@@ -70,7 +70,7 @@ const DashboardChart = () => {
               },
             ],
             colors: [
-              theme.vars.palette.primary.main,
+              theme.palette.primary.main,
               varAlpha(theme.vars.palette.warning.mainChannel, 0.5),
             ],
           }}

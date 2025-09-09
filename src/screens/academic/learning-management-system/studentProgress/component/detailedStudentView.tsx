@@ -23,7 +23,7 @@ const DetailedStudentView = () => (
       sx={{
         width: 120,
         height: 120,
-        border: (theme) => `3px solid ${theme.vars.palette.primary.main}`,
+        border: (theme) => `3px solid ${theme.palette.primary.main}`,
         marginBottom: 2,
       }}
     />
@@ -48,7 +48,7 @@ const DetailedStudentView = () => (
           <School
             sx={{
               fontSize: 40,
-              color: (theme) => theme.vars.palette.primary.main,
+              color: (theme) => theme.palette.primary.main,
               marginBottom: 1,
             }}
           />
@@ -75,7 +75,7 @@ const DetailedStudentView = () => (
           <AssignmentTurnedIn
             sx={{
               fontSize: 40,
-              color: (theme) => theme.vars.palette.primary.main,
+              color: (theme) => theme.palette.primary.main,
               marginBottom: 1,
             }}
           />

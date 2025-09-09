@@ -19,7 +19,7 @@ const ProfileDashboardAttendanceTrend = () => {
           colors: [
             theme.vars.palette.success.main, // Green for Present
             theme.vars.palette.warning.main, // Yellow/Orange for Half-Day
-            theme.vars.palette.error.main, // Red/Pink for Absent
+            theme.palette.error.main, // Red/Pink for Absent
           ],
         }}
         sx={{ height: '100%', boxShadow: 'none' }}

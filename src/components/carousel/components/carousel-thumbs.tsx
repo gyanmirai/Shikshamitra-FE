@@ -97,7 +97,7 @@ export function CarouselThumb({
           }),
         ...(selected && {
           opacity: 1,
-          boxShadow: (theme) => `0 0 0 2px ${theme.vars.palette.primary.main}`,
+          boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`,
         }),
         ...sx,
       }}

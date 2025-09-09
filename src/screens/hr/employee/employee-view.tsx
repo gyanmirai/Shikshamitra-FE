@@ -123,7 +123,7 @@ export function EmployeeCard({ employee }: any) {
             borderLeft: (theme) =>
               employee?.employeeStatusType === EmployeeStatusType.Active
                 ? `4px solid ${theme.vars.palette.success.main}`
-                : `4px solid ${theme.vars.palette.error.main}`,
+                : `4px solid ${theme.palette.error.main}`,
             borderRadius: 1,
           }}
         >

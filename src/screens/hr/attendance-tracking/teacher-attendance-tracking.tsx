@@ -88,7 +88,7 @@ const TeacherAttendanceTracking = ({
             maxWidth: 280,
             width: '100%',
             backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
-            color: (theme) => theme.vars.palette.primary.main,
+            color: (theme) => theme.palette.primary.main,
             p: 2,
           }}
         >
@@ -102,7 +102,7 @@ const TeacherAttendanceTracking = ({
             p: 2,
             width: '100%',
             backgroundColor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.1),
-            color: (theme) => theme.vars.palette.error.main,
+            color: (theme) => theme.palette.error.main,
           }}
         >
           <Typography variant="subtitle1">Full Day Leave</Typography>

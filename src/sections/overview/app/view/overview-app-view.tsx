@@ -89,7 +89,7 @@ export function OverviewAppView() {
             percent={-0.1}
             total={678}
             chart={{
-              colors: [theme.vars.palette.error.main],
+              colors: [theme.palette.error.main],
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
               series: [18, 19, 31, 8, 16, 37, 12, 33],
             }}

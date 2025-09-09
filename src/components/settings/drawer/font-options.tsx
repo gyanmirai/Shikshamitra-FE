@@ -60,7 +60,7 @@ export function FontOptions({ value, options, onClickOption }: Props) {
                     color: 'currentColor',
                     ...(selected && {
                       background: (theme) =>
-                        `linear-gradient(135deg, ${theme.vars.palette.primary.light}, ${theme.vars.palette.primary.main})`,
+                        `linear-gradient(135deg, ${theme.vars.palette.primary.light}, ${theme.palette.primary.main})`,
                     }),
                   }}
                 />

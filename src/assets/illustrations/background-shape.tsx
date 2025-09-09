@@ -8,7 +8,7 @@ export function BackgroundShape() {
 
   const gradientId = useId();
 
-  const PRIMARY_MAIN = theme.vars.palette.primary.main;
+  const PRIMARY_MAIN = theme.palette.primary.main;
 
   return (
     <>

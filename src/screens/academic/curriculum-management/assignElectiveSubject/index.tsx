@@ -209,10 +209,8 @@ const AssignElectiveSubject = () => {
                             : theme.palette.mode === 'dark'
                               ? '#fff'
                               : '#000', // For outlined: black in light, white in dark
-                          borderColor: theme.vars.palette.primary.main,
-                          backgroundColor: isSelected
-                            ? theme.vars.palette.primary.main
-                            : 'transparent',
+                          borderColor: theme.palette.primary.main,
+                          backgroundColor: isSelected ? theme.palette.primary.main : 'transparent',
                           '&:hover': {
                             backgroundColor: isSelected
                               ? theme.vars.palette.primary.dark

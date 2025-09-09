@@ -98,7 +98,7 @@ const ChangeStatusForm = ({
                           option.value === EmployeeStatusType.Active
                             ? theme.vars.palette.success.main
                             : option.value === EmployeeStatusType.Inactive
-                              ? theme.vars.palette.error.main
+                              ? theme.palette.error.main
                               : option.value === EmployeeStatusType.Left
                                 ? theme.vars.palette.info.main
                                 : option.value === EmployeeStatusType.Retired

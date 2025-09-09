@@ -200,7 +200,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
                 ],
                 colors: [
                   alpha(theme.vars.palette.primary.dark, 0.8),
-                  alpha(theme.vars.palette.error.main, 0.8),
+                  alpha(theme.palette.error.main, 0.8),
                 ],
               }}
               sx={{ height: '100%' }}

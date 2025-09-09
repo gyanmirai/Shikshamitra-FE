@@ -190,7 +190,7 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
                 colors: [
                   alpha(theme.vars.palette.primary.dark, 0.8),
                   alpha(theme.vars.palette.warning.main, 0.8),
-                  alpha(theme.vars.palette.error.main, 0.8),
+                  alpha(theme.palette.error.main, 0.8),
                 ],
                 options: { legend: { show: false, position: 'top' } },
               }}

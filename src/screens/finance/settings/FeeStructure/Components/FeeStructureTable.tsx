@@ -77,7 +77,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
           render(value, row) {
             const statusColor =
               value === FeeStructureLockStatusType.Locked
-                ? theme.vars.palette.error.main
+                ? theme.palette.error.main
                 : theme.vars.palette.success.main;
 
             return (

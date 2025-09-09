@@ -86,7 +86,7 @@ export function OverviewEcommerceView() {
             percent={0.6}
             total={4876}
             chart={{
-              colors: [theme.vars.palette.error.light, theme.vars.palette.error.main],
+              colors: [theme.vars.palette.error.light, theme.palette.error.main],
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
               series: [40, 70, 75, 70, 50, 28, 7, 64],
             }}

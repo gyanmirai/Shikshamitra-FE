@@ -27,7 +27,7 @@ export const StyledRoot = styled(Stack, {
    * State: error
    */
   ...(error && {
-    border: `solid 1px ${theme.vars.palette.error.main}`,
+    border: `solid 1px ${theme.palette.error.main}`,
   }),
   /**
    * State: disabled
@@ -101,7 +101,7 @@ export const StyledRoot = styled(Stack, {
        * Link
        */
       [`& .${editorClasses.content.link}`]: {
-        color: theme.vars.palette.primary.main,
+        color: theme.palette.primary.main,
       },
       /**
        * Hr Divider

@@ -38,7 +38,7 @@ export function NavOptions({ options, value, onClickOption, hideNavColor, hideNa
     '--item-radius': '12px',
     '--item-bg': theme.vars.palette.grey[500],
     '--item-border-color': varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
-    '--item-active-color': `linear-gradient(135deg, ${theme.vars.palette.primary.light} 0%, ${theme.vars.palette.primary.main} 100%)`,
+    '--item-active-color': `linear-gradient(135deg, ${theme.vars.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
     '--item-active-shadow-light': `-8px 8px 20px -4px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
     '--item-active-shadow-dark': `-8px 8px 20px -4px ${varAlpha(theme.vars.palette.common.blackChannel, 0.12)}`,
   };

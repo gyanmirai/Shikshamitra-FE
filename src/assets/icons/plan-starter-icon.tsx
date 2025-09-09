@@ -9,7 +9,7 @@ import { useTheme } from '@mui/material/styles';
 function PlanStarterIcon({ sx, ...other }: BoxProps) {
   const theme = useTheme();
 
-  const PRIMARY_MAIN = theme.vars.palette.primary.main;
+  const PRIMARY_MAIN = theme.palette.primary.main;
 
   const PRIMARY_DARK = theme.vars.palette.primary.dark;
 

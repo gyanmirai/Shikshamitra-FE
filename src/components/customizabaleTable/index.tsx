@@ -15,8 +15,16 @@ import { DatePicker } from '@mui/x-date-pickers';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { formatNumber } from 'src/utils/formate_number';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import { ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
+import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import React, { useRef, useMemo, useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import {
+  Clear as ClearIcon,
+  Search as SearchIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  ArrowUpward as ArrowUpwardIcon,
+  ArrowDownward as ArrowDownwardIcon,
+} from '@mui/icons-material';
 import {
   Box,
   Menu,
@@ -27,11 +35,14 @@ import {
   Select,
   Button,
   Switch,
+  Popover,
   MenuItem,
   TableRow,
+  Checkbox,
   Collapse,
   TableBody,
   TableCell,
+  TableHead,
   TextField,
   IconButton,
   InputLabel,
@@ -47,10 +58,6 @@ import { Scrollbar } from '../scrollbar';
 import { parseFormattedNumber } from './utlis';
 import { EmptyContent } from '../empty-content';
 import { ComponentBlock } from '../component-block';
-import { TableSearch } from './components/TableSearch';
-import { TableExport } from './components/TableExport';
-import { TableHeader } from './components/TableHeader';
-import { ColumnVisibility } from './components/ColumnVisibility';
 
 import type { IData, IColumn, IParams, IColumnFilterAnchor, ICustomizableTableProps } from './type';
 
@@ -472,34 +479,144 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 1 }} ref={setTableRef}>
       <Box sx={{ display: 'flex', alignItems: 'center', p: isSearch ? 1 : 0, gap: 1 }}>
         {isSearch && (
-          <TableSearch
-            searchValue={searchValue}
-            onSearch={handleSearch}
-            onClear={() => setSearchValue('')}
-            searchFieldProps={searchFieldProps}
+          <TextField
+            variant="outlined"
+            size="small"
+            value={searchValue}
+            onChange={handleSearch}
+            InputProps={{
+              endAdornment: (
+                <>
+                  {searchValue ? (
+                    <IconButton
+                      size="small"
+                      sx={{ mr: '-12px', p: 1 }}
+                      onClick={() => setSearchValue('')}
+                    >
+                      <ClearIcon />
+                    </IconButton>
+                  ) : (
+                    <IconButton size="small" sx={{ mr: '-12px', p: 1 }}>
+                      <SearchIcon />
+                    </IconButton>
+                  )}
+                </>
+              ),
+            }}
+            label="Search in Table"
+            sx={{ maxWidth: '249.6px', width: '100%' }}
+            {...searchFieldProps}
           />
         )}
 
         {isFilter && (
           <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
-            <ColumnVisibility
-              columns={columns}
-              columnVisibility={columnVisibility}
-              columnSearchTerm={columnSearchTerm}
-              onColumnSearchChange={(value) => handelChangeParams({ columnSearchTerm: value })}
-              onColumnVisibilityChange={(columnId, visible) =>
-                handelChangeParams({
-                  columnVisibility: { ...columnVisibility, [columnId]: visible },
-                })
-              }
-              onReset={() =>
-                handelChangeParams({
-                  columnSearchTerm: '',
-                  columnVisibility: Object.fromEntries(columns.map((column) => [column.id, true])),
-                })
-              }
-            />
-            <TableExport onExport={handleExport} />
+            <Box sx={{ ml: 2 }}>
+              <Button
+                // variant="outlined"
+                size="small"
+                startIcon={<RemoveRedEyeIcon />}
+                onClick={(event) => setColumnAnchorEl(event.currentTarget)}
+              >
+                Columns
+              </Button>
+              <Popover
+                open={Boolean(anchorColumnEl)}
+                anchorEl={anchorColumnEl}
+                onClose={() => setColumnAnchorEl(null)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+              >
+                <Box
+                  sx={{
+                    p: 2,
+                    width: 250,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '400px',
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Search columns"
+                    value={columnSearchTerm}
+                    onChange={(e) => handelChangeParams({ columnSearchTerm: e.target.value })}
+                    sx={{ mb: 2, flexShrink: '0', background: 'white', zIndex: '1' }}
+                  />
+                  <Box
+                    sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto' }}
+                  >
+                    {columns
+                      .filter(
+                        (column) =>
+                          column?.label?.trim() &&
+                          column.label.toLowerCase().includes(columnSearchTerm.toLowerCase())
+                      )
+                      .map((column) => (
+                        <FormControlLabel
+                          key={column.id}
+                          sx={{ ml: 0 }}
+                          control={
+                            <Checkbox
+                              checked={columnVisibility[column.id]}
+                              onChange={(e) => {
+                                handelChangeParams({
+                                  columnVisibility: {
+                                    ...columnVisibility,
+                                    [column.id]: e.target.checked,
+                                  },
+                                });
+                              }}
+                            />
+                          }
+                          label={column.label}
+                        />
+                      ))}
+                  </Box>
+                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      size="small"
+                      onClick={() => {
+                        handelChangeParams({
+                          columnSearchTerm: '',
+                          columnVisibility: Object.fromEntries(
+                            columns.map((column) => [column.id, true])
+                          ),
+                        });
+                      }}
+                    >
+                      Reset
+                    </Button>
+                  </Box>
+                </Box>
+              </Popover>{' '}
+            </Box>
+
+            <Box>
+              <Button
+                startIcon={<Iconify icon="solar:export-bold" />}
+                size="small"
+                onClick={(event) => setExportAnchorEl(event.currentTarget)}
+              >
+                Export
+              </Button>
+              <Menu
+                anchorEl={exportAnchorEl}
+                open={Boolean(exportAnchorEl)}
+                onClose={() => setExportAnchorEl(null)}
+              >
+                <MenuItem onClick={() => handleExport('excel')}>
+                  <Iconify icon="solar:document-bold" />
+                  &nbsp; Export as Excel
+                </MenuItem>
+
+                <MenuItem onClick={() => handleExport('pdf')}>
+                  <Iconify icon="solar:document-bold" />
+                  &nbsp; Export as PDF
+                </MenuItem>
+              </Menu>
+            </Box>
           </Box>
         )}
       </Box>
@@ -520,18 +637,122 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       <ComponentBlock sx={{ px: 0, py: 0, boxShadow: 'none', gap: 0.5 }}>
         <TableContainer component={Scrollbar} sx={{ maxHeight: '440px', ...sx }} {...other}>
           <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
-            <TableHeader
-              columns={columns}
-              columnVisibility={columnVisibility}
-              sorts={sorts}
-              onSort={handleSort}
-              getStickyStyle={getStickyStyle}
-              showCheckbox={showCheckbox}
-              // headerRefs={headerRefs}
-              // stickyMap={stickyMap}
-              // theme={theme}
-              // handleColumnFilterClick={handleColumnFilterClick}
-            />
+            <TableHead>
+              <TableRow>
+                {columns.some((column) => column.children) && <TableCell />}
+                {columns.map(
+                  (column, index) =>
+                    columnVisibility[column.id] && (
+                      <TableCell
+                        key={column.id}
+                        align={column.align || 'center'}
+                        ref={(el) => {
+                          headerRefs.current[index] = el as HTMLTableCellElement;
+                        }}
+                        sx={{
+                          fontSize: '14px',
+                          width: column.minWidth,
+                          // @ts-ignore
+                          left: column.sticky ? stickyMap[column.id] : 'auto',
+                          right: column.sticky && columns.length === index + 1 ? 0 : 'auto',
+                          zIndex: column.sticky ? 99 : 10,
+                          backgroundColor: column.sticky ? 'background.paper' : 'transparent',
+                          boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+
+                          ...(column.sticky ? { backgroundImage: 'none' } : {}),
+                          '& .column-filter-icon': { opacity: 0, transition: 'opacity 0.3s ease' },
+                          '&:hover .column-filter-icon': { opacity: 1 },
+                          '&::after': {
+                            borderRight: !column.sticky
+                              ? `1px solid ${theme.vars.palette.grey[400]}`
+                              : 'none',
+                            content: '""',
+                            position: 'absolute',
+                            right: '0',
+                            bottom: '0',
+                            height: '40%',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                          },
+                          '&:last-child::after': { borderRight: 'none' },
+                          ...getStickyStyle(column),
+                          position: 'sticky',
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: column.isSort !== false ? 'pointer' : 'default',
+                            userSelect: 'none',
+                            fontWeight: 'bold',
+                            width: 'inherit',
+                            gap: 0.5,
+                          }}
+                          onClick={() =>
+                            column.isSort !== false && handleSort(column.id, column?.originalId)
+                          }
+                        >
+                          <Box
+                            fontSize="14px"
+                            display="block"
+                            textAlign={column.align}
+                            gap={1}
+                            width="inherit"
+                            component="span"
+                          >
+                            {column.label} {column?.renderColumn?.(column)}
+                          </Box>
+
+                          {column.isFilter && (
+                            <Iconify
+                              icon="lucide:list-filter"
+                              sx={{
+                                height: '16px',
+                                width: '16px',
+                                cursor: 'pointer',
+                                position: 'absolute',
+                                right: '4px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                              }}
+                              onClick={(e) => handleColumnFilterClick(e, column)}
+                            />
+                          )}
+
+                          {column.isSort !== false && (
+                            <Box
+                              width="50px"
+                              display="flex"
+                              justifyContent="center"
+                              alignItems="center"
+                            >
+                              {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
+                                <Box component="span" sx={{ fontSize: '0.75em' }}>
+                                  {sorts.findIndex((sort) => sort.column === column.id) + 1}
+                                </Box>
+                              )}
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
+                                }}
+                              >
+                                {sorts.find((sort) => sort.column === column.id)?.direction ===
+                                'asc' ? (
+                                  <ArrowUpwardIcon fontSize="inherit" />
+                                ) : (
+                                  <ArrowDownwardIcon fontSize="inherit" />
+                                )}
+                              </IconButton>
+                            </Box>
+                          )}
+                        </Box>
+                      </TableCell>
+                    )
+                )}
+              </TableRow>
+            </TableHead>
             <TableBody>
               {isLoading ? (
                 <TableRow>

@@ -474,7 +474,7 @@ const AttendanceCard = ({ student: studentAttendanceData, setStudentData }: any)
           width: '100%',
 
           borderLeft: (theme) =>
-            `4px solid ${!studentAttendanceData.isPresent ? theme.vars.palette.error.main : theme.vars.palette.success.main}`,
+            `4px solid ${!studentAttendanceData.isPresent ? theme.palette.error.main : theme.vars.palette.success.main}`,
           cursor: 'pointer',
           background: (theme) =>
             !studentAttendanceData.isPresent

@@ -141,7 +141,7 @@ export const StyledToaster = styled(Toaster)(({ theme }) => {
     [`& .${toasterClasses.error}`]: {
       ...baseStyles.toastColor,
       [`& .${toasterClasses.icon}`]: {
-        color: theme.vars.palette.error.main,
+        color: theme.palette.error.main,
         backgroundColor: varAlpha(theme.vars.palette.error.mainChannel, 0.08),
       },
     },

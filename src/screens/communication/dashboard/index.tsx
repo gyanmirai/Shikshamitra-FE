@@ -208,7 +208,7 @@ export const CommunicationDashboardCard: React.FC<TDashboardCardProps> = ({
     }
 
     // Default fallback
-    return theme.vars.palette.primary.main;
+    return theme.palette.primary.main;
   };
 
   // Generate gradient background

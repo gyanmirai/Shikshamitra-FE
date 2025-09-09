@@ -87,7 +87,7 @@ const WorkExperiences = (props: any) => {
                 height: '24px',
                 minWidth: '24px',
                 borderRadius: '50%',
-                background: (theme) => theme.vars.palette.primary.main,
+                background: (theme) => theme.palette.primary.main,
                 color: 'white',
                 display: 'flex',
                 alignItems: 'center',

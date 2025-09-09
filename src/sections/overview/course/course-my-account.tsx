@@ -36,7 +36,7 @@ export function CourseMyAccount({ ...other }: CardProps) {
         overlay: {
           border: 2,
           spacing: 3,
-          color: `linear-gradient(135deg, ${varAlpha(theme.vars.palette.primary.mainChannel, 0)} 25%, ${theme.vars.palette.primary.main} 100%)`,
+          color: `linear-gradient(135deg, ${varAlpha(theme.vars.palette.primary.mainChannel, 0)} 25%, ${theme.palette.primary.main} 100%)`,
         },
       }}
       sx={{ mb: 2 }}

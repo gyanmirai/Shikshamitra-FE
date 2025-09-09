@@ -18,7 +18,7 @@ function ForbiddenIllustration({ hideBackground, sx, ...other }: Props) {
 
   const PRIMARY_LIGHT = theme.vars.palette.primary.light;
 
-  const PRIMARY_MAIN = theme.vars.palette.primary.main;
+  const PRIMARY_MAIN = theme.palette.primary.main;
 
   const PRIMARY_DARK = theme.vars.palette.primary.dark;
 

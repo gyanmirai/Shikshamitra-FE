@@ -71,7 +71,7 @@ const MuiOutlinedInput: Components<Theme>['MuiOutlinedInput'] = {
       },
       [`&.${outlinedInputClasses.error}`]: {
         [`& .${outlinedInputClasses.notchedOutline}`]: {
-          borderColor: theme.vars.palette.error.main,
+          borderColor: theme.palette.error.main,
         },
       },
       [`&.${outlinedInputClasses.disabled}`]: {

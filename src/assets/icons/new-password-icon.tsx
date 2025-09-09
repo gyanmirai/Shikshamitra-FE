@@ -9,7 +9,7 @@ import { useTheme } from '@mui/material/styles';
 function NewPasswordIcon({ sx, ...other }: BoxProps) {
   const theme = useTheme();
 
-  const PRIMARY_MAIN = theme.vars.palette.primary.main;
+  const PRIMARY_MAIN = theme.palette.primary.main;
 
   const WARNING_LIGHT = theme.vars.palette.warning.light;
 

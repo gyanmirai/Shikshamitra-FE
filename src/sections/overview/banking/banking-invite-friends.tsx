@@ -22,7 +22,7 @@ export function BankingInviteFriends({ price, title, imgUrl, description, sx, ..
     <Box
       sx={{
         ...bgGradient({
-          color: `135deg, ${theme.vars.palette.primary.main}, ${theme.vars.palette.primary.dark}`,
+          color: `135deg, ${theme.palette.primary.main}, ${theme.vars.palette.primary.dark}`,
         }),
         p: 5,
         borderRadius: 2,

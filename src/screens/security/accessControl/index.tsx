@@ -201,7 +201,7 @@ const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0
         ...(hasChildren && isExpanded.value
           ? {
               '&::before': {
-                borderLeft: (theme) => `1px dashed ${theme.vars.palette.primary.main}`,
+                borderLeft: (theme) => `1px dashed ${theme.palette.primary.main}`,
                 content: '""',
                 height: '80%',
                 width: '100%',
@@ -441,7 +441,7 @@ const BoardScreenStep = ({
           ...(hasChildren && isExpanded
             ? {
                 '&::before': {
-                  borderLeft: (theme) => `1px dashed ${theme.vars.palette.primary.main}`,
+                  borderLeft: (theme) => `1px dashed ${theme.palette.primary.main}`,
                   content: '""',
                   height: '80%',
                   width: '100%',

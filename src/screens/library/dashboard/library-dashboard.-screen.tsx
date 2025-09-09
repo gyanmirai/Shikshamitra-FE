@@ -243,7 +243,7 @@ const LibraryDashboard = () => {
                   borderRadius: 3,
                   position: 'absolute',
                   transform: 'rotate(40deg)',
-                  background: `linear-gradient(to right, ${theme.vars.palette.error.main} 0%, ${varAlpha(theme.vars.palette.error.mainChannel, 0)} 100%)`,
+                  background: `linear-gradient(to right, ${theme.palette.error.main} 0%, ${varAlpha(theme.vars.palette.error.mainChannel, 0)} 100%)`,
                 }}
               />
             </Card>
@@ -318,7 +318,7 @@ const LibraryDashboard = () => {
             chart={{
               colors: [
                 theme.vars.palette.info.main,
-                theme.vars.palette.primary.main,
+                theme.palette.primary.main,
                 theme.vars.palette.warning.main,
               ],
               categories: ['Fiction', 'Non-fiction', 'TextBook', 'Refrences'],
@@ -365,10 +365,10 @@ const LibraryDashboard = () => {
             subheader=""
             chart={{
               colors: [
-                theme.vars.palette.primary.main,
+                theme.palette.primary.main,
                 theme.vars.palette.warning.main,
                 theme.vars.palette.secondary.main,
-                theme.vars.palette.error.main,
+                theme.palette.error.main,
               ],
               categories: [
                 'Jan',

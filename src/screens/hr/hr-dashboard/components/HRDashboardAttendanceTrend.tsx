@@ -146,7 +146,7 @@ const HRDashboardAttendanceTrend = () => {
             ],
             colors: [
               theme.vars.palette.primary.dark,
-              theme.vars.palette.error.main,
+              theme.palette.error.main,
               theme.vars.palette.warning.main,
             ],
           }}

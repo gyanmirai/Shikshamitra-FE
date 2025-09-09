@@ -32,7 +32,7 @@ const CustomAccordion: React.FC<CustomAccordionProps> = ({
       sx={{
         boxShadow: 'none',
 
-        color: isActive ? theme.vars.palette.primary.main : theme.vars.palette.text.secondary,
+        color: isActive ? theme.palette.primary.main : theme.vars.palette.text.secondary,
         fontSize: '14px',
         '&:before': { display: 'none' },
       }}
@@ -48,7 +48,7 @@ const CustomAccordion: React.FC<CustomAccordionProps> = ({
         sx={{
           borderBottom: `1px solid ${theme.vars.palette.divider}`,
           borderLeft: isActive
-            ? `2px solid ${theme.vars.palette.primary.main}`
+            ? `2px solid ${theme.palette.primary.main}`
             : `2px solid ${theme.vars.palette.divider}`,
           bgcolor: isActive ? varAlpha(theme.vars.palette.primary.mainChannel, 0.08) : 'inherit',
           '&.Mui-expanded': { minHeight: '40px' },
@@ -62,7 +62,7 @@ const CustomAccordion: React.FC<CustomAccordionProps> = ({
             fontWeight: isActive
               ? theme.typography.fontWeightBold
               : theme.typography.fontWeightMedium,
-            color: isActive ? theme.vars.palette.primary.main : theme.vars.palette.text.secondary,
+            color: isActive ? theme.palette.primary.main : theme.vars.palette.text.secondary,
           }}
         >
           {title}

@@ -116,7 +116,7 @@ const FinanceBounceScreen = () => {
                   sx={{
                     backgroundColor: (theme) =>
                       varAlpha(theme.vars.palette.primary.mainChannel, 0.3),
-                    color: (theme) => theme.vars.palette.primary.main,
+                    color: (theme) => theme.palette.primary.main,
                     '&:hover': {
                       backgroundColor: (theme) =>
                         varAlpha(theme.vars.palette.primary.mainChannel, 0.3),

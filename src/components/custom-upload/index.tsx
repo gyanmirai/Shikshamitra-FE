@@ -228,7 +228,7 @@ const FileUploader = <T extends boolean = true>({
         onDragOver={(e) => e.preventDefault()}
         sx={{
           border: (theme) =>
-            `1px dashed ${error ? theme.vars.palette.error.main : theme.vars.palette.grey[400]}`,
+            `1px dashed ${error ? theme.palette.error.main : theme.vars.palette.grey[400]}`,
           padding: value && (Array.isArray(value) ? value.length > 0 : value) ? 1 : 2,
           borderRadius: 2,
           textAlign: value && (Array.isArray(value) ? value.length > 0 : value) ? 'left' : 'center',

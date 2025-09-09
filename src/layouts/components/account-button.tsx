@@ -54,7 +54,7 @@ export function AccountButton({ open, photoURL, displayName, sx, ...other }: Acc
             overlay: {
               border: 1,
               spacing: 2,
-              color: `conic-gradient(${theme.vars.palette.primary.main}, ${theme.vars.palette.warning.main}, ${theme.vars.palette.primary.main})`,
+              color: `conic-gradient(${theme.palette.primary.main}, ${theme.vars.palette.warning.main}, ${theme.palette.primary.main})`,
             },
           }}
         >

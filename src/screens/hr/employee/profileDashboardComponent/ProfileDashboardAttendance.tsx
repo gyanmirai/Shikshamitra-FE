@@ -78,7 +78,7 @@ const ProfileDashboardAttendance = () => {
                       '&:hover': { ...(absent ? { backgroundColor: 'unset' } : {}) },
                       // background: (theme) =>
                       //   absent
-                      //     ? `${theme.vars.palette.error.main} !important`
+                      //     ? `${theme.palette.error.main} !important`
                       //     : today
                       //       ? 'transparent !important'
                       //       : '',
@@ -86,7 +86,7 @@ const ProfileDashboardAttendance = () => {
                       //   ? { color: 'white !important' }
                       //   : { color: (theme) => `${theme.vars.palette.text.primary} !important` }),
                       // border: (theme) =>
-                      //   today ? `2px solid ${theme.vars.palette.primary.main}` : 'none !important',
+                      //   today ? `2px solid ${theme.palette.primary.main}` : 'none !important',
                       ...(isHalfDay
                         ? {
                             '&::before': {
@@ -98,8 +98,7 @@ const ProfileDashboardAttendance = () => {
                               width: '50%',
                               height: '100%',
                               // eslint-disable-next-line @typescript-eslint/no-shadow
-                              backgroundColor: (theme) =>
-                                `${theme.vars.palette.error.main} !important`,
+                              backgroundColor: (theme) => `${theme.palette.error.main} !important`,
                               border: '2px solid transparent',
                               zIndex: -1,
                             },

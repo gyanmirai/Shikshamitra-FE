@@ -22,7 +22,7 @@ const IcardPreview = ({
               p: 2,
               cursor: 'pointer',
               outline: (theme) =>
-                selectedDivision === 'A' ? `2px solid ${theme.vars.palette.primary.main}` : 'none',
+                selectedDivision === 'A' ? `2px solid ${theme.palette.primary.main}` : 'none',
             }}
             onClick={() => setSelectedDivision('A')}
           >
@@ -34,7 +34,7 @@ const IcardPreview = ({
               p: 2,
               cursor: 'pointer',
               outline: (theme) =>
-                selectedDivision === 'B' ? `2px solid ${theme.vars.palette.primary.main}` : 'none',
+                selectedDivision === 'B' ? `2px solid ${theme.palette.primary.main}` : 'none',
             }}
             onClick={() => setSelectedDivision('B')}
           >

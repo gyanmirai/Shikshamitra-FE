@@ -119,14 +119,14 @@ const HrEventsAndHolidaysScreen = () => {
       eventHolidayData?.items.map((i: any) => ({
         ...i,
         start: i.startDate,
-        color: i.isHoliday ? theme.vars.palette.error.main : theme.vars.palette.success.main,
+        color: i.isHoliday ? theme.palette.error.main : theme.vars.palette.success.main,
         end: i.endDate,
         allDay: false,
-        textColor: i.isHoliday ? theme.vars.palette.error.main : theme.vars.palette.success.main,
+        textColor: i.isHoliday ? theme.palette.error.main : theme.vars.palette.success.main,
         title: i.isHoliday ? 'Holiday' : 'Event',
         description: i.reason,
       })) || [],
-    [eventHolidayData?.items, theme.vars.palette.error.main, theme.vars.palette.success.main]
+    [eventHolidayData?.items, theme.palette.error.main, theme.vars.palette.success.main]
   );
 
   // Get selected calendar event data

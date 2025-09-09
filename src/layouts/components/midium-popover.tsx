@@ -49,7 +49,7 @@ export function MediumPopover({ data = [], sx, medium, setMedium, ...other }: Me
         sx={{
           p: 0.5,
           gap: { xs: 0.5, [mediaQuery]: 1 },
-          border: (theme) => `dashed 1px ${theme.vars.palette.error.main}`,
+          border: (theme) => `dashed 1px ${theme.palette.error.main}`,
           borderRadius: 1,
           ...sx,
         }}

@@ -12,10 +12,7 @@ const ProgressSvg = ({ title, ...props }: { title: string } & React.SVGProps<SVG
       fill="none"
       {...props}
     >
-      <path
-        d="M0 0 L75 60 L0 120 L350 120 L450 60 L350 0 Z"
-        fill={theme.vars.palette.primary.main}
-      />
+      <path d="M0 0 L75 60 L0 120 L350 120 L450 60 L350 0 Z" fill={theme.palette.primary.main} />
       <text
         x={225}
         y={70}

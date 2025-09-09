@@ -329,7 +329,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                       borderWidth: 2,
                     },
                     ...(!!getError('prerequisites') && {
-                      borderColor: theme.vars.palette.error.main,
+                      borderColor: theme.palette.error.main,
                     }),
                   }}
                 />
@@ -357,7 +357,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                       borderWidth: 2,
                     },
                     ...(!!getError('description') && {
-                      borderColor: theme.vars.palette.error.main,
+                      borderColor: theme.palette.error.main,
                     }),
                   }}
                 />

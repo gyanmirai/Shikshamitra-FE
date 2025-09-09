@@ -213,7 +213,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     borderRadius: 1,
                     '&:hover': { borderColor: theme.vars.palette.text.primary },
                     ...(!!formik.errors.description && {
-                      borderColor: theme.vars.palette.error.main,
+                      borderColor: theme.palette.error.main,
                     }),
                     '&:focus-within': {
                       borderColor: theme.vars.palette.text.primary,

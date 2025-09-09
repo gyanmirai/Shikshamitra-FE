@@ -174,7 +174,7 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
         {...getRootProps()}
         sx={{
           border: (theme) =>
-            `1px dashed ${error ? theme.vars.palette.error.main : theme.vars.palette.grey[300]}`,
+            `1px dashed ${error ? theme.palette.error.main : theme.vars.palette.grey[300]}`,
           borderRadius: 2,
           p: 2,
           textAlign: 'center',

@@ -10,14 +10,14 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   width: theme.spacing(15),
   height: theme.spacing(15),
   margin: '0 auto',
-  border: `3px solid ${theme.vars.palette.primary.main}`,
+  border: `3px solid ${theme.palette.primary.main}`,
   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
 }));
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
   fontWeight: 'bold',
   marginBottom: theme.spacing(2),
-  color: theme.vars.palette.primary.main,
+  color: theme.palette.primary.main,
 }));
 
 const StatItem = styled(Box)(({ theme }) => ({

@@ -70,7 +70,7 @@ const MuiBadge: Components<Theme>['MuiBadge'] = {
       style: ({ theme }) => ({
         [`& .${badgeClasses.badge}`]: {
           ...baseStyles(theme),
-          backgroundColor: theme.vars.palette.error.main,
+          backgroundColor: theme.palette.error.main,
           '&::before': { width: 6, height: 2 },
         },
       }),

@@ -8,7 +8,7 @@ export const StyledTab = styled(Tab)(({ theme }) => ({
   //   border: '2px solid',
   textTransform: 'none',
   outline: `2px solid ${theme.vars.palette.grey[400]}`,
-  //   outline: `1px solid ${theme.vars.palette.primary.main}`,
+  //   outline: `1px solid ${theme.palette.primary.main}`,
   color: theme.vars.palette.common.black,
   fontWeight: 600,
   backgroundColor: theme.vars.palette.grey[200],
@@ -17,7 +17,7 @@ export const StyledTab = styled(Tab)(({ theme }) => ({
   borderRadius: '10px',
   transition: 'all 0.3s ease-in-out',
   '&.Mui-selected': {
-    backgroundColor: theme.vars.palette.primary.main,
+    backgroundColor: theme.palette.primary.main,
     color: theme.vars.palette.common.white,
     fontWeight: 600,
     border: 'none',
@@ -52,7 +52,7 @@ export const StyledTabs = styled(Tabs)(({ theme }) => ({
     height: '28px',
     width: '28px',
     borderRadius: '50%',
-    color: theme.vars.palette.primary.main,
+    color: theme.palette.primary.main,
     position: 'absolute',
 
     zIndex: '99',
@@ -66,7 +66,7 @@ export const StyledTabs = styled(Tabs)(({ theme }) => ({
 export const StyledMainDiv = styled('div')(({ theme }) => ({
   height: '5px',
   backgroundColor: theme.vars.palette.grey[400],
-  //   backgroundColor: theme.vars.palette.primary.main,
+  //   backgroundColor: theme.palette.primary.main,
   //   marginTop: '37px',
   position: 'absolute',
   left: '0',

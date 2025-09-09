@@ -270,8 +270,8 @@ const ColorlibStepIconRoot = styled('div')<{
   justifyContent: 'center',
   alignItems: 'center',
   ...(ownerState.active && {
-    background: theme.vars.palette.primary.main,
+    background: theme.palette.primary.main,
     boxShadow: '0 4px 10px 0 rgba(0,0,0,.25)',
   }),
-  ...(ownerState.completed && { background: theme.vars.palette.primary.main }),
+  ...(ownerState.completed && { background: theme.palette.primary.main }),
 }));

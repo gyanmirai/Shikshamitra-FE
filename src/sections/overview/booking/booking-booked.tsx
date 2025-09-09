@@ -47,7 +47,7 @@ export function BookingBooked({ title, subheader, data, ...other }: Props) {
                   }),
                   ...(progress.status === 'Canceled' && {
                     background: (theme) =>
-                      `linear-gradient(135deg, ${theme.vars.palette.error.light} 0%, ${theme.vars.palette.error.main} 100%)`,
+                      `linear-gradient(135deg, ${theme.vars.palette.error.light} 0%, ${theme.palette.error.main} 100%)`,
                   }),
                 },
               }}

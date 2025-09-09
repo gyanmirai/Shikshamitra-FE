@@ -72,10 +72,10 @@ interface CustomStepperWithFormikProps {
 const CustomStepLabel = styled(StepLabel)(({ theme, error, isDisabledLabel }: any) => ({
   '&.Mui-disabled': { cursor: 'default !important' },
   '& .MuiStepLabel-iconContainer': {
-    color: error ? theme.vars.palette.error.main : theme.vars.palette.primary.main,
+    color: error ? theme.palette.error.main : theme.palette.primary.main,
   },
   '& .MuiStepLabel-label': {
-    color: error ? theme.vars.palette.error.main : theme.vars.palette.text.primary,
+    color: error ? theme.palette.error.main : theme.vars.palette.text.primary,
     fontWeight: error ? 'bold' : 'normal',
   },
   '& .MuiStepLabel-iconContainer.Mui-disabled': {
@@ -93,10 +93,10 @@ const QontoConnector = styled(StepConnector)(({ theme }) => ({
     right: 'calc(50% + 16px)',
   },
   [`&.${stepConnectorClasses.active}`]: {
-    [`& .${stepConnectorClasses.line}`]: { borderColor: theme.vars.palette.primary.main },
+    [`& .${stepConnectorClasses.line}`]: { borderColor: theme.palette.primary.main },
   },
   [`&.${stepConnectorClasses.completed}`]: {
-    [`& .${stepConnectorClasses.line}`]: { borderColor: theme.vars.palette.primary.main },
+    [`& .${stepConnectorClasses.line}`]: { borderColor: theme.palette.primary.main },
   },
   [`& .${stepConnectorClasses.line}`]: {
     borderColor: '#eaeaf0',
@@ -114,7 +114,7 @@ function CustomStepIcon(props: StepIconProps) {
         height: 24,
         borderRadius: '50%',
         backgroundColor: (theme) =>
-          active || completed ? theme.vars.palette.primary.main : theme.vars.palette.grey[400],
+          active || completed ? theme.palette.primary.main : theme.vars.palette.grey[400],
         color: '#fff',
         display: 'flex',
         alignItems: 'center',

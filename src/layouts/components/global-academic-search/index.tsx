@@ -24,13 +24,13 @@ import type { GlobalAcademicSearchOption } from './types';
 // Define keyframes using the theme
 const createPulseAnimation = (theme: Theme) => keyframes`
   0% {
-    box-shadow: 0 0 0 0 ${theme.vars.palette.warning.main}99;
+    box-shadow: 0 0 0 0 ${theme.palette.warning.main}99;
   }
   70% {
-    box-shadow: 0 0 0 6px ${theme.vars.palette.warning.main}00;
+    box-shadow: 0 0 0 6px ${theme.palette.warning.main}00;
   }
   100% {
-    box-shadow: 0 0 0 0 ${theme.vars.palette.warning.main}00;
+    box-shadow: 0 0 0 0 ${theme.palette.warning.main}00;
   }
 `;
 
@@ -41,7 +41,7 @@ const AnimatedWrapper = styled(Box, { shouldForwardProp: (prop) => prop !== 'err
   borderRadius: 5,
   ...(error && {
     animation: `${createPulseAnimation(theme as any)} 1.5s infinite`,
-    border: `1px solid ${theme.vars.palette.warning.main}90`,
+    border: `1px solid ${theme.palette.warning.main}90`,
   }),
 }));
 /**
@@ -128,12 +128,13 @@ const GlobalAcademicSearch = () => {
       <CustomTooltip
         arrow
         title={!currentYear?.name ? 'Select Academic Year, Board and Medium' : undefined}
+        placement="left"
       >
         <AnimatedWrapper error={!currentYear?.name}>
           <Autocomplete
             options={options}
             getOptionLabel={(option) => option.label}
-            value={selectedDivision}
+            value={(selectedDivision ?? {}) as any}
             loading={isYearLoading || isBoardLoading}
             clearIcon={false}
             disableClearable

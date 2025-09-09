@@ -62,7 +62,7 @@ const FeedbackAnalyticsViewDialog: React.FC<IFeedbackDetailsViewDialogProps> = (
                 borderBottom: `1px solid ${theme.vars.palette.divider}`,
                 borderLeft:
                   expanded === index
-                    ? `2px solid ${theme.vars.palette.primary.main}`
+                    ? `2px solid ${theme.palette.primary.main}`
                     : `2px solid ${theme.vars.palette.divider}`,
                 bgcolor: 'inherit',
                 '&.Mui-expanded': { minHeight: '40px' },

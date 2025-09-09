@@ -31,7 +31,7 @@ export function CourseReminders({ title, list, ...other }: Props) {
 
   const colors = [
     theme.vars.palette.info.main,
-    theme.vars.palette.error.main,
+    theme.palette.error.main,
     theme.vars.palette.secondary.main,
     theme.vars.palette.success.main,
   ];

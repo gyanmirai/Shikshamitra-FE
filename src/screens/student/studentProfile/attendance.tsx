@@ -212,8 +212,8 @@ const Attendance = (props: StudentTabsComponentType) => {
                 }
                 chart={{
                   colors: [
-                    alpha(theme.vars.palette.primary.main, 0.8),
-                    alpha(theme.vars.palette.error.main, 0.8),
+                    alpha(theme.palette.primary.main, 0.8),
+                    alpha(theme.palette.error.main, 0.8),
                   ],
                   series: [
                     { label: 'Present', value: 75 },
@@ -262,8 +262,8 @@ const Attendance = (props: StudentTabsComponentType) => {
                 // subheader="(+43%) than last year"
                 chart={{
                   colors: [
-                    alpha(theme.vars.palette.primary.main, 0.8),
-                    alpha(theme.vars.palette.error.main, 0.8),
+                    alpha(theme.palette.primary.main, 0.8),
+                    alpha(theme.palette.error.main, 0.8),
                   ],
                   categories: [
                     'Jan',
@@ -361,7 +361,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                             '&:hover': { ...(absent ? { backgroundColor: 'unset' } : {}) },
                             // background: (theme) =>
                             //   absent
-                            //     ? `${theme.vars.palette.error.main} !important`
+                            //     ? `${theme.palette.error.main} !important`
                             //     : today
                             //       ? 'transparent !important'
                             //       : '',
@@ -369,7 +369,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                             //   ? { color: 'white !important' }
                             //   : { color: (theme) => `${theme.vars.palette.text.primary} !important` }),
                             // border: (theme) =>
-                            //   today ? `2px solid ${theme.vars.palette.primary.main}` : 'none !important',
+                            //   today ? `2px solid ${theme.palette.primary.main}` : 'none !important',
                             ...(isHalfDay
                               ? {
                                   '&::before': {
@@ -382,7 +382,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                                     height: '100%',
                                     // eslint-disable-next-line @typescript-eslint/no-shadow
                                     backgroundColor: (theme) =>
-                                      `${theme.vars.palette.error.main} !important`,
+                                      `${theme.palette.error.main} !important`,
                                     border: '2px solid transparent',
                                     zIndex: -1,
                                   },

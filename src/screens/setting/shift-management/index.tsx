@@ -177,10 +177,10 @@ export default ShiftManageMentScreen;
 
 const CustomStepLabel = styled(StepLabel)(({ theme, error }) => ({
   '& .MuiStepLabel-iconContainer': {
-    color: error ? theme.vars.palette.error.main : theme.vars.palette.primary.main,
+    color: error ? theme.palette.error.main : theme.palette.primary.main,
   },
   '& .MuiStepLabel-label': {
-    color: error ? theme.vars.palette.error.main : theme.vars.palette.text.primary,
+    color: error ? theme.palette.error.main : theme.vars.palette.text.primary,
     fontWeight: error ? 'bold' : 'normal',
   },
 }));
