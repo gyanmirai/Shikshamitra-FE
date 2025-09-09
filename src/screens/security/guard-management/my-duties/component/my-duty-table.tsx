@@ -99,7 +99,6 @@ const MyDutytable = () => {
                 now.isAfter(start.subtract(1, 'hour')) &&
                 now.isBefore(start);
               const canCheckOut = isCheckedIn && now.isBefore(end);
-              const isPast = now.isAfter(end);
 
               // if ( (!canCheckIn && !canCheckOut)) return null; // Hide three-dots if no actions
 

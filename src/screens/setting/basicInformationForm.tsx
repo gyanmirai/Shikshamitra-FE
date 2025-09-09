@@ -410,7 +410,7 @@ const BasicInformation = () => {
   // State to store data for editing an institute
   const [editData, setEditData] = useState<any>(null);
 
-  const { data: tenantDetail, isLoading: isTenantLoading } = useQueryAndMutation({
+  const { data: tenantDetail } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetTenantByIdQuery,
     params: store?.user?.profile.tenantid,

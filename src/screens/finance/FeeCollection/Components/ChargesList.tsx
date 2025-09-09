@@ -32,9 +32,9 @@ const ChargesList: React.FC<ChargesListProps> = ({ charges, selectedCharges, tog
         Charges
       </Typography>
 
-      {charges?.map((ch) => (
+      {charges?.map((ch, idx) => (
         <Box
-          key={ch.id}
+          key={ch.id ?? idx}
           sx={{
             border: '1px solid #f28c82', // red highlight for charges
             borderRadius: 2,

@@ -57,6 +57,7 @@ export const generalFieldValidation = Yup.object({
     .test(
       'unique',
       'Secondary Contact No. cannot be same as primary contact no.',
+      // eslint-disable-next-line func-names
       function (value) {
         return !value || value !== this.parent.primaryContactNumber;
       }

@@ -6,7 +6,6 @@ import { Box, Card, Stack, Divider, Typography, LinearProgress } from '@mui/mate
 const AttendanceStatusCard = () => {
   const totalClasses = 32;
   const completedClasses = 28;
-  const pendingClasses = totalClasses - completedClasses;
   const completionPercentage = Math.round((completedClasses / totalClasses) * 100);
 
   return (
