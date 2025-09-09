@@ -8,6 +8,7 @@ import type { Viewport } from 'next';
 import { CONFIG } from 'src/config-global';
 import { primary } from 'src/theme/core/palette';
 import { Snackbar } from 'src/components/snackbar';
+import { InitColorSchemeScript } from '@mui/material';
 import { ThemeProvider } from 'src/theme/theme-provider';
 import { ProgressBar } from 'src/components/progress-bar';
 import { MotionLazy } from 'src/components/animate/motion-lazy';
@@ -17,7 +18,6 @@ import { SettingsDrawer, defaultSettings, SettingsProvider } from 'src/component
 import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
 
 import ReduxProvider from '../redux/reduxProvider';
-import { InitColorSchemeScript } from '@mui/material';
 
 // ----------------------------------------------------------------------
 

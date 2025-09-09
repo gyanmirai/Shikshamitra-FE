@@ -2,12 +2,9 @@
 import type { FormikProps } from 'formik';
 
 import React, { useState } from 'react';
-
-import { Button, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
+import { Button, DialogActions } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';

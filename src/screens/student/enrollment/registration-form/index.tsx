@@ -17,7 +17,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Card, MenuItem, MenuList, Typography } from '@mui/material';
-import { useMoveToRegistrationMutation } from 'src/redux/student/registration/registration-api';
 import {
   StudentRegistrationFormApi,
   useGetStudentRegistrationFormQuery,
@@ -40,24 +39,20 @@ const RegistrationFormScreen = () => {
   const followUpDialog = useBoolean();
 
   // Query hook to fetch registration form data
-  const {
-    data: inquiryFormData,
-    isLoading,
-    refetch,
-  } = useQueryAndMutation({
+  const { data: inquiryFormData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentRegistrationFormQuery,
   });
 
   // Mutation hook to move student to registration status
-  const [moveToRegistration] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useMoveToRegistrationMutation,
-    popupConfig: {
-      successMessage: 'Student moved to registration successfully',
-      success: true,
-    },
-  });
+  // const [moveToRegistration] = useQueryAndMutation({
+  //   type: 'mutation',
+  //   currentQueryAndMutation: useMoveToRegistrationMutation,
+  //   popupConfig: {
+  //     successMessage: 'Student moved to registration successfully',
+  //     success: true,
+  //   },
+  // });
 
   // Transform inquiry form data into table-friendly format
   // - Formats dates (DOB and DOI) into DD-MM-YYYY

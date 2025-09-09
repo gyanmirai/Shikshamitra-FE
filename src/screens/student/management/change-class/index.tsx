@@ -32,7 +32,7 @@ const ChangeClassScreen = ({
   classes: string;
 }) => {
   // State to manage selected students for bulk operations and notifications
-  const [selectedStudent, setSelectedStudent] = useState<any>([]);
+  const [selectedStudent] = useState<any>([]);
 
   // State to track the selected class value in the column header dropdown
   const [columClass, setColumnClass] = useState<string>('');
@@ -67,7 +67,7 @@ const ChangeClassScreen = ({
   // Handler function to process and save class changes
   const handleSave = async () => {
     try {
-      const res = await changeClass({
+      await changeClass({
         studentStandardUpdates: tableData.map((student) => ({
           studentId: student.id,
           standardId: student.standardId,

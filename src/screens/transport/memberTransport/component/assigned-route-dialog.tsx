@@ -71,7 +71,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
     formik.setFieldValue('name', '');
   };
 
-  const selectedGradeObj = availableGrades.find((g) => g.grade === formik.values.grade);
+  // const selectedGradeObj = availableGrades.find((g) => g.grade === formik.values.grade);
 
   return (
     <CustomDialog maxWidth="md" title="Assigned Route" open={dialogValue} handleClose={onClose}>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NumericFormat } from 'react-number-format';
-
+import { Scrollbar } from 'src/components/scrollbar';
 import { GridExpandMoreIcon } from '@mui/x-data-grid';
 import {
   Box,
@@ -12,8 +12,6 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-
-import { Scrollbar } from 'src/components/scrollbar';
 
 interface FeeStructureViewCardProps {
   className: string;

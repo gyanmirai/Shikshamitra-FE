@@ -1,5 +1,5 @@
 import type { RootState } from 'src/redux/store';
-import type { Medium, Division, Standards, Organization } from 'src/types/school';
+import type { Division, Standards, Organization } from 'src/types/school';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -19,7 +19,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box ,
+import {
+  Box,
   Grid,
   Chip,
   Button,
@@ -28,7 +29,6 @@ import { Box ,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
 
 const CharacterCertificate = () => {
   const dialog = useBoolean();
@@ -134,7 +134,7 @@ export default CharacterCertificate;
 
 const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void }) => {
   // State for storing all available mediums (languages of instruction)
-  const [allMediums, setAllMediums] = useState<Medium[]>([]);
+  // const [allMediums, setAllMediums] = useState<Medium[]>([]);
 
   // State for storing all organizations/stages within selected medium
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -147,9 +147,9 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
 
   // Get current board and medium from global state
   const {
-    currentBoard,
+    // currentBoard,
     currentMedium: medium,
-    setCurrentMedium: setMedium,
+    // setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
 
   // Query hook for fetching filtered students based on selected criteria

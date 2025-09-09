@@ -47,7 +47,7 @@ const RollNoGenerationScreen = ({
   const dispatch = useDispatch();
 
   // RTK Query mutation hook for updating student roll numbers in the backend
-  const [_updateStudentRollNumbers, { isLoading: isSaving }] = useUpdateStudentRollNumberMutation();
+  const [, { isLoading: isSaving }] = useUpdateStudentRollNumberMutation();
 
   /**
    * Automatically generates roll numbers based on selected arrangement type and criteria

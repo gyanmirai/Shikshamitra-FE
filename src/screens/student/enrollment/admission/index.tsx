@@ -1,6 +1,5 @@
 'use client';
 
-import type { IKanbanColumn } from 'src/types/kanban';
 import type { LabelColor } from 'src/components/label';
 import type { Division, Standards } from 'src/types/school';
 import type { EntranceExamStatusType } from 'src/enums/entranceExam-type';
@@ -14,7 +13,6 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { GenderType } from 'src/enums/gender';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import calculateAge from 'src/utils/calculate-age';
@@ -71,29 +69,29 @@ import { ViewDocuments } from '../register/RenderDocument';
 
 import type { IInquiryData } from '../Inquiry';
 
-const cssVars = {
-  '--item-gap': '16px',
-  '--item-radius': '12px',
-  '--column-gap': '24px',
-  '--column-width': '336px',
-  '--column-radius': '16px',
-  '--column-padding': '20px 16px 16px 16px',
-};
+// const cssVars = {
+//   '--item-gap': '16px',
+//   '--item-radius': '12px',
+//   '--column-gap': '24px',
+//   '--column-width': '336px',
+//   '--column-radius': '16px',
+//   '--column-padding': '20px 16px 16px 16px',
+// };
 
-const columns: IKanbanColumn[] = [
-  {
-    id: 'pendingApproval',
-    name: 'Pending Approval',
-  },
-  {
-    id: 'approved',
-    name: 'Approved',
-  },
-  {
-    id: 'rejected',
-    name: 'Rejected',
-  },
-];
+// const columns: IKanbanColumn[] = [
+//   {
+//     id: 'pendingApproval',
+//     name: 'Pending Approval',
+//   },
+//   {
+//     id: 'approved',
+//     name: 'Approved',
+//   },
+//   {
+//     id: 'rejected',
+//     name: 'Rejected',
+//   },
+// ];
 
 const AdmissionScreen = () => {
   const tabs = useTabs(RegistrationStatusType.Pending);
@@ -794,7 +792,7 @@ const EntranceExamSections = ({ editData }: any) => {
       skip: !editData?.id,
     },
   });
-  const theme = useTheme();
+  // const theme = useTheme();
   const examData = useMemo(
     () =>
       entranceExamData
@@ -884,7 +882,7 @@ const DocumentsSections = ({ editData }: any) => {
     currentQueryAndMutation: useGetStudentDocumentTypeQuery,
   });
 
-  const { data: employeeDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
+  const { data: employeeDocuments } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentsQuery,
     params: editData?.id,
@@ -1129,27 +1127,27 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
     },
   });
 
-  const getStatusOptions = () => {
-    switch (tabValue) {
-      case RegistrationStatusType.Pending:
-        return [
-          { label: 'Approved', value: RegistrationStatusType.Approved },
-          { label: 'Rejected', value: RegistrationStatusType.Rejected },
-        ];
-      case RegistrationStatusType.Approved:
-        return [
-          { label: 'Rejected', value: RegistrationStatusType.Rejected },
-          { label: 'Pending', value: RegistrationStatusType.Pending },
-        ];
-      case RegistrationStatusType.Rejected:
-        return [
-          { label: 'Approved', value: RegistrationStatusType.Approved },
-          { label: 'Pending', value: RegistrationStatusType.Pending },
-        ];
-      default:
-        return [];
-    }
-  };
+  // const getStatusOptions = () => {
+  //   switch (tabValue) {
+  //     case RegistrationStatusType.Pending:
+  //       return [
+  //         { label: 'Approved', value: RegistrationStatusType.Approved },
+  //         { label: 'Rejected', value: RegistrationStatusType.Rejected },
+  //       ];
+  //     case RegistrationStatusType.Approved:
+  //       return [
+  //         { label: 'Rejected', value: RegistrationStatusType.Rejected },
+  //         { label: 'Pending', value: RegistrationStatusType.Pending },
+  //       ];
+  //     case RegistrationStatusType.Rejected:
+  //       return [
+  //         { label: 'Approved', value: RegistrationStatusType.Approved },
+  //         { label: 'Pending', value: RegistrationStatusType.Pending },
+  //       ];
+  //     default:
+  //       return [];
+  //   }
+  // };
 
   return (
     <>

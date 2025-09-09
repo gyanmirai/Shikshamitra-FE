@@ -36,9 +36,9 @@ const assignments: any = [
   },
 ];
 
-const handleChange = (e: any) => {
-  console.log(e);
-};
+// const handleChange = (e: any) => {
+//   console.log(e);
+// };
 
 const handleSaveForBulk = (e: any) => {
   console.log(e);

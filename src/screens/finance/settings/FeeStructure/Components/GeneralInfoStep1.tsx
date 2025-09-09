@@ -2,18 +2,15 @@ import type { FormikProps } from 'formik';
 import type { Board } from 'src/types/school';
 
 import { capitalize } from 'lodash';
-import React, { useState, useEffect } from 'react';
-
 import { Grid, TextField } from '@mui/material';
-
+import React, { useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
-
-import CustomSelect from 'src/components/custom-select';
-import ShakingTextField from 'src/components/shaking-text-field';
 
 import type { IFeeStructure, IClassWiseFeeData } from '../type';
 

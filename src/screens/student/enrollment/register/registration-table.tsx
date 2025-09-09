@@ -50,7 +50,7 @@ const RegistrationTable = ({
         {' '}
         <MenuList>
           <MenuItem
-            onClick={async () => {
+            onClick={() => {
               if (row.percentage < 50) {
                 shikshaMitraToast.error({
                   message: 'Please Complete Required Fields of Registration Form',
@@ -99,7 +99,7 @@ const RegistrationTable = ({
     currentQueryAndMutation: useGetStudentRegistrationQuery,
   });
 
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [selectedStudents] = useState<any>([]);
 
   const tableData = useMemo(
     () =>

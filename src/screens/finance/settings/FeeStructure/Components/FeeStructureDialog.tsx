@@ -2,15 +2,11 @@
 import type { FormikProps } from 'formik';
 
 import React, { useState } from 'react';
-
-import { Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
-
 import { Iconify } from 'src/components/iconify';
+import { Button, TextField, DialogActions } from '@mui/material';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IFeeStructure } from '../type';

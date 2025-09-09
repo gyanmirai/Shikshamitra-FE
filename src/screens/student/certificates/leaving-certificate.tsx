@@ -20,7 +20,8 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
-import { Box ,
+import {
+  Box,
   Grid,
   Chip,
   Button,
@@ -30,16 +31,15 @@ import { Box ,
   DialogActions,
 } from '@mui/material';
 
-
 const LeavingCertificate = () => {
   const dialog = useBoolean();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  // const {
+  //   // currentBoard,
+  //   // currentMedium: medium,
+  //   // setCurrentMedium: setMedium,
+  // } = useSelector((state: RootState) => state.globalState);
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
       setTimeout(() => {

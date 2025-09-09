@@ -12,7 +12,7 @@ import TransportAddingStopDialog from './transport-adding-stop-dialog';
 const TransportStopsSettingScreen = () => {
   const addingStopDialog = useBoolean();
   const viewStopDialog = useBoolean();
-  const [_selectedEntry, setSelectedEntry] = useState<any>();
+  const [, setSelectedEntry] = useState<any>();
 
   const stopData = [
     {
@@ -138,10 +138,10 @@ const TransportStopsSettingScreen = () => {
 
 export default TransportStopsSettingScreen;
 
-interface CreateRoutesProps {
-  onClose: () => void;
-  // addNewRouteHandle: (route: Route) => void;
-}
+// interface CreateRoutesProps {
+//   onClose: () => void;
+//   // addNewRouteHandle: (route: Route) => void;
+// }
 
 // const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose }) => {
 //   const [activeStep, setActiveStep] = useState<number>(0);

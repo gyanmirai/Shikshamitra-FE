@@ -20,7 +20,8 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
-import { Box ,
+import {
+  Box,
   Grid,
   Chip,
   Button,
@@ -29,7 +30,6 @@ import { Box ,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
 
 const FirstTrialCertificate = () => {
   const dialog = useBoolean();
@@ -139,9 +139,9 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // Get current board and medium from global state
   const {
-    currentBoard,
+    // currentBoard,
     currentMedium: medium,
-    setCurrentMedium: setMedium,
+    // setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
   // State for storing division data
   const [allDivision, setAllDivision] = useState<Division[]>([]);

@@ -39,7 +39,7 @@ import RenderInquiryPrefrance from './RenderInquiryPrefrance';
 import type { FieldsType } from './type';
 
 const RenderGeneralFormFields = (props: any) => {
-  const { formik, isEdit: disabled, isMainForm = false } = props;
+  const { formik, isMainForm = false } = props;
   const isGeneralFormEditable = useBoolean(isMainForm);
   const isStudentDetailsEditable = useBoolean(isMainForm);
   const isContactDetailsEditable = useBoolean(isMainForm);

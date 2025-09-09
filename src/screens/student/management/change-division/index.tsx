@@ -39,7 +39,7 @@ const ChangeDivisionScreen = ({
   const dispatch = useDispatch();
 
   // State to keep track of the initial/original table data for comparison
-  const [_initialData, setInitialData] = useState<IInquiryData[]>(studentData);
+  const [, setInitialData] = useState<IInquiryData[]>(studentData);
   // const [selectedStudents, setSelectedStudents] = useState<{ id: string; name: string }[]>([]);
   // Update table data when studentData changes
   useEffect(() => {

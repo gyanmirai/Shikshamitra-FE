@@ -210,7 +210,7 @@ const MemberTransportScreen = () => {
     },
   ];
   const dialog = useBoolean();
-  const dialogForBulkEdit = useBoolean();
+  // const dialogForBulkEdit = useBoolean();
   const dialogNotify = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState();
   const [isEdit, setIsEdit] = useState<boolean>(false);

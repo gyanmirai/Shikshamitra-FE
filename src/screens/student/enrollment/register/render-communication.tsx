@@ -12,7 +12,7 @@ import RenderEmergencyAddressFields from './RenderEmergencyAddressFields';
 import type { FieldsType } from './type';
 
 const RenderCommunicationFields = (props: any) => {
-  const { formik, isEdit, isMainForm = false } = props;
+  const { formik, isMainForm = false } = props;
   const isLocalAddressEditable = useBoolean(isMainForm);
   const isPermanentAddressEditable = useBoolean(isMainForm);
   const isEmergencyAddressEditable = useBoolean(isMainForm);

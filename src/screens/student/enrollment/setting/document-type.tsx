@@ -438,7 +438,7 @@ export const DocumentForm = ({
   handleClose?: (e: any, isSubmit: boolean) => void;
 }) => {
   const dispatch = useDispatch();
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [, setShowSuccessMessage] = useState(false);
 
   const [addDocument, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -506,7 +506,7 @@ export const DocumentForm = ({
     },
   });
 
-  const { values, touched, errors, setFieldValue, handleChange, handleSubmit } = formik;
+  const { values, touched, errors, setFieldValue, handleSubmit } = formik;
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={values}>

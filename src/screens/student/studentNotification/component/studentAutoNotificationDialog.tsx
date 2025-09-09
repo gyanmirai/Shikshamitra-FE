@@ -1,7 +1,6 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { useSearchParam } from 'src/hooks/use-search-param';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import { Box, Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
 import NotificationConditionRuleForm from 'src/screens/communication/notification/component/notification-condition-rule-form';
@@ -180,78 +179,78 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
   const handleTemplateChangeForTeacher = (d: string) => {
     formik.setFieldValue('selectedTemplateNameForTeacher', d);
   };
-  const TABS = [
-    {
-      value: 'Teacher',
-      label: 'Teacher',
-      component: () => (
-        <RoleConfigForNotification // eslint-disable-next-line jsx-a11y/aria-role
-          role="Teacher"
-          selectedRoles={formik.values.selectedRoles}
-          configurations={configurations}
-          handleConfigChange={handleConfigChange}
-          communicationChannel={formik.values.selectedCommunicationChannelForTeacher}
-          setCommunicationChannel={handleCommunicationChannelForTeacher}
-          isRecurring={formik.values.isRecurringForTeacher}
-          setIsRecurring={handleRecurringForTeacher}
-          timingOptions={timingOptions}
-          recurringValue={formik.values.recurringValueForTeacher}
-          setRecurringValue={handleRecurringValueForTeacher}
-          showRecurringSwitch={formik.values.notificationType !== 'event'}
-          selectedTemplateContent={formik.values.selectedTemplateContentForTeacher}
-          selectedTemplateName={formik.values.selectedTemplateNameForTeacher}
-          fromSendManual={fromSendManual}
-          templateOptions={[
-            {
-              value: 'generalInquirySubmittedTemplate',
-              label: 'General Inquiry Submitted Template',
-            },
-            {
-              value: 'generalTemplateForBelow80%Attendance',
-              label: 'General Template For Below 80% Attendance',
-            },
-          ]}
-          handleTemplateChange={handleTemplateChangeForTeacher}
-        />
-      ),
-    },
-    {
-      value: 'Student',
-      label: 'Student',
-      component: () => (
-        <RoleConfigForNotification
-          // eslint-disable-next-line jsx-a11y/aria-role
-          role="Student"
-          selectedRoles={formik.values.selectedRoles}
-          configurations={configurations}
-          handleConfigChange={handleConfigChange}
-          communicationChannel={formik.values.selectedCommunicationChannelForStudent}
-          setCommunicationChannel={handleCommunicationChannelForStudent}
-          isRecurring={formik.values.isRecurringForStudent}
-          setIsRecurring={handleRecurringForStudent}
-          timingOptions={timingOptions}
-          recurringValue={formik.values.recurringValueForStudent}
-          setRecurringValue={handleRecurringValueForStudent}
-          showRecurringSwitch={formik.values.notificationType !== 'event'}
-          selectedTemplateContent={formik.values.selectedTemplateContentForStudent}
-          selectedTemplateName={formik.values.selectedTemplateNameForStudent}
-          fromSendManual={fromSendManual}
-          templateOptions={[
-            {
-              value: 'generalInquirySubmittedTemplate',
-              label: 'General Inquiry Submitted Template',
-            },
-            {
-              value: 'generalTemplateForBelow80%Attendance',
-              label: 'General Template For Below 80% Attendance',
-            },
-          ]}
-          handleTemplateChange={handleTemplateChangeForStudent}
-        />
-      ),
-    },
-  ];
-  const [searchParams] = useSearchParam({ tab: 'dashboard' });
+  // const TABS = [
+  //   {
+  //     value: 'Teacher',
+  //     label: 'Teacher',
+  //     component: () => (
+  //       <RoleConfigForNotification // eslint-disable-next-line jsx-a11y/aria-role
+  //         role="Teacher"
+  //         selectedRoles={formik.values.selectedRoles}
+  //         configurations={configurations}
+  //         handleConfigChange={handleConfigChange}
+  //         communicationChannel={formik.values.selectedCommunicationChannelForTeacher}
+  //         setCommunicationChannel={handleCommunicationChannelForTeacher}
+  //         isRecurring={formik.values.isRecurringForTeacher}
+  //         setIsRecurring={handleRecurringForTeacher}
+  //         timingOptions={timingOptions}
+  //         recurringValue={formik.values.recurringValueForTeacher}
+  //         setRecurringValue={handleRecurringValueForTeacher}
+  //         showRecurringSwitch={formik.values.notificationType !== 'event'}
+  //         selectedTemplateContent={formik.values.selectedTemplateContentForTeacher}
+  //         selectedTemplateName={formik.values.selectedTemplateNameForTeacher}
+  //         fromSendManual={fromSendManual}
+  //         templateOptions={[
+  //           {
+  //             value: 'generalInquirySubmittedTemplate',
+  //             label: 'General Inquiry Submitted Template',
+  //           },
+  //           {
+  //             value: 'generalTemplateForBelow80%Attendance',
+  //             label: 'General Template For Below 80% Attendance',
+  //           },
+  //         ]}
+  //         handleTemplateChange={handleTemplateChangeForTeacher}
+  //       />
+  //     ),
+  //   },
+  //   {
+  //     value: 'Student',
+  //     label: 'Student',
+  //     component: () => (
+  //       <RoleConfigForNotification
+  //         // eslint-disable-next-line jsx-a11y/aria-role
+  //         role="Student"
+  //         selectedRoles={formik.values.selectedRoles}
+  //         configurations={configurations}
+  //         handleConfigChange={handleConfigChange}
+  //         communicationChannel={formik.values.selectedCommunicationChannelForStudent}
+  //         setCommunicationChannel={handleCommunicationChannelForStudent}
+  //         isRecurring={formik.values.isRecurringForStudent}
+  //         setIsRecurring={handleRecurringForStudent}
+  //         timingOptions={timingOptions}
+  //         recurringValue={formik.values.recurringValueForStudent}
+  //         setRecurringValue={handleRecurringValueForStudent}
+  //         showRecurringSwitch={formik.values.notificationType !== 'event'}
+  //         selectedTemplateContent={formik.values.selectedTemplateContentForStudent}
+  //         selectedTemplateName={formik.values.selectedTemplateNameForStudent}
+  //         fromSendManual={fromSendManual}
+  //         templateOptions={[
+  //           {
+  //             value: 'generalInquirySubmittedTemplate',
+  //             label: 'General Inquiry Submitted Template',
+  //           },
+  //           {
+  //             value: 'generalTemplateForBelow80%Attendance',
+  //             label: 'General Template For Below 80% Attendance',
+  //           },
+  //         ]}
+  //         handleTemplateChange={handleTemplateChangeForStudent}
+  //       />
+  //     ),
+  //   },
+  // ];
+  // const [searchParams] = useSearchParam({ tab: 'dashboard' });
   return (
     <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
       <form onSubmit={formik.handleSubmit}>

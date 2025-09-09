@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-
 import AddIcon from '@mui/icons-material/Add';
-import { Box, Grid, Button, Switch, TextField, IconButton, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, Button, Switch, TextField, IconButton, Typography } from '@mui/material';
 
 import AddFeeHeadDialogContent from './AddFeeHeadForm';
 

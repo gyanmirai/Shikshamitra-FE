@@ -12,7 +12,7 @@ import {
 import type { FieldsType } from './type';
 
 const RenderAdditionalDetails = (props: any) => {
-  const { formik, isEdit, isMainForm = false } = props;
+  const { formik, isMainForm = false } = props;
   const isAdditionalDetailsEditable = useBoolean(isMainForm);
 
   const handleSave = async (): Promise<void | false | undefined> => {

@@ -2,8 +2,8 @@ import type { Board, AcademicYear } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
+import { capitalize } from 'lodash';
 import { LoadingButton } from '@mui/lab';
-import { useDispatch } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 // FormHelperText is already imported via the destructured import from @mui/material below
 import { DatePicker } from '@mui/x-date-pickers';
@@ -14,7 +14,6 @@ import PhoneInput from 'src/components/phone-input';
 import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import { isEqual, cloneDeep, capitalize } from 'lodash';
 import CustomSelect from 'src/components/custom-select';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -24,7 +23,6 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { FollowUpStatusType } from 'src/enums/inquiry-status-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -779,16 +777,16 @@ const InquiryForm = ({
 
 export default InquiryForm;
 
-const CheckIsChanges = ({ initialValues, currentValue, children }: Record<string, any>) => {
-  const isEqualValue = useMemo(
-    () => isEqual(cloneDeep(initialValues), cloneDeep(currentValue)),
-    [currentValue, initialValues]
-  );
+// const CheckIsChanges = ({ initialValues, currentValue, children }: Record<string, any>) => {
+//   const isEqualValue = useMemo(
+//     () => isEqual(cloneDeep(initialValues), cloneDeep(currentValue)),
+//     [currentValue, initialValues]
+//   );
 
-  const dispatch = useDispatch();
-  useEffect(() => {
-    dispatch(setIsChanges(!isEqualValue));
-  }, [dispatch, isEqualValue]);
+//   const dispatch = useDispatch();
+//   useEffect(() => {
+//     dispatch(setIsChanges(!isEqualValue));
+//   }, [dispatch, isEqualValue]);
 
-  return children;
-};
+//   return children;
+// };

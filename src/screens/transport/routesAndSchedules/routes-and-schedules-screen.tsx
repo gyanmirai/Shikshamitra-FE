@@ -665,13 +665,13 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose, addNewRouteHan
     onClose();
   };
 
-  interface RoutePoint {
-    id: number;
-    name: string;
-    coordinates: [number, number];
-  }
+  // interface RoutePoint {
+  //   id: number;
+  //   name: string;
+  //   coordinates: [number, number];
+  // }
 
-  const [allRouteDetails, setAllRouteDetails] = useState<any>({
+  const [allRouteDetails] = useState<any>({
     startPoint: null,
     endPoint: null,
     stops: [],

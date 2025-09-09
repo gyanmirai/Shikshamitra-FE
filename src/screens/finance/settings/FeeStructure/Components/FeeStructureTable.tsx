@@ -1,21 +1,17 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Typography, IconButton } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Typography, IconButton } from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   FeeStructureLockStatusType,
   FeeStructureLockStatusOptions,
 } from 'src/enums/finance-fee-structure-status';
-
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IFeeStructure, IFeeStructureTableProps } from '../type';
 

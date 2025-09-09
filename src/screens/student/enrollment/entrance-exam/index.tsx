@@ -18,7 +18,6 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { useSearchParam } from 'src/hooks/use-search-param';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -71,7 +70,7 @@ dayjs.extend(isoWeek);
  */
 const EntranceExamScreen = () => {
   // Search params hook for view state management
-  const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
+  // const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
 
   // State for managing edit data and move operations
   const [editData, setEditData] = useState<any | null>(null);
@@ -137,48 +136,48 @@ const EntranceExamScreen = () => {
   /**
    * Memoized calendar data transformation
    */
-  const calendarData = useMemo(
-    () =>
-      entranceExamData?.items.map((i: any) => {
-        const startTime = dayjs(i.entranceExamSlot.startDate).format('hh:mm A');
-        const endTime = dayjs(i.entranceExamSlot.endDate).format('hh:mm A');
+  // const calendarData = useMemo(
+  //   () =>
+  //     entranceExamData?.items.map((i: any) => {
+  //       const startTime = dayjs(i.entranceExamSlot.startDate).format('hh:mm A');
+  //       const endTime = dayjs(i.entranceExamSlot.endDate).format('hh:mm A');
 
-        const startExamDate = dayjs(
-          dayjs(
-            `${dayjs(i.examDate).format('DD-MM-YYYY')} ${startTime}`,
-            'DD-MM-YYYY hh:mm A'
-          ).format('YYYY-MM-DD hh:mm A')
-        ).format();
-        const endExamDate = dayjs(
-          dayjs(
-            `${dayjs(i.examDate).format('DD-MM-YYYY')} ${endTime}`,
-            'DD-MM-YYYY hh:mm A'
-          ).format('YYYY-MM-DD hh:mm A')
-        ).format();
+  //       const startExamDate = dayjs(
+  //         dayjs(
+  //           `${dayjs(i.examDate).format('DD-MM-YYYY')} ${startTime}`,
+  //           'DD-MM-YYYY hh:mm A'
+  //         ).format('YYYY-MM-DD hh:mm A')
+  //       ).format();
+  //       const endExamDate = dayjs(
+  //         dayjs(
+  //           `${dayjs(i.examDate).format('DD-MM-YYYY')} ${endTime}`,
+  //           'DD-MM-YYYY hh:mm A'
+  //         ).format('YYYY-MM-DD hh:mm A')
+  //       ).format();
 
-        const status =
-          i.marksObtained === null ? 'Pending' : i.marksObtained >= i.passingMark ? 'Pass' : 'Fail';
-        let color: LabelColor = 'error';
-        if (status === 'Pending') {
-          color = 'warning';
-        } else if (status === 'Pass') {
-          color = 'success';
-        } else {
-          color = 'error';
-        }
-        return {
-          ...i,
-          start: startExamDate,
-          end: endExamDate,
-          color: theme.vars.palette[color].main,
-          allDay: false,
-          textColor: theme.vars.palette[color].main,
-          title: `${i.studentEnrollment.lastName} ${i.studentEnrollment.firstName} `,
-          description: i.reason,
-        };
-      }) || [],
-    [entranceExamData?.items, theme.vars.palette]
-  );
+  //       const status =
+  //         i.marksObtained === null ? 'Pending' : i.marksObtained >= i.passingMark ? 'Pass' : 'Fail';
+  //       let color: LabelColor = 'error';
+  //       if (status === 'Pending') {
+  //         color = 'warning';
+  //       } else if (status === 'Pass') {
+  //         color = 'success';
+  //       } else {
+  //         color = 'error';
+  //       }
+  //       return {
+  //         ...i,
+  //         start: startExamDate,
+  //         end: endExamDate,
+  //         color: theme.vars.palette[color].main,
+  //         allDay: false,
+  //         textColor: theme.vars.palette[color].main,
+  //         title: `${i.studentEnrollment.lastName} ${i.studentEnrollment.firstName} `,
+  //         description: i.reason,
+  //       };
+  //     }) || [],
+  //   [entranceExamData?.items, theme.vars.palette]
+  // );
 
   /**
    * Callback for handling row actions
@@ -236,7 +235,7 @@ const EntranceExamScreen = () => {
   };
 
   // State for managing selected students
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [selectedStudents] = useState<any>([]);
 
   // Dialog control for instant notifications
   const sendInstantNotificationDialogValue = useBoolean();

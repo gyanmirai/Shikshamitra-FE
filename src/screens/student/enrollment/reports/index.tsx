@@ -16,11 +16,8 @@ import { convertBase64Format } from 'src/utils/base64Formate';
 import React, { useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { StudentEnrollmentReportTitleOptions } from 'src/enums/studentEnrollmentReport';
 import { useGenerateReportMutation } from 'src/redux/student/student-enrollment-report/student-enrollemt-report';
-import {
-  StudentEnrollmentReportTitle,
-  StudentEnrollmentReportTitleOptions,
-} from 'src/enums/studentEnrollmentReport';
 
 import { getValidationSchema } from './validationSchema';
 
@@ -71,117 +68,115 @@ const initialValues = {
 };
 
 // Mapping of report types to their required fields
-const reportFieldsMap = {
-  [StudentEnrollmentReportTitle.ClassWiseStudentEnrollmentReport]: [
-    'academicYear',
-    'class',
-    'totalStudent',
-    'gender',
-    'inquiryStatus',
-  ],
-  [StudentEnrollmentReportTitle.StudentEnrollmentList]: [
-    'enrollmentNo',
-    'board',
-    'medium',
-    'class',
-    'enrollmentDate',
-    'name',
-    'gender',
-    'dob',
-    'religion',
-    'cast',
-    'inquiryPreference',
-    'previousSchoolName',
-    'contactNo',
-  ],
-  [StudentEnrollmentReportTitle.AadharVerificationReport]: [
-    'enrollmentNo',
-    'name',
-    'board',
-    'medium',
-    'class',
-    'adharNo',
-  ],
-  [StudentEnrollmentReportTitle.ContactInformationReport]: [
-    'enrollmentNo',
-    'board',
-    'medium',
-    'class',
-    'name',
-    'primaryContactNo',
-    'secondaryContactNo',
-    'email',
-  ],
-  [StudentEnrollmentReportTitle.ReligionWiseStudentReport]: [
-    'religion',
-    'studentCount',
-    'gender',
-    'class',
-  ],
-  [StudentEnrollmentReportTitle.CasteCategoryWiseReport]: [
-    'cast',
-    'studentCount',
-    'gender',
-    'familyCaste',
-    'class',
-  ],
-  [StudentEnrollmentReportTitle.PreviousSchoolRepot]: [
-    'studentName',
-    'classAdmitted',
-    'previousSchoolName',
-    'lastClassPassed',
-    'admissionDate',
-  ],
-  [StudentEnrollmentReportTitle.PinCodeWiseStudentDistribution]: [
-    'pincode',
-    'studentCount',
-    'class',
-    'cityArea',
-    'gender',
-  ],
-  [StudentEnrollmentReportTitle.AdmissionSourceReport]: [
-    'inqueryNo',
-    'studentName',
-    'inquiryPreference',
-    'class',
-    'admissionStatus',
-    'dateOfEnrollment',
-  ],
-  [StudentEnrollmentReportTitle.DateOfBirthReport]: [
-    'enrollmentNo',
-    'studentName',
-    'dob',
-    'age',
-    'class',
-    'gender',
-  ],
-  [StudentEnrollmentReportTitle.GenderWiseStudentDistributionReport]: [
-    'class',
-    'section',
-    'noOfBoys',
-    'noOfGirls',
-    'totalStudent',
-  ],
-  [StudentEnrollmentReportTitle.MonthlyAdmissionTrendReport]: [
-    'month',
-    'numberOfNewAdmission',
-    'withdrawals',
-    'netIncrease',
-    'totalStudents',
-  ],
-  [StudentEnrollmentReportTitle.AcademicYearComparisonReport]: [
-    'totalEnrollments',
-    'newAdmissions',
-    'withdrawals',
-    'retentionRate',
-  ],
-};
+// const reportFieldsMap = {
+//   [StudentEnrollmentReportTitle.ClassWiseStudentEnrollmentReport]: [
+//     'academicYear',
+//     'class',
+//     'totalStudent',
+//     'gender',
+//     'inquiryStatus',
+//   ],
+//   [StudentEnrollmentReportTitle.StudentEnrollmentList]: [
+//     'enrollmentNo',
+//     'board',
+//     'medium',
+//     'class',
+//     'enrollmentDate',
+//     'name',
+//     'gender',
+//     'dob',
+//     'religion',
+//     'cast',
+//     'inquiryPreference',
+//     'previousSchoolName',
+//     'contactNo',
+//   ],
+//   [StudentEnrollmentReportTitle.AadharVerificationReport]: [
+//     'enrollmentNo',
+//     'name',
+//     'board',
+//     'medium',
+//     'class',
+//     'adharNo',
+//   ],
+//   [StudentEnrollmentReportTitle.ContactInformationReport]: [
+//     'enrollmentNo',
+//     'board',
+//     'medium',
+//     'class',
+//     'name',
+//     'primaryContactNo',
+//     'secondaryContactNo',
+//     'email',
+//   ],
+//   [StudentEnrollmentReportTitle.ReligionWiseStudentReport]: [
+//     'religion',
+//     'studentCount',
+//     'gender',
+//     'class',
+//   ],
+//   [StudentEnrollmentReportTitle.CasteCategoryWiseReport]: [
+//     'cast',
+//     'studentCount',
+//     'gender',
+//     'familyCaste',
+//     'class',
+//   ],
+//   [StudentEnrollmentReportTitle.PreviousSchoolRepot]: [
+//     'studentName',
+//     'classAdmitted',
+//     'previousSchoolName',
+//     'lastClassPassed',
+//     'admissionDate',
+//   ],
+//   [StudentEnrollmentReportTitle.PinCodeWiseStudentDistribution]: [
+//     'pincode',
+//     'studentCount',
+//     'class',
+//     'cityArea',
+//     'gender',
+//   ],
+//   [StudentEnrollmentReportTitle.AdmissionSourceReport]: [
+//     'inqueryNo',
+//     'studentName',
+//     'inquiryPreference',
+//     'class',
+//     'admissionStatus',
+//     'dateOfEnrollment',
+//   ],
+//   [StudentEnrollmentReportTitle.DateOfBirthReport]: [
+//     'enrollmentNo',
+//     'studentName',
+//     'dob',
+//     'age',
+//     'class',
+//     'gender',
+//   ],
+//   [StudentEnrollmentReportTitle.GenderWiseStudentDistributionReport]: [
+//     'class',
+//     'section',
+//     'noOfBoys',
+//     'noOfGirls',
+//     'totalStudent',
+//   ],
+//   [StudentEnrollmentReportTitle.MonthlyAdmissionTrendReport]: [
+//     'month',
+//     'numberOfNewAdmission',
+//     'withdrawals',
+//     'netIncrease',
+//     'totalStudents',
+//   ],
+//   [StudentEnrollmentReportTitle.AcademicYearComparisonReport]: [
+//     'totalEnrollments',
+//     'newAdmissions',
+//     'withdrawals',
+//     'retentionRate',
+//   ],
+// };
 
 const StudentReportsScreen = () => {
   // Redux selectors for board/medium
-  const { currentMedium: medium, setCurrentMedium: setMedium } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Custom mutation hook for report generation
   const [generateReport, { isLoading }] = useQueryAndMutation({
@@ -190,10 +185,10 @@ const StudentReportsScreen = () => {
   });
 
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  const [, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [currentFieldsState, setCurrentFieldsState] = useState<string[]>([]);
-  const [dynamicSchema, setDynamicSchema] = useState(getValidationSchema([]));
+  const [currentFieldsState] = useState<string[]>([]);
+  const [dynamicSchema] = useState(getValidationSchema([]));
 
   // Formik for form state and validation
   const formik = useFormik({

@@ -1,7 +1,6 @@
-import { Box, Grid, Button, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { Box, Grid, Button, Typography } from '@mui/material';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
-
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   FeeStructureClassStatusType,

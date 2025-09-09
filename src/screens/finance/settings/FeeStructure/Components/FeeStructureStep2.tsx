@@ -1,9 +1,15 @@
 import { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  FeeStructureClassStatusType,
+  FeeStructureClassStatusTypeColors,
+} from 'src/enums/fee-structure-statusType';
 import {
   Box,
   Grid,
@@ -14,16 +20,6 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import {
-  FeeStructureClassStatusType,
-  FeeStructureClassStatusTypeColors,
-} from 'src/enums/fee-structure-statusType';
-
-import CustomDialog from 'src/components/customDialog';
 
 import FeeStructureCard from './FeeStructureCard';
 import AddFeeStructureDialog from './FeeStructureDialog';
