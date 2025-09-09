@@ -149,7 +149,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   // );
   const { columnVisibility } = tableConfig;
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  // const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const [anchorColumnEl, setColumnAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -400,12 +400,27 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
   const sortedData = useMemo(() => {
     if (serverSide) return filteredData;
+
     return _.orderBy(
       filteredData,
-      sorts.map((i) => i.column),
+      sorts.map((sort) => (row) => {
+        const column = columns.find((col) => col.id === sort.column);
+        const value = _.get(row, sort.column);
+
+        switch (column?.filterType) {
+          case 'number':
+            return Number(value);
+          case 'date':
+            return dayjs(value, 'DD-MM-YYYY').valueOf();
+          case 'formattedNumber':
+            return parseFormattedNumber(value);
+          default:
+            return value;
+        }
+      }),
       sorts.map((i) => i.direction)
     );
-  }, [serverSide, filteredData, sorts]);
+  }, [serverSide, filteredData, sorts, columns]);
 
   const paginatedData = useMemo(
     () =>
@@ -419,10 +434,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     handelChangeParams({ dense: event.target.checked });
   };
 
-  const clearFilter = () => {
-    handelChangeParams({ filterColumn: '', filterType: 'contains', filterValue: '', page: 0 });
-    setAnchorEl(null);
-  };
+  // const clearFilter = () => {
+  //   handelChangeParams({ filterColumn: '', filterType: 'contains', filterValue: '', page: 0 });
+  //   setAnchorEl(null);
+  // };
 
   const handleExpandRow = (index: number) => {
     setExpandedRows((prev) => ({ ...prev, [index]: !prev[index] }));
@@ -705,19 +720,34 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                           </Box>
 
                           {column.isFilter && (
-                            <Iconify
-                              icon="lucide:list-filter"
-                              sx={{
-                                height: '16px',
-                                width: '16px',
-                                cursor: 'pointer',
-                                position: 'absolute',
-                                right: '4px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                              }}
-                              onClick={(e) => handleColumnFilterClick(e, column)}
-                            />
+                            <>
+                              <Iconify
+                                icon="lucide:list-filter"
+                                sx={{
+                                  height: '16px',
+                                  width: '16px',
+                                  cursor: 'pointer',
+                                  position: 'absolute',
+                                  right: '4px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                }}
+                                onClick={(e) => handleColumnFilterClick(e, column)}
+                              />
+                              {filters.some((f) => f.column === column.id) && (
+                                <Box
+                                  sx={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    bgcolor: 'primary.main',
+                                    position: 'absolute',
+                                    top: 8,
+                                    right: 2,
+                                  }}
+                                />
+                              )}
+                            </>
                           )}
 
                           {column.isSort !== false && (

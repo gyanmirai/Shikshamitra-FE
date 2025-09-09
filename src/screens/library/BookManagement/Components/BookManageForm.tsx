@@ -11,6 +11,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Card, Button, Switch, TextField, DialogActions } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -186,7 +187,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                   <TextField
                     fullWidth
                     name="subject"
-                    label="Subject"
+                    label="Subject *"
                     value={formik.values.subject}
                     onChange={(e) => {
                       const value = e.target.value
@@ -296,6 +297,28 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                     size="small"
                   />
                 </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <NumericFormatCustom
+                  size="small"
+                  fullWidth
+                  label="Price *"
+                  name="price"
+                  value={formik.values.price}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    // remove ₹, commas, spaces
+                    val = val.replace(/[₹ ,\s]/g, '');
+                    formik.setFieldValue('price', val ? Number(val) : '');
+                  }}
+                  error={!!(formik.touched.price && formik.errors.price)}
+                  helperText={(formik.touched.price && formik.errors.price) as string}
+                  prefix="₹"
+                  thousandSeparator=","
+                  decimalScale={2}
+                  fixedDecimalScale
+                />
               </Grid>
               <Grid size={12}>
                 <CustomUpload
