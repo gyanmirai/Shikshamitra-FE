@@ -13,10 +13,15 @@ export interface IStudentFeeData {
   totalPaidFees: number;
   totalPendingFees: number;
   refundAmount?: number;
+  requestDate?: string;
   reasonOfRefund?: string;
+  parentName?: string;
   status?: number;
-  paidTerm?: string;
-  applicableAmount?: string;
+  paidTerms?: string[]; // Changed to array for multiple terms
+  applicableFeeHeads?: {
+    feeHead: string;
+    amount: string;
+  }[]; // Array of fee heads and their amounts
   refundMethod?: string; // 👈 restrict to defined methods
   reason?: string;
   remarks?: string;
@@ -34,13 +39,25 @@ export interface IRefundFormProps {
   open: UseBooleanReturn;
   onClose: (e: any, isSubmit: boolean) => void;
   student: IStudentFeeData;
+  onApprove: () => void;
+  onReject: () => void;
+}
+
+export interface IRefundProcessFormProps {
+  open: UseBooleanReturn;
+  onClose: (e: any, isSubmit: boolean) => void;
+  student: IStudentFeeData;
 }
 
 export interface IRefundFormValues {
-  paidTerm: string;
-  applicableAmount: string;
+  paidTerms: string[];
+  totalPaidFees: string | number;
   refundAmount: number | null;
   refundMethod: string;
+  applicableFeeHeads?: {
+    feeHead: string;
+    amount: string;
+  }[];
   reason: string;
   remarks?: string;
   paymentDetails?: Record<string, any>;
@@ -57,4 +74,12 @@ export interface IRefund {
   refundAmount: number | '';
   refundMethod: string;
   reason: string;
+}
+
+export interface IRefundInfoData {
+  paidTerms?: string[];
+  applicableFeeHeads?: {
+    feeHead: string;
+    amount: string;
+  }[];
 }

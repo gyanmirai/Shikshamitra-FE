@@ -14,7 +14,6 @@ import { Save, Refresh, Grading } from '@mui/icons-material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import { useUpdateStudentRollNumberMutation } from 'src/redux/student/roll-number/roll-number-api';
 
 import type { IInquiryData } from '../../enrollment/Inquiry';
 
@@ -45,9 +44,6 @@ const RollNoGenerationScreen = ({
 
   // Redux dispatch hook for dispatching actions
   const dispatch = useDispatch();
-
-  // RTK Query mutation hook for updating student roll numbers in the backend
-  const [, { isLoading: isSaving }] = useUpdateStudentRollNumberMutation();
 
   /**
    * Automatically generates roll numbers based on selected arrangement type and criteria
@@ -206,10 +202,10 @@ const RollNoGenerationScreen = ({
                 startIcon={<Save />}
                 variant="contained"
                 onClick={handleSave}
-                disabled={isSaving || !isChanges}
+                disabled={!isChanges}
                 size="small"
               >
-                {isSaving ? 'Saving...' : 'Save'}
+                Save
               </Button>
             </Box>
           )}

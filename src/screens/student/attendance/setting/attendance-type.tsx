@@ -233,7 +233,6 @@ export const AttendanceTypeForm = ({
     errors,
     touched,
     handleBlur,
-    setFieldTouched,
   } = useFormik({
     initialValues: {
       type: editData?.type || '',

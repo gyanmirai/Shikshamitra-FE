@@ -160,19 +160,19 @@ const WhatsNewInMonthComponent: React.FC<WhatsNewInMonthProps> = ({
             icon={tab.icon}
             value={tab.value}
             label={
-              <Typography style={{ display: 'flex', alignItems: 'center' }}>
-                {tab.label}
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="body1">{tab.label}</Typography>
                 <Chip
                   label="100"
                   size="small"
-                  style={{
+                  sx={{
                     backgroundColor: 'white',
-                    marginLeft: 8,
+                    ml: 1,
                     fontSize: '11px',
                     color: getColor(tab.value),
                   }}
                 />
-              </Typography>
+              </Box>
             }
           />
         ))}

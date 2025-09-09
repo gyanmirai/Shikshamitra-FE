@@ -5,7 +5,6 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
@@ -47,16 +46,6 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
       formik.setFieldValue('floors', []);
     }
   };
-
-  const onSubmit = (data: FormData) => {
-    // Handle form submission
-    shikshaMitraToast.success({
-      message: editData ? 'Building updated successfully' : 'Building added successfully',
-    });
-    onClose(null, true);
-  };
-
-  console.log('formik values----', formik.values);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

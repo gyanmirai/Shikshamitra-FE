@@ -22,10 +22,7 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import {
-  useGetAttendanceByFilterQuery,
-  useFillStudentAttendanceMutation,
-} from 'src/redux/student/take-attendance/take-attendace-api';
+import { useGetAttendanceByFilterQuery } from 'src/redux/student/take-attendance/take-attendace-api';
 import {
   Box,
   Chip,
@@ -42,14 +39,9 @@ import {
 } from '@mui/material';
 
 const TakeAttendanceScreen = () => {
-  const [fillStudentAttendance, { isLoading: isSavedAttendanceLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useFillStudentAttendanceMutation,
-  });
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [view, setView] = React.useState('list');
-  // State to control the dialog visibility
-  const dialog = useBoolean();
+
   // State to store all available mediums
 
   // State to store all available organizations
@@ -69,11 +61,7 @@ const TakeAttendanceScreen = () => {
   // check if the attendance is saved
   const isSaved = useBoolean();
 
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
@@ -94,14 +82,14 @@ const TakeAttendanceScreen = () => {
 
   const handleSave = async () => {
     try {
-      const response = await fillStudentAttendance({
-        attendanceDate: dateConvertor(dayjs(date).format(dateFormat), true), // Passing date as a query parameter
-        data: studentData.map((student: any) => ({
-          studentId: student?.student?.id,
-          isPresent: student.isPresent,
-          remarks: student.remarks,
-        })),
-      }).unwrap();
+      // const response = await fillStudentAttendance({
+      //   attendanceDate: dateConvertor(dayjs(date).format(dateFormat), true), // Passing date as a query parameter
+      //   data: studentData.map((student: any) => ({
+      //     studentId: student?.student?.id,
+      //     isPresent: student.isPresent,
+      //     remarks: student.remarks,
+      //   })),
+      // }).unwrap();
       shikshaMitraToast.success({
         message: `Attendance saved successfully of ${date?.format('DD-MM-YYYY')}`,
       });
@@ -313,7 +301,7 @@ const TakeAttendanceScreen = () => {
             studentData.length === 0 || studentData.every((item: any) => item.isPresent === null)
           }
         >
-          {isSavedAttendanceLoading ? 'Loading...' : 'Save'}
+          Save
         </Button>
       </Box>
 
@@ -464,110 +452,107 @@ const TakeAttendanceScreen = () => {
 };
 export default TakeAttendanceScreen;
 
-const AttendanceCard = ({ student: studentAttendanceData, setStudentData }: any) => {
-  const a = null;
-  return (
-    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-      <Paper
-        elevation={3}
-        sx={{
-          width: '100%',
+const AttendanceCard = ({ student: studentAttendanceData, setStudentData }: any) => (
+  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+    <Paper
+      elevation={3}
+      sx={{
+        width: '100%',
 
-          borderLeft: (theme) =>
-            `4px solid ${!studentAttendanceData.isPresent ? theme.palette.error.main : theme.vars.palette.success.main}`,
-          cursor: 'pointer',
-          background: (theme) =>
-            !studentAttendanceData.isPresent
-              ? varAlpha(theme.vars.palette.error.mainChannel, 0.05)
-              : varAlpha(theme.vars.palette.success.mainChannel, 0.05),
-        }}
-      >
-        <Box display="flex" gap={1} p={1.5} alignItems="center">
-          <Box
-            sx={{
-              width: '100px',
-              height: '100px',
+        borderLeft: (theme) =>
+          `4px solid ${!studentAttendanceData.isPresent ? theme.palette.error.main : theme.vars.palette.success.main}`,
+        cursor: 'pointer',
+        background: (theme) =>
+          !studentAttendanceData.isPresent
+            ? varAlpha(theme.vars.palette.error.mainChannel, 0.05)
+            : varAlpha(theme.vars.palette.success.mainChannel, 0.05),
+      }}
+    >
+      <Box display="flex" gap={1} p={1.5} alignItems="center">
+        <Box
+          sx={{
+            width: '100px',
+            height: '100px',
 
-              '& img': { width: '100%', height: '100%', objectFit: 'cover' },
-            }}
-          >
-            <img
-              src={convertBase64Format(studentAttendanceData?.student?.profilePicture)}
-              alt="Student"
-              style={{ borderRadius: '50%' }}
-            />
-          </Box>
-          <Box flexGrow={1} ml={1} gap={0.5}>
-            <Typography variant="h6">{studentAttendanceData?.name}</Typography>
-            <Typography variant="body2">
-              <Label color="info" sx={{ fontSize: 15 }}>
-                Roll No :- {studentAttendanceData?.student?.rollNo}
-              </Label>
-            </Typography>
-            <Typography variant="body2">
-              Class: {studentAttendanceData?.student?.standard?.name}
-            </Typography>
-            <Typography variant="body2">
-              Division: {studentAttendanceData?.student?.division?.name}
-            </Typography>
-          </Box>
-          {/* <Box> */}
-          <Tooltip title="Present">
-            <IconButton
-              color="success"
-              aria-label="mark present"
-              onClick={() => {
-                setStudentData((studentData: any) =>
-                  studentData.map((item: any) =>
-                    item.id === studentAttendanceData.id ? { ...item, isPresent: true } : item
-                  )
-                );
-              }}
-            >
-              <CheckCircleOutlined />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Absent">
-            <IconButton
-              color="error"
-              aria-label="mark absent"
-              onClick={() => {
-                setStudentData((studentData: any) =>
-                  studentData.map((item: any) =>
-                    item.id === studentAttendanceData.id ? { ...item, isPresent: false } : item
-                  )
-                );
-              }}
-            >
-              <CancelOutlined />
-            </IconButton>
-          </Tooltip>{' '}
-          {/* </Box> */}
+            '& img': { width: '100%', height: '100%', objectFit: 'cover' },
+          }}
+        >
+          <img
+            src={convertBase64Format(studentAttendanceData?.student?.profilePicture)}
+            alt="Student"
+            style={{ borderRadius: '50%' }}
+          />
         </Box>
-        <Box p={2} sx={{ transition: 'all 0.3s ease-in-out' }}>
-          <TextField
-            size="small"
-            label="Remarks"
-            fullWidth
-            multiline
-            rows={2}
-            value={studentAttendanceData?.remarks}
-            onChange={(e) => {
+        <Box flexGrow={1} ml={1} gap={0.5}>
+          <Typography variant="h6">{studentAttendanceData?.name}</Typography>
+          <Typography variant="body2">
+            <Label color="info" sx={{ fontSize: 15 }}>
+              Roll No :- {studentAttendanceData?.student?.rollNo}
+            </Label>
+          </Typography>
+          <Typography variant="body2">
+            Class: {studentAttendanceData?.student?.standard?.name}
+          </Typography>
+          <Typography variant="body2">
+            Division: {studentAttendanceData?.student?.division?.name}
+          </Typography>
+        </Box>
+        {/* <Box> */}
+        <Tooltip title="Present">
+          <IconButton
+            color="success"
+            aria-label="mark present"
+            onClick={() => {
               setStudentData((studentData: any) =>
                 studentData.map((item: any) =>
-                  item.id === studentAttendanceData.id ? { ...item, remarks: e.target.value } : item
+                  item.id === studentAttendanceData.id ? { ...item, isPresent: true } : item
                 )
               );
             }}
-          />
-        </Box>
-      </Paper>
-    </Grid>
-  );
-};
+          >
+            <CheckCircleOutlined />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Absent">
+          <IconButton
+            color="error"
+            aria-label="mark absent"
+            onClick={() => {
+              setStudentData((studentData: any) =>
+                studentData.map((item: any) =>
+                  item.id === studentAttendanceData.id ? { ...item, isPresent: false } : item
+                )
+              );
+            }}
+          >
+            <CancelOutlined />
+          </IconButton>
+        </Tooltip>{' '}
+        {/* </Box> */}
+      </Box>
+      <Box p={2} sx={{ transition: 'all 0.3s ease-in-out' }}>
+        <TextField
+          size="small"
+          label="Remarks"
+          fullWidth
+          multiline
+          rows={2}
+          value={studentAttendanceData?.remarks}
+          onChange={(e) => {
+            setStudentData((studentData: any) =>
+              studentData.map((item: any) =>
+                item.id === studentAttendanceData.id ? { ...item, remarks: e.target.value } : item
+              )
+            );
+          }}
+        />
+      </Box>
+    </Paper>
+  </Grid>
+);
 
 const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
-  const a = null;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 

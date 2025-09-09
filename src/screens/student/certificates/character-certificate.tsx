@@ -146,11 +146,7 @@ const CharacterForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => vo
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
   // Get current board and medium from global state
-  const {
-    // currentBoard,
-    currentMedium: medium,
-    // setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Query hook for fetching filtered students based on selected criteria
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
