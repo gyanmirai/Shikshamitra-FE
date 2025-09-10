@@ -17,6 +17,9 @@ export const librarySettingsApi = createApi({
         if (url === '/libraryTimingData') {
           return { data: settingsData.libraryTimingData };
         }
+        if (url === '/borrowingReturnRulesData') {
+          return { data: settingsData.borrowingReturnRulesData };
+        }
         return {
           error: {
             status: 404,
@@ -40,7 +43,18 @@ export const librarySettingsApi = createApi({
       }),
       providesTags: ['LibrarySettings'],
     }),
+    getBorrowingReturnRules: builder.query({
+      query: () => ({
+        url: '/borrowingReturnRulesData',
+        method: 'GET',
+      }),
+      providesTags: ['LibrarySettings'],
+    }),
   }),
 });
 
-export const { useGetLibrarySettingsQuery, useGetLibraryTimingQuery } = librarySettingsApi;
+export const {
+  useGetLibrarySettingsQuery,
+  useGetLibraryTimingQuery,
+  useGetBorrowingReturnRulesQuery,
+} = librarySettingsApi;

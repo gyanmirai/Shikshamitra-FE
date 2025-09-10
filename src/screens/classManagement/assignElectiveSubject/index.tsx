@@ -228,7 +228,6 @@ const AssignElectiveSubject = () => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
-      p
       <Box
         sx={{
           display: 'flex',

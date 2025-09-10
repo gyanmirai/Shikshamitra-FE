@@ -211,7 +211,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
             <ShakingTextField error={!!(formik.touched.member && formik.errors.member)}>
               <Autocomplete
                 loading={isLoading}
-                disabled={!formik.values.division}
+                disabled={!formik.values.role}
                 noOptionsText="No Member Found"
                 fullWidth
                 value={tableData.find((s: any) => s.id === formik.values.member) || null}
