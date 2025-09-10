@@ -1,0 +1,131 @@
+'use client';
+
+import React from 'react';
+import { useFormik } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { DialogScrollContent } from 'src/components/customDialog';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+
+import { getChargeTypeInitialValues } from './ChargeInitialValues';
+import { chargeTypeValidationSchema } from './ChargeTypeValidationSchema';
+
+import type { IChargeTypeFormProps } from './type';
+
+const ChargeTypeForm: React.FC<IChargeTypeFormProps> = ({ open, onClose, editData }) => {
+  const formik = useFormik({
+    initialValues: getChargeTypeInitialValues(editData),
+    validationSchema: chargeTypeValidationSchema,
+    onSubmit: (values) => {
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `${values.chargeType} Charge Type updated successfully`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `${values.chargeType} Charge Type added successfully`,
+        });
+      }
+      onClose(null, true);
+    },
+  });
+
+  return (
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <DialogScrollContent>
+        <Grid container spacing={2}>
+          {/* Charge Type */}
+          <Grid size={12}>
+            <ShakingTextField
+              error={!!(formik.touched.chargeType && formik.errors.chargeType) || false}
+            >
+              <TextField
+                fullWidth
+                label="Charge Type *"
+                name="chargeType"
+                size="small"
+                value={formik.values.chargeType}
+                onChange={(e) => {
+                  const value = e.target.value
+                    // Remove everything except letters and spaces
+                    .replace(/[^a-zA-Z\s]/g, '')
+                    // Capitalize each word
+                    .split(' ')
+                    .map((word) =>
+                      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                    )
+                    .join(' ');
+                  formik.setFieldValue('chargeType', value);
+                }}
+                error={formik.touched.chargeType && Boolean(formik.errors.chargeType)}
+                helperText={(formik.touched.chargeType && formik.errors.chargeType) as string}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Amount */}
+          <Grid size={12}>
+            <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
+              <NumericFormatCustom
+                fullWidth
+                label="Amount *"
+                size="small"
+                name="amount"
+                value={formik.values.amount}
+                onChange={formik.handleChange}
+                error={formik.touched.amount && Boolean(formik.errors.amount)}
+                helperText={(formik.touched.amount && formik.errors.amount) as string}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Description */}
+          <Grid size={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Description"
+              name="description"
+              size="small"
+              value={formik.values.description}
+              onChange={formik.handleChange}
+            />
+          </Grid>
+        </Grid>
+      </DialogScrollContent>
+
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={() => onClose(null, false)}
+          variant="outlined"
+          size="small"
+        >
+          Cancel
+        </Button>
+        <Button
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
+          type="submit"
+          variant="contained"
+          size="small"
+          onClick={(e: any) => formik.handleSubmit(e)}
+        >
+          {editData ? 'Update' : 'Submit'}
+        </Button>
+      </DialogActions>
+    </BackPopUpChecked>
+  );
+};
+
+export default ChargeTypeForm;

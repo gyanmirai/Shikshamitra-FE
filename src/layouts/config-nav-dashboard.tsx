@@ -1469,6 +1469,20 @@ const libraryModule = {
               shortcutKeyName: 'Alt+L+S+1',
             },
             {
+              title: 'Charge Type',
+              path: '/library/settings/charge-type',
+              _action: 'general-setting',
+              shortcutKey: 'Alt+L+S+2',
+              shortcutKeyName: 'Alt+L+S+2',
+            },
+            {
+              title: 'Library Timing',
+              path: '/library/settings/library-timing',
+              _action: 'general-setting',
+              shortcutKey: 'Alt+L+S+3',
+              shortcutKeyName: 'Alt+L+S+3',
+            },
+            {
               title: 'Book Condition',
               path: '/library/settings/book-condition',
               _action: 'book-condition-setting',
