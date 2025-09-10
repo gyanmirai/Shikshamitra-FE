@@ -21,7 +21,7 @@ const FeeCollectComponent = ({
 }: {
   student: IStudentFee | null;
   onSubmit?: (values: any) => void;
-  onCancel?: () => void;
+  onCancel?: (e: any, isSubmit: boolean) => void;
   loading?: boolean;
 }) => {
   const formik = useFormik({
@@ -31,6 +31,7 @@ const FeeCollectComponent = ({
       // This logic will be moved from PaymentDetailsForm
       if (onSubmit) {
         onSubmit(values);
+        onCancel?.(null, true);
       } else {
         console.log('Form submission data:', values);
       }
@@ -50,7 +51,9 @@ const FeeCollectComponent = ({
         <Button
           variant="outlined"
           color="inherit"
-          onClick={onCancel}
+          onClick={() => {
+            onCancel?.(null, false);
+          }}
           disabled={loading}
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}

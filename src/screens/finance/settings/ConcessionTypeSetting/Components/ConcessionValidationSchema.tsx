@@ -36,7 +36,13 @@ export const concessionTypeValidationSchema = Yup.object().shape({
         .of(
           Yup.object().shape({
             documentName: Yup.string().trim().required('Document Name is required'),
-            documentUrl: Yup.string().trim().required('Document URL is required'),
+            documentSize: Yup.number()
+              .required('Document Size is required')
+              .max(20, 'Max 20 Document Size can be add'),
+            acceptedFormat: Yup.array()
+              .of(Yup.string().trim())
+              .min(1, 'At least one file format is required')
+              .required('Accepted formats are required'),
           })
         )
         .min(1, 'At least one document is required'),

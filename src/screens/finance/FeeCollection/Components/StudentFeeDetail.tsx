@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Grid, Avatar, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
@@ -24,7 +25,12 @@ export const FeeSummaryCard = ({
 
   return (
     <Card
-      sx={{ p: 2, borderRadius: 3, boxShadow: 2, bgcolor: theme.vars.palette.background.paper }}
+      sx={{
+        p: 2,
+        borderRadius: 3,
+        boxShadow: 2,
+        bgcolor: theme.vars.palette.background.paper,
+      }}
     >
       <Box display="flex" gap={2} alignItems="center">
         {/* Avatar */}
@@ -60,12 +66,12 @@ export const FeeSummaryCard = ({
 
           {/* Fee Info Row */}
 
-          <Grid container spacing={3} columns={{ xs: 12, sm: 12, md: 12, lg: 60 }}>
+          <Grid container spacing={2} columns={{ xs: 12, sm: 12, md: 12, lg: 60 }}>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
               <FinanceCollectionCard
                 icon="mdi:currency-inr"
                 title="Total Fees"
-                count={student?.totalFees ?? 0}
+                count={formatNumber(student?.totalFees ?? 0, 'INR')}
                 color="text.primary"
                 bgColor="background.neutral"
                 href="#"
@@ -77,7 +83,7 @@ export const FeeSummaryCard = ({
               <FinanceCollectionCard
                 icon="mdi:cash-check"
                 title="Paid Fees"
-                count={student?.paidFees ?? 0}
+                count={formatNumber(student?.paidFees ?? 0, 'INR')}
                 color="success.main"
                 bgColor="success.lighter"
                 href="#"
@@ -89,7 +95,7 @@ export const FeeSummaryCard = ({
               <FinanceCollectionCard
                 icon="mdi:cash-clock"
                 title="Pending Fees"
-                count={student?.pendingFees ?? 0}
+                count={formatNumber(student?.pendingFees ?? 0, 'INR')}
                 color="warning.main"
                 bgColor="warning.lighter"
                 href="#"
@@ -101,7 +107,7 @@ export const FeeSummaryCard = ({
               <FinanceCollectionCard
                 icon="mdi:cash-remove"
                 title="Overdue Fees"
-                count={student?.overdueFees ?? 0}
+                count={formatNumber(student?.overdueFees ?? 0, 'INR')}
                 color="error.main"
                 bgColor="error.lighter"
                 href="#"
@@ -113,18 +119,10 @@ export const FeeSummaryCard = ({
               <FinanceCollectionCard
                 icon="mdi:cash-plus"
                 title="Charges"
-                count={Number(student?.chargesPaid ?? 0) + Number(student?.chargesTotal ?? 0)}
-                color="info.main"
-                bgColor="info.lighter"
-                href="#"
-                labels={[]}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
-              <FinanceCollectionCard
-                icon="mdi:cash-minus"
-                title="Concessions"
-                count={Number(student?.chargesPaid ?? 0) + Number(student?.chargesTotal ?? 0)}
+                count={formatNumber(
+                  Number(student?.chargesPaid ?? 0) + Number(student?.chargesTotal ?? 0),
+                  'INR'
+                )}
                 color="info.main"
                 bgColor="info.lighter"
                 href="#"
@@ -182,7 +180,7 @@ export const FinanceCollectionCard = ({
     >
       <Box>
         <Typography variant="subtitle1">{title}</Typography>
-        <Typography variant="h5">{count}</Typography>
+        <Typography variant="h6">{count}</Typography>
         <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
           {labels.map((label, idx) => (
             <Label key={idx} color={label.color}>

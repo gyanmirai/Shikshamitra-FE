@@ -155,7 +155,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <NumericFormatCustom
                     fullWidth
-                    label="Total Payable Amount"
+                    label="Total Payable Amount *"
                     value={`₹${formik.values.totalAmount}`}
                     disabled
                     size="small"
@@ -222,7 +222,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                 }
                               >
                                 <DatePicker
-                                  label={field.label}
+                                  label={`${field.label} *`}
                                   value={
                                     formik.values[method][field.name]
                                       ? dayjs(formik.values[method][field.name])
@@ -256,7 +256,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                 <TextField
                                   select
                                   fullWidth
-                                  label={field.label}
+                                  label={`${field.label} *`}
                                   name={`${method}.${field.name}`}
                                   value={formik.values[method][field.name]}
                                   onChange={formik.handleChange}
@@ -291,7 +291,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                   sx={{ width: '100%' }}
                                   minRows={2}
                                   size="small"
-                                  label={field.label}
+                                  label={`${field.label} *`}
                                   name={`${method}.${field.name}`}
                                   value={formik.values[method][field.name]}
                                   onChange={formik.handleChange}
@@ -315,7 +315,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                 <NumericFormatCustom
                                   size="small"
                                   fullWidth
-                                  label={field.label}
+                                  label={`${field.label} *`}
                                   name={`${method}.${field.name}`}
                                   value={formik.values[method][field.name]}
                                   onChange={formik.handleChange}
@@ -339,7 +339,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                 <TextField
                                   fullWidth
                                   type={field.type}
-                                  label={field.label}
+                                  label={`${field.label} *`}
                                   size="small"
                                   name={`${method}.${field.name}`}
                                   value={formik.values[method][field.name]}
