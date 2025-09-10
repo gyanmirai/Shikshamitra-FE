@@ -20,13 +20,12 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
     currentQueryAndMutation: useGetFinesChargesQuery,
   });
 
-  return mockFinesChargesLoading ? (
-    'Loading...'
-  ) : (
+  return (
     <Box>
       <CustomizableTable
         tableId="fines-charges-table"
         noDataText="No Fines or Charges Found"
+        isLoading={mockFinesChargesLoading}
         columns={[
           { id: 'bookTitle', label: 'Book Title', align: 'left' },
           { id: 'amount', label: 'Amount', align: 'left' },
@@ -49,7 +48,7 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
             },
           },
         ]}
-        data={mockFinesCharges}
+        data={mockFinesCharges || []}
       />
     </Box>
   );

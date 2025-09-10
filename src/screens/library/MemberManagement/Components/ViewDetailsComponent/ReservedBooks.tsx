@@ -20,13 +20,12 @@ const ReservedBooks: React.FC<ReservedBooksProps> = ({ member }) => {
     currentQueryAndMutation: useGetReservedBooksQuery,
   });
 
-  return memberLoading ? (
-    'Loading...'
-  ) : (
+  return (
     <Box>
       <CustomizableTable
         tableId="reserved-books-table"
         noDataText="No Reserved Books Found"
+        isLoading={memberLoading}
         columns={[
           { id: 'bookTitle', label: 'Book Title', align: 'left' },
           { id: 'reservationDate', label: 'Reserved on', align: 'left' },

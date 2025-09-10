@@ -160,7 +160,7 @@ const WhatsNewInMonthComponent: React.FC<WhatsNewInMonthProps> = ({
             icon={tab.icon}
             value={tab.value}
             label={
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box display="flex" alignItems="center">
                 <Typography variant="body1">{tab.label}</Typography>
                 <Chip
                   label="100"

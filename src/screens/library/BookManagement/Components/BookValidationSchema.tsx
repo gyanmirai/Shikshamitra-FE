@@ -35,6 +35,15 @@ export const bookValidationSchema = Yup.object().shape({
     .min(1, 'Must have at least 1 copy')
     .max(1000, 'Cannot exceed 1000 copies'),
 
+  price: Yup.number()
+    .required('Price is required')
+    .min(0, 'Price cannot be negative')
+    .max(100000, 'Price cannot exceed 100000')
+    .test('decimal-places', 'Price can have up to 2 decimal places', (value) => {
+      if (!value) return true;
+      return /^\d+(\.\d{1,2})?$/.test(value.toString());
+    }),
+
   bookCoverImages: Yup.array().of(Yup.string().url('Must be a valid URL')),
 
   copies: Yup.array()
