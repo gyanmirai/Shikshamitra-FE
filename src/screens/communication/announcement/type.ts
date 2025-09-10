@@ -5,15 +5,19 @@ export interface ISchoolWiseAnnouncement {
   title: string;
   description: string;
   audience: string[];
-  organization: string[];
-  publishDate: Dayjs | string | null;
-  expiryDate: Dayjs | string | null;
-  status: string;
-  category: string;
-  importance_level: string;
+  startDate: Dayjs | string | null;
+  endDate: Dayjs | string | null;
+  createdBy: string;
+  cratedOn: Dayjs | string | null;
+  status: number;
+  type: string;
+  attachment: File;
+  importance_level?: string;
   link: string;
+  active?: number;
   notification_preferences: string[];
-  isScheduled: boolean;
+  isAllowAcknoledgement: boolean;
+  viewedBy?: number;
 }
 
 /**
@@ -54,9 +58,9 @@ export interface ISchoolWiseAnnouncementFormValues {
  * @property {boolean} isEdit - Flag indicating if form is in edit mode
  */
 export interface ISchoolWiseAnnouncementFormProps {
-  onSubmit: (values: ISchoolWiseAnnouncement) => void;
   initialValues?: ISchoolWiseAnnouncement | null;
   isEdit?: boolean;
+  onClose: (e: any, isSubmit: boolean) => void;
 }
 
 export interface SchoolWiseAnnouncementTableProps {
@@ -67,21 +71,27 @@ export interface SchoolWiseAnnouncementTableProps {
   onPublish: (announcement: ISchoolWiseAnnouncement) => void;
 }
 
-export interface IClassAnnouncement {
+export interface IClassWiseAnnouncement {
   id: string;
   title: string;
   description: string;
-  audience: string[];
-  publishDate: Dayjs | string | null;
-  expiryDate: Dayjs | string | null;
-  className: string[];
-  division: string[];
-  status: string;
-  category: string;
-  importance_level: string;
+  audience: string[]; // same as school-wise
+  organizations: string[]; // newly added
+  classes: string[]; // newly added
+  divisions: string[]; // newly added
+  startDate: Dayjs | string | null;
+  endDate: Dayjs | string | null;
+  createdBy: string;
+  cratedOn: Dayjs | string | null;
+  status: number;
+  type: string;
+  attachment: File;
+  importance_level?: string;
   link: string;
+  active?: number;
   notification_preferences: string[];
-  isScheduled: boolean;
+  isAllowAcknoledgement: boolean;
+  viewedBy?: number;
 }
 
 export interface IClassWiseAnnouncementFormValues {
@@ -101,8 +111,8 @@ export interface IClassWiseAnnouncementFormValues {
 }
 
 export interface IClassWiseAnnouncementFormProps {
-  onSubmit: (values: IClassAnnouncement) => void;
-  initialValues?: IClassAnnouncement | null;
+  onSubmit: (values: IClassWiseAnnouncement) => void;
+  initialValues?: IClassWiseAnnouncement | null;
   isEdit?: boolean;
 }
 
@@ -122,10 +132,20 @@ export interface IClassWiseAnnouncementFormikValues {
   isScheduled: boolean;
 }
 
+export interface ISchoolWiseAnnouncementTableProps {
+  data: ISchoolWiseAnnouncement[];
+  onEdit: (row: ISchoolWiseAnnouncement) => void;
+  handleSwitchChange: (row: ISchoolWiseAnnouncement) => void;
+  onDelete: (id: string) => void;
+  onView: (row: ISchoolWiseAnnouncement) => void;
+  onPublish: (row: ISchoolWiseAnnouncement) => void;
+}
+
 export interface IClassWiseAnnouncementTableProps {
-  data: IClassAnnouncement[];
-  onEdit: (announcement: IClassAnnouncement) => void;
-  onDelete: (announcementId: string) => void;
-  onView: (announcement: IClassAnnouncement) => void;
-  onRequestPublish: (announcement: IClassAnnouncement) => void;
+  data: IClassWiseAnnouncement[];
+  onEdit: (row: IClassWiseAnnouncement) => void;
+  handleSwitchChange: (row: IClassWiseAnnouncement) => void;
+  onDelete: (id: string) => void;
+  onView: (row: IClassWiseAnnouncement) => void;
+  onPublish: (row: IClassWiseAnnouncement) => void;
 }

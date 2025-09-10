@@ -1,34 +1,30 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
-import { useGetClassQuery } from 'src/redux/class/classApi';
+import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Card, Button, DialogContent, DialogActions } from '@mui/material';
-import classWiseAnnouncementData from 'src/json/communication/announcement/classWiseAnnouncementData.json';
+import { useGetClassWiseAnnouncementsQuery } from 'src/redux/communication/announcement/classWiseAnnouncement';
 
 import AnnouncementForm from './components/classWiseAnnouncementForm';
 import AnnouncementDetails from './components/classAnnouncementDetails';
 import ClassWiseAnnouncementTable from './components/classAnnouncementTable';
 
-import type { IClassAnnouncement } from './type';
-
 const ClassWiseAnnounsement = (props: TabComponentType) => {
-  // Query hook to fetch class data
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
+  const dispatch = useDispatch();
   // Modal state for publish announcement dialog
   const publish_modal = useBoolean();
   // State to store the announcement being published
@@ -37,8 +33,6 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
   const [deleteAnnouncement, setDeleteAnnouncement] = useState('');
   // State to store the announcement being edited
   const [editingAnnouncement, setEditingAnnouncement] = useState<any | null>(null);
-  // State to store the selected class filter
-  const [selectedClass, setSelectedClass] = useState<string>('All Classes');
   // Modal state for confirmation dialog
   const confirm_dialog = useBoolean();
 
@@ -47,132 +41,91 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
   const [viewAnnouncement, setViewAnnouncement] = useState<any | null>(null);
   // Modal state for view announcement dialog
   const view_dialog = useBoolean();
-  const [announcementTableData, setAnnouncementTableData] =
-    useState<IClassAnnouncement[]>(classWiseAnnouncementData);
-  /**
-   * Handles the deletion of an announcement by its ID
-   * Removes the announcement from the table data and closes the confirmation dialog
-   * @param id - The ID of the announcement to delete
-   */
-  const handleDelete = (id: string) => {
-    setAnnouncementTableData((prevData) =>
-      prevData.filter((announcement) => announcement.id !== id)
-    );
-    confirm_dialog.onFalse();
-  };
-
-  /**
-   * Handles the submission of announcement form data
-   * Updates existing announcement if editing, or creates a new announcement
-   * @param values - The form values containing announcement data
-   */
-  const handleSubmit = (values: any) => {
-    if (editingAnnouncement) {
-      setAnnouncementTableData((prevData) =>
-        prevData.map((announcement) =>
-          announcement.id === editingAnnouncement.id
-            ? { ...values, id: editingAnnouncement.id }
-            : announcement
-        )
-      );
-    } else {
-      const newAnnouncement = {
-        ...values,
-        id: String(announcementTableData.length + 1),
-      };
-      setAnnouncementTableData((prevData) => [...prevData, newAnnouncement]);
-    }
-    handleCloseDialog();
-  };
+  const { data: announcementData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassWiseAnnouncementsQuery,
+  });
 
   /**
    * Handles closing of dialogs and resetting related states
    * Resets editing announcement, form params, publishing announcement and modal
    */
-  const handleCloseDialog = () => {
-    setEditingAnnouncement(null);
-    setOpen(false);
-    setPublishingAnnouncement(null);
-    publish_modal.onFalse();
-  };
+  const handleCloseDialog = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setEditingAnnouncement(null);
+        setOpen(false);
+        setPublishingAnnouncement(null);
+        publish_modal.onFalse();
+        dispatch(setIsChanges(false));
+      }, 200); // Delay for dialog transition
+    };
 
-  /**
-   * Handles publishing of an announcement
-   * Updates the announcement status to Published and sets current publish date
-   * @param announcement - The announcement object to be published
-   */
-  const handlePublish = (announcement: any) => {
-    setAnnouncementTableData((prevData) =>
-      prevData.map((item) =>
-        item.id === announcement.id
-          ? {
-              ...item,
-              status: 'Published',
-              publishDate: dayjs(),
-              isScheduled: false,
-            }
-          : item
-      )
-    );
-    publish_modal.onFalse();
-    setPublishingAnnouncement(null);
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      resetState();
+    } else if (!isChanges) {
+      resetState();
+    }
   };
-
-  const links = open
-    ? [
-        { name: 'Communication', href: '/communication/dashboard' },
-        { name: 'Announcements' },
-        { name: 'Class Wise Announcement' },
-        { name: 'Announcement Form' },
-      ]
-    : [
-        { name: 'Communication', href: '/communication/dashboard' },
-        { name: 'Announcements' },
-        { name: 'Class Wise Announcement' },
-      ];
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CustomBreadcrumbs
-        heading="Class Wise Announcement"
-        description={
-          open
-            ? 'Create or update class-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff.'
-            : 'View and manage all class-wide announcements, including message content, target audience, and publication status. Add new announcements, update existing ones, or remove them as needed.'
-        }
-        links={links}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            size="small"
-            startIcon={open ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            variant="contained"
-            onClick={
-              open
-                ? () => handleCloseDialog()
-                : () => {
-                    setOpen(true);
-                  }
-            }
-          >
-            {open ? 'Back' : 'Class Wise Announcement'}
-          </Button>
-        }
-      />
+      {open ? (
+        <CustomBreadcrumbs
+          heading="Class Wise Announcement"
+          description="Create or update class-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff."
+          links={[
+            { name: 'Communication', href: '/communication/dashboard' },
+            { name: 'Announcements' },
+            { name: 'Class Wise Announcement' },
+            { name: 'Announcement Form' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          isBack
+          onBack={() => {
+            handleCloseDialog(null, false);
+          }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Class Wise Announcement"
+          description="View and manage all class-wide announcements, including message content, target audience, and publication status. Add new announcements, update existing ones, or remove them as needed."
+          links={[
+            { name: 'Communication', href: '/communication/dashboard' },
+            { name: 'Announcements' },
+            { name: 'Class Wise Announcement' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          action={
+            <Button
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              onClick={() => setOpen(true)}
+            >
+              Class Wise Announcement
+            </Button>
+          }
+        />
+      )}
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AnnouncementForm
             initialValues={editingAnnouncement}
-            onSubmit={handleSubmit}
+            onSubmit={() => {}}
             isEdit={!!editingAnnouncement}
           />
         </Card>
       ) : (
         <ClassWiseAnnouncementTable
-          data={announcementTableData}
+          data={announcementData}
           onEdit={(announcement) => {
             setOpen(true);
             setEditingAnnouncement(announcement);
+          }}
+          handleSwitchChange={(announcement) => {
+            // toggle active/inactive etc.
+            console.log('Switch changed:', announcement);
           }}
           onDelete={(id) => {
             confirm_dialog.onTrue();
@@ -182,7 +135,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
             view_dialog.onTrue();
             setViewAnnouncement(announcement);
           }}
-          onRequestPublish={(announcement) => {
+          onPublish={(announcement) => {
             publish_modal.onTrue();
             setPublishingAnnouncement(announcement);
           }}
@@ -198,13 +151,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
         title="Delete"
         content="Are you sure you want to delete?"
         action={
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => {
-              handleDelete(deleteAnnouncement);
-            }}
-          >
+          <Button variant="contained" color="error" onClick={() => {}}>
             Yes
           </Button>
         }
@@ -212,17 +159,11 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
 
       <ConfirmDialog
         open={publish_modal.value}
-        onClose={() => {
-          handleCloseDialog();
-        }}
+        onClose={() => {}}
         title="Delete"
         content="Are you sure want to Publish?"
         action={
-          <Button
-            variant="contained"
-            color="success"
-            onClick={() => handlePublish(publishingAnnouncement)}
-          >
+          <Button variant="contained" color="success" onClick={() => {}}>
             Publish
           </Button>
         }
