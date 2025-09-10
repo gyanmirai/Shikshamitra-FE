@@ -1,12 +1,9 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-
-import { Box, Card, Stack, Typography } from '@mui/material';
-
-import { ScheduleExamStatus, ScheduleExamStatusColor } from 'src/enums/schedule-exam-status';
-
 import { Label } from 'src/components/label';
+import { Box, Card, Stack, Typography } from '@mui/material';
+import { ScheduleExamStatus, ScheduleExamStatusColor } from 'src/enums/schedule-exam-status';
 
 interface HomeworkAssignmentCardProps {
   title: string;

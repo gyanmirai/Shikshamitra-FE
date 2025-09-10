@@ -3,14 +3,11 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-
-import { Box, Card, Grid, alpha, useTheme, Typography } from '@mui/material';
-
+import { alpha, useTheme } from '@mui/material/styles';
+import CustomSelect from 'src/components/custom-select';
+import { Box, Card, Grid, Typography } from '@mui/material';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomSelect from 'src/components/custom-select';
-
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const SubjectAnalytics = () => {
@@ -25,7 +22,7 @@ const SubjectAnalytics = () => {
   const theme = useTheme();
 
   return (
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle1">Subject Analytics</Typography>
@@ -43,14 +40,11 @@ const SubjectAnalytics = () => {
               setClasses3(val as string);
               setDivisionOptions(selectedClass?.divisions || []);
             }}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
         </Box>
         <AnalyticsWebsiteVisits
           title=""
-          //   subheader="(+43%) than last year"
           chart={{
             categories: ['Math', 'Sci', 'ENG', 'GUJ'],
             series: [
@@ -59,8 +53,8 @@ const SubjectAnalytics = () => {
               { name: '9-C', data: [51, 67, 47, 97] },
             ],
             colors: [
-              alpha(theme.palette.primary.dark, 0.8),
-              alpha(theme.palette.warning.main, 0.8),
+              alpha(theme.vars.palette.primary.dark, 0.8),
+              alpha(theme.vars.palette.warning.main, 0.8),
               alpha(theme.palette.error.main, 0.8),
             ],
             options: {
@@ -76,7 +70,6 @@ const SubjectAnalytics = () => {
                     zoomin: false,
                     zoomout: false,
                     pan: false,
-
                     customIcons: [],
                   },
                 },

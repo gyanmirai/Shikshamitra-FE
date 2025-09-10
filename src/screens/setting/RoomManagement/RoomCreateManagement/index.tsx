@@ -3,19 +3,15 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
+import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import RoomTable from './components/roomTable';
 import RoomForm from './components/AddRoomForm';
@@ -32,6 +28,7 @@ const RoomCreateManagement = () => {
 
   // State for managing selected room and room data
   const [selectedRoom, setSelectedRoom] = useState<IRoom | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [roomData, setRoomData] = useState<IRoom[]>([
     {
       id: 1,

@@ -2,8 +2,13 @@ import type { FormikErrors } from 'formik';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -19,14 +24,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialConcessionTypeData } from './ConcessionInitialValues';
 import { concessionTypeValidationSchema } from './ConcessionValidationSchema';
@@ -71,7 +68,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={!!(formik.touched.concessionName && formik.errors.concessionName) || false}
             >
@@ -87,7 +84,8 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={!!(formik.touched.concessionType && formik.errors.concessionType)}
             >
@@ -117,7 +115,8 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
               </FormControl>
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             {formik.values.concessionType === 'fixed' ? (
               <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
                 <TextField
@@ -153,7 +152,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
             )}
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={!!(formik.touched.applicableFeeHeads && formik.errors.applicableFeeHeads)}
             >
@@ -173,7 +172,8 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField>
               <FormControlLabel
                 control={
@@ -188,8 +188,9 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
               />
             </ShakingTextField>
           </Grid>
+
           {formik.values.documentRequired && (
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                   <Typography mb={1} fontWeight={600}>
@@ -252,6 +253,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                         }
                       />
                     </ShakingTextField>
+
                     <ShakingTextField>
                       <TextField
                         label="Document Size *"
@@ -266,6 +268,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                         sx={{ minWidth: 80 }}
                       />
                     </ShakingTextField>
+
                     <ShakingTextField>
                       <TextField
                         label="Accepted Format *"
@@ -280,6 +283,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                         sx={{ minWidth: 100 }}
                       />
                     </ShakingTextField>
+
                     <IconButton color="error" onClick={() => handleRemoveDocument(idx)}>
                       <Iconify icon={GlobalIcons.delete} />
                     </IconButton>
@@ -288,7 +292,8 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
               </Paper>
             </Grid>
           )}
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField>
               <TextField
                 fullWidth

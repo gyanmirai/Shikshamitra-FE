@@ -3,8 +3,24 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
+import { CONFIG } from 'src/config-global';
+import { useTabs } from 'src/hooks/use-tabs';
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import { Add, Create } from '@mui/icons-material';
+import { fNumber } from 'src/utils/format-number';
+import { UploadBox } from 'src/components/upload';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { SvgColor } from 'src/components/svg-color';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { Chart, useChart } from 'src/components/chart';
+import CustomSelect from 'src/components/custom-select';
+import { CustomTabs } from 'src/components/custom-tabs';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   Box,
   Tab,
@@ -13,7 +29,6 @@ import {
   Button,
   Switch,
   MenuList,
-  useTheme,
   MenuItem,
   TextField,
   Typography,
@@ -23,26 +38,6 @@ import {
   LinearProgress,
   DialogContentText,
 } from '@mui/material';
-
-import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { fNumber } from 'src/utils/format-number';
-
-import { CONFIG } from 'src/config-global';
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
-import { SvgColor } from 'src/components/svg-color';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import { Chart, useChart } from 'src/components/chart';
-import CustomSelect from 'src/components/custom-select';
-import { CustomTabs } from 'src/components/custom-tabs';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const initialCourseData: CourseData[] = [
   {
@@ -55,10 +50,7 @@ const initialCourseData: CourseData[] = [
     learningGoal: 'Understand basic algebraic equations.',
     assignedTeacher: 'Jiya',
     status: 'Active',
-    material: {
-      videos: 20,
-      pdfs: 50,
-    },
+    material: { videos: 20, pdfs: 50 },
   },
   {
     id: 2,
@@ -70,10 +62,7 @@ const initialCourseData: CourseData[] = [
     learningGoal: 'Familiarize with classical literature themes.',
     assignedTeacher: 'Riya',
     status: 'Inactive',
-    material: {
-      videos: 90,
-      pdfs: 10,
-    },
+    material: { videos: 90, pdfs: 10 },
   },
   {
     id: 3,
@@ -85,10 +74,7 @@ const initialCourseData: CourseData[] = [
     learningGoal: 'Understand the basics of mechanics and energy transfer.',
     assignedTeacher: 'Priya',
     status: 'Active',
-    material: {
-      videos: 60,
-      pdfs: 10,
-    },
+    material: { videos: 60, pdfs: 10 },
   },
 ];
 
@@ -102,10 +88,7 @@ interface CourseData {
   learningGoal: string;
   assignedTeacher: string;
   status: string;
-  material: {
-    videos: number;
-    pdfs: number;
-  };
+  material: { videos: number; pdfs: number };
 }
 
 interface ChapterData {
@@ -375,7 +358,7 @@ const CourseManagement = (props: TabComponentType) => {
       </CustomDialog>
 
       <Grid container spacing={2} mt={4}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%', display: 'flex', justifyContent: 'space-between' }}>
             <AppWidget
               title="Videos"
@@ -403,7 +386,8 @@ const CourseManagement = (props: TabComponentType) => {
             </Button>
           </Box>
         </Grid>
-        <Grid item xs={12} md={6}>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%', display: 'flex', justifyContent: 'space-between' }}>
             <AppWidget
               title="Videos"
@@ -614,11 +598,7 @@ interface AppWidgetProps {
   title: string;
   total?: number;
   icon: string;
-  chart: {
-    colors?: string[];
-    series: number;
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; series: number; options?: ChartOptions };
 }
 
 export const AppWidget: React.FC<AppWidgetProps> = ({ title, total, icon, chart }) => {
@@ -629,10 +609,7 @@ export const AppWidget: React.FC<AppWidgetProps> = ({ title, total, icon, chart 
   const chartOptions = useChart({
     chart: { sparkline: { enabled: true } },
     stroke: { width: 0 },
-    fill: {
-      type: 'solid',
-      colors: chartColors,
-    },
+    fill: { type: 'solid', colors: chartColors },
     plotOptions: {
       radialBar: {
         dataLabels: {
@@ -742,10 +719,7 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
       learningGoal: isEdit && data ? data.learningGoal : '',
       assignedTeacher: isEdit && data ? data.assignedTeacher : '',
       status: isEdit && data ? data.status : 'Inactive',
-      material: {
-        videos: 0,
-        pdfs: 0,
-      },
+      material: { videos: 0, pdfs: 0 },
     },
     onSubmit: (values) => {
       onSave(values);
@@ -757,7 +731,7 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '300px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Course Name"
@@ -767,7 +741,8 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                 size="small"
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 options={classData?.items || []}
                 value={formik.values.className}
@@ -779,7 +754,8 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                 formControlProps={{ sx: { minWidth: 270 } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Subject"
                 options={[
@@ -793,7 +769,8 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                 formControlProps={{ sx: { minWidth: 275 } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Assigned Teacher(s)"
                 options={[
@@ -807,7 +784,8 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                 formControlProps={{ sx: { minWidth: 270 } }}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
@@ -818,7 +796,8 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                 onChange={formik.handleChange}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <UploadBox
                 onDrop={() => {}}
                 placeholder={
@@ -835,15 +814,11 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                     <Typography variant="body2">Drag Your Document</Typography>
                   </Box>
                 }
-                sx={{
-                  py: 2.5,
-                  width: '100%',
-                  height: 'auto',
-                  borderRadius: 1.5,
-                }}
+                sx={{ py: 2.5, width: '100%', height: 'auto', borderRadius: 1.5 }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Resources"
                 options={[
@@ -857,7 +832,8 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                 formControlProps={{ sx: { minWidth: 275 } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Learning Goals"
@@ -867,7 +843,8 @@ const CourseCreationForm: React.FC<CourseCreationFormProps> = ({
                 size="small"
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <CustomSelect
                 label="Status"
                 options={[

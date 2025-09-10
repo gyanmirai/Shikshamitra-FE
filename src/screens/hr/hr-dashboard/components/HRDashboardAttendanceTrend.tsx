@@ -1,8 +1,7 @@
 import React from 'react';
-
+import { useTheme } from '@mui/material/styles';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import { Box, Grid, Card, useTheme, Typography } from '@mui/material';
-
+import { Box, Grid, Card, Typography } from '@mui/material';
 import { BankingBalanceStatistics } from 'src/screens/student/attendance/attendanceDashboard/components/dailyAttendanceTrend';
 
 const HRDashboardAttendanceTrend = () => {
@@ -16,7 +15,7 @@ const HRDashboardAttendanceTrend = () => {
 
         <Grid container spacing={2} mb={2}>
           {/* Present */}
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Box
               sx={{
                 border: '1px solid',
@@ -43,7 +42,7 @@ const HRDashboardAttendanceTrend = () => {
           </Grid>
 
           {/* Absent */}
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Box
               sx={{
                 border: '1px solid',
@@ -70,7 +69,7 @@ const HRDashboardAttendanceTrend = () => {
           </Grid>
 
           {/* Late Arrival */}
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Box
               sx={{
                 border: '1px solid',
@@ -146,9 +145,9 @@ const HRDashboardAttendanceTrend = () => {
               },
             ],
             colors: [
-              theme.palette.primary.dark,
+              theme.vars.palette.primary.dark,
               theme.palette.error.main,
-              theme.palette.warning.main,
+              theme.vars.palette.warning.main,
             ],
           }}
           sx={{ height: '100%' }}

@@ -1,7 +1,5 @@
 import { Grid, TextField } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import {
   CardActions,
   SectionCard,
@@ -37,7 +35,7 @@ const RenderMedicalFields = (props: any) => {
         )
       }
     >
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField
           fullWidth
           label="Weight (KG)"
@@ -56,7 +54,7 @@ const RenderMedicalFields = (props: any) => {
           autoFocus
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField
           fullWidth
           label="Height (CM)"
@@ -74,7 +72,7 @@ const RenderMedicalFields = (props: any) => {
           disabled={!isMedicalEditable.value}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField
           fullWidth
           label="Body Mass Index (BMI)"
@@ -92,7 +90,7 @@ const RenderMedicalFields = (props: any) => {
           disabled={!isMedicalEditable.value}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField
           fullWidth
           label="Pulse Rate"
@@ -110,7 +108,7 @@ const RenderMedicalFields = (props: any) => {
           disabled={!isMedicalEditable.value}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField
           fullWidth
           label="Hemoglobin (HB)"
@@ -131,7 +129,7 @@ const RenderMedicalFields = (props: any) => {
           disabled={!isMedicalEditable.value}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField
           fullWidth
           label="Covid Vaccination (DOSE) *"
@@ -158,7 +156,7 @@ const RenderMedicalFields = (props: any) => {
           inputProps={{ maxLength: 1 }}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField
           fullWidth
           label="Allergies"
@@ -172,7 +170,7 @@ const RenderMedicalFields = (props: any) => {
         />
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField
           fullWidth
           label="Child Immunization"
@@ -185,7 +183,7 @@ const RenderMedicalFields = (props: any) => {
           disabled={!isMedicalEditable.value}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <TextField
           fullWidth
           label="Immunization Remarks"
@@ -207,7 +205,7 @@ export const medicalFields: FieldsType[] = [
     name: 'weight',
     label: 'Weight (KG)',
     type: 'number',
-    gridProps: { xs: 12, sm: 12, md: 12 },
+    gridProps: { size: { xs: 12, sm: 12, md: 12 } },
     otherProps: { autoFocus: true },
     renderComp(props: any) {
       return <RenderMedicalFields {...props} />;

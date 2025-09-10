@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-
 import { Add } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
 import {
   Box,
   Table,
@@ -12,10 +13,6 @@ import {
   TableCell,
   TableContainer,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import CustomDialog from 'src/components/customDialog';
 
 import TimeTableCell from './timeTableCell';
 import CreateSlotsForm from '../../settings/components/lectureSlots/createSlotsForm';

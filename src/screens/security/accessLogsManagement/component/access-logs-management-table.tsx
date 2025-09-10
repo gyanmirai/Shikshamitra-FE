@@ -2,10 +2,11 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import React from 'react';
-
+import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
+import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Grid, TextField, Autocomplete } from '@mui/material';
-
 import data from 'src/json/ResourceManagement/resourceSettings/access-logs-data.json';
 import {
   AccessLogsManagementStatusType,
@@ -13,14 +14,10 @@ import {
   AccessLogsManagementStatusTypeOptions,
 } from 'src/enums/access-logs-management-statusType';
 
-import { Label } from 'src/components/label';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-
 const AccessLogsManagementTable = () => (
   <>
     <Box display="flex" alignItems="center" flexDirection="row" gap={2}>
-      <Grid item xs={12} md={3}>
+      <Grid size={{ xs: 12, md: 3 }}>
         <DatePicker
           label="Start Date"
           format="DD-MM-YYYY"
@@ -35,7 +32,7 @@ const AccessLogsManagementTable = () => (
           }}
         />
       </Grid>
-      <Grid item xs={12} md={3}>
+      <Grid size={{ xs: 12, md: 3 }}>
         <DatePicker
           label="End Date"
           format="DD-MM-YYYY"
@@ -50,7 +47,7 @@ const AccessLogsManagementTable = () => (
           }}
         />
       </Grid>
-      <Grid item xs={12} md={3}>
+      <Grid size={{ xs: 12, md: 3 }}>
         <Autocomplete
           loading={false}
           noOptionsText="No Employee Found"
@@ -77,7 +74,7 @@ const AccessLogsManagementTable = () => (
         />
       </Grid>
 
-      <Grid item xs={12} md={3}>
+      <Grid size={{ xs: 12, md: 3 }}>
         <CustomSelect
           label="Gate"
           options={[]}

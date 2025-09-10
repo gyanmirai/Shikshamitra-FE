@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Grid,
@@ -12,12 +15,6 @@ import {
   IconButton,
   DialogActions,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Iconify } from 'src/components/iconify';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { DialogScrollContent } from 'src/components/customDialog';
 
 import type { IViewConcessionRequestProps } from './type';
 
@@ -33,42 +30,49 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
     <DialogScrollContent>
       <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, mb: 2 }}>
         <Grid container spacing={2}>
-          <Grid item xs={6}>
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Student Name :</b> {student?.studentName}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Roll No. :</b> {student?.rollNo}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Sibling :</b> {student?.sibling}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Contact No. :</b> {student?.contactNo}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Class/Division :</b> {student?.classDivision}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>GR No. :</b> {student?.grNo}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Parent Name :</b> {student?.parentName}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+
+          <Grid size={{ xs: 6 }}>
             <Typography>
               <b>Email :</b> {student?.email}
             </Typography>
@@ -154,32 +158,36 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
       />
     </DialogScrollContent>
     <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-      <Grid item>
-        <Button variant="outlined" color="warning" onClick={onMismatch} size="small">
-          Document Mismatch
-        </Button>
-      </Grid>
-      <Grid item>
-        <Button
-          variant="contained"
-          color="error"
-          onClick={onReject}
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-        >
-          Reject
-        </Button>
-      </Grid>
-      <Grid item>
-        <Button
-          variant="contained"
-          color="success"
-          onClick={onApprove}
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-        >
-          Approve
-        </Button>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 6, md: 4 }}>
+          <Button variant="outlined" color="warning" onClick={onMismatch} size="small">
+            Document Mismatch
+          </Button>
+        </Grid>
+
+        <Grid size={{ xs: 6, md: 4 }}>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={onReject}
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Reject
+          </Button>
+        </Grid>
+
+        <Grid size={{ xs: 6, md: 4 }}>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={onApprove}
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+          >
+            Approve
+          </Button>
+        </Grid>
       </Grid>
     </DialogActions>
   </>

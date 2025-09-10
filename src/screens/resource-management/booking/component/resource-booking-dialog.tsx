@@ -1,13 +1,11 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
-import { Grid, TextField, DialogActions } from '@mui/material';
-import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 
 import { getInitialBookingValues } from '../initialValue';
 import { bookingValidationSchema } from '../validationSchema';
@@ -43,7 +41,7 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={formik.touched.resourceCategory && Boolean(formik.errors.resourceCategory)}
             >
@@ -62,7 +60,7 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={formik.touched.resourceName && Boolean(formik.errors.resourceName)}
             >
@@ -82,7 +80,7 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField error={formik.touched.date && Boolean(formik.errors.date)}>
               <DatePicker
                 label="Select Date *"
@@ -99,7 +97,7 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6}>
+          <Grid size={6}>
             <TimePicker
               label="Select Time *"
               value={formik.values.time}
@@ -120,7 +118,7 @@ const ResourceBookingDialog: React.FC<IResourceBookingDialogProps> = ({ data, is
               }}
             />{' '}
           </Grid>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField error={formik.touched.purpose && Boolean(formik.errors.purpose)}>
               <TextField
                 multiline

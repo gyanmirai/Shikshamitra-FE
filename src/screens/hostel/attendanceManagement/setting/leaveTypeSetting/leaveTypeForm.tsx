@@ -1,15 +1,12 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { MuiColorInput } from 'mui-color-input';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import { MuiColorInput } from 'mui-color-input';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { ILeaveTypeFormProps } from './type';
@@ -36,7 +33,7 @@ const LeaveTypeForm: React.FC<ILeaveTypeFormProps> = ({ dialog, onClose, editDat
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2 }}>
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <ShakingTextField
                   error={!!(formik.touched.leaveTypeName && formik.errors.leaveTypeName)}
                 >
@@ -53,7 +50,7 @@ const LeaveTypeForm: React.FC<ILeaveTypeFormProps> = ({ dialog, onClose, editDat
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <MuiColorInput
                   format="hex"
                   value={formik.values.backgroundColor}

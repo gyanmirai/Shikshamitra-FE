@@ -7,7 +7,7 @@ import { useRef, useMemo, useState, useCallback } from 'react';
 
 export type UseScrollOffSetTopReturn = {
   offsetTop: boolean;
-  elementRef: React.RefObject<HTMLDivElement>;
+  elementRef: React.RefObject<HTMLDivElement | null>;
 };
 
 export function useScrollOffSetTop(top = 0): UseScrollOffSetTopReturn {

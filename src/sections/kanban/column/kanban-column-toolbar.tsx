@@ -1,19 +1,15 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
-import IconButton from '@mui/material/IconButton';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import IconButton from '@mui/material/IconButton';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import { KanbanInputName } from '../components/kanban-input-name';

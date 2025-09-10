@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-
-import { Box, Grid, Paper, useTheme } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
+import { Box, Grid, Paper } from '@mui/material';
+import { Scrollbar } from 'src/components/scrollbar';
 import seatAllocationData from 'src/json/examination/seatAllocationData.json';
 import seatAllocationStudents from 'src/json/examination/seatAllocationStudents.json';
-
-import { Scrollbar } from 'src/components/scrollbar';
 
 import StudentCard from './StudentCard';
 import SeatManagement from './SeatManagement';
@@ -87,7 +85,7 @@ const SeatAllocationSection = ({
   return (
     <Grid container spacing={1} height="calc(100vh - 150px)" p={2}>
       {division && (
-        <Grid item xs={2.5} height="100%">
+        <Grid size={2.5} height="100%">
           <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
             <Box
               display="flex"
@@ -109,7 +107,7 @@ const SeatAllocationSection = ({
         </Grid>
       )}
       {division && classRoom && (
-        <Grid item xs={9} height="100%">
+        <Grid size={9} height="100%">
           <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
             <SeatManagement
               selectedRoom={{

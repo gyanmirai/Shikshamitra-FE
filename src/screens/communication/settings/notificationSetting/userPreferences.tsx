@@ -3,7 +3,11 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
+import { GlobalIcons } from 'src/utils/icons';
+import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
+import { Iconify } from 'src/components/iconify/iconify';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Card,
@@ -17,13 +21,6 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import CustomSelect from 'src/components/custom-select';
-import SubmitButton from 'src/components/submit-button';
-import { Iconify } from 'src/components/iconify/iconify';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const UserPreferences = (props: TabComponentType) => (
   <Box>
@@ -39,7 +36,7 @@ const UserPreferences = (props: TabComponentType) => (
     />
     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Typography variant="h6">Theme Settings</Typography>
@@ -56,7 +53,8 @@ const UserPreferences = (props: TabComponentType) => (
             </Box>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6">Default View For Messages</Typography>
             <RadioGroup
@@ -84,45 +82,45 @@ const UserPreferences = (props: TabComponentType) => (
         </Grid>
       </Grid>
     </Box>
+
     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Typography variant="h6">Display Preferences</Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Switch
                   checked={false}
                   onChange={() => {}}
-                  defaultChecked
                   inputProps={{ 'aria-label': 'controlled' }}
                 />
-                <Typography sx={{ mr: 2 }}>Show Images</Typography>
+                <Typography sx={{ ml: 1 }}>Show Images</Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Switch
                   checked={false}
                   onChange={() => {}}
-                  defaultChecked
                   inputProps={{ 'aria-label': 'controlled' }}
                 />
-                <Typography sx={{ mr: 2 }}>Enable Notifications</Typography>
+                <Typography sx={{ ml: 1 }}>Enable Notifications</Typography>
               </Box>
             </Box>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Typography variant="h6">Language Settings</Typography>
               <CustomSelect
                 options={[
-                  { value: 'light', label: 'Light' },
-                  { value: 'dark', label: 'Dark' },
-                  { value: 'auto', label: 'Auto' },
+                  { value: 'english', label: 'English' },
+                  { value: 'hindi', label: 'Hindi' },
+                  { value: 'gujarati', label: 'Gujarati' },
                 ]}
                 value=""
-                label="Prefered Language"
+                label="Preferred Language"
                 onChange={() => {}}
               />
             </Box>
@@ -130,55 +128,58 @@ const UserPreferences = (props: TabComponentType) => (
         </Grid>
       </Grid>
     </Box>
+
     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Typography variant="h6">Accessibility Options</Typography>
-              <RadioGroup
-                aria-label="accessibility-option"
-                name="accessibility-option"
-                defaultValue="allConversation"
-              >
+              <RadioGroup aria-label="accessibility-option" name="accessibility-option">
                 <FormControlLabel
-                  value="highContactMode"
+                  value="highContrastMode"
                   control={<Radio />}
                   label="High Contrast Mode"
                 />
                 <FormControlLabel
-                  value="screenReaderSuppport"
+                  value="screenReaderSupport"
                   control={<Radio />}
                   label="Screen Reader Support"
                 />
               </RadioGroup>
-              <Box display="flex" alignItems="center">
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Checkbox size="small" checked />
-                <Typography variant="body2">Text Resizing</Typography>
+                <Typography variant="body2" sx={{ ml: 1 }}>
+                  Text Resizing
+                </Typography>
               </Box>
-              <Box display="flex" alignItems="center">
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Checkbox size="small" />
-                <Typography variant="body2">Keyabord Navigation</Typography>
+                <Typography variant="body2" sx={{ ml: 1 }}>
+                  Keyboard Navigation
+                </Typography>
               </Box>
             </Box>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box display="flex" alignItems="center">
                 <Checkbox size="small" checked />
-                <Typography variant="body2">Set this as default for all admin users</Typography>
+                <Typography variant="body2" sx={{ ml: 1 }}>
+                  Set as default for all admin users
+                </Typography>
               </Box>
               <Typography variant="h6">Text to Speech</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Switch
                   checked={false}
                   onChange={() => {}}
-                  defaultChecked
                   inputProps={{ 'aria-label': 'controlled' }}
                 />
-                <Typography sx={{ mr: 2 }}>Enable Text to Speech for Announcement</Typography>
+                <Typography>Enable Text to Speech for Announcement</Typography>
               </Box>
               <Typography variant="h6">Adjust text size for better readability</Typography>
               <Box
@@ -224,6 +225,7 @@ const UserPreferences = (props: TabComponentType) => (
         </Grid>
       </Grid>
     </Box>
+
     <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
       <Button startIcon={<Iconify icon={GlobalIcons.resetIcon} />} variant="outlined">
         Reset to Default

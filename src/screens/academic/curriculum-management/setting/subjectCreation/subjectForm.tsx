@@ -2,17 +2,14 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getSubjectInitialValues } from './initialValues';
 import { subjectValidationSchema } from './validationSchema';
@@ -46,7 +43,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
           <Scrollbar sx={{ p: 2, height: '170px' }}> */}
       <DialogScrollContent>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={!!(formik.touched.subjectName && formik.errors.subjectName) || false}
             >
@@ -74,7 +71,8 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={!!(formik.touched.subjectColor && formik.errors.subjectColor) || false}
             >

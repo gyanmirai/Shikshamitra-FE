@@ -1,18 +1,13 @@
 import React, { useState } from 'react';
-
-import { Box, Button, MenuItem, MenuList } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import data from 'src/json/ResourceManagement/resourceAllocation/assigned-resource-data.json';
-
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Box, Button, MenuItem, MenuList } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import data from 'src/json/ResourceManagement/resourceAllocation/assigned-resource-data.json';
 
 import ResourceTransferDialog from './resource-transfer-dialog';
 import ResourceViewDialogTeacher from './resource-view-dialog-teacher';

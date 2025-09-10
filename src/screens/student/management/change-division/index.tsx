@@ -3,21 +3,17 @@
 import type { Division } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Box } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { Save } from '@mui/icons-material';
-
+import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { StudentApi, useChangeDivisionMutation } from 'src/redux/student';
-
+import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { StudentApi, useChangeDivisionMutation } from 'src/redux/student';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
@@ -43,7 +39,7 @@ const ChangeDivisionScreen = ({
   const dispatch = useDispatch();
 
   // State to keep track of the initial/original table data for comparison
-  const [initialData, setInitialData] = useState<IInquiryData[]>(studentData);
+  const [, setInitialData] = useState<IInquiryData[]>(studentData);
   // const [selectedStudents, setSelectedStudents] = useState<{ id: string; name: string }[]>([]);
   // Update table data when studentData changes
   useEffect(() => {
@@ -52,7 +48,7 @@ const ChangeDivisionScreen = ({
   }, [studentData]);
 
   // Mutation hook for changing student division
-  const [changeDivision, { isLoading: isChangeDivisionLoading, data }] = useQueryAndMutation({
+  const [changeDivision, { isLoading: isChangeDivisionLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useChangeDivisionMutation,
   });

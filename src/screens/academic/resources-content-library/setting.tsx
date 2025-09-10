@@ -4,8 +4,13 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Card,
@@ -17,14 +22,6 @@ import {
   DialogContent,
   DialogContentText,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import NotificationSetting from './settings/component/notificationSetting';
 
@@ -101,7 +98,7 @@ const Setting = (props: TabComponentType) => {
         sx={{ px: 1, mb: 2 }}
       />
       <Grid container spacing={2} marginTop={1}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <CustomSelect
@@ -123,22 +120,18 @@ const Setting = (props: TabComponentType) => {
                 onChange={() => {}}
               />
             </Box>
+
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 6, gap: 1 }}>
               <Button variant="outlined">Reset</Button>
               <Button variant="contained">Save</Button>
             </Box>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Scrollbar sx={{ mt: 1.5, height: '180px' }}>
-              <Box
-                component="ul"
-                sx={{
-                  listStyle: 'none',
-                  padding: 0,
-                }}
-              >
+              <Box component="ul" sx={{ listStyle: 'none', padding: 0 }}>
                 {categories.map((category) => (
                   <Box
                     key={category.id}
@@ -159,6 +152,7 @@ const Setting = (props: TabComponentType) => {
                         {category.categoryName}
                       </Typography>
                     </Box>
+
                     <Box>
                       <Iconify
                         icon="solar:pen-bold"
@@ -182,6 +176,7 @@ const Setting = (props: TabComponentType) => {
                 ))}
               </Box>
             </Scrollbar>
+
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
               <Button
                 startIcon={<Add />}
@@ -199,6 +194,7 @@ const Setting = (props: TabComponentType) => {
           </Card>
         </Grid>
       </Grid>
+
       <NotificationSetting />
       <CustomDialog
         open={dialog.value}
@@ -254,7 +250,7 @@ const AddCategory: React.FC<AddCategoryProps> = ({ onSubmit, data, isEdit }) => 
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 label="Category Name"

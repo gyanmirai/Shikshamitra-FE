@@ -4,10 +4,23 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { useDispatch, useSelector } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
 import {
   Box,
   Grid,
@@ -21,24 +34,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
-
-import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { SectionCard } from '../employee/employee-form-fields/InformationFields';
 
@@ -316,10 +311,11 @@ const ShiftManagementForm = ({
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Stack spacing={1}>
-          <Box>
-            <SectionCard title="Shift Details">
-              <Grid item xs={12} sm={6}>
+        <Stack spacing={2}>
+          {/* Shift Details */}
+          <SectionCard title="Shift Details">
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField
                   error={formik.touched.shiftName && Boolean(formik.errors.shiftName)}
                 >
@@ -332,25 +328,26 @@ const ShiftManagementForm = ({
                       const endTime = dayjs(option.endTime, 'HH:mm:ss').format('hh:mm A');
                       return `${option.shiftName} (${startTime}-${endTime})`;
                     }}
+                    onChange={(e, value) => formik.setFieldValue('shiftName', value?.id)}
                     renderInput={(params) => (
                       <TextField
                         {...params}
                         label="Shift *"
-                        // placeholder="Search Shift *"
                         size="small"
                         fullWidth
-                        sx={{ width: '100%', minWidth: '200px' }}
                         error={formik.touched.shiftName && Boolean(formik.errors.shiftName)}
-                        helperText={(formik.touched.shiftName && formik.errors.shiftName) as string}
+                        helperText={
+                          formik.touched.shiftName && typeof formik.errors.shiftName === 'string'
+                            ? formik.errors.shiftName
+                            : undefined
+                        }
                       />
                     )}
-                    onChange={(e, value) => {
-                      formik.setFieldValue('shiftName', value?.id);
-                    }}
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} sm={6}>
+
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField
                   error={formik.touched.weekStartDay && Boolean(formik.errors.weekStartDay)}
                 >
@@ -364,138 +361,126 @@ const ShiftManagementForm = ({
                     onChange={formik.handleChange}
                     error={formik.touched.weekStartDay && Boolean(formik.errors.weekStartDay)}
                     helperText={
-                      (formik.touched.weekStartDay && formik.errors.weekStartDay) as string
+                      formik.touched.weekStartDay && typeof formik.errors.weekStartDay === 'string'
+                        ? formik.errors.weekStartDay
+                        : undefined
                     }
                   >
-                    <MenuItem value="monday">Monday</MenuItem>
-                    <MenuItem value="tuesday">Tuesday</MenuItem>
-                    <MenuItem value="wednesday">Wednesday</MenuItem>
-                    <MenuItem value="thursday">Thursday</MenuItem>
-                    <MenuItem value="friday">Friday</MenuItem>
-                    <MenuItem value="saturday">Saturday</MenuItem>
-                    <MenuItem value="sunday">Sunday</MenuItem>
+                    {[
+                      'monday',
+                      'tuesday',
+                      'wednesday',
+                      'thursday',
+                      'friday',
+                      'saturday',
+                      'sunday',
+                    ].map((day) => (
+                      <MenuItem key={day} value={day}>
+                        {day.charAt(0).toUpperCase() + day.slice(1)}
+                      </MenuItem>
+                    ))}
                   </TextField>
                 </ShakingTextField>
               </Grid>
-            </SectionCard>
-          </Box>
-          {/* <TextField
-            size="small"
-            select
-            name="shiftName"
-            label="Shift Name"
-            value={formik.values.shiftName}
-            onChange={formik.handleChange}
-            error={formik.touched.shiftName && Boolean(formik.errors.shiftName)}
-            helperText={formik.touched.shiftName && formik.errors.shiftName}
-          >
-            <MenuItem value="morning">Morning Shift</MenuItem>
-            <MenuItem value="afternoon">Afternoon Shift</MenuItem>
-            <MenuItem value="evening">Evening Shift</MenuItem>
-          </TextField> */}
-
-          <SectionCard title="Working Days & Timing">
-            <Grid item xs={12}>
-              <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-                {Object.entries(formik.values.workingDays).map(([day, checked]) => (
-                  <FormControlLabel
-                    key={day}
-                    control={
-                      <Checkbox
-                        size="small"
-                        checked={checked}
-                        onChange={formik.handleChange}
-                        name={`workingDays.${day}`}
-                      />
-                    }
-                    label={day.charAt(0).toUpperCase() + day.slice(1)}
-                  />
-                ))}
-              </Box>
             </Grid>
           </SectionCard>
 
-          {/* <TextField
-            size="small"
-            select
-            name="weekStartDay"
-            label="Week Start Day"
-            value={formik.values.weekStartDay}
-            onChange={formik.handleChange}
-            error={formik.touched.weekStartDay && Boolean(formik.errors.weekStartDay)}
-            helperText={formik.touched.weekStartDay && formik.errors.weekStartDay}
-          >
-            {Object.keys(formik.values.workingDays).map((day) => (
-              <MenuItem key={day} value={day}>
-                {day.charAt(0).toUpperCase() + day.slice(1)}
-              </MenuItem>
-            ))}
-          </TextField> */}
+          {/* Working Days */}
+          <SectionCard title="Working Days & Timing">
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12 }}>
+                <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+                  {Object.entries(formik.values.workingDays).map(([day, checked]) => (
+                    <FormControlLabel
+                      key={day}
+                      control={
+                        <Checkbox
+                          size="small"
+                          checked={checked}
+                          onChange={formik.handleChange}
+                          name={`workingDays.${day}`}
+                        />
+                      }
+                      label={day.charAt(0).toUpperCase() + day.slice(1)}
+                    />
+                  ))}
+                </Box>
+              </Grid>
+            </Grid>
+          </SectionCard>
 
+          {/* Day Wise Timing */}
           <SectionCard title="Day Wise Timing">
-            {formik?.values?.daySchedule.map((schedule: any, index: number) => (
-              <>
-                <Grid item xs={3}>
-                  <Typography variant="body2">{schedule.day}</Typography>
-                </Grid>
-                <Grid item xs={3}>
-                  <TextField
-                    size="small"
-                    select
-                    fullWidth
-                    name={`daySchedule.${index}.dayType`}
-                    value={schedule.dayType}
-                    onChange={formik.handleChange}
-                    label="Day Type"
-                  >
-                    <MenuItem value="full">Full Day</MenuItem>
-                    <MenuItem value="half">Half Day</MenuItem>
-                  </TextField>
-                </Grid>
-                <Grid item xs={3}>
-                  <TimePicker
-                    label="Start Time"
-                    value={schedule.startTime}
-                    format="HH:mm"
-                    viewRenderers={{
-                      hours: renderTimeViewClock,
-                      minutes: renderTimeViewClock,
-                      seconds: renderTimeViewClock,
-                    }}
-                    onChange={(date) =>
-                      formik.setFieldValue(`daySchedule.${index}.startTime`, date)
-                    }
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        name: `daySchedule.${index}.startTime`,
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={3}>
-                  <TimePicker
-                    label="End Time"
-                    value={schedule.endTime}
-                    format="HH:mm"
-                    viewRenderers={{
-                      hours: renderTimeViewClock,
-                      minutes: renderTimeViewClock,
-                      seconds: renderTimeViewClock,
-                    }}
-                    onChange={(date) => formik.setFieldValue(`daySchedule.${index}.endTime`, date)}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        name: `daySchedule.${index}.endTime`,
-                      },
-                    }}
-                  />
-                </Grid>
-              </>
-            ))}
+            <Grid container spacing={2}>
+              {formik.values.daySchedule.map((schedule: any, index: number) => (
+                <React.Fragment key={schedule.day}>
+                  <Grid size={{ xs: 3 }}>
+                    <Typography variant="body2">{schedule.day}</Typography>
+                  </Grid>
+
+                  <Grid size={{ xs: 3 }}>
+                    <TextField
+                      size="small"
+                      select
+                      fullWidth
+                      name={`daySchedule.${index}.dayType`}
+                      value={schedule.dayType}
+                      onChange={formik.handleChange}
+                      label="Day Type"
+                    >
+                      <MenuItem value="full">Full Day</MenuItem>
+                      <MenuItem value="half">Half Day</MenuItem>
+                    </TextField>
+                  </Grid>
+
+                  <Grid size={{ xs: 3 }}>
+                    <TimePicker
+                      label="Start Time"
+                      value={schedule.startTime}
+                      format="HH:mm"
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                        seconds: renderTimeViewClock,
+                      }}
+                      onChange={(date) =>
+                        formik.setFieldValue(`daySchedule.${index}.startTime`, date)
+                      }
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          name: `daySchedule.${index}.startTime`,
+                        },
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid size={{ xs: 3 }}>
+                    <TimePicker
+                      label="End Time"
+                      value={schedule.endTime}
+                      format="HH:mm"
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                        seconds: renderTimeViewClock,
+                      }}
+                      onChange={(date) =>
+                        formik.setFieldValue(`daySchedule.${index}.endTime`, date)
+                      }
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          name: `daySchedule.${index}.endTime`,
+                        },
+                      }}
+                    />
+                  </Grid>
+                </React.Fragment>
+              ))}
+            </Grid>
           </SectionCard>
         </Stack>
       </DialogScrollContent>

@@ -1,5 +1,4 @@
 import React from 'react';
-
 import AllResources from 'src/screens/academic/resources-content-library/allResources/all-resources';
 
 const AllResourcesScreen = () => <AllResources />;

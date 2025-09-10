@@ -1,13 +1,11 @@
 import type { IKanbanTask } from 'src/types/kanban';
 
-import { useMemo, useState, useCallback } from 'react';
-
 import Paper from '@mui/material/Paper';
+import { uuidv4 } from 'src/utils/uuidv4';
+import { useMemo, useState, useCallback } from 'react';
 import FormHelperText from '@mui/material/FormHelperText';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import InputBase, { inputBaseClasses } from '@mui/material/InputBase';
-
-import { uuidv4 } from 'src/utils/uuidv4';
 
 // ----------------------------------------------------------------------
 

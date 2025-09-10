@@ -6,28 +6,14 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-import base64ToFile from 'src/utils/base64ToFile';
-import { fileToBase64 } from 'src/utils/file-to-base64';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import {
-  useGetAllGroupQuery,
-  useDeleteGroupMutation,
-  useAddStudentGroupMutation,
-  useUpdateStudentGroupMutation,
-} from 'src/redux/student/student-group/student-group';
-
 import { Iconify } from 'src/components/iconify';
+import base64ToFile from 'src/utils/base64ToFile';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector, useDispatch } from 'react-redux';
+import { fileToBase64 } from 'src/utils/file-to-base64';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -35,16 +21,25 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useGetAllGroupQuery,
+  useDeleteGroupMutation,
+  useAddStudentGroupMutation,
+  useUpdateStudentGroupMutation,
+} from 'src/redux/student/student-group/student-group';
 
 import type { IGroup } from '../management/group-managemnet/type';
 
 const HouseSetting = () => {
-  const { data: groupData, isLoading: isGetGroupLoading } = useQueryAndMutation({
+  const { data: groupData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllGroupQuery,
   });
@@ -58,7 +53,6 @@ const HouseSetting = () => {
   const confirm = useBoolean();
   // State to store group data being edited
 
-  const isDeleteConfirm = useBoolean();
   const [editData, setEditData] = useState<null | IGroup>(null);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();

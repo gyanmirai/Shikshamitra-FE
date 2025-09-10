@@ -1,15 +1,13 @@
 import dayjs from 'dayjs';
 import React from 'react';
-
+import { Label } from 'src/components/label';
+import CustomizableTable from 'src/components/customizabaleTable';
 import data from 'src/json/hostel/visitorManagement/visitor-logs-data.json';
 import {
   VisitorStatusType,
   VisitorStatusColors,
   VisitorStatusOptions,
 } from 'src/enums/visitor-status-type';
-
-import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const VisitorLogtable = () => (
   <CustomizableTable

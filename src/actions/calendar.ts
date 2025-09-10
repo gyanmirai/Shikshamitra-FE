@@ -2,7 +2,6 @@ import type { ICalendarEvent } from 'src/types/calendar';
 
 import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
-
 import axios, { fetcher, endpoints } from 'src/utils/axios';
 
 // ----------------------------------------------------------------------

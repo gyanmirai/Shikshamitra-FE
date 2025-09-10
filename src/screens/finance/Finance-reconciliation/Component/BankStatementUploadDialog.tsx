@@ -1,23 +1,19 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetUploadDialogQuery } from 'src/redux/finance/reconciliation';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import FileUploader1 from 'src/components/custom-upload/custom-upload';
+import { useGetUploadDialogQuery } from 'src/redux/finance/reconciliation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 interface BankStatementUploadDialogProps {
   open: boolean;
@@ -132,7 +128,6 @@ const BankStatementUploadDialog = ({ open, onClose }: BankStatementUploadDialogP
                     formik.touched.statementName ? formik.errors.statementName : undefined
                   }
                   options={statementNameOptions}
-                  placeholder="Statement Name *"
                   disabled={isLoadingDialogData}
                 />
               </ShakingTextField>

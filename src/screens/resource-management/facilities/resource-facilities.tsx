@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-
 import { Box, Grid } from '@mui/material';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import BookFacilitySection from './component/bookfacility-section';
@@ -24,12 +22,12 @@ const ResourceFacilities = () => (
       <FacilitiesAllocationOverview />
       <AllFacilitiesTableSection />
       <Grid container spacing={2} pb="20px" alignItems="stretch">
-        <Grid item md={12} lg={6} sx={{ display: 'flex' }}>
+        <Grid size={{ lg: 6, md: 12 }} sx={{ display: 'flex' }}>
           <Box sx={{ flex: 1 }}>
             <BookFacilitySection />
           </Box>
         </Grid>
-        <Grid item md={12} lg={6} sx={{ display: 'flex' }}>
+        <Grid size={{ lg: 6, md: 12 }} sx={{ display: 'flex' }}>
           <Box sx={{ flex: 1 }}>
             <UpcomingBookingSection />
           </Box>

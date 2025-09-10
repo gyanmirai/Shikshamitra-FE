@@ -1,5 +1,4 @@
 import type { Dayjs } from 'dayjs';
-import type { DatePickerProps } from '@mui/x-date-pickers';
 import type { TableRowProps, TextFieldProps, TableContainerProps } from '@mui/material';
 
 // Add this interface to your existing interfaces
@@ -53,9 +52,6 @@ export interface ICustomizableTableProps {
   isScrollbar?: boolean;
   isShowedDense?: boolean;
   rowProps?: (row: IData, index: number) => TableRowProps;
-  startDateProps?: DatePickerProps<Dayjs>;
-  endDateProps?: DatePickerProps<Dayjs>;
-  dateProps?: DatePickerProps<Dayjs>;
   tableId: string;
   showCheckbox?: boolean;
   onSendNotification?: (data: any) => void;

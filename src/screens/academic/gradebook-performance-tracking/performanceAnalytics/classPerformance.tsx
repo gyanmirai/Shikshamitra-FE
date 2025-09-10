@@ -3,13 +3,11 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-
-import { Box, Card, Grid, useTheme, Typography } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
+import CustomSelect from 'src/components/custom-select';
+import { Box, Card, Grid, Typography } from '@mui/material';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomSelect from 'src/components/custom-select';
 
 import { PerformanceOverTime } from '../progress-report';
 
@@ -23,7 +21,7 @@ const ClassPerformance = () => {
   });
   const theme = useTheme();
   return (
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle1">Class Performance</Typography>
@@ -41,9 +39,7 @@ const ClassPerformance = () => {
               setClasses1(val as string);
               setDivisionOptions(selectedClass?.divisions || []);
             }}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
           <CustomSelect
             label="Division"
@@ -58,9 +54,7 @@ const ClassPerformance = () => {
               );
               setDivision1(val as string);
             }}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
         </Box>
         <PerformanceOverTime
@@ -79,12 +73,7 @@ const ClassPerformance = () => {
               'Nov',
               'Dec',
             ],
-            series: [
-              {
-                name: '',
-                data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-              },
-            ],
+            series: [{ name: '', data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49] }],
             options: {
               chart: {
                 toolbar: {
@@ -98,7 +87,6 @@ const ClassPerformance = () => {
                     zoomin: false,
                     zoomout: false,
                     pan: false,
-
                     customIcons: [],
                   },
                 },

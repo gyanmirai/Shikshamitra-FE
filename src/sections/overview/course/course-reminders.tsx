@@ -5,16 +5,13 @@ import type { CardProps } from '@mui/material/Card';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Card from '@mui/material/Card';
+import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
-import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
-
 import { fDateTime } from 'src/utils/format-time';
 import { fPercent } from 'src/utils/format-number';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Iconify } from 'src/components/iconify';
+import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 
 // ----------------------------------------------------------------------
 
@@ -34,7 +31,7 @@ export function CourseReminders({ title, list, ...other }: Props) {
 
   const colors = [
     theme.vars.palette.info.main,
-    theme.vars.palette.error.main,
+    theme.palette.error.main,
     theme.vars.palette.secondary.main,
     theme.vars.palette.success.main,
   ];

@@ -1,9 +1,6 @@
 import React from 'react';
-
 import { Box, Typography } from '@mui/material';
-
 import { formatNumber } from 'src/utils/formate_number';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const data = [

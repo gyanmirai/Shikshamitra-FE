@@ -2,12 +2,10 @@
 
 import dayjs from 'dayjs';
 import React, { useCallback } from 'react';
-
-import { Box, Chip, MenuList, MenuItem, Typography, CircularProgress } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Chip, MenuList, MenuItem, Typography, CircularProgress } from '@mui/material';
 
 type Props = {
   data: any[];

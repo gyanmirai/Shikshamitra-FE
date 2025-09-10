@@ -4,28 +4,23 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { Board, Medium, Division, Standards, Organization } from 'src/types/school';
 
-import { useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-import { Box, Chip, Button, Checkbox, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Chip, Button, Checkbox, Typography } from '@mui/material';
 import {
   useGetAccessControlQuery,
   useAddAccessControlMutation,
 } from 'src/redux/employee/employeeApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // Main screen component for access control functionality
 const AccessControlScreen = () => {
@@ -79,13 +74,7 @@ export const AccessControlForm = ({
     organizations: string[];
     standards: string[];
     divisions: string[];
-  }>({
-    boards: [],
-    mediums: [],
-    organizations: [],
-    standards: [],
-    divisions: [],
-  });
+  }>({ boards: [], mediums: [], organizations: [], standards: [], divisions: [] });
 
   // Get current academic year from global state
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -94,10 +83,7 @@ export const AccessControlForm = ({
   const [addAccessControl, { isLoading: isAddAccessControlLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddAccessControlMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Access Control added successfully',
-    },
+    popupConfig: { success: true, successMessage: 'Access Control added successfully' },
   });
 
   // Query hook for fetching existing access control data
@@ -105,9 +91,7 @@ export const AccessControlForm = ({
     type: 'query',
     currentQueryAndMutation: useGetAccessControlQuery,
     params: user?.id,
-    options: {
-      skip: !user?.id,
-    },
+    options: { skip: !user?.id },
   });
 
   // Effect to populate form with existing access control data
@@ -234,10 +218,7 @@ const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0
           display: 'flex',
           alignItems: 'center',
           position: 'relative',
-          '&:hover': {
-            bgcolor: 'action.hover',
-            borderRadius: 1,
-          },
+          '&:hover': { bgcolor: 'action.hover', borderRadius: 1 },
         }}
       >
         <Box
@@ -249,7 +230,7 @@ const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0
             justifyContent: 'center',
             borderRadius: '50%',
             p: 0.2,
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.2),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.2),
             visibility: hasChildren ? 'initial' : 'hidden',
           }}
         >
@@ -446,6 +427,7 @@ const BoardScreenStep = ({
   };
 
   // Function to render individual nodes
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const renderNode = (node: any, level: number = 0) => {
     const isSelected = checkedItem[`${node.type}` as keyof typeof checkedItem]?.includes(node.id);
     const isExpanded = expandedNodes.has(node.id);
@@ -477,10 +459,7 @@ const BoardScreenStep = ({
             display: 'flex',
             alignItems: 'center',
             position: 'relative',
-            '&:hover': {
-              bgcolor: 'action.hover',
-              borderRadius: 1,
-            },
+            '&:hover': { bgcolor: 'action.hover', borderRadius: 1 },
           }}
         >
           <Box
@@ -492,7 +471,7 @@ const BoardScreenStep = ({
               justifyContent: 'center',
               borderRadius: '50%',
               p: 0.2,
-              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.2),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.2),
               visibility: hasChildren ? 'initial' : 'hidden',
             }}
           >

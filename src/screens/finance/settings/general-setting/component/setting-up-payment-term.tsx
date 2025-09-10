@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-
-import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Grid, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
+import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Grid, Typography } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -28,7 +25,7 @@ const SetPaymentTerm = () => {
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <CustomizableTable
             noDataText={
               <>

@@ -4,13 +4,10 @@ import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
 import Link from 'next/link';
-
-import { Box, Grid, Card, Typography, CardContent } from '@mui/material';
-
-import { fNumber } from 'src/utils/format-number';
-
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { fNumber } from 'src/utils/format-number';
+import { Box, Grid, Card, Typography, CardContent } from '@mui/material';
 
 import Overview from './overview';
 import EventsHoliday from './events-holiday';
@@ -28,7 +25,7 @@ const Dashboard = () => (
       {/* Employee Birthdays & Anniversary */}
       <EmployeeBirthDay />
 
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Card>
           <CardContent>
             <Typography variant="h6">Events & Holidays</Typography>

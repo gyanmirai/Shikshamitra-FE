@@ -5,31 +5,25 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import React, { useState, useEffect } from 'react';
-
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
+import { alpha, useTheme } from '@mui/material/styles';
+import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import {
   Box,
   Grid,
   Card,
-  alpha,
   Button,
   Switch,
-  useTheme,
   Typography,
   DialogContent,
   DialogActions,
   DialogContentText,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-
-import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const curriculumInitialData = [
   {
@@ -162,7 +156,7 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
       </CustomDialog>
 
       <Grid container mt={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1">Material For Subjects</Typography>
@@ -194,16 +188,11 @@ const CarriculumListDashboardComponent = (props: TabComponentType) => {
                 ],
 
                 colors: [
-                  alpha(theme.palette.primary.dark, 0.8),
-                  alpha(theme.palette.warning.main, 0.8),
+                  alpha(theme.vars.palette.primary.dark, 0.8),
+                  alpha(theme.vars.palette.warning.main, 0.8),
                   alpha(theme.palette.error.main, 0.8),
                 ],
-                options: {
-                  legend: {
-                    show: false,
-                    position: 'top',
-                  },
-                },
+                options: { legend: { show: false, position: 'top' } },
               }}
               sx={{ height: '100%', boxShadow: 'none' }}
             />

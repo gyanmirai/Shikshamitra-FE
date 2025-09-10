@@ -1,5 +1,8 @@
 import React from 'react';
-
+import { useTabs } from 'src/hooks/use-tabs';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
 import {
   Tab,
   Box,
@@ -11,12 +14,6 @@ import {
   ListItemText,
   ListItemAvatar,
 } from '@mui/material';
-
-import { useTabs } from 'src/hooks/use-tabs';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
 
 interface Birthday {
   id: number;
@@ -163,19 +160,19 @@ const WhatsNewInMonthComponent: React.FC<WhatsNewInMonthProps> = ({
             icon={tab.icon}
             value={tab.value}
             label={
-              <Typography style={{ display: 'flex', alignItems: 'center' }}>
-                {tab.label}
+              <Box display="flex" alignItems="center">
+                <Typography variant="body1">{tab.label}</Typography>
                 <Chip
                   label="100"
                   size="small"
-                  style={{
+                  sx={{
                     backgroundColor: 'white',
-                    marginLeft: 8,
+                    ml: 1,
                     fontSize: '11px',
                     color: getColor(tab.value),
                   }}
                 />
-              </Typography>
+              </Box>
             }
           />
         ))}

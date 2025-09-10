@@ -1,10 +1,9 @@
 import type { BoxProps } from '@mui/material/Box';
 
 import Box from '@mui/material/Box';
+import { CONFIG } from 'src/config-global';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
-
-import { CONFIG } from 'src/config-global';
 import { varAlpha, bgGradient } from 'src/theme/styles';
 
 // ----------------------------------------------------------------------

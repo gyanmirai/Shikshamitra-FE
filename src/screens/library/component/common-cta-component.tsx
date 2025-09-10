@@ -1,10 +1,8 @@
 import React from 'react';
-
-import { Box, alpha, Button } from '@mui/material';
-
-import { varAlpha } from 'src/theme/styles/utils';
-
+import { Box, Button } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { varAlpha } from 'src/theme/styles/utils';
 
 interface CommonCtaComponentProps {
   bookHandler: () => void;
@@ -29,11 +27,11 @@ const CommonCtaComponent: React.FC<CommonCtaComponentProps> = ({
                 color="primary"
                 sx={{
                     backgroundColor: (theme) =>
-                        varAlpha(theme.palette.primary.mainChannel, 0.1),
+                        varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     color: 'primary.main',
                     '&:hover': {
                         backgroundColor: (theme) =>
-                            varAlpha(theme.palette.primary.mainChannel, 0.1),
+                            varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     },
                 }}
                 onClick={createReservationHandler}
@@ -49,10 +47,10 @@ const CommonCtaComponent: React.FC<CommonCtaComponentProps> = ({
         variant="contained"
         color="warning"
         sx={{
-          backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+          backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
           color: 'warning.main',
           '&:hover': {
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
           },
         }}
         onClick={bookHandler}
@@ -64,10 +62,10 @@ const CommonCtaComponent: React.FC<CommonCtaComponentProps> = ({
         variant="contained"
         color="success"
         sx={{
-          backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+          backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
           color: 'primary.main',
           '&:hover': {
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
           },
         }}
         onClick={issueBookHandler}

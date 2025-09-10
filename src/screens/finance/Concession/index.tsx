@@ -3,23 +3,19 @@
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 
-import { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetConcessionsQuery } from 'src/redux/feeConcession/feeConcession';
-
+import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import { useDispatch, useSelector } from 'react-redux';
+import { Box, Button, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetConcessionsQuery } from 'src/redux/feeConcession/feeConcession';
 
 import ReasonApprovalForm from './Components/ConcessionRequestApprove';
 import StudentConcessionTable from './Components/StudentConcessionTable';
@@ -113,7 +109,7 @@ const Concession = () => {
       />
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <CustomSelect
-          label="Board *"
+          label="Board"
           options={boards || []}
           labelKey="name"
           valueKey="id"
@@ -125,7 +121,7 @@ const Concession = () => {
           formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
         />
         <CustomSelect
-          label="Medium *"
+          label="Medium"
           options={mediums || []}
           labelKey="name"
           disabled={!selectedBoard}

@@ -4,13 +4,10 @@ import type { Division } from 'src/types/school';
 
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-
-import { Box, Grid, Chip, Typography } from '@mui/material';
-
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Box, Grid, Chip, Typography } from '@mui/material';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import type { IExamFormValues } from '../type';
 
@@ -49,7 +46,7 @@ const ExamBasicReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) =
   return (
     <SectionCard title="Basic Details">
       {/* Left Column */}
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Box display="flex" gap={3} alignItems="flex-start">
           {/* Exam Type */}
           <Box display="flex" alignItems="flex-start" gap={1} minWidth={200}>

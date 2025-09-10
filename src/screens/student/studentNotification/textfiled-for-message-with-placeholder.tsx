@@ -1,5 +1,4 @@
 import React, { useRef, useState } from 'react';
-
 import { Box, Menu, MenuItem } from '@mui/material';
 
 interface CustomPlaceholderInputProps {

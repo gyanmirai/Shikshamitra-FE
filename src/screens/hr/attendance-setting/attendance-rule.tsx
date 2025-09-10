@@ -3,10 +3,24 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
-import React, { useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { TimeUnitType } from 'src/enums/time-units';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useDispatch, useSelector } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -18,31 +32,12 @@ import {
   InputAdornment,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { TimeUnitType } from 'src/enums/time-units';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
 import {
   useGetEmployeeCustomAttendanceRuleQuery,
   useAddEmployeeCustomAttendanceRuleMutation,
   useUpdateEmployeeCustomAttendanceRuleMutation,
   useDeleteEmployeeCustomAttendanceRuleMutation,
 } from 'src/redux/employee/employeeApi';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import { Iconify } from 'src/components/iconify/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const AttendanceRule = ({ attendanceRuleDialog }: any) => {
   const confirm = useBoolean();
@@ -296,7 +291,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
             }}
           >
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <TextField
                   name="name"
                   label="Rule Name"
@@ -306,7 +301,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <CustomSelect
                   options={[
                     { id: EmployeeAttendanceStatus.HalfDayLeave, name: 'Half-day' },
@@ -321,7 +316,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
                   onChange={(val) => formik.setFieldValue('type', val)}
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <TextField
                   label="Late Threshold"
                   name="lateThreshold"
@@ -351,7 +346,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
                   }}
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <TextField
                   label="Half Threshold"
                   name="halfDayThreshold"
@@ -381,7 +376,7 @@ const AttendanceRuleForm = ({ handleClose, editData }: AttendanceRuleFormProps) 
                   }}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <FormControlLabel
                   control={
                     <Checkbox

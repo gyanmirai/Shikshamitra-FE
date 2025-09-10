@@ -3,18 +3,15 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-
 import { Box, Chip } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   IncidentStatusType,
   IncidentStatusColors,
   IncidentStatusOptions,
 } from 'src/enums/incident-status';
-
-import { Label } from 'src/components/label';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IArchivedIncidentTableProps } from '../type';
 import type { IHostelIncident } from '../../logDisciplinaryIncident/type';

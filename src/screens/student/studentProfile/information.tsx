@@ -1,18 +1,16 @@
 // import { isValidPhoneNumber } from 'react-phone-number-input/input';
 
 import { useFormik } from 'formik';
-import { useMemo, useState, useCallback } from 'react';
-
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { Tab, Box, Grid, Card, TextField } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
-import { getBase64String } from 'src/utils/get-base64-string';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
 import { Category } from 'src/enums/studnet-category';
+import { useMemo, useState, useCallback } from 'react';
+import { CustomTabs } from 'src/components/custom-tabs';
+import { shikshaMitraToast } from 'src/components/toast';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { getBase64String } from 'src/utils/get-base64-string';
+import { Tab, Box, Grid, Card, TextField } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import {
   useUpdateBasicDetailsMutation,
   useUpdateFamilyDetailsMutation,
@@ -22,9 +20,6 @@ import {
   useUpdateStudentAdditionalDetailsMutation,
   useUpdateStudentCommunicationDetailsMutation,
 } from 'src/redux/student/registration/registration-api';
-
-import { CustomTabs } from 'src/components/custom-tabs';
-import { shikshaMitraToast } from 'src/components/toast';
 
 import { FormSlider } from '../enrollment/register/register-form';
 import { familyFields } from '../enrollment/register/register-fields';
@@ -498,9 +493,10 @@ export function StudentInformation(props: StudentTabsComponentType) {
             <Grid container spacing={2} p={2}>
               {fields[activeTabIndex].map((field: FieldsType) => (
                 <Grid
-                  item
-                  xs={[1].includes(activeTabIndex) ? 12 : 3}
-                  md={[1].includes(activeTabIndex) ? 12 : 3}
+                  size={{
+                    xs: [1].includes(activeTabIndex) ? 12 : 3,
+                    md: [1].includes(activeTabIndex) ? 12 : 3,
+                  }}
                   key={field.name}
                   {...(field.gridProps || {})}
                 >

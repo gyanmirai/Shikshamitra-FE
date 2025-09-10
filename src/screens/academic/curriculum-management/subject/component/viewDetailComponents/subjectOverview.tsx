@@ -1,5 +1,8 @@
 import type { ReactElement } from 'react';
 
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomTooltip from 'src/components/custom-tooltip';
+import DetailRow from 'src/screens/communication/announcement/components/detailRow';
 import {
   Box,
   Grid,
@@ -15,26 +18,18 @@ import {
   ListItemAvatar,
 } from '@mui/material';
 
-import DetailRow from 'src/screens/communication/announcement/components/detailRow';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomTooltip from 'src/components/custom-tooltip';
-
 import type { ISubjectDetail } from '../type';
 
 const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
   <Box sx={{ height: '100%' }}>
     <Grid container spacing={2} height="100%">
       <Grid
-        item
-        xs={12}
-        md={8}
+        size={{ xs: 12, md: 8 }}
         sx={{ mt: 0, pt: 0, pl: 0, pb: 2, height: '100%', overflow: 'auto' }}
       >
         <Card sx={{ height: '100%', boxShadow: 0, border: 'none' }}>
           <Scrollbar sx={{ height: '100%', px: 0, pr: 2 }}>
             <CardContent sx={{ p: 0 }}>
-              {' '}
               {/* Adjust padding here */}
               <DetailRow label="Subject Code" value={subject?.subjectCode} icon="mdi:code-tags" />
               <DetailRow
@@ -53,18 +48,9 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
         </Card>
       </Grid>
 
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <Card>
           <CardContent sx={{ p: 2 }}>
-            {/* <Typography
-              variant="subtitle1"
-              gutterBottom
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              <Iconify icon="mdi:account-group" sx={{ mr: 1, height: '22px', width: '22px' }} />
-              Teachers
-            </Typography> */}
-            {/* <Divider sx={{ mb: 2 }} /> */}
             {/* Primary Teacher */}
             <Box sx={{ mb: 1 }}>
               <Typography variant="subtitle2" gutterBottom>
@@ -78,7 +64,6 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
                     border: '1px solid',
                     borderColor: 'divider',
                     boxShadow: 3,
-                    // mb: 1,
                   }}
                 >
                   <ListItemAvatar>
@@ -150,13 +135,11 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
 
             {/* Secondary Teachers */}
             <Typography variant="subtitle2">Secondary Teacher</Typography>
-
             <Scrollbar sx={{ height: '200px' }}>
               {Array.isArray(subject?.secondaryTeacher) && subject?.secondaryTeacher.length > 0 ? (
-                subject?.secondaryTeacher.map((teacher: TeacherProfile, idx: number) => (
+                subject.secondaryTeacher.map((teacher, idx) => (
                   <ListItem
                     key={idx}
-                    // disablePadding
                     sx={{
                       borderRadius: '8px',
                       p: 1,

@@ -3,14 +3,10 @@ import type { Theme, SxProps } from '@mui/material/styles';
 import type { UseSetStateReturn } from 'src/hooks/use-set-state';
 
 import { useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
-
-import { fDateRangeShortLabel } from 'src/utils/format-time';
-
 import { varAlpha } from 'src/theme/styles';
-
+import { fDateRangeShortLabel } from 'src/utils/format-time';
 import { chipProps, FiltersBlock, FiltersResult } from 'src/components/filters-result';
 
 // ----------------------------------------------------------------------

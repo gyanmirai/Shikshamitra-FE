@@ -3,9 +3,8 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
-import { Box, Grid, useTheme } from '@mui/material';
-
+import { Box, Grid } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import PerformanceTrends from './component/performanceTrens';

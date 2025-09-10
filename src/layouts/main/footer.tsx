@@ -1,18 +1,16 @@
 import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
 
 import Box from '@mui/material/Box';
+import { Grid } from '@mui/material';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
+import { Logo } from 'src/components/logo';
 import Divider from '@mui/material/Divider';
 import { useTheme } from '@mui/material/styles';
 import Container from '@mui/material/Container';
-import Grid from '@mui/material/Unstable_Grid2';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-
 import { RouterLink } from 'src/routes/components';
-
-import { Logo } from 'src/components/logo';
 import { SocialIcon } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
@@ -68,7 +66,7 @@ export function Footer({ layoutQuery, sx }: FooterProps) {
             [theme.breakpoints.up(layoutQuery)]: { justifyContent: 'space-between' },
           }}
         >
-          <Grid {...{ xs: 12, [layoutQuery]: 3 }}>
+          <Grid {...{ size: 12, [layoutQuery]: 3 }}>
             <Typography
               variant="body2"
               sx={{
@@ -98,7 +96,7 @@ export function Footer({ layoutQuery, sx }: FooterProps) {
             </Stack>
           </Grid>
 
-          <Grid {...{ xs: 12, [layoutQuery]: 6 }}>
+          <Grid {...{ size: 12, [layoutQuery]: 6 }}>
             <Stack
               spacing={5}
               sx={{

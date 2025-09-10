@@ -11,21 +11,18 @@ import type {
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
-import { Box, Slider, TextField, DialogActions, sliderClasses } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import courseProgressTableData from 'src/json/academic/syllabus/employee-course-data.json';
-import CourseProgressComponent from 'src/screens/classManagement/courseProgress/courseProgress';
-
+import { sliderClasses } from '@mui/material/Slider';
+import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
 import { ComponentBlock } from 'src/components/component-block';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Slider, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import courseProgressTableData from 'src/json/academic/syllabus/employee-course-data.json';
+import CourseProgressComponent from 'src/screens/classManagement/courseProgress/courseProgress';
 
 const CourseProgress = () => {
   const [courses, setCourses] = useState<any[]>(courseProgressTableData);

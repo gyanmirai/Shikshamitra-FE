@@ -27,26 +27,32 @@ export function updateCoreWithSettings(
     ...theme,
     colorSchemes: {
       ...colorSchemes,
-      light: {
-        palette: {
-          ...colorSchemes?.light?.palette,
-          /** [1] */
-          primary: getPalettePrimary(settings.primaryColor),
-          /** [2] */
-          background: {
-            ...colorSchemes?.light?.palette?.background,
-            default: getBackgroundDefault(settings.contrast),
-            defaultChannel: hexToRgbChannel(getBackgroundDefault(settings.contrast)),
-          },
-        },
-      },
-      dark: {
-        palette: {
-          ...colorSchemes?.dark?.palette,
-          /** [1] */
-          primary: getPalettePrimary(settings.primaryColor),
-        },
-      },
+      light:
+        typeof colorSchemes?.light === 'object' && colorSchemes.light !== null
+          ? {
+              palette: {
+                ...colorSchemes.light.palette,
+                /** [1] */
+                primary: getPalettePrimary(settings.primaryColor),
+                /** [2] */
+                background: {
+                  ...colorSchemes.light.palette?.background,
+                  default: getBackgroundDefault(settings.contrast),
+                  defaultChannel: hexToRgbChannel(getBackgroundDefault(settings.contrast)),
+                },
+              },
+            }
+          : {},
+      dark:
+        typeof colorSchemes?.dark === 'object' && colorSchemes.dark !== null
+          ? {
+              palette: {
+                ...colorSchemes.dark.palette,
+                /** [1] */
+                primary: getPalettePrimary(settings.primaryColor),
+              },
+            }
+          : {},
     },
     customShadows: {
       ...customShadows,

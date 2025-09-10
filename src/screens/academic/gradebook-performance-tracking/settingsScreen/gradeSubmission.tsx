@@ -5,9 +5,16 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   Box,
   Grid,
@@ -17,17 +24,6 @@ import {
   DialogActions,
   DialogContentText,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 interface TGradeDeadline {
   id: number;
@@ -262,7 +258,7 @@ const GradeDeadlineForm: React.FC<{
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
           <Grid container spacing={1}>
-            <Grid item xs={6}>
+            <Grid size={{ xs: 6 }}>
               <CustomSelect
                 label="Class"
                 options={classData?.items || []}
@@ -281,7 +277,8 @@ const GradeDeadlineForm: React.FC<{
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
-            <Grid item xs={6}>
+
+            <Grid size={{ xs: 6 }}>
               <CustomSelect
                 label="Division"
                 disabled={!classes}
@@ -297,7 +294,8 @@ const GradeDeadlineForm: React.FC<{
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
-            <Grid item xs={6}>
+
+            <Grid size={{ xs: 6 }}>
               <CustomSelect
                 label="Subject"
                 disabled={!formik.values.division}
@@ -310,12 +308,11 @@ const GradeDeadlineForm: React.FC<{
                   formik.setFieldValue('subject', val);
                 }}
                 value={formik.values.subject}
-                formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
-                }}
+                formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
               />
             </Grid>
-            <Grid item xs={6}>
+
+            <Grid size={{ xs: 6 }}>
               <CustomSelect
                 label="Assignment Type"
                 disabled={!formik.values.subject}
@@ -327,9 +324,11 @@ const GradeDeadlineForm: React.FC<{
                 ]}
                 onChange={(val) => formik.setFieldValue('assignmentType', val)}
                 value={formik.values.assignmentType}
+                formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
               />
             </Grid>
-            <Grid item xs={6}>
+
+            <Grid size={{ xs: 6 }}>
               <CustomSelect
                 label="Assignment Title"
                 disabled={!formik.values.assignmentType}
@@ -342,17 +341,13 @@ const GradeDeadlineForm: React.FC<{
                   { value: 'Quiz 3', label: 'Quiz 3' },
                   { value: 'Lab Report', label: 'Lab Report' },
                 ]}
-                onChange={(val) => {
-                  // setAssignmentTitle(val as string);
-                  formik.setFieldValue('assignmentTitle', val as string);
-                }}
+                onChange={(val) => formik.setFieldValue('assignmentTitle', val as string)}
                 value={formik.values.assignmentTitle}
-                formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
-                }}
+                formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <DateTimePicker
                 label="Deadline"
                 value={formik.values.deadline}

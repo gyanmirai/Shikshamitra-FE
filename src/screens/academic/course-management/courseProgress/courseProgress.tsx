@@ -7,9 +7,24 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { sliderClasses } from '@mui/material/Slider';
 import { useSelector, useDispatch } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import CancelButton from 'src/components/cancel-button';
+import SubmitButton from 'src/components/submit-button';
 import React, { useState, useEffect, useCallback } from 'react';
-
+import { ComponentBlock } from 'src/components/component-block';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
 import {
   Box,
   Slider,
@@ -18,28 +33,8 @@ import {
   TextField,
   Typography,
   DialogActions,
-  sliderClasses,
   CircularProgress,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
-
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import CancelButton from 'src/components/cancel-button';
-import SubmitButton from 'src/components/submit-button';
-import { ComponentBlock } from 'src/components/component-block';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import CourseCardsGrid from './components/courseCardsGrid';
 import ViewChapterLogs from './components/viewChapterLogs';

@@ -1,11 +1,9 @@
 import type { BoxProps } from '@mui/material/Box';
 
 import { memo } from 'react';
-
 import Box from '@mui/material/Box';
-import { useTheme } from '@mui/material/styles';
-
 import { CONFIG } from 'src/config-global';
+import { useTheme } from '@mui/material/styles';
 
 import { BackgroundShape } from './background-shape';
 
@@ -20,7 +18,7 @@ function ForbiddenIllustration({ hideBackground, sx, ...other }: Props) {
 
   const PRIMARY_LIGHT = theme.vars.palette.primary.light;
 
-  const PRIMARY_MAIN = theme.vars.palette.primary.main;
+  const PRIMARY_MAIN = theme.palette.primary.main;
 
   const PRIMARY_DARK = theme.vars.palette.primary.dark;
 

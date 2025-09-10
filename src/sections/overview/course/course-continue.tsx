@@ -5,12 +5,10 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Card from '@mui/material/Card';
 import Avatar from '@mui/material/Avatar';
-import CardHeader from '@mui/material/CardHeader';
-import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
-
-import { fPercent } from 'src/utils/format-number';
-
 import { varAlpha } from 'src/theme/styles';
+import CardHeader from '@mui/material/CardHeader';
+import { fPercent } from 'src/utils/format-number';
+import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 
 // ----------------------------------------------------------------------
 

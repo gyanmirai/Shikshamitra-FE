@@ -1,20 +1,13 @@
 import L from 'leaflet';
 import React, { useState } from 'react';
-import { Popup, Marker, TileLayer, MapContainer, useMapEvents } from 'react-leaflet';
-
-import { Box, Switch, Typography } from '@mui/material';
-
 import { CONFIG } from 'src/config-global';
+import { Box, Switch, Typography } from '@mui/material';
+import { Popup, Marker, TileLayer, MapContainer, useMapEvents } from 'react-leaflet';
 
 // Define types for coordinates and location data
 interface Coordinates {
   lat: number;
   lng: number;
-}
-
-interface LocationDetail {
-  coordinates: Coordinates;
-  name: string;
 }
 
 // Define props interface

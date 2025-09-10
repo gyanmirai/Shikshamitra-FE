@@ -3,21 +3,17 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
-
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import { useSelector, useDispatch } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetMembersQuery } from 'src/redux/memberManagement/memberManagementApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import MemberForm from './Components/MemberManageForm';
 import ChangeStatusForm from './Components/ChangeStatusForm';
@@ -28,7 +24,7 @@ import MemberDetailedViewComponent from './Components/MemberDetailedViewComponen
 const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control member form visibility
   const [open, setOpen] = useState(false);
-  const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
+  const { data: memberData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetMembersQuery,
   });
@@ -37,6 +33,7 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
 
   // State to store currently selected status
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedStatus, setSelectedStatus] = useState<any | null>(null);
 
   // Redux selector to track unsaved changes

@@ -1,10 +1,8 @@
 import Box from '@mui/material/Box';
+import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
-
-import { varAlpha } from 'src/theme/styles';
-
-import { Label } from 'src/components/label';
 
 // ----------------------------------------------------------------------
 
@@ -39,7 +37,7 @@ export function ResultItem({
         borderBottomColor: (theme) => theme.vars.palette.divider,
         '&:hover': {
           borderRadius: 1,
-          borderColor: (theme) => theme.vars.palette.primary.main,
+          borderColor: (theme) => theme.palette.primary.main,
           backgroundColor: (theme) =>
             varAlpha(
               theme.vars.palette.primary.mainChannel,

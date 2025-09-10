@@ -6,26 +6,21 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { useMemo, useState, useEffect } from 'react';
-
-import { Box, Tab, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useCustomSearchParams } from 'src/hooks/use-search-param';
-
-import calculateAge from 'src/utils/calculate-age';
-import { convertBase64Format } from 'src/utils/base64Formate';
-
-import { GenderType, GenderOptions } from 'src/enums/gender';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetStudentByIdQuery, useLazyGetFilterStudentsQuery } from 'src/redux/student';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import calculateAge from 'src/utils/calculate-age';
+import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { GenderType, GenderOptions } from 'src/enums/gender';
+import { convertBase64Format } from 'src/utils/base64Formate';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useCustomSearchParams } from 'src/hooks/use-search-param';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Tab, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
+import { useGetStudentByIdQuery, useLazyGetFilterStudentsQuery } from 'src/redux/student';
 
 import Finance from './finance';
 import Library from './libraray';
@@ -143,7 +138,6 @@ const TABS = [
 
 export function StudentProfile() {
   // Dialog state for student ID card
-  const icardDialog = useBoolean();
 
   // States for managing organization/stage selection
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -156,11 +150,7 @@ export function StudentProfile() {
   // States for managing division selection
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Effect to update organizations when medium changes
   useEffect(() => {
@@ -182,9 +172,7 @@ export function StudentProfile() {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
 
-  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({
-    student: '',
-  });
+  const { getAllParams, setParam: setSearchParams } = useCustomSearchParams({ student: '' });
   const searchParams = getAllParams();
 
   // Query hook for fetching filtered student data
@@ -226,7 +214,7 @@ export function StudentProfile() {
   const currentStudent: boolean = !!searchParams?.student;
 
   // State to track selected students for bulk actions
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [selectedStudents] = useState<any>([]);
 
   // Boolean state to control instant notification dialog visibility
   const sendInstantNotificationDialogValue = useBoolean();
@@ -462,9 +450,7 @@ const StudentProfileView = () => {
     type: 'query',
     currentQueryAndMutation: useGetStudentByIdQuery,
     params: searchParams?.student,
-    options: {
-      skip: !searchParams?.student,
-    },
+    options: { skip: !searchParams?.student },
   });
   console.log(currentStudent, 'currentStudent==========>');
   return isLoading ? (
@@ -486,7 +472,7 @@ const StudentProfileView = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderLeft: (theme) => `4px solid ${theme.palette.success.main}`,
+            borderLeft: (theme) => `4px solid ${theme.vars.palette.success.main}`,
             borderRadius: 1,
           }}
         >

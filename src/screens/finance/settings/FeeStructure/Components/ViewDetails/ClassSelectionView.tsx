@@ -1,6 +1,6 @@
-import { Box, Grid, Button, useTheme, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { Box, Grid, Button, Typography } from '@mui/material';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
-
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   FeeStructureClassStatusType,
@@ -10,7 +10,7 @@ import {
 import type { IClassWiseFeeData } from '../../type';
 
 interface ClassSelectionViewProps {
-  feeStructureClasses: Record<string, IClassWiseFeeData[]>; // ✅ FIXED
+  feeStructureClasses: Record<string, IClassWiseFeeData[]>; //  FIXED
   selectedClass: string | null;
   onSelectClass: (className: string) => void;
 }
@@ -26,7 +26,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
 
   return (
     <SectionCard title="Selected Classes">
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Box display="flex" flexWrap="wrap" gap={1}>
           {Object.keys(feeStructureClasses).map((className) => {
             // take the first structure’s status for display
@@ -42,11 +42,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
                       status as keyof typeof FeeStructureClassStatusTypeColors
                     ]
                   }
-                  sx={{
-                    minWidth: 80,
-                    textTransform: 'none',
-                    fontWeight: 500,
-                  }}
+                  sx={{ minWidth: 80, textTransform: 'none', fontWeight: 500 }}
                   onClick={() => onSelectClass(className)}
                 >
                   {className.replace('Class ', '')}
@@ -58,7 +54,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
       </Grid>
 
       {/* Legend */}
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Box display="flex" alignItems="center" gap={3} mb={2}>
           {[
             FeeStructureClassStatusType.Current,
@@ -72,10 +68,10 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
 
             const dotColor =
               statusKey === FeeStructureClassStatusType.Current
-                ? theme.palette.success.main
+                ? theme.vars.palette.success.main
                 : statusKey === FeeStructureClassStatusType.Completed
-                  ? theme.palette.success.light
-                  : theme.palette.grey[400];
+                  ? theme.vars.palette.success.light
+                  : theme.vars.palette.grey[400];
 
             return (
               <Box key={statusKey} display="flex" alignItems="center" gap={1}>

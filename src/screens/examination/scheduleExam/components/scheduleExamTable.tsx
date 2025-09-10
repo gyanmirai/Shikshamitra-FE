@@ -1,23 +1,18 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useMemo, useState, useCallback } from 'react';
-
 import { Add } from '@mui/icons-material';
-import { Box, Tab, Tabs, Button, MenuList, MenuItem } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
-
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useCallback } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
+import { Box, Tab, Tabs, Button, MenuList, MenuItem } from '@mui/material';
 
 import ViewTimetableComp from './viewTimetableComp';
 

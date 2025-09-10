@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-
 import { Box } from '@mui/material';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ReviewGatePassRequestStaffTable from './component/review-gate-pass-request-staff-table';

@@ -1,23 +1,19 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useState, useCallback } from 'react';
-
-import { Box, MenuItem, MenuList, TextField, Autocomplete } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import React, { useState, useCallback } from 'react';
+import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, MenuItem, MenuList, TextField, Autocomplete } from '@mui/material';
 import hostelRoomData from 'src/json/hostel/hostelConfiguration/hostelRoomAllocation.json';
 import {
   HostelRoomStatusType,
   HostelRoomStatusColors,
   HostelRoomStatusOptions,
 } from 'src/enums/hostelRoom-status';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import RoomDetailComp from './roomDetailComp';
 

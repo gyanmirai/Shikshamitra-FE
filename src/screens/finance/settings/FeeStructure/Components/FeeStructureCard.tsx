@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-
 import AddIcon from '@mui/icons-material/Add';
-import { Box, Grid, Button, Switch, TextField, IconButton, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, Button, Switch, TextField, IconButton, Typography } from '@mui/material';
 
 import AddFeeHeadDialogContent from './AddFeeHeadForm';
 
@@ -32,7 +28,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
   const deleteFeeStructureDialog = useBoolean();
 
   return (
-    <Grid xs={12} key={className} sx={{ ml: 3, mt: 2 }}>
+    <Grid size={12} key={className} sx={{ ml: 3, mt: 2 }}>
       {feeItems.length > 0 && (
         <Scrollbar sx={{ height: '150px', mb: 2 }}>
           {feeItems.map((item, index) => (
@@ -49,10 +45,10 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                 mb: 4,
               }}
             >
-              <Grid item xs={0.1}>
+              <Grid size={0.1}>
                 <Typography variant="h6">{index + 1}.</Typography>
               </Grid>
-              <Grid item xs={2} pt={0}>
+              <Grid size={2} pt={0}>
                 <TextField
                   label="Category"
                   size="small"
@@ -71,7 +67,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={2} pt={0}>
+              <Grid size={2} pt={0}>
                 <TextField
                   label="Fee Head"
                   disabled
@@ -85,7 +81,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   fullWidth
                 />
               </Grid>
-              <Grid item xs={2} pt={0}>
+              <Grid size={2} pt={0}>
                 <NumericFormatCustom
                   size="small"
                   fullWidth
@@ -122,7 +118,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   // }
                 />
               </Grid>
-              <Grid item xs={2} pt={0} display="flex" alignItems="center">
+              <Grid size={2} pt={0} display="flex" alignItems="center">
                 <Switch
                   checked={item.isOneTime}
                   onChange={(event) => {
@@ -136,7 +132,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   One Time Fee
                 </Typography>
               </Grid>
-              <Grid item xs={2} pt={0} display="flex" alignItems="center">
+              <Grid size={2} pt={0} display="flex" alignItems="center">
                 <Switch
                   checked={item.required}
                   onChange={(event) => {
@@ -150,7 +146,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   Optional
                 </Typography>
               </Grid>
-              <Grid item xs={0.5} ml={2}>
+              <Grid size={0.5} ml={2}>
                 <IconButton
                   color="error"
                   onClick={() => {

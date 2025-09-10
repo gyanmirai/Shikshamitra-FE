@@ -1,11 +1,9 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
-import { Grid, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getResourceMeasurementUnitInitialValues } from '../initialValue';
@@ -45,7 +43,7 @@ const AddMeasurementUnitDialog: React.FC<IResourceMeasurementUnitDialogProps> = 
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
         <Grid container spacing={2}>
           {/* Category Name Field */}
-          <Grid item xs={12} md={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={
                 formik.touched.resourceMeasurementUnit &&
@@ -72,7 +70,7 @@ const AddMeasurementUnitDialog: React.FC<IResourceMeasurementUnitDialogProps> = 
           </Grid>
 
           {/* Subcategory Field */}
-          <Grid item xs={12} md={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={
                 formik.touched.resourceMeasurementUnitDescription &&

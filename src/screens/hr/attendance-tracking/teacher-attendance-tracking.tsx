@@ -2,22 +2,18 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import { useMemo, useEffect } from 'react';
-
+import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Card, Typography } from '@mui/material';
-
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
-import { varAlpha } from 'src/theme/styles';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useLazyGetAttendanceByEmployeeIdQuery } from 'src/redux/employee/employeeApi';
 import {
   EmployeeAttendanceStatus,
   EmployeeAttendanceStatusColor,
 } from 'src/enums/employee-attendance-status';
-
-import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const TeacherAttendanceTracking = ({
   searchParams,
@@ -72,11 +68,7 @@ const TeacherAttendanceTracking = ({
           // setDate(value);
         }}
         sx={{ mb: 2 }}
-        slotProps={{
-          textField: {
-            size: 'small',
-          },
-        }}
+        slotProps={{ textField: { size: 'small' } }}
       />
       &nbsp;
       <DatePicker
@@ -88,18 +80,14 @@ const TeacherAttendanceTracking = ({
           // setDate(value);
         }}
         sx={{ mb: 2 }}
-        slotProps={{
-          textField: {
-            size: 'small',
-          },
-        }}
+        slotProps={{ textField: { size: 'small' } }}
       />
       <Box display="flex" gap={2}>
         <Card
           sx={{
             maxWidth: 280,
             width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
             color: (theme) => theme.palette.primary.main,
             p: 2,
           }}
@@ -113,7 +101,7 @@ const TeacherAttendanceTracking = ({
             maxWidth: 280,
             p: 2,
             width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.1),
             color: (theme) => theme.palette.error.main,
           }}
         >
@@ -126,8 +114,8 @@ const TeacherAttendanceTracking = ({
             maxWidth: 280,
             p: 2,
             width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
-            color: (theme) => theme.palette.warning.main,
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
+            color: (theme) => theme.vars.palette.warning.main,
           }}
         >
           <Typography variant="subtitle1">Half Day Leave</Typography>

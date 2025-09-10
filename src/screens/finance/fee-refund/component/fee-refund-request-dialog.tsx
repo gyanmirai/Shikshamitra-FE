@@ -1,14 +1,12 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react'; // Import isEqual
 
-import { Box, Grid, Card, TextField, Autocomplete } from '@mui/material';
-
 import capitalizeWords from 'src/utils/capitalizeText';
-
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, Card, TextField, Autocomplete } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { feeRefundValidationSchema } from './validationSchema';
@@ -56,13 +54,12 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
             <Box gap={2} flexGrow={1}>
               <Grid container spacing={3} p={2} my={1}>
                 {/* Class */}
-                <Grid item lg={4} xs={6}>
+                <Grid size={{ lg: 4, xs: 6 }}>
                   <ShakingTextField error={formik.touched.class && Boolean(formik.errors.class)}>
                     <CustomSelect
                       options={[
                         { label: '10', value: '10A' },
                         { label: '12', value: '10B' },
-
                         { label: '11', value: '10C' },
                       ]}
                       autoFocus
@@ -78,7 +75,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                 </Grid>
 
                 {/* Division */}
-                <Grid item lg={4} xs={6}>
+                <Grid size={{ lg: 4, xs: 6 }}>
                   <ShakingTextField
                     error={formik.touched.division && Boolean(formik.errors.division)}
                   >
@@ -101,7 +98,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                 </Grid>
 
                 {/* Student Name */}
-                <Grid item lg={4} xs={6}>
+                <Grid size={{ lg: 4, xs: 6 }}>
                   <ShakingTextField
                     error={formik.touched.studentName && Boolean(formik.errors.studentName)}
                   >
@@ -130,7 +127,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                 </Grid>
 
                 {/* GR No */}
-                <Grid item lg={4} xs={6}>
+                <Grid size={{ lg: 4, xs: 6 }}>
                   <ShakingTextField error={formik.touched.grNo && Boolean(formik.errors.grNo)}>
                     <Autocomplete
                       options={[
@@ -157,7 +154,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                 </Grid>
 
                 {/* Fee Type */}
-                <Grid item lg={4} xs={6}>
+                <Grid size={{ lg: 4, xs: 6 }}>
                   <ShakingTextField
                     error={formik.touched.feeType && Boolean(formik.errors.feeType)}
                   >
@@ -191,7 +188,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                 </Grid>
 
                 {/* Paid Terms */}
-                <Grid item lg={4} xs={6}>
+                <Grid size={{ lg: 4, xs: 6 }}>
                   <ShakingTextField
                     error={formik.touched.paidTerms && Boolean(formik.errors.paidTerms)}
                   >
@@ -225,7 +222,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                 </Grid>
 
                 {/* Refund Amount Fields */}
-                <Grid item lg={4} xs={6}>
+                <Grid size={{ lg: 4, xs: 6 }}>
                   <NumericFormatCustom
                     size="small"
                     label="Amount Applicable For Refund"
@@ -245,7 +242,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                   />
                 </Grid>
 
-                <Grid item lg={4} xs={6}>
+                <Grid size={{ lg: 4, xs: 6 }}>
                   <ShakingTextField
                     error={formik.touched.askForRefund && Boolean(formik.errors.askForRefund)}
                   >
@@ -263,7 +260,7 @@ const FeeRefundRequestDialog: React.FC<IFeeRefundRequestDialogProps> = ({ onClos
                 </Grid>
 
                 {/* Additional Notes */}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <ShakingTextField error={formik.touched.reason && Boolean(formik.errors.reason)}>
                     <TextField
                       label="Reason *"

@@ -1,7 +1,14 @@
 import React from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, Button, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Card,
+  Button,
+  Switch,
+  TextField,
+  Typography,
+  FormControlLabel,
+} from '@mui/material';
 
 interface FinanceNotificationCardProps {
   cardTitle: string; // Prop for card title
@@ -26,7 +33,7 @@ const FinanceNotificationCardComponent: React.FC<FinanceNotificationCardProps> =
   onInputChange,
   onSave,
 }) => (
-  <Grid2>
+  <Grid>
     <Card
       sx={{
         pl: 3,
@@ -65,7 +72,7 @@ const FinanceNotificationCardComponent: React.FC<FinanceNotificationCardProps> =
 
       <Box py="12px" />
     </Card>
-  </Grid2>
+  </Grid>
 );
 
 export default FinanceNotificationCardComponent;

@@ -3,24 +3,20 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button, Typography, CircularProgress } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetExpensesQuery } from 'src/redux/finance/expenseApi/expenseApi';
-import { useGetExpenseDetailsQuery } from 'src/redux/finance/expenseApi/expenseDetailedApi';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetExpensesQuery } from 'src/redux/finance/expenseApi/expenseApi';
+import { Box, Card, Button, Typography, CircularProgress } from '@mui/material';
+import { useGetExpenseDetailsQuery } from 'src/redux/finance/expenseApi/expenseDetailedApi';
 
 import ViewExpenseData from './component/ViewExpenseData';
 import ExpenseCategoryForm from './component/ExpenseCategoryForm';
@@ -137,6 +133,7 @@ const FinanceExpenseTracking = () => {
             data={expenseDetailedData || []}
             addExpenseCategory={addExpenseDialog}
             setEditData={setSelectedExpense}
+            isLoading={isLoading}
             onEdit={(data) => {
               addExpenseDialog.onTrue();
               setSelectedExpense(data);

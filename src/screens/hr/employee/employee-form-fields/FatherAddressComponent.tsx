@@ -1,5 +1,4 @@
 import { Grid, TextField } from '@mui/material';
-
 import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -12,7 +11,7 @@ interface FatherAddressComponentProps {
 
 export const FatherAddressComponent = ({ formik, disabled }: FatherAddressComponentProps) => (
   <Grid container spacing={2}>
-    <Grid item xs={12} sm={6} md={4} lg={3}>
+    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
       <CountryComponent
         value={formik.values.fatherCountry}
         onChange={(_e: any, value: any) => {
@@ -24,7 +23,7 @@ export const FatherAddressComponent = ({ formik, disabled }: FatherAddressCompon
       />
     </Grid>
 
-    <Grid item xs={12} sm={6} md={4} lg={3}>
+    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
       <StateComponent
         value={formik.values.fatherState}
         countryValue={formik.values.fatherCountry}
@@ -37,7 +36,7 @@ export const FatherAddressComponent = ({ formik, disabled }: FatherAddressCompon
       />
     </Grid>
 
-    <Grid item xs={12} sm={6} md={4} lg={3}>
+    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
       <CityComponent
         value={formik.values.fatherCity}
         onChange={(_e: any, value: any) => {
@@ -49,7 +48,7 @@ export const FatherAddressComponent = ({ formik, disabled }: FatherAddressCompon
       />
     </Grid>
 
-    <Grid item xs={12} sm={6} md={4} lg={3}>
+    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
       <ShakingTextField
         error={formik.touched.fatherPinCode && Boolean(formik.errors.fatherPinCode)}
       >
@@ -67,7 +66,7 @@ export const FatherAddressComponent = ({ formik, disabled }: FatherAddressCompon
       </ShakingTextField>
     </Grid>
 
-    <Grid item xs={12} sm={6} md={4} lg={3}>
+    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
       <ShakingTextField
         error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
       >

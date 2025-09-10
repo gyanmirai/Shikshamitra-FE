@@ -1,7 +1,6 @@
-import { Box, Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
-
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
+import { Box, Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
 const RenderLocalAddressFields = (props: any) => {
@@ -10,7 +9,7 @@ const RenderLocalAddressFields = (props: any) => {
   return (
     <Box>
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <FormControlLabel
             disabled={!isEdit}
             control={
@@ -48,7 +47,7 @@ const RenderLocalAddressFields = (props: any) => {
             label="Same as Student Local Address"
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <TextField
             name="localAddressLine1"
             label="Building No./Flat/House No."
@@ -61,7 +60,7 @@ const RenderLocalAddressFields = (props: any) => {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <TextField
             disabled={!isEdit}
             name="localAddressLine2"
@@ -74,7 +73,7 @@ const RenderLocalAddressFields = (props: any) => {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <TextField
             disabled={!isEdit}
             name="localAddressLine3"
@@ -88,7 +87,7 @@ const RenderLocalAddressFields = (props: any) => {
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <CountryComponent
             value={formik.values.localCountry}
             onChange={(_e, value) => {
@@ -100,7 +99,7 @@ const RenderLocalAddressFields = (props: any) => {
             // helperText={formik.touched.localCountry && formik.errors.localCountry}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <StateComponent
             value={formik.values.localState}
             onChange={(_e, value) => {
@@ -113,7 +112,7 @@ const RenderLocalAddressFields = (props: any) => {
             countryValue={formik.values.localCountry}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <CityComponent
             value={formik.values.localCity}
             onChange={(_e, value) => formik.setFieldValue('localCity', value)}
@@ -123,7 +122,7 @@ const RenderLocalAddressFields = (props: any) => {
             disabled={!isEdit}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <TextField
             disabled={!isEdit}
             name="localPincode"

@@ -6,50 +6,45 @@ import type { EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import { useDispatch, useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CommonCalender from 'src/components/calender';
+import { useDispatch, useSelector } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
   Switch,
   Button,
-  useTheme,
   TextField,
   Typography,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   useAddEventHolidayMutation,
   useDeleteEventHolidayMutation,
   useUpdateEventHolidayMutation,
   useLazyGetEventHolidayByDateQuery,
 } from 'src/redux/eventHoliday/eventHolidayApi';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CommonCalender from 'src/components/calender';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { eventAndHolidayInitialValues } from './initialValue';
 import { eventAndHolidayValidationSchema } from './validationSchema';
@@ -124,14 +119,14 @@ const HrEventsAndHolidaysScreen = () => {
       eventHolidayData?.items.map((i: any) => ({
         ...i,
         start: i.startDate,
-        color: i.isHoliday ? theme.palette.error.main : theme.palette.success.main,
+        color: i.isHoliday ? theme.palette.error.main : theme.vars.palette.success.main,
         end: i.endDate,
         allDay: false,
-        textColor: i.isHoliday ? theme.palette.error.main : theme.palette.success.main,
+        textColor: i.isHoliday ? theme.palette.error.main : theme.vars.palette.success.main,
         title: i.isHoliday ? 'Holiday' : 'Event',
         description: i.reason,
       })) || [],
-    [eventHolidayData?.items, theme.palette.error.main, theme.palette.success.main]
+    [eventHolidayData?.items, theme.palette.error.main, theme.vars.palette.success.main]
   );
 
   // Get selected calendar event data
@@ -158,11 +153,7 @@ const HrEventsAndHolidaysScreen = () => {
           onChange={(newValue) => {
             setDate(newValue);
           }}
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
+          slotProps={{ textField: { size: 'small' } }}
         />
         <Button onClick={dialog.onTrue} startIcon={<Add />} variant="contained" size="small">
           Event & Holiday
@@ -285,8 +276,8 @@ const HrEventsAndHolidaysScreen = () => {
           //   sx: {
           //     borderLeft: `3px solid ${row.isHoliday ? 'red' : 'green'}`,
           //     background: row.isHoliday
-          //       ? varAlpha(theme.palette.error.mainChannel, 0.2)
-          //       : varAlpha(theme.palette.success.mainChannel, 0.2),
+          //       ? varAlpha(theme.vars.palette.error.mainChannel, 0.2)
+          //       : varAlpha(theme.vars.palette.success.mainChannel, 0.2),
           //   },
           // })}
         />
@@ -416,13 +407,9 @@ export const HrEventsAndHolidaysForm = ({
             },
           }).unwrap();
           if (value.isHoliday) {
-            shikshaMitraToast.success({
-              message: 'Holiday updated successfully',
-            });
+            shikshaMitraToast.success({ message: 'Holiday updated successfully' });
           } else {
-            shikshaMitraToast.success({
-              message: 'Event updated successfully',
-            });
+            shikshaMitraToast.success({ message: 'Event updated successfully' });
           }
         } else {
           // If creating new event, add it with provided values
@@ -434,13 +421,9 @@ export const HrEventsAndHolidaysForm = ({
             name: value.name,
           }).unwrap();
           if (value.isHoliday) {
-            shikshaMitraToast.success({
-              message: 'Holiday created successfully',
-            });
+            shikshaMitraToast.success({ message: 'Holiday created successfully' });
           } else {
-            shikshaMitraToast.success({
-              message: 'Event created successfully',
-            });
+            shikshaMitraToast.success({ message: 'Event created successfully' });
           }
         }
         // Close form after successful submission
@@ -455,7 +438,7 @@ export const HrEventsAndHolidaysForm = ({
       <DialogScrollContent>
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ShakingTextField error={formik.touched.endDate && Boolean(formik.errors.endDate)}>
                 <TextField
                   fullWidth
@@ -469,7 +452,7 @@ export const HrEventsAndHolidaysForm = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ShakingTextField
                 error={formik.touched.startDate && Boolean(formik.errors.startDate)}
               >
@@ -490,7 +473,7 @@ export const HrEventsAndHolidaysForm = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ShakingTextField error={formik.touched.endDate && Boolean(formik.errors.endDate)}>
                 <DatePicker
                   format="DD-MM-YYYY"
@@ -509,7 +492,7 @@ export const HrEventsAndHolidaysForm = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ShakingTextField error={formik.touched.reason && Boolean(formik.errors.reason)}>
                 <TextField
                   label="Description *"
@@ -526,7 +509,7 @@ export const HrEventsAndHolidaysForm = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <FormControlLabel
                 disabled={isCalenderPreview}
                 control={

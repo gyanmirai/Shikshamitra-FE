@@ -1,17 +1,14 @@
 import type { StackProps } from '@mui/material/Stack';
 
 import { m } from 'framer-motion';
-
 import Box from '@mui/material/Box';
+import { Grid } from '@mui/material';
 import Stack from '@mui/material/Stack';
-import Grid from '@mui/material/Unstable_Grid2';
+import { CONFIG } from 'src/config-global';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
-
-import { CONFIG } from 'src/config-global';
 import { varAlpha, stylesMode } from 'src/theme/styles';
 import { ICONS } from 'src/layouts/config-nav-dashboard';
-
 import { navSectionClasses } from 'src/components/nav-section';
 import { varFade, MotionViewport } from 'src/components/animate';
 
@@ -52,7 +49,7 @@ export function HomeMinimal({ sx, ...other }: StackProps) {
       >
         <Grid container rowSpacing="48px">
           {ITEMS.map((item) => (
-            <Grid xs={12} md={6} key={item.title}>
+            <Grid size={{ xs: 12, md: 6 }} key={item.title}>
               <Box
                 component={m.div}
                 key={item.title}
@@ -144,14 +141,14 @@ export function HomeMinimal({ sx, ...other }: StackProps) {
 
         <Container sx={{ position: 'relative' }}>
           <Grid container columnSpacing={{ xs: 0, md: 8 }} sx={{ position: 'relative', zIndex: 9 }}>
-            <Grid xs={12}>{renderDescription}</Grid>
+            <Grid size={12}>{renderDescription}</Grid>
 
             {/* <Grid md={6} lg={5} sx={{ display: { xs: 'none', md: 'block' } }}>
               {renderImg}
             </Grid> */}
           </Grid>
 
-          <CircleSvg variants={varFade().in} sx={{ display: { xs: 'none', md: 'block' } }} />
+          <CircleSvg variants={varFade().in as any} sx={{ display: { xs: 'none', md: 'block' } }} />
         </Container>
       </MotionViewport>
     </Stack>

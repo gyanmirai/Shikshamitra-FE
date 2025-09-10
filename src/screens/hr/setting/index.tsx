@@ -2,43 +2,38 @@
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useMemo, useState } from 'react';
-
-import { Autocomplete, LoadingButton } from '@mui/lab';
-import { Add, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
-import {
-  Box,
-  Chip,
-  Stack,
-  Button,
-  Checkbox,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
-import {
-  useGetDocumentsQuery,
-  useAddDocumentMutation,
-  useDeleteDocumentMutation,
-  useUpdateDocumentMutation,
-} from 'src/redux/document/documentApi';
-
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Add, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
+import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box ,
+  Chip,
+  Stack,
+  Button,
+  Checkbox,
+  TextField,
+  Typography,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
+import {
+  useGetDocumentsQuery,
+  useAddDocumentMutation,
+  useDeleteDocumentMutation,
+  useUpdateDocumentMutation,
+} from 'src/redux/document/documentApi';
 
 const HrSetting = () => {
   const dialog = useBoolean();

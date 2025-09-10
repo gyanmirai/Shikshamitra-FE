@@ -5,7 +5,7 @@ import { useRef, useEffect, useCallback } from 'react';
 // ----------------------------------------------------------------------
 
 export type UseMessagesScrollReturn = {
-  messagesEndRef: React.RefObject<HTMLDivElement>;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
 };
 
 export function useMessagesScroll(messages: IChatMessage[]): UseMessagesScrollReturn {

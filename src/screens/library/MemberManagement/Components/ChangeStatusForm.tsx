@@ -1,19 +1,17 @@
 import React from 'react';
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetSelectStatusOptionsQuery } from 'src/redux/memberManagement/memberManagementApi';
-
 import { Iconify } from 'src/components/iconify';
+import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetSelectStatusOptionsQuery } from 'src/redux/memberManagement/memberManagementApi';
 
 import type { IChangeStatusPayload, IChangeStatusFormProps } from './type';
 
@@ -25,6 +23,7 @@ const ChangeStatusForm: React.FC<IChangeStatusFormProps> = ({ open, onClose }) =
   const formik = useFormik<IChangeStatusPayload>({
     initialValues: {
       status: 'Active',
+      date: dayjs(),
       remarks: 'Active for this member.',
     },
     validateOnChange: true,
@@ -43,7 +42,7 @@ const ChangeStatusForm: React.FC<IChangeStatusFormProps> = ({ open, onClose }) =
       <DialogScrollContent>
         <Grid container spacing={2}>
           {/* Select Status */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.status && formik.errors.status)}>
               <CustomSelect
                 label="Select Status *"
@@ -58,8 +57,27 @@ const ChangeStatusForm: React.FC<IChangeStatusFormProps> = ({ open, onClose }) =
             </ShakingTextField>
           </Grid>
 
+          <Grid size={{ xs: 12 }}>
+            <DatePicker
+              label="Date *"
+              value={dayjs(formik.values.date)}
+              onChange={(newValue) => {
+                formik.setFieldValue('date', newValue);
+              }}
+              format="DD/MM/YYYY"
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  error: !!(formik.touched.date && formik.errors.date),
+                  helperText: (formik.touched.date && formik.errors.date) as string,
+                },
+              }}
+            />
+          </Grid>
+
           {/* Remarks */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.remarks && formik.errors.remarks)}>
               <TextField
                 fullWidth
@@ -94,7 +112,7 @@ const ChangeStatusForm: React.FC<IChangeStatusFormProps> = ({ open, onClose }) =
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
-          Save
+          Submit
         </Button>
       </DialogActions>
     </BackPopUpChecked>

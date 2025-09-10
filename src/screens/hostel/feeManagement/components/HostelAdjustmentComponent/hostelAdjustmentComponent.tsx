@@ -2,28 +2,23 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
-import { Box, Button, MenuList, MenuItem, Typography } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import { useDispatch, useSelector } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
-
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   HostelPaymentStatusType,
   HostelPaymentStatusOptions,
   HostelPaymentStatusTypeColor,
 } from 'src/enums/hostel-payment-type';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import AdjustmentForm from './components/adjustmentForm';
 import PaymentReceipt from '../HostelPaymentHistoryComponent/paymentReceipt';

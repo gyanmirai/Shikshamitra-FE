@@ -5,6 +5,7 @@ export interface IFeeHead {
   feeCategoryId: string;
   feeHeadName: string;
   description?: string;
+  toggle: boolean;
 }
 
 export interface IFeeHeadTableProps {
@@ -14,8 +15,10 @@ export interface IFeeHeadTableProps {
   open: boolean;
   setOpenDialog: (value: boolean) => void;
   setEditData: (value: IFeeHead | null) => void;
-  onDelete: (row: IFeeHead) => void;
   onEdit: (row: IFeeHead) => void;
+  activeDialog: UseBooleanReturn;
+  selectedEntry: IFeeHead | null;
+  setSelectedEntry: (entry: IFeeHead | null) => void;
 }
 
 export interface IFeeHeadFormProps {

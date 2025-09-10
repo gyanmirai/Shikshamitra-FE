@@ -4,14 +4,11 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Card, Grid, Alert, Button, CardHeader, Typography, CardContent } from '@mui/material';
-
-import { formatCurrency } from 'src/utils/cureencyFormater';
-
 import { Iconify } from 'src/components/iconify';
+import { formatCurrency } from 'src/utils/cureencyFormater';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Card, Grid, Alert, Button, CardHeader, Typography, CardContent } from '@mui/material';
 
 const PayrollSummary = ({ employee }: any) => {
   const [monthYear, setMonthYear] = useState<null | Dayjs>(dayjs());
@@ -26,11 +23,7 @@ const PayrollSummary = ({ employee }: any) => {
           label="Select Year Month"
           format="MMMM-YYYY"
           sx={{ maxWidth: '250px', width: '100%' }}
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
+          slotProps={{ textField: { size: 'small' } }}
         />
       </Box>
 
@@ -38,7 +31,7 @@ const PayrollSummary = ({ employee }: any) => {
         <Card
           sx={{
             flexGrow: 1,
-            // background: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
+            // background: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -56,7 +49,7 @@ const PayrollSummary = ({ employee }: any) => {
         <Card
           sx={{
             flexGrow: 1,
-            // background: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            // background: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -74,7 +67,7 @@ const PayrollSummary = ({ employee }: any) => {
         <Card
           sx={{
             flexGrow: 1,
-            // background: (theme) => varAlpha(theme.palette.info.mainChannel, 0.1),
+            // background: (theme) => varAlpha(theme.vars.palette.info.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -108,7 +101,7 @@ const PayrollSummary = ({ employee }: any) => {
         </Button>
       </Box>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h5">Earning Section</Typography>
           <CustomizableTable
             noDataText={<>No Data Found For Earning Section </>}
@@ -119,7 +112,7 @@ const PayrollSummary = ({ employee }: any) => {
                 id: 'amount',
                 label: 'Amount',
                 filterType: 'number',
-                render(value, row) {
+                render(value) {
                   return formatCurrency(value);
                 },
               },
@@ -127,7 +120,7 @@ const PayrollSummary = ({ employee }: any) => {
                 id: 'total',
                 label: 'Total',
                 filterType: 'number',
-                render(value, row) {
+                render(value) {
                   return formatCurrency(value);
                 },
               },
@@ -140,7 +133,8 @@ const PayrollSummary = ({ employee }: any) => {
             ]}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h5">Deductions Section</Typography>
           <CustomizableTable
             noDataText={<>No Data Found For Deduction </>}
@@ -151,7 +145,7 @@ const PayrollSummary = ({ employee }: any) => {
                 id: 'amount',
                 label: 'Amount',
                 filterType: 'number',
-                render(value, row) {
+                render(value) {
                   return formatCurrency(value);
                 },
               },
@@ -159,7 +153,7 @@ const PayrollSummary = ({ employee }: any) => {
                 id: 'totalDeduction',
                 label: 'Total',
                 filterType: 'number',
-                render(value, row) {
+                render(value) {
                   return formatCurrency(value);
                 },
               },
@@ -173,7 +167,7 @@ const PayrollSummary = ({ employee }: any) => {
           />
         </Grid>
 
-        <Grid item xs={12} pb="20px">
+        <Grid size={{ xs: 12 }} pb="20px">
           <Alert
             variant="outlined"
             icon={false}

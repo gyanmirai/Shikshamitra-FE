@@ -2,13 +2,10 @@ import type { BoxProps } from '@mui/material/Box';
 import type { ChartOptions } from 'src/components/chart';
 
 import Box from '@mui/material/Box';
-import { useTheme } from '@mui/material/styles';
-
-import { fNumber } from 'src/utils/format-number';
-
 import { CONFIG } from 'src/config-global';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { fNumber } from 'src/utils/format-number';
 import { SvgColor } from 'src/components/svg-color';
 import { Chart, useChart } from 'src/components/chart';
 
@@ -18,11 +15,7 @@ type Props = BoxProps & {
   icon: string;
   title: string;
   total: number;
-  chart: {
-    colors?: string[];
-    series: number;
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; series: number; options?: ChartOptions };
   renderComp?: React.ReactNode;
 };
 
@@ -49,7 +42,7 @@ export function AppWidget({ title, total, icon, chart, sx, renderComp, ...other 
           name: { show: false },
           value: {
             offsetY: 6,
-            color: theme.vars.palette.common.white,
+            color: theme.palette.common.white,
             fontSize: theme.typography.subtitle2.fontSize as string,
           },
         },
@@ -111,13 +104,7 @@ export function AppWidget({ title, total, icon, chart, sx, renderComp, ...other 
 
       <Iconify
         icon={icon}
-        sx={{
-          width: 120,
-          right: -40,
-          height: 120,
-          opacity: 0.08,
-          position: 'absolute',
-        }}
+        sx={{ width: 120, right: -40, height: 120, opacity: 0.08, position: 'absolute' }}
       />
     </Box>
   );

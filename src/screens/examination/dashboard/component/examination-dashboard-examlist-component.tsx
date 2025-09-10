@@ -3,15 +3,12 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
 import { Add } from '@mui/icons-material';
-import { Box, Card, Grid, Button, Typography, CardContent } from '@mui/material';
-
 import { Label } from 'src/components/label';
+import { CalendarView } from 'src/sections/calendar/view';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-
-import { CalendarView } from 'src/sections/calendar/view';
+import { Box, Card, Grid, Button, Typography, CardContent } from '@mui/material';
 
 const ExaminationDashboardExamlistComponent = (props: TabComponentType) => (
   <Box sx={{ mt: 2 }}>
@@ -111,7 +108,7 @@ const ExaminationDashboardExamlistComponent = (props: TabComponentType) => (
       ]}
     />
 
-    <Grid item xs={12} mt={3}>
+    <Grid size={12} mt={3}>
       <Card>
         <CardContent>
           <Typography variant="h6">Examination Calendar</Typography>

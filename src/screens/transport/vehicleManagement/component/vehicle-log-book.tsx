@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import TransportDailyVehicleDialog from './dialog/daily-inspection-dialog';
@@ -102,7 +100,7 @@ const VehicleLogBook: React.FC<VehicleLogBookProps> = ({ vehicle }) => {
   const [tableData, setTableData] = useState(vehicleLogBook);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
-  const [selectedMaintenance, setSelectedMaintenance] = useState<any>(null);
+  const [selectedMaintenance] = useState<any>(null);
 
   const closeDialog = () => {
     setIsEdit(false);

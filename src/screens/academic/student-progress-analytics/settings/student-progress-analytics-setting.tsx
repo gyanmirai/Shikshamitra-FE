@@ -3,7 +3,7 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Card,
@@ -14,8 +14,6 @@ import {
   Typography,
   FormControlLabel,
 } from '@mui/material';
-
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 type PeriodSetting = {
   label: string;
@@ -41,7 +39,7 @@ const StudentProgressAnalyticsSetting = (props: TabComponentType) => {
         sx={{ px: 1, mb: 2 }}
       />
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Box sx={{ py: '7px' }} />
             <Typography variant="h6">Attendance Reports</Typography>
@@ -64,7 +62,7 @@ const StudentProgressAnalyticsSetting = (props: TabComponentType) => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <Box sx={{ py: '7px' }} />
             <Typography variant="h6">Performance Alerts</Typography>

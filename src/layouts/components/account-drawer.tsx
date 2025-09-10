@@ -4,31 +4,26 @@ import type { IconButtonProps } from '@mui/material/IconButton';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector } from 'react-redux';
-import { useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import { useSelector } from 'react-redux';
 import Drawer from '@mui/material/Drawer';
-import { useTheme } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import { Button, MenuItem, TextField, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { convertBase64Format } from 'src/utils/base64Formate';
-
 import { varAlpha } from 'src/theme/styles';
-import HrProfile from 'src/screens/hr/profile';
-import { useChangePasswordMutation } from 'src/redux/user/userApi';
-
 import { Label } from 'src/components/label';
+import { useState, useCallback } from 'react';
+import HrProfile from 'src/screens/hr/profile';
+import { useTheme } from '@mui/material/styles';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { AnimateAvatar } from 'src/components/animate';
 import CustomDialog from 'src/components/customDialog';
+import { convertBase64Format } from 'src/utils/base64Formate';
+import { useChangePasswordMutation } from 'src/redux/user/userApi';
+import { Button, MenuItem, TextField, DialogActions } from '@mui/material';
 
 import { AccountButton } from './account-button';
 import { SignOutButton } from './sign-out-button';
@@ -84,7 +79,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
         overlay: {
           border: 2,
           spacing: 3,
-          color: `linear-gradient(135deg, ${varAlpha(theme.vars.palette.primary.mainChannel, 0)} 25%, ${theme.vars.palette.primary.main} 100%)`,
+          color: `linear-gradient(135deg, ${varAlpha(theme.vars.palette.primary.mainChannel, 0)} 25%, ${theme.palette.primary.main} 100%)`,
         },
       }}
     >

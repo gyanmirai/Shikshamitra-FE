@@ -1,12 +1,9 @@
 import dayjs from 'dayjs';
 import React from 'react';
-
 import { Box } from '@mui/material';
-
-import data from 'src/json/security/visitor-management/visitor-pre-approval-data.json';
-
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import data from 'src/json/security/visitor-management/visitor-pre-approval-data.json';
 
 import type {
   IVisitorPreApprovalFormValues,

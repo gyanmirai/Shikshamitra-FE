@@ -1,8 +1,6 @@
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
 import { Box, Grid, Radio, Divider, Typography } from '@mui/material';
-
 import ReceiptTable from 'src/screens/finance/viewReceipt/receipt-table';
 // Dummy data
 import dummyReceipt from 'src/json/finance/create-receipt/charges-template-one.json';
@@ -27,7 +25,7 @@ const ChargesTemplateOne = () => {
     const getFormattedRows = (rows: { label: string; value?: string }[]) => (
       <Grid container spacing={1}>
         {rows.map((row, index) => (
-          <Grid item xs={6} key={index} display="flex" justifyContent="flex-start">
+          <Grid size={6} key={index} display="flex" justifyContent="flex-start">
             <Typography fontSize="10px">
               <strong>{row.label}:</strong> {row.value || '-'}
             </Typography>
@@ -66,7 +64,7 @@ const ChargesTemplateOne = () => {
   };
   return (
     <Grid container spacing={2} mb={3} justifyContent="flex-start">
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Box
           sx={{
             position: 'relative',
@@ -97,7 +95,7 @@ const ChargesTemplateOne = () => {
 
           {/* From & To */}
           <Grid container sx={{ fontSize: '0.75rem', justifyContent: 'space-between' }}>
-            <Grid item xs={5}>
+            <Grid size={{ xs: 5 }}>
               <Box display="flex" flexDirection="column" alignItems="flex-start">
                 <Typography fontSize="10px" fontWeight="bold">
                   From:
@@ -107,7 +105,7 @@ const ChargesTemplateOne = () => {
                 <Typography fontSize="10px">{from?.branch}</Typography>
               </Box>
             </Grid>
-            <Grid item xs={5}>
+            <Grid size={{ xs: 5 }}>
               <Box display="flex" flexDirection="column" alignItems="flex-start">
                 <Typography fontSize="10px" fontWeight="bold">
                   To:
@@ -125,9 +123,11 @@ const ChargesTemplateOne = () => {
             </Grid>
           </Grid>
 
+          {/* Payment Details */}
           <Box mt={2} mb={1} display="flex" justifyContent="flex-start">
             {renderPaymentDetails(dummyReceipt.paymentDetails)}
           </Box>
+
           {/* Late Fee Table */}
           <Typography
             fontSize="10px"

@@ -1,14 +1,11 @@
 import React from 'react';
-
-import { Box, Typography, DialogActions } from '@mui/material';
-
-import { formatNumber } from 'src/utils/formate_number';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import CancelButton from 'src/components/cancel-button';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Typography, DialogActions } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IFinanceIncomeDetailsDialogProps } from '../interface/income-screen-interface';

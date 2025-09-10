@@ -1,20 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Avatar, MenuList, MenuItem } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { convertBase64Format } from 'src/utils/base64Formate';
-
-import { useGetUsersQuery } from 'src/redux/user/userApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import { useGetUsersQuery } from 'src/redux/user/userApi';
+import { convertBase64Format } from 'src/utils/base64Formate';
+import { Box, Avatar, MenuList, MenuItem } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AssignModule from '../role/modules';

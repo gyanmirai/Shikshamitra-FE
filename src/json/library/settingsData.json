@@ -1,0 +1,90 @@
+{
+  "librarySettingsData": [
+    {
+      "id": "1",
+      "chargeType": "Late Return Fee",
+      "amount": 150,
+      "createdBy": "Dharmik Jinjala",
+      "createdDate": "01-05-2025"
+    },
+    {
+      "id": "2",
+      "chargeType": "Book Damage Fee",
+      "amount": 200,
+      "createdBy": "Prerna Atre",
+      "createdDate": "04-05-2025"
+    },
+    {
+      "id": "3",
+      "chargeType": "Lost Book Fee",
+      "amount": 300,
+      "createdBy": "Dharmik Jinjala",
+      "createdDate": "06-05-2025"
+    },
+    {
+      "id": "4",
+      "chargeType": "Membership Renewal",
+      "amount": 50,
+      "createdBy": "Mayur Solanki",
+      "createdDate": "08-05-2025"
+    },
+    {
+      "id": "5",
+      "chargeType": "Reservation Cancel",
+      "amount": 150,
+      "createdBy": "Prerna Atre",
+      "createdDate": "10-05-2025"
+    }
+  ],
+  "libraryTimingData": [
+    {
+      "id": "1",
+      "day": "Monday",
+      "startTime": "10:00 AM",
+      "endTime": "06:00 PM",
+      "status": "On"
+    },
+    {
+      "id": "2",
+      "day": "Tuesday",
+      "startTime": "10:00 AM",
+      "endTime": "06:00 PM",
+      "status": "On"
+    },
+    {
+      "id": "3",
+      "day": "Wednesday",
+      "startTime": "10:00 AM",
+      "endTime": "06:00 PM",
+      "status": "On"
+    },
+    {
+      "id": "4",
+      "day": "Thursday",
+      "startTime": "10:00 AM",
+      "endTime": "06:00 PM",
+      "status": "Off"
+    },
+    {
+      "id": "5",
+      "day": "Friday",
+      "startTime": "10:00 AM",
+      "endTime": "06:00 PM",
+      "status": "Off"
+    },
+    {
+      "id": "6",
+      "day": "Saturday",
+      "startTime": "10:00 AM",
+      "endTime": "02:00 PM",
+      "status": "On"
+    },
+    {
+      "id": "7",
+      "day": "Sunday",
+      "startTime": "",
+      "endTime": "",
+      "status": "Off"
+    }
+  ]
+}

@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 
 import React from 'react';
-
 import { Phone, Message, LinkedIn } from '@mui/icons-material';
 import { Box, Button, Avatar, IconButton, Typography } from '@mui/material';
 

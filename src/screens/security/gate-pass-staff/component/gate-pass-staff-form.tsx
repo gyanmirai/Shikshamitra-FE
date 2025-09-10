@@ -3,15 +3,12 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { DatePicker, TimePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { Box, Grid, Button, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -40,7 +37,7 @@ const EarlyGatePassFormStaff: React.FC<IGatePassStaffRequestFormProps> = ({
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   disabled={isDisabled}
                   label="Desired Date *"
@@ -64,7 +61,7 @@ const EarlyGatePassFormStaff: React.FC<IGatePassStaffRequestFormProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TimePicker
                   disabled={isDisabled}
                   label="Desired Time *"
@@ -88,7 +85,7 @@ const EarlyGatePassFormStaff: React.FC<IGatePassStaffRequestFormProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={!!(formik.touched.reasonForLeave && formik.errors.reasonForLeave) || false}
                 >

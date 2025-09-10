@@ -1,10 +1,7 @@
 import React from 'react';
-
+import { Iconify } from 'src/components/iconify';
 import { Box, Card, Stack, Button, Typography } from '@mui/material';
-
-import enrollmentActivities from 'src/json/student/enrollementDashboard/enrollmentActivities.json';
-
-import { Iconify } from 'src/components/iconify'; // Or replace with <ArrowForwardIos />
+import enrollmentActivities from 'src/json/student/enrollementDashboard/enrollmentActivities.json'; // Or replace with <ArrowForwardIos />
 import EnrollmentActivityCard from './enrollmentActivityCard';
 
 const EnrollmentActivities = () => (

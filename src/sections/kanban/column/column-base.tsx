@@ -1,11 +1,9 @@
 import type { Theme, SxProps } from '@mui/material/styles';
 
-import { memo, forwardRef } from 'react';
-
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import { memo, forwardRef } from 'react';
 import { styled } from '@mui/material/styles';
-
 import { varAlpha, stylesMode } from 'src/theme/styles';
 
 import { kanbanClasses } from '../classes';

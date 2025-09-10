@@ -2,16 +2,12 @@
 
 import Link from 'next/link';
 import React, { useState } from 'react';
-
-import { useTheme } from '@mui/material/styles';
-import { Box, Card, Grid, Typography } from '@mui/material';
-
 import { varAlpha } from 'src/theme/styles';
-import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Grid, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
+import { AppAreaInstalled } from 'src/screens/hr/dashboard/app-area-installed';
 import { EcommerceYearlySales } from 'src/sections/overview/e-commerce/ecommerce-yearly-sales';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
@@ -89,13 +85,7 @@ const LibraryDashboard = () => {
 
               <Iconify
                 icon="ix:library"
-                sx={{
-                  top: 24,
-                  right: 10,
-                  width: 36,
-                  height: 36,
-                  position: 'absolute',
-                }}
+                sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute' }}
               />
               <Box
                 sx={{
@@ -142,13 +132,7 @@ const LibraryDashboard = () => {
 
               <Iconify
                 icon="map:library"
-                sx={{
-                  top: 24,
-                  right: 10,
-                  width: 36,
-                  height: 36,
-                  position: 'absolute',
-                }}
+                sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute' }}
               />
 
               <Box
@@ -197,13 +181,7 @@ const LibraryDashboard = () => {
 
               <Iconify
                 icon="material-symbols-light:slide-library-sharp"
-                sx={{
-                  top: 24,
-                  right: 10,
-                  width: 36,
-                  height: 36,
-                  position: 'absolute',
-                }}
+                sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute' }}
               />
 
               <Box
@@ -251,13 +229,7 @@ const LibraryDashboard = () => {
 
               <Iconify
                 icon="tabler:calendar-due"
-                sx={{
-                  top: 24,
-                  right: 10,
-                  width: 36,
-                  height: 36,
-                  position: 'absolute',
-                }}
+                sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute' }}
               />
 
               <Box
@@ -271,7 +243,7 @@ const LibraryDashboard = () => {
                   borderRadius: 3,
                   position: 'absolute',
                   transform: 'rotate(40deg)',
-                  background: `linear-gradient(to right, ${theme.vars.palette.error.main} 0%, ${varAlpha(theme.vars.palette.error.mainChannel, 0)} 100%)`,
+                  background: `linear-gradient(to right, ${theme.palette.error.main} 0%, ${varAlpha(theme.vars.palette.error.mainChannel, 0)} 100%)`,
                 }}
               />
             </Card>
@@ -305,13 +277,7 @@ const LibraryDashboard = () => {
 
               <Iconify
                 icon="heroicons:user-group"
-                sx={{
-                  top: 24,
-                  right: 10,
-                  width: 36,
-                  height: 36,
-                  position: 'absolute',
-                }}
+                sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute' }}
               />
 
               <Box
@@ -335,7 +301,7 @@ const LibraryDashboard = () => {
 
       {/* Main Dashboard Content */}
       <Grid container spacing={3} alignItems="stretch">
-        <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
           <AnalyticsCurrentVisits
             title="Books by Category"
             chart={{ series: data }}
@@ -343,7 +309,7 @@ const LibraryDashboard = () => {
           />
         </Grid>
 
-        <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
           <AppAreaInstalled
             isShowChartLegendValue={false}
             height={350} // or a unified height if needed
@@ -351,9 +317,9 @@ const LibraryDashboard = () => {
             selectSeries="Standard 1"
             chart={{
               colors: [
-                theme.palette.info.main,
+                theme.vars.palette.info.main,
                 theme.palette.primary.main,
-                theme.palette.warning.main,
+                theme.vars.palette.warning.main,
               ],
               categories: ['Fiction', 'Non-fiction', 'TextBook', 'Refrences'],
               series: [
@@ -392,7 +358,7 @@ const LibraryDashboard = () => {
       <Grid>
         {/* <Typography variant='h6' >Borrowing & Reservation Trends</Typography>;
         <Typography fontSize="12px">Gain insights into borrowing patterns and popular books over time</Typography>; */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <EcommerceYearlySales
             isShowChartLegend={false}
             title="Monthly Borrowing Trends"
@@ -400,8 +366,8 @@ const LibraryDashboard = () => {
             chart={{
               colors: [
                 theme.palette.primary.main,
-                theme.palette.warning.main,
-                theme.palette.secondary.main,
+                theme.vars.palette.warning.main,
+                theme.vars.palette.secondary.main,
                 theme.palette.error.main,
               ],
               categories: [
@@ -422,22 +388,10 @@ const LibraryDashboard = () => {
                 {
                   name: 'Standard 1',
                   data: [
-                    {
-                      name: 'Fiction',
-                      data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                    },
-                    {
-                      name: 'Non-Fiction',
-                      data: [10, 34, 13, 56, 77, 88, 99, 77, 45, 13, 56, 77],
-                    },
-                    {
-                      name: 'TextBook',
-                      data: [56, 13, 34, 10, 77, 99, 88, 45, 77, 99, 88, 77],
-                    },
-                    {
-                      name: 'Refrences',
-                      data: [56, 13, 34, 10, 77, 99, 69, 91, 148, 35, 51, 49],
-                    },
+                    { name: 'Fiction', data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49] },
+                    { name: 'Non-Fiction', data: [10, 34, 13, 56, 77, 88, 99, 77, 45, 13, 56, 77] },
+                    { name: 'TextBook', data: [56, 13, 34, 10, 77, 99, 88, 45, 77, 99, 88, 77] },
+                    { name: 'Refrences', data: [56, 13, 34, 10, 77, 99, 69, 91, 148, 35, 51, 49] },
                   ],
                 },
               ],
@@ -448,7 +402,7 @@ const LibraryDashboard = () => {
 
       {/* Replenishment Chart */}
       <Grid container spacing={3} sx={{ marginTop: 3 }}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <AppAreaInstalled
             isShowChartLegendValue={false}
             title="Reservation Trends Over Time"

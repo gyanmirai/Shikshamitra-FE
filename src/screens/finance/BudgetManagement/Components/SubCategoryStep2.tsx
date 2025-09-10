@@ -1,12 +1,10 @@
 import type { FormikProps } from 'formik';
 
-import { Box, Grid, Chip, TextField, Typography, IconButton } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, Chip, TextField, Typography, IconButton } from '@mui/material';
 
 interface ISubCategory {
   category: string;
@@ -52,17 +50,17 @@ const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
           }}
         >
           {/* Index */}
-          <Grid item xs={12} md={1}>
+          <Grid size={{ xs: 12, md: 1 }}>
             <Typography variant="h6">{index + 1}.</Typography>
           </Grid>
 
           {/* Category (Chip) */}
-          <Grid item xs={12} md={2}>
+          <Grid size={{ xs: 12, md: 2 }}>
             <Chip label={item.category} color="default" variant="outlined" />
           </Grid>
 
           {/* Sub Category */}
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <TextField
               label="Sub Category"
               value={item.subCategory}
@@ -73,7 +71,7 @@ const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
           </Grid>
 
           {/* Amount */}
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <ShakingTextField
               error={
                 !!(
@@ -91,8 +89,7 @@ const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
                 name={`subCategories[${index}].amount`}
                 value={item.amount || ''}
                 onChange={(e) => {
-                  let val = e.target.value;
-                  val = val.replace(/[₹,\s]/g, '');
+                  const val = e.target.value.replace(/[₹,\s]/g, '');
                   setFieldValue(`subCategories[${index}].amount`, Number(val));
                   setFieldTouched(`subCategories.${index}.amount`, false);
                 }}
@@ -111,17 +108,13 @@ const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
                       : errors?.subCategories?.[index]
                     : ''
                 }
-                sx={{
-                  width: '100%',
-                  padding: '0',
-                  borderRadius: 1,
-                }}
+                sx={{ width: '100%', padding: 0, borderRadius: 1 }}
               />
             </ShakingTextField>
           </Grid>
 
           {/* Notes */}
-          <Grid item xs={12} md={2}>
+          <Grid size={{ xs: 12, md: 2 }}>
             <ShakingTextField
               error={
                 !!(
@@ -161,7 +154,7 @@ const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
           </Grid>
 
           {/* Delete Button */}
-          <Grid item xs={12} md={1} textAlign="center">
+          <Grid size={{ xs: 12, md: 1 }} textAlign="center">
             <IconButton color="error" onClick={() => handleRemove(index)}>
               <Iconify icon={GlobalIcons.delete} />
             </IconButton>

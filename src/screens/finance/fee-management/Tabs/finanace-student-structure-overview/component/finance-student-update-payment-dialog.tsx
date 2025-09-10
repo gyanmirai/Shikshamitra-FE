@@ -1,13 +1,10 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import type studentFeePaymentStatusUpdated from '../data/student-fee-payment-status-updated';
 
@@ -44,7 +41,7 @@ const FinanceStudentUpdatePaymentDialog: React.FC<FinanceStudentUpdatePaymentDia
         <Box px="15px">
           <form onSubmit={formik.handleSubmit}>
             <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-              <Grid2 xl={6}>
+              <Grid size={{ xl: 6 }}>
                 <Box py="8px" display="flex" flexDirection="row" gap={3}>
                   <CustomSelect
                     label="Payment status"
@@ -75,7 +72,7 @@ const FinanceStudentUpdatePaymentDialog: React.FC<FinanceStudentUpdatePaymentDia
                   format="DD-MM-YYYY"
                   slotProps={{ textField: { size: 'small' } }}
                 />
-              </Grid2>
+              </Grid>
             </Box>
             <DialogActions>
               <Button variant="contained" size="small">

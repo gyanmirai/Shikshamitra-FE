@@ -1,12 +1,9 @@
 import React from 'react';
 import dayjs from 'dayjs';
-
 import { TextField, Autocomplete } from '@mui/material';
-
+import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
-
-import ShakingTextField from 'src/components/shaking-text-field';
 
 const RenderShift = ({ formik, disabled }: any) => {
   const { data, isLoading } = useQueryAndMutation({

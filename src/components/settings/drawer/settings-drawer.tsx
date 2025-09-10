@@ -4,14 +4,13 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Badge from '@mui/material/Badge';
 import Tooltip from '@mui/material/Tooltip';
+import COLORS from 'src/theme/core/colors.json';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import Drawer, { drawerClasses } from '@mui/material/Drawer';
-import { useTheme, useColorScheme } from '@mui/material/styles';
-
-import COLORS from 'src/theme/core/colors.json';
 import { paper, varAlpha } from 'src/theme/styles';
 import { defaultFont } from 'src/theme/core/typography';
+import Drawer, { drawerClasses } from '@mui/material/Drawer';
+import { useTheme, useColorScheme } from '@mui/material/styles';
 import PRIMARY_COLOR from 'src/theme/with-settings/primary-color.json';
 
 import { Iconify } from '../../iconify';
@@ -135,18 +134,12 @@ export function SettingsDrawer({
 
   const renderNav = (
     <NavOptions
-      value={{
-        color: settings.navColor,
-        layout: settings.navLayout,
-      }}
+      value={{ color: settings.navColor, layout: settings.navLayout }}
       onClickOption={{
         color: (newValue) => settings.onUpdateField('navColor', newValue),
         layout: (newValue) => settings.onUpdateField('navLayout', newValue),
       }}
-      options={{
-        colors: ['integrate', 'apparent'],
-        layouts: ['vertical', 'horizontal', 'mini'],
-      }}
+      options={{ colors: ['integrate', 'apparent'], layouts: ['vertical', 'horizontal', 'mini'] }}
       hideNavColor={hideNavColor}
       hideNavLayout={hideNavLayout}
     />
@@ -168,10 +161,7 @@ export function SettingsDrawer({
       slotProps={{ backdrop: { invisible: true } }}
       sx={{
         [`& .${drawerClasses.paper}`]: {
-          ...paper({
-            theme,
-            color: varAlpha(theme.vars.palette.background.defaultChannel, 0.9),
-          }),
+          ...paper({ theme, color: varAlpha(theme.vars.palette.background.defaultChannel, 0.9) }),
           width: 360,
           ...sx,
         },

@@ -1,7 +1,6 @@
 import type { Standards } from 'src/types/school';
 
 import React from 'react';
-
 import { Box, Grid, TextField } from '@mui/material';
 
 interface ClassSetupProps {
@@ -25,7 +24,7 @@ const ClassSetup: React.FC<ClassSetupProps> = ({
 }) => (
   <Box sx={{ mt: 2, width: '100%' }}>
     <Grid container spacing={3}>
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <TextField
           fullWidth
           name="class.name"

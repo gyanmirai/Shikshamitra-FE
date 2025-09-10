@@ -1,7 +1,5 @@
 import { useState } from 'react';
-
 import { Box } from '@mui/material';
-
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 

@@ -2,12 +2,15 @@
 
 import 'leaflet/dist/leaflet.css';
 
-import type { LatLngExpression } from 'leaflet';
-
 import * as yup from 'yup';
-import { useMapEvents } from 'react-leaflet';
+import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
-
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import {
   Box,
   Paper,
@@ -23,15 +26,6 @@ import {
   Typography,
   TableContainer,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import TransportMap from './component/view-on-map-dialog';
 
@@ -144,9 +138,8 @@ const RoutesAndSchedulesScreen = () => {
     },
   ];
   const dialog = useBoolean();
-  const mapDialog = useBoolean();
-  const [selectedExpense, setSelectedExpense] = useState(routesData);
-  const [isEdit, setIsEdit] = useState(false);
+  const [selectedExpense] = useState(routesData);
+  const [isEdit] = useState(false);
   const [tableData, setTableData] = useState(routesData);
   const [mapDialogOpen, setMapDialogOpen] = useState(false);
   const [mapData, setMapData] = useState<any>(null);
@@ -163,10 +156,6 @@ const RoutesAndSchedulesScreen = () => {
     setMapDialogOpen(true);
   };
 
-  const closeDialog = () => {
-    setIsEdit(false);
-    dialog.onFalse();
-  };
   const mapDialogClose = () => {
     setMapDialogOpen(false);
     setMapData(null);
@@ -178,13 +167,6 @@ const RoutesAndSchedulesScreen = () => {
     console.log('from the save', item);
     const updatedData = [...tableData, item];
     setTableData(updatedData);
-  };
-
-  const [open, setOpen] = useState(false);
-
-  const closeHandler = () => {
-    // setIsEdit(false);
-    setOpen(false);
   };
 
   return (
@@ -284,77 +266,6 @@ interface AddBusStopsProps {
 
 const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => {
   const [busStops, setBusStops] = useState<SelectedStop[]>(selectedStop);
-  const [markers, setMarkers] = useState<{ lat: number; lng: number }[]>([]);
-  const handleTimeChange = (stopId: number, type: 'pickupTime' | 'dropoffTime', time: string) => {
-    const updatedStops = busStops.map((stop) =>
-      stop.stopId === stopId ? { ...stop, [type]: time } : stop
-    );
-    setBusStops(updatedStops);
-    onChange(updatedStops);
-  };
-
-  const handleStudentChange = (stopId: number, selectedStudents: string[]) => {
-    const updatedStops = busStops.map((stop) =>
-      stop.stopId === stopId ? { ...stop, assignedStudents: selectedStudents } : stop
-    );
-    setBusStops(updatedStops);
-    onChange(updatedStops);
-  };
-  const position: LatLngExpression = [21.212907926175802, 72.85037234842194];
-
-  const fetchCityName = async (lat: number, lng: number) => {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
-    );
-    const data = await response.json();
-    console.log(data);
-    return (
-      data.display_name || data.address?.suburb || data.address?.neighbourhood || 'Unknown Location'
-    );
-  };
-
-  const isPointOnRoute = (lat: number, lng: number) => {
-    const startLat = 21.212907926175802;
-    const startLng = 72.85037234842194;
-    const endLat = 21.232128871923543;
-    const endLng = 72.90404790256112;
-    // const [startLat, startLng] = startPoint;
-    // const [endLat, endLng] = endPoint;
-
-    const latDiff = endLat - startLat;
-    const lngDiff = endLng - startLng;
-
-    // Simple linear interpolation
-    const isWithinLat = lat >= Math.min(startLat, endLat) && lat <= Math.max(startLat, endLat);
-    const isWithinLng = lng >= Math.min(startLng, endLng) && lng <= Math.max(startLng, endLng);
-
-    return isWithinLat && isWithinLng;
-  };
-  const DetectClick: React.FC = () => {
-    useMapEvents({
-      // eslint-disable-next-line consistent-return
-      click: async (e) => {
-        const { lat, lng } = e.latlng;
-        console.log(`Clicked at: ${lat}, ${lng}`);
-
-        const locationName = await fetchCityName(lat, lng);
-        if (isPointOnRoute(lat, lng)) {
-          const newStop = {
-            stopId: Math.random(),
-            stopName: locationName,
-          };
-
-          setBusStops((prevStops) => [...prevStops, newStop]);
-
-          setMarkers((prevMarkers) => [...prevMarkers, { lat, lng }]);
-          onChange([...busStops, newStop]);
-        } else {
-          return alert('This stop is outside the defined route.');
-        }
-      },
-    });
-    return null;
-  };
 
   useEffect(() => {
     console.log('Current bus stops:', busStops);
@@ -754,56 +665,17 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose, addNewRouteHan
     onClose();
   };
 
-  interface RoutePoint {
-    id: number;
-    name: string;
-    coordinates: [number, number];
-  }
+  // interface RoutePoint {
+  //   id: number;
+  //   name: string;
+  //   coordinates: [number, number];
+  // }
 
-  interface RouteDetailsNew {
-    startPoint: RoutePoint | null;
-    endPoint: RoutePoint | null;
-    stops: RoutePoint[];
-  }
-
-  const [allRouteDetails, setAllRouteDetails] = useState<any>({
+  const [allRouteDetails] = useState<any>({
     startPoint: null,
     endPoint: null,
     stops: [],
   });
-
-  const [stepOneInfo, setStepOneInfo] = useState<any>(null);
-  const handleLocationData = (data: any, locationType: string) => {
-    // Update route details based on locationType
-    setAllRouteDetails((prevDetails: any) => {
-      const newDetails = {
-        ...prevDetails,
-        startPoint: locationType === 'start' ? data.start : prevDetails.startPoint,
-        endPoint: locationType === 'end' ? data.end : prevDetails.endPoint,
-      };
-
-      setStepOneInfo(newDetails);
-      return newDetails;
-    });
-  };
-
-  useEffect(() => {
-    console.log('Updated route data:', allRouteDetails);
-  }, [allRouteDetails, allRouteDetails.stops]);
-
-  const handleStop = (newStop: RoutePoint) => {
-    console.log('new stop from handle stop', newStop);
-
-    setAllRouteDetails((prevDetails: any) => {
-      const updatedDetails = {
-        ...prevDetails,
-        stops: [...prevDetails.stops, newStop],
-      };
-      console.log('Updated route details:', updatedDetails);
-
-      return updatedDetails;
-    });
-  };
 
   const allRouteSteps = [
     // <LocationPicker onLocationSelect={handleLocationData}/>,
@@ -813,14 +685,6 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose, addNewRouteHan
     // <FinalRoute routeDetails={allRouteDetails} />,
     <AssignVehicleAndDriver onChange={handleVehicleChange} vehicle={vehicle} driver={driver} />,
     <SetSchedule scheduleData={scheduleData} onChange={handleSelectChange} />,
-  ];
-
-  const validationSchemas = [
-    yup.object().shape({
-      routeName: yup.string().required('Route name is required'),
-      startPoint: yup.string().required('start point is required'),
-      endPoint: yup.string().required('end point is required'),
-    }),
   ];
 
   return (

@@ -5,20 +5,17 @@ import type { Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect, useCallback } from 'react';
-
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getNoOfLectureInitialValues } from './initialValues';
 import { noOfLectureValidationSchema } from './validationSchema';
@@ -169,7 +166,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
       <DialogScrollContent>
         {/* <Scrollbar sx={{ p: 2, height: '450px' }}> */}
         <Grid container spacing={1}>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
               <CustomSelect
                 options={allClass}
@@ -186,7 +183,6 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                   formik.setFieldValue('totalLectures', 0);
                 }}
                 label="Class *"
-                // isLoading={isLoading}
                 labelKey="name"
                 valueKey="id"
                 formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
@@ -200,8 +196,9 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
               />
             </ShakingTextField>
           </Grid>
+
           {formik.values.className && (
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
                 <CustomizableTable
                   tableId="table-subject-list"
@@ -214,7 +211,6 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                       id: 'name',
                       label: 'Subject',
                       isFilter: false,
-                      // isSort: false,
                       render: (value, row) => (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <SubjectColorIndicator color={row.subjectColor} />
@@ -238,6 +234,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
             </Grid>
           )}
         </Grid>
+
         {/* </Scrollbar> */}
       </DialogScrollContent>
       {!disabled && (

@@ -1,7 +1,5 @@
 import React from 'react';
-
 import { Box } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
 
 const CurrencySettingForDifferentRegionComponent = () => (

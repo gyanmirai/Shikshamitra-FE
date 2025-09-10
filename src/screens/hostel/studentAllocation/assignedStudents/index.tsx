@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-
 import { Box, TextField, Autocomplete } from '@mui/material';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AllocatedRoomsTable from './components/allocatedRoomsTable';

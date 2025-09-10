@@ -2,20 +2,17 @@
 
 import type { LabelColor } from 'src/components/label';
 
-import React, { useMemo, useState } from 'react';
-
-import { Box, Tab, Tabs, Button, Divider, MenuItem, MenuList, Checkbox } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
+import React, { useState } from 'react';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Iconify } from 'src/components/iconify/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import { Box, Tab, Tabs, Button, Divider, MenuItem, MenuList, Checkbox } from '@mui/material';
 
+// eslint-disable-next-line import/no-named-as-default
 import TransportRouteAssignedDialog from './component/assigned-route-dialog';
 import { assignments, assignmentsForStaff } from './data/member-transport-screen-data';
 import TransportNotifyParentsDialog from '../starffTransport/component/transport-notify-parents.dialog';
@@ -214,15 +211,13 @@ const MemberTransportScreen = () => {
     },
   ];
   const dialog = useBoolean();
-  const dialogForBulkEdit = useBoolean();
   const dialogNotify = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState();
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [isStaff, setIsStaff] = useState<boolean>(false);
   const [clickFromTable, setClickFromTable] = useState<boolean>(false);
-  const [tableData, setTableData] = useState<StudentAssignment[]>(assignments);
-  const [tableDataForStaff, setTableDataForStaff] =
-    useState<StaffAssignment[]>(assignmentsForStaff);
+  const [tableData] = useState<StudentAssignment[]>(assignments);
+  const [tableDataForStaff] = useState<StaffAssignment[]>(assignmentsForStaff);
   const closeDialog = () => {
     setClickFromTable(false);
     setIsStaff(false);
@@ -230,9 +225,6 @@ const MemberTransportScreen = () => {
     dialog.onFalse();
   };
 
-  const closeDialogForBulk = () => {
-    dialogForBulkEdit.onFalse();
-  };
   const closeDialogForNotify = () => {
     dialogNotify.onFalse();
   };
@@ -264,11 +256,6 @@ const MemberTransportScreen = () => {
   };
 
   const [searchParams, setSearchParams] = useState({ tab: 'student' });
-
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
 
   const handleTabChange = (e: React.SyntheticEvent<Element, Event>, value: any) => {
     setSelectedStudents([]);

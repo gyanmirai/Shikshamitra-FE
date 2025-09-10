@@ -4,9 +4,8 @@ import type { ListSubheaderProps } from '@mui/material/ListSubheader';
 
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
-import ListSubheader from '@mui/material/ListSubheader';
-
 import { stylesMode } from 'src/theme/styles';
+import ListSubheader from '@mui/material/ListSubheader';
 
 import { navSectionClasses } from './classes';
 import { svgColorClasses } from '../svg-color';

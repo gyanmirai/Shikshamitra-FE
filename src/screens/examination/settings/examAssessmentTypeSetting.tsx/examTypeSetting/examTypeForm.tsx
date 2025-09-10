@@ -1,14 +1,11 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getExamTypeInitialValues } from '../initialValues';
@@ -50,7 +47,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
         {/* <form onSubmit={formik.handleSubmit}> */}
         <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ShakingTextField error={!!(formik.touched.examType && formik.errors.examType)}>
                 <TextField
                   fullWidth
@@ -77,7 +74,7 @@ const ExamTypeForm: React.FC<IExamTypeFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={12}>
               <ShakingTextField error={!!(formik.touched.description && formik.errors.description)}>
                 <TextField
                   fullWidth

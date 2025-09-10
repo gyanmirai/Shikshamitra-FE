@@ -1,10 +1,7 @@
 import { useState } from 'react';
-
-import { Box, Card, Button, Tooltip, Typography, IconButton } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Card, Button, Tooltip, Typography, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';

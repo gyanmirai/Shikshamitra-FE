@@ -2,10 +2,8 @@ import type { FormikProps } from 'formik';
 
 import React from 'react';
 import dayjs from 'dayjs';
-
-import { Box, Card, Chip, Grid, Typography, CardContent } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Card, Chip, Grid, Typography, CardContent } from '@mui/material';
 
 import type { IBudgetFormValues } from './type';
 
@@ -22,7 +20,7 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
 
           <Grid container spacing={2}>
             {/* Budget Title */}
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="body2" color="text.secondary">
                 Budget Title
               </Typography>
@@ -32,7 +30,7 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
             </Grid>
 
             {/* Category */}
-            <Grid item xs={12} sm={3}>
+            <Grid size={{ xs: 12, sm: 3 }}>
               <Typography variant="body2" color="text.secondary">
                 Category
               </Typography>
@@ -40,7 +38,7 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
             </Grid>
 
             {/* Threshold */}
-            <Grid item xs={12} sm={3}>
+            <Grid size={{ xs: 12, sm: 3 }}>
               <Typography variant="body2" color="text.secondary">
                 Threshold Alert
               </Typography>
@@ -48,7 +46,7 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
             </Grid>
 
             {/* Departments */}
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="body2" color="text.secondary">
                 Assigned Department
               </Typography>
@@ -60,7 +58,7 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
             </Grid>
 
             {/* Total Budget */}
-            <Grid item xs={12} sm={3}>
+            <Grid size={{ xs: 12, sm: 3 }}>
               <Typography variant="body2" color="text.secondary">
                 Total Budget
               </Typography>
@@ -70,7 +68,7 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
             </Grid>
 
             {/* Period */}
-            <Grid item xs={12} sm={3}>
+            <Grid size={{ xs: 12, sm: 3 }}>
               <Typography variant="body2" color="text.secondary">
                 Period
               </Typography>
@@ -82,7 +80,7 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
 
             {/* Notes */}
             {values.description && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Typography variant="body2" color="text.secondary">
                   Notes
                 </Typography>

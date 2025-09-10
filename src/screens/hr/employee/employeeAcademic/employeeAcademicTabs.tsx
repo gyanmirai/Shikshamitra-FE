@@ -1,13 +1,9 @@
 import React from 'react';
-
-import { Tab, Box, Card } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-
+import { Tab, Box, Card } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import CourseProgress from './subjectPerformance';
 import EmployeeTimetable from './employeeTimetable';

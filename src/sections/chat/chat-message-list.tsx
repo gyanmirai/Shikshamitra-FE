@@ -1,9 +1,8 @@
 import type { IChatMessage, IChatParticipant } from 'src/types/chat';
 
 import Stack from '@mui/material/Stack';
-import LinearProgress from '@mui/material/LinearProgress';
-
 import { Scrollbar } from 'src/components/scrollbar';
+import LinearProgress from '@mui/material/LinearProgress';
 import { Lightbox, useLightBox } from 'src/components/lightbox';
 
 import { ChatMessageItem } from './chat-message-item';

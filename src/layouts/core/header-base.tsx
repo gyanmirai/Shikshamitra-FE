@@ -1,19 +1,15 @@
 import type { NavSectionProps } from 'src/components/nav-section';
 
-import { useSelector } from 'react-redux';
-
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
-import { Skeleton, Typography } from '@mui/material';
-import { styled, useTheme } from '@mui/material/styles';
-
+import { useSelector } from 'react-redux';
+import { Logo } from 'src/components/logo';
 import { dashboardPath } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
-
+import { Skeleton, Typography } from '@mui/material';
+import { styled, useTheme } from '@mui/material/styles';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
-
-import { Logo } from 'src/components/logo';
 
 import { HeaderSection } from './header-section';
 import { Searchbar } from '../components/searchbar';

@@ -3,14 +3,11 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
-
-import { Search as SearchIcon } from '@mui/icons-material';
-import { Box, Card, Grid, TextField, Typography, IconButton, CardContent } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
 import { CalendarView } from 'src/sections/calendar/view';
+import { Search as SearchIcon } from '@mui/icons-material';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Card, Grid, TextField, Typography, IconButton, CardContent } from '@mui/material';
 
 const AllEvents = (props: TabComponentType) => {
   // State to track the selected event type (schoolWise, classWise, extraCurricular)
@@ -57,7 +54,7 @@ const AllEvents = (props: TabComponentType) => {
           }}
         />
       </Box>
-      <Grid item xs={12} mt={3}>
+      <Grid size={12} mt={3}>
         <Card>
           <CardContent>
             <Typography variant="h6">Event Calendar</Typography>

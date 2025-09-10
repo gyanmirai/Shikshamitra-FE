@@ -1,9 +1,7 @@
 import React from 'react';
-
-import { Grid, Switch, Button, TextField, Typography, FormControlLabel } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { Grid, Switch, Button, TextField, Typography, FormControlLabel } from '@mui/material';
 
 interface NotificationConditionRuleFormProps {
   title: string;
@@ -42,13 +40,13 @@ const NotificationConditionRuleForm: React.FC<NotificationConditionRuleFormProps
   deleteConditionHandler,
   isDisabled = false,
 }) => (
-  <Grid item lg={12} alignItems="center">
+  <Grid size={{ lg: 12 }} alignItems="center">
     <Typography variant="subtitle1" gutterBottom>
       {title}
     </Typography>
     <Grid container spacing={1} alignItems="center">
       {/* Name Field */}
-      <Grid item lg={2}>
+      <Grid size={{ lg: 2 }}>
         <TextField
           label="Name"
           fullWidth
@@ -60,7 +58,7 @@ const NotificationConditionRuleForm: React.FC<NotificationConditionRuleFormProps
       </Grid>
 
       {/* Arithmetic Operator */}
-      <Grid item lg={3}>
+      <Grid size={{ lg: 3 }}>
         <CustomSelect
           label="Arithmetic Operator"
           options={[
@@ -76,7 +74,7 @@ const NotificationConditionRuleForm: React.FC<NotificationConditionRuleFormProps
       </Grid>
 
       {/* Value Field */}
-      <Grid item lg={2}>
+      <Grid size={{ lg: 2 }}>
         <TextField
           label="Value"
           fullWidth
@@ -89,7 +87,7 @@ const NotificationConditionRuleForm: React.FC<NotificationConditionRuleFormProps
       </Grid>
 
       {/* Merge Operator */}
-      <Grid item lg={3}>
+      <Grid size={{ lg: 3 }}>
         <CustomSelect
           label="Merge Operator"
           options={[
@@ -103,7 +101,7 @@ const NotificationConditionRuleForm: React.FC<NotificationConditionRuleFormProps
       </Grid>
 
       {/* Action Buttons */}
-      <Grid item lg={2} display="flex" alignItems="center" gap={1}>
+      <Grid size={{ lg: 2 }} display="flex" alignItems="center" gap={1}>
         <Button
           color="primary"
           variant="outlined"
@@ -143,11 +141,11 @@ const NotificationConditionRuleForm: React.FC<NotificationConditionRuleFormProps
 
       {/* Switches */}
       <Grid container spacing={1} alignItems="center">
-        <Grid item lg={2} />
-        <Grid item lg={3} />
+        <Grid size={{ lg: 2 }} />
+        <Grid size={{ lg: 3 }} />
 
         {/* Is Percentage Switch */}
-        <Grid item lg={2}>
+        <Grid size={{ lg: 2 }}>
           <FormControlLabel
             control={
               <Switch

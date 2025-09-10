@@ -1,7 +1,5 @@
 import React from 'react';
-
 import { Card, Typography } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const HRDashboardRecentPayrollRunsCard = () => (

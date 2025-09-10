@@ -4,11 +4,8 @@ import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import * as yup from 'yup';
 import React, { useState } from 'react';
-
 import { Box, Avatar } from '@mui/material';
-
 import { convertBase64Format } from 'src/utils/base64Formate';
-
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';

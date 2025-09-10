@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-
-import { Box, Tab, Tabs, Button, TextField, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload/upload-box';
+import { Box, Tab, Tabs, Button, TextField, Typography } from '@mui/material';
 
 interface CommunicationChannelProps {
   mobileRecipients: any;

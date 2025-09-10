@@ -2,7 +2,6 @@ import type { IChatMessage, IChatParticipant, IChatConversation } from 'src/type
 
 import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
-
 import { keyBy } from 'src/utils/helper';
 import axios, { fetcher, endpoints } from 'src/utils/axios';
 

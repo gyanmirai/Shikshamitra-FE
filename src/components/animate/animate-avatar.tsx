@@ -3,7 +3,6 @@ import type { BoxProps } from '@mui/material/Box';
 import type { AvatarProps } from '@mui/material/Avatar';
 
 import { m } from 'framer-motion';
-
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 

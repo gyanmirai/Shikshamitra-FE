@@ -1,24 +1,20 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import { Grid, Button, DialogActions } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   useGetRoleOptionsQuery,
   useGetClassOptionsQuery,
   useGetStudentOptionsQuery,
   useGetDivisionOptionsQuery,
 } from 'src/redux/memberManagement/memberManagementApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { memberValidationSchema } from './MemberManagementSchema';
 import { getInitialMemberData } from './MemberManagementInitialValues';
@@ -65,7 +61,7 @@ const MemberForm: React.FC<IMemberFormProps> = ({ open, onClose }) => {
       <DialogScrollContent>
         <Grid container spacing={2}>
           {/* Role */}
-          <Grid item xs={6} md={6}>
+          <Grid size={6}>
             <ShakingTextField error={!!(formik.touched.role && formik.errors.role)}>
               <CustomSelect
                 label="Role *"
@@ -81,7 +77,7 @@ const MemberForm: React.FC<IMemberFormProps> = ({ open, onClose }) => {
           </Grid>
 
           {/* Class */}
-          <Grid item xs={6} md={6}>
+          <Grid size={6}>
             <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
               <CustomSelect
                 label="Class *"
@@ -97,7 +93,7 @@ const MemberForm: React.FC<IMemberFormProps> = ({ open, onClose }) => {
           </Grid>
 
           {/* Division */}
-          <Grid item xs={6} md={6}>
+          <Grid size={6}>
             <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
               <CustomSelect
                 label="Division *"
@@ -113,7 +109,7 @@ const MemberForm: React.FC<IMemberFormProps> = ({ open, onClose }) => {
           </Grid>
 
           {/* Student */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.student && formik.errors.student)}>
               <CustomSelect
                 label="Student *"

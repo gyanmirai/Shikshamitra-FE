@@ -1,6 +1,5 @@
-import { useTheme } from '@mui/material/styles';
-
 import { varAlpha } from 'src/theme/styles';
+import { useTheme } from '@mui/material/styles';
 
 import type { ChartOptions } from './types';
 
@@ -12,14 +11,14 @@ export function useChart(options?: ChartOptions): ChartOptions {
   const LABEL_TOTAL = {
     show: true,
     label: 'Total',
-    color: theme.vars.palette.text.secondary,
+    color: theme.palette.text.secondary,
     fontSize: theme.typography.subtitle2.fontSize as string,
     fontWeight: theme.typography.subtitle2.fontWeight,
   };
 
   const LABEL_VALUE = {
     offsetY: 8,
-    color: theme.vars.palette.text.primary,
+    color: theme.palette.text.primary,
     fontSize: theme.typography.h4.fontSize as string,
     fontWeight: theme.typography.h4.fontWeight,
   };
@@ -27,24 +26,11 @@ export function useChart(options?: ChartOptions): ChartOptions {
   const RESPONSIVE = [
     {
       breakpoint: theme.breakpoints.values.sm, // sm ~ 600
-      options: {
-        plotOptions: {
-          bar: {
-            borderRadius: 3,
-            columnWidth: '80%',
-          },
-        },
-      },
+      options: { plotOptions: { bar: { borderRadius: 3, columnWidth: '80%' } } },
     },
     {
       breakpoint: theme.breakpoints.values.md, // md ~ 900
-      options: {
-        plotOptions: {
-          bar: {
-            columnWidth: '60%',
-          },
-        },
-      },
+      options: { plotOptions: { bar: { columnWidth: '60%' } } },
     },
     ...(options?.responsive ?? []),
   ];
@@ -56,15 +42,11 @@ export function useChart(options?: ChartOptions): ChartOptions {
      * Chart
      *************************************** */
     chart: {
-      toolbar: {
-        show: false,
-      },
-      zoom: {
-        enabled: false,
-      },
+      toolbar: { show: false },
+      zoom: { enabled: false },
       parentHeightOffset: 0,
       fontFamily: theme.typography.fontFamily,
-      foreColor: theme.vars.palette.text.disabled,
+      foreColor: theme.palette.text.disabled,
       ...options?.chart,
       animations: {
         enabled: true,
@@ -97,10 +79,12 @@ export function useChart(options?: ChartOptions): ChartOptions {
       ...options?.states,
       hover: {
         ...options?.states?.hover,
+        // @ts-ignore
         filter: { type: 'darken', value: 0.88, ...options?.states?.hover?.filter },
       },
       active: {
         ...options?.states?.active,
+        // @ts-ignore
         filter: { type: 'darken', value: 0.88, ...options?.states?.active?.filter },
       },
     },
@@ -124,79 +108,39 @@ export function useChart(options?: ChartOptions): ChartOptions {
     /** **************************************
      * Data labels
      *************************************** */
-    dataLabels: {
-      enabled: false,
-      ...options?.dataLabels,
-    },
+    dataLabels: { enabled: false, ...options?.dataLabels },
 
     /** **************************************
      * Stroke
      *************************************** */
-    stroke: {
-      width: 2.5,
-      curve: 'smooth',
-      lineCap: 'round',
-      ...options?.stroke,
-    },
+    stroke: { width: 2.5, curve: 'smooth', lineCap: 'round', ...options?.stroke },
 
     /** **************************************
      * Grid
      *************************************** */
     grid: {
       strokeDashArray: 3,
-      borderColor: theme.vars.palette.divider,
+      borderColor: theme.palette.divider,
       ...options?.grid,
-      padding: {
-        top: 0,
-        right: 0,
-        bottom: 0,
-        ...options?.grid?.padding,
-      },
-      xaxis: {
-        lines: {
-          show: false,
-        },
-        ...options?.grid?.xaxis,
-      },
+      padding: { top: 0, right: 0, bottom: 0, ...options?.grid?.padding },
+      xaxis: { lines: { show: false }, ...options?.grid?.xaxis },
     },
 
     /** **************************************
      * Axis
      *************************************** */
-    xaxis: {
-      axisBorder: {
-        show: false,
-      },
-      axisTicks: {
-        show: false,
-      },
-      ...options?.xaxis,
-    },
-    yaxis: {
-      tickAmount: 5,
-      ...options?.yaxis,
-    },
+    xaxis: { axisBorder: { show: false }, axisTicks: { show: false }, ...options?.xaxis },
+    yaxis: { tickAmount: 5, ...options?.yaxis },
 
     /** **************************************
      * Markers
      *************************************** */
-    markers: {
-      size: 0,
-      strokeColors: theme.vars.palette.background.paper,
-      ...options?.markers,
-    },
+    markers: { size: 0, strokeColors: theme.palette.background.paper, ...options?.markers },
 
     /** **************************************
      * Tooltip
      *************************************** */
-    tooltip: {
-      theme: 'false',
-      fillSeriesColor: false,
-      x: {
-        show: true,
-      },
-      ...options?.tooltip,
-    },
+    tooltip: { theme: 'false', fillSeriesColor: false, x: { show: true }, ...options?.tooltip },
 
     /** **************************************
      * Legend
@@ -208,15 +152,9 @@ export function useChart(options?: ChartOptions): ChartOptions {
       fontSize: '13px',
       horizontalAlign: 'right',
       markers: {},
-      labels: {
-        colors: theme.vars.palette.text.primary,
-      },
+      labels: { colors: theme.palette.text.primary },
       ...options?.legend,
-      itemMargin: {
-        horizontal: 8,
-        vertical: 8,
-        ...options?.legend?.itemMargin,
-      },
+      itemMargin: { horizontal: 8, vertical: 8, ...options?.legend?.itemMargin },
     },
 
     /** **************************************
@@ -240,14 +178,8 @@ export function useChart(options?: ChartOptions): ChartOptions {
           labels: {
             show: true,
             ...options?.plotOptions?.pie?.donut?.labels,
-            value: {
-              ...LABEL_VALUE,
-              ...options?.plotOptions?.pie?.donut?.labels?.value,
-            },
-            total: {
-              ...LABEL_TOTAL,
-              ...options?.plotOptions?.pie?.donut?.labels?.total,
-            },
+            value: { ...LABEL_VALUE, ...options?.plotOptions?.pie?.donut?.labels?.value },
+            total: { ...LABEL_TOTAL, ...options?.plotOptions?.pie?.donut?.labels?.total },
           },
         },
       },
@@ -255,27 +187,17 @@ export function useChart(options?: ChartOptions): ChartOptions {
       // plotOptions: Radialbar
       radialBar: {
         ...options?.plotOptions?.radialBar,
-        hollow: {
-          margin: -8,
-          size: '100%',
-          ...options?.plotOptions?.radialBar?.hollow,
-        },
+        hollow: { margin: -8, size: '100%', ...options?.plotOptions?.radialBar?.hollow },
         track: {
           margin: -8,
           strokeWidth: '50%',
-          background: varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
+          background: varAlpha(theme.palette.grey['500Channel'], 0.16),
           ...options?.plotOptions?.radialBar?.track,
         },
         dataLabels: {
           ...options?.plotOptions?.radialBar?.dataLabels,
-          value: {
-            ...LABEL_VALUE,
-            ...options?.plotOptions?.radialBar?.dataLabels?.value,
-          },
-          total: {
-            ...LABEL_TOTAL,
-            ...options?.plotOptions?.radialBar?.dataLabels?.total,
-          },
+          value: { ...LABEL_VALUE, ...options?.plotOptions?.radialBar?.dataLabels?.value },
+          total: { ...LABEL_TOTAL, ...options?.plotOptions?.radialBar?.dataLabels?.total },
         },
       },
 
@@ -283,31 +205,22 @@ export function useChart(options?: ChartOptions): ChartOptions {
       radar: {
         ...options?.plotOptions?.radar,
         polygons: {
-          fill: {
-            colors: ['transparent'],
-          },
-          strokeColors: theme.vars.palette.divider,
-          connectorColors: theme.vars.palette.divider,
+          fill: { colors: ['transparent'] },
+          strokeColors: theme.palette.divider,
+          connectorColors: theme.palette.divider,
           ...options?.plotOptions?.radar?.polygons,
         },
       },
 
       // plotOptions: polarArea
       polarArea: {
-        rings: {
-          strokeColor: theme.vars.palette.divider,
-        },
-        spokes: {
-          connectorColors: theme.vars.palette.divider,
-        },
+        rings: { strokeColor: theme.palette.divider },
+        spokes: { connectorColors: theme.palette.divider },
         ...options?.plotOptions?.polarArea,
       },
 
       // plotOptions: heatmap
-      heatmap: {
-        distributed: true,
-        ...options?.plotOptions?.heatmap,
-      },
+      heatmap: { distributed: true, ...options?.plotOptions?.heatmap },
     },
 
     /** **************************************

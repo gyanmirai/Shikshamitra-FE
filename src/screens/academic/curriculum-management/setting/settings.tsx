@@ -3,7 +3,7 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
+import CustomSelect from 'src/components/custom-select';
 import {
   Box,
   Card,
@@ -15,15 +15,13 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import CustomSelect from 'src/components/custom-select';
-
 const Settings = (props: TabComponentType) => (
   <Box>
     <Typography variant="h6" mt={2}>
       Notification Section
     </Typography>
     <Grid container spacing={2}>
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ p: 2, height: '100%' }}>
           <Typography variant="h6">Set Reminders</Typography>
           <FormControlLabel control={<Switch />} label="Set reminders for curriculum reviews" />
@@ -56,7 +54,8 @@ const Settings = (props: TabComponentType) => (
           </Box>
         </Card>
       </Grid>
-      <Grid item xs={12} md={6}>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ p: 2, height: '100%' }}>
           <Typography variant="h6">Permission Connection</Typography>
           <Box sx={{ pl: '20px', pb: '20px', pt: 2 }}>

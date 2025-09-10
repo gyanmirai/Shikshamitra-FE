@@ -2,10 +2,20 @@
 import React from 'react';
 // eslint-disable-next-line import/no-duplicates
 import { useState } from 'react';
-import { Droppable, Draggable, DragDropContext } from 'react-beautiful-dnd';
-
 import { Add } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { Droppable, Draggable, DragDropContext } from '@hello-pangea/dnd';
 import {
   Box,
   Chip,
@@ -26,20 +36,6 @@ import {
   TableContainer,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import { validationSchema } from './validationSchema';
 
@@ -112,10 +108,8 @@ const SurveyDetails = ({ formik }: any) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <ShakingTextField
-            error={!!(formik.touched.surveyTitle && formik.errors.surveyTitle) || false}
-          >
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ShakingTextField error={!!(formik.touched.surveyTitle && formik.errors.surveyTitle)}>
             <TextField
               fullWidth
               label="Survey Title"
@@ -128,10 +122,9 @@ const SurveyDetails = ({ formik }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <ShakingTextField
-            error={!!(formik.touched.organization && formik.errors.organization) || false}
-          >
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ShakingTextField error={!!(formik.touched.organization && formik.errors.organization)}>
             <CustomSelect
               label="Select Organizations"
               options={[
@@ -142,9 +135,7 @@ const SurveyDetails = ({ formik }: any) => {
                 ...allOrganizations,
               ]}
               value={formik.values.organization}
-              onChange={(val: any) => {
-                handleOrganizationChange(val as string[]);
-              }}
+              onChange={(val: any) => handleOrganizationChange(val as string[])}
               multiple
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={formik.touched.organization && Boolean(formik.errors.organization)}
@@ -156,10 +147,9 @@ const SurveyDetails = ({ formik }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <ShakingTextField
-            error={!!(formik.touched.className && formik.errors.className) || false}
-          >
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
             <CustomSelect
               options={[
                 {
@@ -169,9 +159,7 @@ const SurveyDetails = ({ formik }: any) => {
                 ...(classData?.items || []),
               ]}
               value={formik.values.className}
-              onChange={(val) => {
-                handleClass(val as string[]);
-              }}
+              onChange={(val) => handleClass(val as string[])}
               label="Class"
               isLoading={isLoading}
               multiple
@@ -187,8 +175,9 @@ const SurveyDetails = ({ formik }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience) || false}>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
             <CustomSelect
               label="Select Audience"
               options={[
@@ -198,9 +187,7 @@ const SurveyDetails = ({ formik }: any) => {
               ]}
               multiple
               value={formik.values.audience}
-              onChange={(val) => {
-                formik.setFieldValue('audience', val);
-              }}
+              onChange={(val) => formik.setFieldValue('audience', val)}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
               error={formik.touched.audience && Boolean(formik.errors.audience)}
               helperText={
@@ -211,10 +198,9 @@ const SurveyDetails = ({ formik }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <ShakingTextField
-            error={!!(formik.touched.description && formik.errors.description) || false}
-          >
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ShakingTextField error={!!(formik.touched.description && formik.errors.description)}>
             <TextField
               fullWidth
               label="Survey Description"

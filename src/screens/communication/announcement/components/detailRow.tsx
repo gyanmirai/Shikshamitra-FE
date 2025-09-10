@@ -1,8 +1,6 @@
-import React, { useRef, useState, useEffect } from 'react';
-
-import { Box, Button, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Button, Typography } from '@mui/material';
+import React, { useRef, useState, useEffect } from 'react';
 
 const DetailRow = ({ icon, label, value, color }: any) => {
   const contentRef = useRef<HTMLDivElement | null>(null);

@@ -1,24 +1,21 @@
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
-
 import { Box } from '@mui/material';
-
+import React, { useState } from 'react';
+import { Label } from 'src/components/label';
+import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   AttendanceStatusType,
   AttendanceStatusOptions,
   AttendanceStatusTypeColors,
 } from 'src/enums/attendance-type';
 
-import { Label } from 'src/components/label';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
 const MyAttendance = () => {
   // State to store selected year (defaults to current year)
-  const [year, setYear] = useState<string>(dayjs().format('YYYY'));
+  const [year] = useState<string>(dayjs().format('YYYY'));
 
   // State to store selected month (defaults to current month)
   const [month, setMonth] = useState<string>(dayjs().format('MM'));

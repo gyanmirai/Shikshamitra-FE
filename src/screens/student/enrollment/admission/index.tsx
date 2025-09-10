@@ -1,6 +1,5 @@
 'use client';
 
-import type { IKanbanColumn } from 'src/types/kanban';
 import type { LabelColor } from 'src/components/label';
 import type { Division, Standards } from 'src/types/school';
 import type { EntranceExamStatusType } from 'src/enums/entranceExam-type';
@@ -9,9 +8,38 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { toast } from 'sonner';
 import { useFormik } from 'formik';
-import { useMemo, useState, useEffect } from 'react';
-
 import { LoadingButton } from '@mui/lab';
+import { useTabs } from 'src/hooks/use-tabs';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { GenderType } from 'src/enums/gender';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import calculateAge from 'src/utils/calculate-age';
+import { useMemo, useState, useEffect } from 'react';
+import { DocumentType } from 'src/enums/documnet-type';
+import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
+import CancelButton from 'src/components/cancel-button';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { EntranceExamStatusTypeColors } from 'src/enums/entranceExam-type';
+import { RegistrationStatusType } from 'src/enums/registration-status-type';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import { useGetStudentDocumentsQuery } from 'src/redux/student/registration/registration-api';
+import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
+import FeeNewCollectionForm from 'src/screens/finance/fee-collection/collectFees/fee-collection-form';
+import { useGetEntranceExamByStudentIdQuery } from 'src/redux/student/entrance-exam/entrance-exam-api';
+import {
+  useGetStudentAdmissionQuery,
+  useChangeAdmissionStatusMutation,
+  useAssignDivisionTOStudentMutation,
+} from 'src/redux/student/admission/admission-api';
 import {
   Box,
   Tab,
@@ -24,7 +52,6 @@ import {
   Dialog,
   Divider,
   Checkbox,
-  useTheme,
   MenuList,
   MenuItem,
   TextField,
@@ -36,446 +63,35 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-import calculateAge from 'src/utils/calculate-age';
-
-import { GenderType } from 'src/enums/gender';
-import { DocumentType } from 'src/enums/documnet-type';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { EntranceExamStatusTypeColors } from 'src/enums/entranceExam-type';
-import { RegistrationStatusType } from 'src/enums/registration-status-type';
-import { useGetStudentDocumentsQuery } from 'src/redux/student/registration/registration-api';
-import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
-import FeeNewCollectionForm from 'src/screens/finance/fee-collection/collectFees/fee-collection-form';
-import { useGetEntranceExamByStudentIdQuery } from 'src/redux/student/entrance-exam/entrance-exam-api';
-import {
-  useGetStudentAdmissionQuery,
-  useChangeAdmissionStatusMutation,
-  useAssignDivisionTOStudentMutation,
-} from 'src/redux/student/admission/admission-api';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import SubmitButton from 'src/components/submit-button';
-import CancelButton from 'src/components/cancel-button';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-
 import { CommunicationForm } from '../follow-up';
 import RegisterForm from '../register/register-form';
 import { ViewDocuments } from '../register/RenderDocument';
 
 import type { IInquiryData } from '../Inquiry';
 
-const cssVars = {
-  '--item-gap': '16px',
-  '--item-radius': '12px',
-  '--column-gap': '24px',
-  '--column-width': '336px',
-  '--column-radius': '16px',
-  '--column-padding': '20px 16px 16px 16px',
-};
-
-const columns: IKanbanColumn[] = [
-  {
-    id: 'pendingApproval',
-    name: 'Pending Approval',
-  },
-  {
-    id: 'approved',
-    name: 'Approved',
-  },
-  {
-    id: 'rejected',
-    name: 'Rejected',
-  },
-];
-
-const data = [
-  {
-    id: '1',
-    name: 'John Doe',
-    description: 'Description 1',
-    status: 'pending',
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    description: 'Description 2',
-    status: 'approved',
-  },
-  {
-    id: '3',
-    name: 'Bob Johnson',
-    description: 'Description 3',
-    status: 'rejected',
-  },
-];
-
-// const AdmissionScreen = () => {
-//   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-//   const [columnFixed, setColumnFixed] = useState(true);
-
-//   const openDetails = useBoolean();
-
-//   const ref = useRef<any>(null);
-
-//   const [board, setBoard] = useState<{
-//     columns: IKanbanColumn[];
-//     tasks: Record<UniqueIdentifier, IKanbanTask[]>;
-//   }>({
-//     columns,
-//     tasks,
-//   });
-
-//   const recentlyMovedToNewContainer = useRef(false);
-
-//   const lastOverId = useRef<UniqueIdentifier | null>(null);
-
-//   // const { board, boardLoading, boardEmpty } = useGetBoard();
-
-//   const sensors = useSensors(
-//     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
-//     useSensor(TouchSensor, { activationConstraint: { distance: 5 } }),
-//     useSensor(KeyboardSensor, { coordinateGetter })
-//   );
-//   /**
-//    * onDragStart
-//    */
-//   const onDragStart = ({ active }: DragStartEvent) => {
-//     setActiveId(active.id);
-//   };
-
-//   /**
-//    * onDragOver
-//    */
-//   const onDragOver = ({ active, over }: DragOverEvent) => {
-//     const overId = over?.id;
-
-//     if (overId == null || active.id in board.tasks) {
-//       return;
-//     }
-
-//     const overColumn = findColumn(overId);
-
-//     const activeColumn = findColumn(active.id);
-
-//     if (!overColumn || !activeColumn) {
-//       return;
-//     }
-
-//     if (activeColumn !== overColumn) {
-//       const activeItems = board.tasks[activeColumn].map((task) => task.id);
-//       const overItems = board.tasks[overColumn].map((task) => task.id);
-//       const overIndex = overItems.indexOf(overId);
-//       const activeIndex = activeItems.indexOf(active.id);
-
-//       let newIndex: number;
-
-//       if (overId in board.tasks) {
-//         newIndex = overItems.length + 1;
-//       } else {
-//         const isBelowOverItem =
-//           over &&
-//           active.rect.current.translated &&
-//           active.rect.current.translated.top > over.rect.top + over.rect.height;
-
-//         const modifier = isBelowOverItem ? 1 : 0;
-
-//         newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
-//       }
-
-//       recentlyMovedToNewContainer.current = true;
-
-//       const updateTasks = {
-//         ...board.tasks,
-//         [activeColumn]: board.tasks[activeColumn].filter((task) => task.id !== active.id),
-//         [overColumn]: [
-//           ...board.tasks[overColumn].slice(0, newIndex),
-//           board.tasks[activeColumn][activeIndex],
-//           ...board.tasks[overColumn].slice(newIndex, board.tasks[overColumn].length),
-//         ],
-//       };
-
-//       setBoard((prev) => ({
-//         ...prev,
-//         tasks: updateTasks,
-//       }));
-//     }
-//   };
-
-//   const findColumn = (id: UniqueIdentifier) => {
-//     if (id in board.tasks) {
-//       return id;
-//     }
-
-//     return Object.keys(board.tasks).find((key) =>
-//       board.tasks[key].map((task) => task.id).includes(id)
-//     );
-//   };
-
-//   /**
-//    * onDragEnd
-//    */
-//   const onDragEnd = ({ active, over }: DragEndEvent) => {
-//     if (active.id in board.tasks && over?.id) {
-//       const activeIndex = columnIds.indexOf(active.id);
-//       const overIndex = columnIds.indexOf(over.id);
-
-//       const updateColumns = arrayMove(board.columns, activeIndex, overIndex);
-
-//       // moveColumn(updateColumns);
-//       setBoard((prev) => ({
-//         ...prev,
-//         columns: updateColumns,
-//       }));
-//     }
-
-//     const activeColumn = findColumn(active.id);
-
-//     if (!activeColumn) {
-//       setActiveId(null);
-//       return;
-//     }
-
-//     const overId = over?.id;
-
-//     if (overId == null) {
-//       setActiveId(null);
-//       return;
-//     }
-
-//     const overColumn = findColumn(overId);
-
-//     if (overColumn) {
-//       const activeContainerTaskIds = board.tasks[activeColumn].map((task) => task.id);
-//       const overContainerTaskIds = board.tasks[overColumn].map((task) => task.id);
-
-//       const activeIndex = activeContainerTaskIds.indexOf(active.id);
-//       const overIndex = overContainerTaskIds.indexOf(overId);
-
-//       if (activeIndex !== overIndex) {
-//         const updateTasks = {
-//           ...board.tasks,
-//           [overColumn]: arrayMove(board.tasks[overColumn], activeIndex, overIndex),
-//         };
-
-//         // moveTask(updateTasks);
-//         setBoard((prev) => ({
-//           ...prev,
-//           tasks: updateTasks,
-//         }));
-//       }
-//     }
-
-//     setActiveId(null);
-//   };
-
-//   const collisionDetectionStrategy: CollisionDetection = useCallback(
-//     (args) => {
-//       if (activeId && activeId in board.tasks) {
-//         return closestCenter({
-//           ...args,
-//           droppableContainers: args.droppableContainers.filter(
-//             (column) => column.id in board.tasks
-//           ),
-//         });
-//       }
-
-//       // Start by finding any intersecting droppable
-//       const pointerIntersections = pointerWithin(args);
-
-//       const intersections =
-//         pointerIntersections.length > 0
-//           ? // If there are droppables intersecting with the pointer, return those
-//             pointerIntersections
-//           : rectIntersection(args);
-//       let overId = getFirstCollision(intersections, 'id');
-
-//       if (overId != null) {
-//         if (overId in board.tasks) {
-//           const columnItems = board.tasks[overId].map((task) => task.id);
-
-//           // If a column is matched and it contains items (columns 'A', 'B', 'C')
-//           if (columnItems.length > 0) {
-//             // Return the closest droppable within that column
-//             overId = closestCenter({
-//               ...args,
-//               droppableContainers: args.droppableContainers.filter(
-//                 (column) => column.id !== overId && columnItems.includes(column.id)
-//               ),
-//             })[0]?.id;
-//           }
-//         }
-
-//         lastOverId.current = overId;
-
-//         return [{ id: overId }];
-//       }
-
-//       // When a draggable item moves to a new column, the layout may shift
-//       // and the `overId` may become `null`. We manually set the cached `lastOverId`
-//       // to the id of the draggable item that was moved to the new column, otherwise
-//       // the previous `overId` will be returned which can cause items to incorrectly shift positions
-//       if (recentlyMovedToNewContainer.current) {
-//         lastOverId.current = activeId;
-//       }
-
-//       // If no droppable is matched, return the last match
-//       return lastOverId.current ? [{ id: lastOverId.current }] : [];
-//     },
-//     [activeId, board?.tasks]
-//   );
-
-//   const columnIds = board.columns.map((column) => column.id);
-
-//   const isSortingContainer = activeId ? columnIds.includes(activeId) : false;
-
-//   return (
-//     <Box height="100%" className="admission-container" ref={ref}>
-//       <DashboardContent
-//         maxWidth={false}
-//         disablePadding
-//         sx={{
-//           ...cssVars,
-//           pb: 0,
-//           pl: { sm: 0, md: 0 },
-//           pr: { sm: 0 },
-//           flex: '1 1 0',
-//           display: 'flex',
-//           overflow: 'hidden',
-//           flexDirection: 'column',
-//           height: '100%',
-//         }}
-//       >
-//         <CustomBreadcrumbs
-//           heading="Admission"
-//           links={[{ name: 'Student' }, { name: 'Student Enrollment' }, { name: 'Admission' }]}
-//           sx={{ px: 1, mb: 2 }}
-//         />
-//         <DndContext
-//           id="admission-dnd"
-//           sensors={sensors}
-//           collisionDetection={collisionDetectionStrategy}
-//           measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
-//           onDragStart={onDragStart}
-//           onDragOver={onDragOver}
-//           onDragEnd={onDragEnd}
-//         >
-//           <Scrollbar sx={{ flex: '1 1 auto', overflowX: 'auto' }}>
-//             <Stack
-//               sx={{
-//                 pb: 3,
-//                 display: 'unset',
-//                 height: '100%',
-//                 ...(columnFixed && { minHeight: 0, display: 'flex', flex: '1 1 auto' }),
-//               }}
-//             >
-//               <Stack
-//                 direction="row"
-//                 sx={{
-//                   gap: 'var(--column-gap)',
-//                   ...(columnFixed && {
-//                     minHeight: 0,
-//                     flex: '1 1 auto',
-//                     [`& .${kanbanClasses.columnList}`]: { ...hideScrollY, flex: '1 1 auto' },
-//                   }),
-//                 }}
-//               >
-//                 <SortableContext items={[...columnIds]} strategy={horizontalListSortingStrategy}>
-//                   {board?.columns.map((column) => (
-//                     <AdmissionColumn key={column.id} column={column} tasks={board.tasks[column.id]}>
-//                       <SortableContext
-//                         items={board.tasks[column.id]}
-//                         strategy={verticalListSortingStrategy}
-//                       >
-//                         <TextField
-//                           label="Search Student"
-//                           variant="outlined"
-//                           size="small"
-//                           sx={{ mt: 1 }}
-//                         />
-//                         {board.tasks[column.id].map((task) => (
-//                           <AdmissionItemBase
-//                             task={task}
-//                             key={task.id}
-//                             columnId={column.id}
-//                             disabled={isSortingContainer}
-//                             openDetails={openDetails}
-//                           />
-//                         ))}
-//                       </SortableContext>
-//                     </AdmissionColumn>
-//                   ))}
-//                 </SortableContext>
-//               </Stack>
-//             </Stack>
-//           </Scrollbar>
-
-//           <AdmissionOverlay
-//             columns={board?.columns}
-//             tasks={board?.tasks}
-//             activeId={activeId}
-//             sx={cssVars}
-//           />
-//         </DndContext>
-//       </DashboardContent>
-//       {/* {container && openDetails.value && ( */}
-
-//       <Drawer
-//         anchor="right"
-//         open={openDetails.value}
-//         onClose={openDetails.onFalse}
-//         slotProps={{ backdrop: { invisible: true } }}
-//         sx={{
-//           [`& .${drawerClasses.paper}`]: (theme) => ({
-//             ...paper({
-//               theme,
-//               color: varAlpha(theme.vars.palette.background.defaultChannel, 0.9),
-//             }),
-//             width: 400,
-//           }),
-//         }}
-//       >
-//         <Paper
-//           elevation={12}
-//           component="button"
-//           autoFocus
-//           sx={{
-//             border: 'none',
-//             maxWidth: '400px',
-//             width: '100%',
-//             zIndex: 9999,
-//             height: '100%',
-//             textAlign: 'left',
-//             // transition: 'all 0.3s ease',
-//             // transform: openDetails.value ? 'translateX(0)' : 'translateX(110%)',
-//           }}
-
-//           // ref={ref}
-//         >
-//           <Scrollbar sx={{ height: '100%', p: 2 }}>
-//             <Iconify
-//               icon="zondicons:close-outline"
-//               onClick={openDetails.onFalse}
-//               sx={{ position: 'absolute', top: 10, right: 10, cursor: 'pointer' }}
-//             />
-//             <StudentDetails />
-//           </Scrollbar>
-//         </Paper>
-//       </Drawer>
-//     </Box>
-//   );
+// const cssVars = {
+//   '--item-gap': '16px',
+//   '--item-radius': '12px',
+//   '--column-gap': '24px',
+//   '--column-width': '336px',
+//   '--column-radius': '16px',
+//   '--column-padding': '20px 16px 16px 16px',
 // };
+
+// const columns: IKanbanColumn[] = [
+//   {
+//     id: 'pendingApproval',
+//     name: 'Pending Approval',
+//   },
+//   {
+//     id: 'approved',
+//     name: 'Approved',
+//   },
+//   {
+//     id: 'rejected',
+//     name: 'Rejected',
+//   },
+// ];
 
 const AdmissionScreen = () => {
   const tabs = useTabs(RegistrationStatusType.Pending);
@@ -1066,7 +682,6 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
   const [selectedStatus, setSelectedStatus] = useState<RegistrationStatusType | null>(null);
 
   const handleSave = async () => {
-    console.log('handleSave called with selectedStatus:', selectedStatus);
     if (selectedStatus === null) return;
 
     const payload = {
@@ -1177,32 +792,35 @@ const EntranceExamSections = ({ editData }: any) => {
       skip: !editData?.id,
     },
   });
-  const theme = useTheme();
+  // const theme = useTheme();
   const examData = useMemo(
-    () => ({
-      ...entranceExamData,
-      date: dayjs(entranceExamData?.examDate).format('DD-MM-YYYY'),
-      examTime: `${dayjs(entranceExamData?.entranceExamSlot?.startDate).format('hh:mm A')} to ${dayjs(
-        entranceExamData?.entranceExamSlot?.endDate
-      ).format('hh:mm A')}`,
-      name: `${entranceExamData?.studentEnrollment?.firstName} ${entranceExamData?.studentEnrollment?.lastName}`,
-      medium: entranceExamData?.studentEnrollment?.educationMedium?.name,
-      class: entranceExamData?.studentEnrollment?.standard?.name,
-      status:
-        entranceExamData?.marksObtained === null
-          ? 'Pending'
-          : entranceExamData?.marksObtained >= entranceExamData?.passingMark
-            ? 'Pass'
-            : 'Fail',
-      percentage:
-        entranceExamData?.marksObtained === null || entranceExamData?.totalMarks === 0
-          ? 0
-          : +(
-              ((entranceExamData?.marksObtained ?? 0) / (entranceExamData?.totalMarks ?? 1)) *
-              100
-            ).toFixed(2),
-      obtainMarks: entranceExamData?.marksObtained ?? '-',
-    }),
+    () =>
+      entranceExamData
+        ? {
+            ...entranceExamData,
+            date: dayjs(entranceExamData?.examDate).format('DD-MM-YYYY'),
+            examTime: `${dayjs(entranceExamData?.entranceExamSlot?.startDate).format('hh:mm A')} to ${dayjs(
+              entranceExamData?.entranceExamSlot?.endDate
+            ).format('hh:mm A')}`,
+            name: `${entranceExamData?.studentEnrollment?.firstName} ${entranceExamData?.studentEnrollment?.lastName}`,
+            medium: entranceExamData?.studentEnrollment?.educationMedium?.name,
+            class: entranceExamData?.studentEnrollment?.standard?.name,
+            status:
+              entranceExamData?.marksObtained === null
+                ? 'Pending'
+                : entranceExamData?.marksObtained >= entranceExamData?.passingMark
+                  ? 'Pass'
+                  : 'Fail',
+            percentage:
+              entranceExamData?.marksObtained === null || entranceExamData?.totalMarks === 0
+                ? 0
+                : +(
+                    ((entranceExamData?.marksObtained ?? 0) / (entranceExamData?.totalMarks ?? 1)) *
+                    100
+                  ).toFixed(2),
+            obtainMarks: entranceExamData?.marksObtained ?? '-',
+          }
+        : {},
     [entranceExamData]
   );
   const color = EntranceExamStatusTypeColors[
@@ -1264,7 +882,7 @@ const DocumentsSections = ({ editData }: any) => {
     currentQueryAndMutation: useGetStudentDocumentTypeQuery,
   });
 
-  const { data: employeeDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
+  const { data: employeeDocuments } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentsQuery,
     params: editData?.id,
@@ -1420,7 +1038,7 @@ const AssignDivisionForm = ({
           }}
         > */}
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               value={formik.values.standardName}
               label="Standard"
@@ -1429,7 +1047,7 @@ const AssignDivisionForm = ({
               fullWidth
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <CustomSelect
               autoFocus
               options={standard?.divisions || []}
@@ -1509,27 +1127,27 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
     },
   });
 
-  const getStatusOptions = () => {
-    switch (tabValue) {
-      case RegistrationStatusType.Pending:
-        return [
-          { label: 'Approved', value: RegistrationStatusType.Approved },
-          { label: 'Rejected', value: RegistrationStatusType.Rejected },
-        ];
-      case RegistrationStatusType.Approved:
-        return [
-          { label: 'Rejected', value: RegistrationStatusType.Rejected },
-          { label: 'Pending', value: RegistrationStatusType.Pending },
-        ];
-      case RegistrationStatusType.Rejected:
-        return [
-          { label: 'Approved', value: RegistrationStatusType.Approved },
-          { label: 'Pending', value: RegistrationStatusType.Pending },
-        ];
-      default:
-        return [];
-    }
-  };
+  // const getStatusOptions = () => {
+  //   switch (tabValue) {
+  //     case RegistrationStatusType.Pending:
+  //       return [
+  //         { label: 'Approved', value: RegistrationStatusType.Approved },
+  //         { label: 'Rejected', value: RegistrationStatusType.Rejected },
+  //       ];
+  //     case RegistrationStatusType.Approved:
+  //       return [
+  //         { label: 'Rejected', value: RegistrationStatusType.Rejected },
+  //         { label: 'Pending', value: RegistrationStatusType.Pending },
+  //       ];
+  //     case RegistrationStatusType.Rejected:
+  //       return [
+  //         { label: 'Approved', value: RegistrationStatusType.Approved },
+  //         { label: 'Pending', value: RegistrationStatusType.Pending },
+  //       ];
+  //     default:
+  //       return [];
+  //   }
+  // };
 
   return (
     <>

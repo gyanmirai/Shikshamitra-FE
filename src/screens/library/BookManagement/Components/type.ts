@@ -25,10 +25,13 @@ export interface IBookPayload {
   category: string;
   edition: string;
   language: string;
+  price: number | null;
   numberOfCopies: number;
   bookCoverImages: string[]; // URLs or file references
   copies: IBookCopy[];
   documents?: File[];
+  damagedBook?: number;
+  availableBook?: number;
 }
 
 export interface IBookFormProps {

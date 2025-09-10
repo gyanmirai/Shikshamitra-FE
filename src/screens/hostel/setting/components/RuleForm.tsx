@@ -1,15 +1,12 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getRoomInitialValues } from './ruleInitialValue';
 import { hostelRoomValidationSchema } from './ruleValidationSchema';
@@ -30,7 +27,7 @@ const RuleForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={!!(formik.touched.ruleName && formik.errors.ruleName) || false}
                 >
@@ -46,7 +43,7 @@ const RuleForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={
                     !!(formik.touched.ruleDescription && formik.errors.ruleDescription) || false
@@ -66,7 +63,7 @@ const RuleForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={

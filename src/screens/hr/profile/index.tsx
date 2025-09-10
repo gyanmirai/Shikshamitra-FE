@@ -1,10 +1,8 @@
 'use client';
 
 import React from 'react';
-import { useSelector } from 'react-redux';
-
 import { Box } from '@mui/material';
-
+import { useSelector } from 'react-redux';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { EmployeeCard } from '../employee/employee-view';

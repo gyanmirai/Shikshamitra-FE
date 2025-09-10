@@ -1,8 +1,13 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Grid,
@@ -12,14 +17,6 @@ import {
   DialogActions,
   DialogContentText,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 interface Grade {
   id: number;
@@ -265,7 +262,7 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '150px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Grade"
@@ -276,7 +273,8 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
                 error={formik.touched.grade && Boolean(formik.errors.grade)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Start Range"
@@ -287,7 +285,8 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
                 error={formik.touched.startRange && Boolean(formik.errors.startRange)}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="End Range"
@@ -298,7 +297,8 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
                 error={formik.touched.endRange && Boolean(formik.errors.endRange)}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <CustomSelect
                 fullWidth
                 label="Descriptive Scale"
@@ -313,11 +313,9 @@ const GradeForm: React.FC<GradeFormProps> = ({ onSubmit, onClose, data, isEdit }
                   { value: 'Fail', label: 'Fail' },
                 ]}
                 value={formik.values.descriptiveScale}
-                onChange={(val) => {
-                  formik.setFieldValue('descriptiveScale', val);
-                }}
+                onChange={(val) => formik.setFieldValue('descriptiveScale', val)}
                 formControlProps={{
-                  sx: { width: '100%', mixWidth: '200px' },
+                  sx: { width: '100%', maxWidth: '200px' },
                 }}
                 error={formik.touched.descriptiveScale && Boolean(formik.errors.descriptiveScale)}
               />

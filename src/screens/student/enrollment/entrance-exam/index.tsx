@@ -7,36 +7,30 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import isoWeek from 'dayjs/plugin/isoWeek';
-import { useSelector, useDispatch } from 'react-redux';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-import Grid from '@mui/material/Unstable_Grid2/Grid2';
-import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
-import {
-  Box,
-  Paper,
-  Radio,
-  Button,
-  MenuItem,
-  MenuList,
-  useTheme,
-  TextField,
-  Typography,
-  DialogActions,
-  FormControlLabel,
-  CircularProgress,
-} from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
-
+import isoWeek from 'dayjs/plugin/isoWeek';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useSelector, useDispatch } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { EmptyContent } from 'src/components/empty-content';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useMoveToAdmissionMutation } from 'src/redux/student/registration/registration-api';
 import { useGetEntranceExamSlotQuery } from 'src/redux/student/entrance-exam-slot/entrance-exam-slot-api';
 import {
@@ -45,26 +39,25 @@ import {
   EntranceExamStatusTypeColors,
 } from 'src/enums/entranceExam-type';
 import {
+  Box,
+  Grid,
+  Paper,
+  Radio,
+  Button,
+  MenuItem,
+  MenuList,
+  TextField,
+  Typography,
+  DialogActions,
+  FormControlLabel,
+  CircularProgress,
+} from '@mui/material';
+import {
   useGetEntranceExamQuery,
   useAddEntranceExamMutation,
   useUpdateEntranceExamMutation,
   useLazyGetStudentForSlotByDateQuery,
 } from 'src/redux/student/entrance-exam/entrance-exam-api';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { EmptyContent } from 'src/components/empty-content';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { ExamTypeForm } from '../setting/exam-type';
 import { SlotsForm } from '../setting/entrance-exam-slots';
@@ -76,7 +69,7 @@ dayjs.extend(isoWeek);
  */
 const EntranceExamScreen = () => {
   // Search params hook for view state management
-  const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
+  // const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
 
   // State for managing edit data and move operations
   const [editData, setEditData] = useState<any | null>(null);
@@ -107,14 +100,8 @@ const EntranceExamScreen = () => {
   const [moveToAdmission] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMoveToAdmissionMutation,
-    popupConfig: {
-      successMessage: 'Student moved to Admission successfully.',
-      success: true,
-    },
+    popupConfig: { successMessage: 'Student moved to Admission successfully.', success: true },
   });
-
-  // Material-UI theme hook
-  const theme = useTheme();
 
   /**
    * Memoized table data transformation
@@ -145,48 +132,48 @@ const EntranceExamScreen = () => {
   /**
    * Memoized calendar data transformation
    */
-  const calendarData = useMemo(
-    () =>
-      entranceExamData?.items.map((i: any) => {
-        const startTime = dayjs(i.entranceExamSlot.startDate).format('hh:mm A');
-        const endTime = dayjs(i.entranceExamSlot.endDate).format('hh:mm A');
+  // const calendarData = useMemo(
+  //   () =>
+  //     entranceExamData?.items.map((i: any) => {
+  //       const startTime = dayjs(i.entranceExamSlot.startDate).format('hh:mm A');
+  //       const endTime = dayjs(i.entranceExamSlot.endDate).format('hh:mm A');
 
-        const startExamDate = dayjs(
-          dayjs(
-            `${dayjs(i.examDate).format('DD-MM-YYYY')} ${startTime}`,
-            'DD-MM-YYYY hh:mm A'
-          ).format('YYYY-MM-DD hh:mm A')
-        ).format();
-        const endExamDate = dayjs(
-          dayjs(
-            `${dayjs(i.examDate).format('DD-MM-YYYY')} ${endTime}`,
-            'DD-MM-YYYY hh:mm A'
-          ).format('YYYY-MM-DD hh:mm A')
-        ).format();
+  //       const startExamDate = dayjs(
+  //         dayjs(
+  //           `${dayjs(i.examDate).format('DD-MM-YYYY')} ${startTime}`,
+  //           'DD-MM-YYYY hh:mm A'
+  //         ).format('YYYY-MM-DD hh:mm A')
+  //       ).format();
+  //       const endExamDate = dayjs(
+  //         dayjs(
+  //           `${dayjs(i.examDate).format('DD-MM-YYYY')} ${endTime}`,
+  //           'DD-MM-YYYY hh:mm A'
+  //         ).format('YYYY-MM-DD hh:mm A')
+  //       ).format();
 
-        const status =
-          i.marksObtained === null ? 'Pending' : i.marksObtained >= i.passingMark ? 'Pass' : 'Fail';
-        let color: LabelColor = 'error';
-        if (status === 'Pending') {
-          color = 'warning';
-        } else if (status === 'Pass') {
-          color = 'success';
-        } else {
-          color = 'error';
-        }
-        return {
-          ...i,
-          start: startExamDate,
-          end: endExamDate,
-          color: theme.palette[color].main,
-          allDay: false,
-          textColor: theme.palette[color].main,
-          title: `${i.studentEnrollment.lastName} ${i.studentEnrollment.firstName} `,
-          description: i.reason,
-        };
-      }) || [],
-    [entranceExamData?.items, theme.palette]
-  );
+  //       const status =
+  //         i.marksObtained === null ? 'Pending' : i.marksObtained >= i.passingMark ? 'Pass' : 'Fail';
+  //       let color: LabelColor = 'error';
+  //       if (status === 'Pending') {
+  //         color = 'warning';
+  //       } else if (status === 'Pass') {
+  //         color = 'success';
+  //       } else {
+  //         color = 'error';
+  //       }
+  //       return {
+  //         ...i,
+  //         start: startExamDate,
+  //         end: endExamDate,
+  //         color: theme.vars.palette[color].main,
+  //         allDay: false,
+  //         textColor: theme.vars.palette[color].main,
+  //         title: `${i.studentEnrollment.lastName} ${i.studentEnrollment.firstName} `,
+  //         description: i.reason,
+  //       };
+  //     }) || [],
+  //   [entranceExamData?.items, theme.vars.palette]
+  // );
 
   /**
    * Callback for handling row actions
@@ -244,7 +231,7 @@ const EntranceExamScreen = () => {
   };
 
   // State for managing selected students
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [selectedStudents] = useState<any>([]);
 
   // Dialog control for instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
@@ -276,12 +263,7 @@ const EntranceExamScreen = () => {
             label="Start Date"
             format="DD-MM-YYYY"
             value={startDate}
-            slotProps={{
-              textField: {
-                sx: { width: '250px' },
-                size: 'small',
-              },
-            }}
+            slotProps={{ textField: { sx: { width: '250px' }, size: 'small' } }}
             views={['year', 'month', 'day']}
             onChange={(value) => {
               setStartDate(value);
@@ -292,12 +274,7 @@ const EntranceExamScreen = () => {
             value={endDate}
             format="DD-MM-YYYY"
             views={['year', 'month', 'day']}
-            slotProps={{
-              textField: {
-                sx: { width: '250px' },
-                size: 'small',
-              },
-            }}
+            slotProps={{ textField: { sx: { width: '250px' }, size: 'small' } }}
             onChange={(value) => {
               setEndDate(value);
             }}
@@ -312,29 +289,11 @@ const EntranceExamScreen = () => {
           noDataText={<>No Entrance Exam Data Found </>}
           isLoading={isLoading}
           columns={[
-            {
-              id: 'name',
-              label: 'Student Name',
-              align: 'left',
-              sticky: true,
-              minWidth: 180,
-            },
+            { id: 'name', label: 'Student Name', align: 'left', sticky: true, minWidth: 180 },
 
-            {
-              id: 'board',
-              label: 'Board',
-              align: 'left',
-            },
-            {
-              id: 'medium',
-              label: 'Medium',
-              align: 'left',
-            },
-            {
-              id: 'class',
-              label: 'Class',
-              align: 'left',
-            },
+            { id: 'board', label: 'Board', align: 'left' },
+            { id: 'medium', label: 'Medium', align: 'left' },
+            { id: 'class', label: 'Class', align: 'left' },
             { id: 'date', label: 'Date', filterType: 'date' },
             { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
             {
@@ -374,9 +333,7 @@ const EntranceExamScreen = () => {
                       value={value}
                       size={50}
                       thickness={3}
-                      sx={{
-                        color: value < 50 ? 'warning.main' : 'success.main',
-                      }}
+                      sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
                     />
                     <Box
                       sx={{
@@ -417,9 +374,7 @@ const EntranceExamScreen = () => {
                       value={value}
                       size={50}
                       thickness={3}
-                      sx={{
-                        color: value < 50 ? 'warning.main' : 'success.main',
-                      }}
+                      sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
                     />
                     <Box
                       sx={{
@@ -640,12 +595,7 @@ export const ExamForm = ({
 
   // Formik instance for form handling
   const formik = useFormik({
-    initialValues: {
-      examDate: null,
-      isConfirmed: false,
-      slots: allSlots || [],
-      slot: '',
-    },
+    initialValues: { examDate: null, isConfirmed: false, slots: allSlots || [], slot: '' },
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -676,12 +626,7 @@ export const ExamForm = ({
             const label = `${dayjs(slot.startDate).format('hh:mm A')} to ${dayjs(slot.endDate).format('hh:mm A')}`;
             const studentCount = await getStudentCount(slot.id, formattedDate);
 
-            return {
-              ...slot,
-              label,
-              value: slot.id,
-              studentCount,
-            };
+            return { ...slot, label, value: slot.id, studentCount };
           })
         );
 
@@ -749,21 +694,17 @@ export const ExamForm = ({
             </Box>
           </Box>
         </Paper>
-        <Scrollbar
-          sx={{
-            p: 2,
-            bgcolor: 'background.neutral',
-            height: '100%',
-          }}
-        >
+        <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
           <Grid container spacing={3}>
-            <Grid xs={4}>
+            <Grid size={{ xs: 4 }}>
               <Paper sx={{ height: '100%' }}>
                 <DateCalendar
                   value={formik.values.examDate}
                   onChange={(value) => {
                     formik.setFieldValue('examDate', value);
-                    handleGetAllStudentCount(value);
+                    if (value) {
+                      handleGetAllStudentCount(dayjs(value).format('YYYY-MM-DD'));
+                    }
                   }}
                   disablePast
                   slots={{
@@ -786,10 +727,11 @@ export const ExamForm = ({
                 </Typography>
               )}
             </Grid>
-            <Grid xs={8}>
+
+            <Grid size={{ xs: 8 }}>
               <Paper sx={{ p: 1, height: '100%' }}>
                 <Grid container spacing={2}>
-                  <Grid xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Box>
                       <Box
                         display="flex"
@@ -802,14 +744,14 @@ export const ExamForm = ({
 
                       <Grid container spacing={2}>
                         {isStudentCountLoading ? (
-                          <Grid xs={12}>
+                          <Grid size={{ xs: 12 }}>
                             <Box className="loader" height={24} />
                           </Grid>
                         ) : formik.values.slots.length === 0 ? (
                           <EmptyContent title="Please select the date." />
                         ) : (
                           formik.values.slots.map((slot: any, index: number) => (
-                            <Grid xs={6} key={index}>
+                            <Grid size={{ xs: 6 }} key={index}>
                               <FormControlLabel
                                 sx={{ marginLeft: 1 }}
                                 control={

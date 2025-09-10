@@ -3,29 +3,25 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Button, Switch, useTheme, IconButton, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-import { formatNumber } from 'src/utils/formate_number';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import initialData from 'src/json/finance/settings/fee-structure/feeStructureData.json';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Button, Switch, IconButton, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
+import initialData from 'src/json/finance/settings/fee-structure/feeStructureData.json';
 
 import { feestructureDummyData } from './data/fee-structure-data';
 import ReadOnlyFeeStructureTable from './component/read-only-fee-structure-table';
@@ -148,10 +144,7 @@ const FinanceNewFeeStructureSetting = () => {
             }
             tableId="finance-fee-structure-setting-tab"
             columns={[
-              {
-                id: 'bookRecipt',
-                label: 'Receipt Book',
-              },
+              { id: 'bookRecipt', label: 'Receipt Book' },
               { id: 'applicableGrade', label: 'Class', filterType: 'number' },
 
               {
@@ -191,7 +184,9 @@ const FinanceNewFeeStructureSetting = () => {
                 isSort: false,
                 render(value, row) {
                   const statusColor =
-                    value === true ? theme.palette.success.main : theme.palette.text.secondary;
+                    value === true
+                      ? theme.vars.palette.success.main
+                      : theme.vars.palette.text.secondary;
                   return (
                     <CustomTooltip
                       title={value === true ? 'Active' : 'InActive'}
@@ -227,11 +222,7 @@ const FinanceNewFeeStructureSetting = () => {
                       >
                         <Iconify
                           icon={GlobalIcons.tick}
-                          sx={{
-                            width: 20,
-                            height: 20,
-                            color: statusColor,
-                          }}
+                          sx={{ width: 20, height: 20, color: statusColor }}
                         />
                       </IconButton>
                     </CustomTooltip>

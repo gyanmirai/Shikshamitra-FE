@@ -3,12 +3,10 @@ import type { IChatMessage, IChatParticipant } from 'src/types/chat';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-
 import { today, fToNow } from 'src/utils/format-time';
-
-import { Iconify } from 'src/components/iconify';
 
 import { useMessage } from './hooks/use-message';
 

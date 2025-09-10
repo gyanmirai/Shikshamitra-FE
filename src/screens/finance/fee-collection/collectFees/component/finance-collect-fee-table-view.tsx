@@ -1,15 +1,13 @@
 import dayjs from 'dayjs';
 import { Form, Formik } from 'formik';
 import React, { useState } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, Checkbox, TextField, Typography, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, Button, Checkbox, TextField, Typography, DialogActions } from '@mui/material';
 
 // Define the types
 interface Fee {
@@ -126,7 +124,7 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                     tableId="fee-collect-table"
                   />
                   <Grid container pt="15px" gap={3}>
-                    <Grid item xs={12} md={3}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <CustomSelect
                         multiple
                         label="Payment Mode"
@@ -141,7 +139,8 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                         formControlProps={{ sx: { width: '100%' } }}
                       />
                     </Grid>
-                    <Grid item xs={12} md={3}>
+
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <NumericFormatCustom
                         size="small"
                         label="Amount Due"
@@ -153,7 +152,8 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                         fullWidth
                       />
                     </Grid>
-                    <Grid item xs={12} md={3}>
+
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <NumericFormatCustom
                         size="small"
                         label="Received Payment"
@@ -170,7 +170,7 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                   {values.paymentMode.length > 0 && (
                     <Grid container spacing={2} p={2}>
                       {values.paymentMode.includes('Cash') && (
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <Typography variant="subtitle2" gutterBottom>
                             Cash Details
                           </Typography>
@@ -186,8 +186,9 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                           />
                         </Grid>
                       )}
+
                       {values.paymentMode.includes('Online') && (
-                        <Grid item xs={12} md={12}>
+                        <Grid size={{ xs: 12 }}>
                           <Typography variant="subtitle2" gutterBottom>
                             Online Details
                           </Typography>
@@ -212,7 +213,7 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                       )}
 
                       {values.paymentMode.includes('Card') && (
-                        <Grid item xs={12} md={12}>
+                        <Grid size={{ xs: 12 }}>
                           <Typography variant="subtitle2" gutterBottom>
                             Card Details
                           </Typography>
@@ -237,12 +238,12 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                       )}
 
                       {values.paymentMode.includes('Cheque') && (
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                           <Typography variant="subtitle2" gutterBottom>
                             Cheque Details
                           </Typography>
                           <Grid container spacing={2}>
-                            <Grid item xs={12} md={3}>
+                            <Grid size={{ xs: 12, md: 3 }}>
                               <TextField
                                 name="chequeNumber"
                                 label="Cheque Number"
@@ -252,7 +253,8 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                                 fullWidth
                               />
                             </Grid>
-                            <Grid item xs={12} md={3}>
+
+                            <Grid size={{ xs: 12, md: 3 }}>
                               <DatePicker
                                 label="Cheque Date"
                                 value={values.chequeDate}
@@ -266,7 +268,7 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                               />
                             </Grid>
 
-                            <Grid item xs={12} md={3}>
+                            <Grid size={{ xs: 12, md: 3 }}>
                               <TextField
                                 name="bankName"
                                 label="Bank Name"
@@ -277,7 +279,7 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                               />
                             </Grid>
 
-                            <Grid item xs={12} md={3}>
+                            <Grid size={{ xs: 12, md: 3 }}>
                               <NumericFormatCustom
                                 label="Cheque Amount"
                                 value={values.chequeAmount}
@@ -292,7 +294,7 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                     </Grid>
                   )}
 
-                  <Grid item xs={12} pt="20px">
+                  <Grid size={{ xs: 12 }} pt="20px">
                     <TextField
                       multiline
                       rows={6}

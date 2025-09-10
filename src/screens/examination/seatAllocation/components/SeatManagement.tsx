@@ -89,7 +89,7 @@ const SeatManagement = ({
               .sort((a, b) => a - b);
 
             return (
-              <Grid item xs={6} key={`column-${colIdx}`}>
+              <Grid size={6} key={`column-${colIdx}`}>
                 <Typography align="center" variant="subtitle2" sx={{ mb: 2 }}>
                   Column {colIdx + 1}
                 </Typography>

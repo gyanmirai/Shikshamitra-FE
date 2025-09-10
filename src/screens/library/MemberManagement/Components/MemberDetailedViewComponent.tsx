@@ -1,16 +1,12 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Tab, Grid, Button, Avatar, Typography } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
-import { GlobalIcons } from 'src/utils/icons';
-
+import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
+import { Tab, Card, Grid, Avatar, Typography } from '@mui/material';
 
 import IssuedBooks from './ViewDetailsComponent/IssuedBooks';
 import FinesCharges from './ViewDetailsComponent/FinesCharges';
@@ -50,211 +46,145 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
 }) => {
   // Initialize tab state, defaulting to 'issued-books'
   const tabs = useTabs('issued-books');
-
+  const theme = useTheme();
   // Find the currently selected tab's component to render
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 
   return (
-    <Box
+    <Scrollbar
       sx={{
-        height: { xs: '80vh', sm: '85vh', md: '90vh' }, // Responsive height
-        maxHeight: '800px',
+        p: 2,
+        height: { xs: '80vh' }, // Responsive height
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden', // Prevent main container overflow
       }}
     >
       {/* Member Information Header */}
-      <Box
+      <Card
         sx={{
-          p: { xs: 2, sm: 3 }, // Responsive padding
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          flexShrink: 0, // Prevent shrinking
+          p: 2,
+          mb: 2,
+          borderRadius: 3,
+          boxShadow: 2,
+          bgcolor: theme.vars.palette.background.paper,
         }}
       >
         <Typography variant="h6" gutterBottom>
           Member Information
         </Typography>
 
-        <Grid container spacing={{ xs: 2, sm: 3 }} alignItems="center">
-          <Grid item>
+        <Grid container spacing={1}>
+          {/* Left Side: Avatar */}
+          <Grid size={{ xs: 12, sm: 2 }} display="flex">
             <Avatar
               src="/assets/images/avatar/avatar-1.jpg"
               alt={member?.name || 'Member'}
-              sx={{ width: { xs: 60, sm: 80 }, height: { xs: 60, sm: 80 } }} // Responsive avatar size
+              sx={{ mt: 2, width: { xs: 60, sm: 80 }, height: { xs: 60, sm: 80 } }}
             />
           </Grid>
 
-          <Grid item xs>
+          {/* Right Side: Member Details */}
+          <Grid size={{ xs: 12, sm: 10 }}>
             <Grid container spacing={2}>
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Member Name
                 </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight="medium"
-                  sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }} // Responsive font size
-                >
+                <Typography variant="body1" fontWeight="medium">
                   {member?.name || 'Dharmik Jinjala'}
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Member ID
                 </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight="medium"
-                  sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
-                >
+                <Typography variant="body1" fontWeight="medium">
                   {member?.id || 'DDVS001'}
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Current Issued Books
                 </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight="medium"
-                  sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
-                >
+                <Typography variant="body1" fontWeight="medium">
                   {member?.currentIssue || '10'}
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Overdue Return Books
                 </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight="medium"
-                  sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
-                >
+                <Typography variant="body1" fontWeight="medium">
                   {member?.overdueReturn || '01'}
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Role
                 </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight="medium"
-                  sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
-                >
+                <Typography variant="body1" fontWeight="medium">
                   {member?.role || 'Student'}
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Contact No.
                 </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight="medium"
-                  sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
-                >
+                <Typography variant="body1" fontWeight="medium">
                   +91 6355030866
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Pending Return Books
                 </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight="medium"
-                  sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
-                >
+                <Typography variant="body1" fontWeight="medium">
                   10
                 </Typography>
               </Grid>
 
-              <Grid item xs={6} sm={3}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Typography variant="body2" color="text.secondary">
                   Reserved Books
                 </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight="medium"
-                  sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
-                >
+                <Typography variant="body1" fontWeight="medium">
                   02
                 </Typography>
               </Grid>
             </Grid>
           </Grid>
         </Grid>
-      </Box>
+      </Card>
 
       {/* Tabs */}
-      <CustomTabs value={tabs.value} onChange={tabs.onChange}>
-        {TABS.map((tab) => (
-          <Tab
-            key={tab.value}
-            value={tab.value}
-            label={
-              <Box display="flex" alignItems="center" gap={1}>
-                {tab.icon}
-                {tab.label}
-              </Box>
-            }
-            sx={{
-              fontSize: '14px',
-              textTransform: 'none',
-            }}
-          />
-        ))}
-      </CustomTabs>
-
-      {/* Tab Content */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        <Scrollbar
-          sx={{
-            p: { xs: 1, sm: 2 },
-            flex: 1,
-            '& .simplebar-content': {
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-            },
-          }}
-        >
-          {CurrentComponent?.({ member })}
-        </Scrollbar>
-      </Box>
-
-      {/* Cancel Button */}
-      <Box
+      <Card
         sx={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 2,
-          p: { xs: 1.5, sm: 2 },
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          flexShrink: 0, // Prevent shrinking
+          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={() => onClose(null, false)}
-          variant="outlined"
-          size="small"
+        <CustomTabs
+          value={tabs.value}
+          onChange={tabs.onChange}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
         >
-          Cancel
-        </Button>
-      </Box>
-    </Box>
+          {TABS.map((tab) => (
+            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+          ))}
+        </CustomTabs>
+      </Card>
+
+      {/* Tab Content */}
+      <Scrollbar sx={{ p: 1 }}>
+        {CurrentComponent && <CurrentComponent member={member} />}
+      </Scrollbar>
+    </Scrollbar>
   );
 };
 

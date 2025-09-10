@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
-
-import { useTheme } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 const ZoomAndDrag = ({ children, maxScale = 3, minScale = 0.2, zoomFactor = 0.1 }: any) => {
   const containerRef = useRef(null);
@@ -40,10 +39,7 @@ const ZoomAndDrag = ({ children, maxScale = 3, minScale = 0.2, zoomFactor = 0.1 
     const dy = event.clientY - lastMousePosition.y;
 
     setLastMousePosition({ x: event.clientX, y: event.clientY });
-    setPosition((prev) => ({
-      x: prev.x + dx,
-      y: prev.y + dy,
-    }));
+    setPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
   };
 
   // Handle drag end
@@ -68,7 +64,7 @@ const ZoomAndDrag = ({ children, maxScale = 3, minScale = 0.2, zoomFactor = 0.1 
       style={{
         width: '100%',
         height: '100%',
-        background: theme.palette.background.neutral,
+        background: theme.vars.palette.background.neutral,
         overflow: 'hidden',
         position: 'relative',
         cursor: isDragging ? 'grabbing' : 'grab',

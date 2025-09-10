@@ -1,14 +1,10 @@
 import React from 'react';
-
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
-
-import { formatNumber } from 'src/utils/formate_number';
-
-import data from 'src/json/finance/fee-details-student/fee-payment-history.json';
-
 import { Iconify } from 'src/components/iconify';
+import { formatNumber } from 'src/utils/formate_number';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import data from 'src/json/finance/fee-details-student/fee-payment-history.json';
 
 export const FinanceStudentPaymentHistoryTab = () => (
   <>

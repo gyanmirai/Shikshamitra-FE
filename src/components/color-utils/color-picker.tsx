@@ -1,14 +1,12 @@
 import type { BoxProps } from '@mui/material/Box';
 
-import { forwardRef, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { Typography } from '@mui/material';
+import { varAlpha } from 'src/theme/styles';
+import { forwardRef, useCallback } from 'react';
 import ButtonBase from '@mui/material/ButtonBase';
 import { alpha as hexAlpha } from '@mui/material/styles';
-
-import { varAlpha } from 'src/theme/styles';
 
 import { Iconify } from '../iconify';
 
@@ -63,10 +61,7 @@ export const ColorPicker = forwardRef<
             flexWrap: 'wrap',
             flexDirection: 'row',
             display: 'inline-flex',
-            ...(limit !== 'auto' && {
-              width: limit * 36,
-              justifyContent: 'flex-end',
-            }),
+            ...(limit !== 'auto' && { width: limit * 36, justifyContent: 'flex-end' }),
             ...sx,
           }}
           {...other}
@@ -79,12 +74,7 @@ export const ColorPicker = forwardRef<
                 <ButtonBase
                   aria-label={color}
                   onClick={() => handleSelect(color)}
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '50%',
-                    ...slotProps?.button,
-                  }}
+                  sx={{ width: 36, height: 36, borderRadius: '50%', ...slotProps?.button }}
                   disabled={disabled}
                 >
                   <Stack

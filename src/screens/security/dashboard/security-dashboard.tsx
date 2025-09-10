@@ -1,11 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Grid, useTheme } from '@mui/material';
-
+import { Box, Grid } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
-
 import { BankingBalanceStatistics } from 'src/sections/overview/banking/banking-balance-statistics';
 
 import GuardOnDuty from './guard-on-duty';
@@ -28,7 +26,7 @@ const SecurityAdminDashboard = () => {
       <VisitorSummary />
 
       <Grid container spacing={2} sx={{ pt: '20px' }}>
-        <Grid item xs={12} md={12}>
+        <Grid size={12}>
           <BankingBalanceStatistics
             title="Visitor Analytics"
             // subheader="Statistics on balance over time"

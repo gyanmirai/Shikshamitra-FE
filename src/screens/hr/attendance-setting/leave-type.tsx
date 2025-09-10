@@ -4,37 +4,32 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
-import React, { useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { LoadingButton } from '@mui/lab';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import React, { useMemo, useState } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { AccurateRateType } from 'src/enums/accurate-rate';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useGetEmployeeLeavePolicyQuery,
   useAddEmployeeLeavePolicyMutation,
   useUpdateEmployeeLeavePolicyMutation,
   useDeleteEmployeeLeavePolicyMutation,
 } from 'src/redux/employee/employeeApi';
-
-import { Iconify } from 'src/components/iconify/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 interface ILeavePolicy {
   id: string;
@@ -355,7 +350,7 @@ const LeaveTypeForm = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={formik.touched.leaveType && Boolean(formik.errors.leaveType)}>
               <TextField
                 name="leaveType"
@@ -427,7 +422,7 @@ const LeaveTypeForm = ({
             </ShakingTextField>
           </Grid> */}
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={formik.touched.color && Boolean(formik.errors.color)}>
               <Typography
                 variant="subtitle2"

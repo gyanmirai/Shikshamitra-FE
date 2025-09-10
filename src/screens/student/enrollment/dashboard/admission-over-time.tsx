@@ -1,10 +1,9 @@
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
+import { useTheme } from '@mui/material/styles';
 import React, { useState, useCallback } from 'react';
-
-import { Card, Grid, useTheme, CardHeader, Typography } from '@mui/material';
-
+import { Card, Grid, CardHeader, Typography } from '@mui/material';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 const AdmissionOverTime = () => {
@@ -29,24 +28,15 @@ const AdmissionOverTime = () => {
     },
   });
   return (
-    <Grid xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ p: 3, boxShadow: 'var(--shadows-4)', height: '100%' }}>
         <Typography variant="h6">Enrollment Trend</Typography>
         <Chart
           type="area"
           series={[
-            {
-              name: 'Admission',
-              data: [51, 35, 41, 10, 91, 69, 62, 148, 91, 69, 62, 49],
-            },
-            {
-              name: 'Inquiry',
-              data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50],
-            },
-            {
-              name: 'Registration',
-              data: [40, 67, 58, 59, 49, 77, 88, 99, 98, 36, 55, 51],
-            },
+            { name: 'Admission', data: [51, 35, 41, 10, 91, 69, 62, 148, 91, 69, 62, 49] },
+            { name: 'Inquiry', data: [60, 47, 55, 59, 49, 69, 69, 91, 18, 35, 51, 50] },
+            { name: 'Registration', data: [40, 67, 58, 59, 49, 77, 88, 99, 98, 36, 55, 51] },
           ]}
           options={chartOptions}
           height={320}
@@ -66,13 +56,7 @@ type Props3 = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: {
-      name: string;
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
+    series: { name: string; data: { name: string; data: number[] }[] }[];
     options?: ChartOptions;
   };
 };

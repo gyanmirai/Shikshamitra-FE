@@ -8,24 +8,22 @@ import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
+import { Label } from 'src/components/label';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import { useTheme } from '@mui/material/styles';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import CardHeader from '@mui/material/CardHeader';
-import ListItemText from '@mui/material/ListItemText';
-import Badge, { badgeClasses } from '@mui/material/Badge';
-
 import { fCurrency } from 'src/utils/format-number';
 import { fDate, fTime } from 'src/utils/format-time';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import ListItemText from '@mui/material/ListItemText';
 import { TableHeadCustom } from 'src/components/table';
+import Badge, { badgeClasses } from '@mui/material/Badge';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
@@ -87,9 +85,7 @@ export function BankingRecentTransitions({
 
 // ----------------------------------------------------------------------
 
-type RowItemProps = {
-  row: Props['tableData'][number];
-};
+type RowItemProps = { row: Props['tableData'][number] };
 
 function RowItem({ row }: RowItemProps) {
   const theme = useTheme();
@@ -138,12 +134,7 @@ function RowItem({ row }: RowItemProps) {
       >
         <Avatar
           src={row.avatarUrl || ''}
-          sx={{
-            width: 48,
-            height: 48,
-            color: 'text.secondary',
-            bgcolor: 'background.neutral',
-          }}
+          sx={{ width: 48, height: 48, color: 'text.secondary', bgcolor: 'background.neutral' }}
         >
           {row.category === 'Fast food' && <Iconify icon="ion:fast-food" width={24} />}
           {row.category === 'Fitness' && <Iconify icon="ic:round-fitness-center" width={24} />}

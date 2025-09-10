@@ -1,25 +1,23 @@
 import type { TooltipProps } from '@mui/material';
 
 import React from 'react';
-
-import { Fade, styled, Tooltip, tooltipClasses } from '@mui/material';
+import { Fade, Tooltip } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { tooltipClasses } from '@mui/material/Tooltip';
 
 const LightTooltip = styled(({ className, ...props }: TooltipProps) => (
   <Tooltip {...props} classes={{ popper: className }} />
 ))(({ theme }) => ({
   [`& .${tooltipClasses.tooltip}`]: {
-    backgroundColor: theme.palette.common.white,
+    backgroundColor: theme.vars.palette.common.white,
     color: 'rgba(0, 0, 0, 0.87)',
     boxShadow: theme.shadows[4],
     fontSize: 11,
     p: 0,
   },
   [`& .${tooltipClasses.arrow}`]: {
-    color: theme.palette.common.white,
-    '&::before': {
-      backgroundColor: theme.palette.common.white,
-      boxShadow: theme.shadows[5],
-    },
+    color: theme.vars.palette.common.white,
+    '&::before': { backgroundColor: theme.vars.palette.common.white, boxShadow: theme.shadows[5] },
   },
 }));
 

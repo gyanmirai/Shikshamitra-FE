@@ -4,22 +4,18 @@ import React from 'react';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { Formik } from 'formik';
-
 import { LoadingButton } from '@mui/lab';
-import { Card, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { validatePhoneNumber } from 'src/utils/validate-phone-number';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useUpdateStudentInquiryMutation } from 'src/redux/student/inquiry/inquiry-api';
-
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { validatePhoneNumber } from 'src/utils/validate-phone-number';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Card, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { useUpdateStudentInquiryMutation } from 'src/redux/student/inquiry/inquiry-api';
 
 import type { IInquiryData } from '../Inquiry';
 
@@ -112,7 +108,7 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
           <>
             <DialogScrollContent>
               <Grid container spacing={3}>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <ShakingTextField error={!!(touched.formNumber && errors.formNumber) || false}>
                     <TextField
                       fullWidth
@@ -126,7 +122,7 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
                     <NumericFormatCustom
                       fullWidth

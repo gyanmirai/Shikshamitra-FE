@@ -3,14 +3,11 @@ import type { UniqueIdentifier } from '@dnd-kit/core';
 import type { Theme, SxProps } from '@mui/material/styles';
 
 import { useSortable } from '@dnd-kit/sortable';
-import { useState, useEffect, useCallback } from 'react';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { deleteTask, updateTask } from 'src/actions/kanban';
-
 import { toast } from 'src/components/snackbar';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { imageClasses } from 'src/components/image';
+import { useState, useEffect, useCallback } from 'react';
+import { deleteTask, updateTask } from 'src/actions/kanban';
 
 import ItemBase from './item-base';
 import { KanbanDetails } from '../details/kanban-details';

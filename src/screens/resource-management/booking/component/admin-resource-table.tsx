@@ -2,25 +2,20 @@ import type { LabelColor } from 'src/components/label/types';
 
 import React from 'react';
 import dayjs from 'dayjs';
-
-import { Button, MenuItem, MenuList } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Button, MenuItem, MenuList } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import bookingRequestData from 'src/json/ResourceManagement/booking/bookingData.json';
 import {
   ResourceBookingStatusType,
   ResourceBookingStatusTypeColor,
   ResourceBookingStatusTypeOptions,
 } from 'src/enums/resource-booking-status';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const AdminResourceTable = () => {
   const approveDialog = useBoolean();

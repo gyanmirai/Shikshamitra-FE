@@ -1,9 +1,8 @@
 import React, { useRef, useState } from 'react';
-
 import { Box, Menu, Button, MenuItem } from '@mui/material';
 
 const ImageUploadAndMarker = () => {
-  const [image, setImage] = useState(null);
+  const [image] = useState(null);
   const [markerColor, setMarkerColor] = useState('red');
   const [anchorEl, setAnchorEl] = useState(null);
   const canvasRef = useRef(null);

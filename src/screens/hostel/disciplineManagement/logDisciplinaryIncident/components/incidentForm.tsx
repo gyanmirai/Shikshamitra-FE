@@ -2,11 +2,20 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CustomSelect from 'src/components/custom-select';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -19,19 +28,6 @@ import {
   DialogActions,
   FormHelperText,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Editor } from 'src/components/editor';
-import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getIncidentInitialValues } from './initialValues';
 import TagForm from '../../settings/tagsManagement/tagForm';
@@ -62,19 +58,15 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.hostelName && formik.errors.hostelName) || false}
-                >
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.hostelName && formik.errors.hostelName)}>
                   <CustomSelect
                     size="small"
                     label="Hostel Name *"
                     name="hostelName"
                     fullWidth
                     value={formik.values.hostelName}
-                    onChange={(val) => {
-                      formik.setFieldValue('hostelName', val);
-                    }}
+                    onChange={(val) => formik.setFieldValue('hostelName', val)}
                     error={formik.touched.hostelName && Boolean(formik.errors.hostelName)}
                     helperText={
                       formik.touched.hostelName && formik.errors.hostelName
@@ -86,10 +78,8 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.students && formik.errors.students) || false}
-                >
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.students && formik.errors.students)}>
                   <FormControl
                     fullWidth
                     error={formik.touched.students && Boolean(formik.errors.students)}
@@ -141,11 +131,9 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={
-                    !!(formik.touched.emeregencyLevel && formik.errors.emeregencyLevel) || false
-                  }
+                  error={!!(formik.touched.emeregencyLevel && formik.errors.emeregencyLevel)}
                 >
                   <CustomSelect
                     size="small"
@@ -153,9 +141,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                     name="emeregencyLevel"
                     fullWidth
                     value={formik.values.emeregencyLevel}
-                    onChange={(val) => {
-                      formik.setFieldValue('emeregencyLevel', val);
-                    }}
+                    onChange={(val) => formik.setFieldValue('emeregencyLevel', val)}
                     error={formik.touched.emeregencyLevel && Boolean(formik.errors.emeregencyLevel)}
                     helperText={
                       formik.touched.emeregencyLevel && formik.errors.emeregencyLevel
@@ -172,9 +158,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                   color="primary.main"
                   fontSize={12}
                   sx={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    addEmergencyLevelDialog.onTrue();
-                  }}
+                  onClick={() => addEmergencyLevelDialog.onTrue()}
                 >
                   Add Emergency Level ?
                 </Typography>
@@ -185,17 +169,15 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                 >
                   <TagForm
                     dialog={addEmergencyLevelDialog}
-                    onClose={() => {
-                      addEmergencyLevelDialog.onFalse();
-                    }}
+                    onClose={() => addEmergencyLevelDialog.onFalse()}
                     editData={null}
-                  />{' '}
+                  />
                 </CustomDialog>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.incidentDate && formik.errors.incidentDate) || false}
+                  error={!!(formik.touched.incidentDate && formik.errors.incidentDate)}
                 >
                   <DatePicker
                     label="Incident Date *"
@@ -217,9 +199,9 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.incidentTime && formik.errors.incidentTime) || false}
+                  error={!!(formik.touched.incidentTime && formik.errors.incidentTime)}
                 >
                   <TimePicker
                     label="Incident Time *"
@@ -241,9 +223,9 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.incidentType && formik.errors.incidentType) || false}
+                  error={!!(formik.touched.incidentType && formik.errors.incidentType)}
                 >
                   <CustomSelect
                     size="small"
@@ -251,9 +233,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                     name="incidentType"
                     fullWidth
                     value={formik.values.incidentType}
-                    onChange={(val) => {
-                      formik.setFieldValue('incidentType', val);
-                    }}
+                    onChange={(val) => formik.setFieldValue('incidentType', val)}
                     error={formik.touched.incidentType && Boolean(formik.errors.incidentType)}
                     helperText={
                       formik.touched.incidentType && formik.errors.incidentType
@@ -270,9 +250,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                   color="primary.main"
                   fontSize={12}
                   sx={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    addIncidentTypeDialog.onTrue();
-                  }}
+                  onClick={() => addIncidentTypeDialog.onTrue()}
                 >
                   Add Incident Type ?
                 </Typography>
@@ -283,24 +261,19 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                 >
                   <IncidentTypeForm
                     dialog={addIncidentTypeDialog}
-                    onClose={() => {
-                      addIncidentTypeDialog.onFalse();
-                    }}
+                    onClose={() => addIncidentTypeDialog.onFalse()}
                     editData={null}
-                  />{' '}
+                  />
                 </CustomDialog>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.description && formik.errors.description) || false}
+                  error={!!(formik.touched.description && formik.errors.description)}
                 >
                   <Editor
                     value={formik.values.description}
-                    onChange={(value) => {
-                      // setQuestion(value);
-                      formik.setFieldValue('description', value);
-                    }}
+                    onChange={(value) => formik.setFieldValue('description', value)}
                     placeholder="Incident Description *"
                     error={formik.touched.description && Boolean(formik.errors.description)}
                     helperText={
@@ -308,10 +281,11 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                         ? String(formik.errors.description)
                         : ''
                     }
-                  />{' '}
+                  />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={
@@ -328,12 +302,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
                       <Typography variant="body2">Drag Attachment</Typography>
                     </Box>
                   }
-                  sx={{
-                    py: 2.5,
-                    width: '100%',
-                    height: 'auto',
-                    borderRadius: 1.5,
-                  }}
+                  sx={{ py: 2.5, width: '100%', height: 'auto', borderRadius: 1.5 }}
                 />
               </Grid>
             </Grid>

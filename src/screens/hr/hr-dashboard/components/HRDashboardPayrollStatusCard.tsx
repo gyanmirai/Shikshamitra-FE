@@ -1,8 +1,7 @@
 import React from 'react';
-
-import { Box, Card, Stack, Divider, useTheme, Typography } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Stack, Divider, Typography } from '@mui/material';
 
 const PayrollStatusCard = () => {
   const theme = useTheme();

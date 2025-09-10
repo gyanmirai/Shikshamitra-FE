@@ -1,19 +1,16 @@
-import type { NodeViewProps } from '@tiptap/react';
-
+import Stack from '@mui/material/Stack';
+import Portal from '@mui/material/Portal';
+import Backdrop from '@mui/material/Backdrop';
 import { common, createLowlight } from 'lowlight';
 import LinkExtension from '@tiptap/extension-link';
 import ImageExtension from '@tiptap/extension-image';
 import StarterKitExtension from '@tiptap/starter-kit';
+import FormHelperText from '@mui/material/FormHelperText';
 import TextAlignExtension from '@tiptap/extension-text-align';
 import PlaceholderExtension from '@tiptap/extension-placeholder';
 import { useState, useEffect, forwardRef, useCallback } from 'react';
 import CodeBlockLowlightExtension from '@tiptap/extension-code-block-lowlight';
 import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react';
-
-import Stack from '@mui/material/Stack';
-import Portal from '@mui/material/Portal';
-import Backdrop from '@mui/material/Backdrop';
-import FormHelperText from '@mui/material/FormHelperText';
 
 import { Toolbar } from './toolbar';
 import { Iconify } from '../iconify';
@@ -92,9 +89,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
         }),
         CodeBlockLowlightExtension.extend({
           addNodeView() {
-            return ReactNodeViewRenderer(
-              CodeHighlightBlock as unknown as React.ComponentType<NodeViewProps>
-            );
+            return ReactNodeViewRenderer(CodeHighlightBlock);
           },
         }).configure({ lowlight, HTMLAttributes: { class: editorClasses.content.codeBlock } }),
       ],

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import { Box, Card, Avatar, Typography } from '@mui/material';
 
 import TemplateView from './templateView';

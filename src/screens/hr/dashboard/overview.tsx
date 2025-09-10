@@ -1,12 +1,11 @@
 import React from 'react';
-
 import { Grid } from '@mui/material';
 
 import { EmployeeDashboardCard } from './dashboard';
 
 const Overview = () => (
   <>
-    <Grid item xs={12} sm={12} md={6} lg={6} xl={4}>
+    <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }}>
       <EmployeeDashboardCard
         title="Total Employees"
         icon="mdi:account-multiple"
@@ -20,7 +19,7 @@ const Overview = () => (
       />
     </Grid>
 
-    <Grid item xs={12} sm={12} md={6} lg={6} xl={4}>
+    <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }}>
       <EmployeeDashboardCard
         title="Attendance Overview"
         icon="mdi:calendar-check"
@@ -35,17 +34,7 @@ const Overview = () => (
       />
     </Grid>
 
-    {/* <Grid item xs={12} sm={612  md={6} lg={6} xl={3}>
-      <EmployeeDashboardCard
-        title="New Joiners"
-        icon="mdi:account-plus"
-        value={5}
-        labels={[{ name: 'This Month', color: 'info' }]}
-        color="warning.main"
-      />
-    </Grid> */}
-
-    <Grid item xs={12} sm={12} md={6} lg={6} xl={4}>
+    <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }}>
       <EmployeeDashboardCard
         title="Pending Leave Requests"
         icon="mdi:clock-alert"
@@ -54,17 +43,6 @@ const Overview = () => (
         href="/hr/leave-requests/?tab=leaveHistory"
       />
     </Grid>
-
-    {/* <Grid item xs={12} sm={12} md={6} lg={6} xl={4}>
-      <EmployeeDashboardCard
-        title="Payroll Summary"
-        icon="streamline:bag-dollar-solid"
-        value={formatCurrency(50000)}
-        labels={[{ name: `Pending: ${formatCurrency(10000)}`, color: 'warning' }]}
-        color="info.main"
-        href="/hr/payroll/pay-process"
-      />
-    </Grid> */}
   </>
 );
 

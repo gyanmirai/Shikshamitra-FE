@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Droppable, Draggable, DragDropContext } from 'react-beautiful-dnd';
-
+import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
+import { Droppable, Draggable, DragDropContext } from '@hello-pangea/dnd';
 import {
   Box,
   Table,
@@ -15,22 +16,12 @@ import {
   TableContainer,
 } from '@mui/material';
 
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-
 const ManageStopsWithRiders = () => {
   const availableStops = [
     { value: 'Madhuram Circle', label: 'Madhuram Circle' },
     { value: 'Navjeevan Circle', label: 'Navjeevan Circle' },
     { value: 'Laxmi Nagar', label: 'Laxmi Nagar' },
     { value: 'Ashirvad Nagar', label: 'Ashirvad Nagar' },
-  ];
-
-  const studentList = [
-    { value: 'student1', label: 'John Doe' },
-    { value: 'student2', label: 'Jane Smith' },
-    { value: 'student3', label: 'Mike Johnson' },
-    { value: 'student4', label: 'Emily Davis' },
   ];
 
   const [stops, setStops] = useState<
@@ -63,12 +54,6 @@ const ManageStopsWithRiders = () => {
     const [removed] = reorderedStops.splice(result.source.index, 1);
     reorderedStops.splice(result.destination.index, 0, removed);
     setStops(reorderedStops);
-  };
-
-  const handleAssignRiders = (id: string, assignedRiders: string[]) => {
-    setStops((prev) =>
-      prev.map((stop) => (stop.id === id ? { ...stop, riders: assignedRiders } : stop))
-    );
   };
 
   return (

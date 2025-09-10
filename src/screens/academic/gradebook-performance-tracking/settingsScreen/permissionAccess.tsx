@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-
 import { Box, Switch, Button } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const initialTableData = [

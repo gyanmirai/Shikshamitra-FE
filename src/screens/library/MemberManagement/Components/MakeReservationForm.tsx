@@ -4,24 +4,21 @@ import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Grid, Card, Button, Avatar, Typography, CardContent, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useGetBookTitleOptionsQuery,
-  useGetBookCategoryOptionsQuery,
-} from 'src/redux/memberManagement/memberManagementApi';
-
+import { useTheme } from '@mui/material/styles';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Card, Button, Avatar, Typography, DialogActions } from '@mui/material';
+import {
+  useGetBookTitleOptionsQuery,
+  useGetBookCategoryOptionsQuery,
+} from 'src/redux/memberManagement/memberManagementApi';
 
 import { makeReservationValidationSchema } from './MemberManagementSchema';
 import { getInitialReservationData } from './MemberManagementInitialValues';
@@ -33,6 +30,8 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
   onClose,
   selectedMember,
 }) => {
+  const theme = useTheme();
+
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const { data: bookCategoryOptions, isLoading: bookCategoryLoading } = useQueryAndMutation({
@@ -60,108 +59,118 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
   const isLoading = bookCategoryLoading || bookTitleLoading;
 
   return isLoading ? (
-    'loading.. ...'
+    <Box display="flex" justifyContent="center" alignItems="center" p={2}>
+      <Box className="loader" height={24} />
+    </Box>
   ) : (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         {/* Member Information Card */}
-        <Card sx={{ mb: 3, border: '1px solid', borderColor: 'black', borderRadius: 2 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Member Information
-            </Typography>
+        <Card
+          sx={{
+            p: 2,
+            mb: 2,
+            borderRadius: 3,
+            boxShadow: 2,
+            bgcolor: theme.vars.palette.background.paper,
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Member Information
+          </Typography>
 
-            <Grid container spacing={2} alignItems="center">
-              <Grid item>
-                <Avatar
-                  src="/assets/images/avatar/avatar-1.jpg"
-                  alt={selectedMember?.name || 'Member'}
-                  sx={{ width: 60, height: 60 }}
-                />
-              </Grid>
+          <Grid container spacing={1}>
+            {/* Left Side: Avatar */}
+            <Grid size={{ xs: 12, sm: 2 }} display="flex">
+              <Avatar
+                src="/assets/images/avatar/avatar-1.jpg"
+                alt={selectedMember?.name || 'Member'}
+                sx={{ mt: 2, width: { xs: 60, sm: 80 }, height: { xs: 60, sm: 80 } }}
+              />
+            </Grid>
 
-              <Grid item xs>
-                <Grid container spacing={2}>
-                  <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="text.secondary">
-                      Member Name
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {selectedMember?.name || 'Dharmik Jinjala'}
-                    </Typography>
-                  </Grid>
+            {/* Right Side: Member Details */}
+            <Grid size={{ xs: 12, sm: 10 }}>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Member Name
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    {selectedMember?.name || 'Dharmik Jinjala'}
+                  </Typography>
+                </Grid>
 
-                  <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="text.secondary">
-                      Member ID
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {selectedMember?.memberId || 'DDVS001'}
-                    </Typography>
-                  </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Member ID
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    {selectedMember?.id || 'DDVS001'}
+                  </Typography>
+                </Grid>
 
-                  <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="text.secondary">
-                      Class/Division
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {selectedMember?.class || '10-A'}
-                    </Typography>
-                  </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Current Issued Books
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    {selectedMember?.currentIssue || '10'}
+                  </Typography>
+                </Grid>
 
-                  <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="text.secondary">
-                      Overdue Return Books
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {selectedMember?.overdueBooks || '01'}
-                    </Typography>
-                  </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Overdue Return Books
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    {selectedMember?.overdueReturn || '01'}
+                  </Typography>
+                </Grid>
 
-                  <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="text.secondary">
-                      Role
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {selectedMember?.role || 'Student'}
-                    </Typography>
-                  </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Role
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    {selectedMember?.role || 'Student'}
+                  </Typography>
+                </Grid>
 
-                  <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="text.secondary">
-                      Contact No.
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {selectedMember?.contact || '+91 6355030866'}
-                    </Typography>
-                  </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Contact No.
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    +91 6355030866
+                  </Typography>
+                </Grid>
 
-                  <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="text.secondary">
-                      Current Issued Books
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {selectedMember?.issuedBooks || '10'}
-                    </Typography>
-                  </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Pending Return Books
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    10
+                  </Typography>
+                </Grid>
 
-                  <Grid item xs={6} md={3}>
-                    <Typography variant="body2" color="text.secondary">
-                      Reserved Books
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {selectedMember?.reservedBooks || '02'}
-                    </Typography>
-                  </Grid>
+                <Grid size={{ xs: 12, sm: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Reserved Books
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
+                    02
+                  </Typography>
                 </Grid>
               </Grid>
             </Grid>
-          </CardContent>
+          </Grid>
         </Card>
 
         <Grid container spacing={2}>
           {/* Book Category */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
               <CustomSelect
                 label="Book Category *"
@@ -177,7 +186,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
           </Grid>
 
           {/* Book Title */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
               <CustomSelect
                 label="Book Title *"
@@ -193,7 +202,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
           </Grid>
 
           {/* Requested Date */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField
               error={!!(formik.touched.requestedDate && formik.errors.requestedDate) || false}
             >
@@ -219,6 +228,30 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
               />
             </ShakingTextField>
           </Grid>
+
+          <Grid size={6}>
+            <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}>
+              <DatePicker
+                label="Due Date *"
+                format="DD/MM/YYYY"
+                value={dayjs(formik.values.dueDate)}
+                onChange={(newValue) => {
+                  formik.setFieldValue('dueDate', newValue?.toDate() || new Date());
+                }}
+                minDate={dayjs(currentYear?.startDate)}
+                maxDate={dayjs(currentYear?.endDate)}
+                sx={{ minWidth: 180, width: '100%' }}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: !!(formik.touched.dueDate && formik.errors.dueDate) || false,
+                    helperText: formik.touched.dueDate && (formik.errors.dueDate as string),
+                  },
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
         </Grid>
       </DialogScrollContent>
 
@@ -238,7 +271,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
-          Submit Reservation
+          Submit
         </Button>
       </DialogActions>
     </BackPopUpChecked>

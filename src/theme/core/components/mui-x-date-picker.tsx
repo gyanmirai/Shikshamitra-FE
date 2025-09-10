@@ -180,14 +180,14 @@ const MuiPickersLayout: Components<Theme>['MuiPickersLayout'] = {
   },
 };
 
-const MuiPickersPopper: Components<Theme>['MuiPickersPopper'] = {
+const MuiPickersPopper = {
   /** **************************************
    * DEFAULT PROPS
    *************************************** */
   styleOverrides: {
-    paper: ({ theme }) => ({
+    paper: ({ theme }: { theme: Theme }) => ({
       boxShadow: theme.customShadows.dropdown,
-      borderRadius: theme.shape.borderRadius * 1.5,
+      borderRadius: +theme.shape.borderRadius * 1.5,
     }),
   },
 };

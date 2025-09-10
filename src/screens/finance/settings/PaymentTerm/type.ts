@@ -15,10 +15,10 @@ export interface IPaymentTerm {
   id: string | number;
   paymentTermName: string;
   totalInstallments: number | string;
-  // academicYearId: string;
-  // academicYear?: string;
-  // board: string;
-  // medium: string;
+  academicYearId: string;
+  academicYear?: string;
+  board: string;
+  medium: string;
   installments: IInstallment[];
 }
 
@@ -28,7 +28,6 @@ export interface IPaymentTermTableProps {
   editData: IPaymentTerm | null;
   setEditData: (value: IPaymentTerm | null) => void;
   onEdit?: (row: IPaymentTerm) => void;
-  onDelete?: (row: IPaymentTerm) => void;
 }
 
 export interface IFeeStructureFormProps {

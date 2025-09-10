@@ -4,25 +4,21 @@ import type { EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState, useCallback } from 'react';
-
-import { Box, Grid, Button, MenuList, MenuItem, Typography } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import CommonCalender from 'src/components/calender';
+import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeLeaveQuery } from 'src/redux/employee/employeeApi';
+import { usePopover, CustomPopover } from 'src/components/custom-popover';
+import { Box, Grid, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CommonCalender from 'src/components/calender';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 import type { TabComponentType } from '.';
 
@@ -172,33 +168,33 @@ export const LeaveRequestForm = ({ editData }: any) => {
   return (
     <Box sx={{ p: 2 }} bgcolor="background.neutral">
       <Grid container spacing={3}>
-        <Grid item xs={4}>
+        <Grid size={4}>
           <Typography variant="body2" fontWeight={600}>
             {' '}
             Employee
           </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid size={8}>
           <Typography variant="body2">
             {editData?.employee?.firstName} {editData?.employee?.lastName}{' '}
           </Typography>
         </Grid>
-        <Grid item xs={4}>
+        <Grid size={4}>
           <Typography variant="body2" fontWeight={600}>
             {' '}
             Organization
           </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid size={8}>
           <Typography variant="body2">{editData?.employee?.educationMediumStage?.name}</Typography>
         </Grid>
-        <Grid item xs={4}>
+        <Grid size={4}>
           <Typography variant="body2" fontWeight={600}>
             {' '}
             Leave Type
           </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid size={8}>
           {editData?.leavePolicy?.leaveType && (
             <Typography
               variant="body2"
@@ -209,22 +205,22 @@ export const LeaveRequestForm = ({ editData }: any) => {
             </Typography>
           )}
         </Grid>
-        <Grid item xs={4}>
+        <Grid size={4}>
           <Typography variant="body2" fontWeight={600}>
             {' '}
             Half Day
           </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid size={8}>
           <Typography variant="body2"> {editData?.halfDay ? 'Yes' : 'No'} </Typography>
         </Grid>
-        <Grid item xs={4}>
+        <Grid size={4}>
           <Typography variant="body2" fontWeight={600}>
             {' '}
             Start Date
           </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid size={8}>
           <Typography variant="body2">
             {' '}
             {dayjs(editData?.viewStartDate).format('DD-MM-YYYY')}{' '}
@@ -233,48 +229,48 @@ export const LeaveRequestForm = ({ editData }: any) => {
         {!editData?.halfDay && (
           <>
             {' '}
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Typography variant="body2" fontWeight={600}>
                 {' '}
                 End Date
               </Typography>
             </Grid>
-            <Grid item xs={8}>
+            <Grid size={8}>
               <Typography variant="body2">
                 {dayjs(editData?.viewEndDate).format('DD-MM-YYYY')}
               </Typography>
             </Grid>{' '}
           </>
         )}
-        <Grid item xs={4}>
+        <Grid size={4}>
           <Typography variant="body2" fontWeight={600}>
             {' '}
             Description
           </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid size={8}>
           <Typography variant="body2" dangerouslySetInnerHTML={{ __html: editData?.description }} />
         </Grid>
         {editData?.rejectionReason && (
           <>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Typography variant="body2" fontWeight={600}>
                 {' '}
                 Rejection Reason
               </Typography>
             </Grid>
-            <Grid item xs={8}>
+            <Grid size={8}>
               <Typography variant="body2"> {editData.rejectionReason}</Typography>
             </Grid>
           </>
         )}
-        <Grid item xs={4}>
+        <Grid size={4}>
           <Typography variant="body2" fontWeight={600}>
             {' '}
             Status
           </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid size={8}>
           <Label
             color={
               EmployeeLeaveStatusTypeColor[
@@ -288,13 +284,13 @@ export const LeaveRequestForm = ({ editData }: any) => {
         {editData?.attachment && (
           <>
             {' '}
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Typography variant="body2" fontWeight={600}>
                 {' '}
                 Document
               </Typography>
             </Grid>
-            <Grid item xs={8}>
+            <Grid size={8}>
               <Iconify
                 icon="eva:eye-fill"
                 sx={{ mr: 0.5, cursor: 'pointer' }}

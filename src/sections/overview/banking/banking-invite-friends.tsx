@@ -4,7 +4,6 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import InputBase from '@mui/material/InputBase';
 import { useTheme } from '@mui/material/styles';
-
 import { varAlpha, bgGradient } from 'src/theme/styles';
 
 // ----------------------------------------------------------------------
@@ -23,7 +22,7 @@ export function BankingInviteFriends({ price, title, imgUrl, description, sx, ..
     <Box
       sx={{
         ...bgGradient({
-          color: `135deg, ${theme.vars.palette.primary.main}, ${theme.vars.palette.primary.dark}`,
+          color: `135deg, ${theme.palette.primary.main}, ${theme.vars.palette.primary.dark}`,
         }),
         p: 5,
         borderRadius: 2,

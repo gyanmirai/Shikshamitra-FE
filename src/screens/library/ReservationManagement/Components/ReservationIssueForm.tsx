@@ -6,22 +6,18 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Grid, Button, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
-
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { Grid, Button, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
 
 import { getIssueBookInitialValues } from './ReservationIssueInitialValues';
 import { getReservationIssueBookSchema } from './ReservationIssueValidation';
@@ -44,6 +40,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [classes, setClasses] = useState<string>('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
 
@@ -55,6 +52,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
   }, [medium?.educationMediumStages]);
 
   // Initialize query hook for fetching students
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
@@ -98,7 +96,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
       <DialogScrollContent>
         <Grid container spacing={3}>
           {/* Book Category */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
               <CustomSelect
                 label="Book Category *"
@@ -126,7 +124,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
           </Grid>
 
           {/* Book Title */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
               <CustomSelect
                 label="Book Title *"
@@ -156,7 +154,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
           </Grid>
 
           {/* Edition */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.edition && formik.errors.edition)}>
               <CustomSelect
                 label="Edition *"
@@ -184,7 +182,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
           </Grid>
 
           {/* Issue Date */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>
               <DatePicker
                 label="Issue Date *"
@@ -204,7 +202,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
           </Grid>
 
           {/* Due Date */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate)}>
               <DatePicker
                 label="Due Date *"

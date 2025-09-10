@@ -2,9 +2,7 @@
 
 // src/Dashboard.js
 import React from 'react';
-
 import { Box } from '@mui/material';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import MonthCards from './component/MonthCards';

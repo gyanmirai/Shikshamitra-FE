@@ -1,8 +1,7 @@
 'use client';
 
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
 import { School, AssignmentTurnedIn } from '@mui/icons-material';
-import { Box, Avatar, Typography, LinearProgress } from '@mui/material';
+import { Box, Grid, Avatar, Typography, LinearProgress } from '@mui/material';
 
 const DetailedStudentView = () => (
   <Box
@@ -31,18 +30,11 @@ const DetailedStudentView = () => (
     <Typography variant="h4" fontWeight="bold" sx={{ marginBottom: 1 }}>
       John Doe
     </Typography>
-    <Typography
-      variant="h5"
-      sx={{
-        color: '#4caf50',
-        fontWeight: 'bold',
-        marginBottom: 3,
-      }}
-    >
+    <Typography variant="h5" sx={{ color: '#4caf50', fontWeight: 'bold', marginBottom: 3 }}>
       A+
     </Typography>
-    <Grid2 container spacing={3} sx={{ width: '100%', maxWidth: 400 }}>
-      <Grid2 xs={6}>
+    <Grid container spacing={3} sx={{ width: '100%', maxWidth: 400 }}>
+      <Grid size={{ xs: 6 }}>
         <Box
           sx={{
             display: 'flex',
@@ -54,7 +46,11 @@ const DetailedStudentView = () => (
           }}
         >
           <School
-            sx={{ fontSize: 40, color: (theme) => theme.palette.primary.main, marginBottom: 1 }}
+            sx={{
+              fontSize: 40,
+              color: (theme) => theme.palette.primary.main,
+              marginBottom: 1,
+            }}
           />
           <Typography variant="subtitle1" color="textSecondary">
             Average Grade
@@ -63,8 +59,9 @@ const DetailedStudentView = () => (
             95%
           </Typography>
         </Box>
-      </Grid2>
-      <Grid2 xs={6}>
+      </Grid>
+
+      <Grid size={{ xs: 6 }}>
         <Box
           sx={{
             display: 'flex',
@@ -76,7 +73,11 @@ const DetailedStudentView = () => (
           }}
         >
           <AssignmentTurnedIn
-            sx={{ fontSize: 40, color: (theme) => theme.palette.primary.main, marginBottom: 1 }}
+            sx={{
+              fontSize: 40,
+              color: (theme) => theme.palette.primary.main,
+              marginBottom: 1,
+            }}
           />
           <Typography variant="subtitle1" color="textSecondary">
             Assignments Completed
@@ -89,9 +90,7 @@ const DetailedStudentView = () => (
                 height: 10,
                 borderRadius: 5,
                 backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#555' : '#e0e0e0'),
-                '& .MuiLinearProgress-bar': {
-                  backgroundColor: '#4caf50',
-                },
+                '& .MuiLinearProgress-bar': { backgroundColor: '#4caf50' },
               }}
             />
             <Typography variant="body2" sx={{ textAlign: 'center', marginTop: 0.5 }}>
@@ -99,8 +98,8 @@ const DetailedStudentView = () => (
             </Typography>
           </Box>
         </Box>
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   </Box>
 );
 

@@ -1,17 +1,15 @@
 import type { Board } from 'src/types/school';
 
 import { capitalize } from 'lodash';
-
+import CustomSelect from 'src/components/custom-select';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetClassByOrganizationIdQuery } from 'src/redux/class/classApi';
 
-import CustomSelect from 'src/components/custom-select';
-
 const RenderAcademicYear = (props: any) => {
   // Destructure props to get value, row (unused), and onChange function
-  const { value, row, onChange } = props;
+  const { value, onChange } = props;
 
   // Fetch academic year data using custom hook
   // Returns data object containing items array and loading state
@@ -38,7 +36,7 @@ const RenderAcademicYear = (props: any) => {
 
 const RenderBoard = (props: any) => {
   // Destructure props to get value, row (unused), and onChange function
-  const { value, row, onChange } = props;
+  const { value, onChange } = props;
 
   // Fetch board data using custom hook
   // Returns data object containing items array and loading state
@@ -69,7 +67,7 @@ const RenderMedium = (props: any) => {
 
   // Fetch board data using custom hook
   // Returns data object containing board items and loading state
-  const { data: board, isLoading: boardLoading } = useQueryAndMutation({
+  const { data: board } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });

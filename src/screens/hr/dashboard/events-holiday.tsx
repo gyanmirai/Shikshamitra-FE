@@ -1,15 +1,12 @@
 import type { EventClickArg } from '@fullcalendar/core';
 
 import dayjs from 'dayjs';
+import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
-
-import { useTheme } from '@mui/material';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEventHolidayByDateQuery } from 'src/redux/eventHoliday/eventHolidayApi';
-
 import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEventHolidayByDateQuery } from 'src/redux/eventHoliday/eventHolidayApi';
 
 import { HrEventsAndHolidaysForm } from '../events-holidays';
 
@@ -27,14 +24,14 @@ const EventsHoliday = () => {
       eventHolidayData?.items.map((i: any) => ({
         ...i,
         start: i.startDate,
-        color: i.isHoliday ? theme.palette.error.main : theme.palette.success.main,
+        color: i.isHoliday ? theme.palette.error.main : theme.vars.palette.success.main,
         end: i.endDate,
         allDay: false,
-        textColor: i.isHoliday ? theme.palette.error.main : theme.palette.success.main,
+        textColor: i.isHoliday ? theme.palette.error.main : theme.vars.palette.success.main,
         title: i.isHoliday ? 'Holiday' : 'Event',
         description: i.reason,
       })) || [],
-    [eventHolidayData?.items, theme.palette.error.main, theme.palette.success.main]
+    [eventHolidayData?.items, theme.palette.error.main, theme.vars.palette.success.main]
   );
 
   const selectCalenderData = useMemo(() => {

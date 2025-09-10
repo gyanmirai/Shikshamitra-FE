@@ -1,5 +1,4 @@
 import React from 'react';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const GradeBook = () => (

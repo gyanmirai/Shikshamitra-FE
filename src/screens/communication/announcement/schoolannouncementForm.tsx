@@ -5,8 +5,13 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
+import { uuidv4 } from 'src/utils/uuidv4';
+import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 import {
   Box,
   Grid,
@@ -21,14 +26,6 @@ import {
   FormControlLabel,
   // eslint-disable-next-line import/no-duplicates
 } from '@mui/material';
-
-import { uuidv4 } from 'src/utils/uuidv4';
-
-import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import ShakingTextField from 'src/components/shaking-text-field';
 
 import { validationSchema } from './validationSchema';
 import { getSchoolInitialValues } from './components/getSchoolInitialValues';
@@ -135,8 +132,8 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
       <Box display="flex" flexDirection="column" gap={2} height="100%">
         <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <ShakingTextField error={!!(formik.touched.title && formik.errors.title) || false}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
                 <TextField
                   fullWidth
                   label="Title"
@@ -150,9 +147,9 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField
-                error={!!(formik.touched.organization && formik.errors.organization) || false}
+                error={!!(formik.touched.organization && formik.errors.organization)}
               >
                 <CustomSelect
                   label="Select Organizations"
@@ -164,11 +161,9 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                     ...allOrganizations,
                   ]}
                   value={formik.values.organization}
-                  onChange={(val) => {
-                    handleOrganizationChange(val as string[]);
-                  }}
+                  onChange={(val) => handleOrganizationChange(val as string[])}
                   multiple
-                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
                   error={formik.touched.organization && Boolean(formik.errors.organization)}
                   helperText={
                     Array.isArray(formik.errors.organization)
@@ -179,10 +174,8 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.audience && formik.errors.audience) || false}
-              >
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                 <CustomSelect
                   label="Select Audience"
                   options={[
@@ -192,10 +185,8 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                   ]}
                   multiple
                   value={formik.values.audience}
-                  onChange={(val) => {
-                    formik.setFieldValue('audience', val);
-                  }}
-                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  onChange={(val) => formik.setFieldValue('audience', val)}
+                  formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
                   error={formik.touched.audience && Boolean(formik.errors.audience)}
                   helperText={
                     Array.isArray(formik.errors.audience)
@@ -206,16 +197,12 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.expiryDate && formik.errors.expiryDate) || false}
-              >
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.expiryDate && formik.errors.expiryDate)}>
                 <DateTimePicker
                   label="Expiry Date & Time"
                   value={formik.values.expiryDate}
-                  onChange={(newDate) => {
-                    formik.setFieldValue('expiryDate', newDate);
-                  }}
+                  onChange={(newDate) => formik.setFieldValue('expiryDate', newDate)}
                   format="DD/MM/YYYY HH:mm"
                   slotProps={{
                     textField: {
@@ -230,10 +217,8 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              <ShakingTextField
-                error={!!(formik.touched.category && formik.errors.category) || false}
-              >
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.category && formik.errors.category)}>
                 <CustomSelect
                   label="Select Category"
                   options={[
@@ -242,10 +227,8 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                     { value: 'extracurriculam', label: 'Extracurriculam' },
                   ]}
                   value={formik.values.category}
-                  onChange={(val) => {
-                    formik.setFieldValue('category', val);
-                  }}
-                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  onChange={(val) => formik.setFieldValue('category', val)}
+                  formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
                   error={formik.touched.category && Boolean(formik.errors.category)}
                   helperText={
                     formik.touched.category && formik.errors.category
@@ -256,11 +239,9 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField
-                error={
-                  !!(formik.touched.importance_level && formik.errors.importance_level) || false
-                }
+                error={!!(formik.touched.importance_level && formik.errors.importance_level)}
               >
                 <CustomSelect
                   label="Importance Level"
@@ -268,12 +249,9 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                     { value: 'urgent', label: 'Urgent' },
                     { value: 'critical', label: 'Critical' },
                   ]}
-                  placeholder="Announcement Importance level"
                   value={formik.values.importance_level}
-                  onChange={(val) => {
-                    formik.setFieldValue('importance_level', val);
-                  }}
-                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  onChange={(val) => formik.setFieldValue('importance_level', val)}
+                  formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
                   error={formik.touched.importance_level && Boolean(formik.errors.importance_level)}
                   helperText={
                     formik.touched.importance_level && formik.errors.importance_level
@@ -284,23 +262,22 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControlLabel
                 control={
                   <Switch
                     checked={formik.values.isScheduled}
-                    onChange={(e) => {
-                      formik.setFieldValue('isScheduled', e.target.checked);
-                    }}
+                    onChange={(e) => formik.setFieldValue('isScheduled', e.target.checked)}
                   />
                 }
                 label="Schedule Announcement"
               />
             </Grid>
+
             {formik.values.isScheduled && (
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.publishDate && formik.errors.publishDate) || false}
+                  error={!!(formik.touched.publishDate && formik.errors.publishDate)}
                 >
                   <DateTimePicker
                     label="Schedule Date & Time"
@@ -320,10 +297,8 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               </Grid>
             )}
 
-            <Grid item xs={12}>
-              <ShakingTextField
-                error={!!(formik.touched.description && formik.errors.description) || false}
-              >
+            <Grid size={{ xs: 12 }}>
+              <ShakingTextField error={!!(formik.touched.description && formik.errors.description)}>
                 <TextField
                   fullWidth
                   label="Announcement Description"
@@ -339,33 +314,29 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <UploadBox
                 onDrop={() => {}}
                 placeholder={
                   <Box
                     sx={{
-                      gap: 0.5,
                       display: 'flex',
-                      alignItems: 'center',
-                      color: 'text.disabled',
                       flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      color: 'text.disabled',
                     }}
                   >
                     <Iconify icon="eva:cloud-upload-fill" width={40} />
                     <Typography variant="body2">Upload Document</Typography>
                   </Box>
                 }
-                sx={{
-                  py: 2.5,
-                  width: '100%',
-                  height: 'auto',
-                  borderRadius: 1.5,
-                }}
+                sx={{ py: 2.5, width: '100%', height: 'auto', borderRadius: 1.5 }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
-              <ShakingTextField error={!!(formik.touched.link && formik.errors.link) || false}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.link && formik.errors.link)}>
                 <TextField
                   fullWidth
                   label="Link"
@@ -386,53 +357,40 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle2" gutterBottom>
                 Notification Preferences
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formik.values.notification_preferences.includes('email')}
-                      onChange={() => handleNotificationPreferenceChange('email')}
+                {['email', 'sms', 'app'].map((type) => {
+                  const icons: Record<string, string> = {
+                    email: 'mdi:email-outline',
+                    sms: 'mdi:message-outline',
+                    app: 'mdi:bell-outline',
+                  };
+                  const labels: Record<string, string> = {
+                    email: 'Email',
+                    sms: 'SMS',
+                    app: 'App Notification',
+                  };
+                  return (
+                    <FormControlLabel
+                      key={type}
+                      control={
+                        <Checkbox
+                          checked={formik.values.notification_preferences.includes(type)}
+                          onChange={() => handleNotificationPreferenceChange(type)}
+                        />
+                      }
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Iconify icon={icons[type]} />
+                          <Typography variant="body2">{labels[type]}</Typography>
+                        </Box>
+                      }
                     />
-                  }
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Iconify icon="mdi:email-outline" />
-                      <Typography variant="body2">Email</Typography>
-                    </Box>
-                  }
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formik.values.notification_preferences.includes('sms')}
-                      onChange={() => handleNotificationPreferenceChange('sms')}
-                    />
-                  }
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Iconify icon="mdi:message-outline" />
-                      <Typography variant="body2">SMS</Typography>
-                    </Box>
-                  }
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formik.values.notification_preferences.includes('app')}
-                      onChange={() => handleNotificationPreferenceChange('app')}
-                    />
-                  }
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Iconify icon="mdi:bell-outline" />
-                      <Typography variant="body2">App Notification</Typography>
-                    </Box>
-                  }
-                />
+                  );
+                })}
               </Box>
               {formik.touched.notification_preferences &&
                 formik.errors.notification_preferences && (

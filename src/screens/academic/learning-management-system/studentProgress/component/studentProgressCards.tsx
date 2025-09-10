@@ -1,19 +1,17 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Card, Grid, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Grid, Typography } from '@mui/material';
 
 const StudentProgressCards = () => (
   <Grid container spacing={2} mt={2}>
-    <Grid item xs={12} md={4}>
+    <Grid size={{ xs: 12, md: 4 }}>
       <Card
         sx={{
           height: '100%',
           p: 3,
-          backgroundColor: (them) => (them.palette.mode === 'dark' ? '#1a2027' : '#e6f7ff'),
+          backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#1a2027' : '#e6f7ff'),
           borderRadius: '12px',
           boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
           transition: 'all 0.3s ease',
@@ -32,12 +30,13 @@ const StudentProgressCards = () => (
         </Typography>
       </Card>
     </Grid>
-    <Grid item xs={12} md={4}>
+
+    <Grid size={{ xs: 12, md: 4 }}>
       <Card
         sx={{
           height: '100%',
           p: 3,
-          backgroundColor: (them) => (them.palette.mode === 'dark' ? '#1a2027' : '#e6ffe6'),
+          backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#1a2027' : '#e6ffe6'),
           borderRadius: '12px',
           boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
           transition: 'all 0.3s ease',
@@ -56,12 +55,13 @@ const StudentProgressCards = () => (
         </Typography>
       </Card>
     </Grid>
-    <Grid item xs={12} md={4}>
+
+    <Grid size={{ xs: 12, md: 4 }}>
       <Card
         sx={{
           height: '100%',
           p: 3,
-          backgroundColor: (them) => (them.palette.mode === 'dark' ? '#1a2027' : '#fff0f0'),
+          backgroundColor: (theme) => (theme.palette.mode === 'dark' ? '#1a2027' : '#fff0f0'),
           borderRadius: '12px',
           boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
           transition: 'all 0.3s ease',

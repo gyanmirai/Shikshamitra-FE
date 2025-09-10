@@ -3,11 +3,8 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
-
 import { Editor } from 'src/components/editor';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -16,6 +13,7 @@ import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialResourceRequestOrderValues } from '../initialValue';
@@ -45,7 +43,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
         <Scrollbar sx={{ p: 2, height: '100%', bgcolor: 'background.neutral' }}>
           <Grid container spacing={2}>
             {/* Name */}
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
                 <TextField
                   disabled
@@ -60,7 +58,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
               </ShakingTextField>
             </Grid>
             {requestStatusType !== 'New' && (
-              <Grid item xs={6} pb="10px">
+              <Grid size={6} pb="10px">
                 <ShakingTextField
                   error={formik.touched.assignedDate && Boolean(formik.errors.assignedDate)}
                 >
@@ -84,7 +82,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
               </Grid>
             )}
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.category && Boolean(formik.errors.category)}>
                 <CustomSelect
                   disabled
@@ -98,7 +96,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.subCategory && Boolean(formik.errors.subCategory)}
               >
@@ -114,7 +112,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
                 <TextField
                   disabled
@@ -130,7 +128,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.measurementUnit && Boolean(formik.errors.measurementUnit)}
               >
@@ -149,7 +147,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
             </Grid>
 
             {/* Priority (Optional) */}
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.priority && Boolean(formik.errors.priority)}>
                 <CustomSelect
                   disabled={isDisabled}
@@ -167,7 +165,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.requiredByDate && Boolean(formik.errors.requiredByDate)}
               >
@@ -192,7 +190,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
 
             {/* Issue Description */}
             {requestStatusType !== 'New' && (
-              <Grid item xs={12} pb="10px">
+              <Grid size={12} pb="10px">
                 <ShakingTextField
                   error={formik.touched.issueDescription && Boolean(formik.errors.issueDescription)}
                 >
@@ -214,7 +212,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
             )}
 
             {requestStatusType === 'New' && (
-              <Grid item xs={12} pb="10px">
+              <Grid size={12} pb="10px">
                 <ShakingTextField
                   error={
                     formik.touched.reasonForNewResource &&
@@ -241,7 +239,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
             )}
 
             {requestStatusType === 'New' && (
-              <Grid item xs={6} pb="10px">
+              <Grid size={6} pb="10px">
                 <ShakingTextField
                   error={formik.touched.approvedQuantity && Boolean(formik.errors.approvedQuantity)}
                 >
@@ -265,7 +263,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
                 </ShakingTextField>
               </Grid>
             )}
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.reasonByAdmin && Boolean(formik.errors.reasonByAdmin)}
               >
@@ -281,7 +279,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.assignedVendor && Boolean(formik.errors.assignedVendor)}
               >
@@ -297,7 +295,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.orderQuantity && Boolean(formik.errors.orderQuantity)}
               >
@@ -314,7 +312,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.costing && Boolean(formik.errors.costing)}>
                 <NumericFormatCustom
                   disabled={orderStatus !== 'wantToOrder'}
@@ -331,7 +329,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
             </Grid>
 
             {orderStatus === 'cancelOrder' && (
-              <Grid item xs={12} pb="10px">
+              <Grid size={12} pb="10px">
                 <ShakingTextField
                   error={
                     formik.touched.cancelOrderReason && Boolean(formik.errors.cancelOrderReason)
@@ -355,7 +353,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
             )}
 
             {orderStatus === 'returnOrder' && (
-              <Grid item xs={12} pb="10px">
+              <Grid size={12} pb="10px">
                 <ShakingTextField
                   error={
                     formik.touched.returnOrderReason && Boolean(formik.errors.returnOrderReason)
@@ -379,7 +377,7 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
             )}
 
             {orderStatus === 'deliverOrder' && (
-              <Grid item xs={12} sx={{ pb: '10px' }}>
+              <Grid size={12} sx={{ pb: '10px' }}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={

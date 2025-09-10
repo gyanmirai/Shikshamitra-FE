@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-
 import { Box } from '@mui/material';
-
 import { Label } from 'src/components/label';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';

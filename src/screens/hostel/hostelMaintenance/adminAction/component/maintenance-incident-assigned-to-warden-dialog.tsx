@@ -1,13 +1,11 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Grid, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getAssignedToMaintenanceWardenInitialValues } from '../initialValue';
@@ -45,7 +43,7 @@ const MaintenceIncidentAssignedToWardenDialog: React.FC<
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={formik.touched.wardenName && Boolean(formik.errors.wardenName)}
             >
@@ -65,7 +63,7 @@ const MaintenceIncidentAssignedToWardenDialog: React.FC<
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={formik.touched.assignedDeadline && Boolean(formik.errors.assignedDeadline)}
             >
@@ -89,7 +87,7 @@ const MaintenceIncidentAssignedToWardenDialog: React.FC<
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={formik.touched.updateStatus && Boolean(formik.errors.updateStatus)}
             >
@@ -109,7 +107,7 @@ const MaintenceIncidentAssignedToWardenDialog: React.FC<
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField error={formik.touched.notes && Boolean(formik.errors.notes)}>
               <TextField
                 multiline

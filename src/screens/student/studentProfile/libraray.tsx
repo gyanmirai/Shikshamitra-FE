@@ -1,10 +1,8 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-
-import { Box, Tab, Tabs } from '@mui/material';
-
 import { Label } from 'src/components/label';
+import { Box, Tab, Tabs } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -106,25 +104,25 @@ const libraryData = [
 ];
 
 const Libraray = (props: StudentTabsComponentType) => {
-  const [activeTab, setActiveTab] = useState('currentIssue');
+  // const [activeTab, setActiveTab] = useState('currentIssue');
 
-  const cardStyles = (tab: string) => ({
-    py: 2,
-    textAlign: 'center',
-    typography: 'h4',
-    maxWidth: '250px',
-    width: '100%',
-    transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
-    cursor: 'pointer',
-    transform: activeTab === tab ? 'scale(1.025)' : 'scale(1)',
-    boxShadow: activeTab === tab ? 6 : 3,
-    border: activeTab === tab ? '2px solidrgb(0, 0, 0)' : '2px solid transparent',
-    backgroundColor: activeTab === tab ? 'rgba(25, 118, 210, 0.1)' : 'white',
-    '&:hover': {
-      transform: 'scale(1.025)',
-      boxShadow: 6,
-    },
-  });
+  // const cardStyles = (tab: string) => ({
+  //   py: 2,
+  //   textAlign: 'center',
+  //   typography: 'h4',
+  //   maxWidth: '250px',
+  //   width: '100%',
+  //   transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
+  //   cursor: 'pointer',
+  //   transform: activeTab === tab ? 'scale(1.025)' : 'scale(1)',
+  //   boxShadow: activeTab === tab ? 6 : 3,
+  //   border: activeTab === tab ? '2px solidrgb(0, 0, 0)' : '2px solid transparent',
+  //   backgroundColor: activeTab === tab ? 'rgba(25, 118, 210, 0.1)' : 'white',
+  //   '&:hover': {
+  //     transform: 'scale(1.025)',
+  //     boxShadow: 6,
+  //   },
+  // });
 
   const [searchParams, setSearchParams] = useState({ tab: 'borrowingHistory' });
   const TABS = [

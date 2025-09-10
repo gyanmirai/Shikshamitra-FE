@@ -1,9 +1,7 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, DialogActions } from '@mui/material';
-
 import { Editor } from 'src/components/editor';
+import { Grid, DialogActions } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
@@ -40,7 +38,7 @@ const GateAcessDenyDialog: React.FC<IGateAcessDenyDialogProps> = ({ data, onClos
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} lg={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField error={formik.touched.notes && Boolean(formik.errors.notes)}>
               <Editor
                 onChange={(value) => {

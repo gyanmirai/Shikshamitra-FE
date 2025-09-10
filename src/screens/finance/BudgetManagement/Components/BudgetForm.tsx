@@ -1,10 +1,8 @@
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-
 import { Box } from '@mui/material';
-
+import { useSelector } from 'react-redux';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 

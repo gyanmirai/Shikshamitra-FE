@@ -1,7 +1,5 @@
 import React from 'react';
-
 import { Box, Card, Stack, Typography, LinearProgress } from '@mui/material';
-
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 const chapterProgress = [

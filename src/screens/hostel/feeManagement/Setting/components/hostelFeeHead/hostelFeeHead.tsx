@@ -1,26 +1,21 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
-
+import { Iconify } from 'src/components/iconify';
 import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Grid, Button, TextField, Typography } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import capitalizeWords from 'src/utils/capitalizeText';
-
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Grid, Button, TextField, Typography } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 import {
   useGetfeeHeadQuery,
   useAddfeeHeadMutation,
   useDeletefeeHeadMutation,
   useUpdatefeeHeadMutation,
 } from 'src/redux/feeHead/feeHeadApi';
-
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
 const HostelFeeHead = (props: TabComponentType) => {
   // State to store and manage the new fee head name input value
@@ -162,7 +157,7 @@ const HostelFeeHead = (props: TabComponentType) => {
   return (
     <Box display="flex" flexDirection="column" gap={2} p={2}>
       {/* Add New Fee Head */}
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Box
           pt="15px"
           display="flex"
@@ -205,7 +200,7 @@ const HostelFeeHead = (props: TabComponentType) => {
 
       {/* Fee Heads Table */}
       <Grid container spacing={2}>
-        <Grid item xs={12} md={12}>
+        <Grid size={{ xs: 12, md: 12 }}>
           <Box>
             <CustomizableTable
               noDataText={<>No Fee Head Found </>}
@@ -241,9 +236,7 @@ const HostelFeeHead = (props: TabComponentType) => {
                         showThreeDots={false}
                         showDeleteIcon
                         showEditIcon
-                        handleEditClick={() => {
-                          handleEditClick(value);
-                        }}
+                        handleEditClick={() => handleEditClick(value)}
                         handleDeleteClick={() => {
                           setSelectedFeeHeadId(value.id);
                           const capitalizeName =

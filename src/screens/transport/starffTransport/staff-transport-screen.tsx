@@ -1,25 +1,13 @@
 import React, { useState } from 'react';
-
-import { Box, Button, MenuItem, MenuList } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Button, MenuItem, MenuList } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import TransportBulkRouteDialog from './component/transport-bulk-route-dialog';
 import TransportNotifyParentsDialog from './component/transport-notify-parents.dialog';
 import TransportStudentAndStaffUpdateInfoDialog from './component/transport-student-update-route-dialog';
-
-interface Assignment {
-  name: string;
-  grade: string;
-  assignedRoute: string;
-  pickupPoint: string;
-  dropoffPoint: string;
-  id: number;
-}
 
 const assignments: any = [
   {
@@ -48,9 +36,9 @@ const assignments: any = [
   },
 ];
 
-const handleChange = (e: any) => {
-  console.log(e);
-};
+// const handleChange = (e: any) => {
+//   console.log(e);
+// };
 
 const handleSaveForBulk = (e: any) => {
   console.log(e);

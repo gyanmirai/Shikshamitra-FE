@@ -3,18 +3,16 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import React, { useEffect } from 'react';
-
+import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Card, Grid, MenuItem, useTheme, TextField, Typography } from '@mui/material';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeTermsQuery } from 'src/redux/feeCollection/feeTerms';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetFeeTermsQuery } from 'src/redux/feeCollection/feeTerms';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Card, Grid, MenuItem, TextField, Typography } from '@mui/material';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import FeeTermsComponent from './FeeTermsComponent';
 import { paymentMethodsConfig } from './paymentConfigMethods';
@@ -120,7 +118,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
   return (
     <Box display="flex" flexDirection="column">
       <Grid container spacing={3}>
-        <Grid item xs={6} mt={2} mb={2}>
+        <Grid size={{ xs: 6 }} mt={2} mb={2}>
           <FeeTermsComponent
             terms={feeTermsData}
             selectedTerms={formik.values.selectedTerms}
@@ -129,13 +127,14 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
             errorMessage={formik.errors.selectedTerms as string}
           />
         </Grid>
-        <Grid item xs={6} mt={2} mb={2}>
+
+        <Grid size={{ xs: 6 }} mt={2} mb={2}>
           <Card
             sx={{
               p: 2,
               borderRadius: 2,
               boxShadow: 2,
-              bgcolor: theme.palette.background.paper,
+              bgcolor: theme.vars.palette.background.paper,
               height: '100%',
             }}
           >
@@ -153,7 +152,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
               <Grid container spacing={2}>
                 {/* Terms Selection Section */}
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <NumericFormatCustom
                     fullWidth
                     label="Total Payable Amount"
@@ -163,7 +162,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                   />
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={!!(formik.touched.receivedAmount && formik.errors.receivedAmount)}
                   >
@@ -182,7 +181,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                   </ShakingTextField>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.selectedMethods && Boolean(formik.errors.selectedMethods)}
                   >
@@ -201,20 +200,20 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                         (formik.touched.selectedMethods && formik.errors.selectedMethods) as string
                       }
                       multiple
-                      formControlProps={{
-                        sx: { width: '100%' },
-                      }}
+                      formControlProps={{ sx: { width: '100%' } }}
                       name="selectedMethods"
                     />
                   </ShakingTextField>
                 </Grid>
 
                 {formik.values.selectedMethods.map((method: string) => (
-                  <Grid item xs={12} key={method}>
+                  <Grid size={{ xs: 12 }} key={method}>
                     <SectionCard key={method} title={method}>
                       {paymentMethodsConfig[method as keyof typeof paymentMethodsConfig]?.map(
                         (field: IPaymentFieldConfig) => (
-                          <Grid item xs={6} key={`${method}-${field.name}`}>
+                          <Grid size={{ xs: 6 }} key={`${method}-${field.name}`}>
+                            {/* your field rendering logic stays the same */}
+
                             {field.type === 'date' ? (
                               <ShakingTextField
                                 error={
@@ -368,7 +367,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                   </Grid>
                 ))}
 
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
                     multiline

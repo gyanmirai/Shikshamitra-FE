@@ -15,7 +15,7 @@ export const documentFields: FieldsType[] = [
     label: 'Certificate Name',
     name: 'certificateName',
 
-    gridProps: { xs: 12, md: 12 },
+    gridProps: { size: { xs: 12, md: 12 } },
     renderComp(props) {
       return <RenderDocuments id={props.formik.values.id} />;
     },
@@ -27,7 +27,7 @@ export const familyFields: FieldsType[] = [
     label: 'Father Name',
     type: 'text',
     otherProps: {},
-    gridProps: { xs: 12, md: 12 },
+    gridProps: { size: { xs: 12, md: 12 } },
     renderComp(props: any) {
       return <RenderFamilyInformation {...props} />;
     },

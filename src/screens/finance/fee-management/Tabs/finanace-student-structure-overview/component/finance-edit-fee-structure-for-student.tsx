@@ -1,16 +1,12 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Button, TextField, DialogActions } from '@mui/material';
-
-import { formatNumber } from 'src/utils/formate_number';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 interface FinanceEditFeeStructureForStudentProps {
   dialogValue: boolean;
@@ -54,9 +50,9 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
 
             {/* Form Fields */}
             <Box pt={2}>
-              <Grid2 container spacing={2}>
+              <Grid container spacing={2}>
                 {/* Row 1: Class and Student Name */}
-                <Grid2 xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     name="class"
                     label="Standard"
@@ -65,8 +61,9 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                     disabled
                     fullWidth
                   />
-                </Grid2>
-                <Grid2 xs={12} md={6}>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     name="studentName"
                     label="Student Name"
@@ -75,10 +72,10 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                     disabled
                     fullWidth
                   />
-                </Grid2>
+                </Grid>
 
                 {/* Row 2: Discount Category and Amount */}
-                <Grid2 xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <CustomSelect
                     options={[]} // Dynamic options for discount categories
                     label="Additional Discount Category"
@@ -88,10 +85,10 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                       formik.setFieldValue('discountPercantage', value);
                     }}
                     formControlProps={{ sx: { minWidth: 275 } }}
-                    placeholder="No categories available"
                   />
-                </Grid2>
-                <Grid2 xs={12} md={6}>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     name="fixedReduction"
                     label="Additional Discount Amount"
@@ -102,12 +99,12 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                     fullWidth
                     error={Boolean(formik.errors.fixedReduction)}
                   />
-                </Grid2>
+                </Grid>
 
                 {/* Dynamic Fee Breakdown */}
                 {data.fees.map((fee: any) => (
                   <React.Fragment key={fee.feeHeadId}>
-                    <Grid2 xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label={`Payable ${fee.feeHead} Fee`}
                         value={formatNumber(fee.finalFees, 'INR')}
@@ -115,8 +112,8 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                         fullWidth
                         disabled
                       />
-                    </Grid2>
-                    <Grid2 xs={12} md={6}>
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <TextField
                         label={`${fee.feeHead} Fee Discount`}
                         value={formatNumber(fee.totalDiscount, 'INR')}
@@ -124,12 +121,12 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                         fullWidth
                         disabled
                       />
-                    </Grid2>
+                    </Grid>
                   </React.Fragment>
                 ))}
 
                 {/* Row 3: Final and Total Fee */}
-                <Grid2 xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     name="finalFee"
                     label="Payable Fee"
@@ -138,8 +135,9 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                     fullWidth
                     disabled
                   />
-                </Grid2>
-                <Grid2 xs={12} md={6}>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     name="totalFee"
                     label="Gross Fee"
@@ -148,10 +146,10 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                     fullWidth
                     disabled
                   />
-                </Grid2>
+                </Grid>
 
                 {/* Row 4: Due Date */}
-                <Grid2 xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <DatePicker
                     label="Due Date"
                     value={formik.values.date}
@@ -159,8 +157,8 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
                     slotProps={{ textField: { size: 'small', fullWidth: true } }}
                     disabled
                   />
-                </Grid2>
-              </Grid2>
+                </Grid>
+              </Grid>
             </Box>
           </Scrollbar>
 

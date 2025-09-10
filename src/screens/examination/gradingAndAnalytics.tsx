@@ -3,16 +3,12 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-
 import { Box, Grid, Card } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
-
+import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
@@ -87,7 +83,7 @@ const GradingAndAnalytics = (props: TabComponentType) => {
         />
       </Box>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <AnalyticsWebsiteVisits
               title="Visual Performance Overview"
@@ -100,7 +96,7 @@ const GradingAndAnalytics = (props: TabComponentType) => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ p: 2, height: '100%' }}>
             <AnalyticsCurrentVisits
               title="Analysis Chart"
@@ -116,9 +112,10 @@ const GradingAndAnalytics = (props: TabComponentType) => {
           </Card>
         </Grid>
       </Grid>
+
       <Box sx={{ display: 'flex', mt: 2 }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TopPerformer
               title="Top Performer"
               sx={{ height: '100%' }}
@@ -144,7 +141,8 @@ const GradingAndAnalytics = (props: TabComponentType) => {
               ]}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+
+          <Grid size={{ xs: 12, md: 6 }}>
             <TopPerformer
               title="Bottom Performer"
               sx={{ height: '100%' }}
@@ -172,6 +170,7 @@ const GradingAndAnalytics = (props: TabComponentType) => {
           </Grid>
         </Grid>
       </Box>
+
       {/* <Box display="flex" gap={2} mt={2} justifyContent="end" mb={20}>
         <Button
           startIcon={<Iconify icon="mingcute:notification-fill" />}

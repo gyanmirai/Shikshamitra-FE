@@ -3,13 +3,10 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React from 'react';
 import * as yup from 'yup';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import SubmitButton from 'src/components/submit-button';
+import { Box, Grid, Button, TextField } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 const HostelPaymentMethodDialog = (props: TabComponentType) => {
@@ -36,7 +33,7 @@ const HostelPaymentMethodDialog = (props: TabComponentType) => {
     >
       <Box p={2} display="flex" flexDirection="column" gap={3} flexGrow={1}>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField
               error={formik.touched.paymentMethodName && Boolean(formik.errors.paymentMethodName)}
             >

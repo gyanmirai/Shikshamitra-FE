@@ -1,14 +1,12 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
-import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 
 import type { IAddNewBookDialogProps } from '../book-management-interface';
 
@@ -54,7 +52,7 @@ const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
             <Grid container spacing={3} pt="10px">
               {/* Book Details */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="bookTitle"
@@ -64,7 +62,8 @@ const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
                   size="small"
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="bookAuthor"
@@ -74,7 +73,8 @@ const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
                   size="small"
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="isbn"
@@ -85,7 +85,8 @@ const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
                   type="number"
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="publisher"
@@ -97,7 +98,7 @@ const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
               </Grid>
 
               {/* Edition Details */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   label="Year"
                   value={formik.values.year}
@@ -108,7 +109,7 @@ const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   name="availableCopies"
@@ -121,7 +122,7 @@ const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
               </Grid>
 
               {/* Additional Metadata */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Category"
                   options={[]}
@@ -130,7 +131,8 @@ const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
                   formControlProps={{ fullWidth: true }}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Condition"
                   options={[]}
@@ -139,7 +141,8 @@ const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
                   formControlProps={{ fullWidth: true }}
                 />
               </Grid>
-              <Grid item xs={12} md={12}>
+
+              <Grid size={{ xs: 12, md: 12 }}>
                 <UploadBox
                   onDrop={() => {}}
                   placeholder={
@@ -164,7 +167,8 @@ const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
                   }}
                 />
               </Grid>
-              <Grid item xs={12} md={12}>
+
+              <Grid size={{ xs: 12, md: 12 }}>
                 <TextField
                   fullWidth
                   name="editionNotes"

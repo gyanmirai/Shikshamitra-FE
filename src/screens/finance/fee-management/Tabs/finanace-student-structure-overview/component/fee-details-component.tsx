@@ -3,14 +3,11 @@ import type { IColumn } from 'src/components/customizabaleTable/type';
 import type { PaymentDate } from 'src/screens/student/studentProfile/finance-profile-data/finance-profile-fee-data';
 
 import React from 'react';
-
-import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
-
-import { formatNumber } from 'src/utils/formate_number';
-
 import { Label } from 'src/components/label';
+import { formatNumber } from 'src/utils/formate_number';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 import type { StudentForFeeStructure } from '../data/student-fee-structure-interface';
 

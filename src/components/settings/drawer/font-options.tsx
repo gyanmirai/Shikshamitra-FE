@@ -1,7 +1,6 @@
 import Box from '@mui/material/Box';
-import ButtonBase from '@mui/material/ButtonBase';
-
 import { CONFIG } from 'src/config-global';
+import ButtonBase from '@mui/material/ButtonBase';
 import { setFont, varAlpha, stylesMode } from 'src/theme/styles';
 
 import { Block } from './styles';
@@ -61,7 +60,7 @@ export function FontOptions({ value, options, onClickOption }: Props) {
                     color: 'currentColor',
                     ...(selected && {
                       background: (theme) =>
-                        `linear-gradient(135deg, ${theme.vars.palette.primary.light}, ${theme.vars.palette.primary.main})`,
+                        `linear-gradient(135deg, ${theme.vars.palette.primary.light}, ${theme.palette.primary.main})`,
                     }),
                   }}
                 />

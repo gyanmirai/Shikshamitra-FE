@@ -1,9 +1,11 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-
+import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { FeedBackStatusType, FeedBackStatusColors } from 'src/enums/meal-feedback-status';
+import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 import {
   Box,
   Card,
@@ -14,12 +16,6 @@ import {
   AccordionSummary,
 } from '@mui/material';
 
-import { FeedBackStatusType, FeedBackStatusColors } from 'src/enums/meal-feedback-status';
-
-import { Label } from 'src/components/label';
-
-import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
-
 import type { IFeedbackDetailsViewDialogProps } from '../feedback-analytics-interface';
 
 const FeedbackAnalyticsViewDialog: React.FC<IFeedbackDetailsViewDialogProps> = ({ data }) => {
@@ -28,7 +24,7 @@ const FeedbackAnalyticsViewDialog: React.FC<IFeedbackDetailsViewDialogProps> = (
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ p: 2, boxShadow: 'var(--shadows-2)', height: '100%' }}>
           <AnalyticsCurrentVisits
             title="Aggregate Rating"
@@ -46,7 +42,8 @@ const FeedbackAnalyticsViewDialog: React.FC<IFeedbackDetailsViewDialogProps> = (
           />
         </Card>
       </Grid>
-      <Grid item xs={12} md={6}>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         {data.reviewBy.map((review, index) => (
           <Accordion
             key={index}
@@ -54,28 +51,22 @@ const FeedbackAnalyticsViewDialog: React.FC<IFeedbackDetailsViewDialogProps> = (
             onChange={(e, isExpanded) => setExpanded(isExpanded ? index : false)}
             sx={{
               boxShadow: 'none',
-              color: theme.palette.text.secondary,
+              color: theme.vars.palette.text.secondary,
               fontSize: '14px',
-              '&:before': {
-                display: 'none',
-              },
+              '&:before': { display: 'none' },
             }}
           >
             <AccordionSummary
-              expandIcon={null} // we'll handle the expand icon manually
+              expandIcon={null} // handled manually
               sx={{
-                borderBottom: `1px solid ${theme.palette.divider}`,
+                borderBottom: `1px solid ${theme.vars.palette.divider}`,
                 borderLeft:
                   expanded === index
                     ? `2px solid ${theme.palette.primary.main}`
-                    : `2px solid ${theme.palette.divider}`,
+                    : `2px solid ${theme.vars.palette.divider}`,
                 bgcolor: 'inherit',
-                '&.Mui-expanded': {
-                  minHeight: '40px',
-                },
-                '& .MuiAccordionSummary-content.Mui-expanded': {
-                  margin: '0',
-                },
+                '&.Mui-expanded': { minHeight: '40px' },
+                '& .MuiAccordionSummary-content.Mui-expanded': { margin: '0' },
               }}
             >
               <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
@@ -88,7 +79,7 @@ const FeedbackAnalyticsViewDialog: React.FC<IFeedbackDetailsViewDialogProps> = (
                       expanded === index
                         ? theme.typography.fontWeightBold
                         : theme.typography.fontWeightMedium,
-                    color: theme.palette.text.secondary,
+                    color: theme.vars.palette.text.secondary,
                   }}
                 >
                   {review.name}

@@ -1,16 +1,12 @@
 'use client';
 
 import React, { useMemo } from 'react';
-
 import { Add } from '@mui/icons-material';
-import { Tab, Box, Card, Button } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
 import { varAlpha } from 'src/theme/styles';
-
 import { Iconify } from 'src/components/iconify';
+import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import Setting from './setting';
@@ -87,17 +83,15 @@ const ExaminationPageScreen = () => {
         <Button
           startIcon={<Iconify icon="mdi:calendar" />}
           sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
             color: 'secondary.main',
             '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
             },
           }}
           variant="contained"
           onClick={() => {
-            setSearchParams?.({
-              tab: 'scheduleExam',
-            });
+            setSearchParams?.({ tab: 'scheduleExam' });
           }}
         >
           Schedule Exam
@@ -105,17 +99,15 @@ const ExaminationPageScreen = () => {
         <Button
           startIcon={<Iconify icon="mdi:upload" />}
           sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
             color: 'primary.main',
             '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
             },
           }}
           variant="contained"
           onClick={() => {
-            setSearchParams?.({
-              tab: 'gradeEntry',
-            });
+            setSearchParams?.({ tab: 'gradeEntry' });
           }}
         >
           Upload Mark
@@ -124,26 +116,22 @@ const ExaminationPageScreen = () => {
         <Button
           startIcon={<Add />}
           sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.1),
             color: 'error.main',
             '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.1),
             },
           }}
           variant="contained"
           onClick={() => {
-            setSearchParams?.({
-              tab: 'assessmentManagement',
-            });
+            setSearchParams?.({ tab: 'assessmentManagement' });
           }}
         >
           Create Assessment
         </Button>
       </Box>
       <Card
-        sx={{
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-        }}
+        sx={{ '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } } }}
       >
         <CustomTabs
           value={searchParams.tab}

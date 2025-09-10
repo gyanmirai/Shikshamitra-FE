@@ -3,13 +3,10 @@ import type { ChartOptions } from 'src/components/chart';
 
 import Card from '@mui/material/Card';
 import Divider from '@mui/material/Divider';
-import CardHeader from '@mui/material/CardHeader';
-import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
-import { fNumber } from 'src/utils/format-number';
-
 import { varAlpha } from 'src/theme/styles';
-
+import CardHeader from '@mui/material/CardHeader';
+import { fNumber } from 'src/utils/format-number';
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
@@ -20,10 +17,7 @@ type Props = CardProps & {
   total: number;
   chart: {
     colors?: string[][];
-    series: {
-      label: string;
-      value: number;
-    }[];
+    series: { label: string; value: number }[];
     options?: ChartOptions;
   };
 };
@@ -57,7 +51,7 @@ export function EcommerceSaleByGender({ title, subheader, total, chart, ...other
     plotOptions: {
       radialBar: {
         hollow: { margin: 10, size: '32%' },
-        track: { margin: 10, background: varAlpha(theme.vars.palette.grey['500Channel'], 0.08) },
+        track: { margin: 10, background: varAlpha(theme.palette.grey['500Channel'], 0.08) },
         dataLabels: {
           total: { formatter: () => fNumber(total) },
           value: { offsetY: 2, fontSize: theme.typography.h5.fontSize as string },

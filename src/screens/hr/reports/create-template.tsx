@@ -3,10 +3,19 @@ import type { FormikProps } from 'formik';
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import Draggable from 'react-draggable';
+import { Add } from '@mui/icons-material';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import UploadButton from 'src/components/upload-button';
 import React, { useMemo, useState, useCallback } from 'react';
 import { PDFViewer, type PageProps } from '@react-pdf/renderer';
-
-import { Add } from '@mui/icons-material';
+import { ComponentBlock } from 'src/components/component-block';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import CommonReport, { PdfTable, ReportHeader } from 'src/components/reports';
 import {
   Box,
   Grid,
@@ -28,18 +37,6 @@ import {
   AccordionSummary,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import UploadButton from 'src/components/upload-button';
-import { ComponentBlock } from 'src/components/component-block';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import CommonReport, { PdfTable, ReportHeader } from 'src/components/reports';
 
 const employeeFields = [
   {
@@ -601,7 +598,7 @@ const CreateTemplate = () => {
   return (
     <Box component="form" onSubmit={formik.handleSubmit} sx={{ height: '100%' }}>
       <Grid container spacing={2} height="100%">
-        <Grid item xs={4}>
+        <Grid size={{ xs: 4 }}>
           <Box
             sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}
           >
@@ -615,7 +612,7 @@ const CreateTemplate = () => {
               </IconButton>
             </Box>
           </Box>
-          {/* <Scrollbar sx={{ height: '100%' }}> */}
+
           <AccordingComp
             handleChangeTab={handleChangeTab}
             activeTab={activeTab}
@@ -626,13 +623,13 @@ const CreateTemplate = () => {
               // { title: 'Footer', content: <PdfFooter formik={formik} /> },
             ]}
           />
-          {/* </Scrollbar> */}
         </Grid>
 
-        <Grid item xs={8} overflow="auto">
+        <Grid size={{ xs: 8 }} overflow="auto">
           <PdfBody formik={formik} pageProps={pageProps} />
         </Grid>
       </Grid>
+
       <CustomDialog
         maxWidth="lg"
         PaperProps={{
@@ -677,9 +674,8 @@ const PdfBodyTable = ({ formik }: any) => (
   <Scrollbar sx={{ height: '300px' }}>
     <Grid container spacing={2}>
       {employeeFields.map((field) => (
-        <Grid item xs={6}>
+        <Grid size={{ xs: 6 }} key={field.name}>
           <FormControlLabel
-            key={field.name}
             control={
               <Checkbox
                 checked={formik.values.selectedFields.some((i: any) => i.name === field.name)}
@@ -841,7 +837,7 @@ const PdfMargin = ({ formik }: IPdfMarginProps) => {
   const { values, setFieldValue } = formik;
   return (
     <Grid container spacing={2}>
-      <Grid item xs={6}>
+      <Grid size={{ xs: 6 }}>
         <CustomSelect
           options={[
             { label: '0', value: 0 },
@@ -862,7 +858,8 @@ const PdfMargin = ({ formik }: IPdfMarginProps) => {
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
         />
       </Grid>
-      <Grid item xs={6}>
+
+      <Grid size={{ xs: 6 }}>
         <CustomSelect
           options={[
             { label: '0', value: 0 },
@@ -883,7 +880,8 @@ const PdfMargin = ({ formik }: IPdfMarginProps) => {
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
         />
       </Grid>
-      <Grid item xs={6}>
+
+      <Grid size={{ xs: 6 }}>
         <CustomSelect
           options={[
             { label: '0', value: 0 },
@@ -904,7 +902,8 @@ const PdfMargin = ({ formik }: IPdfMarginProps) => {
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
         />
       </Grid>
-      <Grid item xs={6}>
+
+      <Grid size={{ xs: 6 }}>
         <CustomSelect
           options={[
             { label: '0', value: 0 },
@@ -925,7 +924,8 @@ const PdfMargin = ({ formik }: IPdfMarginProps) => {
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
         />
       </Grid>
-      <Grid item xs={6}>
+
+      <Grid size={{ xs: 6 }}>
         <CustomSelect
           options={[
             { label: '4A0', value: '4A0' },
@@ -988,7 +988,8 @@ const PdfMargin = ({ formik }: IPdfMarginProps) => {
           formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
         />
       </Grid>
-      <Grid item xs={12}>
+
+      <Grid size={{ xs: 12 }}>
         <FormControlLabel
           control={
             <Checkbox
@@ -1123,7 +1124,7 @@ const PdfHeader = ({ formik }: any) => {
                     actions={() => (
                       <Box sx={{ width: 400, p: 2 }}>
                         <Grid container spacing={2}>
-                          <Grid item xs={6}>
+                          <Grid size={{ xs: 6, md: 6 }}>
                             <TextField
                               size="small"
                               label="Font Size"
@@ -1143,7 +1144,8 @@ const PdfHeader = ({ formik }: any) => {
                               }}
                             />
                           </Grid>
-                          <Grid item xs={6}>
+
+                          <Grid size={{ xs: 6, md: 6 }}>
                             <TextField
                               select
                               size="small"
@@ -1166,7 +1168,8 @@ const PdfHeader = ({ formik }: any) => {
                               <MenuItem value="bold">Bold</MenuItem>
                             </TextField>
                           </Grid>
-                          <Grid item xs={6}>
+
+                          <Grid size={{ xs: 6, md: 6 }}>
                             <TextField
                               select
                               size="small"
@@ -1189,7 +1192,8 @@ const PdfHeader = ({ formik }: any) => {
                               <MenuItem value="italic">Italic</MenuItem>
                             </TextField>
                           </Grid>
-                          <Grid item xs={6}>
+
+                          <Grid size={{ xs: 6, md: 6 }}>
                             <TextField
                               size="small"
                               label="Color"
@@ -1209,7 +1213,8 @@ const PdfHeader = ({ formik }: any) => {
                               }}
                             />
                           </Grid>
-                          <Grid item xs={6}>
+
+                          <Grid size={{ xs: 6, md: 6 }}>
                             <TextField
                               size="small"
                               label="Width"
@@ -1229,7 +1234,8 @@ const PdfHeader = ({ formik }: any) => {
                               }}
                             />
                           </Grid>
-                          <Grid item xs={6}>
+
+                          <Grid size={{ xs: 6, md: 6 }}>
                             <TextField
                               size="small"
                               label="Height"
@@ -1292,7 +1298,7 @@ const PdfHeader = ({ formik }: any) => {
                     actions={() => (
                       <Box sx={{ width: 400, p: 2 }}>
                         <Grid container spacing={2}>
-                          <Grid item xs={6}>
+                          <Grid size={{ xs: 6 }}>
                             <TextField
                               size="small"
                               label="width"
@@ -1311,7 +1317,8 @@ const PdfHeader = ({ formik }: any) => {
                               }}
                             />
                           </Grid>
-                          <Grid item xs={6}>
+
+                          <Grid size={{ xs: 6 }}>
                             <TextField
                               size="small"
                               label="height"
@@ -1373,13 +1380,13 @@ const PdfHeader = ({ formik }: any) => {
                     actions={() => (
                       <Box sx={{ width: 400, p: 2 }}>
                         <Grid container spacing={2}>
-                          <Grid item xs={6}>
+                          <Grid size={{ xs: 6 }}>
                             <TextField
                               size="small"
                               label="Color"
                               type="color"
                               fullWidth
-                              value={item?.style?.color ?? '#000000'}
+                              value={item?.style?.borderColor ?? '#000000'}
                               onChange={(e) => {
                                 const newElements = [...elements];
                                 newElements[index] = {
@@ -1393,7 +1400,8 @@ const PdfHeader = ({ formik }: any) => {
                               }}
                             />
                           </Grid>
-                          <Grid item xs={6}>
+
+                          <Grid size={{ xs: 6 }}>
                             <TextField
                               size="small"
                               label="width"

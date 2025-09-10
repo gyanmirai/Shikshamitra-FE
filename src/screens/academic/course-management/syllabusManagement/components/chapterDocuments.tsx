@@ -1,11 +1,8 @@
 import { useState } from 'react';
-
 import { Box, Grid } from '@mui/material';
-
+import DocumentCard from 'src/components/preview-document/DocumentCard';
 import subjectDocumentsData from 'src/json/academic/curriculum/subjectsDocuments.json';
 import { documentsList } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/subjectDocument';
-
-import DocumentCard from 'src/components/preview-document/DocumentCard';
 
 import type { IChapter } from '../type';
 
@@ -18,7 +15,7 @@ const ChapterDocuments = ({ chapter }: { chapter: IChapter | null }) => {
     <Box p={2}>
       <Grid container spacing={2}>
         {documentsList.map((doc: any, index: number) => (
-          <Grid item xs={12} md={6} lg={4} key={index}>
+          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
             <DocumentCard file={doc} />
           </Grid>
         ))}

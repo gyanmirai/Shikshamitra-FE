@@ -2,12 +2,10 @@ import type { CardProps } from '@mui/material/Card';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
-
-import { fShortenNumber } from 'src/utils/format-number';
-
 import { varAlpha } from 'src/theme/styles';
+import CardHeader from '@mui/material/CardHeader';
+import { fShortenNumber } from 'src/utils/format-number';
+import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 
 // ----------------------------------------------------------------------
 
@@ -49,7 +47,7 @@ export function BookingBooked({ title, subheader, data, ...other }: Props) {
                   }),
                   ...(progress.status === 'Canceled' && {
                     background: (theme) =>
-                      `linear-gradient(135deg, ${theme.vars.palette.error.light} 0%, ${theme.vars.palette.error.main} 100%)`,
+                      `linear-gradient(135deg, ${theme.vars.palette.error.light} 0%, ${theme.palette.error.main} 100%)`,
                   }),
                 },
               }}

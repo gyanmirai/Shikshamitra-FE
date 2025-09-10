@@ -1,7 +1,17 @@
 import { useState } from 'react';
 import { capitalize } from 'lodash';
-
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import PhoneInput from 'src/components/phone-input';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
+import {
+  CardActions,
+  SectionCard,
+} from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
   Grid,
@@ -12,30 +22,16 @@ import {
   InputAdornment,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import {
-  CardActions,
-  SectionCard,
-} from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
-import { Iconify } from 'src/components/iconify';
-import PhoneInput from 'src/components/phone-input';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CityComponent from 'src/components/stardard-address/city-component';
-import StateComponent from 'src/components/stardard-address/state-component';
-import CountryComponent from 'src/components/stardard-address/country-component';
-
 function MotherOfficeAddressComponent(props: any) {
   const { formik, disabled = false } = props;
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Typography variant="subtitle1">Office Address</Typography>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={formik.touched.motherOfficeAddress1 && Boolean(formik.errors.motherOfficeAddress1)}
         >
@@ -55,7 +51,7 @@ function MotherOfficeAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={formik.touched.motherOfficeAddress2 && Boolean(formik.errors.motherOfficeAddress2)}
         >
@@ -75,7 +71,7 @@ function MotherOfficeAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={formik.touched.motherOfficeAddress3 && Boolean(formik.errors.motherOfficeAddress3)}
         >
@@ -94,7 +90,7 @@ function MotherOfficeAddressComponent(props: any) {
           />
         </ShakingTextField>
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <CountryComponent
           value={formik.values.motherOfficeCountry}
           onChange={(_e, value) => {
@@ -104,7 +100,7 @@ function MotherOfficeAddressComponent(props: any) {
           disabled={!!disabled}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <StateComponent
           value={formik.values.motherOfficeState}
           onChange={(_e, value) => {
@@ -115,7 +111,7 @@ function MotherOfficeAddressComponent(props: any) {
           countryValue={formik.values.localCountry}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <CityComponent
           value={formik.values.motherOfficeCity}
           onChange={(_e, value) => formik.setFieldValue('motherOfficeCity', value)}
@@ -123,7 +119,7 @@ function MotherOfficeAddressComponent(props: any) {
           disabled={!!disabled}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <TextField
           disabled={!!disabled}
           name="localPincode"
@@ -151,11 +147,11 @@ function GuardianOfficeAddressComponent(props: any) {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Typography variant="subtitle1">Office Address</Typography>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={
             formik.touched.guardianOfficeAddress1 && Boolean(formik.errors.guardianOfficeAddress1)
@@ -179,7 +175,7 @@ function GuardianOfficeAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={
             formik.touched.guardianOfficeAddress2 && Boolean(formik.errors.guardianOfficeAddress2)
@@ -203,7 +199,7 @@ function GuardianOfficeAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={
             formik.touched.guardianOfficeAddress3 && Boolean(formik.errors.guardianOfficeAddress3)
@@ -226,7 +222,7 @@ function GuardianOfficeAddressComponent(props: any) {
           />
         </ShakingTextField>
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <CountryComponent
           value={formik.values.guardianOfficeCountry}
           onChange={(_e, value) => {
@@ -236,7 +232,7 @@ function GuardianOfficeAddressComponent(props: any) {
           disabled={!!disabled}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <StateComponent
           value={formik.values.guardianOfficeState}
           onChange={(_e, value) => {
@@ -247,7 +243,7 @@ function GuardianOfficeAddressComponent(props: any) {
           countryValue={formik.values.guardianOfficeCountry}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <CityComponent
           value={formik.values.guardianOfficeCity}
           onChange={(_e, value) => formik.setFieldValue('guardianOfficeCity', value)}
@@ -255,7 +251,7 @@ function GuardianOfficeAddressComponent(props: any) {
           disabled={!!disabled}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <TextField
           disabled={!!disabled}
           name="localPincode"
@@ -285,11 +281,11 @@ function MotherAddressComponent(props: any) {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Typography variant="subtitle1">Local Address</Typography>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={formik.touched.motherAddress1 && Boolean(formik.errors.motherAddress1)}
         >
@@ -307,7 +303,7 @@ function MotherAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={formik.touched.motherAddress2 && Boolean(formik.errors.motherAddress2)}
         >
@@ -325,7 +321,7 @@ function MotherAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={formik.touched.motherAddress3 && Boolean(formik.errors.motherAddress3)}
         >
@@ -342,7 +338,7 @@ function MotherAddressComponent(props: any) {
           />
         </ShakingTextField>
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <CountryComponent
           value={formik.values.motherLocalCountry}
           onChange={(_e, value) => {
@@ -352,7 +348,7 @@ function MotherAddressComponent(props: any) {
           disabled={!!disabled}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <StateComponent
           value={formik.values.motherLocalState}
           onChange={(_e, value) => {
@@ -363,7 +359,7 @@ function MotherAddressComponent(props: any) {
           countryValue={formik.values.localCountry}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <CityComponent
           value={formik.values.motherLocalCity}
           onChange={(_e, value) => formik.setFieldValue('motherLocalCity', value)}
@@ -371,7 +367,7 @@ function MotherAddressComponent(props: any) {
           disabled={!!disabled}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <TextField
           disabled={!!disabled}
           name="localPincode"
@@ -399,11 +395,11 @@ function GuardianAddressComponent(props: any) {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Typography variant="subtitle1">Local Address</Typography>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={formik.touched.guardianAddress1 && Boolean(formik.errors.guardianAddress1)}
         >
@@ -421,7 +417,7 @@ function GuardianAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={formik.touched.guardianAddress2 && Boolean(formik.errors.guardianAddress2)}
         >
@@ -439,7 +435,7 @@ function GuardianAddressComponent(props: any) {
         </ShakingTextField>
       </Grid>
 
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <ShakingTextField
           error={formik.touched.guardianAddress3 && Boolean(formik.errors.guardianAddress3)}
         >
@@ -456,7 +452,7 @@ function GuardianAddressComponent(props: any) {
           />
         </ShakingTextField>
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <CountryComponent
           value={formik.values.guardianLocalCountry}
           onChange={(_e, value) => {
@@ -466,7 +462,7 @@ function GuardianAddressComponent(props: any) {
           disabled={!!disabled}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <StateComponent
           value={formik.values.guardianLocalState}
           onChange={(_e, value) => {
@@ -477,7 +473,7 @@ function GuardianAddressComponent(props: any) {
           countryValue={formik.values.guardianLocalCountry}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <CityComponent
           value={formik.values.guardianLocalCity}
           onChange={(_e, value) => formik.setFieldValue('guardianLocalCity', value)}
@@ -485,7 +481,7 @@ function GuardianAddressComponent(props: any) {
           disabled={!!disabled}
         />
       </Grid>
-      <Grid item xs={12} sm={6} md={4} lg={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
         <TextField
           disabled={!!disabled}
           name="localPincode"
@@ -543,7 +539,7 @@ function RenderFamilyInformation(props: any) {
           )
         }
       >
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <ShakingTextField error={formik.touched.fatherName && Boolean(formik.errors.fatherName)}>
             <TextField
               name="fatherName"
@@ -567,7 +563,7 @@ function RenderFamilyInformation(props: any) {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <ShakingTextField error={formik.touched.fatherDob && Boolean(formik.errors.fatherDob)}>
             <DatePicker
               name="fatherDob"
@@ -590,7 +586,7 @@ function RenderFamilyInformation(props: any) {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="fatherOccupation"
             label="Occupation"
@@ -608,7 +604,7 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="fatherEmail"
             label="Email"
@@ -636,7 +632,7 @@ function RenderFamilyInformation(props: any) {
           />
         </Grid>
 
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="fatherQualification"
             label="Qualification"
@@ -653,7 +649,7 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="fatherPassOutYear"
             label="Year of Passing"
@@ -675,7 +671,7 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <PhoneInput
             name="fatherContactNo"
             value={formik.values.fatherContactNo}
@@ -688,7 +684,7 @@ function RenderFamilyInformation(props: any) {
             helperText={formik.touched.fatherContactNo && formik.errors.fatherContactNo}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <PhoneInput
             name="fatherOfficeNo"
             value={formik.values.fatherOfficeNo}
@@ -701,7 +697,7 @@ function RenderFamilyInformation(props: any) {
             helperText={formik.touched.fatherOfficeNo && formik.errors.fatherOfficeNo}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="fatherDesignation"
             label="Designation"
@@ -718,7 +714,7 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="fatherOrganization"
             label="Organization"
@@ -735,7 +731,7 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <ShakingTextField
             error={formik.touched.fatherAadharNo && Boolean(formik.errors.fatherAadharNo)}
           >
@@ -771,10 +767,10 @@ function RenderFamilyInformation(props: any) {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Typography variant="subtitle1">Office Address</Typography>
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <ShakingTextField
             error={
               formik.touched.fatherOfficeAddress1 && Boolean(formik.errors.fatherOfficeAddress1)
@@ -796,7 +792,7 @@ function RenderFamilyInformation(props: any) {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <ShakingTextField
             error={
               formik.touched.fatherOfficeAddress2 && Boolean(formik.errors.fatherOfficeAddress2)
@@ -818,7 +814,7 @@ function RenderFamilyInformation(props: any) {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <ShakingTextField
             error={
               formik.touched.fatherOfficeAddress3 && Boolean(formik.errors.fatherOfficeAddress3)
@@ -839,7 +835,7 @@ function RenderFamilyInformation(props: any) {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <CountryComponent
             value={formik.values.fatherOfficeCountry}
             onChange={(_e, value) => {
@@ -849,7 +845,7 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StateComponent
             value={formik.values.fatherOfficeState}
             onChange={(_e, value) => {
@@ -860,7 +856,7 @@ function RenderFamilyInformation(props: any) {
             countryValue={formik.values.fatherOfficeCountry}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <CityComponent
             value={formik.values.fatherOfficeCity}
             onChange={(_e, value) => formik.setFieldValue('fatherOfficeCity', value)}
@@ -868,7 +864,7 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <TextField
             disabled={!isFatherDetailsEditable.value}
             name="localPincode"
@@ -887,10 +883,10 @@ function RenderFamilyInformation(props: any) {
             label="Pincode"
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Typography variant="subtitle1">Local Address</Typography>
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <ShakingTextField
             error={formik.touched.fatherAddress1 && Boolean(formik.errors.fatherAddress1)}
           >
@@ -908,7 +904,7 @@ function RenderFamilyInformation(props: any) {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <ShakingTextField
             error={formik.touched.fatherAddress2 && Boolean(formik.errors.fatherAddress2)}
           >
@@ -926,7 +922,7 @@ function RenderFamilyInformation(props: any) {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <ShakingTextField
             error={formik.touched.fatherAddress3 && Boolean(formik.errors.fatherAddress3)}
           >
@@ -943,7 +939,7 @@ function RenderFamilyInformation(props: any) {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <CountryComponent
             value={formik.values.fatherLocalCountry}
             onChange={(_e, value) => {
@@ -953,7 +949,7 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <StateComponent
             value={formik.values.fatherLocalState}
             onChange={(_e, value) => {
@@ -964,7 +960,7 @@ function RenderFamilyInformation(props: any) {
             countryValue={formik.values.fatherLocalCountry}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <CityComponent
             value={formik.values.fatherLocalCity}
             onChange={(_e, value) => formik.setFieldValue('fatherLocalCity', value)}
@@ -972,7 +968,7 @@ function RenderFamilyInformation(props: any) {
             disabled={!isFatherDetailsEditable.value}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <TextField
             disabled={!isFatherDetailsEditable.value}
             name="localPincode"
@@ -1006,7 +1002,7 @@ function RenderFamilyInformation(props: any) {
           )
         }
       >
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <ShakingTextField error={formik.touched.motherName && Boolean(formik.errors.motherName)}>
             <TextField
               name="motherName"
@@ -1029,7 +1025,7 @@ function RenderFamilyInformation(props: any) {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <ShakingTextField error={formik.touched.motherDob && Boolean(formik.errors.motherDob)}>
             <DatePicker
               name="motherDob"
@@ -1052,7 +1048,7 @@ function RenderFamilyInformation(props: any) {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="motherOccupation"
             label="Occupation"
@@ -1069,7 +1065,7 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="motherEmail"
             label="Email"
@@ -1097,7 +1093,7 @@ function RenderFamilyInformation(props: any) {
           />
         </Grid>
 
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="motherQualification"
             label="Qualification"
@@ -1114,7 +1110,7 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="motherPassOutYear"
             label="Year of Passing"
@@ -1136,7 +1132,7 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <PhoneInput
             name="motherContactNo"
             disabled={!isMotherDetailsEditable.value}
@@ -1149,7 +1145,7 @@ function RenderFamilyInformation(props: any) {
             helperText={formik.touched.motherContactNo && formik.errors.motherContactNo}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <PhoneInput
             name="motherOfficeNo"
             disabled={!isMotherDetailsEditable.value}
@@ -1163,7 +1159,7 @@ function RenderFamilyInformation(props: any) {
             helperText={formik.touched.motherOfficeNo && formik.errors.motherOfficeNo}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="motherDesignation"
             label="Designation"
@@ -1180,7 +1176,7 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="motherOrganization"
             label="Organization"
@@ -1197,7 +1193,7 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="motherAadharNo"
             label="Aadhar No. "
@@ -1229,10 +1225,10 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <MotherOfficeAddressComponent formik={formik} disabled={!isMotherDetailsEditable.value} />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <MotherAddressComponent formik={formik} disabled={!isMotherDetailsEditable.value} />
         </Grid>
       </SectionCard>
@@ -1250,7 +1246,7 @@ function RenderFamilyInformation(props: any) {
           )
         }
       >
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <ShakingTextField
             error={formik.touched.guardianName && Boolean(formik.errors.guardianName)}
           >
@@ -1275,7 +1271,7 @@ function RenderFamilyInformation(props: any) {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <ShakingTextField
             error={formik.touched.guardianDob && Boolean(formik.errors.guardianDob)}
           >
@@ -1300,7 +1296,7 @@ function RenderFamilyInformation(props: any) {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="guardianOccupation"
             label="Occupation"
@@ -1317,7 +1313,7 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="guardianEmail"
             label="Email"
@@ -1345,7 +1341,7 @@ function RenderFamilyInformation(props: any) {
           />
         </Grid>
 
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="guardianQualification"
             label="Qualification"
@@ -1364,7 +1360,7 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="guardianPassOutYear"
             label="Year of Passing"
@@ -1386,7 +1382,7 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <PhoneInput
             name="guardianContactNo"
             disabled={!isGuardianDetailsEditable.value}
@@ -1399,7 +1395,7 @@ function RenderFamilyInformation(props: any) {
             helperText={formik.touched.guardianContactNo && formik.errors.guardianContactNo}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <PhoneInput
             name="guardianOfficeNo"
             disabled={!isGuardianDetailsEditable.value}
@@ -1412,7 +1408,7 @@ function RenderFamilyInformation(props: any) {
             helperText={formik.touched.guardianOfficeNo && formik.errors.guardianOfficeNo}
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="guardianDesignation"
             label="Designation"
@@ -1429,7 +1425,7 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="guardianOrganization"
             label="Organization"
@@ -1448,7 +1444,7 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <TextField
             name="guardianAadharNo"
             label="Aadhar No."
@@ -1480,13 +1476,13 @@ function RenderFamilyInformation(props: any) {
             size="small"
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <GuardianOfficeAddressComponent
             formik={formik}
             disabled={!isGuardianDetailsEditable.value}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <GuardianAddressComponent formik={formik} disabled={!isGuardianDetailsEditable.value} />
         </Grid>
       </SectionCard>
@@ -1504,7 +1500,7 @@ function RenderFamilyInformation(props: any) {
           )
         }
       >
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <Autocomplete
             disabled={!isSiblingDetailsEditable.value}
             loading={false}

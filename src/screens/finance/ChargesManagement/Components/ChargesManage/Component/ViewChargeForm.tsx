@@ -1,9 +1,7 @@
-import { Box, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Button, TextField, DialogActions } from '@mui/material';
 
 import RequestorInfoCard from './RequestorInfoCard';
 import ChargeFirstDetailsCard from './ChargeFirstDetailCard';

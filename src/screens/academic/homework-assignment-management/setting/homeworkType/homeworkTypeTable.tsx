@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 

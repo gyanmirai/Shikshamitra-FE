@@ -1,10 +1,7 @@
 import React from 'react';
-
-import { Box, Card, Stack, Button, Divider, Typography, CardContent } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Stack, Button, Divider, Typography, CardContent } from '@mui/material';
 
 import type { ILearningResourceCardProps } from '../type';
 // Component to display learning resource information in a card format

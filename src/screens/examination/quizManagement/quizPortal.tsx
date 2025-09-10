@@ -1,5 +1,9 @@
+import { styled } from '@mui/material/styles';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
-
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetQuizListQuery } from 'src/redux/academics/examination/quiz-management-api';
 import {
   Box,
   Grid,
@@ -8,19 +12,11 @@ import {
   Radio,
   Stack,
   Button,
-  styled,
   TextField,
   Typography,
   RadioGroup,
   FormControlLabel,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetQuizListQuery } from 'src/redux/academics/examination/quiz-management-api';
-
-import { Iconify } from 'src/components/iconify';
 
 // Styled components
 interface QuestionNumberProps {
@@ -42,19 +38,19 @@ const QuestionNumber = styled(Paper)<QuestionNumberProps>(({ theme, status }) =>
   cursor: 'pointer',
   borderRadius: 8,
   boxShadow: status === 'current' ? theme.shadows[3] : theme.shadows[1],
-  border: status === 'current' ? `2px solid ${theme.palette.warning.main}` : 'none',
+  border: status === 'current' ? `2px solid ${theme.vars.palette.warning.main}` : 'none',
   backgroundColor:
     status === 'current'
-      ? theme.palette.warning.main
+      ? theme.vars.palette.warning.main
       : status === 'answered'
-        ? theme.palette.success.main
+        ? theme.vars.palette.success.main
         : status === 'skipped'
-          ? theme.palette.info.main
-          : theme.palette.grey[300],
+          ? theme.vars.palette.info.main
+          : theme.vars.palette.grey[300],
   color:
     status === 'answered' || status === 'current' || status === 'skipped'
-      ? theme.palette.common.white
-      : theme.palette.text.primary,
+      ? theme.vars.palette.common.white
+      : theme.vars.palette.text.primary,
   fontWeight: status === 'current' ? 700 : 500,
   transition: 'all 0.2s',
 }));
@@ -110,13 +106,7 @@ const QuestionList = ({
         </Stack>
       </Stack>
     </Box>
-    <Box
-      sx={{
-        flex: 1,
-        overflow: 'auto',
-        pr: 1,
-      }}
-    >
+    <Box sx={{ flex: 1, overflow: 'auto', pr: 1 }}>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
         {Array.from({ length: totalQuestions }, (_, i) => (
           <QuestionNumber
@@ -422,13 +412,10 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
       </Box>
 
       <Grid container spacing={3} padding={2}>
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Stack spacing={3}>
             <QuestionDisplay
-              question={{
-                ...quizList[currentQuestion - 1],
-                questionNumber: currentQuestion,
-              }}
+              question={{ ...quizList[currentQuestion - 1], questionNumber: currentQuestion }}
               totalQuestions={quizList.length}
               onAnswer={handleAnswer}
               currentAnswer={answers[currentQuestion]}
@@ -446,7 +433,8 @@ const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () 
             />
           </Stack>
         </Grid>
-        <Grid item xs={12} md={4}>
+
+        <Grid size={{ xs: 12, md: 4 }}>
           <QuestionList
             totalQuestions={quizList.length}
             currentQuestion={currentQuestion}

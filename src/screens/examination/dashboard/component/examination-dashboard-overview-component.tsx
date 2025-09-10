@@ -4,17 +4,14 @@ import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState, useEffect } from 'react';
-
-import { Box, Card, Grid, alpha, useTheme, Typography } from '@mui/material';
-
+import { alpha, useTheme } from '@mui/material/styles';
+import CustomSelect from 'src/components/custom-select';
+import { Box, Card, Grid, Typography } from '@mui/material';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
-
-import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
-
+import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
@@ -39,9 +36,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
         }
       } else {
         const firstClass = classData.items[0];
-        setSearchParams?.({
-          classId: firstClass.id,
-        });
+        setSearchParams?.({ classId: firstClass.id });
         setDivisionOptions(firstClass?.divisions || []);
         // Set first division if available
         if (firstClass?.divisions?.length) {
@@ -103,15 +98,11 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
           onChange={(val) => {
             const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
             // formik.setFieldValue('class', selectedClass?.name || '');
-            setSearchParams?.({
-              classId: val as string,
-            });
+            setSearchParams?.({ classId: val as string });
             setDivisionOptions(selectedClass?.divisions || []);
           }}
           value={classes}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '150px' },
-          }}
+          formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
         />
         <CustomSelect
           label="Division"
@@ -125,13 +116,11 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
             // formik.setFieldValue('division', selectedDivision?.name || '');
             setDivision(val as string);
           }}
-          formControlProps={{
-            sx: { width: '100%', maxWidth: '150px' },
-          }}
+          formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
         />
       </Box>
       <Grid container spacing={2} mt={1}>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <EmployeeDashboardCard
             title="Total Exam"
             icon="ph:exam"
@@ -141,10 +130,10 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
               { name: 'Completed : 15', color: 'primary' },
             ]}
             color="primary.main"
-            // href="/academic/homework-assignment-management/?tab=homeworkCreation"
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+
+        <Grid size={{ xs: 12, md: 3 }}>
           <EmployeeDashboardCard
             title="Total Assessment"
             icon="ic:baseline-assessment"
@@ -155,21 +144,20 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
               { name: 'Completed : 15', color: 'primary' },
             ]}
             color="secondary.main"
-            // href="/academic/homework-assignment-management/?tab=homeworkCreation"
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+
+        <Grid size={{ xs: 12, md: 3 }}>
           <EmployeeDashboardCard
             title="Total Rubric"
             icon="material-symbols:rubric"
             value={16}
             labels={[]}
             color="warning.main"
-            // href="/academic/homework-assignment-management/?tab=homeworkCreation"
           />
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <EmployeeDashboardCard
             title="Total Quiz"
             icon="mdi:quiz"
@@ -180,13 +168,12 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
               { name: 'Completed : 15', color: 'primary' },
             ]}
             color="secondary.main"
-            // href="/academic/homework-assignment-management/?tab=homeworkCreation"
           />
         </Grid>
       </Grid>
 
       <Grid container spacing={2} mt={1}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Typography variant="subtitle1">Attendees/Non-Attendees in Exams</Typography>
@@ -198,12 +185,8 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
                   { value: 'english', label: 'English' },
                 ]}
                 value=""
-                onChange={(val) => {
-                  // Handle subject selection
-                }}
-                formControlProps={{
-                  sx: { width: '200px' },
-                }}
+                onChange={(val) => {}}
+                formControlProps={{ sx: { width: '200px' } }}
               />
             </Box>
 
@@ -216,7 +199,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
                   { name: 'Non-Attendees', data: [20, 45, 15, 65, 80, 5] },
                 ],
                 colors: [
-                  alpha(theme.palette.primary.dark, 0.8),
+                  alpha(theme.vars.palette.primary.dark, 0.8),
                   alpha(theme.palette.error.main, 0.8),
                 ],
               }}
@@ -224,11 +207,11 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
             />
           </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
+
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Typography variant="subtitle1">Average Score of Quiz</Typography>
-
               <CustomSelect
                 label="Subject"
                 options={[
@@ -237,33 +220,24 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
                   { value: 'english', label: 'English' },
                 ]}
                 value=""
-                onChange={(val) => {
-                  // Handle subject selection
-                }}
-                formControlProps={{
-                  sx: { width: '200px' },
-                }}
+                onChange={(val) => {}}
+                formControlProps={{ sx: { width: '200px' } }}
               />
             </Box>
             <AnalyticsWebsiteVisits
               title=""
-              //   subheader="(+43%) than last year"
               chart={{
                 categories: ['Quiz 1', 'Quiz 2', 'Quiz 3', 'Quiz 4', 'Quiz 5', 'Quiz 6', 'Quiz 7'],
                 series: [{ name: '', data: [43, 33, 22, 37, 18, 35, 27] }],
-                colors: [alpha(theme.palette.primary.dark, 0.8)],
-                options: {
-                  legend: {
-                    show: false,
-                    position: 'top',
-                  },
-                },
+                colors: [alpha(theme.vars.palette.primary.dark, 0.8)],
+                options: { legend: { show: false, position: 'top' } },
               }}
               sx={{ height: '100%', boxShadow: 'none' }}
             />
           </Card>
         </Grid>
       </Grid>
+
       {/* <Grid2 container spacing={3}>
         <Grid2 xs={12} md={6} lg={6}>
           <Card sx={{ p: 3, height: '100%' }}>

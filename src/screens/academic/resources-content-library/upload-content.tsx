@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { Upload } from 'src/components/upload';
 import { DatePicker } from '@mui/x-date-pickers';
 import {
   Box,
@@ -11,8 +11,6 @@ import {
   FormControl,
   FormControlLabel,
 } from '@mui/material';
-
-import { Upload } from 'src/components/upload';
 
 const UploadContent = () => (
   <Box>

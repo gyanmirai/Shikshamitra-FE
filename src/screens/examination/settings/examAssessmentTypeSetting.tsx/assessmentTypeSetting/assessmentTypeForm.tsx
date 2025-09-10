@@ -1,13 +1,10 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getAssessmentTypeInitialValues } from '../initialValues';
@@ -43,7 +40,7 @@ const AssessmentTypeForm: React.FC<IAssessmentTypeFormProps> = ({
         <form onSubmit={formik.handleSubmit}>
           <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={!!(formik.touched.assessmentType && formik.errors.assessmentType)}
                 >
@@ -63,7 +60,7 @@ const AssessmentTypeForm: React.FC<IAssessmentTypeFormProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={!!(formik.touched.description && formik.errors.description)}
                 >

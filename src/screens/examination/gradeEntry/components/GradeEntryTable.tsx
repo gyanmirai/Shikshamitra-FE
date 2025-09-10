@@ -1,17 +1,15 @@
 import type { LabelColor } from 'src/components/label';
 
 import { Typography } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import CustomTooltip from 'src/components/custom-tooltip';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   ExamGradeStatusType,
   ExamGradeStatusColor,
   ExamGradeStatusOptions,
 } from 'src/enums/grade-entry-status';
-
-import { Label } from 'src/components/label';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IGradeEntryTableProps } from '../type';
 

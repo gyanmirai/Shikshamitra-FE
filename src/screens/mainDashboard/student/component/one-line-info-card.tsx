@@ -1,8 +1,6 @@
 import React from 'react';
-
-import { Box, Card, Typography, CardContent } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify/iconify';
+import { Box, Card, Typography, CardContent } from '@mui/material';
 
 interface InfoItem {
   title: string;

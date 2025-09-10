@@ -3,15 +3,11 @@
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
-import { useRouter } from 'next/navigation';
-import React, { useState, useCallback } from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, alpha, useTheme, CardHeader } from '@mui/material';
-
 import { fNumber } from 'src/utils/format-number';
 import 'src/utils/convertABPPermissionToNavigation';
-
+import React, { useState, useCallback } from 'react';
+import { alpha, useTheme } from '@mui/material/styles';
+import { Box, Grid, Card, CardHeader } from '@mui/material';
 import { Chart, useChart, ChartSelect, ChartLegends } from 'src/components/chart';
 
 import Overview from './overview';
@@ -21,45 +17,44 @@ import OrganizationStatus from './organization-status';
 import BoardEnrollmentStatus from './board-enrollment-status';
 import EnrollmentActivities from '../../studentProfile/studentDashbordComponent/recentEnrollmentActivities';
 
-const EnrollmentDashboardScreen = () => {
-  const router = useRouter();
+const EnrollmentDashboardScreen = () => (
+  <Box>
+    <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid size={{ xs: 12 }}>
+        <Overview />
+      </Grid>
 
-  return (
-    <Box>
-      <Grid2 container spacing={2} sx={{ mb: 2 }}>
-        <Grid2 xs={12}>
-          <Overview />
-        </Grid2>
-        <Grid2 xs={12}>
-          <AdmissionOverTime />
-        </Grid2>
-        <Grid2 xs={12}>
-          <Card sx={{ height: '100%', p: 2 }}>
-            <Grid2 container spacing={2}>
-              <Grid2 xs={12} md={6}>
-                <BoardEnrollmentStatus />
-              </Grid2>
-              <Grid2 xs={12} md={6}>
-                <OrganizationStatus />
-              </Grid2>
-            </Grid2>
-          </Card>
-        </Grid2>
+      <Grid size={{ xs: 12 }}>
+        <AdmissionOverTime />
+      </Grid>
 
-        <Grid2 xs={12}>
-          <EntranceExamCard />
-        </Grid2>
-        <Grid2 xs={12}>
-          <EnrollmentActivities />
-        </Grid2>
-      </Grid2>
+      <Grid size={{ xs: 12 }}>
+        <Card sx={{ height: '100%', p: 2 }}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <BoardEnrollmentStatus />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <OrganizationStatus />
+            </Grid>
+          </Grid>
+        </Card>
+      </Grid>
 
-      {/* <Grid2 container spacing={2}>
+      <Grid size={{ xs: 12 }}>
+        <EntranceExamCard />
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
+        <EnrollmentActivities />
+      </Grid>
+    </Grid>
+
+    {/* <Grid2 container spacing={2}>
         {sections.map((section: any) => dashBoardSections[section.id])}
       </Grid2> */}
-    </Box>
-  );
-};
+  </Box>
+);
 
 export default EnrollmentDashboardScreen;
 
@@ -69,10 +64,7 @@ type Props2 = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: {
-      name: string;
-      data: number[];
-    }[];
+    series: { name: string; data: number[] }[];
     options?: ChartOptions;
   };
 };
@@ -103,12 +95,7 @@ export function AnalyticsConversionRates({ title, subheader, chart, ...other }: 
       style: { fontSize: '10px', colors: ['#FFFFFF', theme.palette.text.primary] },
     },
     plotOptions: {
-      bar: {
-        horizontal: true,
-        borderRadius: 2,
-        barHeight: '30%',
-        dataLabels: { position: 'top' },
-      },
+      bar: { horizontal: true, borderRadius: 2, barHeight: '30%', dataLabels: { position: 'top' } },
     },
     ...chart.options,
   });
@@ -135,13 +122,7 @@ type Props3 = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: {
-      name: string;
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
+    series: { name: string; data: { name: string; data: number[] }[] }[];
     options?: ChartOptions;
   };
 };

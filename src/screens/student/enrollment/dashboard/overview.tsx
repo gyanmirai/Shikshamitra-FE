@@ -1,12 +1,11 @@
+import type { JSX} from 'react';
+
 import Link from 'next/link';
 import { useState } from 'react';
-
-import { Box, Card, Typography } from '@mui/material';
-
-import { fNumber } from 'src/utils/format-number';
-
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { fNumber } from 'src/utils/format-number';
+import { Box, Card, Typography } from '@mui/material';
 import CustomizableView from 'src/components/customizable-view';
 
 import type { ICardItem, IStudentEnrollmentCardProps } from '../entrollment-interface';

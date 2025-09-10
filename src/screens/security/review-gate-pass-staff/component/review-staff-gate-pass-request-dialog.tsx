@@ -3,16 +3,13 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { DatePicker, TimePicker } from '@mui/x-date-pickers';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getReviewStaffGatePassRequestInitialValues } from '../initialValue';
@@ -36,7 +33,7 @@ const ReviewStaffGatePassRequestDialog: React.FC<
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} pb="10px">
+            <Grid size={{ xs: 12 }} pb="10px">
               <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
                 <TextField
                   disabled
@@ -51,14 +48,14 @@ const ReviewStaffGatePassRequestDialog: React.FC<
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <DatePicker
                 disabled
                 label="Desired Date *"
                 format="DD-MM-YYYY"
                 value={formik.values.leaveDate ? dayjs(formik.values.leaveDate) : null}
                 onChange={(value) => {
-                  // value is a Dayjs object or null
                   formik.setFieldValue('leaveDate', value ? value.toISOString() : null);
                 }}
                 slotProps={{
@@ -75,14 +72,13 @@ const ReviewStaffGatePassRequestDialog: React.FC<
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TimePicker
                 disabled
-                label="Desired  Time *"
+                label="Desired Time *"
                 format="hh:mm A"
                 value={formik.values.leaveTime ? dayjs(formik.values.leaveTime) : null}
                 onChange={(val) => {
-                  // val is a Dayjs object or null
                   formik.setFieldValue('leaveTime', val ? val.toISOString() : null);
                 }}
                 slotProps={{
@@ -99,9 +95,9 @@ const ReviewStaffGatePassRequestDialog: React.FC<
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField
-                error={!!(formik.touched.reasonForLeave && formik.errors.reasonForLeave) || false}
+                error={!!(formik.touched.reasonForLeave && formik.errors.reasonForLeave)}
               >
                 <Editor
                   value={formik.values.reasonForLeave}
@@ -117,10 +113,8 @@ const ReviewStaffGatePassRequestDialog: React.FC<
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12}>
-              <ShakingTextField
-                error={!!(formik.touched.description && formik.errors.description) || false}
-              >
+            <Grid size={{ xs: 12 }}>
+              <ShakingTextField error={!!(formik.touched.description && formik.errors.description)}>
                 <Editor
                   value={formik.values.description}
                   onChange={(value) => {

@@ -1,7 +1,5 @@
 import { Box, Grid } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import {
   CardActions,
   SectionCard,
@@ -14,7 +12,7 @@ import RenderEmergencyAddressFields from './RenderEmergencyAddressFields';
 import type { FieldsType } from './type';
 
 const RenderCommunicationFields = (props: any) => {
-  const { formik, isEdit, isMainForm = false } = props;
+  const { formik, isMainForm = false } = props;
   const isLocalAddressEditable = useBoolean(isMainForm);
   const isPermanentAddressEditable = useBoolean(isMainForm);
   const isEmergencyAddressEditable = useBoolean(isMainForm);
@@ -44,7 +42,7 @@ const RenderCommunicationFields = (props: any) => {
           )
         }
       >
-        <Grid item xs={12} sm={4}>
+        <Grid size={12} sm={4}>
           <PhoneInput
             name="primaryContactNumber"
             disabled={!isCommunicationEditable.value}
@@ -60,7 +58,7 @@ const RenderCommunicationFields = (props: any) => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={4}>
+        <Grid size={12} sm={4}>
           <PhoneInput
             name="secondaryContactNumber"
             disabled={!isCommunicationEditable.value}
@@ -76,7 +74,7 @@ const RenderCommunicationFields = (props: any) => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={4}>
+        <Grid size={12} sm={4}>
           <TextField
             fullWidth
             name="parentEmail"
@@ -99,7 +97,7 @@ const RenderCommunicationFields = (props: any) => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={4}>
+        <Grid size={12} sm={4}>
           <PhoneInput
             disabled={!isCommunicationEditable.value}
             name="studentContactNo"
@@ -113,7 +111,7 @@ const RenderCommunicationFields = (props: any) => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={4}>
+        <Grid size={12} sm={4}>
           <TextField
             fullWidth
             name="studentEmail"
@@ -136,7 +134,7 @@ const RenderCommunicationFields = (props: any) => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={4}>
+        <Grid size={12} sm={4}>
           <PhoneInput
             disabled={!isCommunicationEditable.value}
             name="whatsAppContactNo"
@@ -164,7 +162,7 @@ const RenderCommunicationFields = (props: any) => {
           )
         }
       >
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RenderLocalAddressFields {...props} isEdit={isLocalAddressEditable.value} />
         </Grid>
       </SectionCard>
@@ -181,7 +179,7 @@ const RenderCommunicationFields = (props: any) => {
           )
         }
       >
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RenderPermanentAddressFields {...props} isEdit={isPermanentAddressEditable.value} />
         </Grid>
       </SectionCard>
@@ -198,12 +196,12 @@ const RenderCommunicationFields = (props: any) => {
           )
         }
       >
-        <Grid item xs={12}>
+        <Grid size={12}>
           <RenderEmergencyAddressFields {...props} isEdit={isEmergencyAddressEditable.value} />
         </Grid>
       </SectionCard>
 
-      {/* <Grid item xs={12}>
+      {/* <Grid size={12}>
           <TextField
             name="remarks"
             label="Remarks"
@@ -225,7 +223,7 @@ export const communicationFields: FieldsType[] = [
     name: 'commPrimaryContactNumber',
     label: 'Primary Contact No.',
     type: 'text',
-    gridProps: { xs: 12, sm: 12, md: 12 },
+    gridProps: { size: { xs: 12, sm: 12, md: 12 } },
     otherProps: {},
     renderComp(props) {
       return <RenderCommunicationFields {...props} />;

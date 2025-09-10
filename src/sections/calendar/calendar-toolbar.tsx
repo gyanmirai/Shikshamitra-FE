@@ -9,21 +9,18 @@ import type { UsePopoverReturn } from 'src/components/custom-popover';
 
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-
 import { Box } from '@mui/material';
 import Stack from '@mui/material/Stack';
+import { useSelector } from 'react-redux';
 import Button from '@mui/material/Button';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import { formatStr } from 'src/utils/format-time';
 import { DateCalendar } from '@mui/x-date-pickers';
 import LinearProgress from '@mui/material/LinearProgress';
-
-import { formatStr } from 'src/utils/format-time';
-
-import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
@@ -49,7 +46,7 @@ type Props = {
   onChangeView: (newView: ICalendarView) => void;
   viewOptions?: typeof VIEW_OPTIONS;
   renderCompToHeader?: React.ReactNode;
-  calendarRef?: React.RefObject<Calendar | FullCalendar>;
+  calendarRef?: React.RefObject<Calendar | FullCalendar | null>;
   format?: string;
   setDate?: Dispatch<SetStateAction<string | Date>>;
 };
@@ -188,7 +185,7 @@ const CalenderDateView = ({
   setDate,
 }: {
   dateValue: Dayjs | null;
-  calendarRef?: React.RefObject<Calendar | FullCalendar>;
+  calendarRef?: React.RefObject<Calendar | FullCalendar | null>;
   format?: string;
   datePopover: UsePopoverReturn;
   setDate?: Dispatch<SetStateAction<string | Date>>;

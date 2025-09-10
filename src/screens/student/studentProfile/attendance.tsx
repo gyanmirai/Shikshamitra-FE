@@ -3,42 +3,34 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
+import CustomTooltip from 'src/components/custom-tooltip';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
-import {
-  Box,
-  Grid,
-  Paper,
-  Badge,
-  alpha,
-  Button,
-  Divider,
-  useTheme,
-  Typography,
-  ButtonGroup,
-  CircularProgress,
-} from '@mui/material';
-
 import {
   AttendanceStatusType,
   AttendanceStatusOptions,
   AttendanceStatusTypeColors,
 } from 'src/enums/attendance-type';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import CustomizableTable from 'src/components/customizabaleTable';
+import {
+  Box,
+  Grid,
+  Paper,
+  Badge,
+  Button,
+  Divider,
+  Typography,
+  ButtonGroup,
+  CircularProgress,
+} from '@mui/material';
 
 import { AttendanceChart, YearlyAttendance } from './attendanceChart';
 
 import type { StudentTabsComponentType } from '.';
 
-type DotProps = {
-  sx?: React.CSSProperties;
-  color?: string;
-  children?: React.ReactNode;
-};
+type DotProps = { sx?: React.CSSProperties; color?: string; children?: React.ReactNode };
 
 export const Dot: React.FC<DotProps> = ({
   sx = {},
@@ -74,11 +66,7 @@ const Attendance = (props: StudentTabsComponentType) => {
   const theme = useTheme();
 
   return (
-    <Box
-      sx={{
-        mt: 1,
-      }}
-    >
+    <Box sx={{ mt: 1 }}>
       {/* <Stack direction="row" spacing={2} alignItems="center">
         <Card
           elevation={3}
@@ -146,11 +134,7 @@ const Attendance = (props: StudentTabsComponentType) => {
           onChange={(newValue) => {
             setDate(newValue);
           }}
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
+          slotProps={{ textField: { size: 'small' } }}
         />
         <Box fontSize="14px" display="flex" alignItems="center" gap={1}>
           Overall Attendance&nbsp;
@@ -190,7 +174,7 @@ const Attendance = (props: StudentTabsComponentType) => {
       </Paper>
       <Divider sx={{ my: 2 }} />
       <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Box flexGrow={1}>
             {activeButton === 'monthly' ? (
               // @ts-ignore
@@ -296,14 +280,8 @@ const Attendance = (props: StudentTabsComponentType) => {
                     'Dec',
                   ],
                   series: [
-                    {
-                      name: 'Present',
-                      data: [12, 25, 18, 22, 15, 28, 20, 17, 24, 17, 11, 30],
-                    },
-                    {
-                      name: 'Absent',
-                      data: [18, 5, 12, 8, 15, 2, 10, 13, 6, 13, 19, 0],
-                    },
+                    { name: 'Present', data: [12, 25, 18, 22, 15, 28, 20, 17, 24, 17, 11, 30] },
+                    { name: 'Absent', data: [18, 5, 12, 8, 15, 2, 10, 13, 6, 13, 19, 0] },
                   ],
                 }}
                 sx={{ width: '100%', boxShadow: 'var(--shadows-2)', borderRadius: 2 }}
@@ -311,7 +289,7 @@ const Attendance = (props: StudentTabsComponentType) => {
             )}
           </Box>
         </Grid>
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <Paper
             elevation={0}
             sx={{
@@ -338,16 +316,12 @@ const Attendance = (props: StudentTabsComponentType) => {
                 '& .MuiPickersCalendarHeader-root': {
                   display: 'none', // Hides the header (Month, Year, and Arrows)
                 },
-                '& .MuiDayCalendar-header': {
-                  justifyContent: 'space-around',
-                },
-                '& .MuiDayCalendar-weekContainer': {
-                  justifyContent: 'space-around',
-                },
+                '& .MuiDayCalendar-header': { justifyContent: 'space-around' },
+                '& .MuiDayCalendar-weekContainer': { justifyContent: 'space-around' },
               }}
               slots={{
                 day: (prop: any) => {
-                  const { day, today } = prop;
+                  const { day } = prop;
 
                   const absent = day.format('DD-MM-YYYY') === '10-06-2025';
                   const isSunday = day.day() === 0;
@@ -384,9 +358,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                             overflow: 'hidden',
                             fontWeight: disabled ? 400 : 600,
                             bgcolor: backgroundColor,
-                            '&:hover': {
-                              ...(absent ? { backgroundColor: 'unset' } : {}),
-                            },
+                            '&:hover': { ...(absent ? { backgroundColor: 'unset' } : {}) },
                             // background: (theme) =>
                             //   absent
                             //     ? `${theme.palette.error.main} !important`
@@ -395,7 +367,7 @@ const Attendance = (props: StudentTabsComponentType) => {
                             //       : '',
                             // ...(absent
                             //   ? { color: 'white !important' }
-                            //   : { color: (theme) => `${theme.palette.text.primary} !important` }),
+                            //   : { color: (theme) => `${theme.vars.palette.text.primary} !important` }),
                             // border: (theme) =>
                             //   today ? `2px solid ${theme.palette.primary.main}` : 'none !important',
                             ...(isHalfDay

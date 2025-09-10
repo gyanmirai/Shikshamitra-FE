@@ -1,37 +1,35 @@
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
-import { styled } from '@mui/material';
+import { styled } from '@mui/material/styles';
 
 export const StyledTab = styled(Tab)(({ theme }) => ({
   margin: '0px 2px',
   padding: '6px 16px',
   //   border: '2px solid',
   textTransform: 'none',
-  outline: `2px solid ${theme.palette.grey[400]}`,
+  outline: `2px solid ${theme.vars.palette.grey[400]}`,
   //   outline: `1px solid ${theme.palette.primary.main}`,
-  color: theme.palette.common.black,
+  color: theme.vars.palette.common.black,
   fontWeight: 600,
-  backgroundColor: theme.palette.grey[200],
+  backgroundColor: theme.vars.palette.grey[200],
   zIndex: 1,
   minHeight: '32px',
   borderRadius: '10px',
   transition: 'all 0.3s ease-in-out',
   '&.Mui-selected': {
     backgroundColor: theme.palette.primary.main,
-    color: theme.palette.common.white,
+    color: theme.vars.palette.common.white,
     fontWeight: 600,
     border: 'none',
     outline: 'none',
   },
   '&:hover': {
-    backgroundColor: `${theme.palette.grey[300]}`,
-    color: theme.palette.common.black,
+    backgroundColor: `${theme.vars.palette.grey[300]}`,
+    color: theme.vars.palette.common.black,
     fontWeight: 600,
     // outline: 'none',
   },
-  '&.Mui-focusVisible': {
-    backgroundColor: 'rgba(100, 95, 228, 0.32)',
-  },
+  '&.Mui-focusVisible': { backgroundColor: 'rgba(100, 95, 228, 0.32)' },
 }));
 
 export const StyledTabs = styled(Tabs)(({ theme }) => ({
@@ -45,14 +43,12 @@ export const StyledTabs = styled(Tabs)(({ theme }) => ({
     paddingTop: '10px',
     paddingBottom: '10px',
   },
-  '& .MuiTabs-indicator': {
-    display: 'none',
-  },
+  '& .MuiTabs-indicator': { display: 'none' },
   '& .MuiTabs-scrollButtons': {
-    background: theme.palette.background.paper,
+    background: theme.vars.palette.background.paper,
     boxShadow: theme.customShadows.z1,
     fontWeight: 600,
-    border: `2px solid ${theme.palette.grey[400]}`,
+    border: `2px solid ${theme.vars.palette.grey[400]}`,
     height: '28px',
     width: '28px',
     borderRadius: '50%',
@@ -63,17 +59,13 @@ export const StyledTabs = styled(Tabs)(({ theme }) => ({
     top: '50%',
     transform: 'translateY(-50%)',
   },
-  '& .MuiTabs-scrollButtons:nth-child(4)': {
-    right: -16,
-  },
-  '& .MuiTabs-scrollButtons:first-of-type': {
-    left: -16,
-  },
+  '& .MuiTabs-scrollButtons:nth-child(4)': { right: -16 },
+  '& .MuiTabs-scrollButtons:first-of-type': { left: -16 },
 }));
 
 export const StyledMainDiv = styled('div')(({ theme }) => ({
   height: '5px',
-  backgroundColor: theme.palette.grey[400],
+  backgroundColor: theme.vars.palette.grey[400],
   //   backgroundColor: theme.palette.primary.main,
   //   marginTop: '37px',
   position: 'absolute',

@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-
 import { Grid } from '@mui/material';
 
 import { ActivityDashboardCard } from '../dashboard';
@@ -17,7 +16,7 @@ const icons = {
 const ActivityDashboardCards = () => (
   <Grid container spacing={2}>
     {/* Statistics Cards */}
-    <Grid item xs={12} sm={6} md={4}>
+    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
       <ActivityDashboardCard
         title="Total Dynamic Group"
         icon={icons.groups}
@@ -28,7 +27,7 @@ const ActivityDashboardCards = () => (
         classRequire
       />
     </Grid>
-    <Grid item xs={12} sm={6} md={4}>
+    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
       <ActivityDashboardCard
         title="Total Static Group"
         icon={icons.groups}
@@ -39,7 +38,7 @@ const ActivityDashboardCards = () => (
         classRequire
       />
     </Grid>
-    <Grid item xs={12} sm={6} md={4}>
+    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
       <ActivityDashboardCard
         title="Total Activity"
         icon={icons.activity}

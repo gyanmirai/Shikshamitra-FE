@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-
-import { Box, Paper, Typography } from '@mui/material';
-
-import responseSurveyData from 'src/json/communication/feedback/responseSurveyData.json';
-
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Paper, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import responseSurveyData from 'src/json/communication/feedback/responseSurveyData.json';
 
 const QuizSolutionComponent = () => {
   // Initialize table data state with esponse data - setTableData is currently unused

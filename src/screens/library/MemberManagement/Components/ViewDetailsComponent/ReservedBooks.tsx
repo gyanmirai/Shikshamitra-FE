@@ -1,15 +1,12 @@
 import React from 'react';
-
 import { Box, Chip } from '@mui/material';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetReservedBooksQuery } from 'src/redux/memberManagement/memberManagementApi';
 import {
   BookReservationStatusTypeColors,
   BookReservationStatusTypeOptions,
 } from 'src/enums/library-status-types';
-
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IMember } from '../type';
 
@@ -23,13 +20,12 @@ const ReservedBooks: React.FC<ReservedBooksProps> = ({ member }) => {
     currentQueryAndMutation: useGetReservedBooksQuery,
   });
 
-  return memberLoading ? (
-    'Loading...'
-  ) : (
+  return (
     <Box>
       <CustomizableTable
         tableId="reserved-books-table"
         noDataText="No Reserved Books Found"
+        isLoading={memberLoading}
         columns={[
           { id: 'bookTitle', label: 'Book Title', align: 'left' },
           { id: 'reservationDate', label: 'Reserved on', align: 'left' },

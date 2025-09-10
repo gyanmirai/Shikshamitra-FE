@@ -1,6 +1,5 @@
 // components/ChapterTable.tsx
 import { Box, Typography } from '@mui/material';
-
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';

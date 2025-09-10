@@ -1,6 +1,5 @@
-import { styled } from '@mui/material/styles';
-
 import { varAlpha } from 'src/theme/styles';
+import { styled } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 
@@ -11,7 +10,7 @@ export const StyledCalendar = styled('div')(({ theme }) => ({
 
   '& .fc': {
     '--fc-border-color': varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
-    '--fc-now-indicator-color': theme.vars.palette.error.main,
+    '--fc-now-indicator-color': theme.palette.error.main,
     '--fc-today-bg-color': varAlpha(theme.vars.palette.grey['500Channel'], 0.2),
     '--fc-page-bg-color': theme.vars.palette.background.default,
     '--fc-neutral-bg-color': theme.vars.palette.background.neutral,
@@ -81,7 +80,7 @@ export const StyledCalendar = styled('div')(({ theme }) => ({
     border: 0,
     overflow: 'hidden',
     boxShadow: theme.customShadows.dropdown,
-    borderRadius: theme.shape.borderRadius * 1.5,
+    borderRadius: +theme.shape.borderRadius * 1.5,
     backgroundColor: theme.vars.palette.background.paper,
   },
   '& .fc .fc-popover-header': {

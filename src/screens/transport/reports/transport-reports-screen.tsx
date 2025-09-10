@@ -1,49 +1,20 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Card, Grid, List, ListItem, useTheme, Typography } from '@mui/material';
-
-import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-
+import { Box, Card, Grid, List, ListItem, Typography } from '@mui/material';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
+import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
-const lineChartData = {
-  labels: ['January', 'February', 'March', 'April', 'May'],
-  datasets: [
-    {
-      label: 'Fuel Consumption (liters)',
-      data: [150, 130, 140, 120, 160],
-      borderColor: 'rgba(255, 99, 132, 1)',
-      backgroundColor: 'rgba(255, 99, 132, 0.5)',
-      fill: true,
-    },
-    {
-      label: 'Maintenance Cost ($)',
-      data: [200, 180, 220, 150, 230],
-      borderColor: 'rgba(54, 162, 235, 1)',
-      backgroundColor: 'rgba(54, 162, 235, 0.5)',
-      fill: true,
-    },
-    {
-      label: 'Number of Trips',
-      data: [20, 25, 30, 18, 27],
-      borderColor: 'rgba(75, 192, 192, 1)',
-      backgroundColor: 'rgba(75, 192, 192, 0.5)',
-      fill: true,
-    },
-  ],
-};
 const TransportReportsScreen = () => {
   const theme = useTheme();
   return (
     <>
       <Grid container spacing={2}>
-        <Grid item sm={12} md={6}>
+        <Grid size={{ sm: 12, md: 6 }}>
           <Card sx={{ p: 3, height: '100%' }}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Typography component="span" variant="h6" gutterBottom>
@@ -66,7 +37,7 @@ const TransportReportsScreen = () => {
             </List>
           </Card>
         </Grid>
-        <Grid item sm={12} md={6}>
+        <Grid size={{ sm: 12, md: 6 }}>
           <Card sx={{ p: 3, height: '100%' }}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Typography component="span" variant="h6" gutterBottom>
@@ -90,7 +61,7 @@ const TransportReportsScreen = () => {
           </Card>
         </Grid>
 
-        <Grid item sm={12} md={6}>
+        <Grid size={{ sm: 12, md: 6 }}>
           <Card sx={{ p: 3, height: '100%' }}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Typography component="span" variant="h6" gutterBottom>
@@ -109,7 +80,7 @@ const TransportReportsScreen = () => {
             </List>
           </Card>
         </Grid>
-        <Grid item sm={12} md={6}>
+        <Grid size={{ sm: 12, md: 6 }}>
           <Card sx={{ p: 3, height: '100%' }}>
             <Box display="flex" flexDirection="column" gap={2}>
               <Typography variant="subtitle1" sx={{ pt: 2 }}>
@@ -129,7 +100,7 @@ const TransportReportsScreen = () => {
                     { name: 'Total trips', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] },
                     { name: 'Fuel Consumed', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
                   ],
-                  colors: [theme.palette.primary.dark, theme.palette.warning.main],
+                  colors: [theme.vars.palette.primary.dark, theme.vars.palette.warning.main],
                 }}
                 sx={{ height: '100%' }}
               />
@@ -137,7 +108,7 @@ const TransportReportsScreen = () => {
           </Card>
         </Grid>
 
-        <Grid item sm={12} md={6}>
+        <Grid size={{ sm: 12, md: 6 }}>
           <Card sx={{ p: 3, height: '100%' }}>
             <Box display="flex" flexDirection="column" gap={2}>
               <Typography variant="subtitle1" sx={{ pt: 2 }}>
@@ -163,7 +134,7 @@ const TransportReportsScreen = () => {
             </Box>
           </Card>
         </Grid>
-        <Grid item sm={12} md={6}>
+        <Grid size={{ sm: 12, md: 6 }}>
           <Card sx={{ p: 3, height: '100%' }}>
             <Box display="flex" flexDirection="column" gap={2}>
               <Typography variant="subtitle1" sx={{ pt: 2 }}>
@@ -230,34 +201,19 @@ const TransportReportsScreen = () => {
               chart={{
                 categories: ['January', 'February', 'March', 'April', 'May'],
                 series: [
-                  {
-                    name: 'Fuel Consumption (liters)',
-                    data: [150, 130, 140, 120, 160],
-                  },
-                  {
-                    name: 'Maintenance Cost ($)',
-                    data: [200, 180, 220, 150, 230],
-                  },
-                  {
-                    name: 'Number of Trips',
-                    data: [20, 25, 30, 18, 27],
-                  },
-                  {
-                    name: 'Document Expirations',
-                    data: [5, 3, 4, 2, 6],
-                  },
-                  {
-                    name: 'Distance Traveled (km)',
-                    data: [150, 200, 180, 220, 240],
-                  },
+                  { name: 'Fuel Consumption (liters)', data: [150, 130, 140, 120, 160] },
+                  { name: 'Maintenance Cost ($)', data: [200, 180, 220, 150, 230] },
+                  { name: 'Number of Trips', data: [20, 25, 30, 18, 27] },
+                  { name: 'Document Expirations', data: [5, 3, 4, 2, 6] },
+                  { name: 'Distance Traveled (km)', data: [150, 200, 180, 220, 240] },
                 ],
                 colors: [
-                  theme.palette.primary.dark,
-                  theme.palette.warning.main,
-                  theme.palette.secondary.main,
-                  theme.palette.primary.light,
-                  theme.palette.warning.light,
-                  theme.palette.secondary.light,
+                  theme.vars.palette.primary.dark,
+                  theme.vars.palette.warning.main,
+                  theme.vars.palette.secondary.main,
+                  theme.vars.palette.primary.light,
+                  theme.vars.palette.warning.light,
+                  theme.vars.palette.secondary.light,
                 ],
               }}
               sx={{ height: '100%' }}

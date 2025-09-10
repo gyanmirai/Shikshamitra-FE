@@ -3,27 +3,22 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
-import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Button, useTheme, IconButton, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Button, IconButton, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
+import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
 
 import FinanceSettingReceiptbookDialog from './component/finance-setting-receiptbook-dialog';
 
@@ -31,7 +26,6 @@ import type { IReceiptBook } from './receipt-book-interface';
 
 const FinanceReceiptBookSetting = () => {
   // Dialog state for general purpose
-  const dialog = useBoolean();
   const theme = useTheme();
 
   // Dialog state specifically for receipt book operations
@@ -134,10 +128,12 @@ const FinanceReceiptBookSetting = () => {
               isSort: false,
               render(value, row) {
                 const statusColor =
-                  value === true ? theme.palette.success.main : theme.palette.text.secondary;
+                  value === true
+                    ? theme.vars.palette.success.main
+                    : theme.vars.palette.text.secondary;
                 return (
                   <CustomTooltip
-                    title={value === true ? 'Active' : 'InActive'}
+                    title={value === true ? 'Active' : 'Inactive'}
                     arrow
                     placement="left"
                     PopperProps={{
@@ -162,19 +158,12 @@ const FinanceReceiptBookSetting = () => {
                         backgroundColor: 'rgba(0,0,0,0.06)', // light background to indicate clickability
                         transition: 'transform 0.2s ease-in-out, background-color 0.2s',
                         cursor: 'pointer',
-                        '&:hover': {
-                          transform: 'scale(1.1)',
-                          backgroundColor: 'rgba(0,0,0,0.08)',
-                        },
+                        '&:hover': { transform: 'scale(1.1)', backgroundColor: 'rgba(0,0,0,0.08)' },
                       }}
                     >
                       <Iconify
                         icon={GlobalIcons.tick}
-                        sx={{
-                          width: 20,
-                          height: 20,
-                          color: statusColor,
-                        }}
+                        sx={{ width: 20, height: 20, color: statusColor }}
                       />
                     </IconButton>
                   </CustomTooltip>
@@ -183,7 +172,7 @@ const FinanceReceiptBookSetting = () => {
             },
             {
               id: 'action',
-              label: 'Actions',
+              label: 'Action',
               isFilter: false,
               isSort: false,
               sticky: true,
@@ -192,12 +181,6 @@ const FinanceReceiptBookSetting = () => {
               render: (value, row: any) => (
                 <ThreeDotsActions
                   showThreeDots={false}
-                  showDeleteIcon
-                  handleDeleteClick={() => {
-                    dialogForDeleteConfirmation.onTrue();
-                    setSelectedEntry(row);
-                    // handleDelete(row);
-                  }}
                   showEditIcon
                   handleEditClick={() => {
                     setIsEdit(true);
@@ -211,34 +194,6 @@ const FinanceReceiptBookSetting = () => {
           data={tableData}
         />
       </>
-
-      {dialogForDeleteConfirmation.value && (
-        <ConfirmDialog
-          open={dialogForDeleteConfirmation.value}
-          onClose={() => {
-            dialogForDeleteConfirmation.onFalse();
-            setSelectedEntry(null);
-          }}
-          title="Delete"
-          content={
-            <>
-              Are you sure you want to delete receipt book{' '}
-              <strong>{selectedEntry?.receiptBookName}</strong>?
-            </>
-          }
-          action={
-            <LoadingButton
-              variant="contained"
-              loading={false}
-              color="error"
-              onClick={() => {}}
-              size="small"
-            >
-              Yes
-            </LoadingButton>
-          }
-        />
-      )}
 
       {receiptBookDialog.value && (
         <CustomDialog

@@ -3,16 +3,12 @@
 import type { Division } from 'src/types/school';
 
 import React, { useState } from 'react';
-
-import { Box, Button, TextField, Autocomplete } from '@mui/material';
-
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import CustomDialog from 'src/components/customDialog';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
+import { Box, Button, TextField, Autocomplete } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import CollectFeesForm from './components/feeCollectForm';

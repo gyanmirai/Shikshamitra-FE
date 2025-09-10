@@ -3,14 +3,11 @@ import type { ChartOptions } from 'src/components/chart';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import { sumBy } from 'src/utils/helper';
+import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
-
-import { sumBy } from 'src/utils/helper';
 import { fNumber } from 'src/utils/format-number';
-
-import { varAlpha } from 'src/theme/styles';
-
 import { Chart, useChart } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
@@ -18,14 +15,7 @@ import { Chart, useChart } from 'src/components/chart';
 type Props = CardProps & {
   title?: string;
   subheader?: string;
-  chart: {
-    colors?: string[];
-    options?: ChartOptions;
-    series: {
-      label: string;
-      value: number;
-    }[];
-  };
+  chart: { colors?: string[]; options?: ChartOptions; series: { label: string; value: number }[] };
 };
 
 export function BookingAvailable({ title, subheader, chart, ...other }: Props) {
@@ -52,7 +42,7 @@ export function BookingAvailable({ title, subheader, chart, ...other }: Props) {
     plotOptions: {
       radialBar: {
         hollow: { margin: -20 },
-        track: { margin: -20, background: varAlpha(theme.vars.palette.grey['500Channel'], 0.08) },
+        track: { margin: -20, background: varAlpha(theme.palette.grey['500Channel'], 0.08) },
         dataLabels: {
           name: { offsetY: -12 },
           value: { offsetY: 6 },
@@ -76,14 +66,7 @@ export function BookingAvailable({ title, subheader, chart, ...other }: Props) {
         sx={{ mx: 'auto' }}
       />
 
-      <Box
-        sx={{
-          p: 5,
-          gap: 2,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <Box sx={{ p: 5, gap: 2, display: 'flex', flexDirection: 'column' }}>
         {chart.series.map((item) => (
           <Box
             key={item.label}
@@ -94,7 +77,7 @@ export function BookingAvailable({ title, subheader, chart, ...other }: Props) {
                 width: 16,
                 height: 16,
                 borderRadius: 0.75,
-                bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
+                bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.16),
                 ...(item.label === 'Sold out' && { bgcolor: chartColors[1] }),
               }}
             />

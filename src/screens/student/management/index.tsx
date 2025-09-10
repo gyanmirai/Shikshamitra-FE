@@ -4,19 +4,15 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { Tab, Box, Card, useTheme } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
+import { Tab, Box, Card } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useSearchParam } from 'src/hooks/use-search-param';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import GroupManagement from './group-managemnet';
@@ -92,14 +88,9 @@ const StudentManagementScreen = () => {
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
   const [division, setDivision] = useState<string>('');
-  const theme = useTheme();
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'grGeneration' });
 
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);

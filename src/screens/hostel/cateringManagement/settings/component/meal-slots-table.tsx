@@ -1,15 +1,11 @@
 import React from 'react';
-
 import { Box, Button } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import data from 'src/json/hostel/cateringManagement/meal-slots-data.json';
-
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import data from 'src/json/hostel/cateringManagement/meal-slots-data.json';
 
 import AddMealSlotsDialog from './add-meal-slots-dialog';
 

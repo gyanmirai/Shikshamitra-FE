@@ -2,8 +2,14 @@
 
 import React from 'react';
 import * as Yup from 'yup';
+import { Iconify } from 'src/components/iconify';
+import { varAlpha } from 'src/theme/styles/utils';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import { Form, Field, Formik, useFormik } from 'formik';
-
+import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import {
   Box,
@@ -24,23 +30,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { varAlpha } from 'src/theme/styles/utils';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
-const initialValues = {
-  report: '',
-  category: 'All',
-  year: 'All',
-  startDate: null,
-  endDate: null,
-};
+const initialValues = { report: '', category: 'All', year: 'All', startDate: null, endDate: null };
 
 const validationSchema = Yup.object().shape({
   report: Yup.string().required('Report is required'),
@@ -100,7 +90,7 @@ const LibraryReportsScreen = () => {
           <Form>
             <Card sx={{ p: 2, mb: 2 }}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <Field as={FormControl} error={touched.report && errors.report} fullWidth>
                     <CustomSelect
                       label="Select Report Type"
@@ -113,7 +103,7 @@ const LibraryReportsScreen = () => {
                   </Field>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <Field as={FormControl} error={touched.startDate && errors.startDate} fullWidth>
                     <DatePicker
                       label="Start Date"
@@ -126,7 +116,7 @@ const LibraryReportsScreen = () => {
                   </Field>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <Field as={FormControl} error={touched.endDate && errors.endDate} fullWidth>
                     <DatePicker
                       label="End Date"
@@ -138,7 +128,7 @@ const LibraryReportsScreen = () => {
                     <FormHelperText>{touched.endDate && errors.endDate}</FormHelperText>
                   </Field>
                 </Grid>
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <CustomSelect
                     label="Standard"
                     name="category"
@@ -147,7 +137,7 @@ const LibraryReportsScreen = () => {
                     onChange={(value) => setFieldValue('category', value)}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <CustomSelect
                     label="Division"
                     name="category"
@@ -156,7 +146,7 @@ const LibraryReportsScreen = () => {
                     onChange={(value) => setFieldValue('category', value)}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <Autocomplete
                     loading={false}
                     noOptionsText="No Student Found"
@@ -185,7 +175,7 @@ const LibraryReportsScreen = () => {
                 </Grid>
 
                 {(values.report === 'inventory' || values.report === 'circulation') && (
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} fullWidth>
                       <CustomSelect
                         label="Book Category"
@@ -199,7 +189,7 @@ const LibraryReportsScreen = () => {
                 )}
 
                 {(values.report === 'inventory' || values.report === 'reservation') && (
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} fullWidth>
                       <CustomSelect
                         label="Year"
@@ -213,16 +203,18 @@ const LibraryReportsScreen = () => {
                 )}
               </Grid>
               <Box pt="20px" />
-              <Grid item xs={12} justifyContent="flex-end" display="flex" gap={3}>
+              <Grid size={12} justifyContent="flex-end" display="flex" gap={3}>
                 <Button
                   startIcon={<Iconify icon="ion:download" />}
                   variant="contained"
                   color="primary"
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     color: 'primary.main',
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -234,10 +226,12 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="warning"
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
                     color: 'warning.main',
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -248,11 +242,12 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="secondary"
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
                     color: 'secondary.main',
                     '&:hover': {
                       backgroundColor: (theme) =>
-                        varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                        varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -264,10 +259,12 @@ const LibraryReportsScreen = () => {
                   variant="contained"
                   color="primary"
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     color: 'primary.main',
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     },
                   }}
                 >

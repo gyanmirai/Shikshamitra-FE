@@ -1,6 +1,22 @@
 import { capitalize } from 'lodash';
-
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import PhoneInput from 'src/components/phone-input';
+import { UploadAvatar } from 'src/components/upload';
+import { fileToBase64 } from 'src/utils/file-to-base64';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import { GenderType, GenderTypeArray } from 'src/enums/gender';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
+import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
+import {
+  CardActions,
+  SectionCard,
+} from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
   Grid,
@@ -14,27 +30,6 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { fileToBase64 } from 'src/utils/file-to-base64';
-
-import { GenderType, GenderTypeArray } from 'src/enums/gender';
-import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
-import {
-  CardActions,
-  SectionCard,
-} from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
-import { Iconify } from 'src/components/iconify';
-import PhoneInput from 'src/components/phone-input';
-import { UploadAvatar } from 'src/components/upload';
-import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CityComponent from 'src/components/stardard-address/city-component';
-import StateComponent from 'src/components/stardard-address/state-component';
-import CountryComponent from 'src/components/stardard-address/country-component';
-
 import RenderBoard from './RenderBoard';
 import RenderClass from './RenderClass';
 import RenderMedium from './RenderMedium';
@@ -44,7 +39,7 @@ import RenderInquiryPrefrance from './RenderInquiryPrefrance';
 import type { FieldsType } from './type';
 
 const RenderGeneralFormFields = (props: any) => {
-  const { formik, isEdit: disabled, isMainForm = false } = props;
+  const { formik, isMainForm = false } = props;
   const isGeneralFormEditable = useBoolean(isMainForm);
   const isStudentDetailsEditable = useBoolean(isMainForm);
   const isContactDetailsEditable = useBoolean(isMainForm);
@@ -79,7 +74,7 @@ const RenderGeneralFormFields = (props: any) => {
           )
         }
       >
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField error={formik.touched.formNo && Boolean(formik.errors.formNo)}>
             <TextField
               fullWidth
@@ -95,16 +90,16 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <RenderAcademicYear {...props} isEdit={Boolean(isGeneralFormEditable.value)} />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <RenderBoard {...props} isEdit={Boolean(isGeneralFormEditable.value)} />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <RenderMedium {...props} isEdit={Boolean(isGeneralFormEditable.value)} />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <RenderClass {...props} isEdit={Boolean(isGeneralFormEditable.value)} />
         </Grid>
       </SectionCard>
@@ -122,7 +117,7 @@ const RenderGeneralFormFields = (props: any) => {
           )
         }
       >
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <UploadAvatar
             maxSize={3145728}
             onDrop={async (acceptedFiles: File[]) => {
@@ -143,9 +138,9 @@ const RenderGeneralFormFields = (props: any) => {
             disabled={!isStudentDetailsEditable.value}
           />
         </Grid>
-        <Grid item xs={12} md={9}>
+        <Grid size={{ xs: 12, md: 9 }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField
                 error={formik.touched.firstName && Boolean(formik.errors.firstName)}
               >
@@ -170,7 +165,7 @@ const RenderGeneralFormFields = (props: any) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField
                 error={formik.touched.middleName && Boolean(formik.errors.middleName)}
               >
@@ -194,7 +189,7 @@ const RenderGeneralFormFields = (props: any) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={formik.touched.lastName && Boolean(formik.errors.lastName)}>
                 <TextField
                   key="lastName"
@@ -216,7 +211,7 @@ const RenderGeneralFormFields = (props: any) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={formik.touched.dob && Boolean(formik.errors.dob)}>
                 <DatePicker
                   label="Date of Birth *"
@@ -247,7 +242,7 @@ const RenderGeneralFormFields = (props: any) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Box display="flex" alignItems="center">
                 <FormLabel
                   sx={{
@@ -298,7 +293,7 @@ const RenderGeneralFormFields = (props: any) => {
           )
         }
       >
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={
               formik.touched.primaryContactNumber && Boolean(formik.errors.primaryContactNumber)
@@ -323,7 +318,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={
               formik.touched.secondaryContactNumber && Boolean(formik.errors.secondaryContactNumber)
@@ -351,7 +346,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={formik.touched.email && Boolean(formik.errors.email)}>
             <TextField
               key="email"
@@ -396,7 +391,7 @@ const RenderGeneralFormFields = (props: any) => {
           )
         }
       >
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField error={formik.touched.adharNo && Boolean(formik.errors.adharNo)}>
             <TextField
               key="adharNo"
@@ -432,7 +427,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField error={formik.touched.apparId && Boolean(formik.errors.apparId)}>
             <TextField
               key="apparId"
@@ -468,7 +463,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField error={formik.touched.panNo && Boolean(formik.errors.panNo)}>
             <TextField
               key="panNo"
@@ -497,14 +492,14 @@ const RenderGeneralFormFields = (props: any) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField
             error={formik.touched.inquiryPreference && Boolean(formik.errors.inquiryPreference)}
           >
             <RenderInquiryPrefrance {...props} disabled={!isIdentificationEditable.value} />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField error={formik.touched.religion && Boolean(formik.errors.religion)}>
             <CustomSelect
               labelId="religion-label"
@@ -534,7 +529,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}>
             <TextField
               key="familyCast *"
@@ -560,7 +555,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField
             error={formik.touched.castCategory && Boolean(formik.errors.castCategory)}
           >
@@ -585,7 +580,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField
             error={formik.touched.nationality && Boolean(formik.errors.nationality)}
           >
@@ -613,7 +608,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField error={formik.touched.birthPlace && Boolean(formik.errors.birthPlace)}>
             <TextField
               key="birthPlace"
@@ -639,7 +634,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField
             error={formik.touched.motherTongue && Boolean(formik.errors.motherTongue)}
           >
@@ -681,7 +676,7 @@ const RenderGeneralFormFields = (props: any) => {
           )
         }
       >
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField
             error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
           >
@@ -700,7 +695,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField
             error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
           >
@@ -719,7 +714,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField
             error={formik.touched.addressLine3 && Boolean(formik.errors.addressLine3)}
           >
@@ -738,7 +733,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField error={formik.touched.country && Boolean(formik.errors.country)}>
             <CountryComponent
               value={formik.values.country}
@@ -757,7 +752,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField error={formik.touched.state && Boolean(formik.errors.state)}>
             <StateComponent
               value={formik.values.state}
@@ -780,7 +775,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField error={formik.touched.city && Boolean(formik.errors.city)}>
             <CityComponent
               value={formik.values.city}
@@ -798,7 +793,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField error={formik.touched.pinCode && Boolean(formik.errors.pinCode)}>
             <TextField
               key="pinCode"
@@ -841,7 +836,7 @@ const RenderGeneralFormFields = (props: any) => {
           )
         }
       >
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField
             error={formik.touched.previousSchool && Boolean(formik.errors.previousSchool)}
           >
@@ -872,7 +867,7 @@ const RenderGeneralFormFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <ShakingTextField
             error={formik.touched.lastClassPassed && Boolean(formik.errors.lastClassPassed)}
           >
@@ -906,7 +901,7 @@ export const generalFormFields: FieldsType[] = [
     label: 'Inquiry No',
     type: 'text',
     otherProps: { disabled: true, autoFocus: true },
-    gridProps: { xs: 12, md: 12 },
+    gridProps: { size: { xs: 12, md: 12 } },
     renderComp(props) {
       return <RenderGeneralFormFields {...props} />;
     },

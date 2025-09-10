@@ -1,15 +1,14 @@
 'use client';
 
 import React from 'react';
-
-import { Grid, Card, alpha, useTheme } from '@mui/material';
-
+import { Grid, Card } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const AssignmentAnalytics = () => {
   const theme = useTheme();
   return (
-    <Grid item xs={12}>
+    <Grid size={12}>
       <Card sx={{ p: 2 }}>
         <AnalyticsWebsiteVisits
           title="Assignment Analytics"
@@ -22,8 +21,8 @@ const AssignmentAnalytics = () => {
               { name: 'Overdue assignments', data: [51, 67, 47, 97, 40, 57, 24, 60, 24] },
             ],
             colors: [
-              alpha(theme.palette.primary.dark, 0.8),
-              alpha(theme.palette.warning.main, 0.8),
+              alpha(theme.vars.palette.primary.dark, 0.8),
+              alpha(theme.vars.palette.warning.main, 0.8),
               alpha(theme.palette.error.main, 0.8),
             ],
           }}

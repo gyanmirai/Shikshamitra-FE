@@ -1,7 +1,6 @@
 import React from 'react';
-
-import { Card, useTheme } from '@mui/material';
-
+import { Card } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
 
 const AcademicDashbordAnalysisChart = () => {
@@ -17,9 +16,9 @@ const AcademicDashbordAnalysisChart = () => {
             { label: 'Low Performance (20%)', value: 20 },
           ],
           colors: [
-            theme.palette.success.main, // Green for High Performance
-            theme.palette.warning.main, // Orange for Average
-            theme.palette.info.main, // Blue for Low Performance
+            theme.vars.palette.success.main, // Green for High Performance
+            theme.vars.palette.warning.main, // Orange for Average
+            theme.vars.palette.info.main, // Blue for Low Performance
           ],
         }}
         sx={{ boxShadow: 'none' }}

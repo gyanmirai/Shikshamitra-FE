@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-
 import { Grid, Select, MenuItem, Typography } from '@mui/material';
-
 import { BankingBalanceStatistics } from 'src/sections/overview/banking/banking-balance-statistics';
 
 const VehicleStatistics = () => {
@@ -51,10 +49,10 @@ const VehicleStatistics = () => {
   return (
     <Grid container spacing={3}>
       {/* Dropdowns */}
-      <Grid item xs={12}>
+      <Grid size={12}>
         <Typography variant="h6">Select Vehicle and Duration</Typography>
         <Grid container spacing={2}>
-          <Grid item xs={6}>
+          <Grid size={6}>
             <Select fullWidth value={selectedVehicle} onChange={handleVehicleChange} displayEmpty>
               <MenuItem value="Vehicle 1">Vehicle 1</MenuItem>
               <MenuItem value="Vehicle 2">Vehicle 2</MenuItem>
@@ -62,7 +60,7 @@ const VehicleStatistics = () => {
               {/* Add more vehicles as needed */}
             </Select>
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={6}>
             <Select fullWidth value={selectedDuration} onChange={handleDurationChange} displayEmpty>
               <MenuItem value="Weekly">Weekly</MenuItem>
               <MenuItem value="Monthly">Monthly</MenuItem>
@@ -73,7 +71,7 @@ const VehicleStatistics = () => {
       </Grid>
 
       {/* Chart */}
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <BankingBalanceStatistics
           title={`${selectedVehicle} - ${selectedDuration} Statistics`}
           subheader={`Details for ${selectedDuration}`}

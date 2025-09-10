@@ -1,10 +1,7 @@
 import { useState } from 'react';
-
 import { Box, Grid } from '@mui/material';
-
-import subjectDocumentsData from 'src/json/academic/curriculum/subjectsDocuments.json';
-
 import DocumentCard from 'src/components/preview-document/DocumentCard';
+import subjectDocumentsData from 'src/json/academic/curriculum/subjectsDocuments.json';
 
 import type { ISubjectDetail } from '../type';
 
@@ -56,7 +53,7 @@ const SubjectDocument = ({ subject }: { subject: ISubjectDetail | null }) => {
     <Box>
       <Grid container spacing={2}>
         {documentsList.map((doc: any, index: number) => (
-          <Grid item xs={12} md={6} lg={4} key={index}>
+          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
             <DocumentCard file={doc} />
           </Grid>
         ))}

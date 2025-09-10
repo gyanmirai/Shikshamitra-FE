@@ -3,23 +3,18 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
-import React, { useState, useEffect } from 'react';
-
-import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Button, Switch, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { formatNumber } from 'src/utils/formate_number';
-
-import hostelFeeData from 'src/json/hostel/hostelFeeStructure/hostel-fee-data.json';
-import FinanceEditFeeStructureSettingDialog from 'src/screens/finance/settings/fee-structure/component/finance-edit-fee-structure-setting-dialog';
-
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
+import LoadingButton from '@mui/lab/LoadingButton';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
+import { Box, Button, Switch, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
+import hostelFeeData from 'src/json/hostel/hostelFeeStructure/hostel-fee-data.json';
+import FinanceEditFeeStructureSettingDialog from 'src/screens/finance/settings/fee-structure/component/finance-edit-fee-structure-setting-dialog';
 
 import HostelFeeCategorySettingDialog from './components/feeStrutureForm';
 

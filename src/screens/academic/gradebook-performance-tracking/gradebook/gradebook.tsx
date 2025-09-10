@@ -5,23 +5,19 @@ import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
-import React, { useState, useEffect, useCallback } from 'react';
-
-import { Box, Chip, Button, Checkbox, MenuItem, MenuList, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import Academic from 'src/screens/student/studentProfile/academic';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import React, { useState, useEffect, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import Academic from 'src/screens/student/studentProfile/academic';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Chip, Button, Checkbox, MenuItem, MenuList, Typography } from '@mui/material';
 
 import ViewResult from './component/viewResult';
 import AssignGrade from './component/assignGradePopup';

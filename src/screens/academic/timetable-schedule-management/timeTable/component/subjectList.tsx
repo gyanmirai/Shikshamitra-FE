@@ -3,15 +3,12 @@
 import type { RootState } from 'src/redux/store';
 
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
-import { Box, Paper, Stack, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Paper, Stack, Typography } from '@mui/material';
 
 import CreateNoOfLecture from '../../settings/components/weeklyLectures/createWeeklyLectures';
 

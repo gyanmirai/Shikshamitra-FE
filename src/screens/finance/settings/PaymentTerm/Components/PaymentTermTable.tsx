@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-
 import { Box } from '@mui/material';
-
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -14,7 +12,6 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   addPaymentTerm,
   setEditData,
   onEdit,
-  onDelete,
   editData,
 }) => (
   <CustomizableTable
@@ -55,7 +52,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
       },
       {
         id: 'action',
-        label: 'Actions',
+        label: 'Action',
         align: 'left',
         isSort: false,
         isFilter: false,
@@ -65,9 +62,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
           <ThreeDotsActions
             showThreeDots={false}
             showEditIcon
-            showDeleteIcon
             handleEditClick={() => onEdit?.(row as IPaymentTerm)}
-            handleDeleteClick={() => onDelete?.(row as IPaymentTerm)}
           />
         ),
       },

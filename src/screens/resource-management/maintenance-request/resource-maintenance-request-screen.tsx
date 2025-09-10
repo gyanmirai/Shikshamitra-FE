@@ -1,10 +1,8 @@
 'use client';
 
 import React from 'react';
-
 import { Grid } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ResourceMaintenanceRequestTable from './component/resource-maintenance-request-table';
@@ -17,7 +15,7 @@ const ResourceMaintenanceRequestScreen = () => {
       <CustomBreadcrumbs heading="Maintenance Request" links={links} sx={{ px: 1, mb: 2 }} />
 
       <Grid container spacing={2}>
-        <Grid item xs={6} lg={3} pb="20px">
+        <Grid size={{ xs: 6, lg: 3 }} pb="20px">
           <DatePicker
             label="From Date"
             format="DD-MM-YYYY"
@@ -32,7 +30,7 @@ const ResourceMaintenanceRequestScreen = () => {
           />
         </Grid>
 
-        <Grid item xs={6} lg={3} pb="20px">
+        <Grid size={{ xs: 6, lg: 3 }} pb="20px">
           <DatePicker
             label="To Date"
             format="DD-MM-YYYY"

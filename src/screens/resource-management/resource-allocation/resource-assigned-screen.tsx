@@ -1,11 +1,8 @@
 'use client';
 
 import React from 'react';
-
 import { Box, Grid } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -30,7 +27,7 @@ const ResourceAssignedScreen = () => {
       </Box>
 
       <Grid container spacing={2} mb={5} mt={1}>
-        <Grid item lg={3}>
+        <Grid size={{ lg: 3 }}>
           <CustomSelect
             autoFocus
             label="Select Resource"
@@ -39,7 +36,7 @@ const ResourceAssignedScreen = () => {
             onChange={() => {}}
           />
         </Grid>
-        <Grid item lg={3}>
+        <Grid size={{ lg: 3 }}>
           <CustomSelect
             autoFocus
             label="Select Category"

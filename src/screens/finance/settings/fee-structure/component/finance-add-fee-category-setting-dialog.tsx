@@ -3,26 +3,21 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
-import { useDispatch, useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Grid, Card, Button, TextField, DialogActions } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-import capitalizeWords from 'src/utils/capitalizeText';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
+import capitalizeWords from 'src/utils/capitalizeText';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Grid, Card, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { feeStructurevalidationSchema } from '../validationSchema';
@@ -180,7 +175,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <Scrollbar sx={{ height: 'calc(100vh - 260px)', p: 2 }}>
             <Grid container spacing={3} py="30px">
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
                 >
@@ -196,8 +191,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                     disabled={isFieldsDisabled}
                     error={formik.touched.bookRecipt && Boolean(formik.errors.bookRecipt)}
                     helperText={formik.touched.bookRecipt ? formik.errors.bookRecipt : undefined}
-                    // addOtherItemText="Add Receipt Book"
-                    // addOtherItemOnClick={receiptBookDialog.onTrue}
                   />
                 </ShakingTextField>
                 {receiptBookDialog.value && (
@@ -210,7 +203,8 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                   </CustomDialog>
                 )}
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={formik.touched.applicableGrade && Boolean(formik.errors.applicableGrade)}
                 >
@@ -231,7 +225,8 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}>
                   <CustomSelect
                     label="Fee Head *"
@@ -244,7 +239,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                     onChange={(e) => formik.setFieldValue('feeHead', e)}
                     error={formik.touched.feeHead && Boolean(formik.errors.feeHead)}
                     helperText={formik.touched.feeHead ? formik.errors.feeHead : undefined}
-                    // addOtherItemText="Add Fee Head"
                     addOtherItemOnClick={feeHeadDialog.onTrue}
                   />
                 </ShakingTextField>
@@ -258,7 +252,8 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                   </CustomDialog>
                 )}
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={formik.touched.grossFee && Boolean(formik.errors.grossFee)}
                 >
@@ -269,17 +264,11 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                     name="grossFee"
                     value={formik.values.grossFee}
                     onChange={(e) => {
-                      console.log(e.target.value);
                       const grossFees = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
                       const discountAmount = +(
                         formik.values.discountAmount?.match(/\d/g)?.join('') ?? '0'
                       );
-
-                      // Calculate payable fee
-                      const payableFee = Math.max(grossFees - discountAmount, 0); // Ensure it doesn't go negative
-
-                      // Set the calculated payable fee
-                      formik.setFieldValue('payableFee', payableFee);
+                      formik.setFieldValue('payableFee', Math.max(grossFees - discountAmount, 0));
                       formik.handleChange(e);
                     }}
                     error={formik.touched.grossFee && Boolean(formik.errors.grossFee)}
@@ -287,7 +276,8 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={formik.touched.discountAmount && Boolean(formik.errors.discountAmount)}
                 >
@@ -300,11 +290,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                     onChange={(e) => {
                       const discountAmount = +(e.target.value?.match(/\d/g)?.join('') ?? '0');
                       const grossFees = +(formik.values.grossFee?.match(/\d/g)?.join('') ?? '0');
-                      // Calculate payable fee
-                      const payableFee = Math.max(grossFees - discountAmount, 0); // Ensure it doesn't go negative
-
-                      // Set the calculated payable fee
-                      formik.setFieldValue('payableFee', payableFee);
+                      formik.setFieldValue('payableFee', Math.max(grossFees - discountAmount, 0));
                       formik.handleChange(e);
                     }}
                     error={formik.touched.discountAmount && Boolean(formik.errors.discountAmount)}
@@ -312,7 +298,8 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={formik.touched.discountRemark && Boolean(formik.errors.discountRemark)}
                 >
@@ -322,15 +309,16 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                     label="Discount Remark"
                     name="discountRemark"
                     value={formik.values.discountRemark}
-                    onChange={(e) => {
-                      formik.setFieldValue('discountRemark', capitalizeWords(e.target.value));
-                    }}
+                    onChange={(e) =>
+                      formik.setFieldValue('discountRemark', capitalizeWords(e.target.value))
+                    }
                     error={formik.touched.discountRemark && Boolean(formik.errors.discountRemark)}
                     helperText={formik.touched.discountRemark && formik.errors.discountRemark}
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   size="small"
                   fullWidth
@@ -342,7 +330,8 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                   helperText={formik.touched.payableFee && formik.errors.payableFee}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
                 >
@@ -357,7 +346,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                     value={formik.values.paymentMethod}
                     onChange={(e) => formik.setFieldValue('paymentMethod', e)}
                     error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
-                    // addOtherItemText="Add Payment Method"
                     addOtherItemOnClick={paymentMethodDialog.onTrue}
                     helperText={
                       (formik.touched.paymentMethod && formik.errors.paymentMethod) as string
@@ -374,7 +362,8 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                   </CustomDialog>
                 )}
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={
                     formik.touched.lateFeeChargesType && Boolean(formik.errors.lateFeeChargesType)
@@ -384,7 +373,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                     label="Late Fee Charges Type"
                     options={[
                       { value: 'perDay', label: 'Per Day' },
-
                       { value: 'none', label: 'None' },
                     ]}
                     value={formik.values.lateFeeChargesType}
@@ -397,12 +385,12 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                         ? formik.errors.lateFeeChargesType
                         : undefined
                     }
-                  />{' '}
+                  />
                 </ShakingTextField>
               </Grid>
 
               {formik.values.lateFeeChargesType === 'perDay' && (
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField
                     error={
                       formik.touched.lateFeeChargesAmount &&
@@ -427,7 +415,8 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
                   </ShakingTextField>
                 </Grid>
               )}
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   label="Fees Due Date *"
                   value={formik.values.paymentDueDate}

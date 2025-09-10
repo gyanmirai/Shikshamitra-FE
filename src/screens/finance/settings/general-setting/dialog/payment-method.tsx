@@ -1,8 +1,6 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
 import { Box, Grid, TextField } from '@mui/material';
-
 import SubmitButton from 'src/components/submit-button';
 import ShakingTextField from 'src/components/shaking-text-field';
 
@@ -27,7 +25,7 @@ const PaymentMethodDialog = () => {
     >
       <Box p={2} display="flex" flexDirection="column" gap={3} flexGrow={1}>
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField
               error={formik.touched.paymentMethodName && Boolean(formik.errors.paymentMethodName)}
             >

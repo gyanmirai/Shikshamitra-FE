@@ -3,15 +3,12 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialGuardShiftFormValues } from './initialValue';
@@ -35,7 +32,7 @@ const GuardShiftsForm: React.FC<IGuardShiftFormProps> = ({ isEdit, data, onClose
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} pb="10px">
+              <Grid size={12} pb="10px">
                 <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
                   <TextField
                     disabled={isEdit}
@@ -50,7 +47,7 @@ const GuardShiftsForm: React.FC<IGuardShiftFormProps> = ({ isEdit, data, onClose
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <TimePicker
                   label="Start Time"
                   ampm={false}
@@ -66,7 +63,7 @@ const GuardShiftsForm: React.FC<IGuardShiftFormProps> = ({ isEdit, data, onClose
               </Grid>
 
               {/* End Time */}
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <TimePicker
                   label="End Time"
                   ampm={false}
@@ -80,7 +77,7 @@ const GuardShiftsForm: React.FC<IGuardShiftFormProps> = ({ isEdit, data, onClose
                   slotProps={{ textField: { size: 'small', fullWidth: true } }}
                 />
               </Grid>
-              <Grid item xs={12} pb="10px">
+              <Grid size={12} pb="10px">
                 <ShakingTextField
                   error={formik.touched.description && Boolean(formik.errors.description)}
                 >

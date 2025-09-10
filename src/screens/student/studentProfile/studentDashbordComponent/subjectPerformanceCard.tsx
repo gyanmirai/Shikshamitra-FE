@@ -1,7 +1,5 @@
 import React from 'react';
-
 import { Box, Chip, Stack, Typography, LinearProgress } from '@mui/material';
-
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 interface SubjectPerformanceItemProps {

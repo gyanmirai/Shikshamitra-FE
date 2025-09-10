@@ -4,13 +4,27 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
-import Grid from '@mui/material/Unstable_Grid2/Grid2';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useSelector, useDispatch } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
 import {
   Box,
+  Grid,
   Chip,
   Button,
   TextField,
@@ -18,25 +32,6 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import { Iconify } from 'src/components/iconify/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const BonofiedCertificate = () => {
   const dialog = useBoolean();
@@ -149,11 +144,7 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
   const [allDivision, setAllDivision] = useState<Division[]>([]);
 
   // Get current medium and board from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Initialize form with Formik
   const {
@@ -256,8 +247,8 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
             </Button>
           </Box>
           <Grid container spacing={3}>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.organization && errors.organization) || false}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(touched.organization && errors.organization)}>
                 <CustomSelect
                   options={allOrganization}
                   label="Organization *"
@@ -275,18 +266,16 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
                   }}
                   labelKey="name"
                   valueKey="id"
-                  formControlProps={{
-                    fullWidth: true,
-                    sx: { maxWidth: 'unset' },
-                  }}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   error={!!(touched.organization && errors.organization)}
                   helperText={(touched.organization && errors.organization) as string}
                   disabled={!medium}
                 />
               </ShakingTextField>
             </Grid>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.classes && errors.classes) || false}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(touched.classes && errors.classes)}>
                 <CustomSelect
                   options={allClass}
                   label="Class *"
@@ -300,18 +289,16 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
                   }}
                   labelKey="name"
                   valueKey="id"
-                  formControlProps={{
-                    fullWidth: true,
-                    sx: { maxWidth: 'unset' },
-                  }}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                   disabled={!organization}
                   error={!!(touched.classes && errors.classes)}
                   helperText={(touched.classes && errors.classes) as string}
                 />
               </ShakingTextField>
             </Grid>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.division && errors.division) || false}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(touched.division && errors.division)}>
                 <CustomSelect
                   options={allDivision}
                   label="Division *"
@@ -319,33 +306,28 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
                   onChange={(val) => setFieldValue('division', val as string)}
                   labelKey="name"
                   valueKey="id"
-                  formControlProps={{
-                    fullWidth: true,
-                    sx: { maxWidth: 'unset', width: '100%' },
-                  }}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset', width: '100%' } }}
                   disabled={!classes}
                   error={!!(touched.division && errors.division)}
                   helperText={(touched.division && errors.division) as string}
                 />
               </ShakingTextField>
             </Grid>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.student && errors.student) || false}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(touched.student && errors.student)}>
                 <Autocomplete
                   loading={isLoading}
                   noOptionsText="No Student Found"
                   multiple
                   fullWidth
                   value={values.student}
-                  onChange={(e, value: any) => {
-                    setFieldValue('student', value);
-                  }}
+                  onChange={(e, value: any) => setFieldValue('student', value)}
                   renderTags={(tagValue, getTagProps) =>
                     tagValue.map((option, index) => (
                       <Chip
                         label={option.name}
                         variant="soft"
-                        // color="default"
                         size="small"
                         {...getTagProps({ index })}
                       />
@@ -371,15 +353,14 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
                 />
               </ShakingTextField>
             </Grid>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.creationDate && errors.creationDate) || false}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(touched.creationDate && errors.creationDate)}>
                 <DatePicker
                   label="Creation Date *"
                   value={values.creationDate}
                   disabled
-                  onChange={(newValue) => {
-                    setFieldValue('creationDate', newValue);
-                  }}
+                  onChange={(newValue) => setFieldValue('creationDate', newValue)}
                   slotProps={{
                     textField: {
                       size: 'small',
@@ -391,15 +372,14 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
                 />
               </ShakingTextField>
             </Grid>
-            <Grid xs={12} md={6}>
-              <ShakingTextField error={!!(touched.reason && errors.reason) || false}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(touched.reason && errors.reason)}>
                 <TextField
                   size="small"
                   value={values.reason}
                   onChange={handleChange}
                   name="reason"
-                  // multiline
-                  // rows={3}
                   label="Reason *"
                   fullWidth
                   error={!!(touched.reason && errors.reason)}
@@ -408,7 +388,7 @@ const BonofiedForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => voi
               </ShakingTextField>
             </Grid>
 
-            <Grid xs={12}>
+            <Grid size={{ xs: 12 }}>
               <BonofiedCertificateTemplate1 />
             </Grid>
           </Grid>

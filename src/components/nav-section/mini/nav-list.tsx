@@ -1,13 +1,10 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
-
 import Paper from '@mui/material/Paper';
-import Popover from '@mui/material/Popover';
-import { useTheme } from '@mui/material/styles';
-
-import { usePathname } from 'src/routes/hooks';
-import { isExternalLink } from 'src/routes/utils';
-
 import { paper } from 'src/theme/styles';
+import Popover from '@mui/material/Popover';
+import { usePathname } from 'src/routes/hooks';
+import { useTheme } from '@mui/material/styles';
+import { isExternalLink } from 'src/routes/utils';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 import { NavItem } from './nav-item';
 import { NavUl, NavLi } from '../styles';

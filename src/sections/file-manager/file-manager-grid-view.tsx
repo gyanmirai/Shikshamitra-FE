@@ -1,16 +1,13 @@
 import type { IFile } from 'src/types/file';
 import type { TableProps } from 'src/components/table';
 
-import { useRef, useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Collapse from '@mui/material/Collapse';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useRef, useState, useCallback } from 'react';
 
 import { FileManagerPanel } from './file-manager-panel';
 import { FileManagerFileItem } from './file-manager-file-item';

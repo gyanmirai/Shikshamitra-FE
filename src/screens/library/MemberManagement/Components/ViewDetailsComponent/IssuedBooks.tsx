@@ -1,15 +1,12 @@
 import React from 'react';
-
 import { Box, Chip } from '@mui/material';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetIssuedBooksQuery } from 'src/redux/memberManagement/memberManagementApi';
 import {
   BookIssueStatusTypeColors,
   BookIssueStatusTypeOptions,
 } from 'src/enums/library-status-types';
-
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IMember } from '../type';
 
@@ -23,13 +20,12 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
     currentQueryAndMutation: useGetIssuedBooksQuery,
   });
 
-  return mockIssuedLoading ? (
-    'Loading...'
-  ) : (
+  return (
     <Box>
       <CustomizableTable
         tableId="issued-books-table"
         noDataText="No Issued Books Found"
+        isLoading={mockIssuedLoading}
         columns={[
           { id: 'bookId', label: 'Book Name', align: 'left' },
           { id: 'bookTitle', label: 'Book Category', align: 'left' },
@@ -53,7 +49,7 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
             },
           },
         ]}
-        data={mockIssuedBooks}
+        data={mockIssuedBooks || []}
       />
     </Box>
   );

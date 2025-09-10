@@ -1,12 +1,11 @@
 import type { Theme } from '@mui/material';
 
 import React from 'react';
-
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import { useTheme, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
-
 import { varAlpha } from 'src/theme/styles';
+import AddIcon from '@mui/icons-material/Add';
+import { useTheme } from '@mui/material/styles';
+import RemoveIcon from '@mui/icons-material/Remove';
+import { Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 interface CustomAccordionProps {
   title: string;
@@ -33,11 +32,9 @@ const CustomAccordion: React.FC<CustomAccordionProps> = ({
       sx={{
         boxShadow: 'none',
 
-        color: isActive ? theme.palette.primary.main : theme.palette.text.secondary,
+        color: isActive ? theme.palette.primary.main : theme.vars.palette.text.secondary,
         fontSize: '14px',
-        '&:before': {
-          display: 'none',
-        },
+        '&:before': { display: 'none' },
       }}
     >
       <AccordionSummary
@@ -49,17 +46,13 @@ const CustomAccordion: React.FC<CustomAccordionProps> = ({
           )
         }
         sx={{
-          borderBottom: `1px solid ${theme.palette.divider}`,
+          borderBottom: `1px solid ${theme.vars.palette.divider}`,
           borderLeft: isActive
             ? `2px solid ${theme.palette.primary.main}`
-            : `2px solid ${theme.palette.divider}`,
-          bgcolor: isActive ? varAlpha(theme.palette.primary.mainChannel, 0.08) : 'inherit',
-          '&.Mui-expanded': {
-            minHeight: '40px',
-          },
-          '& .MuiAccordionSummary-content.Mui-expanded': {
-            margin: '0',
-          },
+            : `2px solid ${theme.vars.palette.divider}`,
+          bgcolor: isActive ? varAlpha(theme.vars.palette.primary.mainChannel, 0.08) : 'inherit',
+          '&.Mui-expanded': { minHeight: '40px' },
+          '& .MuiAccordionSummary-content.Mui-expanded': { margin: '0' },
         }}
       >
         <Typography
@@ -69,7 +62,7 @@ const CustomAccordion: React.FC<CustomAccordionProps> = ({
             fontWeight: isActive
               ? theme.typography.fontWeightBold
               : theme.typography.fontWeightMedium,
-            color: isActive ? theme.palette.primary.main : theme.palette.text.secondary,
+            color: isActive ? theme.palette.primary.main : theme.vars.palette.text.secondary,
           }}
         >
           {title}

@@ -1,9 +1,7 @@
 import type { BoxProps } from '@mui/material/Box';
 
 import { m } from 'framer-motion';
-
 import Box from '@mui/material/Box';
-
 import { varAlpha } from 'src/theme/styles';
 
 import { Logo } from '../logo';
@@ -115,7 +113,7 @@ export function AnimateLogo2({ logo, sx, ...other }: AnimateLogoProps) {
               duration: theme.transitions.duration.shorter,
             }),
           background: (theme) =>
-            `linear-gradient(135deg, ${varAlpha(theme.vars.palette.primary.mainChannel, 0)} 50%, ${theme.vars.palette.primary.main} 100%)`,
+            `linear-gradient(135deg, ${varAlpha(theme.vars.palette.primary.mainChannel, 0)} 50%, ${theme.palette.primary.main} 100%)`,
         }}
       />
     </Box>

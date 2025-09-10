@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
 import MainDashboardTeacher from './teacher/main-dashboard-teacher';

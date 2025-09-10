@@ -5,8 +5,17 @@ import type { Medium, Division, Standards, Organization } from 'src/types/school
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
-
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import {
   Box,
@@ -27,20 +36,6 @@ import {
   InputAdornment,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const AttendanceReportScreen = () => (
   <Box>

@@ -4,10 +4,8 @@ import type { ChartOptions } from 'src/components/chart';
 import Card from '@mui/material/Card';
 import Divider from '@mui/material/Divider';
 import CardHeader from '@mui/material/CardHeader';
-import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
 import { fNumber } from 'src/utils/format-number';
-
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
@@ -15,14 +13,7 @@ import { Chart, useChart, ChartLegends } from 'src/components/chart';
 type Props = CardProps & {
   title?: any;
   subheader?: string;
-  chart: {
-    colors?: string[];
-    series: {
-      label: string;
-      value: number;
-    }[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; series: { label: string; value: number }[]; options?: ChartOptions };
 };
 
 export function AttendanceChart({ title, subheader, chart, ...other }: Props) {
@@ -87,21 +78,10 @@ export function YearlyAttendance({ title, subheader, chart, ...other }: any) {
 
   const chartOptions = useChart({
     colors: chartColors,
-    stroke: {
-      width: 2,
-      colors: ['transparent'],
-    },
-    xaxis: {
-      categories: chart.categories,
-    },
-    legend: {
-      show: true,
-    },
-    tooltip: {
-      y: {
-        formatter: (value: number) => `${value}`,
-      },
-    },
+    stroke: { width: 2, colors: ['transparent'] },
+    xaxis: { categories: chart.categories },
+    legend: { show: true },
+    tooltip: { y: { formatter: (value: number) => `${value}` } },
     ...chart.options,
   });
 

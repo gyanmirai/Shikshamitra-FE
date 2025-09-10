@@ -1,16 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { Box, Switch } from '@mui/material';
-
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   NotificationStatusType,
   NotificationStatusOptions,
 } from 'src/enums/notification-status-type';
-
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import EditNotificationDialog from '../edit-notification-dialog';
 
@@ -139,8 +136,6 @@ const notificationsData = [
     ],
   },
 ];
-
-interface RegistrationNotificationManagementProps {}
 
 const RegistrationNotificationManagement = () => {
   // State variable to control the visibility of the EditNotificationDialog.

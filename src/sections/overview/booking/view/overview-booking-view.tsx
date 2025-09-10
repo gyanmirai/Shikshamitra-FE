@@ -1,8 +1,7 @@
 'use client';
 
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Unstable_Grid2';
-
+import { Grid } from '@mui/material';
 import { DashboardContent } from 'src/layouts/dashboard';
 import {
   BookingIllustration,
@@ -25,8 +24,8 @@ import { BookingCustomerReviews } from '../booking-customer-reviews';
 export function OverviewBookingView() {
   return (
     <DashboardContent maxWidth="xl">
-      <Grid container spacing={3} disableEqualOverflow>
-        <Grid xs={12} md={4}>
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <BookingWidgetSummary
             title="Total booking"
             percent={2.6}
@@ -35,7 +34,7 @@ export function OverviewBookingView() {
           />
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <BookingWidgetSummary
             title="Sold"
             percent={0.2}
@@ -44,7 +43,7 @@ export function OverviewBookingView() {
           />
         </Grid>
 
-        <Grid xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <BookingWidgetSummary
             title="Canceled"
             percent={-0.1}
@@ -53,8 +52,8 @@ export function OverviewBookingView() {
           />
         </Grid>
 
-        <Grid container xs={12}>
-          <Grid xs={12} md={7} lg={8}>
+        <Grid container size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, md: 7, lg: 8 }}>
             <Box
               sx={{
                 mb: 3,
@@ -133,7 +132,7 @@ export function OverviewBookingView() {
             />
           </Grid>
 
-          <Grid xs={12} md={5} lg={4}>
+          <Grid size={{ xs: 12, md: 5, lg: 4 }}>
             <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
               <BookingAvailable
                 title="Tours available"
@@ -154,11 +153,11 @@ export function OverviewBookingView() {
           </Grid>
         </Grid>
 
-        <Grid xs={12}>
+        <Grid size={{ xs: 12 }}>
           <BookingNewest title="Newest booking" subheader={`${[].length} bookings`} list={[]} />
         </Grid>
 
-        <Grid xs={12}>
+        <Grid size={{ xs: 12 }}>
           <BookingDetails
             title="Booking details"
             tableData={[]}

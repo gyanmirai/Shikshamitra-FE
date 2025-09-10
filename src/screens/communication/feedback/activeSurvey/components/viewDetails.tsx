@@ -1,15 +1,11 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Card, Chip, Button, Typography } from '@mui/material';
-
-import DetailRow from 'src/screens/communication/announcement/components/detailRow';
-
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-
+import { Box, Card, Chip, Button, Typography } from '@mui/material';
+import DetailRow from 'src/screens/communication/announcement/components/detailRow';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 import { ResponseComponent } from '../../scheduledSurvey/responseComponent';

@@ -1,9 +1,15 @@
 import { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  FeeStructureClassStatusType,
+  FeeStructureClassStatusTypeColors,
+} from 'src/enums/fee-structure-statusType';
 import {
   Box,
   Grid,
@@ -15,16 +21,6 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import {
-  FeeStructureClassStatusType,
-  FeeStructureClassStatusTypeColors,
-} from 'src/enums/fee-structure-statusType';
-
-import CustomDialog from 'src/components/customDialog';
-
 import FeeStructureCard from './FeeStructureCard';
 import AddFeeStructureDialog from './FeeStructureDialog';
 
@@ -35,48 +31,76 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
   // 🔹 Handle Add Fee Structure globally
   console.log('formik values----', formik.values);
 
+  const [currentClickableClass, setCurrentClickableClass] = useState<string | null>(null);
+
   return (
     <>
       {/* Select Classes Section */}
       {Object.keys(formik.values.feeStructureClasses).length > 0 && (
         <SectionCard title="Select Classes">
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Box display="flex" flexWrap="wrap" gap={1}>
               {Object.keys(formik.values.feeStructureClasses).map((className) => {
-                // Highlight by status
                 const firstFeeStructure = formik.values.feeStructureClasses[className]?.[0];
-                const status = firstFeeStructure?.status || FeeStructureClassStatusType.Remaining;
+
+                // Check if class has actual fee structure data (fee items)
+                const hasData =
+                  firstFeeStructure?.feeItems && firstFeeStructure.feeItems.length > 0;
+
+                // Determine status based on currentClickableClass and data availability
+                let status;
+                if (currentClickableClass === className) {
+                  status = FeeStructureClassStatusType.Current;
+                } else if (hasData) {
+                  status = FeeStructureClassStatusType.Completed;
+                } else {
+                  status = FeeStructureClassStatusType.Remaining;
+                }
 
                 return (
                   <Box key={className} textAlign="center">
                     <Button
-                      variant={
-                        status === FeeStructureClassStatusType.Current ? 'contained' : 'outlined'
-                      }
+                      variant={currentClickableClass === className ? 'contained' : 'outlined'}
                       color={
-                        FeeStructureClassStatusTypeColors[status as FeeStructureClassStatusType]
+                        FeeStructureClassStatusTypeColors[status as FeeStructureClassStatusType] ??
+                        'primary'
                       }
                       onClick={() => {
-                        const updatedStatus = { ...formik.values.feeStructureClasses };
+                        // Only allow clicking if class has data or is being set as current
+                        if (hasData || currentClickableClass !== className) {
+                          setCurrentClickableClass(className);
 
-                        Object.keys(updatedStatus).forEach((cls) => {
-                          updatedStatus[cls] = updatedStatus[cls].map((fs: any, idx: number) => {
-                            if (cls === className && idx === 0) {
-                              return { ...fs, status: FeeStructureClassStatusType.Current };
-                            }
-                            if (
-                              fs.status === FeeStructureClassStatusType.Current ||
-                              fs.status === FeeStructureClassStatusType.Completed
-                            ) {
-                              return { ...fs, status: FeeStructureClassStatusType.Completed };
-                            }
-                            return { ...fs, status: FeeStructureClassStatusType.Remaining };
+                          const updatedStatus = { ...formik.values.feeStructureClasses };
+
+                          Object.keys(updatedStatus).forEach((cls) => {
+                            updatedStatus[cls] = updatedStatus[cls].map((fs: any, idx: number) => {
+                              const clsHasData = fs.feeItems && fs.feeItems.length > 0;
+
+                              if (cls === className && idx === 0) {
+                                return { ...fs, status: FeeStructureClassStatusType.Current };
+                              }
+
+                              if (clsHasData) {
+                                return { ...fs, status: FeeStructureClassStatusType.Completed };
+                              }
+
+                              return { ...fs, status: FeeStructureClassStatusType.Remaining };
+                            });
                           });
-                        });
 
-                        formik.setFieldValue('feeStructureClasses', updatedStatus);
+                          formik.setFieldValue('feeStructureClasses', updatedStatus);
+                        }
                       }}
-                      sx={{ minWidth: 80, textTransform: 'none', fontWeight: 500 }}
+                      sx={{
+                        minWidth: 80,
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        // Disable button if it has no data and is not current
+                        ...(!hasData &&
+                          currentClickableClass !== className && {
+                            opacity: 0.6,
+                          }),
+                      }}
                     >
                       {className.replace('Class ', '')}
                     </Button>
@@ -87,7 +111,7 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
           </Grid>
 
           {/* Status Legend */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Box display="flex" alignItems="center" gap={3} mb={2}>
               {[
                 FeeStructureClassStatusType.Current,
@@ -100,10 +124,10 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
 
                 const dotColor =
                   statusKey === FeeStructureClassStatusType.Current
-                    ? theme.palette.success.main
+                    ? theme.vars.palette.success.main
                     : statusKey === FeeStructureClassStatusType.Completed
-                      ? theme.palette.success.light
-                      : theme.palette.grey[400];
+                      ? theme.vars.palette.success.light
+                      : theme.vars.palette.grey[400];
 
                 return (
                   <Box key={statusKey} display="flex" alignItems="center" gap={1}>
@@ -157,7 +181,6 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                   ) || 0;
 
                 return (
-                  //   <Paper sx={{ p: 2, mb: 3 }} elevation={6} key={idx}>
                   <Accordion
                     defaultExpanded
                     sx={{

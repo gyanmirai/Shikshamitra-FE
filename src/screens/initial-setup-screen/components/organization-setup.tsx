@@ -2,7 +2,6 @@ import type { Organization } from 'src/types/school';
 
 import React from 'react';
 import * as Yup from 'yup';
-
 import { Box, Grid, TextField } from '@mui/material';
 
 interface OrganizationValues {
@@ -38,7 +37,7 @@ const OrganizationSetup: React.FC<IOrganizationSetupProps> = (props: IOrganizati
   return (
     <Box sx={{ mt: 2, width: '100%' }}>
       <Grid container spacing={2}>
-        <Grid item xs={6}>
+        <Grid size={6}>
           <TextField
             size="small"
             name="name"

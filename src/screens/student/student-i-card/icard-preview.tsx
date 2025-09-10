@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-
 import { Box, Paper } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import { DraggableField } from 'src/components/icard-creation';
 

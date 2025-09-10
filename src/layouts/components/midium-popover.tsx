@@ -3,13 +3,11 @@
 import type { ButtonBaseProps } from '@mui/material/ButtonBase';
 
 import { useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
-import ButtonBase from '@mui/material/ButtonBase';
-
 import { Iconify } from 'src/components/iconify';
+import ButtonBase from '@mui/material/ButtonBase';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
@@ -51,7 +49,7 @@ export function MediumPopover({ data = [], sx, medium, setMedium, ...other }: Me
         sx={{
           p: 0.5,
           gap: { xs: 0.5, [mediaQuery]: 1 },
-          border: (theme) => `dashed 1px ${theme.vars.palette.error.main}`,
+          border: (theme) => `dashed 1px ${theme.palette.error.main}`,
           borderRadius: 1,
           ...sx,
         }}

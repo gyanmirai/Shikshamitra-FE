@@ -1,11 +1,10 @@
 import type { TypographyProps } from '@mui/material/Typography';
 import type { Variants, UseInViewOptions } from 'framer-motion';
 
-import { useRef, useEffect } from 'react';
-import { m, useInView, useAnimation } from 'framer-motion';
-
 import Box from '@mui/material/Box';
+import { useRef, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
+import { m, useInView, useAnimation } from 'framer-motion';
 
 import { varFade, varContainer } from './variants';
 
@@ -29,6 +28,9 @@ export type AnimateTextProps = TypographyProps & {
   once?: UseInViewOptions['once'];
   amount?: UseInViewOptions['amount'];
 };
+
+// ✅ Motion-enabled Box so we can still use `sx`
+const MotionBox = m(Box);
 
 export function AnimateText({
   sx,
@@ -99,8 +101,8 @@ export function AnimateText({
     >
       <span className={animateTextClasses.srOnly}>{textArray.join(' ')}</span>
 
-      <Box
-        component={m.span}
+      {/* ✅ MotionBox replaces Box component={m.span} */}
+      <MotionBox
         ref={ref}
         initial="initial"
         animate={controls}
@@ -118,7 +120,8 @@ export function AnimateText({
             sx={{ display: 'block' }}
           >
             {line.split(' ').map((word, wordIndex) => {
-              const lastWordInline = line.split(' ')[line.split(' ').length - 1];
+              const words = line.split(' ');
+              const lastWordInline = words[words.length - 1];
 
               return (
                 <Box
@@ -129,16 +132,15 @@ export function AnimateText({
                   sx={{ display: 'inline-block' }}
                 >
                   {word.split('').map((char, charIndex) => (
-                    <Box
-                      component={m.span}
+                    <MotionBox
                       key={`${char}-${charIndex}`}
-                      variants={variants ?? varFade().in}
+                      variants={(variants ?? varFade()?.in) as any}
                       data-index={charIndex}
                       className={animateTextClasses.char}
                       sx={{ display: 'inline-block' }}
                     >
                       {char}
-                    </Box>
+                    </MotionBox>
                   ))}
 
                   {lastWordInline !== word && (
@@ -155,7 +157,7 @@ export function AnimateText({
             })}
           </Box>
         ))}
-      </Box>
+      </MotionBox>
     </Typography>
   );
 }

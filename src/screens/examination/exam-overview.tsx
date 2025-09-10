@@ -1,9 +1,6 @@
 import React from 'react';
-
 import { Box, Switch, Typography } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
-
 import { CalendarView } from 'src/sections/calendar/view';
 
 import type { TabComponentType } from '../hr/leave-request';

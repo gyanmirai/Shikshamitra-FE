@@ -1,5 +1,4 @@
 import React from 'react';
-
 import StudentProgressTracking from 'src/screens/academic/learning-management-system/studentProgress/student-progess-tacking';
 
 const StudentProgressTrackingScreen = () => <StudentProgressTracking />;

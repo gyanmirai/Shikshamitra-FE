@@ -2,11 +2,8 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Typography, DialogActions } from '@mui/material';
-
 import { Editor } from 'src/components/editor';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -14,6 +11,7 @@ import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Typography, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getInitialResourceIncidentValues } from '../initialValue';
@@ -36,7 +34,7 @@ const AddReportLossForm: React.FC<IAddReportLossFormProps> = ({ isEdit, data, on
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Grid container spacing={2}>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.resourceName && Boolean(formik.errors.resourceName)}
               >
@@ -55,7 +53,7 @@ const AddReportLossForm: React.FC<IAddReportLossFormProps> = ({ isEdit, data, on
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.typeOfIncident && Boolean(formik.errors.typeOfIncident)}
               >
@@ -75,7 +73,7 @@ const AddReportLossForm: React.FC<IAddReportLossFormProps> = ({ isEdit, data, on
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.dateOfIncident && Boolean(formik.errors.dateOfIncident)}
               >
@@ -99,7 +97,7 @@ const AddReportLossForm: React.FC<IAddReportLossFormProps> = ({ isEdit, data, on
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={
                   formik.touched.incidentDescription && Boolean(formik.errors.incidentDescription)
@@ -128,7 +126,7 @@ const AddReportLossForm: React.FC<IAddReportLossFormProps> = ({ isEdit, data, on
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} sx={{ pb: '10px' }}>
+            <Grid size={12} sx={{ pb: '10px' }}>
               <UploadBox
                 onDrop={() => {}}
                 placeholder={

@@ -1,17 +1,13 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
-
-import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Grid, Button, TextField, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import capitalizeWords from 'src/utils/capitalizeText';
-
 import { Iconify } from 'src/components/iconify';
+import LoadingButton from '@mui/lab/LoadingButton';
+import { useBoolean } from 'src/hooks/use-boolean';
+import capitalizeWords from 'src/utils/capitalizeText';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Grid, Button, TextField, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
 const HostelPaymentMethodComponent = (props: TabComponentType) => {
@@ -85,80 +81,84 @@ const HostelPaymentMethodComponent = (props: TabComponentType) => {
   };
   return (
     <Box display="flex" flexDirection="column" gap={2}>
-      <Grid item xs={12} md={6}>
-        <Box pt="15px" display="flex" alignItems="center" gap={3}>
-          <TextField
-            autoFocus
-            name="newPaymentMethod"
-            label="Add New Payment Method"
-            size="small"
-            value={newPaymentMethod}
-            onChange={(e) => setNewPaymentMethod(capitalizeWords(e.target.value))}
-          />
-          <Button
-            startIcon={!isEdit && <Iconify icon="ic:outline-plus" />}
-            variant="contained"
-            size="small"
-            onClick={handleAddOrUpdate}
-            disabled={newPaymentMethod.trim() === ''}
-          >
-            {isEdit ? 'Save' : 'Add New Payment Method'}
-          </Button>
-        </Box>
-      </Grid>
-
       <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <CustomizableTable
-            noDataText={<>No Payment Method Found</>}
-            isLoading={false}
-            tableId="payment-methods"
-            isShowedDense={false}
-            isPagination={false}
-            isFilter={false}
-            isSearch={false}
-            columns={[
-              {
-                id: 'paymentMethodName',
-                label: 'Existing Payment Method',
-                render(value) {
-                  return (
-                    <Typography fontSize="12px" sx={{ textTransform: 'capitalize' }}>
-                      {value}
-                    </Typography>
-                  );
+        {/* Add New Payment Method */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Box pt="15px" display="flex" alignItems="center" gap={3}>
+            <TextField
+              autoFocus
+              name="newPaymentMethod"
+              label="Add New Payment Method"
+              size="small"
+              value={newPaymentMethod}
+              onChange={(e) => setNewPaymentMethod(capitalizeWords(e.target.value))}
+            />
+            <Button
+              startIcon={!isEdit && <Iconify icon="ic:outline-plus" />}
+              variant="contained"
+              size="small"
+              onClick={handleAddOrUpdate}
+              disabled={newPaymentMethod.trim() === ''}
+            >
+              {isEdit ? 'Save' : 'Add New Payment Method'}
+            </Button>
+          </Box>
+        </Grid>
+
+        {/* Payment Methods Table */}
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12 }}>
+            <CustomizableTable
+              noDataText={<>No Payment Method Found</>}
+              isLoading={false}
+              tableId="payment-methods"
+              isShowedDense={false}
+              isPagination={false}
+              isFilter={false}
+              isSearch={false}
+              columns={[
+                {
+                  id: 'paymentMethodName',
+                  label: 'Existing Payment Method',
+                  render(value) {
+                    return (
+                      <Typography fontSize="12px" sx={{ textTransform: 'capitalize' }}>
+                        {value}
+                      </Typography>
+                    );
+                  },
                 },
-              },
-              {
-                id: 'action',
-                label: 'Action',
-                isFilter: false,
-                isSort: false,
-                sticky: true,
-                align: 'center',
-                minWidth: 50,
-                render(row, value) {
-                  return (
-                    <ThreeDotsActions
-                      showThreeDots={false}
-                      showDeleteIcon
-                      showEditIcon
-                      handleEditClick={() => handleEdit(value)}
-                      handleDeleteClick={() => {
-                        setSelectedPaymentMethodId(value.id);
-                        setSelectedPaymentMethodName(
-                          value.paymentMethodName.charAt(0).toUpperCase() +
-                            value.paymentMethodName.slice(1).toLowerCase()
-                        );
-                        dialogForDeleteConfirmation.onTrue();
-                      }}
-                    />
-                  );
+                {
+                  id: 'action',
+                  label: 'Action',
+                  isFilter: false,
+                  isSort: false,
+                  sticky: true,
+                  align: 'center',
+                  minWidth: 50,
+                  render(row, value) {
+                    return (
+                      <ThreeDotsActions
+                        showThreeDots={false}
+                        showDeleteIcon
+                        showEditIcon
+                        handleEditClick={() => handleEdit(value)}
+                        handleDeleteClick={() => {
+                          setSelectedPaymentMethodId(value.id);
+                          setSelectedPaymentMethodName(
+                            value.paymentMethodName.charAt(0).toUpperCase() +
+                              value.paymentMethodName.slice(1).toLowerCase()
+                          );
+                          dialogForDeleteConfirmation.onTrue();
+                        }}
+                      />
+                    );
+                  },
                 },
-              },
-            ]}
-            data={data}
-          />
+              ]}
+              data={data}
+            />
+          </Grid>
         </Grid>
       </Grid>
 

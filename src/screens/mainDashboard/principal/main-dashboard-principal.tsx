@@ -1,9 +1,15 @@
 'use client';
 
 import { useFormik } from 'formik';
-import React, { useState, useCallback } from 'react';
-
+import { CONFIG } from 'src/config-global';
 import { useTheme } from '@mui/material/styles';
+import { SvgColor } from 'src/components/svg-color';
+import React, { useState, useCallback } from 'react';
+import { formatNumber } from 'src/utils/formate_number';
+import CustomSelect from 'src/components/custom-select';
+import { AppWelcome } from 'src/sections/overview/app/app-welcome';
+import SeoIllustration from 'src/assets/illustrations/seo-illustration';
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import {
   Box,
   Card,
@@ -14,17 +20,6 @@ import {
   ButtonGroup,
   Autocomplete,
 } from '@mui/material';
-
-import { formatNumber } from 'src/utils/formate_number';
-
-import { CONFIG } from 'src/config-global';
-import SeoIllustration from 'src/assets/illustrations/seo-illustration';
-
-import { SvgColor } from 'src/components/svg-color';
-import CustomSelect from 'src/components/custom-select';
-
-import { AppWelcome } from 'src/sections/overview/app/app-welcome';
-import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 import PerformerCard from '../teacher/component/performer-card';
 import { AnalyticsClassResults } from './component/result-graph';
@@ -105,7 +100,7 @@ const MainDashboardPrincipal = () => {
   );
   return (
     <Grid container spacing={3} px={2} py={3}>
-      <Grid item xs={12}>
+      <Grid size={12}>
         <AppWelcome
           title={`Good Morning 👋 \n Jeet`}
           description="If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything."
@@ -113,8 +108,8 @@ const MainDashboardPrincipal = () => {
         />
       </Grid>
 
-      <Grid container spacing={3} item xs={12}>
-        <Grid item xs={12} md={4}>
+      <Grid container spacing={3} size={12}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <PrincipalDashboardCard
             dropdownLabel="Select Class"
             icon="hugeicons:students"
@@ -139,7 +134,7 @@ const MainDashboardPrincipal = () => {
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <PrincipalDashboardCard
             icon="clarity:employee-group-solid"
             title="Total Employees"
@@ -162,7 +157,7 @@ const MainDashboardPrincipal = () => {
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <PrincipalDashboardCard
             dropdownLabel="Select Month"
             icon="noto:receipt"
@@ -186,7 +181,8 @@ const MainDashboardPrincipal = () => {
           />
         </Grid>
       </Grid>
-      <Grid item xs={12} lg={4}>
+
+      <Grid size={{ xs: 12, lg: 4 }}>
         <PerformerCard
           title="Needs improvement"
           subheader="Based on The latest Exam"
@@ -194,7 +190,8 @@ const MainDashboardPrincipal = () => {
           options={subjectOptions}
         />
       </Grid>
-      <Grid item xs={12} lg={4}>
+
+      <Grid size={{ xs: 12, lg: 4 }}>
         <PerformerCard
           title="Top Performers"
           subheader="Based on The latest Exam"
@@ -202,7 +199,8 @@ const MainDashboardPrincipal = () => {
           options={subjectOptions}
         />
       </Grid>
-      <Grid item xs={12}>
+
+      <Grid size={12}>
         <Card sx={{ boxShadow: 'var(--shadows-2)' }}>
           <AnalyticsWebsiteVisits
             firstDropdownOnChange={() => {}}
@@ -240,26 +238,20 @@ const MainDashboardPrincipal = () => {
         </Card>
       </Grid>
 
-      <Grid item lg={4} px={1}>
-        <Card
-          sx={{
-            p: 2,
-            cursor: 'pointer',
-            height: '100%',
-          }}
-        >
+      <Grid size={{ lg: 4 }} px={1}>
+        <Card sx={{ p: 2, cursor: 'pointer', height: '100%' }}>
           <WhatsNewInMonthComponent birthdays={[]} events={[]} timeOffRequests={[]} />
         </Card>
       </Grid>
 
-      <Grid item lg={8}>
+      <Grid size={{ lg: 8 }}>
         <Typography sx={{ pt: '13px' }} variant="h6" fontWeight={600} mb="24px">
           Exam Overview
         </Typography>
-
         <ExamOverviewForPrincipal />
       </Grid>
-      <Grid item lg={12} px={1}>
+
+      <Grid size={{ lg: 12 }} px={1}>
         <Card sx={{ boxShadow: 'var(--shadows-2)' }}>
           <AnalyticsClassResults
             title="Class & Subject Wise Results"
@@ -267,7 +259,8 @@ const MainDashboardPrincipal = () => {
           />
         </Card>
       </Grid>
-      <Grid item xs={12}>
+
+      <Grid size={12}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <ButtonGroup>
@@ -312,6 +305,7 @@ const MainDashboardPrincipal = () => {
                 />
               </>
             )}
+
             {timeTable === 'employee' && (
               <Autocomplete
                 options={[

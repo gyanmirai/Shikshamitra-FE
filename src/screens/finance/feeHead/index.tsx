@@ -3,23 +3,20 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadApi/feeHeadApi';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetFeeHeadsQuery } from 'src/redux/feeHeadApi/feeHeadApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import FeeHeadForm from './Components/FeeHeadForm';
 import FeeHeadTable from './Components/FeeHeadTable';
@@ -34,13 +31,14 @@ const FeeHeadCreation = () => {
   });
 
   // Dialog control states
-  const deleteFeeHeadDialog = useBoolean(); // Controls delete confirmation dialog
   const addFeeHeadDialog = useBoolean(); // Controls add/edit fee head dialog
+  const activeDialog = useBoolean(); // Controls active/inactive confirmation dialog
   const [open, setOpen] = useState(false); // Controls main dialog visibility
 
   // State management
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup); // Tracks unsaved changes
   const [selectedFeeHead, setSelectedFeeHead] = useState<IFeeHead | null>(null); // Currently selected fee head for edit/delete
+  const [selectedEntry, setSelectedEntry] = useState<IFeeHead | null>(null);
   const dispatch = useDispatch();
 
   /**
@@ -73,7 +71,7 @@ const FeeHeadCreation = () => {
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Fee Head"
-        description="Manage all fee heads such as Tuition Fee, Exam Fee, and more. Use the actions to edit or delete existing heads. Click ‘Add Fee Head’ to create a new one."
+        description="Manage all fee heads such as Tuition Fee, Exam Fee, and more. Use the actions to edit or delete existing heads. Click '+ Fee Head' to create a new one."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Setting', href: '/finance/setting' },
@@ -91,11 +89,8 @@ const FeeHeadCreation = () => {
         }
         sx={{ px: 1, mb: 2 }}
       />
+
       <FeeHeadTable
-        onDelete={(data) => {
-          setSelectedFeeHead(data);
-          deleteFeeHeadDialog.onTrue();
-        }}
         onEdit={(data) => {
           setSelectedFeeHead(data);
           addFeeHeadDialog.onTrue();
@@ -106,8 +101,13 @@ const FeeHeadCreation = () => {
         editData={selectedFeeHead}
         setEditData={setSelectedFeeHead}
         data={feeHeadData}
+        //  New props for toggle functionality
+        activeDialog={activeDialog}
+        selectedEntry={selectedEntry}
+        setSelectedEntry={setSelectedEntry}
       />
 
+      {/* Add/Edit Fee Head Dialog */}
       <CustomDialog
         open={addFeeHeadDialog.value}
         handleClose={() => {
@@ -139,34 +139,48 @@ const FeeHeadCreation = () => {
         <FeeHeadForm open={addFeeHeadDialog} onClose={handleClose} editData={selectedFeeHead} />
       </CustomDialog>
 
+      {/* Active/Inactive Confirmation Dialog */}
       <ConfirmDialog
-        open={deleteFeeHeadDialog.value}
+        open={activeDialog.value}
         onClose={() => {
-          setSelectedFeeHead(null);
-          deleteFeeHeadDialog.onFalse();
+          setTimeout(() => {
+            setSelectedEntry(null);
+          }, 200);
+          activeDialog.onFalse();
         }}
-        title="Delete"
+        title={selectedEntry?.toggle === true ? 'InActive' : 'Active'}
         content={
           <>
-            Are you sure you want to delete fee head <strong>{selectedFeeHead?.feeHeadName}</strong>
-            ?
+            Are you sure you want move <strong>{selectedEntry?.feeHeadName}</strong> fee head to{' '}
+            {selectedEntry?.toggle === true ? 'InActive' : 'Active'}?
           </>
         }
         action={
           <Button
             variant="contained"
-            color="error"
             size="small"
+            startIcon={
+              <Iconify
+                icon={selectedEntry?.toggle === true ? GlobalIcons.draftIcon : GlobalIcons.publish}
+              />
+            }
             onClick={() => {
-              deleteFeeHeadDialog.onFalse();
-              setSelectedFeeHead(null);
+              const status = selectedEntry?.toggle === true ? 'InActive' : 'Active';
               shikshaMitraToast.success({
-                message: `Fee Head ${selectedFeeHead?.feeHeadName} deleted successfully`,
+                message: (
+                  <>
+                    Fee Head: <strong>{selectedEntry?.feeHeadName}</strong> moved to {status}{' '}
+                    successfully.
+                  </>
+                ),
               });
-              // handle delete action
+              setTimeout(() => {
+                setSelectedEntry(null);
+              }, 200);
+              activeDialog.onFalse();
             }}
           >
-            Yes
+            {selectedEntry?.toggle === true ? 'InActive' : 'Active'}
           </Button>
         }
       />

@@ -1,19 +1,14 @@
 import type { IChatParticipant } from 'src/types/chat';
 
-import { useRef, useMemo, useState, useCallback } from 'react';
-
 import Stack from '@mui/material/Stack';
-import InputBase from '@mui/material/InputBase';
-import IconButton from '@mui/material/IconButton';
-
-import { useRouter } from 'src/routes/hooks';
-
 import { uuidv4 } from 'src/utils/uuidv4';
-import { fSub, today } from 'src/utils/format-time';
-
-import { sendMessage, createConversation } from 'src/actions/chat';
-
+import { useRouter } from 'src/routes/hooks';
+import InputBase from '@mui/material/InputBase';
 import { Iconify } from 'src/components/iconify';
+import IconButton from '@mui/material/IconButton';
+import { fSub, today } from 'src/utils/format-time';
+import { useRef, useMemo, useState, useCallback } from 'react';
+import { sendMessage, createConversation } from 'src/actions/chat';
 
 // ----------------------------------------------------------------------
 

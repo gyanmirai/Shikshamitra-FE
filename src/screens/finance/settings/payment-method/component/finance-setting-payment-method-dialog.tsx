@@ -4,13 +4,10 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
 import { useSelector, useDispatch } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
 import { Iconify } from 'src/components/iconify/iconify';
+import React, { useMemo, useState, useEffect } from 'react';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
 interface FinanceSettingPaymentMethodDialogProps {

@@ -1,31 +1,27 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
+import { varAlpha } from 'src/theme/styles';
 import { Search } from '@mui/icons-material';
+import { Label } from 'src/components/label';
+import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Chart, useChart } from 'src/components/chart';
+import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
+import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 import {
   Box,
   Card,
   Grid,
   Button,
-  useTheme,
   TextField,
   Typography,
   CardHeader,
   InputAdornment,
 } from '@mui/material';
-
-import { varAlpha } from 'src/theme/styles';
-import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
-
-import { Label } from 'src/components/label';
-import { Chart, useChart } from 'src/components/chart';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-
-import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
-import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 // import { EcommerceYearlySales } from 'src/components/studentProfile/academicDashboard';
 
 const ProgressReport = (props: TabComponentType) => (
@@ -40,9 +36,7 @@ const ProgressReport = (props: TabComponentType) => (
         ]}
         onChange={() => {}}
         value=""
-        formControlProps={{
-          sx: { width: '100%', maxWidth: '200px' },
-        }}
+        formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
       />
 
       <CustomSelect
@@ -54,9 +48,7 @@ const ProgressReport = (props: TabComponentType) => (
         ]}
         onChange={() => {}}
         value=""
-        formControlProps={{
-          sx: { width: '100%', maxWidth: '200px' },
-        }}
+        formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
       />
       <CustomSelect
         label="Grading Scale Assignment"
@@ -67,32 +59,20 @@ const ProgressReport = (props: TabComponentType) => (
         ]}
         value=""
         onChange={() => {}}
-        formControlProps={{
-          sx: { width: '100%', maxWidth: '200px' },
-        }}
+        formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
       />
       <DatePicker
         label="Start Date"
-        slotProps={{
-          textField: {
-            sx: { width: '100%', maxWidth: '200px' },
-            size: 'small',
-          },
-        }}
+        slotProps={{ textField: { sx: { width: '100%', maxWidth: '200px' }, size: 'small' } }}
       />
       <DatePicker
         label="End Date"
-        slotProps={{
-          textField: {
-            sx: { width: '100%', maxWidth: '200px' },
-            size: 'small',
-          },
-        }}
+        slotProps={{ textField: { sx: { width: '100%', maxWidth: '200px' }, size: 'small' } }}
       />
       <Button variant="contained">Generate Report</Button>
     </Box>
     <Grid container spacing={3}>
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <AnalyticsWebsiteVisits
           title="Performance by Assignment"
           chart={{
@@ -115,7 +95,8 @@ const ProgressReport = (props: TabComponentType) => (
           sx={{ boxShadow: 'var(--shadows-2)', height: '100%' }}
         />
       </Grid>
-      <Grid item xs={12} md={6}>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="subtitle1">Subject Performance</Typography>
@@ -128,9 +109,7 @@ const ProgressReport = (props: TabComponentType) => (
               ]}
               onChange={() => {}}
               value=""
-              formControlProps={{
-                sx: { width: '100%', maxWidth: '200px' },
-              }}
+              formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
             />
           </Box>
           <AnalyticsCurrentVisits
@@ -147,7 +126,8 @@ const ProgressReport = (props: TabComponentType) => (
           />
         </Card>
       </Grid>
-      <Grid item xs={12}>
+
+      <Grid size={{ xs: 12 }}>
         <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="subtitle1">Performance Over Time</Typography>
@@ -159,15 +139,11 @@ const ProgressReport = (props: TabComponentType) => (
               ]}
               onChange={() => {}}
               value=""
-              formControlProps={{
-                sx: { width: '100%', maxWidth: '200px' },
-              }}
+              formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
             />
           </Box>
           <PerformanceOverTime
             id="demo__4"
-            //   title="Performance Over Time"
-            //   subheader="(+43%) than last year"
             chart={{
               categories: [
                 'Jan',
@@ -183,18 +159,14 @@ const ProgressReport = (props: TabComponentType) => (
                 'Nov',
                 'Dec',
               ],
-              series: [
-                {
-                  name: '',
-                  data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                },
-              ],
+              series: [{ name: '', data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49] }],
             }}
             sx={{ height: '100%', boxShadow: 'none' }}
           />
         </Card>
       </Grid>
-      <Grid item xs={12}>
+
+      <Grid size={{ xs: 12 }}>
         <Typography variant="h6" sx={{ mb: 3 }}>
           Individual Student Reports
         </Typography>
@@ -213,9 +185,7 @@ const ProgressReport = (props: TabComponentType) => (
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
-                  '&:hover': {
-                    boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.2)',
-                  },
+                  '&:hover': { boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.2)' },
                 },
                 mb: 3,
               }}
@@ -227,20 +197,14 @@ const ProgressReport = (props: TabComponentType) => (
               <DatePicker
                 label="Start Date"
                 slotProps={{
-                  textField: {
-                    sx: { width: '100%', maxWidth: '200px' },
-                    size: 'small',
-                  },
+                  textField: { sx: { width: '100%', maxWidth: '200px' }, size: 'small' },
                 }}
               />
               &nbsp;
               <DatePicker
                 label="End Date"
                 slotProps={{
-                  textField: {
-                    sx: { width: '100%', maxWidth: '200px' },
-                    size: 'small',
-                  },
+                  textField: { sx: { width: '100%', maxWidth: '200px' }, size: 'small' },
                 }}
               />
             </Box>
@@ -257,10 +221,7 @@ const ProgressReport = (props: TabComponentType) => (
               formControlProps={{
                 sx: {
                   width: '200px',
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '8px',
-                    height: '40px',
-                  },
+                  '& .MuiOutlinedInput-root': { borderRadius: '8px', height: '40px' },
                 },
               }}
             />
@@ -274,7 +235,7 @@ const ProgressReport = (props: TabComponentType) => (
               borderRadius: '12px',
               maxWidth: '300px',
               width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.3),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.3),
             }}
           >
             <Typography variant="h5" fontWeight="bold" mb={2}>
@@ -285,6 +246,7 @@ const ProgressReport = (props: TabComponentType) => (
             </Typography>
           </Card>
         </Card>
+
         <CustomizableTable
           tableId="demo__5"
           columns={[
@@ -333,7 +295,8 @@ const ProgressReport = (props: TabComponentType) => (
           ]}
         />
       </Grid>
-      <Grid item xs={12} md={6}>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="subtitle1">Performance Over Time</Typography>
@@ -345,15 +308,11 @@ const ProgressReport = (props: TabComponentType) => (
               ]}
               onChange={() => {}}
               value=""
-              formControlProps={{
-                sx: { width: '100%', maxWidth: '200px' },
-              }}
+              formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
             />
           </Box>
           <PerformanceOverTime
             id="demo__4"
-            //   title="Performance Over Time"
-            //   subheader="(+43%) than last year"
             chart={{
               categories: [
                 'Jan',
@@ -369,18 +328,14 @@ const ProgressReport = (props: TabComponentType) => (
                 'Nov',
                 'Dec',
               ],
-              series: [
-                {
-                  name: '',
-                  data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                },
-              ],
+              series: [{ name: '', data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49] }],
             }}
             sx={{ height: '100%', boxShadow: 'none' }}
           />
         </Card>
       </Grid>
-      <Grid item xs={12} md={6}>
+
+      <Grid size={{ xs: 12, md: 6 }}>
         <AppCurrentDownload
           title="Grade Distribution"
           chart={{

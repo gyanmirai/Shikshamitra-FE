@@ -1,10 +1,8 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
-import { Grid, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import SubmitButton from 'src/components/submit-button';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getInitialResourceCategoryValues } from '../initialValue';
@@ -41,7 +39,7 @@ const AddResourceCategoryDialog: React.FC<IAddResourceCategoryDialogProps> = ({ 
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
             >

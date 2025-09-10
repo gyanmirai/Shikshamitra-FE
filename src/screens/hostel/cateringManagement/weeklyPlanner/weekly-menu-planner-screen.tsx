@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import WeeklyPlanningForCatering from './component/weekly-planning-for-catering';

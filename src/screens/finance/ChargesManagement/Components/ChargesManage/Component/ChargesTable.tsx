@@ -1,9 +1,10 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-
+import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
-
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   ChargesPriorityStatus,
   ChargesPriorityStatusOptions,
@@ -13,10 +14,6 @@ import {
   ChargesPaymentStatusColors,
   ChargesPaymentStatusOptions,
 } from 'src/enums/fee-charges-status';
-
-import { Label } from 'src/components/label';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IChargeData } from './type';
 

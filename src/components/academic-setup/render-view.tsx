@@ -8,7 +8,6 @@ import type {
 } from 'src/types/school';
 
 import React from 'react';
-
 import { Card, Tooltip, Typography } from '@mui/material';
 
 import { Label } from '../label';

@@ -1,20 +1,15 @@
 import type { BoxProps } from '@mui/material/Box';
 
-import { useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import { uuidv4 } from 'src/utils/uuidv4';
+import { useState, useCallback } from 'react';
 import TextField from '@mui/material/TextField';
+import { Iconify } from 'src/components/iconify';
+import { createColumn } from 'src/actions/kanban';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { inputBaseClasses } from '@mui/material/InputBase';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { uuidv4 } from 'src/utils/uuidv4';
-
-import { createColumn } from 'src/actions/kanban';
-
-import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 

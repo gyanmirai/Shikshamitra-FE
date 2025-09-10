@@ -1,19 +1,16 @@
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
-
-import { Box, useTheme, Typography, IconButton } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Typography, IconButton } from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
 } from 'src/enums/publishUnpublish-status';
-
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IAssignment, IAssignmentTableProps } from '../type';
 import type { DivisionHomeworkMeta } from '../../homeworkCreation/type';
@@ -102,9 +99,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
             sx={{
               cursor: 'pointer',
               textDecoration: 'underline',
-              '&:hover': {
-                color: 'primary.dark',
-              },
+              '&:hover': { color: 'primary.dark' },
             }}
           >
             Create Assignment
@@ -112,18 +107,8 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
         </>
       }
       columns={[
-        {
-          id: 'title',
-          label: 'Title',
-          align: 'left',
-          filterType: 'string',
-        },
-        {
-          id: 'assignmentType',
-          label: 'Type',
-          align: 'left',
-          filterType: 'string',
-        },
+        { id: 'title', label: 'Title', align: 'left', filterType: 'string' },
+        { id: 'assignmentType', label: 'Type', align: 'left', filterType: 'string' },
         {
           id: 'createdAt',
           label: 'Created On',
@@ -170,8 +155,8 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           render(value, row) {
             const statusColor =
               value === PublishUnpublishStatusType.Published
-                ? theme.palette.success.main
-                : theme.palette.text.secondary;
+                ? theme.vars.palette.success.main
+                : theme.vars.palette.text.secondary;
 
             return (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -215,10 +200,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                           value === PublishUnpublishStatusType.Draft ? 'pointer' : 'not-allowed',
                         '&:hover':
                           value === PublishUnpublishStatusType.Draft
-                            ? {
-                                transform: 'scale(1.1)',
-                                backgroundColor: 'rgba(0,0,0,0.08)',
-                              }
+                            ? { transform: 'scale(1.1)', backgroundColor: 'rgba(0,0,0,0.08)' }
                             : {},
                       }}
                       disabled={value === PublishUnpublishStatusType.Published}
@@ -262,10 +244,9 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                   (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
                 );
 
-                onView({
-                  ...row,
-                  divisionMeta: divisionData,
-                } as IAssignment & { divisionMeta?: DivisionHomeworkMeta });
+                onView({ ...row, divisionMeta: divisionData } as IAssignment & {
+                  divisionMeta?: DivisionHomeworkMeta;
+                });
               }}
               handleDeleteClick={() => onDelete(row as IAssignment)}
             />

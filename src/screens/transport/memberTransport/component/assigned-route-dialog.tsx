@@ -1,6 +1,10 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
+import { Scrollbar } from 'src/components/scrollbar';
+import capitalizeWords from 'src/utils/capitalizeText';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import SubmitButton from 'src/components/submit-button';
 import {
   Box,
   Grid,
@@ -14,13 +18,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import capitalizeWords from 'src/utils/capitalizeText';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import SubmitButton from 'src/components/submit-button';
 
 import {
   availableGrades,
@@ -46,7 +43,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
   isStaff,
   clickFromTable,
 }) => {
-  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState<boolean>(false);
+  const [showExistingEntryMessage] = useState<boolean>(false);
   const [userType, setUserType] = useState<string>('student');
   const [dropoffPoint, setDifferentDropOffPoint] = useState<boolean>(false);
 
@@ -74,8 +71,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
     formik.setFieldValue('name', '');
   };
 
-  const selectedGradeObj = availableGrades.find((g) => g.grade === formik.values.grade);
-  const students = selectedGradeObj ? selectedGradeObj.availableStudents : [];
+  // const selectedGradeObj = availableGrades.find((g) => g.grade === formik.values.grade);
 
   return (
     <CustomDialog maxWidth="md" title="Assigned Route" open={dialogValue} handleClose={onClose}>
@@ -121,7 +117,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
           <Grid container spacing={2} sx={{ mt: '5px' }}>
             {/* Row 1 */}
             {userType === 'student' && isStaff === false && (
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <CustomSelect
                   disabled={isEdit}
                   label="Standard"
@@ -133,7 +129,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
               </Grid>
             )}
             {userType === 'student' && isStaff === false && (
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <CustomSelect
                   disabled={isEdit}
                   label="Division"
@@ -147,7 +143,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
 
             {/* Row 2 */}
             {(userType === 'staff' || isStaff) && (
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <Autocomplete
                   loading={false}
                   noOptionsText="No Employee Found"
@@ -172,7 +168,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
               </Grid>
             )}
             {userType === 'student' && isStaff === false && (
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <Autocomplete
                   loading={false}
                   noOptionsText="No Student Found"
@@ -197,7 +193,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
               </Grid>
             )}
 
-            {/* <Grid item xs={12} md={6}>
+            {/* <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
   
                   name="Preferable Route"
@@ -213,7 +209,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
             {/* Row 3 */}
 
             {!dropoffPoint && (
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   name="Prefrable Pickup/Dropoff Point"
                   label="Prefrable Pickup/Dropoff Point"
@@ -226,7 +222,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
             )}
 
             {dropoffPoint && (
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   name="Prefrable Pickup Point"
                   label="Prefrable Pickup Point"
@@ -238,7 +234,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
               </Grid>
             )}
             {dropoffPoint && (
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   name="Prefrable Dropoff Point"
                   label="Prefrable Dropoff Point"
@@ -250,7 +246,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
               </Grid>
             )}
             {dropoffPoint && (
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <CustomSelect
                   label="Assigned Pickup"
                   options={pickupPointsList}
@@ -261,7 +257,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
               </Grid>
             )}
             {dropoffPoint && (
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <CustomSelect
                   label="Assigned DropOff"
                   options={pickupPointsList}
@@ -272,7 +268,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
               </Grid>
             )}
             {!dropoffPoint && (
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <CustomSelect
                   label="Assigned Pickup/Dropoff Point"
                   options={pickupPointsList}
@@ -283,7 +279,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
               </Grid>
             )}
 
-            <Grid item xs={6}>
+            <Grid size={6}>
               <CustomSelect
                 label="Assigned Route"
                 options={assignedRoutesList}
@@ -293,7 +289,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
               />
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid size={6}>
               <CustomSelect
                 label="Select Vehicle"
                 options={assignedRoutesList}
@@ -303,7 +299,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Select Reason"
                 options={[
@@ -319,7 +315,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
               />
             </Grid>
 
-            <Grid item xs={12} md={12}>
+            <Grid size={12}>
               <TextField
                 multiline
                 rows={3}
@@ -333,7 +329,7 @@ const TransportRouteAssignedDialog: React.FC<ITransportRouteAssignedDialogProps>
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} md={12}>
+            <Grid size={12}>
               <TextField
                 multiline
                 rows={3}

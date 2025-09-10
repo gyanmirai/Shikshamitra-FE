@@ -2,13 +2,11 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
+import { varAlpha } from 'src/theme/styles';
+import { Image } from 'src/components/image';
 import Typography from '@mui/material/Typography';
 import ListItemText from '@mui/material/ListItemText';
-
-import { varAlpha } from 'src/theme/styles';
 import { AvatarShape } from 'src/assets/illustrations';
-
-import { Image } from 'src/components/image';
 
 export type IUserCard = {
   id: string;

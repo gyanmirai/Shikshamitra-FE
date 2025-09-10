@@ -1,7 +1,5 @@
 import { Grid, TextField } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import {
   SectionCard,
   CardActions,
@@ -13,7 +11,7 @@ export const bankDetailsFields: FieldsType[] = [
   {
     name: 'bankName',
     label: 'Bank Name',
-    gridProps: { xs: 12, sm: 12, md: 12 },
+    gridProps: { size: { xs: 12, sm: 12, md: 12 } },
     type: 'text',
     otherProps: { autoFocus: true },
     renderComp(props) {
@@ -91,7 +89,7 @@ const RenderBankDetails = (props: any) => {
           },
         },
       ].map((field) => (
-        <Grid key={field.name} item xs={12} sm={6} md={4}>
+        <Grid key={field.name} size={{ xs: 12, sm: 6, md: 4 }}>
           <TextField
             {...field}
             value={formik.values[field.name]}

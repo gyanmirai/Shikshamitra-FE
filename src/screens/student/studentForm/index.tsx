@@ -3,7 +3,6 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { Form, Field, Formik } from 'formik';
-
 import { Grid, Button, TextField, Typography } from '@mui/material';
 
 interface StudentFormValues {
@@ -91,12 +90,12 @@ const StudentForm: React.FC = () => {
       {({ errors, touched, isSubmitting }) => (
         <Form>
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Typography variant="h4" textAlign="center">
                 Student Form
               </Typography>
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -107,7 +106,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.firstName && errors.firstName}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -118,7 +117,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.lastName && errors.lastName}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -129,7 +128,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.email && errors.email}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -140,7 +139,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.studentId && errors.studentId}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -153,7 +152,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.dateOfBirth && errors.dateOfBirth}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -164,7 +163,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.phoneNumber && errors.phoneNumber}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -175,7 +174,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.address && errors.address}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -186,7 +185,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.city && errors.city}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -197,7 +196,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.state && errors.state}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -208,7 +207,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.zipCode && errors.zipCode}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -219,7 +218,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.major && errors.major}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -232,7 +231,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.gpa && errors.gpa}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -243,7 +242,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.gender && errors.gender}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -254,7 +253,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.nationality && errors.nationality}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -265,7 +264,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.emergencyContact && errors.emergencyContact}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -276,7 +275,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.emergencyPhone && errors.emergencyPhone}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -289,7 +288,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.enrollmentDate && errors.enrollmentDate}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -302,7 +301,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.expectedGraduationDate && errors.expectedGraduationDate}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -313,7 +312,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.currentYear && errors.currentYear}
               />
             </Grid>
-            <Grid item xs={4}>
+            <Grid size={4}>
               <Field
                 as={TextField}
                 fullWidth
@@ -324,7 +323,7 @@ const StudentForm: React.FC = () => {
                 helperText={touched.currentSemester && errors.currentSemester}
               />
             </Grid>
-            <Grid item xs={12} display="flex" justifyContent="end">
+            <Grid size={12} display="flex" justifyContent="end">
               <Button type="submit" variant="contained" disabled={isSubmitting}>
                 Submit
               </Button>

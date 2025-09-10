@@ -1,6 +1,6 @@
 import React from 'react';
 import { NumericFormat } from 'react-number-format';
-
+import { Scrollbar } from 'src/components/scrollbar';
 import { GridExpandMoreIcon } from '@mui/x-data-grid';
 import {
   Box,
@@ -12,8 +12,6 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-
-import { Scrollbar } from 'src/components/scrollbar';
 
 interface FeeStructureViewCardProps {
   className: string;
@@ -38,7 +36,7 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, 
   const totalFeeAmount = feeItems.reduce((sum, item) => sum + (item.amount || 0), 0);
 
   return (
-    <Grid item xs={12} key={className}>
+    <Grid size={12} key={className}>
       <Accordion
         defaultExpanded
         sx={{
@@ -64,7 +62,7 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, 
 
         <AccordionDetails sx={{ width: '100%' }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} sx={{ mt: 2 }}>
+            <Grid size={12} sx={{ mt: 2 }}>
               <Scrollbar sx={{ maxHeight: 300 }}>
                 {feeItems.map((item, index) => (
                   <Paper
@@ -77,25 +75,25 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, 
                     }}
                   >
                     <Grid container spacing={2} alignItems="center">
-                      <Grid item xs={0.5}>
+                      <Grid size={0.5}>
                         <Typography variant="subtitle2">{index + 1}.</Typography>
                       </Grid>
 
-                      <Grid item xs={2}>
+                      <Grid size={2}>
                         <Typography variant="body2" color="text.secondary">
                           Category
                         </Typography>
                         <Typography variant="body1">{item.feeCategory}</Typography>
                       </Grid>
 
-                      <Grid item xs={2}>
+                      <Grid size={2}>
                         <Typography variant="body2" color="text.secondary">
                           Fee Head
                         </Typography>
                         <Typography variant="body1">{item.feeHead}</Typography>
                       </Grid>
 
-                      <Grid item xs={2}>
+                      <Grid size={2}>
                         <Typography variant="body2" color="text.secondary">
                           Amount
                         </Typography>
@@ -109,7 +107,7 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, 
                         </Typography>
                       </Grid>
 
-                      <Grid item xs={2}>
+                      <Grid size={2}>
                         {item.isOneTime ? (
                           <Chip label="One Time" color="info" size="small" />
                         ) : (
@@ -117,7 +115,7 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, 
                         )}
                       </Grid>
 
-                      <Grid item xs={2}>
+                      <Grid size={2}>
                         {item.required ? (
                           <Chip label="Mandatory" color="success" size="small" />
                         ) : (

@@ -1,9 +1,5 @@
-import type { ReadonlyURLSearchParams } from 'next/navigation';
-
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-
-import { isJSONStringified } from 'src/utils/is-json-string';
 
 export type useSearchParamReturnType = [Record<string, string>, (obj: Record<string, any>) => void];
 
@@ -51,51 +47,43 @@ function isFunction<T>(
   return typeof value === 'function';
 }
 
-// Utility function to parse URLSearchParams into an object
-const parseSearchParams = <T>(params: URLSearchParams): T => {
-  const parsedParams: Record<string, any> = {};
-  params.forEach((value, key) => {
-    try {
-      parsedParams[key] =
-        value === 'true' || value === 'false'
-          ? value === 'true'
-          : isJSONStringified(value)
-            ? JSON.parse(value)
-            : value;
-    } catch {
-      parsedParams[key] = value; // Fallback to original value if JSON parsing fails
-    }
+// Helper: Parse search params into an object
+function parseSearchParams<T>(params: URLSearchParams): T {
+  const obj = {} as Record<string, string>;
+  Array.from(params.entries()).forEach(([key, value]) => {
+    obj[key] = value;
   });
-  return parsedParams as T;
-};
+  return obj as T;
+}
 
-const updateSearchParams = <T>(params: URLSearchParams, updates: T | Partial<T>) => {
-  Object.entries(updates as Object).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      params.set(key, typeof value === 'string' ? value : JSON.stringify(value));
-    } else {
+// Helper: Update search params with new values
+function updateSearchParams<T>(params: URLSearchParams, newValues: Partial<T> | T) {
+  Object.entries(newValues as any).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
       params.delete(key);
+    } else {
+      params.set(key, String(value));
     }
   });
-};
+}
 
 export const useNewSearchParam = <T>(
   defaultValues: T = {} as T
 ): [T, (obj: T | Partial<T> | ((params: T) => T)) => void, (key: string) => void, () => void] => {
-  const originalSearchParams = useSearchParams();
-
+  const originalSearchParams = useSearchParams(); // ReadonlyURLSearchParams
   const pathName = usePathname();
   const router = useRouter();
+
+  // Keep values in ref
   const paramsValues = useRef<T>({
     ...defaultValues,
-    ...parseSearchParams(new URLSearchParams(originalSearchParams.toString())),
+    ...parseSearchParams<T>(new URLSearchParams(originalSearchParams.toString())),
   });
 
+  // Convert ReadonlyURLSearchParams -> URLSearchParams
   const searchParams = useMemo(() => {
     const params = new URLSearchParams(originalSearchParams.toString());
-
     updateSearchParams(params, paramsValues.current);
-
     return params;
   }, [originalSearchParams]);
 
@@ -109,45 +97,26 @@ export const useNewSearchParam = <T>(
       const updatedParams = new URLSearchParams(searchParams.toString());
       updateSearchParams(updatedParams, newParams);
 
-      // paramsValues.current = parseSearchParams<T>(updatedParams);
-
       router.push(`${pathName}?${updatedParams.toString()}`);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [allSearchParams, searchParams]
+    [allSearchParams, searchParams, router, pathName]
   );
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const removeSearchParams = useCallback(() => router.push(pathName), []);
+  const removeSearchParams = useCallback(() => {
+    router.push(pathName);
+  }, [router, pathName]);
 
   const removeSearchParamsByKey = useCallback(
     (key: string) => {
-      searchParams.delete(key);
-      delete (allSearchParams as Record<string, string>)[key];
-      router.push(`${pathName}?${searchParams.toString()}`);
+      const updatedParams = new URLSearchParams(searchParams.toString());
+      updatedParams.delete(key);
+
+      router.push(`${pathName}?${updatedParams.toString()}`);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [searchParams]
+    [searchParams, router, pathName]
   );
+
   return [allSearchParams, setSearchParams, removeSearchParamsByKey, removeSearchParams];
-};
-
-export const convertNextJsParamsToObject = (param: ReadonlyURLSearchParams) => {
-  const params = new URLSearchParams(param.toString());
-  const parsedParams: Record<string, any> = {};
-  if (params.size > 0) {
-    params.entries().forEach(([key, value]) => {
-      if (value === 'true' || value === 'false') {
-        parsedParams[key] = value === 'true';
-      } else if (isJSONStringified(value)) {
-        parsedParams[key] = JSON.parse(value);
-      } else {
-        parsedParams[key] = value;
-      }
-    });
-  }
-
-  return parsedParams;
 };
 
 // export const useSearchParam = <T>(defaultValues: T = {} as T) => {

@@ -1,17 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Grid, Switch, TextField, Typography } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Switch, TextField, Typography } from '@mui/material';
 
 const ContentManagementSetting = () => {
   const [isContentModerateVisible, setIsContentModerateVisible] = useState<boolean>(false);
   return (
     <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Grid container spacing={4}>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant="h6" pb={2}>
               Supported File Types
@@ -30,7 +28,7 @@ const ContentManagementSetting = () => {
           </Box>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant="h6" pb={2}>
               Content Moderation

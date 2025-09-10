@@ -1,38 +1,49 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-
-import { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import type { Board, Medium } from 'src/types/school';
 
 import { Add } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
-
+import { useState, useEffect } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import { useSelector, useDispatch } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Card, Button, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeRefundQuery } from 'src/redux/finance/feeRefund';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
-import RefundRequestForm from './Components/RefurnRequestForm';
 import RefundRemarksForm from './Components/RefundRemarksForm';
 import RefundProcessForm from './Components/RefundProcessForm';
 import StudentFeeRefundTable from './Components/FeeRefundTable';
-import NewFeeRequestRefundForm from './Components/NewFeeRequest';
+import FeeRefundFormComponent from './NewRefundForm/RefundForm';
+import FeeRefundReasonApprovalForm from './Components/FeeRefuncRejectApproveForm';
 
 import type { IStudentFeeData } from './type';
 
 const FeeRefund = () => {
+  const {
+    currentYear,
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Local state to store filtered boards based on academic year
+  const [boards, setBoards] = useState([]);
+  const [mediums, setMediums] = useState<Medium[]>([]);
+  const [selectedBoard, setSelectedBoard] = useState<string>('');
+  const [selectedMedium, setSelectedMedium] = useState<string>('');
   // Boolean state to control the visibility of add concession request modal/form
   const addRefundRequest = useBoolean();
-  const createRefundRequest = useBoolean();
   const viewRefundRequest = useBoolean();
   const processRefundDialog = useBoolean();
+  const onConfirmDialg = useBoolean();
+  const [selectedMode, setSelectedMode] = useState('');
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Redux dispatch hook for dispatching actions
@@ -54,125 +65,130 @@ const FeeRefund = () => {
    * @param isSubmit - Boolean indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    // Helper function to reset state with a delay
-    const resetState = () => {
-      setTimeout(() => {
-        setSelectedFeeRefund(null);
-        dispatch(setIsChanges(false));
-      }, 200); // Delay matches dialog close animation duration
-    };
-
-    // If form was submitted or user confirms leaving with unsaved changes
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       setSelectedFeeRefund(null);
-      createRefundRequest.onFalse();
       addRefundRequest.onFalse();
       viewRefundRequest.onFalse();
       processRefundDialog.onFalse();
-      resetState();
-    }
-    // If no unsaved changes, simply close the dialog
-    else if (!isChanges) {
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
       setSelectedFeeRefund(null);
-      createRefundRequest.onFalse();
       addRefundRequest.onFalse();
       viewRefundRequest.onFalse();
       processRefundDialog.onFalse();
-      setTimeout(() => {
-        setSelectedFeeRefund(null);
-      }, 200);
     }
   };
 
+  const handleRequstClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
+      onConfirmDialg.onFalse();
+      setSelectedMode('');
+      setSelectedFeeRefund(null);
+    } else if (!isChanges) {
+      onConfirmDialg.onFalse();
+      setSelectedMode('');
+      setSelectedFeeRefund(null);
+    }
+  };
+  useEffect(() => {
+    // Filter boards based on academic year ID from edit data
+    setBoards(currentYear?.boards);
+    const board = boards?.find((item: any) => item.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums || []);
+  }, [boards, currentYear?.boards, selectedBoard]);
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CustomBreadcrumbs
-        heading="Fee Refund"
-        description="View and manage student concession requests."
-        links={[
-          { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Fee Refund', href: '/finance/fee-refund' },
-        ]}
-        action={
-          <Button
-            onClick={() => createRefundRequest.onTrue()}
-            size="small"
-            startIcon={<Add />}
-            variant="contained"
-          >
-            Fee Refund
-          </Button>
-        }
-        sx={{ px: 1, mb: 2 }}
-      />
-
-      <StudentFeeRefundTable
-        data={feeRefundData}
-        onRequestRefund={(data) => {
-          setSelectedFeeRefund(data);
-          addRefundRequest.onTrue();
-        }}
-        onView={(data) => {
-          setSelectedFeeRefund(data);
-          viewRefundRequest.onTrue();
-        }}
-        onProcessRefund={(data) => {
-          setSelectedFeeRefund(data);
-          processRefundDialog.onTrue();
-        }}
-      />
-
-      <CustomDialog
-        open={createRefundRequest.value}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Create Fee Refund</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Form to create and submit new fee refund requests."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        handleClose={() => {
-          setSelectedFeeRefund(null);
-          createRefundRequest.onFalse();
-        }}
-        maxWidth="sm"
-      >
-        <NewFeeRequestRefundForm open={createRefundRequest} onClose={handleClose} student={null} />
-      </CustomDialog>
-
-      <CustomDialog
-        open={addRefundRequest.value}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Request Refund</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Form to record and request student fee refunds."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        handleClose={() => {
-          setSelectedFeeRefund(null);
-          addRefundRequest.onFalse();
-        }}
-        maxWidth="sm"
-      >
-        <RefundRequestForm
-          open={addRefundRequest}
-          onClose={handleClose}
-          student={selectedFeeRefund as IStudentFeeData}
+      {addRefundRequest.value ? (
+        <CustomBreadcrumbs
+          heading="Fee Refund"
+          description="Form to record and request student fee refunds."
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fee Refund', href: '/finance/fee-refund' },
+          ]}
+          isBack={addRefundRequest.value}
+          onBack={() => {
+            addRefundRequest.onFalse();
+            setSelectedFeeRefund(null);
+          }}
+          sx={{ px: 1, mb: 2 }}
         />
-      </CustomDialog>
+      ) : (
+        <CustomBreadcrumbs
+          heading="Fee Refund"
+          description="Search for a student and manage fee refund requests by initiating new refund requests."
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fee Refund', href: '/finance/fee-refund' },
+          ]}
+          action={
+            <Button
+              onClick={() => addRefundRequest.onTrue()}
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+            >
+              Fee Refund
+            </Button>
+          }
+          sx={{ px: 1, mb: 2 }}
+        />
+      )}
+
+      {!addRefundRequest.value && (
+        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+          <CustomSelect
+            label="Board"
+            options={boards || []}
+            labelKey="name"
+            valueKey="id"
+            value={selectedBoard}
+            onChange={(value) => {
+              setSelectedBoard(value as string);
+              setSelectedMedium('');
+            }}
+            formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+          />
+          <CustomSelect
+            label="Medium"
+            options={mediums || []}
+            labelKey="name"
+            disabled={!selectedBoard}
+            valueKey="id"
+            value={selectedMedium}
+            onChange={(value) => setSelectedMedium(value as string)}
+            formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+          />
+        </Box>
+      )}
+
+      {!addRefundRequest.value && (
+        <StudentFeeRefundTable
+          data={feeRefundData}
+          onRequestRefund={(data) => {
+            setSelectedFeeRefund(data);
+            addRefundRequest.onTrue();
+          }}
+          onView={(data) => {
+            setSelectedFeeRefund(data);
+            viewRefundRequest.onTrue();
+          }}
+          onProcessRefund={(data) => {
+            setSelectedFeeRefund(data);
+            processRefundDialog.onTrue();
+          }}
+        />
+      )}
+
+      {addRefundRequest.value && (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <FeeRefundFormComponent
+            onCancel={handleClose}
+            student={selectedFeeRefund as IStudentFeeData}
+          />
+        </Card>
+      )}
 
       <CustomDialog
         open={viewRefundRequest.value}
@@ -197,8 +213,21 @@ const FeeRefund = () => {
       >
         <RefundRemarksForm
           open={viewRefundRequest}
-          onClose={handleClose}
+          onClose={() => {
+            viewRefundRequest.onFalse();
+            setSelectedFeeRefund(null);
+          }}
           student={selectedFeeRefund as IStudentFeeData}
+          onApprove={() => {
+            onConfirmDialg.onTrue();
+            setSelectedMode('Approve');
+            // Handle approve logic
+          }}
+          onReject={() => {
+            onConfirmDialg.onTrue();
+            setSelectedMode('Reject');
+            // Handle reject logic
+          }}
         />
       </CustomDialog>
 
@@ -229,46 +258,37 @@ const FeeRefund = () => {
           student={selectedFeeRefund as IStudentFeeData}
         />
       </CustomDialog>
-      {/* <CustomDialog
-        open={viewConcessionRequest.value}
+
+      <CustomDialog
+        open={onConfirmDialg.value}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">View Concession</Typography>
+            <Typography variant="h5">
+              {selectedMode === 'Approve' ? 'Approve Request' : 'Reject Request'}
+            </Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Review the student’s concession request and take action to approve or reject it."
+              title={
+                selectedMode === 'Approve'
+                  ? 'This modal allows the admin to approve a student’s fee refund request by adding remarks and confirming the approval.'
+                  : 'This modal allows the admin to reject a student’s fee refund request by adding remarks and confirming the rejection.'
+              }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>
         }
         handleClose={() => {
-          setSelectedConcession(null);
-          viewConcessionRequest.onFalse();
+          onConfirmDialg.onFalse();
+          setSelectedMode('');
+          setSelectedFeeRefund(null);
         }}
         maxWidth="sm"
       >
-        <ViewConcessionRequest
-          viewConcessionRequest={viewConcessionRequest}
-          onClose={() => {
-            viewConcessionRequest.onFalse();
-            setSelectedConcession(null);
-          }}
-          student={selectedConcessionForView as unknown as IStudentInfo}
-          documents={selectedConcessionForView?.documents}
-          onApprove={() => {
-            // Handle approve logic
-          }}
-          onReject={() => {
-            // Handle reject logic
-          }}
-          onMismatch={() => {
-            // Handle mismatch logic
-          }}
-        />
-      </CustomDialog>  */}
+        <FeeRefundReasonApprovalForm onClose={handleRequstClose} mode={selectedMode} />
+      </CustomDialog>
     </Box>
   );
 };

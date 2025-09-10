@@ -1,14 +1,11 @@
 import { capitalize } from 'lodash';
 import React, { useState } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Add, RemoveCircle } from '@mui/icons-material';
-import { Box, Paper, Button, TextField, IconButton } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import { Add, RemoveCircle } from '@mui/icons-material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Paper, Button, TextField, IconButton } from '@mui/material';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
@@ -140,9 +137,7 @@ const WorkExperiences = (props: any) => {
                         whiteSpace: 'normal',
                       },
                     }}
-                    InputLabelProps={{
-                      sx: { lineHeight: '1.2em' },
-                    }}
+                    InputLabelProps={{ sx: { lineHeight: '1.2em' } }}
                     disabled={!isEditable.value}
                   />
                 </ShakingTextField>
@@ -181,9 +176,7 @@ const WorkExperiences = (props: any) => {
                         whiteSpace: 'normal',
                       },
                     }}
-                    InputLabelProps={{
-                      sx: { lineHeight: '1.2em' },
-                    }}
+                    InputLabelProps={{ sx: { lineHeight: '1.2em' } }}
                   />
                 </ShakingTextField>
               </Box>
@@ -209,9 +202,7 @@ const WorkExperiences = (props: any) => {
                       whiteSpace: 'normal',
                     },
                   }}
-                  InputLabelProps={{
-                    sx: { lineHeight: '1.2em' },
-                  }}
+                  InputLabelProps={{ sx: { lineHeight: '1.2em' } }}
                 />
               </Box>
 
@@ -222,9 +213,7 @@ const WorkExperiences = (props: any) => {
                     setFieldValue(`experiences.${index}.organizationCountry`, value);
                   }}
                   disabled={!isEditable.value}
-                  textFieldProps={{
-                    label: 'Country',
-                  }}
+                  textFieldProps={{ label: 'Country' }}
                   FormHelperTextProps={{
                     sx: {
                       margin: 0,
@@ -233,9 +222,7 @@ const WorkExperiences = (props: any) => {
                       whiteSpace: 'normal',
                     },
                   }}
-                  InputLabelProps={{
-                    sx: { lineHeight: '1.2em' },
-                  }}
+                  InputLabelProps={{ sx: { lineHeight: '1.2em' } }}
                 />
               </Box>
               <Box sx={{ width: '200px' }}>
@@ -247,9 +234,7 @@ const WorkExperiences = (props: any) => {
                   }}
                   disabled={!isEditable.value || !experience.organizationCountry}
                   countryValue={experience.organizationCountry}
-                  textFieldProps={{
-                    label: 'State',
-                  }}
+                  textFieldProps={{ label: 'State' }}
                   FormHelperTextProps={{
                     sx: {
                       margin: 0,
@@ -258,9 +243,7 @@ const WorkExperiences = (props: any) => {
                       whiteSpace: 'normal',
                     },
                   }}
-                  InputLabelProps={{
-                    sx: { lineHeight: '1.2em' },
-                  }}
+                  InputLabelProps={{ sx: { lineHeight: '1.2em' } }}
                 />
                 {/* <TextField
                 fullWidth
@@ -283,9 +266,7 @@ const WorkExperiences = (props: any) => {
                   }}
                   disabled={!isEditable.value || !experience.organizationState}
                   stateValue={experience.organizationState}
-                  textFieldProps={{
-                    label: 'City',
-                  }}
+                  textFieldProps={{ label: 'City' }}
                   FormHelperTextProps={{
                     sx: {
                       margin: 0,
@@ -294,9 +275,7 @@ const WorkExperiences = (props: any) => {
                       whiteSpace: 'normal',
                     },
                   }}
-                  InputLabelProps={{
-                    sx: { lineHeight: '1.2em' },
-                  }}
+                  InputLabelProps={{ sx: { lineHeight: '1.2em' } }}
                 />
                 {/* <TextField
                 fullWidth
@@ -349,9 +328,7 @@ const WorkExperiences = (props: any) => {
                             whiteSpace: 'normal',
                           },
                         },
-                        InputLabelProps: {
-                          sx: { lineHeight: '1.2em' },
-                        },
+                        InputLabelProps: { sx: { lineHeight: '1.2em' } },
                       },
                     }}
                   />
@@ -395,9 +372,7 @@ const WorkExperiences = (props: any) => {
                             whiteSpace: 'normal',
                           },
                         },
-                        InputLabelProps: {
-                          sx: { lineHeight: '1.2em' },
-                        },
+                        InputLabelProps: { sx: { lineHeight: '1.2em' } },
                       },
                     }}
                   />

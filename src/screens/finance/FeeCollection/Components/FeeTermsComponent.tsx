@@ -1,26 +1,15 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-
+import { Label } from 'src/components/label';
+import { useTheme } from '@mui/material/styles';
+import { Scrollbar } from 'src/components/scrollbar';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
-import {
-  Box,
-  Card,
-  Divider,
-  useTheme,
-  Checkbox,
-  Collapse,
-  Typography,
-  IconButton,
-} from '@mui/material';
-
+import { Box, Card, Divider, Checkbox, Collapse, Typography, IconButton } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
-
-import { Label } from 'src/components/label';
-import { Scrollbar } from 'src/components/scrollbar';
 
 import ChargesList from './ChargesList';
 
@@ -58,7 +47,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
         p: 2,
         borderRadius: 2,
         boxShadow: 2,
-        bgcolor: theme.palette.background.paper,
+        bgcolor: theme.vars.palette.background.paper,
         height: '100%',
       }}
     >
@@ -74,12 +63,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
         {terms?.map((term) => (
           <Box
             key={term.id}
-            sx={{
-              border: '1px solid #ddd',
-              borderRadius: 2,
-              mb: 1.5,
-              overflow: 'hidden',
-            }}
+            sx={{ border: '1px solid #ddd', borderRadius: 2, mb: 1.5, overflow: 'hidden' }}
           >
             <Box display="flex" alignItems="center" justifyContent="space-between" p={2}>
               <Box display="flex" alignItems="center" gap={1}>
@@ -119,11 +103,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                     alignItems="center"
                     justifyContent="space-between"
                     p={1}
-                    sx={{
-                      border: '1px solid #eee',
-                      borderRadius: 1,
-                      mb: 1,
-                    }}
+                    sx={{ border: '1px solid #eee', borderRadius: 1, mb: 1 }}
                   >
                     <Typography>{head.name}</Typography>
                     <Box display="flex" alignItems="center" gap={1}>

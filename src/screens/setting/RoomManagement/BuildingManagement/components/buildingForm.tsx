@@ -1,17 +1,13 @@
 import React from 'react';
 import { isNaN } from 'lodash';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getBuildingInitialValues } from './initialValues';
@@ -51,23 +47,13 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
     }
   };
 
-  const onSubmit = (data: FormData) => {
-    // Handle form submission
-    shikshaMitraToast.success({
-      message: editData ? 'Building updated successfully' : 'Building added successfully',
-    });
-    onClose(null, true);
-  };
-
-  console.log('formik values----', formik.values);
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.buildingName && formik.errors.buildingName)}
                 >
@@ -81,12 +67,13 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
                       formik.setFieldValue('buildingName', value);
                     }}
                     size="small"
-                    error={!!(formik.touched.buildingName && formik.errors.buildingName) || false}
+                    error={!!(formik.touched.buildingName && formik.errors.buildingName)}
                     helperText={formik.touched.buildingName && formik.errors.buildingName}
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.totalFloors && formik.errors.totalFloors)}
                 >
@@ -96,131 +83,133 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
                     label="Total Floors *"
                     name="totalFloors"
                     value={formik.values.totalFloors}
-                    onChange={(e) => {
-                      handleTotalFloors(e);
-                    }}
+                    onChange={handleTotalFloors}
                     onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                        e.preventDefault();
-                      }
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
                     }}
                     inputProps={{ min: 0 }}
                     size="small"
-                    error={!!(formik.touched.totalFloors && formik.errors.totalFloors) || false}
+                    error={!!(formik.touched.totalFloors && formik.errors.totalFloors)}
                     helperText={formik.touched.totalFloors && formik.errors.totalFloors}
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <Editor
                   value={formik.values.description}
-                  onChange={(value) => {
-                    formik.setFieldValue('description', value);
-                  }}
+                  onChange={(value) => formik.setFieldValue('description', value)}
                   placeholder="Description"
-                  error={!!(formik.touched.description && formik.errors.description) || false}
+                  error={!!(formik.touched.description && formik.errors.description)}
                   helperText={formik.touched.description && formik.errors.description}
                 />
               </Grid>
-            </Grid>
-            {formik.values.floors.length > 0 && (
-              <Grid item xs={12}>
-                <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
-                  <CustomizableTable
-                    tableId="table-floors-list"
-                    isSearch={false}
-                    isShowedDense={false}
-                    noDataText={<>No Floor&apos;s Found </>}
-                    isFilter={false}
-                    columns={[
-                      {
-                        id: 'id',
-                        label: 'Sr No.',
-                        render: (_value, row) => row.id + 1, // Display 1-based serial number
-                      },
-                      {
-                        id: 'floorName',
-                        label: 'Floor Name',
-                        isFilter: false,
-                        render: (_value, row) => (
-                          <ShakingTextField
-                            error={
-                              !!(
-                                formik.touched.floors?.[row.id]?.floorName &&
-                                (formik.errors.floors?.[row.id] as any)?.floorName
-                              )
-                            }
-                          >
-                            <TextField
-                              fullWidth
-                              label="Floor Name *"
-                              name={`floors.${row.id}.floorName`}
-                              value={formik.values.floors[row.id]?.floorName || ''}
-                              onChange={(e) => {
-                                const val = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                                formik.setFieldValue(`floors.${row.id}.floorName`, val);
-                              }}
-                              size="small"
+
+              {formik.values.floors.length > 0 && (
+                <Grid size={{ xs: 12 }}>
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    gap={2}
+                    maxHeight="500px"
+                    height="100%"
+                  >
+                    <CustomizableTable
+                      tableId="table-floors-list"
+                      isSearch={false}
+                      isShowedDense={false}
+                      noDataText={<>No Floor&apos;s Found</>}
+                      isFilter={false}
+                      columns={[
+                        {
+                          id: 'id',
+                          label: 'Sr No.',
+                          render: (_value, row) => row.id + 1, // 1-based serial number
+                        },
+                        {
+                          id: 'floorName',
+                          label: 'Floor Name',
+                          isFilter: false,
+                          render: (_value, row) => (
+                            <ShakingTextField
                               error={
                                 !!(
                                   formik.touched.floors?.[row.id]?.floorName &&
                                   (formik.errors.floors?.[row.id] as any)?.floorName
                                 )
                               }
-                              helperText={
-                                formik.touched.floors?.[row.id]?.floorName &&
-                                (formik.errors.floors?.[row.id] as any)?.floorName
-                              }
-                              sx={{ minWidth: '100px', width: '100%', mb: 1.5 }}
-                            />
-                          </ShakingTextField>
-                        ),
-                      },
-                      {
-                        id: 'totalRoom',
-                        label: 'Total Room',
-                        isSort: false,
-                        isFilter: false,
-                        render: (_value, row) => (
-                          <ShakingTextField
-                            error={
-                              !!(
-                                formik.touched.floors?.[row.id]?.totalRoom &&
-                                (formik.errors.floors?.[row.id] as any)?.totalRoom
-                              )
-                            }
-                          >
-                            <TextField
-                              fullWidth
-                              label="Total Room *"
-                              name={`floors.${row.id}.totalRoom`}
-                              value={formik.values.floors[row.id]?.totalRoom || ''}
-                              onChange={(e) => {
-                                const val = e.target.value.replace(/[^0-9]/g, '');
-                                formik.setFieldValue(`floors.${row.id}.totalRoom`, val);
-                              }}
-                              size="small"
+                            >
+                              <TextField
+                                fullWidth
+                                label="Floor Name *"
+                                name={`floors.${row.id}.floorName`}
+                                value={formik.values.floors[row.id]?.floorName || ''}
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                                  formik.setFieldValue(`floors.${row.id}.floorName`, val);
+                                }}
+                                size="small"
+                                error={
+                                  !!(
+                                    formik.touched.floors?.[row.id]?.floorName &&
+                                    (formik.errors.floors?.[row.id] as any)?.floorName
+                                  )
+                                }
+                                helperText={
+                                  formik.touched.floors?.[row.id]?.floorName &&
+                                  (formik.errors.floors?.[row.id] as any)?.floorName
+                                }
+                                sx={{ minWidth: '100px', width: '100%', mb: 1.5 }}
+                              />
+                            </ShakingTextField>
+                          ),
+                        },
+                        {
+                          id: 'totalRoom',
+                          label: 'Total Room',
+                          isSort: false,
+                          isFilter: false,
+                          render: (_value, row) => (
+                            <ShakingTextField
                               error={
                                 !!(
                                   formik.touched.floors?.[row.id]?.totalRoom &&
                                   (formik.errors.floors?.[row.id] as any)?.totalRoom
                                 )
                               }
-                              helperText={
-                                formik.touched.floors?.[row.id]?.totalRoom &&
-                                (formik.errors.floors?.[row.id] as any)?.totalRoom
-                              }
-                              sx={{ minWidth: '100px', width: '100%', mb: 1.5 }}
-                            />
-                          </ShakingTextField>
-                        ),
-                      },
-                    ]}
-                    data={formik.values.floors}
-                  />
-                </Box>
-              </Grid>
-            )}
+                            >
+                              <TextField
+                                fullWidth
+                                label="Total Room *"
+                                name={`floors.${row.id}.totalRoom`}
+                                value={formik.values.floors[row.id]?.totalRoom || ''}
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(/[^0-9]/g, '');
+                                  formik.setFieldValue(`floors.${row.id}.totalRoom`, val);
+                                }}
+                                size="small"
+                                error={
+                                  !!(
+                                    formik.touched.floors?.[row.id]?.totalRoom &&
+                                    (formik.errors.floors?.[row.id] as any)?.totalRoom
+                                  )
+                                }
+                                helperText={
+                                  formik.touched.floors?.[row.id]?.totalRoom &&
+                                  (formik.errors.floors?.[row.id] as any)?.totalRoom
+                                }
+                                sx={{ minWidth: '100px', width: '100%', mb: 1.5 }}
+                              />
+                            </ShakingTextField>
+                          ),
+                        },
+                      ]}
+                      data={formik.values.floors}
+                    />
+                  </Box>
+                </Grid>
+              )}
+            </Grid>
           </Scrollbar>
 
           <DialogActions>

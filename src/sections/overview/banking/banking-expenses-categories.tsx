@@ -6,9 +6,7 @@ import Card from '@mui/material/Card';
 import Divider from '@mui/material/Divider';
 import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
-
 import { fCurrency } from 'src/utils/format-number';
-
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
@@ -19,10 +17,7 @@ type Props = CardProps & {
   chart: {
     colors?: string[];
     icons?: React.ReactNode[];
-    series: {
-      label: string;
-      value: number;
-    }[];
+    series: { label: string; value: number }[];
     options?: ChartOptions;
   };
 };
@@ -47,7 +42,7 @@ export function BankingExpensesCategories({ title, subheader, chart, ...other }:
     chart: { offsetY: 12 },
     colors: chartColors,
     labels: chart.series.map((item) => item.label),
-    stroke: { width: 1, colors: [theme.palette.background.paper] },
+    stroke: { width: 1, colors: [theme.vars.palette.background.paper] },
     fill: { opacity: 0.88 },
     tooltip: { y: { formatter: (value: number) => fCurrency(value) } },
     plotOptions: { pie: { donut: { labels: { show: false } } } },
@@ -95,7 +90,7 @@ export function BankingExpensesCategories({ title, subheader, chart, ...other }:
         gridTemplateColumns="repeat(2, 1fr)"
         sx={{ textAlign: 'center', typography: 'h4' }}
       >
-        <Box sx={{ py: 2, borderRight: `dashed 1px ${theme.vars.palette.divider}` }}>
+        <Box sx={{ py: 2, borderRight: `dashed 1px ${theme.palette.divider}` }}>
           <Box sx={{ mb: 1, typography: 'body2', color: 'text.secondary' }}>Categories</Box>9
         </Box>
 

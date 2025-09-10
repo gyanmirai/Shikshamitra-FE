@@ -2,12 +2,10 @@
 
 import type { BoxProps } from '@mui/material/Box';
 
-import { useId, forwardRef } from 'react';
-
 import Box from '@mui/material/Box';
 import NoSsr from '@mui/material/NoSsr';
+import { useId, forwardRef } from 'react';
 import { useTheme } from '@mui/material/styles';
-
 import { RouterLink } from 'src/routes/components';
 
 import { logoClasses } from './classes';
@@ -27,7 +25,7 @@ export const Logo = forwardRef<HTMLDivElement, LogoProps>(
 
     const PRIMARY_LIGHT = theme.vars.palette.primary.light;
 
-    const PRIMARY_MAIN = theme.vars.palette.primary.main;
+    const PRIMARY_MAIN = theme.palette.primary.main;
 
     const PRIMARY_DARK = theme.vars.palette.primary.dark;
 

@@ -1,7 +1,6 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-
 import { Label } from 'src/components/label';
 import CustomizableTable from 'src/components/customizabaleTable';
 

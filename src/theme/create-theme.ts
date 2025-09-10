@@ -1,7 +1,7 @@
 import type { Theme } from '@mui/material/styles';
 import type { SettingsState } from 'src/components/settings';
 
-import { experimental_extendTheme as extendTheme } from '@mui/material/styles';
+import { extendTheme } from '@mui/material/styles';
 
 import { setFont } from './styles/utils';
 import { overridesTheme } from './overrides-theme';
@@ -18,12 +18,10 @@ export function createTheme(settings: SettingsState): Theme {
     direction: settings.direction,
     shape: { borderRadius: 8 },
     components,
-    typography: {
-      ...typography,
-      fontFamily: setFont(settings.fontFamily),
-    },
+    typography: { ...typography, fontFamily: setFont(settings.fontFamily) },
     cssVarPrefix: '',
     shouldSkipGeneratingVar,
+    colorSchemeSelector: 'data-mui-color-scheme',
   };
 
   /**
@@ -34,6 +32,7 @@ export function createTheme(settings: SettingsState): Theme {
   /**
    * 2.Create theme + add locale + update component with settings.
    */
+  // @ts-ignore
   const theme = extendTheme(updateTheme, updateComponentsWithSettings(settings), overridesTheme);
 
   return theme;
@@ -53,9 +52,7 @@ function shouldSkipGeneratingVar(keys: string[], value: string | number): boolea
     // 'transitions',
   ];
 
-  const skipPaletteKeys: {
-    [key: string]: string[];
-  } = {
+  const skipPaletteKeys: { [key: string]: string[] } = {
     global: ['tonalOffset', 'dividerChannel', 'contrastThreshold'],
     grey: ['A100', 'A200', 'A400', 'A700'],
     text: ['icon'],

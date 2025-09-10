@@ -2,18 +2,20 @@ import type { RootState } from 'src/redux/store';
 
 import { toast } from 'sonner';
 import { useMemo, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
-import { Box, Tooltip, Skeleton, IconButton, Typography } from '@mui/material';
-
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import { useSelector, useDispatch } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
+import UploadButton from 'src/components/upload-button';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { convertBase64Format } from 'src/utils/base64Formate';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { DocumentStatusOptions } from 'src/enums/document-statusType';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { DocumentType, DocumentFileType } from 'src/enums/documnet-type';
+import { Box, Tooltip, Skeleton, IconButton, Typography } from '@mui/material';
 import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
 import {
   useUploadDocumentsMutation,
@@ -21,13 +23,6 @@ import {
   useGetStudentDocumentByIdQuery,
   useStudentUpdateDocumentMutation,
 } from 'src/redux/student/registration/registration-api';
-
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import UploadButton from 'src/components/upload-button';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import { DocumentForm } from '../setting/document-type';
 
@@ -139,7 +134,9 @@ export const RenderDocuments = (props: any) => {
                     width={20}
                     sx={{
                       color: (theme) =>
-                        row.statusVal === 'Uploaded' ? 'success.main' : theme.palette.grey[500],
+                        row.statusVal === 'Uploaded'
+                          ? 'success.main'
+                          : theme.vars.palette.grey[500],
                       cursor: 'pointer',
                     }}
                   />
@@ -167,9 +164,7 @@ export const RenderDocuments = (props: any) => {
                     paddingLeft: '0px',
                     justifyContent: 'flex-start',
                     display: 'flex',
-                    '&:hover': {
-                      backgroundColor: 'transparent',
-                    },
+                    '&:hover': { backgroundColor: 'transparent' },
                   }}
                   onChange={async (e) => {
                     const file = e.target.files[0];
@@ -182,9 +177,7 @@ export const RenderDocuments = (props: any) => {
                       );
                     });
                     if (!acceptableFileFormats.includes(file?.type)) {
-                      shikshaMitraToast.error({
-                        message: `Please upload ${row.docType} file`,
-                      });
+                      shikshaMitraToast.error({ message: `Please upload ${row.docType} file` });
                       return;
                     }
                     const myNewFile = new File([file], row.documentName, { type: file.type });
@@ -193,11 +186,7 @@ export const RenderDocuments = (props: any) => {
 
                     toast.promise(
                       row.uploadDocument
-                        ? updateDocument({
-                            documentId: row.uploadDocument.id,
-                            id,
-                            body: formData,
-                          })
+                        ? updateDocument({ documentId: row.uploadDocument.id, id, body: formData })
                         : uploadDocument({ id, body: formData }),
                       {
                         loading: `Uploading Document ${row.documentName}...`,
@@ -332,38 +321,21 @@ export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null 
   });
 
   return (
-    <Box
-      height="60vh"
-      width="100%"
-      sx={{
-        '& iframe img': {
-          height: '100%',
-        },
-      }}
-    >
+    <Box height="60vh" width="100%" sx={{ '& iframe img': { height: '100%' } }}>
       {isLoading ? (
         <Skeleton variant="rectangular" height={300} />
       ) : documents?.contentType === 'application/pdf' ? (
         <Box
           component="iframe"
           src={convertBase64Format(documents.content)}
-          sx={{
-            width: '100%',
-            height: '100%',
-            border: 'none',
-          }}
+          sx={{ width: '100%', height: '100%', border: 'none' }}
           title="Employee Document"
         />
       ) : (
         <Box
           component="img"
           src={convertBase64Format(documents.content)}
-          sx={{
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            objectFit: 'contain',
-          }}
+          sx={{ width: '100%', height: '100%', border: 'none', objectFit: 'contain' }}
           title="Employee Document"
         />
       )}

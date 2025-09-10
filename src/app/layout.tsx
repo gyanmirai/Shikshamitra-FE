@@ -7,10 +7,9 @@ import type { Viewport } from 'next';
 
 import { CONFIG } from 'src/config-global';
 import { primary } from 'src/theme/core/palette';
-import { ThemeProvider } from 'src/theme/theme-provider';
-import { getInitColorSchemeScript } from 'src/theme/color-scheme-script';
-
 import { Snackbar } from 'src/components/snackbar';
+import { InitColorSchemeScript } from '@mui/material';
+import { ThemeProvider } from 'src/theme/theme-provider';
 import { ProgressBar } from 'src/components/progress-bar';
 import { MotionLazy } from 'src/components/animate/motion-lazy';
 import { detectSettings } from 'src/components/settings/server';
@@ -28,9 +27,7 @@ export const viewport: Viewport = {
   themeColor: primary.main,
 };
 
-type Props = {
-  children: React.ReactNode;
-};
+type Props = { children: React.ReactNode };
 
 export default async function RootLayout({ children }: Props) {
   const settings = CONFIG.isStaticExport ? defaultSettings : await detectSettings();
@@ -38,13 +35,17 @@ export default async function RootLayout({ children }: Props) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        {getInitColorSchemeScript}
+        <InitColorSchemeScript
+          attribute="data"
+          modeStorageKey="theme-mode"
+          defaultMode={defaultSettings.colorScheme}
+        />
         <ReduxProvider>
           <KeyboardShortcut />
           <LocalizationProvider>
             <SettingsProvider
               settings={settings}
-              caches={CONFIG.isStaticExport ? 'localStorage' : 'cookie'}
+              // caches={CONFIG.isStaticExport ? 'localStorage' : 'cookie'}
             >
               <ThemeProvider>
                 <MotionLazy>

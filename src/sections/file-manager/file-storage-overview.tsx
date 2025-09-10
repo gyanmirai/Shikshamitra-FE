@@ -5,26 +5,15 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import { useTheme } from '@mui/material/styles';
-
 import { fData } from 'src/utils/format-number';
-
 import { Chart, useChart } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
 
 type Props = CardProps & {
   total: number;
-  data: {
-    name: string;
-    usedStorage: number;
-    filesCount: number;
-    icon: React.ReactNode;
-  }[];
-  chart: {
-    colors?: string[];
-    series: number;
-    options?: ChartOptions;
-  };
+  data: { name: string; usedStorage: number; filesCount: number; icon: React.ReactNode }[];
+  chart: { colors?: string[]; series: number; options?: ChartOptions };
 };
 
 export function FileStorageOverview({ data, total, chart, ...other }: Props) {
@@ -56,7 +45,7 @@ export function FileStorageOverview({ data, total, chart, ...other }: Props) {
           value: { offsetY: -36 },
           total: {
             label: `Used of ${fData(total)} / ${fData(total * 2)}`,
-            color: theme.vars.palette.text.disabled,
+            color: theme.palette.text.disabled,
             fontSize: theme.typography.caption.fontSize as string,
             fontWeight: theme.typography.caption.fontWeight,
           },
@@ -80,14 +69,7 @@ export function FileStorageOverview({ data, total, chart, ...other }: Props) {
 
       <Stack
         spacing={3}
-        sx={{
-          px: 3,
-          pb: 5,
-          mt: -4,
-          zIndex: 1,
-          position: 'relative',
-          bgcolor: 'background.paper',
-        }}
+        sx={{ px: 3, pb: 5, mt: -4, zIndex: 1, position: 'relative', bgcolor: 'background.paper' }}
       >
         {data.map((category) => (
           <Stack

@@ -2,26 +2,21 @@
 
 import type { LabelColor } from 'src/components/label';
 
-import React, { useMemo, useState } from 'react';
-
 import { Add } from '@mui/icons-material';
-import { Box, Tab, Tabs, Button, MenuItem, MenuList, Typography } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-
+import React, { useMemo, useState } from 'react';
+import { Iconify } from 'src/components/iconify';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import facilityData from 'src/json/ResourceManagement/facility/facilityData.json';
+import { Box, Tab, Tabs, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import {
   FacilityStatusType,
   FacilityStatusTypeColor,
   FacilityStatusTypeOptions,
 } from 'src/enums/facility-statusType';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomizableTable from 'src/components/customizabaleTable';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 
 import type { IFacility } from '../facilities-interface';
 

@@ -1,9 +1,12 @@
 import React, { useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useHotkeys } from 'react-hotkeys-hook';
-
+import { varAlpha } from 'src/theme/styles';
 import { Search } from '@mui/icons-material';
+import { Label } from 'src/components/label';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { useTheme } from '@mui/material/styles';
+import { usePopover } from 'src/components/custom-popover';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
   Grid,
@@ -15,17 +18,11 @@ import {
   Typography,
 } from '@mui/material';
 
-import { varAlpha } from 'src/theme/styles';
-
-import { Label } from 'src/components/label';
-import { usePopover } from 'src/components/custom-popover';
-import CustomizableTable from 'src/components/customizabaleTable';
-
 const GlobalSearch = () => {
   const theme = useTheme();
   const popover = usePopover();
   const router = useRouter();
-  const ref = useRef<any>();
+  const ref = useRef<any>(null);
   const isMac =
     typeof window !== 'undefined' &&
     /Macintosh|MacIntel|MacPPC|Mac68K/.test(window.navigator.userAgent);
@@ -163,7 +160,7 @@ const GlobalSearch = () => {
               slotProps={{}}
             />
           </Grid> */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size="small"
@@ -173,7 +170,7 @@ const GlobalSearch = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size="small"
@@ -183,7 +180,7 @@ const GlobalSearch = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size="small"
@@ -193,7 +190,7 @@ const GlobalSearch = () => {
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
               size="small"
@@ -203,7 +200,8 @@ const GlobalSearch = () => {
               inputProps={{ maxLength: 10 }}
             />
           </Grid>
-          <Grid item xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <Box display="flex" justifyContent="flex-end" gap={1}>
               <Button
                 variant="outlined"

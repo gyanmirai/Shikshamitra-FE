@@ -1,10 +1,8 @@
 import React from 'react';
-
-import { Box, Card, Avatar, useTheme, Typography } from '@mui/material';
-
 import { CONFIG } from 'src/config-global';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Avatar, Typography } from '@mui/material';
 
 const { assetURL } = CONFIG.site;
 
@@ -20,7 +18,7 @@ const StudentProfile = ({ studentId }: { studentId: string }) => {
           flexDirection: { xs: 'column', sm: 'row' },
           width: '100%',
           padding: { xs: 2, sm: 2.5, md: 3 },
-          background: theme.palette.background.default,
+          background: theme.vars.palette.background.default,
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
           borderRadius: 3,
           overflow: 'hidden',
@@ -56,7 +54,7 @@ const StudentProfile = ({ studentId }: { studentId: string }) => {
             variant="h5"
             sx={{
               fontWeight: 600,
-              color: theme.palette.text.primary,
+              color: theme.vars.palette.text.primary,
               fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' },
               textAlign: { xs: 'left', sm: 'center' },
             }}
@@ -106,14 +104,7 @@ const StudentProfile = ({ studentId }: { studentId: string }) => {
                   width: '100%',
                 }}
               >
-                <Iconify
-                  width={26}
-                  height={26}
-                  icon={item.icon}
-                  sx={{
-                    color: 'primary.main',
-                  }}
-                />
+                <Iconify width={26} height={26} icon={item.icon} sx={{ color: 'primary.main' }} />
                 <Typography variant="subtitle2" color="text.secondary">
                   {item.label}
                 </Typography>

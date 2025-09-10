@@ -2,11 +2,9 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
 interface AssignGradeProps {
   data?: any;
@@ -29,7 +27,7 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <CustomSelect
                 options={[
                   { value: 'A+', label: 'A+' },
@@ -54,7 +52,7 @@ const AssignGrade: React.FC<AssignGradeProps> = ({ data, onSubmit }: AssignGrade
                 error={formik.touched.grade && Boolean(formik.errors.grade)}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 placeholder="Detailed Feedback"
                 multiline

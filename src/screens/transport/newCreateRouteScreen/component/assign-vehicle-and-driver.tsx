@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-
 import { Box, Grid, TextField } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
 
 const AssignVehicleAndDriver = () => {
@@ -20,7 +18,7 @@ const AssignVehicleAndDriver = () => {
 
   return (
     <Grid container spacing={2} sx={{ mb: 4, mt: 5 }}>
-      <Grid item xs={12} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <TextField
           size="small"
           fullWidth
@@ -35,7 +33,7 @@ const AssignVehicleAndDriver = () => {
           // }}
         />
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <Box height="200px">
           <CustomSelect
             options={[
@@ -53,7 +51,7 @@ const AssignVehicleAndDriver = () => {
           />
         </Box>
       </Grid>
-      <Grid item xs={12} sm={4}>
+      <Grid size={{ xs: 12, sm: 4 }}>
         <CustomSelect
           options={[
             { value: 'driver1', label: 'John Doe - License No: ABC123' },

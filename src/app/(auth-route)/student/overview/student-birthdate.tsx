@@ -1,13 +1,10 @@
-import { Box, Card, Stack, Button, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-
 import { CalendarView } from 'src/sections/calendar/view';
+import { Box, Card, Stack, Button, Typography } from '@mui/material';
 
 import ViewAllBirthday from './view-all-birthday';
 import BirthdayCardProfile from './studentProfileBirthdayCard';

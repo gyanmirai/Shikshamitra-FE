@@ -1,13 +1,11 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Grid, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getInitialIssueResourceValues } from './initialValue';
@@ -47,7 +45,7 @@ const IssueResourceDialog: React.FC<IIssueResourceDialogProps> = ({
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.selectItem && Boolean(formik.errors.selectItem)}
               >
@@ -68,7 +66,7 @@ const IssueResourceDialog: React.FC<IIssueResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
                 <TextField
                   name="quantity"
@@ -83,7 +81,7 @@ const IssueResourceDialog: React.FC<IIssueResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.issuedTo && Boolean(formik.errors.issuedTo)}>
                 <TextField
                   name="issuedTo"
@@ -98,7 +96,7 @@ const IssueResourceDialog: React.FC<IIssueResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField error={formik.touched.purpose && Boolean(formik.errors.purpose)}>
                 <TextField
                   name="purpose"
@@ -114,7 +112,7 @@ const IssueResourceDialog: React.FC<IIssueResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField error={formik.touched.date && Boolean(formik.errors.date)}>
                 <DatePicker
                   label="Date"

@@ -1,9 +1,6 @@
 import React from 'react';
-
 import { Typography } from '@mui/material';
-
 import { formatNumber } from 'src/utils/formate_number';
-
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 

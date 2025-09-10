@@ -3,15 +3,11 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, Typography } from '@mui/material';
-
 import { varAlpha } from 'src/theme/styles';
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import { Box, Grid, Card, Typography } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
@@ -60,8 +56,8 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
           />
         }
       />
-      <Grid2 container spacing={2} alignItems="stretch">
-        <Grid2 xs={12} md={6} lg={6} xl={4}>
+      <Grid container spacing={2} alignItems="stretch">
+        <Grid size={{ xs: 12, md: 6, lg: 6, xl: 4 }}>
           <Card
             sx={{
               p: 2,
@@ -69,16 +65,12 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
               transition: 'all 0.3s ease',
-              '&:hover': {
-                boxShadow: 'var(--shadows-8)',
-                scale: 1.03,
-              },
+              '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
               cursor: 'pointer',
             }}
           >
-            {' '}
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Typography
                 component="span"
@@ -96,8 +88,9 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
               </Box>
             </Box>
           </Card>
-        </Grid2>
-        <Grid2 xs={12} md={6} lg={6} xl={4}>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6, lg: 6, xl: 4 }}>
           <Card
             sx={{
               p: 2,
@@ -105,12 +98,9 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
               transition: 'all 0.3s ease',
-              '&:hover': {
-                boxShadow: 'var(--shadows-8)',
-                scale: 1.03,
-              },
+              '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
               cursor: 'pointer',
             }}
           >
@@ -139,18 +129,16 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
               </Typography>
             </Box>
           </Card>
-        </Grid2>
-        <Grid2 xs={12} md={6} lg={6} xl={4}>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6, lg: 6, xl: 4 }}>
           <Card
             sx={{
               p: 2,
               height: '100%',
-              backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.1),
               transition: 'all 0.3s ease',
-              '&:hover': {
-                boxShadow: 'var(--shadows-8)',
-                scale: 1.03,
-              },
+              '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
               cursor: 'pointer',
             }}
           >
@@ -164,9 +152,7 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
                 value={classes2}
                 labelKey="name"
                 valueKey="name"
-                onChange={(val) => {
-                  setClasses2(val as string);
-                }}
+                onChange={(val) => setClasses2(val as string)}
                 formControlProps={{ sx: { minWidth: 120 } }}
               />
             </Box>
@@ -176,8 +162,8 @@ const CarriculumnDashboardOverviewComponent = (props: TabComponentType) => {
               </Typography>
             </Box>
           </Card>
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

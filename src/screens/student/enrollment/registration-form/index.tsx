@@ -4,29 +4,23 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
-import { Box, Card, MenuItem, MenuList, Typography } from '@mui/material';
-
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import calculateAge from 'src/utils/calculate-age';
-
+import { useDispatch, useSelector } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { GenderType, GenderOptions } from 'src/enums/gender';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useMoveToRegistrationMutation } from 'src/redux/student/registration/registration-api';
+import { Box, Card, MenuItem, MenuList, Typography } from '@mui/material';
 import {
   StudentRegistrationFormApi,
   useGetStudentRegistrationFormQuery,
 } from 'src/redux/student/registration-form/registration-form-api';
-
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { CommunicationForm } from '../follow-up';
 import RegisterForm from '../register/register-form';
@@ -45,24 +39,20 @@ const RegistrationFormScreen = () => {
   const followUpDialog = useBoolean();
 
   // Query hook to fetch registration form data
-  const {
-    data: inquiryFormData,
-    isLoading,
-    refetch,
-  } = useQueryAndMutation({
+  const { data: inquiryFormData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentRegistrationFormQuery,
   });
 
   // Mutation hook to move student to registration status
-  const [moveToRegistration] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useMoveToRegistrationMutation,
-    popupConfig: {
-      successMessage: 'Student moved to registration successfully',
-      success: true,
-    },
-  });
+  // const [moveToRegistration] = useQueryAndMutation({
+  //   type: 'mutation',
+  //   currentQueryAndMutation: useMoveToRegistrationMutation,
+  //   popupConfig: {
+  //     successMessage: 'Student moved to registration successfully',
+  //     success: true,
+  //   },
+  // });
 
   // Transform inquiry form data into table-friendly format
   // - Formats dates (DOB and DOI) into DD-MM-YYYY

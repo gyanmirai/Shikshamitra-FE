@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import {
   Card,
   Grid,
@@ -13,8 +13,6 @@ import {
   CardContent,
   TableContainer,
 } from '@mui/material';
-
-import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 
 const PayrollOverviewTeacherDashboard = () => {
   const earnings = [
@@ -39,7 +37,7 @@ const PayrollOverviewTeacherDashboard = () => {
       <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Grid container spacing={3}>
           {/* Earnings on the Left */}
-          <Grid item xs={6}>
+          <Grid size={{ xs: 6 }}>
             <Typography variant="h6" color="primary" fontWeight="bold" gutterBottom>
               Earnings
             </Typography>
@@ -60,7 +58,7 @@ const PayrollOverviewTeacherDashboard = () => {
           </Grid>
 
           {/* Deductions on the Right */}
-          <Grid item xs={6}>
+          <Grid size={{ xs: 6 }}>
             <Typography variant="h6" color="error" fontWeight="bold" gutterBottom>
               Deductions
             </Typography>
@@ -86,12 +84,12 @@ const PayrollOverviewTeacherDashboard = () => {
 
         {/* Net Salary Section */}
         <Grid container justifyContent="flex-end" alignItems="center" spacing={2}>
-          <Grid item>
+          <Grid size={{ xs: 'auto' }}>
             <Typography variant="h6" fontWeight="bold">
               Net Salary:
             </Typography>
           </Grid>
-          <Grid item>
+          <Grid size={{ xs: 'auto' }}>
             <Typography variant="h5" color="green" fontWeight="bold">
               ₹{netSalary}
             </Typography>
@@ -100,12 +98,12 @@ const PayrollOverviewTeacherDashboard = () => {
 
         {/* Amount in Words Section */}
         {/* <Grid container justifyContent="flex-end" mt={2}>
-                    <Grid item>
-                        <Typography variant="body1" fontStyle="italic">
-                            ({numberToWords(netSalary)} only)
-                        </Typography>
-                    </Grid>
-                </Grid> */}
+        <Grid size={{ xs: 'auto' }}>
+            <Typography variant="body1" fontStyle="italic">
+                ({numberToWords(netSalary)} only)
+            </Typography>
+        </Grid>
+    </Grid> */}
       </CardContent>
     </Card>
   );

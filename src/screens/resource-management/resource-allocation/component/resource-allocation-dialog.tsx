@@ -1,13 +1,11 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Grid, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getInitialResourceAllocateValues } from '../initialValue';
@@ -49,7 +47,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
         <Grid container spacing={2}>
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.resourceName && Boolean(formik.errors.resourceName)}
             >
@@ -70,7 +68,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
               <TextField
                 name="quantity"
@@ -85,7 +83,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.allocationTarget && Boolean(formik.errors.allocationTarget)}
             >
@@ -104,7 +102,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.assignedTo && Boolean(formik.errors.assignedTo)}
             >
@@ -124,7 +122,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField
               error={formik.touched.allocationDate && Boolean(formik.errors.allocationDate)}
             >
@@ -146,7 +144,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({
               />
             </ShakingTextField>
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField
               error={formik.touched.expectedReturnDate && Boolean(formik.errors.expectedReturnDate)}
             >
@@ -172,7 +170,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={
                 formik.touched.purposeOfAllocation && Boolean(formik.errors.purposeOfAllocation)

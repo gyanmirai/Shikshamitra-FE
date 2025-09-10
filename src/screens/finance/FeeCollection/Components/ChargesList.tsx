@@ -1,15 +1,12 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-
+import { Label } from 'src/components/label';
 import { Box, Checkbox, Typography } from '@mui/material';
-
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
-
-import { Label } from 'src/components/label';
 
 import type { IFeeCharge } from './type';
 
@@ -35,9 +32,9 @@ const ChargesList: React.FC<ChargesListProps> = ({ charges, selectedCharges, tog
         Charges
       </Typography>
 
-      {charges?.map((ch) => (
+      {charges?.map((ch, idx) => (
         <Box
-          key={ch.id}
+          key={ch.id ?? idx}
           sx={{
             border: '1px solid #f28c82', // red highlight for charges
             borderRadius: 2,

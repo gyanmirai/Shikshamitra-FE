@@ -1,14 +1,11 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { hostelValidationSchema } from './validationSchema';
 import { getHostelInitialValues } from './getInitialValues';
@@ -35,10 +32,8 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.hostelName && formik.errors.hostelName) || false}
-                >
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.hostelName && formik.errors.hostelName)}>
                   <TextField
                     size="small"
                     label="Hostel Name *"
@@ -52,10 +47,8 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.hostelType && formik.errors.hostelType) || false}
-                >
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.hostelType && formik.errors.hostelType)}>
                   <Autocomplete
                     options={[
                       { value: 'Boys', label: 'Boys' },
@@ -85,9 +78,9 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.totalFloors && formik.errors.totalFloors) || false}
+                  error={!!(formik.touched.totalFloors && formik.errors.totalFloors)}
                 >
                   <TextField
                     size="small"
@@ -103,10 +96,8 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.location && formik.errors.location) || false}
-                >
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.location && formik.errors.location)}>
                   <TextField
                     size="small"
                     label="Location *"
@@ -120,12 +111,12 @@ const HostelForm: React.FC<IHostelFormProps> = ({ open, onClose, editData }) => 
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.assignedWarden && formik.errors.assignedWarden) || false}
+                  error={!!(formik.touched.assignedWarden && formik.errors.assignedWarden)}
                 >
                   <Autocomplete
-                    options={wardenList} // Make sure you pass this array as a prop or fetch it
+                    options={wardenList} // Make sure wardenList is passed as a prop or fetched
                     getOptionLabel={(option) => option.label}
                     onChange={(_, val) => {
                       formik.setFieldValue('assignedWarden', val?.value || '');

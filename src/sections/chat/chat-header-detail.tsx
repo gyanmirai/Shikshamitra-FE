@@ -1,23 +1,19 @@
 import type { IChatParticipant } from 'src/types/chat';
 
 import { useCallback } from 'react';
-
 import Stack from '@mui/material/Stack';
 import Badge from '@mui/material/Badge';
 import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
+import { fToNow } from 'src/utils/format-time';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
-import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
-
 import { useResponsive } from 'src/hooks/use-responsive';
-
-import { fToNow } from 'src/utils/format-time';
-
-import { Iconify } from 'src/components/iconify';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
+import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
 
 import { ChatHeaderSkeleton } from './chat-skeleton';
 

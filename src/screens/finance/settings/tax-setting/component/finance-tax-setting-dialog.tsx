@@ -2,19 +2,15 @@ import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
-import { useSelector, useDispatch } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { Box, Card, Grid, Button, TextField } from '@mui/material';
-
-import capitalizeWords from 'src/utils/capitalizeText';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
 import { Iconify } from 'src/components/iconify';
+import { useSelector, useDispatch } from 'react-redux';
+import capitalizeWords from 'src/utils/capitalizeText';
 import CustomSelect from 'src/components/custom-select';
+import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Card, Grid, Button, TextField } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 interface FinanceTaxSettingDialogProps {
   dialogValue: boolean;
@@ -148,7 +144,7 @@ const FinanceTaxSettingDialog: React.FC<FinanceTaxSettingDialogProps> = ({
           <Box display="flex" flexDirection="column" gap={2} p={2} flexGrow={1}>
             <Box flexGrow={1} p={2}>
               <Grid container spacing={3} pt="10px">
-                <Grid item xl={6}>
+                <Grid size={{ xl: 6 }}>
                   <ShakingTextField
                     error={formik.touched.taxName && Boolean(formik.errors.taxName)}
                   >
@@ -168,7 +164,7 @@ const FinanceTaxSettingDialog: React.FC<FinanceTaxSettingDialogProps> = ({
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xl={6}>
+                <Grid size={{ xl: 6 }}>
                   <ShakingTextField
                     error={formik.touched.taxPercentage && Boolean(formik.errors.taxPercentage)}
                   >
@@ -185,7 +181,7 @@ const FinanceTaxSettingDialog: React.FC<FinanceTaxSettingDialogProps> = ({
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xl={6}>
+                <Grid size={{ xl: 6 }}>
                   <ShakingTextField
                     error={
                       formik.touched.applicableRegion && Boolean(formik.errors.applicableRegion)
@@ -214,7 +210,7 @@ const FinanceTaxSettingDialog: React.FC<FinanceTaxSettingDialogProps> = ({
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xl={6}>
+                <Grid size={{ xl: 6 }}>
                   <ShakingTextField
                     error={
                       formik.touched.applicableCategory && Boolean(formik.errors.applicableCategory)

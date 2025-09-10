@@ -1,13 +1,10 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useMemo, useState } from 'react';
-
-import { Box, Tab, Tabs, Divider, Checkbox } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
+import React, { useState } from 'react';
 import { Label } from 'src/components/label';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Iconify } from 'src/components/iconify/iconify';
+import { Box, Tab, Tabs, Divider, Checkbox } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
@@ -194,16 +191,9 @@ const TransportNotifiedPersonlistScreen = () => {
     },
   ];
 
-  const [tableData, setTableData] = useState<StudentAssignment[]>(assignments);
-  const [tableDataForStaff, setTableDataForStaff] =
-    useState<StaffAssignment[]>(assignmentsForStaff);
+  const [tableData] = useState<StudentAssignment[]>(assignments);
+  const [tableDataForStaff] = useState<StaffAssignment[]>(assignmentsForStaff);
   const [searchParams, setSearchParams] = useState({ tab: 'student' });
-  const [isStaff, setIsStaff] = useState(false);
-
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
 
   return (
     <>

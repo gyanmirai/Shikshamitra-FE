@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-
-import Tooltip from '@mui/material/Tooltip';
-import IconButton from '@mui/material/IconButton';
-
 import { CONFIG } from 'src/config-global';
+import Tooltip from '@mui/material/Tooltip';
+import { useState, useCallback } from 'react';
+import IconButton from '@mui/material/IconButton';
 
 import { SvgColor, svgColorClasses } from '../../svg-color';
 
@@ -34,7 +32,7 @@ export function FullScreenButton() {
               `linear-gradient(135deg, ${theme.vars.palette.grey[500]} 0%, ${theme.vars.palette.grey[600]} 100%)`,
             ...(fullscreen && {
               background: (theme) =>
-                `linear-gradient(135deg, ${theme.vars.palette.primary.light} 0%, ${theme.vars.palette.primary.main} 100%)`,
+                `linear-gradient(135deg, ${theme.vars.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
             }),
           },
         }}

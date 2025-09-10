@@ -1,12 +1,9 @@
 import type { UploadedFile } from 'src/screens/academic/homework-assignment-management/homeworkCreation/type';
 
 import { useState } from 'react';
-
-import { Box, Card, Grid, Tooltip, Typography, IconButton } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Card, Grid, Tooltip, Typography, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import { Upload } from '../upload/upload';
@@ -102,7 +99,7 @@ const UploadDocument = ({
               const fileName = file.name || `File ${index + 1}`;
 
               return (
-                <Grid item xs={12} sm={6} md={4} key={index}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                   <Card
                     variant="outlined"
                     sx={{

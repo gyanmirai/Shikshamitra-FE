@@ -6,9 +6,7 @@ import Link from '@mui/material/Link';
 import Card from '@mui/material/Card';
 import Avatar from '@mui/material/Avatar';
 import CardHeader from '@mui/material/CardHeader';
-
 import { fCurrency } from 'src/utils/format-number';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import { ColorPreview } from 'src/components/color-utils';
 

@@ -3,12 +3,10 @@ import type { StackProps } from '@mui/material/Stack';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-
 import { RouterLink } from 'src/routes/components';
-
-import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 

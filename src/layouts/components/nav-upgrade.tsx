@@ -1,14 +1,12 @@
 import type { StackProps } from '@mui/material/Stack';
 
 import { m } from 'framer-motion';
-
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import { alpha as hexAlpha } from '@mui/material/styles';
-
 import { CONFIG } from 'src/config-global';
 import { varAlpha, bgGradient } from 'src/theme/styles';
+import { alpha as hexAlpha } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 

@@ -6,29 +6,25 @@ import type { LabelColor } from 'src/components/label';
 import type { UsePopoverReturn } from 'src/components/custom-popover';
 
 import dayjs from 'dayjs';
+import { Add } from '@mui/icons-material';
+import { Label } from 'src/components/label';
+import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
-import { Add } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Card, Button, MenuList, MenuItem, TextField, Autocomplete } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
+import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import hostelLeaveData from 'src/json/hostel/hostelLeaveApprove/hostel-leave-data.json';
+import { Box, Card, Button, MenuList, MenuItem, TextField, Autocomplete } from '@mui/material';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import HostelLeaveForm from './components/leaveForm';
 
@@ -40,19 +36,18 @@ const LeaveAndApprove = () => {
   const [selectedEntry, setSelectedEntry] = useState<IStudentAttendanceLeave | null>(null);
   // State to store the ending date of the leave request, initialized with current date
   const [toDate, setToDate] = useState<Dayjs | null>(dayjs()); // State for storing the selected hostel
-  const [hostel, setHostel] = useState<string>('');
+  const [_hostel, setHostel] = useState<string>('');
   // Dialog state for confirming rejection of leave requests
-  const confirmRejectDialog = useBoolean();
+  // const confirmRejectDialog = useBoolean();
   const confirmApproveDialog = useBoolean();
 
   // State to manage the table data containing student attendance and leave information
-  const [hostelTableData, setHostelTableData] =
-    useState<IStudentAttendanceLeave[]>(hostelLeaveData);
+  const [hostelTableData] = useState<IStudentAttendanceLeave[]>(hostelLeaveData);
 
   // Dialog state for managing leave request form visibility
   const leaveRequestDialog = useBoolean();
   // State for division options based on selected class
-  const [student, setStudent] = useState<string>('');
+  const [_student, setStudent] = useState<string>('');
   // State for managing the visibility of the hostel form.
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();

@@ -2,14 +2,12 @@ import type { RootState } from 'src/redux/store';
 import type { TabsProps } from '@mui/material/Tabs';
 import type { Theme, SxProps } from '@mui/material/styles';
 
-import { useSelector, useDispatch } from 'react-redux';
-
 import NoSsr from '@mui/material/NoSsr';
+import { stylesMode } from 'src/theme/styles';
 import { tabClasses } from '@mui/material/Tab';
 import { useTheme } from '@mui/material/styles';
+import { useSelector, useDispatch } from 'react-redux';
 import Tabs, { tabsClasses } from '@mui/material/Tabs';
-
-import { stylesMode } from 'src/theme/styles';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 // ----------------------------------------------------------------------

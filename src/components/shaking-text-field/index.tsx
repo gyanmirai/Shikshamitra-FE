@@ -1,5 +1,4 @@
 import { m } from 'framer-motion';
-
 import { Box } from '@mui/material';
 
 export default function ShakingTextField({

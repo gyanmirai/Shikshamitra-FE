@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { Box, Card, Button, CardMedia, Typography, CardContent } from '@mui/material';

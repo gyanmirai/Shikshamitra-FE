@@ -4,19 +4,15 @@ import 'leaflet/dist/leaflet.css';
 
 import * as yup from 'yup';
 import React, { useState } from 'react';
-
-import { Box, Button, Checkbox, MenuItem, MenuList } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import IconEnum from 'src/utils/common-icon';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { Box, Button, Checkbox, MenuItem, MenuList } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import { routesData } from './data/new-route-data';
@@ -28,7 +24,7 @@ import TransportMap from '../routesAndSchedules/component/view-on-map-dialog';
 const NewCreateRouteScreen = () => {
   const ViewRouteDetailsdialog = useBoolean();
 
-  const [selectedRoute, setSelectedRoute] = useState<any>();
+  const [selectedRoute] = useState<any>();
   const [mapDialogOpen, setMapDialogOpen] = useState<boolean>(false);
   const [mapData, setMapData] = useState<any>(null);
   const handleViewOnMap = (data: any) => {
@@ -232,15 +228,7 @@ interface CreateRoutesProps {
 
 const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose }) => {
   const [activeStep, setActiveStep] = useState<number>(0);
-  const [routeDetails, setRouteDetails] = useState({
-    routeName: '',
-    startPoint: '',
-    endPoint: '',
-  });
-  const [selectedStop, setSelectedStop] = useState<any>([]);
-  const [vehicle, setVehicle] = useState<string>('');
-  const [driver, setDriver] = useState<string>('');
-  const [scheduleData, setScheduleData] = useState<any>([]);
+  const [scheduleData] = useState<any>([]);
 
   // interface RoutePoint {
   //   id: number;

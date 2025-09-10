@@ -3,26 +3,22 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetBooksQuery } from 'src/redux/bookManagement/bookManagementApi';
-import { useGetBookCategoriesQuery } from 'src/redux/bookCategoryApi/bookCategoryApi';
-import { useGetReservationsQuery } from 'src/redux/reservationDataApi/reservationDataApi';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetBooksQuery } from 'src/redux/bookManagement/bookManagementApi';
+import { useGetBookCategoriesQuery } from 'src/redux/bookCategoryApi/bookCategoryApi';
+import { useGetReservationsQuery } from 'src/redux/reservationDataApi/reservationDataApi';
 
 import ReservationForm from './Components/ReservationForm';
 import ReservedBookTable from './Components/ReservationTable';
@@ -39,7 +35,7 @@ const ReservationManagement = () => {
   const addDialog = useBoolean();
   const issueDialog = useBoolean();
   const deleteDialog = useBoolean();
-  const { data: bookData, isLoading: bookLoading } = useQueryAndMutation({
+  const { data: bookData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBooksQuery,
   });
@@ -140,7 +136,7 @@ const ReservationManagement = () => {
               title={
                 selectedRecord
                   ? 'Update the reserved book details including reservation date and member info.'
-                  : 'Select a member and book to reserve with reservation date.'
+                  : 'This modal allows the librarian to select the required fields (such as member, book, and reservation date) to successfully make a reservation for a book.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

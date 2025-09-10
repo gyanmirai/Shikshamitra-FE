@@ -1,6 +1,11 @@
 import React from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { useFormik, FieldArray } from 'formik';
-
+import { Iconify } from 'src/components/iconify';
+import { formatNumber } from 'src/utils/formate_number';
+import CustomSelect from 'src/components/custom-select';
+import CustomizableTable from 'src/components/customizabaleTable';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import {
   Box,
   Switch,
@@ -11,14 +16,6 @@ import {
   DialogActions,
   FormHelperText,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-import { formatNumber } from 'src/utils/formate_number';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import { editFeeStructureValidationSchema } from '../validationSchema';
 

@@ -2,14 +2,11 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 
 import { checkInValidationSchema, checkOutValidationSchema } from '../validationSchema';
 
@@ -36,7 +33,7 @@ const CheckInCheckOutDialog: React.FC<ICheckInCheckOutDialogProps> = ({
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
         <Grid container spacing={3}>
           {isCheckIn == null && (
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.checkInNotes && Boolean(formik.errors.checkInNotes)}
               >
@@ -58,7 +55,7 @@ const CheckInCheckOutDialog: React.FC<ICheckInCheckOutDialogProps> = ({
           )}
 
           {isCheckIn == null && (
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.checkOutNotes && Boolean(formik.errors.checkOutNotes)}
               >
@@ -80,7 +77,7 @@ const CheckInCheckOutDialog: React.FC<ICheckInCheckOutDialogProps> = ({
           )}
 
           {isCheckIn && (
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.checkInNotes && Boolean(formik.errors.checkInNotes)}
               >
@@ -101,7 +98,7 @@ const CheckInCheckOutDialog: React.FC<ICheckInCheckOutDialogProps> = ({
           )}
 
           {!isCheckIn && data === null && (
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.checkOutNotes && Boolean(formik.errors.checkOutNotes)}
               >

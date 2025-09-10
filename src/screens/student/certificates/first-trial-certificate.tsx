@@ -3,13 +3,26 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
-import Grid from '@mui/material/Unstable_Grid2/Grid2';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector, useDispatch } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
 import {
   Box,
+  Grid,
   Chip,
   Button,
   TextField,
@@ -17,24 +30,6 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import BonofiedCertificateTemplate1 from 'src/templates/student-certificates/bonofied-certificate-1';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 const FirstTrialCertificate = () => {
   const dialog = useBoolean();
@@ -144,9 +139,9 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // Get current board and medium from global state
   const {
-    currentBoard,
+    // currentBoard,
     currentMedium: medium,
-    setCurrentMedium: setMedium,
+    // setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
   // State for storing division data
   const [allDivision, setAllDivision] = useState<Division[]>([]);
@@ -264,7 +259,7 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
           </Button>
         </Box>
         <Grid container spacing={3}>
-          <Grid xs={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.organization && errors.organization) || false}>
               <CustomSelect
                 options={allOrganization}
@@ -293,7 +288,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={4}>
+
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.classes && errors.classes) || false}>
               <CustomSelect
                 options={allClass}
@@ -318,7 +314,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={4}>
+
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.division && errors.division) || false}>
               <CustomSelect
                 options={allDivision}
@@ -337,7 +334,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={4}>
+
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.student && errors.student) || false}>
               <Autocomplete
                 loading={isLoading}
@@ -353,7 +351,6 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
                     <Chip
                       label={option.name}
                       variant="soft"
-                      // color="default"
                       size="small"
                       {...getTagProps({ index })}
                     />
@@ -379,7 +376,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={4}>
+
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.grNo && errors.grNo)}>
               <TextField
                 size="small"
@@ -393,7 +391,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={4}>
+
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.firstTrialDate && errors.firstTrialDate)}>
               <DatePicker
                 label="First Trial Date"
@@ -413,7 +412,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={4}>
+
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.examYear && errors.examYear)}>
               <DatePicker
                 label="Exam Year *"
@@ -421,8 +421,6 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
                 format="YYYY"
                 views={['year']}
                 onChange={(newValue) => {
-                  console.log('newValue---', newValue);
-
                   setFieldValue('examYear', newValue);
                 }}
                 slotProps={{
@@ -436,7 +434,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={4}>
+
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.examCenter && errors.examCenter)}>
               <TextField
                 size="small"
@@ -450,7 +449,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={4}>
+
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.seatNumber && errors.seatNumber)}>
               <TextField
                 size="small"
@@ -464,7 +464,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={4}>
+
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.triel && errors.triel)}>
               <CustomSelect
                 options={[
@@ -487,7 +488,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={4}>
+
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(touched.lastExamName && errors.lastExamName)}>
               <TextField
                 size="small"
@@ -501,7 +503,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(touched.remarks && errors.remarks)}>
               <TextField
                 size="small"
@@ -517,7 +520,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
               />
             </ShakingTextField>
           </Grid>
-          <Grid xs={12}>
+
+          <Grid size={{ xs: 12 }}>
             <BonofiedCertificateTemplate1 />
           </Grid>
         </Grid>

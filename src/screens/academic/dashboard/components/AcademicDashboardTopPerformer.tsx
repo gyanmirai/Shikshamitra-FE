@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { TopPerformer } from 'src/screens/student/enrollment/entrance-exam/dashboard';
 
 const AcademicDashboardTopPerformer = () => (

@@ -1,18 +1,14 @@
 import React, { useState } from 'react';
-
-import LoadingButton from '@mui/lab/LoadingButton';
-import { Box, Grid, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetfeeHeadQuery, useDeletefeeHeadMutation } from 'src/redux/feeHead/feeHeadApi';
-
+import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Grid, Typography } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
+import { useGetfeeHeadQuery, useDeletefeeHeadMutation } from 'src/redux/feeHead/feeHeadApi';
 
 import SetFeeHeadDialog from '../dialogs/set-fee-head-dialog';
 
@@ -71,7 +67,7 @@ const SetDefaultFeeComponent = ({ setFeeHeadDialog }: any) => {
     <Box display="flex" flexDirection="column" gap={2}>
       {/* Fee Heads Table */}
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Box>
             <CustomizableTable
               noDataText={

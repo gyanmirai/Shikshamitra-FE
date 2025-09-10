@@ -1,13 +1,10 @@
 'use client';
 
 import React from 'react';
-
 import { Box, Typography } from '@mui/material';
-
-import DetailRow from 'src/screens/communication/announcement/components/detailRow';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import DetailRow from 'src/screens/communication/announcement/components/detailRow';
 
 import type { TStudentGrade } from '../gradebook';
 

@@ -1,10 +1,7 @@
 import React from 'react';
-
 import { Search } from '@mui/icons-material';
 import { Box, TextField, InputAdornment } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
-
 import { CourseHoursSpent } from 'src/sections/overview/course/course-hours-spent';
 
 const ReviewHistory = () => (

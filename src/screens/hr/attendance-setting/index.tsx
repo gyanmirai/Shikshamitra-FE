@@ -1,19 +1,15 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-
 import { Add } from '@mui/icons-material';
-import { Tab, Box, Card, Button } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import LeaveType from './leave-type';
 import LeavePolicy from './leave-policy';

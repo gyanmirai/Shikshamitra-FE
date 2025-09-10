@@ -3,17 +3,14 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { DatePicker, TimePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { getEarlyPassRequestInitialValues } from '../initialValue';
 import { earlyPassRequestValidationSchema } from '../validationSchema';
@@ -40,7 +37,7 @@ const EarlyGateRequestForm: React.FC<IGetEarlyPassRequestFormProps> = ({
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.childName && formik.errors.childName) || false}
                 >
@@ -75,7 +72,7 @@ const EarlyGateRequestForm: React.FC<IGetEarlyPassRequestFormProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   disabled={isDisabled}
                   label="Desired Pickup Date *"
@@ -99,7 +96,7 @@ const EarlyGateRequestForm: React.FC<IGetEarlyPassRequestFormProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TimePicker
                   disabled={isDisabled}
                   label="Desired Pickup Time *"
@@ -123,7 +120,7 @@ const EarlyGateRequestForm: React.FC<IGetEarlyPassRequestFormProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={
                     !!(formik.touched.reasonForPickup && formik.errors.reasonForPickup) || false

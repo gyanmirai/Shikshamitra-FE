@@ -1,9 +1,7 @@
 import { orderBy } from 'lodash';
 import React, { useState } from 'react';
-
-import { Box, Card, Avatar, CardHeader, Typography } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
+import { Box, Card, Avatar, CardHeader, Typography } from '@mui/material';
 
 interface Student {
   id: number;

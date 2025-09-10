@@ -1,17 +1,14 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import { Box, Grid, Button, Checkbox, TextField, Autocomplete, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import ShakingTextField from 'src/components/shaking-text-field';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, Checkbox, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import type { IFacilityFormProps } from './type';
 
@@ -46,7 +43,7 @@ const AddFacilityForm: React.FC<IFacilityFormProps> = ({ dialog, onClose, editDa
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={!!(formik.touched.facilityName && formik.errors.facilityName)}
                 >
@@ -63,7 +60,7 @@ const AddFacilityForm: React.FC<IFacilityFormProps> = ({ dialog, onClose, editDa
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField
                   error={!!(formik.touched.description && formik.errors.description)}
                 >
@@ -82,7 +79,7 @@ const AddFacilityForm: React.FC<IFacilityFormProps> = ({ dialog, onClose, editDa
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <ShakingTextField error={!!(formik.touched.facilities && formik.errors.facilities)}>
                   <Autocomplete
                     size="small"

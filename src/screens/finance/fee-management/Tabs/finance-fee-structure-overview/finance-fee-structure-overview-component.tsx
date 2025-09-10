@@ -3,23 +3,18 @@
 import type { IFeeItem } from 'src/screens/finance/settings/fee-structure/fee-structure-interface';
 
 import React, { useState } from 'react';
-
 import { Box, Typography } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { formatNumber } from 'src/utils/formate_number';
-
-import feeStructureData from 'src/json/finance/fee-management/feeStructureData.json';
-import ReadOnlyFeeStructureTable from 'src/screens/finance/settings/fee-structure/component/read-only-fee-structure-table';
-
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import feeStructureData from 'src/json/finance/fee-management/feeStructureData.json';
+import ReadOnlyFeeStructureTable from 'src/screens/finance/settings/fee-structure/component/read-only-fee-structure-table';
 
 const FinanceFeeStructureOverviewComponent = () => {
   // Boolean state to control the visibility of detailed fee structure dialog/modal

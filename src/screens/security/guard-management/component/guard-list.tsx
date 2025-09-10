@@ -1,10 +1,8 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
 
 import type { IGuard, IGuardListProps } from '../guard-management-interface';
 

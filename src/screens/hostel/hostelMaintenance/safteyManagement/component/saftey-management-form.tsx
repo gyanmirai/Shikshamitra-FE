@@ -3,9 +3,16 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -19,16 +26,6 @@ import {
   FormHelperText,
   FormControlLabel,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Editor } from 'src/components/editor';
-import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getSafetyManagementInitialValues } from '../initialValue';
 import { safetyManagementValidationSchema } from '../validationSchema';
@@ -54,10 +51,10 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.incidentTitle && formik.errors.incidentTitle) || false}
+                  error={!!(formik.touched.incidentTitle && formik.errors.incidentTitle)}
                 >
                   <TextField
                     disabled={isDisabled}
@@ -72,7 +69,8 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={6} pb="10px">
+
+              <Grid size={{ xs: 6 }} pb="10px">
                 <ShakingTextField
                   error={formik.touched.incidentType && Boolean(formik.errors.incidentType)}
                 >
@@ -92,14 +90,13 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   disabled={isDisabled}
                   label="Select Date *"
                   format="DD-MM-YYYY"
                   value={formik.values.incidentDate ? dayjs(formik.values.incidentDate) : null}
                   onChange={(value) => {
-                    // value is a Dayjs object or null
                     formik.setFieldValue('incidentDate', value ? value.toISOString() : null);
                   }}
                   slotProps={{
@@ -116,14 +113,13 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TimePicker
                   disabled={isDisabled}
                   label="Select Time *"
                   format="hh:mm A"
                   value={formik.values.incidentTime ? dayjs(formik.values.incidentTime) : null}
                   onChange={(val) => {
-                    // val is a Dayjs object or null
                     formik.setFieldValue('incidentTime', val ? val.toISOString() : null);
                   }}
                   slotProps={{
@@ -139,7 +135,8 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
                   }}
                 />
               </Grid>
-              <Grid item xs={6} pb="10px">
+
+              <Grid size={{ xs: 6 }} pb="10px">
                 <ShakingTextField
                   error={formik.touched.incidentType && Boolean(formik.errors.incidentType)}
                 >
@@ -158,11 +155,11 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <ShakingTextField
                   error={
-                    !!(formik.touched.incidentDescription && formik.errors.incidentDescription) ||
-                    false
+                    !!(formik.touched.incidentDescription && formik.errors.incidentDescription)
                   }
                 >
                   <div style={isDisabled ? { pointerEvents: 'none', opacity: 0.6 } : {}}>
@@ -185,7 +182,7 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} pb="20px">
+              <Grid size={{ xs: 12 }} pb="20px">
                 <div style={isDisabled ? { pointerEvents: 'none', opacity: 0.6 } : {}}>
                   <UploadBox
                     onDrop={() => {}}
@@ -212,46 +209,46 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
                   />
                 </div>
               </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="h6">Identity Option (For Students):</Typography>
-              <Box display="flex" flexDirection="row" gap={2} mt={2}>
-                <ShakingTextField
-                  error={
-                    !!(formik.touched.incidentReportedBy && formik.errors.incidentReportedBy) ||
-                    false
-                  }
-                >
-                  <FormControl
+
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="h6">Identity Option (For Students):</Typography>
+                <Box display="flex" flexDirection="row" gap={2} mt={2}>
+                  <ShakingTextField
                     error={
                       !!(formik.touched.incidentReportedBy && formik.errors.incidentReportedBy)
                     }
                   >
-                    <RadioGroup
-                      row
-                      name="Identity Option:"
-                      value={formik.values.incidentReportedBy}
-                      onChange={formik.handleChange}
+                    <FormControl
+                      error={
+                        !!(formik.touched.incidentReportedBy && formik.errors.incidentReportedBy)
+                      }
                     >
-                      <FormControlLabel
-                        value="identified"
-                        control={<Radio />}
-                        label="Report with Identity"
-                        disabled={isDisabled}
-                      />
-                      <FormControlLabel
-                        value="anonymous"
-                        control={<Radio />}
-                        label="Report Anonymously"
-                        disabled={isDisabled}
-                      />
-                    </RadioGroup>
-                    {formik.touched.incidentReportedBy && formik.errors.incidentReportedBy && (
-                      <FormHelperText>{String(formik.errors.incidentReportedBy)}</FormHelperText>
-                    )}
-                  </FormControl>
-                </ShakingTextField>
-              </Box>
+                      <RadioGroup
+                        row
+                        name="Identity Option:"
+                        value={formik.values.incidentReportedBy}
+                        onChange={formik.handleChange}
+                      >
+                        <FormControlLabel
+                          value="identified"
+                          control={<Radio />}
+                          label="Report with Identity"
+                          disabled={isDisabled}
+                        />
+                        <FormControlLabel
+                          value="anonymous"
+                          control={<Radio />}
+                          label="Report Anonymously"
+                          disabled={isDisabled}
+                        />
+                      </RadioGroup>
+                      {formik.touched.incidentReportedBy && formik.errors.incidentReportedBy && (
+                        <FormHelperText>{String(formik.errors.incidentReportedBy)}</FormHelperText>
+                      )}
+                    </FormControl>
+                  </ShakingTextField>
+                </Box>
+              </Grid>
             </Grid>
           </Scrollbar>
 

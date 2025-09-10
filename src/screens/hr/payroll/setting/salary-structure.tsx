@@ -5,9 +5,23 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { formatCurrency } from 'src/utils/cureencyFormater';
+import { PayElementType } from 'src/enums/pay-element-type';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import {
+  useGetPayElementsQuery,
+  useDeletePayElementMutation,
+} from 'src/redux/payElement/payElementApi';
 import {
   Box,
   Grid,
@@ -19,25 +33,6 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-import { formatCurrency } from 'src/utils/cureencyFormater';
-
-import { PayElementType } from 'src/enums/pay-element-type';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useGetPayElementsQuery,
-  useDeletePayElementMutation,
-} from 'src/redux/payElement/payElementApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
@@ -252,236 +247,246 @@ const CTCPreviewForm = ({ handleClose, editData }: { handleClose: () => void; ed
       <DialogScrollContent>
         {/* General Info */}
         <SectionCard title="General Information">
-          <Grid item xs={12} sm={6}>
-            <TextField
-              size="small"
-              fullWidth
-              label="Name"
-              name="name"
-              value={formik.values.name}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              size="small"
-              fullWidth
-              label="Role"
-              name="role"
-              value={formik.values.role}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <DatePicker
-              label="Template Effective From"
-              value={formik.values.effectiveFrom}
-              onChange={(date) => formik.setFieldValue('effectiveFrom', date)}
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <DatePicker
-              label="Template Effective To"
-              value={formik.values.effectiveTo}
-              onChange={(date) => formik.setFieldValue('effectiveTo', date)}
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              size="small"
-              fullWidth
-              label="From Salary"
-              name="fromSalary"
-              value={formik.values.fromSalary}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              size="small"
-              fullWidth
-              label="To Salary"
-              name="toSalary"
-              value={formik.values.toSalary}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              size="small"
-              fullWidth
-              label="Sample Annual CTC"
-              name="sampleCTC"
-              value={formik.values.sampleCTC}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              size="small"
-              fullWidth
-              multiline
-              rows={2}
-              label="Notes"
-              name="notes"
-              value={formik.values.notes}
-              onChange={formik.handleChange}
-            />
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                size="small"
+                fullWidth
+                label="Name"
+                name="name"
+                value={formik.values.name}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                size="small"
+                fullWidth
+                label="Role"
+                name="role"
+                value={formik.values.role}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DatePicker
+                label="Template Effective From"
+                value={formik.values.effectiveFrom}
+                onChange={(date) => formik.setFieldValue('effectiveFrom', date)}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <DatePicker
+                label="Template Effective To"
+                value={formik.values.effectiveTo}
+                onChange={(date) => formik.setFieldValue('effectiveTo', date)}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                size="small"
+                fullWidth
+                label="From Salary"
+                name="fromSalary"
+                value={formik.values.fromSalary}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                size="small"
+                fullWidth
+                label="To Salary"
+                name="toSalary"
+                value={formik.values.toSalary}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                size="small"
+                fullWidth
+                label="Sample Annual CTC"
+                name="sampleCTC"
+                value={formik.values.sampleCTC}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                size="small"
+                fullWidth
+                multiline
+                rows={2}
+                label="Notes"
+                name="notes"
+                value={formik.values.notes}
+                onChange={formik.handleChange}
+              />
+            </Grid>
           </Grid>
         </SectionCard>
 
         {/* Earnings Table */}
-        <SectionCard title="Earing">
-          <Grid item xs={12} sm={6}>
-            <TextField size="small" select fullWidth label="Select Components">
-              <MenuItem value="default">Select</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid item xs={12}>
-            <CustomizableTable
-              tableId="salary-comp"
-              columns={[
-                { id: 'salaryComponent', label: 'Salary Component' },
-                { id: 'type', label: 'Calculation Type' },
-                { id: 'basedOn', label: 'Based On' },
-                { id: 'amount', label: 'Calculation Percentage/Amount' },
-                { id: 'monthly', label: 'Monthly Amount' },
-                { id: 'yearly', label: 'Yearly Amount' },
-              ]}
-              data={[
-                {
-                  salaryComponent: 'Basic Salary',
-                  type: 'Percentage',
-                  basedOn: 'CTC',
-                  amount: '50%',
-                  monthly: '₹25,000',
-                  yearly: '₹3,00,000',
-                },
-                {
-                  salaryComponent: 'House Rent Allowance',
-                  type: 'Percentage',
-                  basedOn: 'Basic',
-                  amount: '40%',
-                  monthly: '₹10,000',
-                  yearly: '₹1,20,000',
-                },
-                {
-                  salaryComponent: 'Special Allowance',
-                  type: 'Fixed',
-                  basedOn: 'N/A',
-                  amount: '₹8,000',
-                  monthly: '₹8,000',
-                  yearly: '₹96,000',
-                },
-                {
-                  salaryComponent: 'Transport Allowance',
-                  type: 'Fixed',
-                  basedOn: 'N/A',
-                  amount: '₹3,000',
-                  monthly: '₹3,000',
-                  yearly: '₹36,000',
-                },
-                {
-                  salaryComponent: 'Medical Allowance',
-                  type: 'Fixed',
-                  basedOn: 'N/A',
-                  amount: '₹2,000',
-                  monthly: '₹2,000',
-                  yearly: '₹24,000',
-                },
-              ]}
-            />
+        <SectionCard title="Earning">
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField size="small" select fullWidth label="Select Components">
+                <MenuItem value="default">Select</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <CustomizableTable
+                tableId="salary-comp"
+                columns={[
+                  { id: 'salaryComponent', label: 'Salary Component' },
+                  { id: 'type', label: 'Calculation Type' },
+                  { id: 'basedOn', label: 'Based On' },
+                  { id: 'amount', label: 'Calculation Percentage/Amount' },
+                  { id: 'monthly', label: 'Monthly Amount' },
+                  { id: 'yearly', label: 'Yearly Amount' },
+                ]}
+                data={[
+                  {
+                    salaryComponent: 'Basic Salary',
+                    type: 'Percentage',
+                    basedOn: 'CTC',
+                    amount: '50%',
+                    monthly: '₹25,000',
+                    yearly: '₹3,00,000',
+                  },
+                  {
+                    salaryComponent: 'House Rent Allowance',
+                    type: 'Percentage',
+                    basedOn: 'Basic',
+                    amount: '40%',
+                    monthly: '₹10,000',
+                    yearly: '₹1,20,000',
+                  },
+                  {
+                    salaryComponent: 'Special Allowance',
+                    type: 'Fixed',
+                    basedOn: 'N/A',
+                    amount: '₹8,000',
+                    monthly: '₹8,000',
+                    yearly: '₹96,000',
+                  },
+                  {
+                    salaryComponent: 'Transport Allowance',
+                    type: 'Fixed',
+                    basedOn: 'N/A',
+                    amount: '₹3,000',
+                    monthly: '₹3,000',
+                    yearly: '₹36,000',
+                  },
+                  {
+                    salaryComponent: 'Medical Allowance',
+                    type: 'Fixed',
+                    basedOn: 'N/A',
+                    amount: '₹2,000',
+                    monthly: '₹2,000',
+                    yearly: '₹24,000',
+                  },
+                ]}
+              />
+            </Grid>
           </Grid>
         </SectionCard>
 
         {/* Deduction Section */}
         <SectionCard title="Deduction">
-          {['pf', 'pt', 'tds', 'lwf', 'esi'].map((field) => (
-            <Grid item xs={12} sm={6} key={field}>
-              <TextField
-                size="small"
-                select
-                fullWidth
-                label={`Select ${field.toUpperCase()}`}
-                name={field}
-                value={(formik.values as any)[field]}
-                onChange={formik.handleChange}
-              >
-                {deductionOptions[field as keyof typeof deductionOptions].map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-          ))}
+          <Grid container spacing={2}>
+            {['pf', 'pt', 'tds', 'lwf', 'esi'].map((field) => (
+              <Grid size={{ xs: 12, sm: 6 }} key={field}>
+                <TextField
+                  size="small"
+                  select
+                  fullWidth
+                  label={`Select ${field.toUpperCase()}`}
+                  name={field}
+                  value={(formik.values as any)[field]}
+                  onChange={formik.handleChange}
+                >
+                  {deductionOptions[field as keyof typeof deductionOptions].map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            ))}
+          </Grid>
         </SectionCard>
 
         {/* CTC Preview */}
-        <SectionCard title=" Sample CTC Preview">
-          <Grid item xs={12} md={6}>
-            <Paper variant="outlined" sx={{ p: 2, bgcolor: '#f0fdf4' }}>
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                Earnings
-              </Typography>
-              <Grid container>
-                <Grid item xs={6}>
-                  <Typography>Basic Salary:</Typography>
-                  <Typography>HRA:</Typography>
-                  <Typography>Special Allowance:</Typography>
-                  <Typography fontWeight="bold" mt={1}>
-                    Gross Earning:
-                  </Typography>
+        <SectionCard title="Sample CTC Preview">
+          <Grid container spacing={2}>
+            {/* Earnings */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Paper variant="outlined" sx={{ p: 2, bgcolor: '#f0fdf4' }}>
+                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                  Earnings
+                </Typography>
+                <Grid container>
+                  <Grid size={{ xs: 6 }}>
+                    <Typography>Basic Salary:</Typography>
+                    <Typography>HRA:</Typography>
+                    <Typography>Special Allowance:</Typography>
+                    <Typography fontWeight="bold" mt={1}>
+                      Gross Earning:
+                    </Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6 }} textAlign="right">
+                    <Typography>₹45,000</Typography>
+                    <Typography>₹18,000</Typography>
+                    <Typography>₹12,000</Typography>
+                    <Typography fontWeight="bold" mt={1}>
+                      ₹75,000
+                    </Typography>
+                  </Grid>
                 </Grid>
-                <Grid item xs={6} textAlign="right">
-                  <Typography>₹45,000</Typography>
-                  <Typography>₹18,000</Typography>
-                  <Typography>₹12,000</Typography>
-                  <Typography fontWeight="bold" mt={1}>
-                    ₹75,000
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
+              </Paper>
+            </Grid>
 
-          {/* Deductions */}
-          <Grid item xs={12} md={6}>
-            <Paper variant="outlined" sx={{ p: 2, bgcolor: '#fff7f6' }}>
-              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                Deductions
-              </Typography>
-              <Grid container>
-                <Grid item xs={6}>
-                  <Typography>Provident Fund:</Typography>
-                  <Typography>ESI:</Typography>
-                  <Typography>TDS:</Typography>
-                  <Typography fontWeight="bold" mt={1}>
-                    Total Deduction:
-                  </Typography>
+            {/* Deductions */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Paper variant="outlined" sx={{ p: 2, bgcolor: '#fff7f6' }}>
+                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                  Deductions
+                </Typography>
+                <Grid container>
+                  <Grid size={{ xs: 6 }}>
+                    <Typography>Provident Fund:</Typography>
+                    <Typography>ESI:</Typography>
+                    <Typography>TDS:</Typography>
+                    <Typography fontWeight="bold" mt={1}>
+                      Total Deduction:
+                    </Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6 }} textAlign="right">
+                    <Typography>₹5,400</Typography>
+                    <Typography>₹722</Typography>
+                    <Typography>₹1,000</Typography>
+                    <Typography fontWeight="bold" mt={1}>
+                      ₹7,122
+                    </Typography>
+                  </Grid>
                 </Grid>
-                <Grid item xs={6} textAlign="right">
-                  <Typography>₹5,400</Typography>
-                  <Typography>₹722</Typography>
-                  <Typography>₹1,000</Typography>
-                  <Typography fontWeight="bold" mt={1}>
-                    ₹7,122
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
+              </Paper>
+            </Grid>
 
-          {/* Net Payable */}
-          <Grid item xs={12}>
-            <Alert variant="outlined" severity="success">
-              Net Payable ₹67,878
-            </Alert>
+            {/* Net Payable */}
+            <Grid size={{ xs: 12 }}>
+              <Alert variant="outlined" severity="success">
+                Net Payable ₹67,878
+              </Alert>
+            </Grid>
           </Grid>
         </SectionCard>
       </DialogScrollContent>
+
       <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}

@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
 import AdminResourceTable from './component/admin-resource-table';

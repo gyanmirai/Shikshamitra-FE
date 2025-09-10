@@ -1,17 +1,17 @@
 import dayjs from 'dayjs';
 import { isEqual } from 'lodash';
 import { useDispatch } from 'react-redux';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
+import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Grid, Slide, TextField } from '@mui/material';
-
-import { convertBase64Format } from 'src/utils/base64Formate';
-
 import { useAddUserMutation } from 'src/redux/user/userApi';
+import { convertBase64Format } from 'src/utils/base64Formate';
+import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   useUpdateEmployeeMutation,
   useUpdateBankDetailsMutation,
@@ -19,10 +19,6 @@ import {
   useUpdateFamilyInformationMutation,
   useUpdateExperienceInformationMutation,
 } from 'src/redux/employee/employeeApi';
-
-import { shikshaMitraToast } from 'src/components/toast';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import { allFields } from './employee-form-fields';
 import { validations } from './employee-form-validation';
@@ -583,9 +579,10 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                     {' '}
                     {allFields[step].map((field) => (
                       <Grid
-                        item
-                        xs={[1, 2, 3].includes(step) ? 12 : 4}
-                        md={[1, 2, 3].includes(step) ? 12 : 4}
+                        size={{
+                          xs: [1, 2, 3].includes(step) ? 12 : 4,
+                          md: [1, 2, 3].includes(step) ? 12 : 4,
+                        }}
                         key={field.name}
                         {...field.gridProps}
                       >

@@ -4,10 +4,8 @@ import type { ChartOptions } from 'src/components/chart';
 import Card from '@mui/material/Card';
 import Divider from '@mui/material/Divider';
 import CardHeader from '@mui/material/CardHeader';
-import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
 import { fNumber } from 'src/utils/format-number';
-
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
@@ -15,14 +13,7 @@ import { Chart, useChart, ChartLegends } from 'src/components/chart';
 type Props = CardProps & {
   title?: string;
   subheader?: string;
-  chart: {
-    colors?: string[];
-    series: {
-      label: string;
-      value: number;
-    }[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; series: { label: string; value: number }[]; options?: ChartOptions };
 };
 
 export function CourseProgress({ title, subheader, chart, ...other }: Props) {
@@ -54,11 +45,7 @@ export function CourseProgress({ title, subheader, chart, ...other }: Props) {
           labels: {
             value: { formatter: (value: number | string) => fNumber(value) },
             total: {
-              formatter: (w: {
-                globals: {
-                  seriesTotals: number[];
-                };
-              }) => {
+              formatter: (w: { globals: { seriesTotals: number[] } }) => {
                 const sum = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                 return fNumber(sum);
               },

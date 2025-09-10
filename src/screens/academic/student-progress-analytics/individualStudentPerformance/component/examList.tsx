@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Card, Tooltip, useTheme, Typography, CardContent } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Card, Tooltip, Typography, CardContent } from '@mui/material';
 
 type ExamStatus = 'Completed' | 'Upcoming' | 'In Progress';
 
@@ -25,18 +24,8 @@ const examsData: Exam[] = [
     subject: 'Mathematics',
     teacherFeedback: 'Excellent performance',
   },
-  {
-    name: 'Science Practical',
-    status: 'In Progress',
-    date: '2024-02-20',
-    subject: 'Science',
-  },
-  {
-    name: 'English Literature Quiz',
-    status: 'Upcoming',
-    date: '2024-03-01',
-    subject: 'English',
-  },
+  { name: 'Science Practical', status: 'In Progress', date: '2024-02-20', subject: 'Science' },
+  { name: 'English Literature Quiz', status: 'Upcoming', date: '2024-03-01', subject: 'English' },
 ];
 
 // Helper function to get status color
@@ -58,7 +47,9 @@ const ExamsList = () => {
       sx={{
         borderRadius: 2,
         backgroundColor:
-          theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100],
+          theme.palette.mode === 'dark'
+            ? theme.vars.palette.grey[800]
+            : theme.vars.palette.grey[100],
         height: '100%',
       }}
     >
@@ -80,10 +71,7 @@ const ExamsList = () => {
                     </Typography>
                     <Typography
                       variant="body2"
-                      sx={{
-                        color: getExamColor(exam.status),
-                        fontWeight: 'bold',
-                      }}
+                      sx={{ color: getExamColor(exam.status), fontWeight: 'bold' }}
                     >
                       Status: {exam.status}
                     </Typography>
@@ -102,9 +90,7 @@ const ExamsList = () => {
                     mb: 1,
                     cursor: 'pointer',
                     borderLeft: `4px solid ${getExamColor(exam.status)}`,
-                    '&:hover': {
-                      boxShadow: theme.shadows[3],
-                    },
+                    '&:hover': { boxShadow: theme.shadows[3] },
                   }}
                   onClick={() => setSelectedExam(exam)}
                 >
@@ -121,10 +107,7 @@ const ExamsList = () => {
                     </Box>
                     <Typography
                       variant="body2"
-                      sx={{
-                        color: getExamColor(exam.status),
-                        fontWeight: 'bold',
-                      }}
+                      sx={{ color: getExamColor(exam.status), fontWeight: 'bold' }}
                     >
                       {exam.status}
                     </Typography>
@@ -140,7 +123,7 @@ const ExamsList = () => {
           <Card
             sx={{
               mt: 2,
-              backgroundColor: theme.palette.background.paper,
+              backgroundColor: theme.vars.palette.background.paper,
               boxShadow: theme.shadows[2],
             }}
           >
@@ -156,10 +139,7 @@ const ExamsList = () => {
               </Typography>
               <Typography
                 variant="body1"
-                sx={{
-                  color: getExamColor(selectedExam.status),
-                  fontWeight: 'bold',
-                }}
+                sx={{ color: getExamColor(selectedExam.status), fontWeight: 'bold' }}
               >
                 Status: {selectedExam.status}
               </Typography>

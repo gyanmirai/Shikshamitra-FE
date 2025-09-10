@@ -1,9 +1,7 @@
 import { TextField, Autocomplete } from '@mui/material';
-
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 interface RenderRoleProps {
   formik: any;

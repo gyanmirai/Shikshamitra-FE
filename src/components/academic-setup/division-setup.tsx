@@ -3,11 +3,14 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
-import { useDispatch } from 'react-redux';
-import { useRef, useState, useEffect, useCallback } from 'react';
-
 import { LoadingButton } from '@mui/lab';
+import { useDispatch } from 'react-redux';
 import { Add } from '@mui/icons-material';
+import { useTabs } from 'src/hooks/use-tabs';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { boardApi } from 'src/redux/board/boardApi';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   Tab,
   Box,
@@ -20,12 +23,6 @@ import {
   DialogActions,
   CircularProgress,
 } from '@mui/material';
-
-import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { boardApi } from 'src/redux/board/boardApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetDivisionQuery,
   useAddDivisionMutation,

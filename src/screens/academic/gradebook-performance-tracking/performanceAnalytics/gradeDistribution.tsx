@@ -3,13 +3,10 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-
+import CustomSelect from 'src/components/custom-select';
 import { Box, Card, Grid, Typography } from '@mui/material';
-
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomSelect from 'src/components/custom-select';
 
 import { GradeDistribution } from '../performance-analytics';
 
@@ -24,7 +21,7 @@ const GradeDistributionChart = () => {
     currentQueryAndMutation: useGetClassQuery,
   });
   return (
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle1">Grade Distribution</Typography>
@@ -42,9 +39,7 @@ const GradeDistributionChart = () => {
               setClasses2(val as string);
               setDivisionOptions(selectedClass?.divisions || []);
             }}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
           <CustomSelect
             label="Division"
@@ -53,24 +48,18 @@ const GradeDistributionChart = () => {
             valueKey="id"
             options={divisionOptions}
             value={division2}
-            onChange={(val) => {
-              setDivision2(val as string);
-            }}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            onChange={(val) => setDivision2(val as string)}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
           <CustomSelect
-            label="subject"
+            label="Subject"
             options={[
               { value: 'math', label: 'Math' },
               { value: 'science', label: 'Science' },
             ]}
-            onChange={() => {}}
             value=""
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            onChange={() => {}}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
         </Box>
         <GradeDistribution
@@ -80,8 +69,8 @@ const GradeDistributionChart = () => {
           chart={{
             categories: ['A', 'B', 'C', 'D'],
             series: [
-              { name: 'quiz Grade', data: [12, 10, 18, 22] },
-              { name: 'other Grade', data: [12, 10, 18, 22] },
+              { name: 'Quiz Grade', data: [12, 10, 18, 22] },
+              { name: 'Other Grade', data: [12, 10, 18, 22] },
             ],
             options: {
               chart: {
@@ -96,7 +85,6 @@ const GradeDistributionChart = () => {
                     zoomin: false,
                     zoomout: false,
                     pan: false,
-
                     customIcons: [],
                   },
                 },

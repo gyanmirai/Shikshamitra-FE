@@ -1,12 +1,9 @@
 import { forwardRef } from 'react';
-
 import Box from '@mui/material/Box';
-import { styled } from '@mui/material/styles';
-import ButtonBase from '@mui/material/ButtonBase';
-
 import { varAlpha } from 'src/theme/styles';
-
+import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import ButtonBase from '@mui/material/ButtonBase';
 import { useNavItem } from 'src/components/nav-section/hooks';
 
 import type { NavItemProps, NavItemStateProps } from '../types';
@@ -62,7 +59,7 @@ const StyledNavItem = styled(ButtonBase, {
   color: theme.vars.palette.text.secondary,
   fontWeight: theme.typography.fontWeightMedium,
   ...(active && {
-    color: theme.vars.palette.primary.main,
+    color: theme.palette.primary.main,
     fontWeight: theme.typography.fontWeightSemiBold,
     backgroundColor: varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
     '&:hover': { backgroundColor: varAlpha(theme.vars.palette.primary.mainChannel, 0.16) },

@@ -4,13 +4,10 @@ import type { ChartOptions } from 'src/components/chart';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
-
-import { fNumber, fPercent } from 'src/utils/format-number';
-
-import { varAlpha, stylesMode } from 'src/theme/styles';
-
 import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
+import { varAlpha, stylesMode } from 'src/theme/styles';
+import { fNumber, fPercent } from 'src/utils/format-number';
 
 // ----------------------------------------------------------------------
 
@@ -18,12 +15,7 @@ type Props = CardProps & {
   title: string;
   total: number;
   percent: number;
-  chart: {
-    colors?: string[];
-    categories: string[];
-    series: number[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; categories: string[]; series: number[]; options?: ChartOptions };
 };
 
 export function EcommerceWidgetSummary({ title, percent, total, chart, sx, ...other }: Props) {
@@ -35,14 +27,7 @@ export function EcommerceWidgetSummary({ title, percent, total, chart, sx, ...ot
     chart: { sparkline: { enabled: true } },
     colors: [chartColors[1]],
     xaxis: { categories: chart.categories },
-    grid: {
-      padding: {
-        top: 6,
-        left: 6,
-        right: 6,
-        bottom: 6,
-      },
-    },
+    grid: { padding: { top: 6, left: 6, right: 6, bottom: 6 } },
     fill: {
       type: 'gradient',
       gradient: {
@@ -70,11 +55,11 @@ export function EcommerceWidgetSummary({ title, percent, total, chart, sx, ...ot
           position: 'relative',
           alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: varAlpha(theme.vars.palette.success.mainChannel, 0.16),
+          bgcolor: varAlpha(theme.palette.success.mainChannel, 0.16),
           color: 'success.dark',
           [stylesMode.dark]: { color: 'success.light' },
           ...(percent < 0 && {
-            bgcolor: varAlpha(theme.vars.palette.error.mainChannel, 0.16),
+            bgcolor: varAlpha(theme.palette.error.mainChannel, 0.16),
             color: 'error.dark',
             [stylesMode.dark]: { color: 'error.light' },
           }),
@@ -97,15 +82,7 @@ export function EcommerceWidgetSummary({ title, percent, total, chart, sx, ...ot
   );
 
   return (
-    <Card
-      sx={{
-        p: 3,
-        display: 'flex',
-        alignItems: 'center',
-        ...sx,
-      }}
-      {...other}
-    >
+    <Card sx={{ p: 3, display: 'flex', alignItems: 'center', ...sx }} {...other}>
       <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ typography: 'subtitle2' }}>{title}</Box>
         <Box sx={{ my: 1.5, typography: 'h3' }}>{fNumber(total)}</Box>

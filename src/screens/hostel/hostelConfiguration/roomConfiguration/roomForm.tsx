@@ -1,17 +1,14 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
 // eslint-disable-next-line import/no-duplicates
 import { Autocomplete } from '@mui/material';
-// eslint-disable-next-line import/no-duplicates
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+// eslint-disable-next-line import/no-duplicates
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IRoomFormProps } from './type'; // Update types to match `IHostelRoom`
@@ -41,8 +38,8 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.roomName && formik.errors.roomName)}>
                   <TextField
                     size="small"
@@ -57,7 +54,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.roomType && formik.errors.roomType)}>
                   <Autocomplete
                     options={roomTypeOptions}
@@ -76,7 +73,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.floorNumber && formik.errors.floorNumber)}
                 >
@@ -94,7 +91,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.roomCapacity && formik.errors.roomCapacity)}
                 >
@@ -112,7 +109,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.status && formik.errors.status)}>
                   <Autocomplete
                     options={statusOptions}
@@ -131,7 +128,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 {formik.values.roomType && (
                   <Box mt={2}>
                     <CustomizableTable
@@ -155,9 +152,6 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                               onChange={(e) => {
                                 const newQuantities = [...formik.values.facilityQuantities];
                                 const index = newQuantities.findIndex((item) => item.id === row.id);
-
-                                console.log('newQuantities---', newQuantities);
-
                                 if (index !== -1) {
                                   newQuantities[index] = {
                                     ...newQuantities[index],

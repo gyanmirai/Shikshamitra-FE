@@ -3,20 +3,16 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
+import { Iconify } from 'src/components/iconify';
 import { Box, Card, Button } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
-import { Iconify } from 'src/components/iconify';
+import { useDispatch, useSelector } from 'react-redux';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 
 import IncidentTypeSettingForm from './components/incidentForm';

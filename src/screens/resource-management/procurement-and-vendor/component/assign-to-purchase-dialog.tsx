@@ -1,14 +1,11 @@
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
-import { Box, Grid, Button, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Button, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 
 import { getInitialAssignedToPurchaseValues } from '../initialValue';
@@ -42,7 +39,7 @@ const AssignToPurchaseDialog = () => {
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
         <Grid container spacing={2}>
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField
               error={formik.touched.assignedTo && Boolean(formik.errors.assignedTo)}
             >
@@ -61,7 +58,7 @@ const AssignToPurchaseDialog = () => {
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={6} pb="10px">
+          <Grid size={6} pb="10px">
             <ShakingTextField error={formik.touched.priority && Boolean(formik.errors.priority)}>
               <CustomSelect
                 label="Select Priority"
@@ -78,7 +75,7 @@ const AssignToPurchaseDialog = () => {
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} pb="10px">
+          <Grid size={12} pb="10px">
             <ShakingTextField
               error={formik.touched.description && Boolean(formik.errors.description)}
             >

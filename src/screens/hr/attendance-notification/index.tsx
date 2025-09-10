@@ -1,15 +1,12 @@
 'use client';
 
 import React from 'react';
-
 import { Box } from '@mui/material';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeNotificationHistoryQuery } from 'src/redux/employee/employeeApi';
-
 import { Label } from 'src/components/label';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useGetEmployeeNotificationHistoryQuery } from 'src/redux/employee/employeeApi';
 
 const HrAttendanceNotificationScreen = () => {
   const { data } = useQueryAndMutation({

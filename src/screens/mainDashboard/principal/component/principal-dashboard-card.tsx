@@ -3,11 +3,11 @@ import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
 import Link from 'next/link';
-
-import { Box, Card, useTheme, Typography } from '@mui/material';
-
+import { get } from 'lodash';
 import { Label } from 'src/components/label';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 
 interface IPrincipalDashboardCardProps {
@@ -58,7 +58,7 @@ export function PrincipalDashboardCard({
         {/* Title & Dropdown Section */}
         <Box display="flex" flexDirection="row" alignItems="center">
           <Box flex={2}>
-            <Iconify icon={icon} width={44} height={44} color={color} />
+            <Iconify icon={icon} width={44} height={44} color={get(theme.palette, color, '')} />
           </Box>
           <Box flex={10}>
             <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">

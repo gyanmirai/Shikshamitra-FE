@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-
 import { Box, Typography } from '@mui/material';
-
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -16,6 +14,7 @@ interface IExpenseCategoryTableProps {
   onEdit?: (row: IExpenseFormValues) => void;
   onDelete?: (row: IExpenseFormValues) => void;
   onView?: (row: IExpenseFormValues) => void;
+  isLoading: boolean;
 }
 
 const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
@@ -25,9 +24,11 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   onEdit,
   onDelete,
   onView,
+  isLoading,
 }) => (
   <CustomizableTable
     tableId="expense-category-table"
+    isLoading={isLoading}
     noDataText={
       <>
         No Expense data found

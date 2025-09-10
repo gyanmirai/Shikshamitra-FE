@@ -1,12 +1,9 @@
 'use client';
 
 import React from 'react';
-
 import { Grid } from '@mui/material';
-
-import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
 
 const TransportDashboardScreen = () => (
   // const [selectedMonth, setSelectedMonth] = useState<{
@@ -22,7 +19,7 @@ const TransportDashboardScreen = () => (
       description="This dashboard provides a daily overview of your transportation activity, including total stops, and more."
     />
     <Grid container spacing={3}>
-      <Grid item xs={12} sm={6} md={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <EmployeeDashboardCard
           title="Total Vehicle"
           icon="tdesign:vehicle"
@@ -37,7 +34,7 @@ const TransportDashboardScreen = () => (
         />
       </Grid>
 
-      <Grid item xs={12} sm={6} md={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <EmployeeDashboardCard
           title="Total Travellers"
           icon="pepicons-print:people"
@@ -51,7 +48,7 @@ const TransportDashboardScreen = () => (
         />
       </Grid>
 
-      <Grid item xs={12} sm={6} md={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <EmployeeDashboardCard
           title="Total Stops"
           icon="noto:bus-stop"
@@ -65,7 +62,7 @@ const TransportDashboardScreen = () => (
         />
       </Grid>
 
-      <Grid item xs={12} sm={6} md={3}>
+      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
         <EmployeeDashboardCard
           title="Total Driver"
           icon="healthicons:truck-driver"

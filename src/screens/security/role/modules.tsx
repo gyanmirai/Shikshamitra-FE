@@ -1,8 +1,12 @@
 //
 
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
 import React, { useRef, useState } from 'react';
-
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import { navData } from 'src/layouts/config-nav-dashboard';
 import {
   Box,
   Grid,
@@ -15,19 +19,11 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { varAlpha } from 'src/theme/styles';
-import { navData } from 'src/layouts/config-nav-dashboard';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-
 const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
   const { user } = useSelector((state: any) => state.auth);
   const data = navData(user?.profile?.email === 'ddvs@gmail.com').flatMap((item) => item.items);
 
-  const stackRef = useRef<any>();
+  const stackRef = useRef<any>(null);
   const [selectSubModule, setSelectSubModule] = useState<any>(null);
 
   return (
@@ -53,14 +49,12 @@ const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
               gap: 2,
               backgroundColor: (theme) =>
                 selectSubModule?._action === item._action
-                  ? varAlpha(theme.palette.primary.mainChannel, 0.1)
+                  ? varAlpha(theme.vars.palette.primary.mainChannel, 0.1)
                   : 'background.paper',
               color: (theme) =>
                 selectSubModule?._action === item._action ? 'primary.main' : 'text.primary',
               transition: 'all 0.3s ease',
-              '&:hover': {
-                scale: 1.05,
-              },
+              '&:hover': { scale: 1.05 },
             }}
           >
             {item.icon}
@@ -78,15 +72,8 @@ const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
         }}
       >
         <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 2,
-                p: 2,
-              }}
-            >
+          <Grid size={12}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, p: 2 }}>
               <Tree
                 data={selectSubModule?.submodule || []}
                 allPermissions={allPermissions}
@@ -116,19 +103,9 @@ const TreeSubList = ({ item, depth, allPermissions, setAllPermissions }: any) =>
   const open = useBoolean();
   return (
     <Stack key={item.id} spacing={1} pl={depth * 4} height="100%" maxWidth="350px" width="100%">
-      <Paper
-        elevation={4}
-        sx={{
-          p: 1,
-        }}
-      >
+      <Paper elevation={4} sx={{ p: 1 }}>
         <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 2,
-          }}
+          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}
         >
           <Typography variant="subtitle2" fontWeight={600}>
             {item.title}
@@ -276,23 +253,10 @@ const TreeSubList = ({ item, depth, allPermissions, setAllPermissions }: any) =>
       </Paper>
       {open.value && item?.children?.length && (
         <Scrollbar
-          sx={{
-            height: '500px',
-            pr: 1,
-            bgcolor: 'background.neutral',
-            py: 1,
-            borderRadius: 1,
-          }}
+          sx={{ height: '500px', pr: 1, bgcolor: 'background.neutral', py: 1, borderRadius: 1 }}
         >
           <Fade timeout={700} in={open.value} easing={{ exit: '500' }}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 1,
-                flexDirection: 'column',
-              }}
-            >
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, flexDirection: 'column' }}>
               <Tree
                 data={item.children}
                 depth={depth + 1}

@@ -2,18 +2,14 @@ import type { LinkProps } from '@mui/material/Link';
 
 import { m } from 'framer-motion';
 import { forwardRef } from 'react';
-
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
-import { styled } from '@mui/material/styles';
-import ButtonBase from '@mui/material/ButtonBase';
-import CardActionArea from '@mui/material/CardActionArea';
-
-import { RouterLink } from 'src/routes/components';
-
 import { CONFIG } from 'src/config-global';
-
+import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import ButtonBase from '@mui/material/ButtonBase';
+import { RouterLink } from 'src/routes/components';
+import CardActionArea from '@mui/material/CardActionArea';
 import { useNavItem } from 'src/components/nav-section/hooks';
 
 import type { NavItemProps, NavItemStateProps } from '../types';
@@ -67,7 +63,7 @@ const StyledNavItem = styled(ButtonBase, {
       borderRadius: '50%',
       position: 'absolute',
       backgroundColor: theme.vars.palette.text.disabled,
-      ...(active && { opacity: 1, backgroundColor: theme.vars.palette.primary.main }),
+      ...(active && { opacity: 1, backgroundColor: theme.palette.primary.main }),
     },
   };
 
@@ -80,7 +76,7 @@ const StyledNavItem = styled(ButtonBase, {
       height: '100%',
       '&:hover': { opacity: 0.64, '&::before': baseStyles.dot },
       ...(active && {
-        color: theme.vars.palette.primary.main,
+        color: theme.palette.primary.main,
         fontWeight: theme.typography.fontWeightSemiBold,
         '&::before': baseStyles.dot,
       }),

@@ -1,7 +1,6 @@
 import type { AlertProps } from '@mui/material';
 
 import { toast } from 'sonner';
-
 import { Alert } from '@mui/material';
 
 export const shikshaMitraToast = {

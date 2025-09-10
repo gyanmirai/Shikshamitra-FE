@@ -1,9 +1,7 @@
 // sections/RecentActivities.tsx
 import React from 'react';
-
-import { Box, Card, Button, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Button, Typography } from '@mui/material';
 
 import ActivityItem from './activityCard';
 

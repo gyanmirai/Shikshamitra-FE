@@ -1,22 +1,18 @@
 import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
+import { useTabs } from 'src/hooks/use-tabs';
+import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-
-import { Tab, Box, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
-
-import { useTabs } from 'src/hooks/use-tabs';
-
+import { EmptyContent } from 'src/components/empty-content';
+import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useLazyGetEmployeeByIdQuery } from 'src/redux/employee/employeeApi';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-
-import { Iconify } from 'src/components/iconify';
-import { EmptyContent } from 'src/components/empty-content';
-import { LoadingScreen } from 'src/components/loading-screen';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Tab, Box, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
 
 import PayrollSummary from './payroll-summary';
 import EmployeeInformation from './information';
@@ -126,7 +122,7 @@ export function EmployeeCard({ employee }: any) {
             justifyContent: 'space-between',
             borderLeft: (theme) =>
               employee?.employeeStatusType === EmployeeStatusType.Active
-                ? `4px solid ${theme.palette.success.main}`
+                ? `4px solid ${theme.vars.palette.success.main}`
                 : `4px solid ${theme.palette.error.main}`,
             borderRadius: 1,
           }}
@@ -141,7 +137,7 @@ export function EmployeeCard({ employee }: any) {
               sx={{
                 width: 64,
                 height: 64,
-                border: (theme) => `1px solid ${theme.palette.grey[400]}`,
+                border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
               }}
             />
             <Box>
@@ -188,17 +184,13 @@ export function EmployeeCard({ employee }: any) {
           sx={{
             px: 1.5,
 
-            '& .MuiTabs-flexContainer': {
-              gap: 1.5,
-            },
+            '& .MuiTabs-flexContainer': { gap: 1.5 },
           }}
           role="tablist"
         >
           {TABS.map((tab) => (
             <Tab
-              sx={{
-                fontSize: '12px',
-              }}
+              sx={{ fontSize: '12px' }}
               key={tab.value}
               value={tab.value}
               icon={tab.icon}
@@ -213,11 +205,7 @@ export function EmployeeCard({ employee }: any) {
         steps={TABS}
         isBackClick={isBackClick}
         step={currentIndex}
-        containerProps={{
-          sx: {
-            p: 0,
-          },
-        }}
+        containerProps={{ sx: { p: 0 } }}
       >
         <Box>
           {currentActiveComponent?.component && (

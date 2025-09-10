@@ -2,9 +2,20 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import React, { useState, useCallback } from 'react';
-
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import React, { useState, useCallback } from 'react';
+import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetReservationBooksQuery } from 'src/redux/book-reservation-api/book-reservation-api';
 import {
   Grid,
   Button,
@@ -14,26 +25,11 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetReservationBooksQuery } from 'src/redux/book-reservation-api/book-reservation-api';
 import {
   LibraryBookStatus,
   LibraryBookStatusColors,
   LibraryBookStatusOptions,
 } from 'src/enums/library-book-status';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import ShakingTextField from 'src/components/shaking-text-field';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { DialogScrollContent } from 'src/components/customDialog';
-import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { buildInitialBookReturnValues } from './ReturnInitialValues';
 import { bookReturnValidationSchema } from './ReturnValidatioSchema';
@@ -76,7 +72,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
       <DialogScrollContent>
         <Grid container spacing={3}>
           {/* Book Category */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
               <CustomSelect
                 label="Book Category *"
@@ -96,7 +92,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Book Title */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size="small"
@@ -111,7 +107,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Edition */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <TextField
               fullWidth
               size="small"
@@ -126,7 +122,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Member ID */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               fullWidth
               disabled
@@ -141,7 +137,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Member Name */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               fullWidth
               size="small"
@@ -156,7 +152,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Due Date */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <DatePicker
               label="Due Date *"
               disabled
@@ -175,7 +171,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Return Date */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <DatePicker
               label="Return Date *"
               value={dayjs(formik.values.returnDate)}
@@ -194,7 +190,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Book Condition */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
               error={!!(formik.touched.bookCondition && formik.errors.bookCondition)}
             >
@@ -214,7 +210,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Fine Amount */}
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.fineAmount && formik.errors.fineAmount)}>
               <NumericFormatCustom
                 size="small"
@@ -231,7 +227,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
 
           {/* Reserved List */}
           {showReservation && (
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Typography variant="subtitle1">Reserved List</Typography>
               <CustomizableTable
                 tableId="reserved-list"

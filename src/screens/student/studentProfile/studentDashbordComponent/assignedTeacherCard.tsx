@@ -1,7 +1,5 @@
 import React from 'react';
-
 import { Card, Stack, Typography } from '@mui/material';
-
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 interface AssignedTeacherItemProps {

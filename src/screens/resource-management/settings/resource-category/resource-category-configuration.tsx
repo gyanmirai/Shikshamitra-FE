@@ -1,19 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import data from 'src/json/ResourceManagement/resourceSettings/resourceCategoryData.json';
-
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
+import data from 'src/json/ResourceManagement/resourceSettings/resourceCategoryData.json';
 
 import AddResourceCategoryDialog from './component/add-resource-category-dialog';
 

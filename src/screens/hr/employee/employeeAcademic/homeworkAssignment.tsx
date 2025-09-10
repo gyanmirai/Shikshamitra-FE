@@ -2,21 +2,18 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import React from 'react';
-
+import { Label } from 'src/components/label';
 import { Box, Card, Grid, Typography } from '@mui/material';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
   PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
 
-import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
-
 const HomeworkAssignment = () => (
   <Grid container spacing={2}>
-    <Grid item xs={12}>
+    <Grid size={12}>
       <Card sx={{ p: 2, height: '100%' }}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Typography variant="h6">Homeworks</Typography>
@@ -140,7 +137,7 @@ const HomeworkAssignment = () => (
         />
       </Card>
     </Grid>
-    <Grid item xs={12}>
+    <Grid size={12}>
       <Card sx={{ p: 2, height: '100%' }}>
         <Typography variant="h6">Assignments</Typography>
         <CustomizableTable

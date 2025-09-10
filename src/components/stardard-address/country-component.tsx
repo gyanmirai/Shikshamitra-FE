@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
-import { type ICountry } from 'country-state-city';
-
 import { TextField } from '@mui/material';
+import { type ICountry } from 'country-state-city';
 import { Autocomplete, type TextFieldProps, type AutocompleteProps } from '@mui/material';
 
 import ShakingTextField from '../shaking-text-field';

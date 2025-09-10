@@ -1,24 +1,20 @@
 import dayjs from 'dayjs';
+import { LoadingButton } from '@mui/lab';
 import React, { useCallback } from 'react';
 import { Form, Field, Formik } from 'formik';
-
-import { LoadingButton } from '@mui/lab';
-import { DateTimePicker } from '@mui/x-date-pickers';
-import { Grid, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-import { convertBase64Format } from 'src/utils/base64Formate';
-
-import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
-
 import { Upload } from 'src/components/upload';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
+import { convertBase64Format } from 'src/utils/base64Formate';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
 
 import { getLeaveValidationSchema } from './validationSchema';
 
@@ -83,7 +79,7 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
           <BackPopUpChecked initialValues={initialValues} currentValues={values}>
             <Scrollbar sx={{ p: 2 }}>
               <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!touched.leaveType && !!errors.leaveType}>
                     <CustomSelect
                       options={[]}
@@ -95,17 +91,12 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                       labelKey="leaveType"
                       error={!!touched.leaveType && !!errors.leaveType}
                       helperText={(touched.leaveType && errors.leaveType) || ''}
-                      onChange={(value) => {
-                        setFieldValue('leaveType', value);
-                      }}
-                      // addOtherItemText="Add Leave Type"
-                      //   addOtherItemOnClick={() => {
-                      //     addLeaveTypeDialog.onTrue();
-                      //   }}
+                      onChange={(value) => setFieldValue('leaveType', value)}
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid item xs={12} md={6}>
+
+                <Grid size={{ xs: 12, md: 6 }}>
                   <FormControlLabel
                     control={
                       <Field
@@ -115,16 +106,15 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                         disabled={editData}
                         onChange={(e: any) => {
                           setFieldValue('isHalfDay', e.target.checked);
-                          if (e.target.checked) {
-                            setFieldValue('endDate', null);
-                          }
+                          if (e.target.checked) setFieldValue('endDate', null);
                         }}
                       />
                     }
                     label="Half Day"
                   />
                 </Grid>
-                <Grid item xs={values.isHalfDay ? 12 : 6}>
+
+                <Grid size={{ xs: values.isHalfDay ? 12 : 6 }}>
                   <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
                     <DateTimePicker
                       label={values.isHalfDay ? 'Date and Time *' : 'Start Date and Time *'}
@@ -143,8 +133,9 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                     />
                   </ShakingTextField>
                 </Grid>
+
                 {!values.isHalfDay && (
-                  <Grid item xs={6}>
+                  <Grid size={{ xs: 6 }}>
                     <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
                       <DateTimePicker
                         label="End Date and Time *"
@@ -155,7 +146,6 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                         slotProps={{
                           textField: {
                             fullWidth: true,
-
                             size: 'small',
                             helperText: touched.endDate && errors.endDate,
                             error: touched.endDate && Boolean(errors.endDate),
@@ -166,7 +156,7 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                   </Grid>
                 )}
 
-                <Grid item xs={6}>
+                <Grid size={{ xs: 6 }}>
                   <Upload
                     {...uploadProps}
                     thumbnail
@@ -176,8 +166,7 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                       const reader = new FileReader();
                       reader.readAsDataURL(file);
                       reader.onload = () => {
-                        const base64String = reader.result;
-                        setFieldValue('docs', base64String);
+                        setFieldValue('docs', reader.result);
                       };
                     }}
                     multiple={false}
@@ -186,28 +175,23 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                     disabled={editData}
                   />
                 </Grid>
-                <Grid item xs={6}>
+
+                <Grid size={{ xs: 6 }}>
                   <ShakingTextField error={touched.description && Boolean(errors.description)}>
                     <Editor
-                      onChange={(value) => {
-                        setFieldValue('description', value);
-                      }}
+                      onChange={(value) => setFieldValue('description', value)}
                       value={values.description}
                       placeholder="Leave description *"
                       error={touched.description && Boolean(errors.description)}
                       helperText={touched.description && errors.description}
                       editable={!editData}
                       sx={{ height: '100%' }}
-                      slotProps={{
-                        wrap: {
-                          height: '100%',
-                        },
-                      }}
+                      slotProps={{ wrap: { height: '100%' } }}
                     />
                   </ShakingTextField>
                 </Grid>
 
-                <Grid item xs={12} display="flex" justifyContent="flex-end">
+                <Grid size={{ xs: 12 }} display="flex" justifyContent="flex-end">
                   {editData && (
                     <>
                       {editData.status !== EmployeeLeaveStatusType.Rejected && (
@@ -225,17 +209,16 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
                         variant="contained"
                         size="small"
                         color="error"
-                        onClick={() => {
-                          setFieldValue('status', EmployeeLeaveStatusType.Rejected);
-                        }}
+                        onClick={() => setFieldValue('status', EmployeeLeaveStatusType.Rejected)}
                       >
                         Reject
                       </LoadingButton>
                     </>
                   )}
                 </Grid>
+
                 {values.status === EmployeeLeaveStatusType.Rejected && (
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <TextField
                       fullWidth
                       multiline

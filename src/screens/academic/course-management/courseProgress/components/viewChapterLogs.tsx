@@ -1,7 +1,6 @@
 import type { TimelineType } from 'src/components/timeline-view';
 
 import React from 'react';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomizedTimeline } from 'src/components/timeline-view';
 

@@ -1,12 +1,11 @@
-import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
 
 const RefundTracking = () => (
   <Box sx={{ mt: 3 }}>
     <Grid container spacing={2}>
       {/* Total Refund Card */}
-      <Grid item xs={12} sm={12}>
+      <Grid size={{ xs: 12, sm: 12 }}>
         <Card
           sx={{
             background: 'linear-gradient(to right, #fbe8d3, #e0f7fa)',

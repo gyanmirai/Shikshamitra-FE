@@ -2,19 +2,16 @@ import type { LabelColor } from 'src/components/label';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import React, { useCallback } from 'react';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { MenuItem, MenuList } from '@mui/material';
-
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   LibraryBookStatus,
   LibraryBookStatusColors,
   LibraryBookStatusOptions,
 } from 'src/enums/library-book-status';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { ILibraryBookData } from './type';
 
@@ -53,7 +50,8 @@ const BookIssueReturnTable = ({
         { id: 'memberName', label: 'Member Name', align: 'left' },
         { id: 'bookCategory', label: 'Book Category', align: 'left' },
         { id: 'bookTitle', label: 'Book Title', align: 'left' },
-        { id: 'requestedDate', label: 'Requested Date', align: 'left', filterType: 'date' },
+        { id: 'requestedDate', label: 'Issue Date', align: 'left', filterType: 'date' },
+        { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date' },
         {
           id: 'status',
           label: 'Status',

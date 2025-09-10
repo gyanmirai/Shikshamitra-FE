@@ -2,15 +2,12 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getBookCategoryInitialValues } from './BookInitialValues';
@@ -43,7 +40,7 @@ const BookCategoryForm: React.FC<IBookCategoryFormProps> = ({ open, onClose, edi
       <DialogScrollContent>
         <Grid container spacing={2}>
           {/* Category Name */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField
               error={!!(formik.touched.categoryName && formik.errors.categoryName) || false}
             >
@@ -72,7 +69,7 @@ const BookCategoryForm: React.FC<IBookCategoryFormProps> = ({ open, onClose, edi
           </Grid>
 
           {/* Code */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.code && formik.errors.code) || false}>
               <TextField
                 fullWidth
@@ -92,7 +89,7 @@ const BookCategoryForm: React.FC<IBookCategoryFormProps> = ({ open, onClose, edi
           </Grid>
 
           {/* Description */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               fullWidth
               multiline

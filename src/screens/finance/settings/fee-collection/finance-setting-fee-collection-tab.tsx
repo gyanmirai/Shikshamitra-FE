@@ -1,10 +1,8 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Switch, Typography, FormControlLabel } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
+import { Box, Switch, Typography, FormControlLabel } from '@mui/material';
 
 const FinanceSettingFeeCollectionTab = () => {
   const data = [];

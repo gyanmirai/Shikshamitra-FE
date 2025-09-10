@@ -2,11 +2,9 @@ import type { Theme, SxProps } from '@mui/material/styles';
 import type { DropAnimation, UniqueIdentifier } from '@dnd-kit/core';
 import type { IKanban, IKanbanTask, IKanbanColumn } from 'src/types/kanban';
 
-import { DragOverlay as DndDragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core';
-
 import Portal from '@mui/material/Portal';
-
 import ColumnBase from 'src/sections/kanban/column/column-base';
+import { DragOverlay as DndDragOverlay, defaultDropAnimationSideEffects } from '@dnd-kit/core';
 
 import AdmissionItem from './admission-item';
 import { HeaderToolBar } from './header-toolbar';

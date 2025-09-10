@@ -5,16 +5,13 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import { getRoomAllocateInitialValues } from './getRoomAllocateInitialValues';
 
@@ -56,7 +53,7 @@ const RoomAllocateForm: React.FC<{
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               {/* Hostel Type */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.hostelType && formik.errors.hostelType)}>
                   <CustomSelect
                     size="small"
@@ -79,8 +76,9 @@ const RoomAllocateForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
+
               {/* Hostel Name */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.hostelName && formik.errors.hostelName)}>
                   <CustomSelect
                     size="small"
@@ -108,7 +106,7 @@ const RoomAllocateForm: React.FC<{
               </Grid>
 
               {/* Room Name */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.roomName && formik.errors.roomName)}>
                   <Autocomplete
                     options={roomOptions}

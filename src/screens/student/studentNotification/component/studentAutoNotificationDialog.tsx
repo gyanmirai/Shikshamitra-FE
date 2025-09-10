@@ -1,14 +1,9 @@
 import { useFormik } from 'formik';
-import React, { useMemo, useState } from 'react';
-
-import { Box, Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
-
-import { useSearchParam } from 'src/hooks/use-search-param';
-
-import NotificationConditionRuleForm from 'src/screens/communication/notification/component/notification-condition-rule-form';
-
+import React, { useState } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
+import { Box, Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
+import NotificationConditionRuleForm from 'src/screens/communication/notification/component/notification-condition-rule-form';
 
 import RoleConfigForNotification from './role-config-for-notification';
 
@@ -22,17 +17,13 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
   StudentAutoNotificationConfigurationDialogProps
 > = ({ onClose, data, fromSendManual }) => {
   const {
-    id,
     category,
     subCategory,
     typeOfNotification,
-    generateTime,
     nameOfTheNotification,
-    occurance,
     role,
     teacherRecipient,
     studentRecipient,
-    isActive,
     communicationTypeForTeacher,
     communicationTypeForStudent,
     selectedTemplateName,
@@ -188,84 +179,78 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
   const handleTemplateChangeForTeacher = (d: string) => {
     formik.setFieldValue('selectedTemplateNameForTeacher', d);
   };
-  const TABS = [
-    {
-      value: 'Teacher',
-      label: 'Teacher',
-      component: () => (
-        <RoleConfigForNotification // eslint-disable-next-line jsx-a11y/aria-role
-          role="Teacher"
-          selectedRoles={formik.values.selectedRoles}
-          configurations={configurations}
-          handleConfigChange={handleConfigChange}
-          communicationChannel={formik.values.selectedCommunicationChannelForTeacher}
-          setCommunicationChannel={handleCommunicationChannelForTeacher}
-          isRecurring={formik.values.isRecurringForTeacher}
-          setIsRecurring={handleRecurringForTeacher}
-          timingOptions={timingOptions}
-          recurringValue={formik.values.recurringValueForTeacher}
-          setRecurringValue={handleRecurringValueForTeacher}
-          showRecurringSwitch={formik.values.notificationType !== 'event'}
-          selectedTemplateContent={formik.values.selectedTemplateContentForTeacher}
-          selectedTemplateName={formik.values.selectedTemplateNameForTeacher}
-          fromSendManual={fromSendManual}
-          templateOptions={[
-            {
-              value: 'generalInquirySubmittedTemplate',
-              label: 'General Inquiry Submitted Template',
-            },
-            {
-              value: 'generalTemplateForBelow80%Attendance',
-              label: 'General Template For Below 80% Attendance',
-            },
-          ]}
-          handleTemplateChange={handleTemplateChangeForTeacher}
-        />
-      ),
-    },
-    {
-      value: 'Student',
-      label: 'Student',
-      component: () => (
-        <RoleConfigForNotification
-          // eslint-disable-next-line jsx-a11y/aria-role
-          role="Student"
-          selectedRoles={formik.values.selectedRoles}
-          configurations={configurations}
-          handleConfigChange={handleConfigChange}
-          communicationChannel={formik.values.selectedCommunicationChannelForStudent}
-          setCommunicationChannel={handleCommunicationChannelForStudent}
-          isRecurring={formik.values.isRecurringForStudent}
-          setIsRecurring={handleRecurringForStudent}
-          timingOptions={timingOptions}
-          recurringValue={formik.values.recurringValueForStudent}
-          setRecurringValue={handleRecurringValueForStudent}
-          showRecurringSwitch={formik.values.notificationType !== 'event'}
-          selectedTemplateContent={formik.values.selectedTemplateContentForStudent}
-          selectedTemplateName={formik.values.selectedTemplateNameForStudent}
-          fromSendManual={fromSendManual}
-          templateOptions={[
-            {
-              value: 'generalInquirySubmittedTemplate',
-              label: 'General Inquiry Submitted Template',
-            },
-            {
-              value: 'generalTemplateForBelow80%Attendance',
-              label: 'General Template For Below 80% Attendance',
-            },
-          ]}
-          handleTemplateChange={handleTemplateChangeForStudent}
-        />
-      ),
-    },
-  ];
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dashboard' });
-
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [searchParams.tab]
-  );
+  // const TABS = [
+  //   {
+  //     value: 'Teacher',
+  //     label: 'Teacher',
+  //     component: () => (
+  //       <RoleConfigForNotification // eslint-disable-next-line jsx-a11y/aria-role
+  //         role="Teacher"
+  //         selectedRoles={formik.values.selectedRoles}
+  //         configurations={configurations}
+  //         handleConfigChange={handleConfigChange}
+  //         communicationChannel={formik.values.selectedCommunicationChannelForTeacher}
+  //         setCommunicationChannel={handleCommunicationChannelForTeacher}
+  //         isRecurring={formik.values.isRecurringForTeacher}
+  //         setIsRecurring={handleRecurringForTeacher}
+  //         timingOptions={timingOptions}
+  //         recurringValue={formik.values.recurringValueForTeacher}
+  //         setRecurringValue={handleRecurringValueForTeacher}
+  //         showRecurringSwitch={formik.values.notificationType !== 'event'}
+  //         selectedTemplateContent={formik.values.selectedTemplateContentForTeacher}
+  //         selectedTemplateName={formik.values.selectedTemplateNameForTeacher}
+  //         fromSendManual={fromSendManual}
+  //         templateOptions={[
+  //           {
+  //             value: 'generalInquirySubmittedTemplate',
+  //             label: 'General Inquiry Submitted Template',
+  //           },
+  //           {
+  //             value: 'generalTemplateForBelow80%Attendance',
+  //             label: 'General Template For Below 80% Attendance',
+  //           },
+  //         ]}
+  //         handleTemplateChange={handleTemplateChangeForTeacher}
+  //       />
+  //     ),
+  //   },
+  //   {
+  //     value: 'Student',
+  //     label: 'Student',
+  //     component: () => (
+  //       <RoleConfigForNotification
+  //         // eslint-disable-next-line jsx-a11y/aria-role
+  //         role="Student"
+  //         selectedRoles={formik.values.selectedRoles}
+  //         configurations={configurations}
+  //         handleConfigChange={handleConfigChange}
+  //         communicationChannel={formik.values.selectedCommunicationChannelForStudent}
+  //         setCommunicationChannel={handleCommunicationChannelForStudent}
+  //         isRecurring={formik.values.isRecurringForStudent}
+  //         setIsRecurring={handleRecurringForStudent}
+  //         timingOptions={timingOptions}
+  //         recurringValue={formik.values.recurringValueForStudent}
+  //         setRecurringValue={handleRecurringValueForStudent}
+  //         showRecurringSwitch={formik.values.notificationType !== 'event'}
+  //         selectedTemplateContent={formik.values.selectedTemplateContentForStudent}
+  //         selectedTemplateName={formik.values.selectedTemplateNameForStudent}
+  //         fromSendManual={fromSendManual}
+  //         templateOptions={[
+  //           {
+  //             value: 'generalInquirySubmittedTemplate',
+  //             label: 'General Inquiry Submitted Template',
+  //           },
+  //           {
+  //             value: 'generalTemplateForBelow80%Attendance',
+  //             label: 'General Template For Below 80% Attendance',
+  //           },
+  //         ]}
+  //         handleTemplateChange={handleTemplateChangeForStudent}
+  //       />
+  //     ),
+  //   },
+  // ];
+  // const [searchParams] = useSearchParam({ tab: 'dashboard' });
   return (
     <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
       <form onSubmit={formik.handleSubmit}>
@@ -278,7 +263,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
           >
             <Grid container spacing={2} px="18px" pt="40px">
               <Grid container spacing={2}>
-                <Grid item lg={4} px={0}>
+                <Grid size={{ lg: 4 }} px={0}>
                   <TextField
                     label="Notification Name"
                     value={formik.values.notificationName}
@@ -288,7 +273,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
                     disabled={fromSendManual}
                   />
                 </Grid>
-                <Grid item lg={4} px={0}>
+                <Grid size={{ lg: 4 }} px={0}>
                   <CustomSelect
                     disabled={fromSendManual}
                     label="Notification Type"
@@ -306,7 +291,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
                     }
                   />
                 </Grid>
-                <Grid item lg={4} px={0}>
+                <Grid size={{ lg: 4 }} px={0}>
                   <CustomSelect
                     disabled={fromSendManual}
                     label="Event Type"
@@ -324,7 +309,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
 
               {fromSendManual && formik.values.notificationType === 'rule' && (
                 <>
-                  <Grid item lg={12}>
+                  <Grid size={{ lg: 12 }}>
                     <Typography variant="subtitle1" gutterBottom>
                       Your Message will be sent on the following conditions:
                     </Typography>
@@ -339,13 +324,13 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
                   {formik.values.notificationType === 'rule' && (
                     <Grid container spacing={2} mt={2}>
                       {/* Condition Rule Title & Toggle */}
-                      <Grid item lg={12}>
+                      <Grid size={{ lg: 12 }}>
                         <Typography variant="subtitle1" gutterBottom>
                           Create Condition to trigger the notification
                         </Typography>
                       </Grid>
 
-                      <Grid item lg={12}>
+                      <Grid size={{ lg: 12 }}>
                         <NotificationConditionRuleForm
                           title=""
                           conditionFor={conditionFor}
@@ -370,7 +355,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
 
                   <>
                     {conditions.length > 0 && formik.values.notificationType === 'rule' && (
-                      <Grid item lg={12}>
+                      <Grid size={{ lg: 12 }}>
                         <Typography variant="subtitle1" gutterBottom>
                           Your Message will be sent on the following conditions:
                         </Typography>
@@ -390,7 +375,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
                 </>
               )}
               <Grid container spacing={2} pt="20px">
-                <Grid item lg={4}>
+                <Grid size={{ lg: 4 }}>
                   <CustomSelect
                     disabled={fromSendManual}
                     label="Select Category"
@@ -399,7 +384,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
                     onChange={(e) => formik.setFieldValue('category', e)}
                   />
                 </Grid>
-                <Grid item lg={4}>
+                <Grid size={{ lg: 4 }}>
                   <CustomSelect
                     disabled={fromSendManual}
                     label="Select Sub Category"
@@ -411,7 +396,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
                     onChange={(e) => formik.setFieldValue('subcategory', e)}
                   />
                 </Grid>
-                <Grid item lg={4}>
+                <Grid size={{ lg: 4 }}>
                   <CustomSelect
                     multiple
                     name="role"
@@ -428,7 +413,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
               </Grid>
               <Grid container spacing={2} pt="20px">
                 {formik.values.selectedRoles.includes('Teacher') && (
-                  <Grid item lg={4}>
+                  <Grid size={{ lg: 4 }}>
                     <CustomSelect
                       // disabled={fromSendManual}
                       multiple
@@ -445,7 +430,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
                 )}
 
                 {formik.values.selectedRoles.includes('Student') && (
-                  <Grid item lg={4}>
+                  <Grid size={{ lg: 4 }}>
                     <CustomSelect
                       // disabled={fromSendManual}
                       multiple
@@ -469,7 +454,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
                 )}
 
                 {formik.values.selectedRoles.length > 0 && (
-                  <Grid item lg={12}>
+                  <Grid size={{ lg: 12 }}>
                     <Box display="flex" flexDirection="row" gap={2}>
                       <RoleConfigForNotification // eslint-disable-next-line jsx-a11y/aria-role
                         role="Teacher"

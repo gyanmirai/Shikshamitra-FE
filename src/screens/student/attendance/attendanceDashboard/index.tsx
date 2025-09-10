@@ -1,81 +1,53 @@
 'use client';
 
+import type { JSX } from 'react';
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
-import React, { useState } from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import { Box, Card, Divider, useTheme, CardHeader } from '@mui/material';
-
+import React from 'react';
+import { useTheme } from '@mui/material/styles';
 import { fNumber } from 'src/utils/format-number';
-
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
+import { Box, Grid, Card, Divider, CardHeader } from '@mui/material';
 
 import Overview from './components/overview';
 import RecentLeaveRequests from './components/recentLeaveRequests';
 import DailyAttendanceTrend from './components/dailyAttendanceTrend';
 import AttendanceStatusCard from './components/attendanceMarkingStatus';
 
-const StudentAttendanceDashboard = () => {
-  const [sections, setSections] = useState([
-    {
-      id: '0',
-      title: 'Over View',
-    },
-    {
-      id: '1',
-      title: 'Daily Attendance Trend',
-    },
-    {
-      id: '2',
-      title: 'Attendance Marking Status',
-    },
-    {
-      id: '3',
-      title: 'Recent Leave Requests',
-    },
-  ]);
-  return (
-    <Box>
-      {/* <CustomizableView sections={sections} setSections={setSections} /> */}
-      <Grid2 container spacing={2} sx={{ mb: 2 }}>
-        <Grid2 xs={12}>
-          <Overview />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
-          <DailyAttendanceTrend />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
-          <AttendanceStatusCard />
-        </Grid2>
-        {/* <Grid2 xs={12} md={6}>
-          <StudentBirthDate />
-        </Grid2> */}
-        <Grid2 xs={12}>
-          <RecentLeaveRequests />
-        </Grid2>
-      </Grid2>
-      {/* <Grid2 container spacing={2} sx={{ mb: 2 }}>
-        <Grid2 xs={12}>{sections.map((section: any) => dashBoardSections[section.id])}</Grid2>
-      </Grid2> */}
-    </Box>
-  );
-};
+const StudentAttendanceDashboard = () => (
+  <Box>
+    {/* <CustomizableView sections={sections} setSections={setSections} /> */}
+    <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid size={{ xs: 12 }}>
+        <Overview />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <DailyAttendanceTrend />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <AttendanceStatusCard />
+      </Grid>
+
+      {/* <Grid size={{ xs: 12, md: 6 }}>
+    <StudentBirthDate />
+  </Grid> */}
+
+      <Grid size={{ xs: 12 }}>
+        <RecentLeaveRequests />
+      </Grid>
+    </Grid>
+  </Box>
+);
 
 export default StudentAttendanceDashboard;
 
 type Props1 = CardProps & {
   title?: string;
   subheader?: string;
-  chart: {
-    colors?: string[];
-    series: {
-      label: string;
-      value: number;
-    }[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; series: { label: string; value: number }[]; options?: ChartOptions };
 };
 export function AttendanceOverview({ title, subheader, chart, ...other }: Props1): JSX.Element {
   const theme = useTheme();
@@ -107,11 +79,7 @@ export function AttendanceOverview({ title, subheader, chart, ...other }: Props1
           labels: {
             value: { formatter: (value: number | string) => fNumber(value) },
             total: {
-              formatter: (w: {
-                globals: {
-                  seriesTotals: number[];
-                };
-              }) => {
+              formatter: (w: { globals: { seriesTotals: number[] } }) => {
                 const sum = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
                 return fNumber(sum);
               },

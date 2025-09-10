@@ -1,12 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Button, Typography } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import TemplateOne from './Templates/templates-one';

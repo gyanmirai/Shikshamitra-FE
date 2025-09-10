@@ -3,9 +3,8 @@ import type { AnimateLayoutChanges } from '@dnd-kit/sortable';
 import type { IKanbanTask, IKanbanColumn } from 'src/types/kanban';
 
 import { CSS } from '@dnd-kit/utilities';
-import { useSortable, defaultAnimateLayoutChanges } from '@dnd-kit/sortable';
-
 import ColumnBase from 'src/sections/kanban/column/column-base';
+import { useSortable, defaultAnimateLayoutChanges } from '@dnd-kit/sortable';
 
 import { HeaderToolBar } from './header-toolbar';
 

@@ -3,19 +3,25 @@
   {
     "id": 1,
     "name": "Dharmik Jinjala",
+    "parentName": "Rajesh Jinjala",
     "avatarUrl": "https://randomuser.me/api/portraits/men/11.jpg",
     "board": "CBSE",
-    "medium": "English",
+    "medium": "English", 
     "class": "10",
-    "division": "A", 
+    "division": "A",
     "rollNo": "01",
+    "grNo": "GR001",
     "totalPaidFees": 10000,
     "totalPendingFees": 0,
     "refundAmount": 2000,
     "reasonOfRefund": "Excess payment",
     "status": 1,
-    "paidTerm": "Term 1",
-    "applicableAmount": "2000",
+    "paidTerms": ["Term 1"],
+    "applicableFeeHeads": [
+      { "feeHead": "Tuition Fee", "amount": "1500" },
+      { "feeHead": "Exam Fee", "amount": "500" }
+    ],
+    "requestDate": "2024-03-15",
     "refundMethod": "Bank Transfer (NEFT/RTGS/IMPS)",
     "reason": "Excess payment made during fee submission",
     "remarks": "Refund approved and processed"
@@ -23,19 +29,25 @@
   {
     "id": 2,
     "name": "Jignesh Jinjala",
+    "parentName": "Mahesh Jinjala", 
     "avatarUrl": "https://randomuser.me/api/portraits/men/12.jpg",
     "board": "GSEB",
     "medium": "English",
     "class": "02",
     "division": "C",
     "rollNo": "06",
+    "grNo": "GR002",
     "totalPaidFees": 15000,
     "totalPendingFees": 35000,
     "refundAmount": 5000,
     "reasonOfRefund": "Course withdrawal",
     "status": 2,
-    "paidTerm": "Term 1",
-    "applicableAmount": "5000",
+    "paidTerms": ["Term 1", "Term 2"],
+    "applicableFeeHeads": [
+      { "feeHead": "Tuition Fee", "amount": "3000" },
+      { "feeHead": "Library Fee", "amount": "2000" }
+    ],
+    "requestDate": "2024-03-14",
     "refundMethod": "Cheque",
     "reason": "Student withdrawing from course",
     "remarks": "Refund pending approval"
@@ -43,19 +55,25 @@
   {
     "id": 3,
     "name": "Mayur Solanki",
+    "parentName": "Dinesh Solanki",
     "avatarUrl": "https://randomuser.me/api/portraits/men/13.jpg",
     "board": "CBSE",
     "medium": "Gujarati",
     "class": "06",
     "division": "D",
     "rollNo": "56",
+    "grNo": "GR003",
     "totalPaidFees": 20000,
     "totalPendingFees": 30000,
     "refundAmount": 3000,
     "reasonOfRefund": "Fee structure change",
     "status": 0,
-    "paidTerm": "Term 2",
-    "applicableAmount": "3000",
+    "paidTerms": ["Term 2"],
+    "applicableFeeHeads": [
+      { "feeHead": "Tuition Fee", "amount": "2000" },
+      { "feeHead": "Activity Fee", "amount": "1000" }
+    ],
+    "requestDate": "2024-03-13",
     "refundMethod": "Cash",
     "reason": "Fee structure revised",
     "remarks": "Refund request submitted"
@@ -63,19 +81,25 @@
   {
     "id": 4,
     "name": "Parth Ghusar",
+    "parentName": "Ramesh Ghusar",
     "avatarUrl": "https://randomuser.me/api/portraits/men/14.jpg",
     "board": "GSEB",
     "medium": "Gujarati",
     "class": "08",
     "division": "B",
     "rollNo": "27",
+    "grNo": "GR004",
     "totalPaidFees": 25000,
     "totalPendingFees": 25000,
     "refundAmount": 4000,
     "reasonOfRefund": "Scholarship approved",
     "status": 1,
-    "paidTerm": "Term 1",
-    "applicableAmount": "4000",
+    "paidTerms": ["Term 1"],
+    "applicableFeeHeads": [
+      { "feeHead": "Tuition Fee", "amount": "2500" },
+      { "feeHead": "Exam Fee", "amount": "1500" }
+    ],
+    "requestDate": "2024-03-12",
     "refundMethod": "Bank Transfer (NEFT/RTGS/IMPS)",
     "reason": "Government scholarship approved",
     "remarks": "Refund processed"
@@ -83,22 +107,84 @@
   {
     "id": 5,
     "name": "Prerna Atre",
+    "parentName": "Suresh Atre",
     "avatarUrl": "https://randomuser.me/api/portraits/men/15.jpg",
     "board": "CBSE",
     "medium": "English",
     "class": "12",
     "division": "A",
     "rollNo": "33",
+    "grNo": "GR005",
     "totalPaidFees": 30000,
     "totalPendingFees": 20000,
     "refundAmount": 6000,
     "reasonOfRefund": "Double payment",
     "status": 2,
-    "paidTerm": "Term 2",
-    "applicableAmount": "6000",
+    "paidTerms": ["Term 2", "Term 3"],
+    "applicableFeeHeads": [
+      { "feeHead": "Tuition Fee", "amount": "4000" },
+      { "feeHead": "Lab Fee", "amount": "2000" }
+    ],
+    "requestDate": "2024-03-11",
     "refundMethod": "Bank Transfer (NEFT/RTGS/IMPS)",
     "reason": "Fee paid twice by mistake",
     "remarks": "Awaiting bank details"
   }
-]
+],
+"refundTermsData": [
+    {
+      "id": "1",
+      "name": "January 2025",
+      "dueDate": "30-01-2025",
+      "paid": 4000,
+      "total": 10000,
+      "feeHeads": [
+        { "name": "Tuition Fee", "paid": 4000, "total": 4000, "status": 1 },
+        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
+        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
+      ],
+      "charges": [
+        { "name": "Late Fee", "paid": 500, "dueDate": "30-01-2025", "total": 500, "status": 1 },
+        { "name": "Sports Fee", "paid": 0, "dueDate": "30-01-2025", "total": 2000, "status": 0 },
+        {
+          "name": "Technology Fee",
+          "paid": 1000,
+          "dueDate": "30-01-2025",
+          "total": 1000,
+          "status": 1
+        },
+        {
+          "name": "Development Fee",
+          "paid": 0,
+          "dueDate": "30-01-2025",
+          "total": 1500,
+          "status": 0
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "February 2025",
+      "dueDate": "28-02-2025",
+      "paid": 0,
+      "total": 10000,
+      "feeHeads": [
+        { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 0 },
+        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
+        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "March 2025",
+      "dueDate": "30-03-2025",
+      "paid": 0,
+      "total": 10000,
+      "feeHeads": [
+        { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 0 },
+        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
+        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
+      ]
+    }
+  ]
 }

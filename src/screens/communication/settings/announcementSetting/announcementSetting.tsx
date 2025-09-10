@@ -3,9 +3,7 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-
 import { Box } from '@mui/material';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import AnnouncementImportant from './announcementImportant/announcementImportant';

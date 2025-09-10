@@ -2,16 +2,13 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getFeeHeadInitialValues } from './FeeHeadInitialValues';
@@ -42,7 +39,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
       <DialogScrollContent>
         <Grid container spacing={2}>
           {/* Fee Category */}
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={!!(formik.touched.feeCategoryId && formik.errors.feeCategoryId) || false}
             >
@@ -74,7 +71,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
           </Grid>
 
           {/* Fee Head Name */}
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={!!(formik.touched.feeHeadName && formik.errors.feeHeadName) || false}
             >
@@ -101,7 +98,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
           </Grid>
 
           {/* Description */}
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
               multiline

@@ -2,18 +2,15 @@ import type { FormikProps } from 'formik';
 import type { Board } from 'src/types/school';
 
 import { capitalize } from 'lodash';
-import React, { useState, useEffect } from 'react';
-
 import { Grid, TextField } from '@mui/material';
-
+import React, { useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
+import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
-
-import CustomSelect from 'src/components/custom-select';
-import ShakingTextField from 'src/components/shaking-text-field';
 
 import type { IFeeStructure, IClassWiseFeeData } from '../type';
 
@@ -89,7 +86,7 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
   return (
     <Grid container spacing={3}>
       {/* Fee Structure Name */}
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField
           error={!!(formik?.touched?.feeStructureName && formik?.errors?.feeStructureName)}
         >
@@ -111,7 +108,7 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
       </Grid>
 
       {/* Academic Year */}
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField error={!!(formik?.touched?.academicYear && formik?.errors?.academicYear)}>
           <CustomSelect
             name="academicYear"
@@ -134,7 +131,7 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
       </Grid>
 
       {/* Board */}
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField error={!!(formik?.touched?.board && formik?.errors?.board)}>
           <CustomSelect
             name="board"
@@ -152,7 +149,7 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
       </Grid>
 
       {/* Medium */}
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField error={!!(formik?.touched?.medium && formik?.errors?.medium)}>
           <CustomSelect
             name="medium"
@@ -175,7 +172,7 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
       </Grid>
 
       {/* Receipt Book */}
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField error={!!(formik?.touched?.receiptBook && formik?.errors?.receiptBook)}>
           <CustomSelect
             name="receiptBook"
@@ -195,7 +192,7 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
       </Grid>
 
       {/* Payment Term */}
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField error={!!(formik?.touched?.paymentTerm && formik?.errors?.paymentTerm)}>
           <CustomSelect
             name="paymentTerm"
@@ -217,7 +214,7 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
       </Grid>
 
       {/* Payment Method */}
-      <Grid item xs={12} md={4}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField
           error={!!(formik?.touched?.paymentMethod && formik?.errors?.paymentMethod)}
         >

@@ -3,23 +3,18 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetFinanceFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Button } from '@mui/material';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetFinanceFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
 
 import FeeStructureTable from './Components/FeeStructureTable';
 import FeeStructureFormStepper from './Components/NewStructureForm';
@@ -202,7 +197,7 @@ const FeeStructure = () => {
                 message: (
                   <>
                     Fee Structure: <strong>{selectedFeeStructure?.feeStructureName}</strong> moved
-                    to {status} successfully.
+                    to {status} successfully
                   </>
                 ),
               });

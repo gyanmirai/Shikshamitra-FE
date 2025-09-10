@@ -1,13 +1,9 @@
 import { useMemo } from 'react';
-
-import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
-
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Skeleton, TextField, Autocomplete } from '@mui/material';
 
 import { CardActions } from './InformationFields';
 
@@ -95,7 +91,7 @@ export const AssignReportingManager: FieldsType[] = [
     type: 'text',
     label: ' ',
     name: ' ',
-    gridProps: { xs: 12, md: 12 },
+    gridProps: { size: { xs: 12, md: 12 } },
     renderComp: (props) => <RenderAssignReportingManager {...props} />,
   },
 ];

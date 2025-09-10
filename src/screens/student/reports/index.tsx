@@ -6,19 +6,15 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Card, Button, TextField } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
-import { StudentReportTitle, StudentReportTitleOptions } from 'src/enums/studentRecordsReports';
-
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Box, Grid, Card, Button, TextField } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
+import { StudentReportTitle, StudentReportTitleOptions } from 'src/enums/studentRecordsReports';
 
 import { getValidationSchema } from './validationSchema';
 
@@ -149,11 +145,7 @@ const reportFieldsMap = {
 
 const StudentReportsScreen = () => {
   // Redux state for current board, medium and medium setter
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // State to store list of all organizations/branches
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -272,7 +264,7 @@ const StudentReportsScreen = () => {
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ p: 2 }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <CustomSelect
                   options={StudentReportTitleOptions}
                   label="Report *"
@@ -289,7 +281,7 @@ const StudentReportsScreen = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <CustomSelect
                   options={allOrganization}
                   label="Organization *"
@@ -316,7 +308,7 @@ const StudentReportsScreen = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <CustomSelect
                   options={allClass}
                   label="Class *"
@@ -372,7 +364,7 @@ const StudentReportsScreen = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 {!(formik.values.classes as string[]).includes('all') &&
                   formik.values.classes.length > 0 && (
                     <CustomSelect
@@ -396,7 +388,7 @@ const StudentReportsScreen = () => {
               </Grid>
 
               {showField('fromRollNo') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <TextField
                     name="fromRollNo"
                     value={formik.values.fromRollNo}
@@ -413,7 +405,7 @@ const StudentReportsScreen = () => {
                 </Grid>
               )}
               {showField('toRollNo') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <TextField
                     name="toRollNo"
                     type="number"
@@ -431,7 +423,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('month') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <CustomSelect
                     label="Month *"
                     options={[
@@ -467,7 +459,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('fromDate') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <DatePicker
                     label="From Date *"
                     disableFuture
@@ -486,7 +478,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('toDate') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <DatePicker
                     label="To Date *"
                     disableFuture
@@ -505,7 +497,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('fromAge') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <TextField
                     label="From Age *"
                     type="number"
@@ -521,7 +513,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('toAge') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <TextField
                     label="To Age *"
                     type="number"
@@ -542,7 +534,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('category') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <CustomSelect
                     labelId="category-dropdown-label"
                     id="category-dropdown"
@@ -565,7 +557,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('gender') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <CustomSelect
                     label="Gender *"
                     options={[
@@ -587,7 +579,7 @@ const StudentReportsScreen = () => {
               )}
 
               {showField('religion') && (
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <CustomSelect
                     label="Religion *"
                     options={[
@@ -613,7 +605,7 @@ const StudentReportsScreen = () => {
                 </Grid>
               )}
 
-              <Grid item xs={12} justifyContent="flex-end" display="flex">
+              <Grid size={12} justifyContent="flex-end" display="flex">
                 <Button
                   startIcon={<Iconify icon={GlobalIcons.generateReport} />}
                   type="submit"

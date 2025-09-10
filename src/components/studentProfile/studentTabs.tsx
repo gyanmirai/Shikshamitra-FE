@@ -1,9 +1,6 @@
 import React, { useMemo } from 'react';
-
 import { Tab, Tabs } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
 import Academic from 'src/screens/student/studentProfile/academic';
 import Attendance from 'src/screens/student/studentProfile/attendance';
 import { StudentInformation } from 'src/screens/student/studentProfile/information';

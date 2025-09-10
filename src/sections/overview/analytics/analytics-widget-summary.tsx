@@ -4,16 +4,13 @@ import type { ChartOptions } from 'src/components/chart';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import { useTheme } from '@mui/material/styles';
-
-import { fNumber, fPercent, fShortenNumber } from 'src/utils/format-number';
-
 import { CONFIG } from 'src/config-global';
-import { varAlpha, bgGradient } from 'src/theme/styles';
-
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
 import { Chart, useChart } from 'src/components/chart';
+import { varAlpha, bgGradient } from 'src/theme/styles';
+import { fNumber, fPercent, fShortenNumber } from 'src/utils/format-number';
 
 // ----------------------------------------------------------------------
 
@@ -23,11 +20,7 @@ type Props = CardProps & {
   percent: number;
   color?: ColorType;
   icon: React.ReactNode;
-  chart: {
-    series: number[];
-    categories: string[];
-    options?: ChartOptions;
-  };
+  chart: { series: number[]; categories: string[]; options?: ChartOptions };
 };
 
 export function AnalyticsWidgetSummary({
@@ -48,14 +41,7 @@ export function AnalyticsWidgetSummary({
     chart: { sparkline: { enabled: true } },
     colors: chartColors,
     xaxis: { categories: chart.categories },
-    grid: {
-      padding: {
-        top: 6,
-        left: 6,
-        right: 6,
-        bottom: 6,
-      },
-    },
+    grid: { padding: { top: 6, left: 6, right: 6, bottom: 6 } },
     tooltip: {
       y: { formatter: (value: number) => fNumber(value), title: { formatter: () => '' } },
     },
@@ -85,7 +71,7 @@ export function AnalyticsWidgetSummary({
     <Card
       sx={{
         ...bgGradient({
-          color: `135deg, ${varAlpha(theme.vars.palette[color].lighterChannel, 0.48)}, ${varAlpha(theme.vars.palette[color].lightChannel, 0.48)}`,
+          color: `135deg, ${varAlpha(theme.palette[color].lighterChannel, 0.48)}, ${varAlpha(theme.palette[color].lightChannel, 0.48)}`,
         }),
         p: 3,
         boxShadow: 'none',

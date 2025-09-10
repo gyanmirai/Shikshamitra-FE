@@ -1,9 +1,7 @@
 import type { ICourse } from 'src/screens/academic/course-management/courseProgress/type';
 
 import React, { useState } from 'react';
-
 import { Box, Card, Stack, Divider, Typography, CircularProgress } from '@mui/material';
-
 import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
 import CourseProgressComponent from 'src/screens/classManagement/courseProgress/courseProgress';
 

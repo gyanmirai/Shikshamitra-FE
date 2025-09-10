@@ -3,9 +3,7 @@
 // pages/silent-renew.tsx
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
 import { oidcService } from 'src/utils/oidcClient';
-
 import { SplashScreen } from 'src/components/loading-screen';
 
 const SilentRenew = () => {

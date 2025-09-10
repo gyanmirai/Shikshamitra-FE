@@ -1,12 +1,8 @@
 import React from 'react';
-
-import { Box, Card, Chip, Typography, CardContent } from '@mui/material';
-
 import { formatNumber } from 'src/utils/formate_number';
-
-import data from 'src/json/finance/fee-details-student/fee-breakdown.json';
-
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Card, Chip, Typography, CardContent } from '@mui/material';
+import data from 'src/json/finance/fee-details-student/fee-breakdown.json';
 
 interface PaymentStatus {
   title: string;

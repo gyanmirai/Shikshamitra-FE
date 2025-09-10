@@ -2,13 +2,10 @@ import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
 import React from 'react';
-
-import { Card, alpha, useTheme, CardHeader } from '@mui/material';
-
+import { Card, CardHeader } from '@mui/material';
 import { fNumber } from 'src/utils/format-number';
-
 import { Chart, useChart } from 'src/components/chart';
-
+import { alpha, useTheme } from '@mui/material/styles';
 import { AppCurrentDownload } from 'src/sections/overview/app/app-current-download';
 
 const HouseDistribution = () => (
@@ -40,10 +37,7 @@ type Props2 = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: {
-      name: string;
-      data: number[];
-    }[];
+    series: { name: string; data: number[] }[];
     options?: ChartOptions;
   };
 };
@@ -74,12 +68,7 @@ export function AnalyticsConversionRates({ title, subheader, chart, ...other }: 
       style: { fontSize: '10px', colors: ['#FFFFFF', theme.palette.text.primary] },
     },
     plotOptions: {
-      bar: {
-        horizontal: true,
-        borderRadius: 2,
-        barHeight: '30%',
-        dataLabels: { position: 'top' },
-      },
+      bar: { horizontal: true, borderRadius: 2, barHeight: '30%', dataLabels: { position: 'top' } },
     },
     ...chart.options,
   });

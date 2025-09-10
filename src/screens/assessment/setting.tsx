@@ -1,10 +1,8 @@
 import React from 'react';
-
-import { Box, Card, IconButton, CardHeader, Typography, CardContent } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Card, IconButton, CardHeader, Typography, CardContent } from '@mui/material';
 
 const Setting = () => (
   <Box>

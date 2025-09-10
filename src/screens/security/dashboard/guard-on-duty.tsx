@@ -1,9 +1,7 @@
 'use client';
 
 import React from 'react';
-
 import { Grid, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import DashboardCard from 'src/components/dasboard-card';
 
@@ -14,7 +12,7 @@ const GuardOnDuty = () => (
     </Typography>
     <Grid container spacing={3}>
       {/* Guard Summary */}
-      <Grid item xs={12} md={6} lg={3}>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
         <DashboardCard
           title="Guards On Duty"
           mainText="12"
@@ -26,7 +24,7 @@ const GuardOnDuty = () => (
           subtitleIconColor="#4CAF50"
         />
       </Grid>
-      <Grid item xs={12} md={6} lg={3}>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
         <DashboardCard
           title="Off Duty"
           mainText="4"
@@ -38,7 +36,7 @@ const GuardOnDuty = () => (
           subtitleIconColor="#FFC107"
         />
       </Grid>
-      <Grid item xs={12} md={6} lg={3}>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
         <DashboardCard
           title="Absent Today"
           mainText="2"
@@ -50,7 +48,7 @@ const GuardOnDuty = () => (
           subtitleIconColor="#F44336"
         />
       </Grid>
-      <Grid item xs={12} md={6} lg={3}>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
         <DashboardCard
           title="On Leave"
           mainText="1"

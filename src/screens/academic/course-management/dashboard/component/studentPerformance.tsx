@@ -1,18 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
-
 import { color } from '@mui/system';
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, useTheme, Typography } from '@mui/material';
-
+import React, { useState } from 'react';
 import { CONFIG } from 'src/config-global';
-import { varAlpha, bgGradient } from 'src/theme/styles';
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
+import { useTheme } from '@mui/material/styles';
 import { SvgColor } from 'src/components/svg-color';
+import { varAlpha, bgGradient } from 'src/theme/styles';
 import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import { Box , Grid, Card, Typography } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 const StudentPerformance = () => {
   const theme = useTheme();
@@ -30,12 +27,15 @@ const StudentPerformance = () => {
   }, [classData]);
 
   return (
-    <Grid2 container spacing={2} mt={2}>
-      <Grid2 xs={12} md={4}>
+    <Grid container spacing={2} mt={2}>
+      <Grid size={{ xs: 12, md: 4 }}>
         <Card
           sx={{
             ...bgGradient({
-              color: `135deg, ${varAlpha(theme.vars.palette.secondary.lighterChannel, 0.48)}, ${varAlpha(theme.vars.palette.secondary.lightChannel, 0.48)}`,
+              color: `135deg, ${varAlpha(
+                theme.vars.palette.secondary.lighterChannel,
+                0.48
+              )}, ${varAlpha(theme.vars.palette.secondary.lightChannel, 0.48)}`,
             }),
             p: 3,
             boxShadow: 'none',
@@ -86,12 +86,16 @@ const StudentPerformance = () => {
             }}
           />
         </Card>
-      </Grid2>
-      <Grid2 xs={12} md={4}>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 4 }}>
         <Card
           sx={{
             ...bgGradient({
-              color: `135deg, ${varAlpha(theme.vars.palette.primary.lighterChannel, 0.48)}, ${varAlpha(theme.vars.palette.primary.lightChannel, 0.48)}`,
+              color: `135deg, ${varAlpha(
+                theme.vars.palette.primary.lighterChannel,
+                0.48
+              )}, ${varAlpha(theme.vars.palette.primary.lightChannel, 0.48)}`,
             }),
             p: 3,
             boxShadow: 'none',
@@ -142,12 +146,16 @@ const StudentPerformance = () => {
             }}
           />
         </Card>
-      </Grid2>
-      <Grid2 xs={12} md={4}>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 4 }}>
         <Card
           sx={{
             ...bgGradient({
-              color: `135deg, ${varAlpha(theme.vars.palette.warning.lighterChannel, 0.48)}, ${varAlpha(theme.vars.palette.warning.lightChannel, 0.48)}`,
+              color: `135deg, ${varAlpha(
+                theme.vars.palette.warning.lighterChannel,
+                0.48
+              )}, ${varAlpha(theme.vars.palette.warning.lightChannel, 0.48)}`,
             }),
             p: 3,
             boxShadow: 'none',
@@ -198,8 +206,8 @@ const StudentPerformance = () => {
             }}
           />
         </Card>
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   );
 };
 

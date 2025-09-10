@@ -1,11 +1,8 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import React from 'react';
-
 import { Box, Card } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { feestructureDummyData } from '../data/fee-structure-data';

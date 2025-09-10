@@ -1,14 +1,11 @@
+import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
-
-import { Box, Card, useTheme, CardHeader, Typography } from '@mui/material';
-
 import { fCurrency } from 'src/utils/format-number';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import { Box, Card, CardHeader, Typography } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 const EnrollmentsTrends = () => {
   const [selectedClass, setSelectedClass] = useState('1');
@@ -83,10 +80,7 @@ type Props3 = {
   subheader?: string;
   chart: {
     seriesByClass: {
-      [classId: string]: {
-        categories: string[];
-        data: { name: string; data: number[] }[];
-      };
+      [classId: string]: { categories: string[]; data: { name: string; data: number[] }[] };
     };
   };
   classId: string;
@@ -121,11 +115,7 @@ export function AttendanceGraph({
     stroke: { width: 2, colors: ['transparent'] },
     colors: [theme.palette.primary.main],
     xaxis: { categories: currentSeries?.categories || [] },
-    tooltip: {
-      y: {
-        formatter: (value: number) => fCurrency(value),
-      },
-    },
+    tooltip: { y: { formatter: (value: number) => fCurrency(value) } },
   });
 
   return (

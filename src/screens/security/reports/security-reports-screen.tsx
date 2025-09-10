@@ -3,13 +3,10 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Card, Button } from '@mui/material';
-
-import { varAlpha } from 'src/theme/styles/utils';
-
 import { Iconify } from 'src/components/iconify';
+import { varAlpha } from 'src/theme/styles/utils';
+import { Box, Grid, Card, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -37,7 +34,7 @@ const SecurityReportsScreen = () => {
         <Card sx={{ p: 3 }}>
           <Grid container spacing={2}>
             {/* Report Dropdown */}
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid size={{ xs: 12, md: 4, sm: 6 }}>
               <CustomSelect
                 label="List of Reports"
                 name="report"
@@ -53,7 +50,7 @@ const SecurityReportsScreen = () => {
             </Grid>
 
             {/* Start Date */}
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid size={{ xs: 12, md: 4, sm: 6 }}>
               <DatePicker
                 label="Start Date"
                 format="DD-MM-YYYY"
@@ -76,7 +73,7 @@ const SecurityReportsScreen = () => {
             </Grid>
 
             {/* End Date */}
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid size={{ xs: 12, md: 4, sm: 6 }}>
               <DatePicker
                 label="End Date"
                 format="DD-MM-YYYY"
@@ -99,7 +96,7 @@ const SecurityReportsScreen = () => {
             </Grid>
 
             {/* Action Buttons */}
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Box display="flex" justifyContent="flex-end" gap={2}>
                 <Button
                   startIcon={<Iconify icon="ion:download" />}
@@ -109,10 +106,12 @@ const SecurityReportsScreen = () => {
                     console.log('Download PDF clicked', formik.values);
                   }}
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     color: 'primary.main',
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -127,10 +126,12 @@ const SecurityReportsScreen = () => {
                     console.log('Download Excel clicked', formik.values);
                   }}
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
                     color: 'warning.main',
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
                     },
                   }}
                 >
@@ -143,11 +144,12 @@ const SecurityReportsScreen = () => {
                   color="secondary"
                   type="submit"
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
                     color: 'secondary.main',
                     '&:hover': {
                       backgroundColor: (theme) =>
-                        varAlpha(theme.palette.secondary.mainChannel, 0.1),
+                        varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
                     },
                   }}
                 >

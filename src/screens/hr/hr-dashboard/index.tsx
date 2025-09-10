@@ -4,12 +4,9 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
+import { Box , Grid } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
-
-import { Box } from '@mui/material';
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-
 import BirthdaySection from 'src/app/(auth-route)/student/overview/student-birthdate';
 
 import HRDashboardOverview from './components/HrDashboardOverview';
@@ -103,53 +100,53 @@ const HRDashboardScreen = () => {
   const router = useRouter();
   return (
     <Box>
-      <Grid2 container spacing={2} sx={{ mb: 2 }}>
-        <Grid2 xs={12}>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid size={12}>
           <HRDashboardOverview />
-        </Grid2>
-        <Grid2 xs={12}>
+        </Grid>
+        <Grid size={12}>
           <HRDashboardAttendanceTrend />
-        </Grid2>
+        </Grid>
 
-        <Grid2 xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <PayrollStatusCard />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
           <HRDashboardRecentPayrollRunsCard />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
           <BirthdaySection
             todaysBirthdays={todayBirthdays}
             upcomingBirthdays={upcomingBirthdays}
             title="Employees's Birthdays"
           />
-        </Grid2>
-        <Grid2 xs={12} md={6}>
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
           <LeaveManagementCard />
-        </Grid2>
-        <Grid2 xs={12}>
+        </Grid>
+        <Grid size={12}>
           <EmployeeRecentActivities />
-        </Grid2>
-        {/* <Grid2 xs={12} md={6}>
+        </Grid>
+        {/* <Grid2 size={{ xs: 12, md: 6 }}>
           <AcademicDashboardChapterProgress />
         </Grid2>
         <Grid2 xs={12}>
           <AcademicDashboardTimetable />
         </Grid2>
 
-        <Grid2 xs={12} md={6}>
+        <Grid2 size={{ xs: 12, md: 6 }}>
           <AcademicDashboardTopPerformer />
         </Grid2>
-        <Grid2 xs={12} md={6}>
+        <Grid2 size={{ xs: 12, md: 6 }}>
           <AcademicDashboardBottomPerformer />
         </Grid2>
-        <Grid2 xs={12} md={6}>
+        <Grid2 size={{ xs: 12, md: 6 }}>
           <RecentActivities activities={activities} />
         </Grid2>
-        <Grid2 xs={12} md={6}>
+        <Grid2 size={{ xs: 12, md: 6 }}>
           <AcademicDashboardExams />
         </Grid2> */}
-      </Grid2>
+      </Grid>
     </Box>
   );
 };

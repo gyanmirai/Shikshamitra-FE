@@ -1,9 +1,7 @@
 import React from 'react';
-
+import CustomSelect from 'src/components/custom-select';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Grid, Switch, TextField, FormControlLabel } from '@mui/material';
-
-import CustomSelect from 'src/components/custom-select';
 
 interface RoleConfigForNotificationProps {
   role: string;
@@ -47,7 +45,7 @@ const RoleConfigForNotification: React.FC<RoleConfigForNotificationProps> = ({
   if (!selectedRoles.includes(role)) return null;
 
   return (
-    <Grid item lg={6} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Grid size={{ lg: 6 }} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <CustomSelect
         disabled={fromSendManual}
         label={`Select Template for ${role.charAt(0).toUpperCase() + role.slice(1)}`}

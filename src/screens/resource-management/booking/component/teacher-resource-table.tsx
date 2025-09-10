@@ -2,18 +2,15 @@ import type { LabelColor } from 'src/components/label/types';
 
 import React from 'react';
 import dayjs from 'dayjs';
-
+import { Label } from 'src/components/label';
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import bookingRequestData from 'src/json/ResourceManagement/booking/bookingData.json';
 import {
   ResourceBookingStatusType,
   ResourceBookingStatusTypeColor,
   ResourceBookingStatusTypeOptions,
 } from 'src/enums/resource-booking-status';
-
-import { Label } from 'src/components/label';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const TeacherResourceTable = () => {
   const bookResourceDialog = useBoolean();

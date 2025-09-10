@@ -1,17 +1,14 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useMemo, useState } from 'react';
-
+import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
-import { Box, Tab, Tabs, Button, Divider, MenuItem, MenuList, Checkbox } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { Label } from 'src/components/label';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Iconify } from 'src/components/iconify/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import { Box, Tab, Tabs, Button, Divider, MenuItem, MenuList, Checkbox } from '@mui/material';
 
 import TransportRequestDialog from './component/transport-request-dialog';
 import TransportRouteAssignedDialog from './component/assigned-route-dialog';
@@ -209,16 +206,10 @@ const TransportRequestScreen = () => {
     },
   ];
 
-  const [tableData, setTableData] = useState<StudentAssignment[]>(assignments);
-  const [tableDataForStaff, setTableDataForStaff] =
-    useState<StaffAssignment[]>(assignmentsForStaff);
+  const [tableData] = useState<StudentAssignment[]>(assignments);
+  const [tableDataForStaff] = useState<StaffAssignment[]>(assignmentsForStaff);
   const [searchParams, setSearchParams] = useState({ tab: 'student' });
   const [isStaff, setIsStaff] = useState<boolean>(false);
-
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
 
   const closeDialog = () => {
     setIsStaff(false);

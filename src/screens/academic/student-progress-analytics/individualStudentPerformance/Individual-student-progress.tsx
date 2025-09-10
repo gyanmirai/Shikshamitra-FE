@@ -3,14 +3,12 @@
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import { Box, Grid } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
-
-import { Box, Grid, useTheme } from '@mui/material';
-
+import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ExamsList from './component/examList';
@@ -22,10 +20,7 @@ export type TStudent = {
   avatarUrl: string;
   name: string;
   grade: string;
-  attendance: {
-    presentDays: number;
-    absentDays: number;
-  };
+  attendance: { presentDays: number; absentDays: number };
   behavior: {
     score: number;
     participationLevel: 'Low' | 'Medium' | 'High'; // Enum-like string union for participation level
@@ -36,14 +31,8 @@ const dummyStudent: TStudent = {
   avatarUrl: 'https://example.com/avatar.jpg',
   name: 'John Doe',
   grade: '10',
-  attendance: {
-    presentDays: 85,
-    absentDays: 5,
-  },
-  behavior: {
-    score: 90,
-    participationLevel: 'High',
-  },
+  attendance: { presentDays: 85, absentDays: 5 },
+  behavior: { score: 90, participationLevel: 'High' },
 };
 
 const IndividualStudentProgress = (props: TabComponentType) => {
@@ -58,9 +47,11 @@ const IndividualStudentProgress = (props: TabComponentType) => {
     currentQueryAndMutation: useGetClassQuery,
   });
   const cardBgColor =
-    theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[100];
+    theme.palette.mode === 'dark' ? theme.vars.palette.grey[800] : theme.vars.palette.grey[100];
   const textColor =
-    theme.palette.mode === 'dark' ? theme.palette.common.white : theme.palette.text.primary;
+    theme.palette.mode === 'dark'
+      ? theme.vars.palette.common.white
+      : theme.vars.palette.text.primary;
 
   useEffect(() => {
     if (classData?.items?.length) {
@@ -73,9 +64,7 @@ const IndividualStudentProgress = (props: TabComponentType) => {
         }
       } else {
         const firstClass = classData.items[0];
-        setSearchParams?.({
-          classId: firstClass.id,
-        });
+        setSearchParams?.({ classId: firstClass.id });
         setDivisionOptions(firstClass?.divisions || []);
         // Set first division if available
         if (firstClass?.divisions?.length) {
@@ -97,8 +86,9 @@ const IndividualStudentProgress = (props: TabComponentType) => {
         ]}
         sx={{ px: 1, mb: 2 }}
       />
+
       <Grid container spacing={3} justifyContent="center" alignItems="center">
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <CustomSelect
             label="Class"
             options={classData?.items || []}
@@ -106,17 +96,13 @@ const IndividualStudentProgress = (props: TabComponentType) => {
             valueKey="id"
             onChange={(val) => {
               const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-              // formik.setFieldValue('class', selectedClass?.name || '');
-              setSearchParams?.({
-                classId: val as string,
-              });
+              setSearchParams?.({ classId: val as string });
               setDivisionOptions(selectedClass?.divisions || []);
             }}
             value={classes}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
-          />{' '}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
+          />
+
           <CustomSelect
             label="Division"
             disabled={!classes}
@@ -125,14 +111,11 @@ const IndividualStudentProgress = (props: TabComponentType) => {
             options={divisionOptions}
             value={division}
             onChange={(val) => {
-              // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
-              // formik.setFieldValue('division', selectedDivision?.name || '');
               setDivision(val as string);
             }}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
-          />{' '}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
+          />
+
           <CustomSelect
             label="Select Student"
             options={[
@@ -142,21 +125,22 @@ const IndividualStudentProgress = (props: TabComponentType) => {
             ]}
             value={selectedStudent}
             isSearch
-            onChange={(val) => {
-              setSelectedStudent(val as string);
-            }}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            onChange={(val) => setSelectedStudent(val as string)}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
         </Grid>
-        {/* <StudentProfile user={dummyStudent} /> */}
+
+        {/* Student profile component */}
         <StudentProfile student={dummyStudent} />
+
+        {/* Progress over time */}
         <ProgressOverTime />
-        <Grid item xs={12} md={6}>
+
+        {/* Assignments and Exams */}
+        <Grid size={{ xs: 12, md: 6 }}>
           <AssignmentsList />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <ExamsList />
         </Grid>
       </Grid>

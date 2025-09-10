@@ -2,13 +2,11 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, TextField, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, TextField, DialogActions } from '@mui/material';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
@@ -110,7 +108,7 @@ const ResourceVendorForm: React.FC<IResourceVendorFormProps> = ({ isEdit, data, 
                   name: 'vendorComponyCountry',
                   label: 'Company Country *',
                   render: (
-                    <Grid item xs={12} md={6} key="vendorComponyCountry">
+                    <Grid size={{ xs: 12, md: 6 }} key="vendorComponyCountry">
                       <ShakingTextField
                         error={
                           !!(
@@ -144,7 +142,7 @@ const ResourceVendorForm: React.FC<IResourceVendorFormProps> = ({ isEdit, data, 
                   name: 'vendorComponyState',
                   label: 'Company State *',
                   render: (
-                    <Grid item xs={12} md={6} key="vendorComponyState">
+                    <Grid size={{ xs: 12, md: 6 }} key="vendorComponyState">
                       <ShakingTextField
                         error={
                           !!(formik.touched.vendorComponyState && formik.errors?.vendorComponyState)
@@ -175,7 +173,7 @@ const ResourceVendorForm: React.FC<IResourceVendorFormProps> = ({ isEdit, data, 
                   name: 'vendorComponyCity',
                   label: 'Company City *',
                   render: (
-                    <Grid item xs={12} md={6} key="vendorComponyCity">
+                    <Grid size={{ xs: 12, md: 6 }} key="vendorComponyCity">
                       <ShakingTextField
                         error={
                           !!(formik.touched.vendorComponyCity && formik.errors?.vendorComponyCity)
@@ -203,7 +201,7 @@ const ResourceVendorForm: React.FC<IResourceVendorFormProps> = ({ isEdit, data, 
                 field.render ? (
                   field.render // use custom render if defined
                 ) : (
-                  <Grid item xs={12} md={6} pb="10px" key={field.name}>
+                  <Grid size={{ xs: 12, md: 6 }} pb="10px" key={field.name}>
                     <ShakingTextField
                       error={Boolean(
                         formik.touched[field.name as keyof typeof formik.touched] &&

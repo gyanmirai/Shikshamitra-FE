@@ -5,8 +5,16 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Grid,
@@ -18,18 +26,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 interface TStudentGroup {
   id: number;
@@ -239,21 +235,17 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
   });
 
   const resetDynamicGroupFields = () => {
-    // Reset Academic Group fields
     formik.setFieldValue('academicSubjects', []);
     formik.setFieldValue('minPer', '');
     formik.setFieldValue('maxPer', '');
     formik.setFieldValue('aggregatePerformance', false);
 
-    // Reset Extracurricular Group fields
     formik.setFieldValue('activityType', []);
     formik.setFieldValue('performanceLevels', []);
 
-    // Reset Attendance Group fields
     formik.setFieldValue('attendanceThreshold', '');
     formik.setFieldValue('attendancePeriod', null);
 
-    // Reset Behavioral Group fields
     formik.setFieldValue('behavioralTags', []);
     formik.setFieldValue('behavioralParticipations', []);
   };
@@ -263,12 +255,12 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       case 'Academic':
         return (
           <>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle1">
                 Assign Student Criteria For Academic Groups
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -280,7 +272,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
               />
             </Grid>
             {!formik.values.aggregatePerformance && (
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Select Subjects"
                   multiple
@@ -296,7 +288,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 />
               </Grid>
             )}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -308,7 +300,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 InputProps={{ inputProps: { min: 0 } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -326,12 +318,12 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       case 'Extracurricular':
         return (
           <>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle1">
                 Assign Student Criteria For Extracurricular Groups
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Activity Type"
                 multiple
@@ -343,7 +335,6 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 ]}
                 value={formik.values.activityType}
                 onChange={(val) => {
-                  // Reset performance levels when activity types change
                   const performanceLevels = val.map(() => '');
                   formik.setFieldValue('activityType', val);
                   formik.setFieldValue('performanceLevels', performanceLevels);
@@ -352,7 +343,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
               />
             </Grid>
             {formik.values.activityType.map((activity, index) => (
-              <Grid item xs={12} md={6} key={activity}>
+              <Grid size={{ xs: 12, md: 6 }} key={activity}>
                 <TextField
                   fullWidth
                   size="small"
@@ -373,12 +364,12 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       case 'Attendance':
         return (
           <>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle1">
                 Assign Student Criteria For Attendance-Based Groups
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -396,12 +387,12 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       case 'Behavioral':
         return (
           <>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle1">
                 Assign Student Criteria For Behavioral Groups
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Behavioral Tags"
                 multiple
@@ -420,7 +411,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
               />
             </Grid>
             {formik.values.behavioralTags.map((tag, index) => (
-              <Grid item xs={12} md={6} key={tag}>
+              <Grid size={{ xs: 12, md: 6 }} key={tag}>
                 <TextField
                   fullWidth
                   size="small"
@@ -450,7 +441,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, height: '450px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Class"
                 options={classData?.items || []}
@@ -469,7 +460,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Division"
                 disabled={!classes}
@@ -485,7 +476,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Group Name"
@@ -497,7 +488,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
                 helperText={formik.touched.groupName && formik.errors.groupName}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CustomSelect
                 label="Group Type"
                 options={[
@@ -514,7 +505,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
             </Grid>
             {formik.values.groupType === 'Dynamic' && (
               <>
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <CustomSelect
                     label="Select Dynamic Group"
                     options={[
@@ -538,7 +529,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
             )}
 
             {formik.values.groupType === 'Static' && (
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   label="Select Students"
                   multiple

@@ -1,35 +1,23 @@
 'use client';
 
-import _ from 'lodash';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState, useCallback } from 'react';
-
+import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import {
-  Box,
-  Paper,
-  Table,
-  Stack,
-  Button,
-  Checkbox,
-  TableRow,
-  Collapse,
-  TableCell,
-  TableHead,
-  TableBody,
-  TextField,
-  IconButton,
-  DialogActions,
-  TableContainer,
-} from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CancelButton from 'src/components/cancel-button';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Button, TextField, DialogActions } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetPermissionsQuery,
   useUpdatePermissionMutation,
@@ -41,20 +29,7 @@ import {
   useUpdateRoleMutation,
 } from 'src/redux/role/roleApi';
 
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CancelButton from 'src/components/cancel-button';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-
 import AssignModule from './modules';
-
-import type { IPermission, IRowComponentProps } from './type';
 
 // Main component for managing roles and permissions in the system
 const RoleScreen = () => {
@@ -222,6 +197,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
   const [allPermissions, setAllPermissions] = useState([]);
 
   // Query hook to fetch permission data based on role name
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: _permissionData } = useQueryAndMutation({
     type: 'query',
     options: {
@@ -328,170 +304,6 @@ const RoleForm = ({ handleClose, editData }: any) => {
           Submit
         </LoadingButton>
       </DialogActions>
-    </>
-  );
-};
-
-const ModuleTable = ({ data, allPermissions, setAllPermissions }: any) => {
-  const handlePermissionClick = useCallback(
-    (currentItem: any) => {
-      setAllPermissions((pre: any) => {
-        const newData = pre.map((item: any) =>
-          item.name === currentItem.name ? { ...item, isGranted: !item.isGranted } : item
-        );
-        return newData;
-      });
-    },
-    [setAllPermissions]
-  );
-
-  return (
-    <TableContainer component={Paper} elevation={2}>
-      <Table stickyHeader size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Modules</TableCell>
-            <TableCell> </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {data.map((item: any) => (
-            <RowComponent
-              item={item}
-              handlePermissionClick={handlePermissionClick}
-              allPermissions={allPermissions}
-              setAllPermissions={setAllPermissions}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
-};
-
-/*
- * Component for rendering a row in the permissions table
- * Props:
- * - item: permission item data
- * - handlePermissionClick: callback for permission click events
- * - allPermissions: array of all available permissions
- * - setAllPermissions: function to update permissions state
- */
-
-const RowComponent = ({
-  item,
-  handlePermissionClick,
-  allPermissions,
-  setAllPermissions,
-}: IRowComponentProps) => {
-  // State to control collapse/expand of row
-  const collapse = useBoolean();
-
-  // Callback to render secondary content (nested permissions) for each row
-  const renderSecondary = useCallback(
-    (data: IPermission[], allPer: IPermission[]) => (
-      <TableRow>
-        <Collapse
-          in={collapse.value}
-          timeout="auto"
-          unmountOnExit
-          sx={{ bgcolor: 'background.neutral' }}
-          component={TableCell}
-          // @ts-ignore
-          colSpan={3}
-        >
-          {data.map((ite: IPermission) => (
-            <Paper
-              sx={{
-                m: 1,
-                display: 'flex',
-                gap: 1,
-                p: 1,
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <Box display="flex" alignItems="center">
-                {/* Checkbox to toggle all child permissions */}
-                <Checkbox
-                  checked={ite.children.every(
-                    (el) => !!allPermissions.find((i) => i.name === el.name)?.isGranted
-                  )}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      // Enable all child permissions
-                      const newData = ite.children.map((el) => ({
-                        ...el,
-                        isGranted: true,
-                      }));
-                      const uniqData = _.unionBy([...newData, ...allPermissions], 'name');
-                      setAllPermissions(uniqData);
-                    } else {
-                      // Disable all child permissions
-                      const removeItem = allPermissions.map((el) =>
-                        ite.children.some((i) => i.name === el.name)
-                          ? { ...el, isGranted: false }
-                          : el
-                      );
-                      setAllPermissions(removeItem);
-                    }
-                  }}
-                />
-                {ite?.displayName}
-              </Box>
-              <Box flexGrow={1}>
-                {/* Container for permission labels */}
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  gap={1}
-                  flexWrap="wrap"
-                  justifyContent="flex-end"
-                >
-                  {ite.children.map((el) => {
-                    // Check if permission is granted
-                    const isGranted = allPer.find((i) => i.name === el.name)?.isGranted;
-                    return (
-                      <Label
-                        color={isGranted ? 'success' : 'error'}
-                        sx={{ cursor: 'pointer', userSelect: 'none' }}
-                        onClick={() => handlePermissionClick(el)}
-                      >
-                        {el.displayName}
-                      </Label>
-                    );
-                  })}
-                </Stack>
-              </Box>
-            </Paper>
-          ))}
-        </Collapse>
-      </TableRow>
-    ),
-    [allPermissions, collapse.value, handlePermissionClick, setAllPermissions]
-  );
-
-  return (
-    <>
-      {/* Main row with collapse toggle */}
-      <TableRow onClick={collapse.onToggle}>
-        <TableCell>{item?.displayName}</TableCell>
-        <TableCell>
-          {/* Collapse toggle button */}
-          <IconButton
-            color={collapse.value ? 'inherit' : 'default'}
-            onClick={(e) => {
-              e.stopPropagation();
-              collapse.onToggle();
-            }}
-            sx={{ ...(collapse.value && { bgcolor: 'action.hover' }) }}
-          >
-            <Iconify icon="eva:arrow-ios-downward-fill" />
-          </IconButton>
-        </TableCell>
-      </TableRow>
-
-      {renderSecondary(item.children, allPermissions)}
     </>
   );
 };

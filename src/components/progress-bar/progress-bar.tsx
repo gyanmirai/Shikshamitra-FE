@@ -7,10 +7,8 @@ import type { RootState } from 'src/redux/store';
 import NProgress from 'nprogress';
 import { useRef, Suspense, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
-import { useRouter, usePathname, useSearchParams } from 'src/routes/hooks';
-
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useRouter, usePathname, useSearchParams } from 'src/routes/hooks';
 
 // ----------------------------------------------------------------------
 

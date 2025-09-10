@@ -1,15 +1,13 @@
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import SubmitButton from 'src/components/submit-button';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 
 import type {
   IFormikValue,
@@ -65,7 +63,7 @@ const TransportMaintenanceDialog: React.FC<ITransportAddNewMaintenanceDialogProp
         <form onSubmit={formik.handleSubmit}>
           <Box pt="10px" display="flex" flexDirection="column" gap={3}>
             <Grid container spacing={2}>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <DatePicker
                   name="dateOfMaintenance"
                   label="Date Of Maintenance"
@@ -77,7 +75,7 @@ const TransportMaintenanceDialog: React.FC<ITransportAddNewMaintenanceDialogProp
                   }}
                 />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <DatePicker
                   name="nextScheduleMaintenance"
                   label="Next Schedule Maintenance"

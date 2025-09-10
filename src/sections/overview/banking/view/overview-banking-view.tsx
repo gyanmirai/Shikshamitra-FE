@@ -1,11 +1,9 @@
 'use client';
 
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Unstable_Grid2';
-
+import { Grid } from '@mui/material';
 import { CONFIG } from 'src/config-global';
 import { DashboardContent } from 'src/layouts/dashboard';
-
 import { Iconify } from 'src/components/iconify/iconify';
 
 import { BankingContacts } from '../banking-contacts';
@@ -23,7 +21,7 @@ export function OverviewBankingView() {
   return (
     <DashboardContent maxWidth="xl">
       <Grid container spacing={3}>
-        <Grid xs={12} md={7} lg={8}>
+        <Grid size={{ xs: 12, md: 7, lg: 8 }}>
           <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
             <BankingOverview />
 
@@ -103,7 +101,7 @@ export function OverviewBankingView() {
           </Box>
         </Grid>
 
-        <Grid xs={12} md={5} lg={4}>
+        <Grid size={{ xs: 12, md: 5, lg: 4 }}>
           <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
             <BankingCurrentBalance list={[]} />
 

@@ -2,11 +2,9 @@ import type { IKanbanComment } from 'src/types/kanban';
 
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
-
-import { fToNow } from 'src/utils/format-time';
-
 import { Image } from 'src/components/image';
+import { fToNow } from 'src/utils/format-time';
+import Typography from '@mui/material/Typography';
 import { Lightbox, useLightBox } from 'src/components/lightbox';
 
 // ----------------------------------------------------------------------

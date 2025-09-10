@@ -1,17 +1,15 @@
 import React from 'react';
 import { capitalize } from 'lodash';
-
-import { Box, Card, Grid, colors, Divider, TextField, Typography } from '@mui/material';
-
-import { fileToBase64 } from 'src/utils/file-to-base64';
-
+import * as colors from '@mui/material/colors';
 import { Iconify } from 'src/components/iconify';
 import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
 import { Scrollbar } from 'src/components/scrollbar';
+import { fileToBase64 } from 'src/utils/file-to-base64';
 import { ComponentBlock } from 'src/components/component-block';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
+import { Box, Card, Grid, Divider, TextField, Typography } from '@mui/material';
 import CountryComponent from 'src/components/stardard-address/country-component';
 
 const LogoSignature = ({ formik }: any) => (
@@ -47,10 +45,10 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
         }}
       >
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Box>
               <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -65,7 +63,8 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                     helperText={touched.instituteName && errors.instituteName}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -80,7 +79,8 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                     helperText={touched.addressLine1 && errors.addressLine1}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -95,7 +95,8 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                     helperText={touched.addressLine2 && errors.addressLine2}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -110,7 +111,8 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                     helperText={touched.addressLine3 && errors.addressLine3}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <CountryComponent
                     onChange={(_e, value) => {
                       setFieldValue('stateProvince', null);
@@ -121,10 +123,10 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                     fullWidth
                     error={touched.country && Boolean(errors?.country?.name)}
                     helperText={touched.country && errors?.country?.name}
-                    // fieldProps={{ size: 'small' }}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <StateComponent
                     onChange={(_e, value) => {
                       setFieldValue('city', null);
@@ -137,19 +139,19 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                     helperText={touched?.stateProvince && errors?.stateProvince?.name}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <CityComponent
                     value={values.city}
                     onChange={(_e, value) => setFieldValue('city', value)}
                     stateValue={values.stateProvince}
                     fullWidth
-                    // @ts-ignore
                     error={touched.city && Boolean(errors.city?.name)}
-                    // @ts-ignore
                     helperText={touched.city && errors.city?.name}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -163,13 +165,11 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                   />
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <PhoneInput
                     name="contactNumber"
                     value={values.contactNumber}
-                    onChange={(value) => {
-                      setFieldValue('contactNumber', value);
-                    }}
+                    onChange={(value) => setFieldValue('contactNumber', value)}
                     placeholder="Contact No."
                     error={touched.contactNumber && Boolean(errors.contactNumber)}
                     helperText={touched.contactNumber && errors.contactNumber}
@@ -178,7 +178,8 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                     size="small"
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={4} lg={3}>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -200,10 +201,10 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                   />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <ComponentBlock title="Upload Photos or Banners" sx={{ height: '100%', mt: 2 }}>
                     <Grid container spacing={3}>
-                      <Grid item xs={6} md={4}>
+                      <Grid size={{ xs: 6, md: 4 }}>
                         <Card
                           elevation={0}
                           sx={{
@@ -231,7 +232,8 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                           </Typography>
                         </Card>
                       </Grid>
-                      <Grid item xs={6} md={4}>
+
+                      <Grid size={{ xs: 6, md: 4 }}>
                         <Card
                           elevation={0}
                           sx={{
@@ -260,7 +262,8 @@ const BasicInformationForm: React.FC<any> = ({ formik }) => {
                           </Typography>
                         </Card>
                       </Grid>
-                      <Grid item xs={6} md={4}>
+
+                      <Grid size={{ xs: 6, md: 4 }}>
                         <Card
                           elevation={0}
                           sx={{

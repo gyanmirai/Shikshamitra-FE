@@ -1,29 +1,14 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import React, { useState } from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2/Grid2';
-import {
-  Box,
-  Card,
-  Grid,
-  Menu,
-  alpha,
-  Button,
-  useTheme,
-  MenuItem,
-  Typography,
-} from '@mui/material';
-
-import { exportGraphData } from 'src/utils/exportGraph';
-
-import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
-
 import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
+import { exportGraphData } from 'src/utils/exportGraph';
 import CustomSelect from 'src/components/custom-select';
 import CustomizableTable from 'src/components/customizabaleTable';
-
+import { Box, Card, Grid, Menu, Button, MenuItem, Typography } from '@mui/material';
 import { AnalyticsWidgetSummary } from 'src/sections/overview/analytics/analytics-widget-summary';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 const monthlyFeeCollectedData = [
   {
@@ -148,10 +133,7 @@ const FinanceFeeReportsScreen = () => {
     'Dec',
   ];
   const seriesForTrend = [
-    {
-      name: 'Fee Collection Progress',
-      data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-    },
+    { name: 'Fee Collection Progress', data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49] },
   ];
 
   const exportTrend = exportGraphData(
@@ -222,8 +204,8 @@ const FinanceFeeReportsScreen = () => {
 
   return (
     <>
-      <Grid2 container spacing={3} py="14px">
-        <Grid2 xs={12} md={6} lg={4}>
+      <Grid container spacing={3} py="14px">
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AnalyticsWidgetSummary
             title="Total Fees Collected"
             percent={2.6}
@@ -234,8 +216,9 @@ const FinanceFeeReportsScreen = () => {
               series: [22, 8, 35, 50, 82, 84, 77, 12],
             }}
           />
-        </Grid2>
-        <Grid2 xs={12} md={6} lg={4}>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AnalyticsWidgetSummary
             title="Total Fees Pending"
             percent={2.8}
@@ -247,8 +230,9 @@ const FinanceFeeReportsScreen = () => {
               series: [40, 70, 50, 28, 70, 75, 7, 64],
             }}
           />
-        </Grid2>
-        <Grid2 xs={12} md={6} lg={4}>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <AnalyticsWidgetSummary
             title="Total Fees Due"
             percent={3.6}
@@ -260,11 +244,11 @@ const FinanceFeeReportsScreen = () => {
               series: [56, 30, 23, 54, 47, 40, 62, 73],
             }}
           />
-        </Grid2>
-      </Grid2>
+        </Grid>
+      </Grid>
 
       <Grid container spacing={3}>
-        <Grid item xl={12} xs={12}>
+        <Grid size={{ xl: 12, xs: 12 }}>
           <Card sx={{ px: 2 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography sx={{ pt: '15px', pb: '15px', pl: '15px' }} variant="subtitle1">
@@ -308,17 +292,9 @@ const FinanceFeeReportsScreen = () => {
                 formControlProps={{ sx: { minWidth: 120 } }}
               />
             </Box>
-            {/* <Box py="15px" gap={3} display="flex" justifyContent="flex-end">
-                <Button onClick={handleExportPerformanceDataPDF} variant="contained" size="small">
-                    Export to PDF
-                </Button>
-                <Button onClick={handleExportPerformanceData} variant="contained" size="small">
-                    Export to Excel
-                </Button>
-            </Box> */}
 
             <Grid container spacing={3} py="14px">
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <PerformanceOverTime
                   id="demo__4"
                   chart={{
@@ -350,7 +326,7 @@ const FinanceFeeReportsScreen = () => {
           </Card>
         </Grid>
 
-        <Grid item lg={12} xs={12}>
+        <Grid size={{ lg: 12, xs: 12 }}>
           <Card sx={{ px: 2 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography sx={{ pt: '15px', pb: '15px', pl: '15px' }} variant="subtitle1">
@@ -382,19 +358,10 @@ const FinanceFeeReportsScreen = () => {
                 formControlProps={{ sx: { minWidth: 120 } }}
               />
             </Box>
-            {/* <Box py="15px" gap={3} display="flex" justifyContent="flex-end">
-                            <Button onClick={handleExportClassDataPDF} variant="contained" size="small">
-                                Export to PDF
-                            </Button>
-                            <Button onClick={handleExportClassData} variant="contained" size="small">
-                                Export to Excel
-                            </Button>
-                        </Box> */}
 
             <Grid container spacing={3} py="14px">
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <AnalyticsWebsiteVisits
-                  // title="Fee Collections Across Different Classes Or Fee Types"
                   chart={{
                     categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
                     series: [
@@ -402,8 +369,8 @@ const FinanceFeeReportsScreen = () => {
                       { name: 'Class 3', data: [51, 70, 47, 67, 40, 37, 24, 70, 24] },
                     ],
                     colors: [
-                      alpha(theme.palette.primary.dark, 0.8),
-                      alpha(theme.palette.warning.main, 0.8),
+                      alpha(theme.vars.palette.primary.dark, 0.8),
+                      alpha(theme.vars.palette.warning.main, 0.8),
                     ],
                   }}
                   sx={{ height: '100%' }}

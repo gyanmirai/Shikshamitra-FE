@@ -1,3 +1,5 @@
+import { CONFIG } from 'src/config-global';
+import { SvgColor } from 'src/components/svg-color';
 import {
   hrPath,
   classPath,
@@ -13,10 +15,6 @@ import {
   securityGuardPath,
   resourceManagementPath,
 } from 'src/routes/paths';
-
-import { CONFIG } from 'src/config-global';
-
-import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
 
@@ -1378,7 +1376,7 @@ const libraryModule = {
           shortcutKeyName: 'Alt+L+2',
         },
         {
-          title: 'Issued Books',
+          title: 'Issue & Return Book',
           path: '/library/issued-books',
           _action: 'issued-books',
           shortcutKey: 'Alt+L+2',
@@ -1406,28 +1404,35 @@ const libraryModule = {
           shortcutKeyName: 'Alt+L+3',
         },
         {
-          title: 'Circulation',
-          path: '',
-          _action: 'circulation',
-          shortcutKey: 'Alt+L+4',
-          shortcutKeyName: 'Alt+L+4',
-          children: [
-            {
-              title: 'Reservations Management',
-              path: '/library/circulation/reservation-management',
-              _action: 'reservation-management',
-              shortcutKey: 'Alt+L+5',
-              shortcutKeyName: 'Alt+L+5',
-            },
-            {
-              title: 'Fines Management',
-              path: '/library/circulation/fine-management',
-              _action: 'reservation-management',
-              shortcutKey: 'Alt+L+5',
-              shortcutKeyName: 'Alt+L+5',
-            },
-          ],
+          title: 'Charges Management',
+          path: '/library/charges-management',
+          _action: 'charges-management',
+          shortcutKey: 'Alt+L+2',
+          shortcutKeyName: 'Alt+L+2',
         },
+        // {
+        //   title: 'Circulation',
+        //   path: '',
+        //   _action: 'circulation',
+        //   shortcutKey: 'Alt+L+4',
+        //   shortcutKeyName: 'Alt+L+4',
+        //   children: [
+        //     {
+        //       title: 'Reservations Management',
+        //       path: '/library/circulation/reservation-management',
+        //       _action: 'reservation-management',
+        //       shortcutKey: 'Alt+L+5',
+        //       shortcutKeyName: 'Alt+L+5',
+        //     },
+        //     {
+        //       title: 'Fines Management',
+        //       path: '/library/circulation/fine-management',
+        //       _action: 'reservation-management',
+        //       shortcutKey: 'Alt+L+5',
+        //       shortcutKeyName: 'Alt+L+5',
+        //     },
+        //   ],
+        // },
         {
           title: 'Reports',
           path: '/library/reports',
@@ -1460,6 +1465,27 @@ const libraryModule = {
               title: 'Book Category',
               path: '/library/settings/book-category',
               _action: 'general-setting',
+              shortcutKey: 'Alt+L+S+1',
+              shortcutKeyName: 'Alt+L+S+1',
+            },
+            {
+              title: 'Charge Type',
+              path: '/library/settings/charge-type',
+              _action: 'general-setting',
+              shortcutKey: 'Alt+L+S+2',
+              shortcutKeyName: 'Alt+L+S+2',
+            },
+            {
+              title: 'Library Timing',
+              path: '/library/settings/library-timing',
+              _action: 'general-setting',
+              shortcutKey: 'Alt+L+S+3',
+              shortcutKeyName: 'Alt+L+S+3',
+            },
+            {
+              title: 'Book Condition',
+              path: '/library/settings/book-condition',
+              _action: 'book-condition-setting',
               shortcutKey: 'Alt+L+S+1',
               shortcutKeyName: 'Alt+L+S+1',
             },

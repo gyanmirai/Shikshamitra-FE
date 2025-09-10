@@ -5,15 +5,13 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Avatar from '@mui/material/Avatar';
+import { Label } from 'src/components/label';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
 import CardHeader from '@mui/material/CardHeader';
-
-import { fCurrency } from 'src/utils/format-number';
-
-import { Label } from 'src/components/label';
 import { FlagIcon } from 'src/components/iconify';
+import { fCurrency } from 'src/utils/format-number';
 import { Scrollbar } from 'src/components/scrollbar';
 import { TableHeadCustom } from 'src/components/table';
 

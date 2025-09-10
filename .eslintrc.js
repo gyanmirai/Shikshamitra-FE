@@ -19,11 +19,6 @@ module.exports = {
       },
     },
   },
-  /**
-   * 0 ~ 'off'
-   * 1 ~ 'warn'
-   * 2 ~ 'error'
-   */
   rules: {
     // general
     'import/no-cycle': 'off',
@@ -39,12 +34,14 @@ module.exports = {
     'no-promise-executor-return': 0,
     'import/prefer-default-export': 0,
     'prefer-destructuring': [1, { object: true, array: false }],
+
     // typescript
     '@typescript-eslint/naming-convention': 0,
     '@typescript-eslint/no-use-before-define': 0,
     '@typescript-eslint/consistent-type-exports': 1,
     '@typescript-eslint/consistent-type-imports': 1,
     '@typescript-eslint/no-unused-vars': [1, { args: 'none' }],
+
     // react
     'react/no-children-prop': 0,
     'react/react-in-jsx-scope': 0,
@@ -55,56 +52,46 @@ module.exports = {
     'react/jsx-no-useless-fragment': [1, { allowExpressions: true }],
     'react/no-unstable-nested-components': [1, { allowAsProps: true }],
     'react/jsx-no-duplicate-props': [1, { ignoreCase: false }],
+
     // jsx-a11y
     'jsx-a11y/anchor-is-valid': 0,
     'jsx-a11y/control-has-associated-label': 0,
+
     // unused imports
     'unused-imports/no-unused-imports': 1,
     'unused-imports/no-unused-vars': [
       0,
       { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' },
     ],
-    // perfectionist
-    'perfectionist/sort-exports': [1, { order: 'asc', type: 'line-length' }],
-    'perfectionist/sort-named-imports': [1, { order: 'asc', type: 'line-length' }],
-    'perfectionist/sort-named-exports': [1, { order: 'asc', type: 'line-length' }],
+
+    // perfectionist (v4+ syntax)
+    'perfectionist/sort-exports': [1, { type: 'line-length', order: 'asc' }],
+    'perfectionist/sort-named-imports': [1, { type: 'line-length', order: 'asc' }],
+    'perfectionist/sort-named-exports': [1, { type: 'line-length', order: 'asc' }],
     'perfectionist/sort-imports': [
       1,
       {
-        order: 'asc',
         type: 'line-length',
-        'newlines-between': 'always',
+        order: 'asc',
         groups: [
           'style',
           'type',
           ['builtin', 'external'],
-          'custom-mui',
-          'custom-routes',
-          'custom-hooks',
-          'custom-utils',
-          'internal',
-          'custom-components',
-          'custom-sections',
-          'custom-auth',
-          'custom-types',
+          { type: 'custom', pattern: '@mui/**', group: 'custom-mui' },
+          { type: 'custom', pattern: 'src/auth/**', group: 'custom-auth' },
+          { type: 'custom', pattern: 'src/hooks/**', group: 'custom-hooks' },
+          { type: 'custom', pattern: 'src/utils/**', group: 'custom-utils' },
+          { type: 'custom', pattern: 'src/types/**', group: 'custom-types' },
+          { type: 'custom', pattern: 'src/routes/**', group: 'custom-routes' },
+          { type: 'custom', pattern: 'src/sections/**', group: 'custom-sections' },
+          { type: 'custom', pattern: 'src/components/**', group: 'custom-components' },
+          { type: 'internal', pattern: 'src/**' },
           ['parent', 'sibling', 'index'],
           ['parent-type', 'sibling-type', 'index-type'],
           'object',
           'unknown',
         ],
-        'custom-groups': {
-          value: {
-            ['custom-mui']: '@mui/**',
-            ['custom-auth']: 'src/auth/**',
-            ['custom-hooks']: 'src/hooks/**',
-            ['custom-utils']: 'src/utils/**',
-            ['custom-types']: 'src/types/**',
-            ['custom-routes']: 'src/routes/**',
-            ['custom-sections']: 'src/sections/**',
-            ['custom-components']: 'src/components/**',
-          },
-        },
-        'internal-pattern': ['src/**'],
+        'newlines-between': 'always',
       },
     ],
   },

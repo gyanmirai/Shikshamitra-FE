@@ -1,27 +1,22 @@
 import dayjs from 'dayjs';
-import React, { useMemo, useState, useCallback } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-import { Box, MenuItem, MenuList, Typography, CircularProgress } from '@mui/material';
-
-import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
-
-import calculateAge from 'src/utils/calculate-age';
-
 import { GenderType } from 'src/enums/gender';
+import { Iconify } from 'src/components/iconify';
+import calculateAge from 'src/utils/calculate-age';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useCallback } from 'react';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+import { Box, MenuItem, MenuList, Typography, CircularProgress } from '@mui/material';
+import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
   useMoveToAdmissionMutation,
   useGetStudentRegistrationQuery,
 } from 'src/redux/student/registration/registration-api';
-
-import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import type { IInquiryData } from '../Inquiry';
 
@@ -55,7 +50,7 @@ const RegistrationTable = ({
         {' '}
         <MenuList>
           <MenuItem
-            onClick={async () => {
+            onClick={() => {
               if (row.percentage < 50) {
                 shikshaMitraToast.error({
                   message: 'Please Complete Required Fields of Registration Form',
@@ -104,7 +99,7 @@ const RegistrationTable = ({
     currentQueryAndMutation: useGetStudentRegistrationQuery,
   });
 
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [selectedStudents] = useState<any>([]);
 
   const tableData = useMemo(
     () =>

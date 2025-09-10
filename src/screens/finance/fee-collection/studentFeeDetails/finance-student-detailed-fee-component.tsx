@@ -1,17 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Tab, Card, Button, Typography } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import data from 'src/json/finance/fee-collection/student-additional-discount.json';
-
 import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
+import { Box, Tab, Card, Button, Typography } from '@mui/material';
+import data from 'src/json/finance/fee-collection/student-additional-discount.json';
 
 import { students } from './student-fee-data/student-fee-data';
 import FeeRefundScreen from '../../fee-refund/fee-refund-screen';

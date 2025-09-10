@@ -1,13 +1,9 @@
-import { useState, useCallback } from 'react';
-
-import Collapse from '@mui/material/Collapse';
-
-import { isExternalLink } from 'src/routes/utils';
-import { useActiveLink } from 'src/routes/hooks/use-active-link';
-
 import { CONFIG } from 'src/config-global';
 import { varAlpha } from 'src/theme/styles';
-
+import { useState, useCallback } from 'react';
+import Collapse from '@mui/material/Collapse';
+import { isExternalLink } from 'src/routes/utils';
+import { useActiveLink } from 'src/routes/hooks/use-active-link';
 import { NavLi, navSectionClasses, NavSectionVertical } from 'src/components/nav-section';
 
 import { NavItem } from './nav-mobile-item';
@@ -63,7 +59,7 @@ export function NavList({ data }: NavListProps) {
                   backgroundRepeat: 'no-repeat',
                   backgroundImage: `url(${CONFIG.site.basePath}/assets/illustrations/illustration-dashboard.webp)`,
                   border: (theme) =>
-                    `solid 1px ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
+                    `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
                 },
               },
             }}

@@ -2,11 +2,9 @@ import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'a
 
 import axios from 'axios';
 import { toast } from 'sonner';
-
+import store from 'src/redux/store';
 import { isTokenExpired } from 'src/utils/client';
 import { oidcService } from 'src/utils/oidcClient';
-
-import store from 'src/redux/store';
 import { setUser, clearUser } from 'src/redux/auth/authSlice';
 
 let isRefreshing = false;

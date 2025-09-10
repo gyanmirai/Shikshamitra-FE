@@ -1,7 +1,6 @@
 import React from 'react';
-
-import { Card, useTheme } from '@mui/material';
-
+import { Card } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const ProfileDashboardAttendanceTrend = () => {
@@ -13,22 +12,13 @@ const ProfileDashboardAttendanceTrend = () => {
         chart={{
           categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
           series: [
-            {
-              name: 'Present',
-              data: [40, 58, 27, 45, 48, 50, 90],
-            },
-            {
-              name: 'Half-Day',
-              data: [30, 45, 40, 30, 20, 10, 57],
-            },
-            {
-              name: 'Absent',
-              data: [35, 20, 45, 22, 20, 30, 35],
-            },
+            { name: 'Present', data: [40, 58, 27, 45, 48, 50, 90] },
+            { name: 'Half-Day', data: [30, 45, 40, 30, 20, 10, 57] },
+            { name: 'Absent', data: [35, 20, 45, 22, 20, 30, 35] },
           ],
           colors: [
-            theme.palette.success.main, // Green for Present
-            theme.palette.warning.main, // Yellow/Orange for Half-Day
+            theme.vars.palette.success.main, // Green for Present
+            theme.vars.palette.warning.main, // Yellow/Orange for Half-Day
             theme.palette.error.main, // Red/Pink for Absent
           ],
         }}

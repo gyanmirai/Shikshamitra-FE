@@ -4,23 +4,18 @@ import type { CardProps } from '@mui/material';
 
 import React from 'react';
 import Link from 'next/link';
-
-import { useTheme } from '@mui/material/styles';
-import { Box, Card, Grid, alpha, Typography, CardContent } from '@mui/material';
-
-import { fShortenNumber } from 'src/utils/format-number';
-
 import { varAlpha } from 'src/theme/styles';
-import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
-import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
-
 import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import DashBoardQuickAction from 'src/components/dashboard-quick-action';
-
+import { fShortenNumber } from 'src/utils/format-number';
 import { CalendarView } from 'src/sections/calendar/view';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
+import DashBoardQuickAction from 'src/components/dashboard-quick-action';
+import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
+import { AnalyticsCurrentVisits } from 'src/screens/student/enrollment/dashboard/organization-status';
 
 import type { TDashboardCardProps } from './type';
 
@@ -65,7 +60,7 @@ const CommunicationDashboard = () => {
         }
       />
       <Grid container spacing={2} mt={1}>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <EmployeeDashboardCard
             title="Total Announcement"
             icon="mdi:announcement"
@@ -78,7 +73,7 @@ const CommunicationDashboard = () => {
             // href="/hr/employee"
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <EmployeeDashboardCard
             title="Unread Messages"
             icon="mdi:message-text"
@@ -88,7 +83,7 @@ const CommunicationDashboard = () => {
             // href="/hr/employee"
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <EmployeeDashboardCard
             title="Total Events"
             icon="mdi:event"
@@ -102,7 +97,7 @@ const CommunicationDashboard = () => {
             // href="/hr/employee"
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <EmployeeDashboardCard
             title="Total Survey"
             icon="ri:survey-line"
@@ -118,7 +113,7 @@ const CommunicationDashboard = () => {
         </Grid>
       </Grid>
 
-      <Grid item xs={12} mt={3}>
+      <Grid size={{ xs: 12 }} mt={3}>
         <Card>
           <CardContent>
             <Typography variant="h6">Event Calendar</Typography>
@@ -128,7 +123,7 @@ const CommunicationDashboard = () => {
       </Grid>
 
       <Grid container spacing={2} mt={1}>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card sx={{ p: 1, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="flex-end" alignItems="flex-end">
               <CustomSelect
@@ -140,26 +135,24 @@ const CommunicationDashboard = () => {
                 ]}
                 onChange={() => {}}
                 value=""
-                formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
-                }}
+                formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
               />
             </Box>
             <AnalyticsWebsiteVisits
               title="Organized Events"
-              //   subheader="(+43%) than last year"
               chart={{
                 categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
                 series: [{ name: 'Class 10-A', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] }],
-                colors: [alpha(theme.palette.primary.dark, 0.8)],
+                colors: [alpha(theme.vars.palette.primary.dark, 0.8)],
               }}
               sx={{ height: '100%', boxShadow: 'none' }}
             />
           </Card>
         </Grid>
       </Grid>
+
       <Grid container spacing={2} mt={1}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <AnalyticsCurrentVisits
               title="Survey Overview"
@@ -204,7 +197,7 @@ export const CommunicationDashboardCard: React.FC<TDashboardCardProps> = ({
     }
 
     // Fallback to standard palette if vars.palette fails
-    const standardPaletteColor = theme.palette[colorKey as keyof typeof theme.palette];
+    const standardPaletteColor = theme.vars.palette[colorKey as keyof typeof theme.vars.palette];
 
     if (
       standardPaletteColor &&
@@ -229,11 +222,7 @@ export const CommunicationDashboardCard: React.FC<TDashboardCardProps> = ({
         textDecoration: 'none',
         cursor: href ? 'pointer' : 'default',
         '&:hover': href
-          ? {
-              boxShadow: 6,
-              transform: 'scale(1.02)',
-              transition: '0.3s ease-in-out',
-            }
+          ? { boxShadow: 6, transform: 'scale(1.02)', transition: '0.3s ease-in-out' }
           : {},
       }}
       onClick={href ? undefined : () => {}}
@@ -259,14 +248,7 @@ export const CommunicationDashboardCard: React.FC<TDashboardCardProps> = ({
         {/* Icon */}
         <Iconify
           icon={icon}
-          sx={{
-            top: 24,
-            right: 10,
-            width: 36,
-            height: 36,
-            position: 'absolute',
-            zIndex: 1,
-          }}
+          sx={{ top: 24, right: 10, width: 36, height: 36, position: 'absolute', zIndex: 1 }}
         />
 
         {/* Background Gradient */}
@@ -289,25 +271,11 @@ export const CommunicationDashboardCard: React.FC<TDashboardCardProps> = ({
   );
 };
 
-type Props = CardProps & {
-  title: string;
-  total: number;
-  percent?: number;
-  icon: string;
-};
+type Props = CardProps & { title: string; total: number; percent?: number; icon: string };
 
 export function BookingWidgetSummary({ title, percent, total, icon, sx, ...other }: Props) {
   return (
-    <Card
-      sx={{
-        p: 2,
-        pl: 3,
-        display: 'flex',
-        alignItems: 'center',
-        ...sx,
-      }}
-      {...other}
-    >
+    <Card sx={{ p: 2, pl: 3, display: 'flex', alignItems: 'center', ...sx }} {...other}>
       <Box sx={{ flexGrow: 1 }}>
         <Box sx={{ color: 'text.secondary', typography: 'subtitle2' }}>{title}</Box>
         <Box sx={{ my: 1.5, typography: 'h3' }}>{fShortenNumber(total)}</Box>

@@ -2,26 +2,21 @@
 
 import type { IFile, IFileFilters } from 'src/types/file';
 
-import { useState, useCallback } from 'react';
-
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useSetState } from 'src/hooks/use-set-state';
-
-import { fIsAfter, fIsBetween } from 'src/utils/format-time';
-
-import { DashboardContent } from 'src/layouts/dashboard';
-
+import { useState, useCallback } from 'react';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import Typography from '@mui/material/Typography';
+import { useBoolean } from 'src/hooks/use-boolean';
+import ToggleButton from '@mui/material/ToggleButton';
+import { useSetState } from 'src/hooks/use-set-state';
+import { DashboardContent } from 'src/layouts/dashboard';
 import { fileFormat } from 'src/components/file-thumbnail';
 import { EmptyContent } from 'src/components/empty-content';
+import { fIsAfter, fIsBetween } from 'src/utils/format-time';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { useTable, rowInPage, getComparator } from 'src/components/table';
 
 import { FileManagerTable } from '../file-manager-table';

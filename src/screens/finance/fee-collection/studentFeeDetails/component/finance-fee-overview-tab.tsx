@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-
-import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
-
-import { formatNumber } from 'src/utils/formate_number';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
+import { Box, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
 
 const students = [
   {

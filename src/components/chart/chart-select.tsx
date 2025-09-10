@@ -1,12 +1,10 @@
 import type { Theme, SxProps } from '@mui/material/styles';
 
+import { varAlpha } from 'src/theme/styles';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
-import ButtonBase from '@mui/material/ButtonBase';
-
-import { varAlpha } from 'src/theme/styles';
-
 import { Iconify } from 'src/components/iconify';
+import ButtonBase from '@mui/material/ButtonBase';
 
 import { Scrollbar } from '../scrollbar';
 import { usePopover, CustomPopover } from '../custom-popover';

@@ -4,8 +4,18 @@ import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
-
+import ShakingTextField from 'src/components/shaking-text-field';
+import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
+import { DialogScrollContent } from 'src/components/customDialog';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Grid,
   Chip,
@@ -17,20 +27,6 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { concessionValidation } from './ConcessionValidation';
 import { getInitialConcessionFormData } from './ConcessionInitialValues';
@@ -110,10 +106,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   // load students when class & division selected
   useEffect(() => {
     if (formik.values.className && formik.values.division) {
-      getStudents({
-        standardId: formik.values.className,
-        divisionId: formik.values.division,
-      });
+      getStudents({ standardId: formik.values.className, divisionId: formik.values.division });
     }
   }, [formik.values.className, formik.values.division, getStudents]);
 
@@ -131,7 +124,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       <DialogScrollContent>
         <Grid container spacing={3} sx={{ mb: 2 }}>
           {/* Board */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField error={!!(formik.touched.board && formik.errors.board)}>
               <CustomSelect
                 label="Board *"
@@ -153,7 +146,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           </Grid>
 
           {/* Medium */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField error={!!(formik.touched.medium && formik.errors.medium)}>
               <CustomSelect
                 label="Medium *"
@@ -174,7 +167,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           </Grid>
 
           {/* Class */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
               <CustomSelect
                 label="Class *"
@@ -194,7 +187,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           </Grid>
 
           {/* Division */}
-          <Grid item xs={6}>
+          <Grid size={6}>
             <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
               <CustomSelect
                 label="Division *"
@@ -213,7 +206,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           </Grid>
 
           {/* Student */}
-          <Grid item xs={12}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.studentName && formik.errors.studentName)}>
               <Autocomplete
                 loading={studentLoading}
@@ -260,7 +253,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
               error={!!(formik.touched.concessionType && formik.errors.concessionType)}
             >
@@ -288,7 +281,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.feeHead && formik.errors.feeHead)}>
               <CustomSelect
                 label="Fee Head *"
@@ -336,7 +329,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       width={20}
                       sx={{
                         color: (theme) =>
-                          row.status === 'Uploaded' ? 'success.main' : theme.palette.grey[500],
+                          row.status === 'Uploaded' ? 'success.main' : theme.vars.palette.grey[500],
                         cursor: 'pointer',
                       }}
                     />

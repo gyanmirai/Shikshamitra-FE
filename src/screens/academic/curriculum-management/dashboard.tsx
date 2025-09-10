@@ -1,9 +1,6 @@
 import React from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, Typography } from '@mui/material';
-
 import CustomSelect from 'src/components/custom-select';
+import { Box , Grid, Card, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
@@ -38,8 +35,8 @@ const Dashboard = () => (
         />
       }
     />
-    <Grid2 container spacing={3}>
-      <Grid2 lg={4}>
+    <Grid container spacing={3}>
+      <Grid size={{ lg: 4 }}>
         <Card sx={{ p: 3, height: '100%' }}>
           <Box display="flex" alignItems="center" justifyContent="space-between">
             <Typography component="span" variant="h6" gutterBottom>
@@ -72,8 +69,8 @@ const Dashboard = () => (
             <Typography sx={{ pl: '20px', mt: '-10px' }}>Curriculums</Typography>
           </Box>
         </Card>
-      </Grid2>
-      <Grid2 lg={4}>
+      </Grid>
+      <Grid size={{ lg: 4 }}>
         <Card sx={{ p: 3, height: '100%' }}>
           <Typography component="span" variant="h6" gutterBottom>
             Subjects/Streams Managed
@@ -88,8 +85,8 @@ const Dashboard = () => (
             </Typography>
           </Box>
         </Card>
-      </Grid2>
-      <Grid2 lg={4}>
+      </Grid>
+      <Grid size={{ lg: 4 }}>
         <Card sx={{ p: 3, height: '100%' }}>
           <Typography component="span" variant="h6" gutterBottom>
             Grade Levels Managed
@@ -104,8 +101,8 @@ const Dashboard = () => (
             </Typography>
           </Box>
         </Card>
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   </Box>
 );
 

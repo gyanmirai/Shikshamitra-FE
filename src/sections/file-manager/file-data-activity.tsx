@@ -1,14 +1,11 @@
 import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
-import { useState, useCallback } from 'react';
-
 import Card from '@mui/material/Card';
+import { useState, useCallback } from 'react';
+import { fData } from 'src/utils/format-number';
 import CardHeader from '@mui/material/CardHeader';
 import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
-import { fData } from 'src/utils/format-number';
-
 import { Chart, useChart, ChartSelect } from 'src/components/chart';
 
 // ----------------------------------------------------------------------
@@ -18,14 +15,7 @@ type Props = CardProps & {
   subheader?: string;
   chart: {
     colors?: string[];
-    series: {
-      name: string;
-      categories?: string[];
-      data: {
-        name: string;
-        data: number[];
-      }[];
-    }[];
+    series: { name: string; categories?: string[]; data: { name: string; data: number[] }[] }[];
     options?: ChartOptions;
   };
 };
@@ -45,22 +35,12 @@ export function FileDataActivity({ title, subheader, chart, ...other }: Props) {
   ];
 
   const chartOptions = useChart({
-    chart: {
-      stacked: true,
-    },
+    chart: { stacked: true },
     colors: chartColors,
-    stroke: {
-      width: 0,
-    },
-    legend: {
-      show: true,
-    },
-    xaxis: {
-      categories: currentSeries?.categories,
-    },
-    tooltip: {
-      y: { formatter: (value: number) => fData(value) },
-    },
+    stroke: { width: 0 },
+    legend: { show: true },
+    xaxis: { categories: currentSeries?.categories },
+    tooltip: { y: { formatter: (value: number) => fData(value) } },
     ...chart.options,
   });
 

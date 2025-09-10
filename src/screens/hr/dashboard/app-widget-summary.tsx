@@ -4,11 +4,9 @@ import type { ChartOptions } from 'src/components/chart';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import { useTheme } from '@mui/material/styles';
-
-import { fNumber, fPercent } from 'src/utils/format-number';
-
 import { Iconify } from 'src/components/iconify';
 import { Chart, useChart } from 'src/components/chart';
+import { fNumber, fPercent } from 'src/utils/format-number';
 
 // ----------------------------------------------------------------------
 
@@ -16,12 +14,7 @@ type Props = CardProps & {
   title: string;
   total: number;
   percent?: number;
-  chart: {
-    colors?: string[];
-    categories: string[];
-    series: number[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; categories: string[]; series: number[]; options?: ChartOptions };
   renderComp?: React.ReactNode;
 };
 
@@ -82,15 +75,7 @@ export function AppWidgetSummary({
   );
 
   return (
-    <Card
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        p: 3,
-        ...sx,
-      }}
-      {...other}
-    >
+    <Card sx={{ display: 'flex', alignItems: 'center', p: 3, ...sx }} {...other}>
       <Box sx={{ flexGrow: 1 }}>
         {renderComp}
         <Box sx={{ typography: 'subtitle2' }}>{title}</Box>

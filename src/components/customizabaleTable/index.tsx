@@ -9,12 +9,14 @@ import * as XLSX from 'xlsx';
 import { useFormik } from 'formik';
 import _, { isNumber } from 'lodash';
 import autoTable from 'jspdf-autotable';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import React, { useRef, useMemo, useState, useEffect, useCallback, useLayoutEffect } from 'react';
-
+import debounce from 'src/utils/debounce';
+import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import { formatNumber } from 'src/utils/formate_number';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
+import React, { useRef, useMemo, useState, useEffect, useCallback, useLayoutEffect } from 'react';
 import {
   Clear as ClearIcon,
   Search as SearchIcon,
@@ -34,7 +36,6 @@ import {
   Button,
   Switch,
   Popover,
-  useTheme,
   MenuItem,
   TableRow,
   Checkbox,
@@ -51,9 +52,6 @@ import {
   TablePagination,
   FormControlLabel,
 } from '@mui/material';
-
-import debounce from 'src/utils/debounce';
-import { formatNumber } from 'src/utils/formate_number';
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
@@ -151,7 +149,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   // );
   const { columnVisibility } = tableConfig;
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  // const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const [anchorColumnEl, setColumnAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -218,7 +216,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   const getStickyStyle = (col: IColumn): React.CSSProperties => {
     const base: React.CSSProperties = {
       position: col.sticky ? 'sticky' : 'static',
-      // background: col.sticky ? theme.palette.background.paper : undefined,
+      // background: col.sticky ? theme.vars.palette.background.paper : undefined,
     };
 
     const colId = col.id as string;
@@ -402,12 +400,27 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
   const sortedData = useMemo(() => {
     if (serverSide) return filteredData;
+
     return _.orderBy(
       filteredData,
-      sorts.map((i) => i.column),
+      sorts.map((sort) => (row) => {
+        const column = columns.find((col) => col.id === sort.column);
+        const value = _.get(row, sort.column);
+
+        switch (column?.filterType) {
+          case 'number':
+            return Number(value);
+          case 'date':
+            return dayjs(value, 'DD-MM-YYYY').valueOf();
+          case 'formattedNumber':
+            return parseFormattedNumber(value);
+          default:
+            return value;
+        }
+      }),
       sorts.map((i) => i.direction)
     );
-  }, [serverSide, filteredData, sorts]);
+  }, [serverSide, filteredData, sorts, columns]);
 
   const paginatedData = useMemo(
     () =>
@@ -421,15 +434,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     handelChangeParams({ dense: event.target.checked });
   };
 
-  const clearFilter = () => {
-    handelChangeParams({
-      filterColumn: '',
-      filterType: 'contains',
-      filterValue: '',
-      page: 0,
-    });
-    setAnchorEl(null);
-  };
+  // const clearFilter = () => {
+  //   handelChangeParams({ filterColumn: '', filterType: 'contains', filterValue: '', page: 0 });
+  //   setAnchorEl(null);
+  // };
 
   const handleExpandRow = (index: number) => {
     setExpandedRows((prev) => ({ ...prev, [index]: !prev[index] }));
@@ -456,10 +464,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           unit: 'mm', // Units: 'pt', 'mm', 'cm', or 'in'
           format: [pageWidth, pageHeight], // Custom page size
         });
-        const columnData = columns.map((column) => ({
-          header: column.label,
-          dataKey: column.id,
-        }));
+        const columnData = columns.map((column) => ({ header: column.label, dataKey: column.id }));
         // @ts-ignore
         autoTable(doc, { columns: columnData, body: data });
         doc.save(`${data?.[0]?.fileName ?? 'table_data'}.pdf`);
@@ -481,10 +486,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   ) => {
     const newFilter = { column: columnId, type: filterTypes, value, valueType };
 
-    handelChangeParams({
-      filters: [...filters, newFilter],
-      page: 0,
-    });
+    handelChangeParams({ filters: [...filters, newFilter], page: 0 });
     setFilterAnchorEl(null);
   };
 
@@ -537,14 +539,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 open={Boolean(anchorColumnEl)}
                 anchorEl={anchorColumnEl}
                 onClose={() => setColumnAnchorEl(null)}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'left',
-                }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
               >
                 <Box
                   sx={{
@@ -679,16 +675,11 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                           boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
 
                           ...(column.sticky ? { backgroundImage: 'none' } : {}),
-                          '& .column-filter-icon': {
-                            opacity: 0,
-                            transition: 'opacity 0.3s ease',
-                          },
-                          '&:hover .column-filter-icon': {
-                            opacity: 1,
-                          },
+                          '& .column-filter-icon': { opacity: 0, transition: 'opacity 0.3s ease' },
+                          '&:hover .column-filter-icon': { opacity: 1 },
                           '&::after': {
                             borderRight: !column.sticky
-                              ? `1px solid ${theme.palette.grey[400]}`
+                              ? `1px solid ${theme.vars.palette.grey[400]}`
                               : 'none',
                             content: '""',
                             position: 'absolute',
@@ -698,9 +689,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                             top: '50%',
                             transform: 'translateY(-50%)',
                           },
-                          '&:last-child::after': {
-                            borderRight: 'none',
-                          },
+                          '&:last-child::after': { borderRight: 'none' },
                           ...getStickyStyle(column),
                           position: 'sticky',
                         }}
@@ -731,19 +720,34 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                           </Box>
 
                           {column.isFilter && (
-                            <Iconify
-                              icon="lucide:list-filter"
-                              sx={{
-                                height: '16px',
-                                width: '16px',
-                                cursor: 'pointer',
-                                position: 'absolute',
-                                right: '4px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                              }}
-                              onClick={(e) => handleColumnFilterClick(e, column)}
-                            />
+                            <>
+                              <Iconify
+                                icon="lucide:list-filter"
+                                sx={{
+                                  height: '16px',
+                                  width: '16px',
+                                  cursor: 'pointer',
+                                  position: 'absolute',
+                                  right: '4px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                }}
+                                onClick={(e) => handleColumnFilterClick(e, column)}
+                              />
+                              {filters.some((f) => f.column === column.id) && (
+                                <Box
+                                  sx={{
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    bgcolor: 'primary.main',
+                                    position: 'absolute',
+                                    top: 8,
+                                    right: 2,
+                                  }}
+                                />
+                              )}
+                            </>
                           )}
 
                           {column.isSort !== false && (
@@ -896,10 +900,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 sx={{
                   '& *': { fontSize: '14px !important' },
                   '& svg': { fontSize: '18px !important' },
-                  '& .MuiToolbar-root': {
-                    minHeight: 'unset',
-                    height: 'auto',
-                  },
+                  '& .MuiToolbar-root': { minHeight: 'unset', height: 'auto' },
                 }}
               />
             )}
@@ -995,12 +996,7 @@ const ColumnFilterMenu: React.FC<{
     filterValue: null | string | Dayjs | number | { min: number; max: number };
     filterType: string;
   }>({
-    initialValues: {
-      min: null,
-      max: null,
-      filterValue: null,
-      filterType: '',
-    },
+    initialValues: { min: null, max: null, filterValue: null, filterType: '' },
     validationSchema: yup.object({
       filterType: yup.string().test('filterType', 'Filter type is required', (value) => {
         if (anchorEl?.column.filterType === 'enum') {
@@ -1112,13 +1108,7 @@ const ColumnFilterMenu: React.FC<{
         formik.resetForm();
         onClose();
       }}
-      slotProps={{
-        paper: {
-          sx: {
-            width: '260px',
-          },
-        },
-      }}
+      slotProps={{ paper: { sx: { width: '260px' } } }}
     >
       <Box component="form" sx={{ p: 2, maxWidth: 350 }} onSubmit={formik.handleSubmit}>
         {anchorEl?.column.filterType !== 'enum' && (

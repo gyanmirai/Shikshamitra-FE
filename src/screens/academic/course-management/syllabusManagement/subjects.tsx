@@ -7,31 +7,27 @@ import type { Standards, Organization } from 'src/types/school';
 // Import necessary types
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import { useSelector, useDispatch } from 'react-redux';
-// Import external dependencies
-import React, { useState, useEffect, useCallback } from 'react';
-
 // Import Material-UI icons and components
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
-
-// Import custom hooks
-import { useBoolean } from 'src/hooks/use-boolean';
-
-// Import Redux related functions
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import chapterTableData from 'src/json/academic/syllabus/chapterTableData.json';
-
 // Import custom components
 import { Iconify } from 'src/components/iconify';
+// Import custom hooks
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+// Import Redux related functions
+import { useGetClassQuery } from 'src/redux/class/classApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+// Import external dependencies
+import React, { useState, useEffect, useCallback } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import chapterTableData from 'src/json/academic/syllabus/chapterTableData.json';
+import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { AddNewChapter } from './addChapterForm';
 // Import mock data

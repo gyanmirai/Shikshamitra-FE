@@ -1,9 +1,6 @@
 import React from 'react';
-
 import { Grid } from '@mui/material';
-
 import CustomDialog from 'src/components/customDialog';
-
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 import { EcommerceSalesOverview } from 'src/sections/overview/e-commerce/ecommerce-sales-overview';
 
@@ -38,7 +35,7 @@ const FinanceBudgetAllocationDialog: React.FC<FinanceBudgetAllocationDialogProps
     maxWidth="lg"
   >
     <Grid container spacing={2}>
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <AnalyticsCurrentVisits
           chart={{
             series: [
@@ -50,8 +47,9 @@ const FinanceBudgetAllocationDialog: React.FC<FinanceBudgetAllocationDialogProps
           sx={{ height: '100%' }}
         />
       </Grid>
-      <Grid item xs={12} md={6}>
-        <Grid xs={12} md={6} lg={8}>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6, lg: 8 }}>
           <EcommerceSalesOverview title="" data={_ecommerceSalesOverview} />
         </Grid>
       </Grid>

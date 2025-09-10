@@ -1,6 +1,12 @@
 import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
-
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify/iconify';
+import ViewReceipt from 'src/screens/finance/viewReceipt/view-receipt';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import {
   Box,
   Grid,
@@ -11,16 +17,6 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import ViewReceipt from 'src/screens/finance/viewReceipt/view-receipt';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import { Iconify } from 'src/components/iconify/iconify';
-import NumericFormatCustom from 'src/components/custom-numeric-format';
 
 import FeeConfirmationDialog from './fee-confirmation-dialog';
 import ReceivedAmountWarning from './received-amount-warning-dialog';
@@ -331,38 +327,34 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                         {fee.paymentMode.length > 0 && (
                           <Grid container spacing={2} px={2} pt={3}>
                             {fee.paymentMode.includes('Cash') && feeIndex !== -1 && (
-                              <Grid item xs={12} md={6}>
+                              <Grid size={{ xs: 12, md: 6 }}>
                                 <Typography variant="subtitle2" gutterBottom>
                                   Cash Details
                                 </Typography>
 
-                                {/** 🔥 Find paymentModeIndex dynamically before using it */}
+                                {/** ✅ Safely find paymentModeIndex */}
                                 {(() => {
-                                  const paymentModeIndex = formik.values.feeDetails[
-                                    feeIndex
-                                  ]?.paymentMode.findIndex(
+                                  const paymentModes =
+                                    formik.values.feeDetails?.[feeIndex]?.paymentMode || [];
+                                  const paymentModeIndex = paymentModes.findIndex(
                                     (mode) => Object.keys(mode)[0] === 'cash'
                                   );
 
+                                  if (paymentModeIndex === -1) return null;
+
                                   return (
-                                    paymentModeIndex !== -1 && (
-                                      <NumericFormatCustom
-                                        label="Cash Amount"
-                                        value={
-                                          formik.values.feeDetails[feeIndex]?.paymentMode[
-                                            paymentModeIndex
-                                          ]?.cash?.amount || ''
-                                        }
-                                        onChange={(e) => {
-                                          formik.setFieldValue(
-                                            `feeDetails[${feeIndex}].paymentMode[${paymentModeIndex}].cash.amount`,
-                                            e
-                                          );
-                                        }}
-                                        size="small"
-                                        fullWidth
-                                      />
-                                    )
+                                    <NumericFormatCustom
+                                      label="Cash Amount"
+                                      value={paymentModes[paymentModeIndex]?.cash?.amount || ''}
+                                      onChange={(e) =>
+                                        formik.setFieldValue(
+                                          `feeDetails[${feeIndex}].paymentMode[${paymentModeIndex}].cash.amount`,
+                                          e
+                                        )
+                                      }
+                                      size="small"
+                                      fullWidth
+                                    />
                                   );
                                 })()}
                               </Grid>
@@ -406,7 +398,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                     </Box>
                   </Box>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} md={3}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <CustomSelect
                         label="Fee Type"
                         options={feeOptions}
@@ -419,7 +411,8 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                         formControlProps={{ sx: { width: '100%' } }}
                       />
                     </Grid>
-                    <Grid item xs={12} md={3}>
+
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <CustomSelect
                         label="Pending Terms"
                         options={termOptions}
@@ -429,7 +422,8 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                         multiple
                       />
                     </Grid>
-                    <Grid item xs={12} md={3}>
+
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <CustomSelect
                         multiple
                         label="Payment Mode"
@@ -447,17 +441,18 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
                         formControlProps={{ sx: { width: '100%' } }}
                       />
                     </Grid>
-                    {/* <Grid item xs={12} md={3}>
-                    <DatePicker
-                      label="Date"
-                      slotProps={{
-                        textField: {
-                          sx: { width: '100%' },
-                          size: 'small',
-                        },
-                      }}
-                    />
-                  </Grid> */}
+
+                    {/* <Grid size={{ xs: 12, md: 3 }}>
+    <DatePicker
+      label="Date"
+      slotProps={{
+        textField: {
+          sx: { width: '100%' },
+          size: 'small',
+        },
+      }}
+    />
+  </Grid> */}
                   </Grid>
 
                   {/* <TextField

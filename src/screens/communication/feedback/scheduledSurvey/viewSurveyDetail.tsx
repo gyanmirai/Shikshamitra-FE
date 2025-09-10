@@ -2,12 +2,10 @@
 import React from 'react';
 // eslint-disable-next-line import/no-duplicates
 
-import { Box, Card, Chip, Button, Typography } from '@mui/material';
-
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-
+import { Box, Card, Chip, Button, Typography } from '@mui/material';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 import { ResponseComponent } from './responseComponent';

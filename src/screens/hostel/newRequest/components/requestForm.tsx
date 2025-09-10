@@ -1,12 +1,24 @@
 'use client';
 
-import type { Division, Standards } from 'src/types/school';
+import type { Division } from 'src/types/school';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import PhoneInput from 'src/components/phone-input';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -18,22 +30,6 @@ import {
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import { Iconify } from 'src/components/iconify';
-import PhoneInput from 'src/components/phone-input';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import ShakingTextField from 'src/components/shaking-text-field';
-import NumericFormatCustom from 'src/components/custom-numeric-format';
-import CityComponent from 'src/components/stardard-address/city-component';
-import StateComponent from 'src/components/stardard-address/state-component';
-import CountryComponent from 'src/components/stardard-address/country-component';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { hostelRequestValidationSchema } from './validationSchema';
 import { getHostelRequestInitialValues } from './getHostelInitialValues';
@@ -82,7 +78,7 @@ const HostelRequestForm: React.FC<{
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
               {/* Hostel Type */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.hostelType && formik.errors.hostelType)}>
                   <CustomSelect
                     size="small"
@@ -105,8 +101,9 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
+
               {/* Hostel Name */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.hostelName && formik.errors.hostelName)}>
                   <CustomSelect
                     size="small"
@@ -132,8 +129,9 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
+
               {/* Class */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                   <CustomSelect
                     size="small"
@@ -147,9 +145,7 @@ const HostelRequestForm: React.FC<{
                     value={formik.values.className}
                     onChange={(val) => {
                       formik.setFieldValue('className', val);
-                      const selectedClass: Standards = classData.items.find(
-                        (i: Standards) => i.id === val
-                      );
+                      const selectedClass = classData.items.find((i: any) => i.id === val);
                       setDivisionOptions(selectedClass?.divisions || []);
                     }}
                     error={formik.touched.className && Boolean(formik.errors.className)}
@@ -161,8 +157,9 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
+
               {/* Division */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
                   <CustomSelect
                     size="small"
@@ -174,9 +171,7 @@ const HostelRequestForm: React.FC<{
                     disabled={!formik.values.className || disabled}
                     fullWidth
                     value={formik.values.division}
-                    onChange={(val) => {
-                      formik.setFieldValue('division', val);
-                    }}
+                    onChange={(val) => formik.setFieldValue('division', val)}
                     error={formik.touched.division && Boolean(formik.errors.division)}
                     helperText={
                       formik.touched.division && formik.errors.division
@@ -186,8 +181,9 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
+
               {/* Name */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.name && formik.errors.name)}>
                   <Autocomplete
                     size="small"
@@ -220,8 +216,9 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
+
               {/* Gender */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.gender && formik.errors.gender)}>
                   <CustomSelect
                     size="small"
@@ -244,8 +241,9 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
+
               {/* Date of Birth */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.dateOfBirth && formik.errors.dateOfBirth)}
                 >
@@ -255,9 +253,7 @@ const HostelRequestForm: React.FC<{
                     name="dateOfBirth"
                     format="DD-MM-YYYY"
                     value={formik.values.dateOfBirth}
-                    onChange={(val) => {
-                      formik.setFieldValue('dateOfBirth', val);
-                    }}
+                    onChange={(val) => formik.setFieldValue('dateOfBirth', val)}
                     slotProps={{
                       textField: {
                         size: 'small',
@@ -272,8 +268,10 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
-                <ShakingTextField error={!!(formik.touched.email && formik.errors.email) || false}>
+
+              {/* Email */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.email && formik.errors.email)}>
                   <TextField
                     value={formik.values.email}
                     fullWidth
@@ -288,26 +286,24 @@ const HostelRequestForm: React.FC<{
                     InputProps={{
                       startAdornment: (
                         <>
-                          <Iconify icon="mdi-light:email" />{' '}
-                          <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />{' '}
+                          <Iconify icon="mdi-light:email" />
+                          <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />
                         </>
                       ),
                     }}
                   />
                 </ShakingTextField>
-              </Grid>{' '}
-              <Grid item xs={12} md={6}>
+              </Grid>
+
+              {/* Parents Contact No */}
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={
-                    !!(formik.touched.parentsContactNo && formik.errors.parentsContactNo) || false
-                  }
+                  error={!!(formik.touched.parentsContactNo && formik.errors.parentsContactNo)}
                 >
                   <PhoneInput
                     name="parentsContactNo"
                     value={formik.values.parentsContactNo}
-                    onChange={(value) => {
-                      formik.setFieldValue('parentsContactNo', value);
-                    }}
+                    onChange={(value) => formik.setFieldValue('parentsContactNo', value)}
                     disabled={disabled}
                     placeholder="Parents Contact No."
                     error={
@@ -320,22 +316,22 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              {/* Alternate Contact */}
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={
                     !!(
                       formik.touched.alternateContactDetails &&
                       formik.errors.alternateContactDetails
-                    ) || false
+                    )
                   }
                 >
                   <PhoneInput
                     name="alternateContactDetails"
                     disabled={disabled}
                     value={formik.values.alternateContactDetails}
-                    onChange={(value) => {
-                      formik.setFieldValue('alternateContactDetails', value);
-                    }}
+                    onChange={(value) => formik.setFieldValue('alternateContactDetails', value)}
                     placeholder="Alternate Contact Details"
                     error={
                       formik.touched.alternateContactDetails &&
@@ -351,9 +347,11 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+
+              {/* Address Line 1 */}
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.addressLine1 && formik.errors.addressLine1) || false}
+                  error={!!(formik.touched.addressLine1 && formik.errors.addressLine1)}
                 >
                   <TextField
                     name="addressLine1"
@@ -369,7 +367,7 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.addressLine2 && formik.errors.addressLine2) || false}
                 >
@@ -387,7 +385,7 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.addressLine3 && formik.errors.addressLine3) || false}
                 >
@@ -405,7 +403,7 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.country && formik.errors.country) || false}
                 >
@@ -421,7 +419,7 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.state && formik.errors?.state?.name) || false}
                 >
@@ -438,7 +436,7 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.city && formik.errors.city) || false}>
                   <CityComponent
                     value={formik.values.city}
@@ -450,7 +448,7 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.village && formik.errors.village) || false}
                 >
@@ -468,7 +466,7 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.pinCode && formik.errors.pinCode) || false}
                 >
@@ -487,7 +485,7 @@ const HostelRequestForm: React.FC<{
                 </ShakingTextField>
               </Grid>
               {/* Package Name */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.roomType && formik.errors.roomType)}>
                   <CustomSelect
                     size="small"
@@ -514,7 +512,7 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.totalAmount && formik.errors.totalAmount)}
                 >
@@ -531,7 +529,7 @@ const HostelRequestForm: React.FC<{
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={12}>
+              <Grid size={12}>
                 {facilities.length > 0 && (
                   <Box>
                     <Typography variant="subtitle2" gutterBottom>
@@ -547,7 +545,7 @@ const HostelRequestForm: React.FC<{
               </Grid>
               {/* Total Amount */}
               {/* Schedule Date */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.scheduleDate && formik.errors.scheduleDate)}
                 >
@@ -573,7 +571,7 @@ const HostelRequestForm: React.FC<{
                 </ShakingTextField>
               </Grid>
               {/* Join Date */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.joinDate && formik.errors.joinDate)}>
                   <DatePicker
                     label="Join Date *"
@@ -597,7 +595,7 @@ const HostelRequestForm: React.FC<{
                 </ShakingTextField>
               </Grid>
               {/* Fees Frequency */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.feesFrequency && formik.errors.feesFrequency)}
                 >
@@ -622,7 +620,7 @@ const HostelRequestForm: React.FC<{
                 </ShakingTextField>
               </Grid>
               {/* Interaction Cost */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.iterationCost && formik.errors.iterationCost)}
                 >

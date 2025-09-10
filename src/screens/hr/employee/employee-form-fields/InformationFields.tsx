@@ -3,9 +3,21 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
 import { useState, useEffect } from 'react';
-import { m as motion, AnimatePresence } from 'framer-motion';
-
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import PhoneInput from 'src/components/phone-input';
+import { UploadAvatar } from 'src/components/upload';
+import { fileToBase64 } from 'src/utils/file-to-base64';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { m as motion, AnimatePresence } from 'framer-motion';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CityComponent from 'src/components/stardard-address/city-component';
+import StateComponent from 'src/components/stardard-address/state-component';
+import CountryComponent from 'src/components/stardard-address/country-component';
+import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
+import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
+import { MaritalStatusType, MaritalStatusTypeArray } from 'src/enums/marriatal-status';
 import {
   Box,
   Grid,
@@ -27,23 +39,6 @@ import {
   InputAdornment,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { fileToBase64 } from 'src/utils/file-to-base64';
-
-import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
-import { EmployeeGroupType, EmployeeGroupTypeArray } from 'src/enums/employee-group';
-import { MaritalStatusType, MaritalStatusTypeArray } from 'src/enums/marriatal-status';
-
-import { Iconify } from 'src/components/iconify';
-import PhoneInput from 'src/components/phone-input';
-import { UploadAvatar } from 'src/components/upload';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CityComponent from 'src/components/stardard-address/city-component';
-import StateComponent from 'src/components/stardard-address/state-component';
-import CountryComponent from 'src/components/stardard-address/country-component';
 
 import RenderShift from './RenderShift';
 import { RenderRole } from './RenderRole';
@@ -218,7 +213,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           )
         }
       >
-        <Grid item xs={12} md={2} sx={{ display: 'flex', justifyContent: 'center' }}>
+        <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', justifyContent: 'center' }}>
           <UploadAvatar
             // maxSize={3145728}
 
@@ -240,9 +235,9 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           />
           {/* <FormHelperText>{formik.touched.photo && formik.errors.photo}</FormHelperText> */}
         </Grid>
-        <Grid item xs={12} md={10}>
+        <Grid size={{ xs: 12, md: 10 }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField
                 error={formik.touched.firstName && Boolean(formik.errors.firstName)}
               >
@@ -263,7 +258,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField
                 error={formik.touched.middleName && Boolean(formik.errors.middleName)}
               >
@@ -286,7 +281,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={formik.touched.lastName && Boolean(formik.errors.lastName)}>
                 <TextField
                   fullWidth
@@ -305,7 +300,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField
                 error={formik.touched.shortName && Boolean(formik.errors.shortName)}
               >
@@ -325,7 +320,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={formik.touched.dob && Boolean(formik.errors.dob)}>
                 <DatePicker
                   label="Date of Birth *"
@@ -350,7 +345,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
                 <FormControl
                   disabled={!isBasicDetailsEditable.value}
@@ -363,7 +358,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                       color: (theme) =>
                         formik.touched.gender && formik.errors.gender
                           ? '#ff563d !important'
-                          : `${theme.palette.common.black} !important`,
+                          : `${theme.vars.palette.common.black} !important`,
                       mr: 1,
                     }}
                   >
@@ -382,7 +377,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 </FormControl>
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={formik.touched.religion && Boolean(formik.errors.religion)}>
                 <FormControl
                   fullWidth
@@ -416,7 +411,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 </FormControl>
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={formik.touched.castType && Boolean(formik.errors.castType)}>
                 <Autocomplete
                   options={EmployeeCastTypeArray.map((item, index) => ({
@@ -447,7 +442,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField
                 error={formik.touched.familyCast && Boolean(formik.errors.familyCast)}
               >
@@ -468,7 +463,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField
                 error={formik.touched.maritalStatus && Boolean(formik.errors.maritalStatus)}
               >
@@ -501,7 +496,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 </FormControl>
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField
                 error={formik.touched.bloodGroup && Boolean(formik.errors.bloodGroup)}
               >
@@ -554,7 +549,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           )
         }
       >
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={formik.touched.email && Boolean(formik.errors.email)}>
             <TextField
               fullWidth
@@ -577,7 +572,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={formik.touched.mobileNo && Boolean(formik.errors.mobileNo)}>
             <PhoneInput
               name="mobileNo"
@@ -594,7 +589,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <PhoneInput
             name="secondaryMobileNo"
             value={formik.values.secondaryMobileNo}
@@ -623,7 +618,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           )
         }
       >
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={formik.touched.dateOfJoining && Boolean(formik.errors.dateOfJoining)}
           >
@@ -644,7 +639,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={formik.touched.employeeGroup && Boolean(formik.errors.employeeGroup)}
           >
@@ -677,7 +672,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             </FormControl>
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={formik.touched.department && Boolean(formik.errors.department)}>
             <TextField
               fullWidth
@@ -724,13 +719,13 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           </ShakingTextField>
         </Grid> */}
 
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <RenderRole formik={formik} disabled={!isProfessionalDetailsEditable.value} />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <RenderOrganization formik={formik} disabled={!isProfessionalDetailsEditable.value} />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <RenderShift formik={formik} disabled={!isProfessionalDetailsEditable.value} />
         </Grid>
       </SectionCard>
@@ -748,7 +743,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
           )
         }
       >
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
           >
@@ -764,7 +759,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
           >
@@ -780,7 +775,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={formik.touched.addressLine3 && Boolean(formik.errors.addressLine3)}
           >
@@ -796,7 +791,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={formik.touched.country && Boolean(formik.errors.country?.name)}>
             <CountryComponent
               value={formik.values.country}
@@ -806,15 +801,13 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               }}
               error={formik.touched.country && Boolean(formik.errors.country?.name)}
               helperText={formik.touched.country && formik.errors.country?.name}
-              textFieldProps={{
-                label: 'Country *',
-              }}
+              textFieldProps={{ label: 'Country *' }}
               disabled={!isAddressDetailsEditable.value}
               onBlur={formik.handleBlur}
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={formik.touched.state && Boolean(formik.errors?.state?.name)}>
             <StateComponent
               value={formik.values.state}
@@ -830,14 +823,12 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               error={formik.touched.state && Boolean(formik.errors?.state?.name)}
               helperText={formik.touched.state && formik.errors?.state?.name}
               disabled={!isAddressDetailsEditable.value}
-              textFieldProps={{
-                label: 'State *',
-              }}
+              textFieldProps={{ label: 'State *' }}
               onBlur={formik.handleBlur}
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={formik.touched.city && Boolean(formik.errors.city?.name)}>
             <CityComponent
               value={formik.values.city}
@@ -848,14 +839,12 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               error={formik.touched.city && Boolean(formik.errors.city?.name)}
               helperText={formik.touched.city && formik.errors.city?.name}
               disabled={!isAddressDetailsEditable.value}
-              textFieldProps={{
-                label: 'City *',
-              }}
+              textFieldProps={{ label: 'City *' }}
               onBlur={formik.handleBlur}
             />
           </ShakingTextField>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={formik.touched.pincode && Boolean(formik.errors.pincode)}>
             <TextField
               fullWidth
@@ -879,10 +868,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   e.preventDefault();
                 }
               }}
-              inputProps={{
-                maxLength: 6,
-                pattern: '[0-9]*',
-              }}
+              inputProps={{ maxLength: 6, pattern: '[0-9]*' }}
             />
           </ShakingTextField>
         </Grid>
@@ -896,7 +882,7 @@ export const InformationFields: FieldsType[] = [
     type: 'text',
     label: ' ',
     name: ' ',
-    gridProps: { xs: 12, md: 12 },
+    gridProps: { size: { xs: 12, md: 12 } },
     renderComp: (props) => <InformationAllFields {...props} />,
   },
 ];

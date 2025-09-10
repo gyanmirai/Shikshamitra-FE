@@ -3,25 +3,20 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import isEqual from 'lodash/isEqual';
-import { useDispatch, useSelector } from 'react-redux';
-import React, { useMemo, useState, useEffect } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Card, Grid, TextField } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import capitalizeWords from 'src/utils/capitalizeText';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
 import { Scrollbar } from 'src/components/scrollbar';
+import { useDispatch, useSelector } from 'react-redux';
+import capitalizeWords from 'src/utils/capitalizeText';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
+import { Box, Card, Grid, TextField } from '@mui/material';
+import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 
 import { addIncomeValidationSchema } from '../validationSchema';
@@ -143,7 +138,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
         >
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField
                   error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
                 >
@@ -160,8 +155,6 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                     disabled={isEdit}
                     error={formik.touched.incomeSource && Boolean(formik.errors.incomeSource)}
                     helperText={formik.touched.incomeSource ? formik.errors.incomeSource || '' : ''}
-                    // addOtherItemOnClick={budgetCategoryDialog.onTrue}
-                    // addOtherItemText="Add New Category"
                   />
                 </ShakingTextField>
                 {budgetCategoryDialog.value && (
@@ -174,7 +167,8 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                   </CustomDialog>
                 )}
               </Grid>
-              <Grid item xs={6}>
+
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField
                   error={formik.touched.incomeName && Boolean(formik.errors.incomeName)}
                 >
@@ -192,7 +186,8 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={6}>
+
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField
                   error={formik.touched.incomeAmount && Boolean(formik.errors.incomeAmount)}
                 >
@@ -208,7 +203,8 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                   />
                 </ShakingTextField>
               </Grid>
-              <Grid item xs={6}>
+
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <ShakingTextField
                   error={formik.touched.paymentMethod && Boolean(formik.errors.paymentMethod)}
                 >
@@ -227,7 +223,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <DatePicker
                   label="Date *"
                   value={formik.values.date}
@@ -235,12 +231,10 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
                   format="DD-MM-YYYY"
                   slotProps={{ textField: { size: 'small', fullWidth: true } }}
                   disabled={isEdit}
-                  // error={Boolean(formik.touched.date && formik.errors.date)}
-                  // helperText={formik.touched.date ? formik.errors.date || '' : ''}
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <TextField
                   multiline
                   rows={4}

@@ -2,25 +2,22 @@ import type { LabelColor } from 'src/components/label/types';
 
 import React from 'react';
 import dayjs from 'dayjs';
-
+import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, TextField, Autocomplete } from '@mui/material';
-
+import CustomSelect from 'src/components/custom-select';
 import data from 'src/json/security/alert-report-data.json';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Grid, TextField, Autocomplete } from '@mui/material';
 import {
   SLAMeetStatusType,
   SLAMeetStatusTypeColor,
   SLAMeetStatusTypeOptions,
 } from 'src/enums/slameet-statusType';
 
-import { Label } from 'src/components/label';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-
 const AlertReportTable = () => (
   <>
     <Box display="flex" alignItems="center" flexDirection="row" gap={2} pb="30px">
-      <Grid item xs={12} md={3}>
+      <Grid size={{ xs: 12, md: 3 }}>
         <DatePicker
           label="To Date"
           format="DD-MM-YYYY"
@@ -35,7 +32,7 @@ const AlertReportTable = () => (
           }}
         />
       </Grid>
-      <Grid item xs={12} md={3}>
+      <Grid size={{ xs: 12, md: 3 }}>
         <DatePicker
           label="End Date"
           format="DD-MM-YYYY"
@@ -51,7 +48,7 @@ const AlertReportTable = () => (
         />
       </Grid>
 
-      <Grid item xs={12} md={3}>
+      <Grid size={{ xs: 12, md: 3 }}>
         <Autocomplete
           loading={false}
           noOptionsText="No Officer Found"
@@ -78,7 +75,7 @@ const AlertReportTable = () => (
         />
       </Grid>
 
-      <Grid item xs={12} md={3}>
+      <Grid size={{ xs: 12, md: 3 }}>
         <CustomSelect
           label="Alert Type"
           options={[]}

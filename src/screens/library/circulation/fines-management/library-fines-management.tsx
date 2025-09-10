@@ -3,18 +3,14 @@
 import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import React, { useState } from 'react';
-
-import { Box, Checkbox, MenuItem, MenuList, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { formatNumber } from 'src/utils/formate_number';
-
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { formatNumber } from 'src/utils/formate_number';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Checkbox, MenuItem, MenuList, Typography } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import CollectFinesDialog from './component/collect-fines-dialog';

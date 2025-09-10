@@ -3,10 +3,9 @@ import type { ChartOptions } from 'src/components/chart';
 
 import { Box } from '@mui/material';
 import CardHeader from '@mui/material/CardHeader';
-import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 
@@ -60,24 +59,13 @@ export function AnalyticsWebsiteVisits({
     // Set the color scheme for the chart
     colors: chartColors,
     // Configure stroke settings for chart elements
-    stroke: {
-      width: 2,
-      colors: ['transparent'],
-    },
+    stroke: { width: 2, colors: ['transparent'] },
     // Set up x-axis configuration with categories
-    xaxis: {
-      categories: chart.categories,
-    },
+    xaxis: { categories: chart.categories },
     // Enable legend display
-    legend: {
-      show: true,
-    },
+    legend: { show: true },
     // Configure tooltip formatting
-    tooltip: {
-      y: {
-        formatter: (value: number) => `${value}`,
-      },
-    },
+    tooltip: { y: { formatter: (value: number) => `${value}` } },
     // Spread additional custom options from chart.options
     ...chart.options,
   });
@@ -93,9 +81,7 @@ export function AnalyticsWebsiteVisits({
             options={firstDropdownOptions}
             onChange={(e) => firstDropdownOnChange(e as string)}
             value={firstDropdownValue ?? ''}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '120px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '120px' } }}
           />
         )}
         {secondDropdownOptions.length > 0 && secondDropdownOnChange && (
@@ -104,9 +90,7 @@ export function AnalyticsWebsiteVisits({
             options={secondDropdownOptions}
             onChange={(e) => secondDropdownOnChange(e as string)}
             value={secondDropdownValue ?? ''}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '120px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '120px' } }}
           />
         )}
       </Box>

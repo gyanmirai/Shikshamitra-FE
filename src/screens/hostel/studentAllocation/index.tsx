@@ -3,12 +3,9 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-
-import { Box, TextField, Autocomplete } from '@mui/material';
-
 import { useGetClassQuery } from 'src/redux/class/classApi';
+import { Box, TextField, Autocomplete } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import StudentProfile from './compoenents/studentProfile';

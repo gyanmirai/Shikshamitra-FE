@@ -1,15 +1,12 @@
 import React from 'react';
-
 import { Box, Chip } from '@mui/material';
-
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFinesChargesQuery } from 'src/redux/memberManagement/memberManagementApi';
 import {
   FinesChargesStatusTypeColors,
   FinesChargesStatusTypeOptions,
 } from 'src/enums/library-status-types';
-
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IMember } from '../type';
 
@@ -23,13 +20,12 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
     currentQueryAndMutation: useGetFinesChargesQuery,
   });
 
-  return mockFinesChargesLoading ? (
-    'Loading...'
-  ) : (
+  return (
     <Box>
       <CustomizableTable
         tableId="fines-charges-table"
         noDataText="No Fines or Charges Found"
+        isLoading={mockFinesChargesLoading}
         columns={[
           { id: 'bookTitle', label: 'Book Title', align: 'left' },
           { id: 'amount', label: 'Amount', align: 'left' },
@@ -52,7 +48,7 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
             },
           },
         ]}
-        data={mockFinesCharges}
+        data={mockFinesCharges || []}
       />
     </Box>
   );

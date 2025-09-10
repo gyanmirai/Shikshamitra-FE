@@ -3,23 +3,18 @@
 import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
-import React, { useMemo, useState } from 'react';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
-import { Box, Stack, Switch, Button, Checkbox, TextField, Autocomplete } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
+import React, { useState } from 'react';
 import { varAlpha } from 'src/theme/styles';
-import hostelManualAttendance from 'src/json/hostel/hostelAttendance/hostelManualAttendance.json';
-
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
+import { Box, Stack, Switch, Button, Checkbox, TextField, Autocomplete } from '@mui/material';
+import hostelManualAttendance from 'src/json/hostel/hostelAttendance/hostelManualAttendance.json';
 
 import type { IStudentHostelManualAttendance } from './type';
 
@@ -27,11 +22,11 @@ const ManualHostelAttendance = () => {
   // State for storing the selected date
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   // State for storing the selected block
-  const [rollCall, setRollCall] = useState<string>();
+  const [_rollCall, setRollCall] = useState<string>();
   // State for storing the selected hostel
-  const [hostel, setHostel] = useState<string>('');
+  const [_hostel, setHostel] = useState<string>('');
   // State for storing the selected room
-  const [floor, setFloor] = useState<string>('');
+  const [_floor, setFloor] = useState<string>('');
   // Dialog state for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
   // State for storing the selected student data
@@ -50,10 +45,10 @@ const ManualHostelAttendance = () => {
     }
   };
 
-  const absentStudents = useMemo(
-    () => studentsData.filter((item: any) => !item.isPresent),
-    [studentsData]
-  );
+  // const absentStudents = useMemo(
+  //   () => studentsData.filter((item: any) => !item.isPresent),
+  //   [studentsData]
+  // );
 
   return (
     <Box display="flex" flexDirection="column">
@@ -75,11 +70,7 @@ const ManualHostelAttendance = () => {
           onChange={(value) => {
             setDate(value);
           }}
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
+          slotProps={{ textField: { size: 'small' } }}
         />
 
         {/* Hostel Dropdown */}
@@ -203,8 +194,8 @@ const ManualHostelAttendance = () => {
           sx: {
             background: (theme) =>
               tableData.isPresent
-                ? varAlpha(theme.palette.success.mainChannel, 0.08)
-                : varAlpha(theme.palette.error.mainChannel, 0.08),
+                ? varAlpha(theme.vars.palette.success.mainChannel, 0.08)
+                : varAlpha(theme.vars.palette.error.mainChannel, 0.08),
           },
         })}
         columns={[
@@ -246,22 +237,9 @@ const ManualHostelAttendance = () => {
               );
             },
           },
-          {
-            id: 'roomNo',
-            label: 'Room No',
-            align: 'left',
-            minWidth: '100px',
-          },
-          {
-            id: 'studentName',
-            label: 'Student Name',
-            align: 'left',
-          },
-          {
-            id: 'hostelName',
-            label: 'Hostel Name',
-            align: 'left',
-          },
+          { id: 'roomNo', label: 'Room No', align: 'left', minWidth: '100px' },
+          { id: 'studentName', label: 'Student Name', align: 'left' },
+          { id: 'hostelName', label: 'Hostel Name', align: 'left' },
           {
             id: 'isPresent',
             label: 'Attendance',
@@ -279,18 +257,14 @@ const ManualHostelAttendance = () => {
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': {
                         color: 'success.main',
-                        '&:hover': {
-                          backgroundColor: 'success.light',
-                        },
+                        '&:hover': { backgroundColor: 'success.light' },
                       },
                       '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
                         backgroundColor: 'success.main',
                       },
                       '& .MuiSwitch-switchBase:not(.Mui-checked)': {
                         color: 'error.main',
-                        '&:hover': {
-                          backgroundColor: 'error.light',
-                        },
+                        '&:hover': { backgroundColor: 'error.light' },
                       },
                       '& .MuiSwitch-switchBase:not(.Mui-checked) + .MuiSwitch-track': {
                         backgroundColor: 'error.main',

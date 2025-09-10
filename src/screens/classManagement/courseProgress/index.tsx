@@ -3,15 +3,12 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
-
-import { Box } from '@mui/material';
-
-import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
-
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import courseProgressTableData from 'src/json/academic/syllabus/courseProgressTableData.json';
 
 import CourseProgressComponent from './courseProgress';
 

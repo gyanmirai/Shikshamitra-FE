@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
-
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 

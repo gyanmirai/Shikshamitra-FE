@@ -1,15 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
-import { Box, Button, Checkbox, Typography } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
 import CustomDialog from 'src/components/customDialog';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { Box, Button, Checkbox, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -28,7 +25,7 @@ const TransportVehicleSettingScreen = () => {
   // State to store selected vehicle data
   const [selectedEntry, setSelectedEntry] = useState<IVehicle>();
   // State to track if form is in edit mode
-  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [isEdit] = useState<boolean>(false);
   // State to control dialog visibility
   const [open, setOpen] = useState<boolean>(false);
   const closeHandler = () => {

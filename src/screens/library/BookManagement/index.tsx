@@ -3,23 +3,19 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetBooksQuery } from 'src/redux/bookManagement/bookManagementApi';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetBooksQuery } from 'src/redux/bookManagement/bookManagementApi';
 
 import BookForm from './Components/BookManageForm';
 import BookDetails from './Components/BookDetails';
@@ -28,7 +24,7 @@ import BookManagementTable from './Components/BookManagementTable';
 const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control book form visibility
   const [open, setOpen] = useState(false);
-  const { data: bookData, isLoading: bookLoading } = useQueryAndMutation({
+  const { data: bookData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBooksQuery,
   });
@@ -41,7 +37,6 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
 
   // Boolean hook to control delete confirmation dialog
   const deleteDialog = useBoolean();
-  const editDialog = useBoolean();
   // Redux dispatch hook for state management
   const dispatch = useDispatch();
 
@@ -167,7 +162,7 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="View comprehensive book information including title, author, category, availability status and other relevant details."
+              title="This modal displays complete details of a particular book, including its information, availability status."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

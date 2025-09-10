@@ -8,21 +8,19 @@ import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
+import { Label } from 'src/components/label';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import { useTheme } from '@mui/material/styles';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import CardHeader from '@mui/material/CardHeader';
-import ListItemText from '@mui/material/ListItemText';
-
 import { fDate, fTime } from 'src/utils/format-time';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import ListItemText from '@mui/material/ListItemText';
 import { TableHeadCustom } from 'src/components/table';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
@@ -37,15 +35,8 @@ type Props = CardProps & {
     status: string;
     checkIn: IDateValue;
     checkOut: IDateValue;
-    destination: {
-      name: string;
-      coverUrl: string;
-    };
-    customer: {
-      name: string;
-      avatarUrl: string;
-      phoneNumber: string;
-    };
+    destination: { name: string; coverUrl: string };
+    customer: { name: string; avatarUrl: string; phoneNumber: string };
   }[];
 };
 
@@ -83,9 +74,7 @@ export function BookingDetails({ title, subheader, headLabel, tableData, ...othe
 
 // ----------------------------------------------------------------------
 
-type RowItemProps = {
-  row: Props['tableData'][number];
-};
+type RowItemProps = { row: Props['tableData'][number] };
 
 function RowItem({ row }: RowItemProps) {
   const theme = useTheme();

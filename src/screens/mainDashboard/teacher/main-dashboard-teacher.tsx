@@ -1,18 +1,13 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-
-import { Box, Grid, Card, Alert, Button, Typography, ButtonGroup } from '@mui/material';
-
-import { formatCurrency } from 'src/utils/cureencyFormater';
-
 import { CONFIG } from 'src/config-global';
-import SeoIllustration from 'src/assets/illustrations/seo-illustration';
-
 import { SvgColor } from 'src/components/svg-color';
+import React, { useState, useCallback } from 'react';
+import { formatCurrency } from 'src/utils/cureencyFormater';
 import CustomizableTable from 'src/components/customizabaleTable';
-
 import { AppWelcome } from 'src/sections/overview/app/app-welcome';
+import SeoIllustration from 'src/assets/illustrations/seo-illustration';
+import { Box, Grid, Card, Alert, Button, Typography, ButtonGroup } from '@mui/material';
 
 import PerformerCard from './component/performer-card';
 import { StudentPerformanceChart } from './component/student-performance';
@@ -91,7 +86,7 @@ const MainDashboardTeacher = () => {
   return (
     <Grid container spacing={3} sx={{ px: 2 }}>
       {/* Welcome Section */}
-      <Grid item xs={12} py={3}>
+      <Grid size={12} py={3}>
         <AppWelcome
           title={`Good Morning 👋 \n Jeet`}
           description="If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything."
@@ -100,8 +95,8 @@ const MainDashboardTeacher = () => {
       </Grid>
 
       {/* Dashboard Cards: Total Students & Class Attendance */}
-      <Grid container item xs={12} spacing={3}>
-        <Grid item lg={3}>
+      <Grid container spacing={3}>
+        <Grid size={{ lg: 3 }}>
           <UpcomingExamCard
             exams={[
               { subject: 'Math Exam', date: 'Sep 20, 2024', class: '10th-A', room: '101' },
@@ -113,7 +108,7 @@ const MainDashboardTeacher = () => {
             ]}
           />
         </Grid>
-        <Grid item lg={3}>
+        <Grid size={{ lg: 3 }}>
           <UpcomingAssignmentCard
             assignments={[
               { name: 'Math Homework', dueDate: 'Sep 20, 2024' },
@@ -126,7 +121,7 @@ const MainDashboardTeacher = () => {
           />
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <PerformerCard
             title="Needs improvement"
             subheader="Based on The latest Exam"
@@ -134,7 +129,7 @@ const MainDashboardTeacher = () => {
             options={subjectOptions}
           />
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <PerformerCard
             title="Top Performers"
             subheader="Based on The latest Exam"
@@ -143,7 +138,7 @@ const MainDashboardTeacher = () => {
           />
         </Grid>
       </Grid>
-      <Grid item xs={12} md={6} lg={3}>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
         <PrincipalDashboardCard
           dropdownLabel="Select Class"
           icon="hugeicons:students"
@@ -162,7 +157,7 @@ const MainDashboardTeacher = () => {
         />
       </Grid>
 
-      <Grid item xs={12} md={6} lg={3}>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
         <PrincipalDashboardCard
           dropdownLabel="Select Class"
           icon="hugeicons:task-daily-02"
@@ -181,7 +176,7 @@ const MainDashboardTeacher = () => {
         />
       </Grid>
       {/* 
-      <Grid item xs={12} md={6} lg={3}>
+      <Grid item xs={12} md={6} size={{lg:3}}>
         <PrincipalDashboardCard
           dropdownLabel="Select Class"
           icon="hugeicons:task-daily-02"
@@ -198,7 +193,7 @@ const MainDashboardTeacher = () => {
           onSelectChange={(val) => console.log('Selected Month:', val)}
         />
       </Grid> */}
-      <Grid item xs={12} md={6} lg={3}>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
         <PrincipalDashboardCard
           dropdownLabel="Select Class"
           icon="material-symbols-light:pending-actions"
@@ -218,7 +213,7 @@ const MainDashboardTeacher = () => {
       </Grid>
 
       {/* Time Table & Class View Buttons */}
-      <Grid item xs={12} sx={{ mt: 3 }}>
+      <Grid size={12} sx={{ mt: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <ButtonGroup>
             <Button
@@ -244,7 +239,7 @@ const MainDashboardTeacher = () => {
 
       {/* What’s New in Month, Performance Chart, and Payroll Overview */}
       <Grid container spacing={3} sx={{ mt: 3, px: 3 }}>
-        <Grid item lg={12}>
+        <Grid size={{ lg: 12 }}>
           <Card sx={{ boxShadow: 'var(--shadows-2)', height: '460px' }}>
             <StudentPerformanceChart />
           </Card>
@@ -253,14 +248,15 @@ const MainDashboardTeacher = () => {
 
       {/* Student Assignments Table */}
       <Grid container spacing={3} sx={{ mt: 3, px: 3 }}>
-        <Grid item xs={12} lg={4}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <Card sx={{ p: 2, height: '90%' }}>
             <WhatsNewInMonthComponent birthdays={[]} events={[]} timeOffRequests={[]} />
           </Card>
         </Grid>
-        <Grid item xs={12} lg={8}>
+
+        <Grid size={{ xs: 12, lg: 8 }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Typography variant="h6">Earning Section</Typography>
               <CustomizableTable
                 isSearch={false}
@@ -315,7 +311,8 @@ const MainDashboardTeacher = () => {
                 ]}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <Typography variant="h6">Deduction Section</Typography>
               <CustomizableTable
                 isSearch={false}
@@ -371,7 +368,8 @@ const MainDashboardTeacher = () => {
                 ]}
               />
             </Grid>
-            <Grid item xs={12} display="flex" justifyContent="flex-end" alignItems="flex-end">
+
+            <Grid size={{ xs: 12 }} display="flex" justifyContent="flex-end" alignItems="flex-end">
               <Alert
                 variant="outlined"
                 icon={false}
@@ -381,10 +379,6 @@ const MainDashboardTeacher = () => {
               </Alert>
             </Grid>
           </Grid>
-          {/* <Typography variant="h6" fontWeight="bold">
-            Assignment Overview
-          </Typography> */}
-          {/* <StudentWiseAssignmentTable /> */}
         </Grid>
       </Grid>
 

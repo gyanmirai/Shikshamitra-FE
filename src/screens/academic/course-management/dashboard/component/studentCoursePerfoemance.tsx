@@ -3,15 +3,11 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Card, alpha, useTheme, Typography } from '@mui/material';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
-
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import { Box, Grid, Card, Typography } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
@@ -27,15 +23,9 @@ const StudentCoursePerfoemance = () => {
   });
   const theme = useTheme();
   return (
-    <Grid2 container spacing={2} mt={1}>
-      <Grid2 xs={12} sm={6}>
-        <Card
-          sx={{
-            alignItems: 'center',
-            p: 2,
-            height: '100%',
-          }}
-        >
+    <Grid container spacing={2} mt={1}>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <Card sx={{ alignItems: 'center', p: 2, height: '100%' }}>
           <Box display="flex" justifyContent="space-between" alignItems="flex-end">
             <Typography variant="subtitle1">Class Wise Performance</Typography>
             <Box display="flex" gap={1}>
@@ -82,8 +72,9 @@ const StudentCoursePerfoemance = () => {
             sx={{ boxShadow: 'none' }}
           />
         </Card>
-      </Grid2>
-      <Grid2 xs={12} sm={6}>
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 6 }}>
         <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="subtitle1">No of Chapters for subject</Typography>
@@ -96,7 +87,6 @@ const StudentCoursePerfoemance = () => {
                 const selectedClass: Standards = classData.items.find(
                   (i: Standards) => i.id === val
                 );
-                // formik.setFieldValue('class', selectedClass?.name || '');
                 setClasses3(selectedClass?.name);
               }}
               value={classes3}
@@ -105,24 +95,17 @@ const StudentCoursePerfoemance = () => {
           </Box>
           <AnalyticsWebsiteVisits
             title=""
-            //   subheader="(+43%) than last year"
             chart={{
               categories: ['Math', 'Science', 'History', 'ENG', 'Social Science', 'Gujarati'],
               series: [{ name: 'Chapters', data: [43, 33, 22, 37, 10, 16] }],
-
-              colors: [alpha(theme.palette.primary.dark, 0.8)],
-              options: {
-                legend: {
-                  show: false,
-                  position: 'top',
-                },
-              },
+              colors: [alpha(theme.vars.palette.primary.dark, 0.8)],
+              options: { legend: { show: false, position: 'top' } },
             }}
             sx={{ height: '100%', boxShadow: 'none' }}
           />
         </Card>
-      </Grid2>
-    </Grid2>
+      </Grid>
+    </Grid>
   );
 };
 

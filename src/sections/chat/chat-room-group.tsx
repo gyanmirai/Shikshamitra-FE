@@ -1,14 +1,12 @@
 import type { IChatParticipant } from 'src/types/chat';
 
-import { useState, useCallback } from 'react';
-
 import Badge from '@mui/material/Badge';
 import Avatar from '@mui/material/Avatar';
+import { useState, useCallback } from 'react';
 import Collapse from '@mui/material/Collapse';
+import { useBoolean } from 'src/hooks/use-boolean';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemButton from '@mui/material/ListItemButton';
-
-import { useBoolean } from 'src/hooks/use-boolean';
 
 import { CollapseButton } from './styles';
 import { ChatRoomParticipantDialog } from './chat-room-participant-dialog';

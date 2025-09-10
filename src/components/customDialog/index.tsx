@@ -2,20 +2,11 @@ import type { RootState } from 'src/redux/store';
 import type { PaperProps, DialogProps, DialogContentProps } from '@mui/material';
 
 import React, { useRef } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
 import { Close } from '@mui/icons-material';
-import {
-  Box,
-  Dialog,
-  Divider,
-  useTheme,
-  IconButton,
-  Typography,
-  DialogContent,
-} from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
+import { useSelector, useDispatch } from 'react-redux';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Dialog, Divider, IconButton, Typography, DialogContent } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar';
 
@@ -76,9 +67,7 @@ const CustomDialog = ({
           <IconButton
             aria-label="close"
             onClick={() => handleCloseDialog({}, 'escapeKeyDown')}
-            sx={{
-              color: theme.palette.grey[500],
-            }}
+            sx={{ color: theme.vars.palette.grey[500] }}
           >
             <Close />
           </IconButton>

@@ -1,15 +1,11 @@
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import React, { useMemo, useState, useEffect } from 'react';
-
-import Grid2 from '@mui/material/Unstable_Grid2';
-import { Box, Button, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box , Grid, Button, DialogActions } from '@mui/material';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -91,8 +87,8 @@ const FinanceNewBudgetCreateDialog: React.FC<IFinanceNewBudgetCreateDialogProps>
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit}>
         <Box sx={{ p: 2 }}>
-          <Grid2 container spacing={2}>
-            <Grid2 xs={6}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 6 }}>
               <ShakingTextField
                 error={formik.touched.categoryType && Boolean(formik.errors.categoryType)}
               >
@@ -114,8 +110,9 @@ const FinanceNewBudgetCreateDialog: React.FC<IFinanceNewBudgetCreateDialogProps>
                   }
                 />
               </ShakingTextField>
-            </Grid2>
-            <Grid2 xs={6}>
+            </Grid>
+
+            <Grid size={{ xs: 6 }}>
               <ShakingTextField
                 error={formik.touched.categoryName && Boolean(formik.errors.categoryName)}
               >
@@ -131,11 +128,11 @@ const FinanceNewBudgetCreateDialog: React.FC<IFinanceNewBudgetCreateDialogProps>
                       ? String(formik.errors.categoryName)
                       : ''
                   }
-                />{' '}
+                />
               </ShakingTextField>
-            </Grid2>
+            </Grid>
 
-            <Grid2 xs={6}>
+            <Grid size={{ xs: 6 }}>
               <ShakingTextField
                 error={formik.touched.fundAllocation && Boolean(formik.errors.fundAllocation)}
               >
@@ -154,8 +151,8 @@ const FinanceNewBudgetCreateDialog: React.FC<IFinanceNewBudgetCreateDialogProps>
                   }
                 />
               </ShakingTextField>
-            </Grid2>
-          </Grid2>
+            </Grid>
+          </Grid>
         </Box>
         <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button

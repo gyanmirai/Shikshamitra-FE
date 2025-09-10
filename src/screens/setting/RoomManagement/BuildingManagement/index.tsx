@@ -3,18 +3,14 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import BuildingForm from './components/buildingForm';
 import BuildingTable from './components/buildingTable';
@@ -32,6 +28,7 @@ const BuildingManagement = () => {
 
   // State for managing selected building and building data
   const [selectedBuilding, setSelectedBuilding] = useState<IBuilding | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [buildingData, setBuildingData] = useState<IBuilding[]>([
     {
       id: 1,

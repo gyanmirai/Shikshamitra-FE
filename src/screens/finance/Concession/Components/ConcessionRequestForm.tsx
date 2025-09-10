@@ -3,7 +3,12 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
+import { DialogScrollContent } from 'src/components/customDialog';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -15,14 +20,6 @@ import {
   IconButton,
   DialogActions,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
-import { DialogScrollContent } from 'src/components/customDialog';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IConcessionDocument, IConcessionFormProps, IConcessionFormValues } from '../type';
 
@@ -56,12 +53,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   editData,
 }) => {
   const formik = useFormik<IConcessionFormValues>({
-    initialValues: editData || {
-      studentName: '',
-      concessionType: '',
-      reason: '',
-      documents: [],
-    },
+    initialValues: editData || { studentName: '', concessionType: '', reason: '', documents: [] },
     validationSchema: concessionValidation,
     onSubmit: (values) => {
       shikshaMitraToast.success({ message: 'Concession request submitted successfully' });
@@ -74,42 +66,49 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       <DialogScrollContent>
         <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, mb: 2 }}>
           <Grid container spacing={2}>
-            <Grid item xs={6}>
+            <Grid size={{ xs: 6 }}>
               <Typography>
                 <b>Student Name :</b> {student?.studentName}
               </Typography>
             </Grid>
-            <Grid item xs={6}>
+
+            <Grid size={{ xs: 6 }}>
               <Typography>
                 <b>Roll No. :</b> {student?.rollNo}
               </Typography>
             </Grid>
-            <Grid item xs={6}>
+
+            <Grid size={{ xs: 6 }}>
               <Typography>
                 <b>Sibling :</b> {student?.sibling}
               </Typography>
             </Grid>
-            <Grid item xs={6}>
+
+            <Grid size={{ xs: 6 }}>
               <Typography>
                 <b>Contact No. :</b> {student?.contactNo}
               </Typography>
             </Grid>
-            <Grid item xs={6}>
+
+            <Grid size={{ xs: 6 }}>
               <Typography>
                 <b>Class/Division :</b> {student?.classDivision}
               </Typography>
             </Grid>
-            <Grid item xs={6}>
+
+            <Grid size={{ xs: 6 }}>
               <Typography>
                 <b>GR No. :</b> {student?.grNo}
               </Typography>
             </Grid>
-            <Grid item xs={6}>
+
+            <Grid size={{ xs: 6 }}>
               <Typography>
                 <b>Parent Name :</b> {student?.parentName}
               </Typography>
             </Grid>
-            <Grid item xs={6}>
+
+            <Grid size={{ xs: 6 }}>
               <Typography>
                 <b>Email :</b> {student?.email}
               </Typography>
@@ -173,7 +172,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       width={20}
                       sx={{
                         color: (theme) =>
-                          row.status === 'Uploaded' ? 'success.main' : theme.palette.grey[500],
+                          row.status === 'Uploaded' ? 'success.main' : theme.vars.palette.grey[500],
                         cursor: 'pointer',
                       }}
                     />

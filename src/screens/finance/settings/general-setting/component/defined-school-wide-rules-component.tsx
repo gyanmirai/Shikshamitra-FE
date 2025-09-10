@@ -1,14 +1,12 @@
 import React from 'react';
-
-import { Box, Grid, Button, TextField } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Grid, Button, TextField } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 const DefinedSchoolWideRulesComponent = () => (
   <Box display="flex" flexDirection="column" gap={2}>
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Box
         pt="15px"
         display="flex"
@@ -30,7 +28,7 @@ const DefinedSchoolWideRulesComponent = () => (
     </Grid>
 
     <Grid container spacing={2}>
-      <Grid item xs={12} md={12}>
+      <Grid size={{ xs: 12, md: 12 }}>
         <Box>
           <CustomizableTable
             tableId="defined-school-wide-rules"
@@ -60,6 +58,7 @@ const DefinedSchoolWideRulesComponent = () => (
       </Grid>
     </Grid>
   </Box>
+
   // <Box display="flex" flexDirection="row" gap={3}>
   //   <Box display="flex" flexDirection="column" gap={3}>
   //     <FormControlLabel

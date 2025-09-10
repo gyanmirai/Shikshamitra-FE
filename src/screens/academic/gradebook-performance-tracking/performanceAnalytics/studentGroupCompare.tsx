@@ -3,14 +3,11 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-
-import { Box, Card, Grid, useTheme, Typography } from '@mui/material';
-
+import { useTheme } from '@mui/material/styles';
+import CustomSelect from 'src/components/custom-select';
+import { Box, Card, Grid, Typography } from '@mui/material';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomSelect from 'src/components/custom-select';
-
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 const StudentGroupCompare = () => {
@@ -27,7 +24,7 @@ const StudentGroupCompare = () => {
   const theme = useTheme();
 
   return (
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle1">Student Group Comparisons</Typography>
@@ -45,9 +42,7 @@ const StudentGroupCompare = () => {
               setClasses4(val as string);
               setDivisionOptions(selectedClass?.divisions || []);
             }}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
           <CustomSelect
             label="Division"
@@ -56,15 +51,8 @@ const StudentGroupCompare = () => {
             valueKey="id"
             options={divisionOptions}
             value={division4}
-            onChange={(val) => {
-              const selectedDivision = divisionOptions.find((i: Division) =>
-                (val as string).includes(i.id)
-              );
-              setDivision4(val as string);
-            }}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            onChange={(val) => setDivision4(val as string)}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
           <CustomSelect
             label="Subject"
@@ -72,18 +60,16 @@ const StudentGroupCompare = () => {
               { value: 'Math', label: 'Math' },
               { value: 'Science', label: 'Science' },
             ]}
-            onChange={() => {}}
             value=""
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '150px' },
-            }}
+            onChange={() => {}}
+            formControlProps={{ sx: { width: '100%', maxWidth: '150px' } }}
           />
         </Box>
         <AnalyticsCurrentVisits
           title=""
           chart={{
             series: [
-              { label: 'Tpo 10%', value: 44 },
+              { label: 'Top 10%', value: 44 },
               { label: 'Middle 10%', value: 55 },
               { label: 'Bottom 10%', value: 41 },
             ],

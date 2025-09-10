@@ -1,22 +1,18 @@
 import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-
-import { MenuItem, MenuList, Typography } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
-
+import { MenuItem, MenuList, Typography } from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import studentPendingFeeData from 'src/json/finance/fee-collection/studentPendingFeeData.json';
 import {
   FinancePendingFeeStatusType,
   FinancePendingFeeStatusTypeColors,
   FinancePendingFeeStatusTypeOptions,
 } from 'src/enums/finance-pending-fee-status';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 const HostelPendingFeeTab = () => {
   // State to store the selected amount

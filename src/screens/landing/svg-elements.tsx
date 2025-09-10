@@ -3,10 +3,8 @@ import type { BoxProps } from '@mui/material/Box';
 import type { Theme, SxProps, CSSObject } from '@mui/material/styles';
 
 import { useId } from 'react';
-import { m } from 'framer-motion';
-
 import Box from '@mui/material/Box';
-
+import { m, circOut } from 'framer-motion';
 import { varFade } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
@@ -21,7 +19,7 @@ const baseStyles: CSSObject = {
   '@media (min-width: 1440px)': { display: 'block' },
 };
 
-const transition = { duration: 0.64, ease: [0.43, 0.13, 0.23, 0.96] };
+const transition = { duration: 0.64, ease: circOut };
 
 // ----------------------------------------------------------------------
 
@@ -204,6 +202,7 @@ export function CircleSvg({ sx, variants }: Props) {
   const gradientId = useId();
 
   return (
+    // @ts-ignore
     <Box
       component={m.svg}
       width="100%"
@@ -211,7 +210,7 @@ export function CircleSvg({ sx, variants }: Props) {
       viewBox="0 0 560 560"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
-      variants={variants ?? varFade().in}
+      variants={varFade().in}
       sx={{
         top: 0,
         left: 0,

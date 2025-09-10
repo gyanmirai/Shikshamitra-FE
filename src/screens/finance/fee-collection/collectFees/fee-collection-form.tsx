@@ -1,8 +1,10 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import Add from '@mui/icons-material/Add';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import {
   Box,
   Grid,
@@ -12,10 +14,6 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 
 const students = [
   {
@@ -331,7 +329,7 @@ const FeeNewCollectionForm: React.FC<FeeNewCollectionFormProps> = ({
           </Box>
           <Box p={0} bgcolor="background.neutral">
             <Grid container spacing={2}>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <CustomSelect
                   label="Fee Type"
                   options={feeOptions}
@@ -340,7 +338,8 @@ const FeeNewCollectionForm: React.FC<FeeNewCollectionFormProps> = ({
                   formControlProps={{ fullWidth: true }}
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+
+              <Grid size={{ xs: 12, md: 3 }}>
                 <CustomSelect
                   multiple
                   label="Pending Terms"
@@ -352,7 +351,8 @@ const FeeNewCollectionForm: React.FC<FeeNewCollectionFormProps> = ({
                   formControlProps={{ fullWidth: true }}
                 />
               </Grid>
-              <Grid item xs={12} md={3}>
+
+              <Grid size={{ xs: 12, md: 3 }}>
                 <CustomSelect
                   multiple
                   label="Payment Mode"

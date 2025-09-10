@@ -4,11 +4,9 @@ import type { BoxProps } from '@mui/material/Box';
 import type { Easing, RepeatType } from 'framer-motion';
 
 import { m } from 'framer-motion';
-import { useRef, useState, useEffect } from 'react';
-
 import Box from '@mui/material/Box';
-
 import { borderGradient } from 'src/theme/styles';
+import { useRef, useState, useEffect } from 'react';
 
 // ----------------------------------------------------------------------
 

@@ -1,14 +1,11 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getRoomInitialValues } from './initialValues';
@@ -30,7 +27,7 @@ const RoomDetailComp: React.FC<IRoomFormProps> = ({ open, onClose, editData }) =
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.roomName && formik.errors.roomName) || false}
                 >
@@ -48,7 +45,7 @@ const RoomDetailComp: React.FC<IRoomFormProps> = ({ open, onClose, editData }) =
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.roomType && formik.errors.roomType) || false}
                 >
@@ -69,7 +66,7 @@ const RoomDetailComp: React.FC<IRoomFormProps> = ({ open, onClose, editData }) =
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.floorNumber && formik.errors.floorNumber) || false}
                 >
@@ -88,7 +85,7 @@ const RoomDetailComp: React.FC<IRoomFormProps> = ({ open, onClose, editData }) =
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.roomCapacity && formik.errors.roomCapacity) || false}
                 >
@@ -107,7 +104,7 @@ const RoomDetailComp: React.FC<IRoomFormProps> = ({ open, onClose, editData }) =
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={
                     !!(formik.touched.currentOccupation && formik.errors.currentOccupation) || false
@@ -130,7 +127,7 @@ const RoomDetailComp: React.FC<IRoomFormProps> = ({ open, onClose, editData }) =
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.bed && formik.errors.bed) || false}>
                   <CustomSelect
                     label="Select Bed"
@@ -153,7 +150,7 @@ const RoomDetailComp: React.FC<IRoomFormProps> = ({ open, onClose, editData }) =
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.roomStatus && formik.errors.roomStatus) || false}
                 >

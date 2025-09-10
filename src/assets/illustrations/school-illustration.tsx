@@ -1,7 +1,6 @@
 import type { BoxProps } from '@mui/material';
 
 import { memo } from 'react';
-
 import { Box } from '@mui/material';
 
 const SchoolIllustration = ({ sx, ...other }: BoxProps) => (

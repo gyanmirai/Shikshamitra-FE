@@ -1,17 +1,14 @@
-import React, { useMemo, useState, useEffect } from 'react';
-
-import { Box, TextField, Typography, DialogActions } from '@mui/material';
-
-import capitalizeWords from 'src/utils/capitalizeText';
-import { formatNumber } from 'src/utils/formate_number';
-
 import { Scrollbar } from 'src/components/scrollbar';
+import capitalizeWords from 'src/utils/capitalizeText';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useEffect } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, TextField, Typography, DialogActions } from '@mui/material';
 
 import type { IAdditionalDiscount } from '../studen-fee-data-interface';
 

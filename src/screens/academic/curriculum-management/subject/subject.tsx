@@ -4,24 +4,19 @@ import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import electiveSubjectData from 'src/json/academic/curriculum/electiveSubjectData.json';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Button } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import electiveSubjectData from 'src/json/academic/curriculum/electiveSubjectData.json';
 
 import SubjectTable from './component/subjectTable';
 import SubjectForm from './component/subjectFormComponent';

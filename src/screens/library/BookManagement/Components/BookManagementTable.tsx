@@ -1,7 +1,5 @@
 import React from 'react';
-
 import { Box } from '@mui/material';
-
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -20,7 +18,6 @@ const BookManagementTable: React.FC<IBookTableProps> = ({ data, onView, onEdit, 
         { id: 'subject', label: 'Subject', align: 'left' },
         { id: 'category', label: 'Category', align: 'left' },
         { id: 'language', label: 'Language', align: 'left' },
-        { id: 'createdOn', label: 'Created On', align: 'left' },
         {
           id: 'action',
           label: 'Actions',

@@ -1,8 +1,6 @@
 import React from 'react';
-
-import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
-
 import { Label } from 'src/components/label';
+import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
 
 import type { IChargeData } from './type';
 
@@ -34,8 +32,14 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
 
           <Grid container spacing={2}>
             {/* Basic Details */}
-            <Grid item xs={12}>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Grid size={{ xs: 12 }}>
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                flexWrap="wrap"
+                gap={2}
+              >
                 <Box>
                   <Typography variant="subtitle2">Category</Typography>
                   <Typography variant="body1">{charge?.category}</Typography>
@@ -71,7 +75,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
             </Grid>
 
             {/* Description */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle2" gutterBottom>
                 Description
               </Typography>
@@ -89,13 +93,13 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
                   component="pre"
                   sx={{ whiteSpace: 'pre-wrap', fontSize: '0.875rem', m: 0 }}
                 >
-                  {charge?.description}
+                  {charge?.description || '—'}
                 </Typography>
               </Box>
             </Grid>
 
-            {/* Notes */}
-            <Grid item xs={12}>
+            {/* Additional Notes */}
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle2" gutterBottom>
                 Additional Notes
               </Typography>

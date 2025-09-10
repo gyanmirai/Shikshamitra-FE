@@ -1,16 +1,25 @@
 import { getIn } from 'formik';
+import { Editor } from 'src/components/editor';
+import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
-
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { fileData } from 'src/components/file-thumbnail';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { SingleFilePreview } from 'src/components/upload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ShakingTextField from 'src/components/shaking-text-field';
+import CustomUpload from 'src/components/custom-upload/custom-upload';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   Box,
   Grid,
   Chip,
   Avatar,
   Checkbox,
-  useTheme,
   Accordion,
   TextField,
   Typography,
@@ -20,18 +29,6 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { Editor } from 'src/components/editor';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import { fileData } from 'src/components/file-thumbnail';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { SingleFilePreview } from 'src/components/upload';
-import ShakingTextField from 'src/components/shaking-text-field';
-import CustomUpload from 'src/components/custom-upload/custom-upload';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import type { TeacherProfile, ISubjectCardProps } from './type';
 
@@ -149,30 +146,27 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
         <AccordionDetails>
           <Grid container spacing={3} alignItems="flex-start">
             {/* Subject Code */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={!!getError('subjectCode')}>
                 <TextField
                   fullWidth
                   label="Subject Code *"
-                  // placeholder="Enter Subject Code"
                   size="small"
                   value={subject.subjectCode || ''}
                   onChange={(e) => {
                     const rawValue = e.target.value;
                     const uppercaseValue = rawValue.toUpperCase().replace(/[^A-Z0-9\-_]/g, ''); // removes special chars except dash and underscore
                     formik.setFieldValue(`subjects.${index}.subjectCode`, uppercaseValue);
-
-                    // handleChange('subjectCode', uppercaseValue);
                   }}
-                  // onChange={(e) => handleChange('subjectCode', e.target.value)}
                   disabled={isPublished}
                   error={!!getError('subjectCode')}
                   helperText={getError('subjectCode')}
                 />
               </ShakingTextField>
             </Grid>
+
             {/* Primary Teacher */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <FormControl fullWidth error={!!getError('primaryTeacher')}>
                 <Autocomplete
                   options={
@@ -189,7 +183,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue)
                   }
                   disabled={isPublished}
-                  // isOptionEqualToValue={(option, value) => option.value === value.value}
                   renderOption={(props, option: any) => <li {...props}>{option.name || ''}</li>}
                   renderTags={(value: any) => {
                     if (!value) return null;
@@ -217,12 +210,12 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 />
               </FormControl>
             </Grid>
+
             {/* Secondary Teacher */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <FormControl fullWidth error={!!getError('secondaryTeacher')}>
                 <Autocomplete
                   multiple
-                  // isOptionEqualToValue={(option, value) => option.id === value.id} // ✅ This is essential!
                   options={
                     teacherOptions?.filter((option) => subject.primaryTeacher?.id !== option.id) ||
                     []
@@ -288,10 +281,10 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             </Grid>
 
             {/* Learning Goal */}
-            <Grid item xs={12} mb={-2}>
+            <Grid size={{ xs: 12 }} mb={-2}>
               <Typography variant="subtitle2">Learning Goal</Typography>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!getError('learningGoal')}>
                 <Editor
                   onChange={(value) => handleChange('learningGoal', value)}
@@ -300,27 +293,26 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   error={!!getError('learningGoal')}
                   helperText={getError('learningGoal')}
                   sx={{
-                    border: `1px solid ${theme.palette.grey[500]}`,
+                    border: `1px solid ${theme.vars.palette.grey[500]}`,
                     borderRadius: 1,
-                    '&:hover': {
-                      borderColor: theme.palette.text.primary,
-                    },
+                    '&:hover': { borderColor: theme.vars.palette.text.primary },
                     '&:focus-within': {
-                      borderColor: theme.palette.text.primary,
+                      borderColor: theme.vars.palette.text.primary,
                       borderWidth: 2,
                     },
                     ...(!!getError('learningGoal') && {
-                      borderColor: theme.palette.text.primary,
+                      borderColor: theme.vars.palette.text.primary,
                     }),
                   }}
                 />
               </ShakingTextField>
             </Grid>
+
             {/* Prerequisites */}
-            <Grid item xs={12} mb={-2}>
+            <Grid size={{ xs: 12 }} mb={-2}>
               <Typography variant="subtitle2">Prerequisites</Typography>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!getError('prerequisites')}>
                 <Editor
                   onChange={(value) => handleChange('prerequisites', value)}
@@ -329,13 +321,11 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   error={!!getError('prerequisites')}
                   helperText={getError('prerequisites')}
                   sx={{
-                    border: `1px solid ${theme.palette.grey[500]}`,
+                    border: `1px solid ${theme.vars.palette.grey[500]}`,
                     borderRadius: 1,
-                    '&:hover': {
-                      borderColor: theme.palette.text.primary,
-                    },
+                    '&:hover': { borderColor: theme.vars.palette.text.primary },
                     '&:focus-within': {
-                      borderColor: theme.palette.text.primary,
+                      borderColor: theme.vars.palette.text.primary,
                       borderWidth: 2,
                     },
                     ...(!!getError('prerequisites') && {
@@ -345,11 +335,12 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 />
               </ShakingTextField>
             </Grid>
+
             {/* Description */}
-            <Grid item xs={12} mb={-2}>
+            <Grid size={{ xs: 12 }} mb={-2}>
               <Typography variant="subtitle2">Description</Typography>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!getError('description')}>
                 <Editor
                   onChange={(value) => handleChange('description', value)}
@@ -358,13 +349,11 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   error={!!getError('description')}
                   helperText={getError('description')}
                   sx={{
-                    border: `1px solid ${theme.palette.grey[500]}`,
+                    border: `1px solid ${theme.vars.palette.grey[500]}`,
                     borderRadius: 1,
-                    '&:hover': {
-                      borderColor: theme.palette.text.primary,
-                    },
+                    '&:hover': { borderColor: theme.vars.palette.text.primary },
                     '&:focus-within': {
-                      borderColor: theme.palette.text.primary,
+                      borderColor: theme.vars.palette.text.primary,
                       borderWidth: 2,
                     },
                     ...(!!getError('description') && {
@@ -374,35 +363,17 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                 />
               </ShakingTextField>
             </Grid>
+
             {/* Upload Document */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <CustomUpload
                 multiple
                 previewCount={6}
                 onChange={(files) => formik.setFieldValue(`subjects.${index}.documents`, files)}
                 value={subject.documents}
-                // error={formik.touched[name] && formik.errors[name]}
-                // helperText={formik.touched[name] && formik.errors[name]}
                 label="Upload Your Subject Documents"
                 outputFormat="file"
               />
-              {/* <FileUploader
-                // @ts-ignore
-                value={subject.documents}
-                multiple
-                showVisibleDocumentCount={1}
-                onChange={(value) => {
-                  formik.setFieldValue(`subjects.${index}.documents`, value);
-                  // const reader = new FileReader();
-                  // reader.readAsDataURL(value as File);
-                  // reader.readAsDataURL(value as File);
-                  // reader.onload = () => {
-                  //   const base64String = reader.result;
-                  // };
-                }}
-                primaryText="Upload Your Subject Documents"
-                secondaryText="Maximum file size is 5MB"
-              /> */}
             </Grid>
           </Grid>
         </AccordionDetails>

@@ -1,7 +1,6 @@
 import type { ButtonProps } from '@mui/material';
 
 import React, { useRef } from 'react';
-
 import { Button } from '@mui/material';
 
 type UploadButtonProps = ButtonProps & {

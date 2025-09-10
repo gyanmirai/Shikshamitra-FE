@@ -2,10 +2,9 @@ import type { ButtonBaseProps } from '@mui/material/ButtonBase';
 import type { ListItemButtonProps } from '@mui/material/ListItemButton';
 
 import { styled } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import ButtonBase from '@mui/material/ButtonBase';
 import ListItemButton from '@mui/material/ListItemButton';
-
-import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
@@ -43,7 +42,7 @@ export const ToggleButton = styled(ButtonBase)<ButtonBaseProps>(({ theme }) => (
   borderRadius: `0 12px 12px 0`,
   boxShadow: theme.customShadows.primary,
   color: theme.vars.palette.primary.contrastText,
-  backgroundColor: theme.vars.palette.primary.main,
+  backgroundColor: theme.palette.primary.main,
   transition: theme.transitions.create(['all'], { duration: theme.transitions.duration.shorter }),
   '&:hover': { backgroundColor: theme.vars.palette.primary.darker },
 }));

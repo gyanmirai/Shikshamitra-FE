@@ -6,11 +6,21 @@ import type { UsePopoverReturn } from 'src/components/custom-popover';
 import type { PayrollStructureType } from 'src/enums/payroll-structure-tyep';
 
 import { useFormik } from 'formik';
-import { useSelector } from 'react-redux';
-import { useState, useEffect, useCallback } from 'react';
-
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Search } from '@mui/icons-material';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import { useState, useEffect, useCallback } from 'react';
+import { formatCurrency } from 'src/utils/cureencyFormater';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useGetPayElementsQuery } from 'src/redux/payElement/payElementApi';
 import {
   Box,
   Grid,
@@ -23,27 +33,12 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { formatCurrency } from 'src/utils/cureencyFormater';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetPayElementsQuery } from 'src/redux/payElement/payElementApi';
 import {
   useAddPayrollStructureMutation,
   useDeletePayrollStructureMutation,
   useUpdatePayrollStructureMutation,
   useGetPayrollStructureByOrganizationQuery,
 } from 'src/redux/payrollStructure/payrollStructureApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const EmployeeSalaryStructureScreen = () => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -93,7 +88,7 @@ const EmployeeSalaryStructureScreen = () => {
       </Box>
       {organization && (
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Sections
               title="Earning"
               data={payrollStructure || []}
@@ -102,7 +97,7 @@ const EmployeeSalaryStructureScreen = () => {
               organization={organization}
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Sections
               title="Deduction"
               data={payrollStructure || []}
@@ -111,9 +106,9 @@ const EmployeeSalaryStructureScreen = () => {
               organization={organization}
             />
           </Grid>
-          {/* <Grid item xs={12} md={6}>
-            
-            </Grid> */}
+          {/* <Grid size={{ xs: 12, md: 6 }}>
+      
+  </Grid> */}
         </Grid>
       )}
     </Box>

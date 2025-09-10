@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Box, Grid, TextField } from '@mui/material';
 
 interface Medium {
@@ -29,7 +28,7 @@ const EducationMediumSetup: React.FC<EducationMediumSetupProps> = ({
 }) => (
   <Box sx={{ mt: 2, width: '100%' }}>
     <Grid container spacing={2}>
-      <Grid item xs={6} md={4}>
+      <Grid size={{ xs: 6, md: 4 }}>
         <TextField
           size="small"
           fullWidth

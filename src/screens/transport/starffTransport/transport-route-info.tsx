@@ -1,11 +1,8 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Tab, Card } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-
+import { Box, Tab, Card } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 
 import StudentTransportScreen from './student-transport';

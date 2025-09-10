@@ -2,21 +2,15 @@ import type { CardProps } from '@mui/material/Card';
 import type { ChartOptions } from 'src/components/chart';
 
 import { useState } from 'react';
-
 import { Box } from '@mui/material';
 import CardHeader from '@mui/material/CardHeader';
-import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
 // Sample Data (Class → Subject → Division-wise Marks)
 type ResultDataType = {
-  [className: string]: {
-    [subject: string]: {
-      [division: string]: number;
-    };
-  };
+  [className: string]: { [subject: string]: { [division: string]: number } };
 };
 
 const resultData: ResultDataType = {
@@ -40,20 +34,14 @@ const resultData: ResultDataType = {
   },
 };
 
-type Props = CardProps & {
-  title?: string;
-  subheader?: string;
-};
+type Props = CardProps & { title?: string; subheader?: string };
 
 export function AnalyticsClassResults({ title, subheader, ...other }: Props) {
   const theme = useTheme();
   const [selectedClass, setSelectedClass] = useState<string>('5');
 
   // Extract class options
-  const classOptions = Object.keys(resultData).map((cls) => ({
-    value: cls,
-    label: cls,
-  }));
+  const classOptions = Object.keys(resultData).map((cls) => ({ value: cls, label: cls }));
 
   const subjects =
     selectedClass && resultData[selectedClass] ? Object.keys(resultData[selectedClass]) : [];
@@ -79,11 +67,7 @@ export function AnalyticsClassResults({ title, subheader, ...other }: Props) {
     stroke: { width: 2, colors: ['transparent'] },
     xaxis: { categories: subjects },
     legend: { show: true },
-    tooltip: {
-      y: {
-        formatter: (value: number) => `${value}`,
-      },
-    },
+    tooltip: { y: { formatter: (value: number) => `${value}` } },
   });
 
   return (
@@ -96,9 +80,7 @@ export function AnalyticsClassResults({ title, subheader, ...other }: Props) {
             options={classOptions}
             onChange={(e) => setSelectedClass(e as string)}
             value={selectedClass}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '200px' },
-            }}
+            formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
           />
         )}
       </Box>

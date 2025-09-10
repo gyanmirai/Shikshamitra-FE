@@ -1,9 +1,6 @@
 import React from 'react';
-
 import { Box, Card, Grid, Typography } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
-
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 
 const EarlyRequestBehaviour = () => {
@@ -23,7 +20,7 @@ const EarlyRequestBehaviour = () => {
   return (
     <Box>
       <Grid container spacing={2} sx={{ pt: '20px' }}>
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Typography sx={{ pt: '13px' }} variant="h6" fontWeight={600} mb="24px">
             Early Request Behaviour
           </Typography>
@@ -46,7 +43,7 @@ const EarlyRequestBehaviour = () => {
             data={data}
           />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <AnalyticsCurrentVisits
               title="Gate Pass Request Reasons"

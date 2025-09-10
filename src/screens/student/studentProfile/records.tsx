@@ -1,28 +1,21 @@
 'use client';
 
 import React from 'react';
-
+import DataTable from 'src/components/commonTable';
 import {
   Box,
   Grid,
-  Card,
-  List,
-  ListItem,
   Typography,
-  CardHeader,
-  CardContent,
 } from '@mui/material';
-
-import DataTable from 'src/components/commonTable';
 
 import { StudentEnrollmentCard } from '../enrollment/dashboard/overview';
 
 import type { StudentTabsComponentType } from '.';
 
-const TABS = [
-  { value: 'behavioral', label: 'Behavioral' },
-  { value: 'health', label: 'Health' },
-];
+// const TABS = [
+//   { value: 'behavioral', label: 'Behavioral' },
+//   { value: 'health', label: 'Health' },
+// ];
 
 // const Records = (props: StudentTabsComponentType) => {
 //   const tabs = useTabs('behavioral');
@@ -83,7 +76,7 @@ const RenderBehavioralRecord = () => (
       />
     </Box>
     <Grid container spacing={2} mt={2}>
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Typography variant="subtitle1">Disciplinary Incidents</Typography>
 
         <DataTable
@@ -95,7 +88,7 @@ const RenderBehavioralRecord = () => (
           ]}
         />
       </Grid>
-      <Grid item xs={12} md={6}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <Typography variant="subtitle1">Counseling Sessions</Typography>
         <DataTable
           data={[{ date: '2023-03-15', reason: 'Academic Support' }]}
@@ -109,59 +102,59 @@ const RenderBehavioralRecord = () => (
   </>
 );
 
-const RenderHealthRecord = () => (
-  <Box display="flex" gap={1}>
-    <Card elevation={3} sx={{ flexGrow: 1 }}>
-      <CardHeader
-        title="Medical History"
-        sx={{
-          '& .MuiCardHeader-title': {
-            fontWeight: 'bold',
-            fontSize: '14px !important',
-          },
-        }}
-      />
-      <CardContent sx={{ p: 1 }}>
-        <List>
-          <ListItem>- Asthma</ListItem>
-          <ListItem>- Allergies to Peanuts</ListItem>
-        </List>
-      </CardContent>
-    </Card>
-    <Card elevation={3} sx={{ flexGrow: 1 }}>
-      <CardHeader
-        title="Vaccination Records"
-        sx={{
-          '& .MuiCardHeader-title': {
-            fontWeight: 'bold',
-            fontSize: '14px !important',
-          },
-        }}
-      />
-      <CardContent sx={{ p: 1 }}>
-        <List>
-          <ListItem>- MMR (2021)</ListItem>
-          <ListItem>- Tetanus (2022)</ListItem>
-        </List>
-      </CardContent>
-    </Card>
-    <Card elevation={3} sx={{ flexGrow: 1 }}>
-      <CardHeader
-        title="Recent Health Check-up"
-        sx={{
-          '& .MuiCardHeader-title': {
-            fontWeight: 'bold',
-            fontSize: '14px !important',
-          },
-        }}
-      />
-      <CardContent sx={{ p: 1 }}>
-        <List>
-          <ListItem>- Height: 165 cm</ListItem>
-          <ListItem>- Height: 165 cm</ListItem>
-          <ListItem>- Blood Pressure: 120/80 mmHg</ListItem>
-        </List>
-      </CardContent>
-    </Card>
-  </Box>
-);
+// const RenderHealthRecord = () => (
+//   <Box display="flex" gap={1}>
+//     <Card elevation={3} sx={{ flexGrow: 1 }}>
+//       <CardHeader
+//         title="Medical History"
+//         sx={{
+//           '& .MuiCardHeader-title': {
+//             fontWeight: 'bold',
+//             fontSize: '14px !important',
+//           },
+//         }}
+//       />
+//       <CardContent sx={{ p: 1 }}>
+//         <List>
+//           <ListItem>- Asthma</ListItem>
+//           <ListItem>- Allergies to Peanuts</ListItem>
+//         </List>
+//       </CardContent>
+//     </Card>
+//     <Card elevation={3} sx={{ flexGrow: 1 }}>
+//       <CardHeader
+//         title="Vaccination Records"
+//         sx={{
+//           '& .MuiCardHeader-title': {
+//             fontWeight: 'bold',
+//             fontSize: '14px !important',
+//           },
+//         }}
+//       />
+//       <CardContent sx={{ p: 1 }}>
+//         <List>
+//           <ListItem>- MMR (2021)</ListItem>
+//           <ListItem>- Tetanus (2022)</ListItem>
+//         </List>
+//       </CardContent>
+//     </Card>
+//     <Card elevation={3} sx={{ flexGrow: 1 }}>
+//       <CardHeader
+//         title="Recent Health Check-up"
+//         sx={{
+//           '& .MuiCardHeader-title': {
+//             fontWeight: 'bold',
+//             fontSize: '14px !important',
+//           },
+//         }}
+//       />
+//       <CardContent sx={{ p: 1 }}>
+//         <List>
+//           <ListItem>- Height: 165 cm</ListItem>
+//           <ListItem>- Height: 165 cm</ListItem>
+//           <ListItem>- Blood Pressure: 120/80 mmHg</ListItem>
+//         </List>
+//       </CardContent>
+//     </Card>
+//   </Box>
+// );

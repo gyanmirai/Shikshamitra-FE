@@ -1,13 +1,11 @@
 import type { IconButtonProps } from '@mui/material/IconButton';
 
 import { m } from 'framer-motion';
-
 import NoSsr from '@mui/material/NoSsr';
 import Avatar from '@mui/material/Avatar';
 import SvgIcon from '@mui/material/SvgIcon';
 import { useTheme } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
-
 import { varHover, AnimateAvatar } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
@@ -56,7 +54,7 @@ export function AccountButton({ open, photoURL, displayName, sx, ...other }: Acc
             overlay: {
               border: 1,
               spacing: 2,
-              color: `conic-gradient(${theme.vars.palette.primary.main}, ${theme.vars.palette.warning.main}, ${theme.vars.palette.primary.main})`,
+              color: `conic-gradient(${theme.palette.primary.main}, ${theme.vars.palette.warning.main}, ${theme.palette.primary.main})`,
             },
           }}
         >

@@ -2,13 +2,10 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
-
+import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Badge, Paper, Typography } from '@mui/material';
 import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
-
 import { Dot } from 'src/screens/student/studentProfile/attendance';
-
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const ProfileDashboardAttendance = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
@@ -40,12 +37,8 @@ const ProfileDashboardAttendance = () => {
           '& .MuiPickersCalendarHeader-root': {
             display: 'none', // Hides the header (Month, Year, and Arrows)
           },
-          '& .MuiDayCalendar-header': {
-            justifyContent: 'space-around',
-          },
-          '& .MuiDayCalendar-weekContainer': {
-            justifyContent: 'space-around',
-          },
+          '& .MuiDayCalendar-header': { justifyContent: 'space-around' },
+          '& .MuiDayCalendar-weekContainer': { justifyContent: 'space-around' },
         }}
         slots={{
           day: (prop: any) => {
@@ -82,9 +75,7 @@ const ProfileDashboardAttendance = () => {
                       overflow: 'hidden',
                       fontWeight: disabled ? 400 : 600,
                       bgcolor: backgroundColor,
-                      '&:hover': {
-                        ...(absent ? { backgroundColor: 'unset' } : {}),
-                      },
+                      '&:hover': { ...(absent ? { backgroundColor: 'unset' } : {}) },
                       // background: (theme) =>
                       //   absent
                       //     ? `${theme.palette.error.main} !important`
@@ -93,7 +84,7 @@ const ProfileDashboardAttendance = () => {
                       //       : '',
                       // ...(absent
                       //   ? { color: 'white !important' }
-                      //   : { color: (theme) => `${theme.palette.text.primary} !important` }),
+                      //   : { color: (theme) => `${theme.vars.palette.text.primary} !important` }),
                       // border: (theme) =>
                       //   today ? `2px solid ${theme.palette.primary.main}` : 'none !important',
                       ...(isHalfDay

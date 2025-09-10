@@ -1,11 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-
-import { Box, Card, Grid, Button, Tooltip, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Box, Card, Grid, Button, Tooltip, Typography } from '@mui/material';
 
 const resourcesData = [
   {
@@ -28,7 +26,7 @@ const RecentResources = () => {
   const [hoveredResource, setHoveredResource] = useState<string | null>(null);
 
   return (
-    <Grid item xs={12} md={6}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card
         sx={{
           display: 'flex',
@@ -97,7 +95,7 @@ const RecentResources = () => {
               ))}
             </Box>
           </Scrollbar>
-        </Box>{' '}
+        </Box>
       </Card>
     </Grid>
   );

@@ -6,9 +6,21 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
+import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
-
+import { useBoolean } from 'src/hooks/use-boolean';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import FileUploader from 'src/components/custom-upload';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
   Grid,
@@ -23,23 +35,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
-import { Editor } from 'src/components/editor';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import FileUploader from 'src/components/custom-upload';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getHomeworkInitialValues } from './homeworkInitialValues';
 import { homeworkValidationSchema } from './homeworkValidationSchema';
@@ -137,39 +132,33 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           {/* Basic Details Section */}
 
           {/* Class Selection */}
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <SectionCard title="Basic Details">
-              <Grid item xs={12} md={6}>
-                <ShakingTextField error={!!(formik.touched.class && formik.errors.class) || false}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
                   <CustomSelect
-                    label="Class *" // Select class from dropdown
+                    label="Class *"
                     options={allClass}
                     value={formik.values.class || classes}
-                    // disabled={!!classes}
                     labelKey="name"
                     valueKey="name"
-                    onChange={(val) => {
-                      formik.setFieldValue('class', val);
-                    }}
+                    onChange={(val) => formik.setFieldValue('class', val)}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                    error={!!(formik.touched.class && formik.errors.class) || false}
+                    error={!!(formik.touched.class && formik.errors.class)}
                     helperText={(formik.touched.class && formik.errors.class) || ''}
                   />
                 </ShakingTextField>
               </Grid>
 
-              {/* Division Selection */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.divisions && formik.errors.divisions) || false}
-                >
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.divisions && formik.errors.divisions)}>
                   <CustomSelect
-                    label="Division *" // Select division from dropdown
+                    label="Division *"
                     labelKey="name"
                     valueKey="name"
                     multiple
                     options={allDivision}
-                    value={formik.values.divisions.map((d) => d.divisionId)} // value = selected division IDs
+                    value={formik.values.divisions.map((d) => d.divisionId)}
                     onChange={(val) => {
                       const selectedDivs = val as string[];
                       const existingDivs = formik.values.divisions || [];
@@ -206,13 +195,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              {/* Subject Selection */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.subject && formik.errors.subject) || false}
-                >
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject)}>
                   <CustomSelect
-                    label="Subject *" // Select subject from dropdown
+                    label="Subject *"
                     disabled={!formik.values.divisions || formik.values.divisions.length === 0}
                     options={[
                       { value: 'Mathematics', label: 'Mathematics' },
@@ -223,17 +209,14 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     value={formik.values.subject}
                     onChange={(val) => formik.setFieldValue('subject', val)}
                     formControlProps={{ fullWidth: true }}
-                    error={!!(formik.touched.subject && formik.errors.subject) || false}
+                    error={!!(formik.touched.subject && formik.errors.subject)}
                     helperText={(formik.touched.subject && formik.errors.subject) || ''}
                   />
                 </ShakingTextField>
               </Grid>
 
-              {/* Chapter Selection */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField
-                  error={!!(formik.touched.chapter && formik.errors.chapter) || false}
-                >
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.chapter && formik.errors.chapter)}>
                   <Autocomplete
                     options={[
                       { id: 'n1', name: '1. Numbers and Number Systems' },
@@ -273,13 +256,11 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              {/* Homework Title */}
-              <Grid item xs={12} md={6}>
-                <ShakingTextField error={!!(formik.touched.title && formik.errors.title) || false}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
                   <TextField
                     fullWidth
-                    label="Homework Title *" // Enter homework title
-                    // placeholder="Enter title for the homework"
+                    label="Homework Title *"
                     name="title"
                     size="small"
                     value={formik.values.title}
@@ -290,13 +271,12 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              {/* Homework Type */}
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.homeworkType && formik.errors.homeworkType) || false}
+                  error={!!(formik.touched.homeworkType && formik.errors.homeworkType)}
                 >
                   <CustomSelect
-                    label="Homework Type *" // Select homework type from dropdown
+                    label="Homework Type *"
                     options={[
                       { label: 'Regular', value: 'Regular' },
                       { label: 'Worksheet', value: 'Worksheet' },
@@ -316,22 +296,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     value={formik.values.homeworkType || ''}
                     onChange={(val) => formik.setFieldValue('homeworkType', val)}
                     formControlProps={{ fullWidth: true }}
-                    error={!!(formik.touched.homeworkType && formik.errors.homeworkType) || false}
+                    error={!!(formik.touched.homeworkType && formik.errors.homeworkType)}
                     helperText={(formik.touched.homeworkType && formik.errors.homeworkType) || ''}
                   />
                 </ShakingTextField>
-                {/* <Box display="flex" justifyContent="flex-end">
-                  <Typography
-                    variant="body2"
-                    fontWeight={500}
-                    color="primary.main"
-                    fontSize={12}
-                    sx={{ cursor: 'pointer' }}
-                    onClick={() => homeworkTypeDialog.onTrue()}
-                  >
-                    Add Homework Type
-                  </Typography>
-                </Box> */}
 
                 <CustomDialog
                   open={homeworkTypeDialog.value}
@@ -348,19 +316,16 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             </SectionCard>
           </Grid>
 
-          {/* Description */}
-          <Grid item xs={12}>
+          {/* Description Section */}
+          <Grid size={{ xs: 12 }}>
             <SectionCard title="Description and Document">
-              {/* Description */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.description && formik.errors.description) || false}
+                  error={!!(formik.touched.description && formik.errors.description)}
                 >
                   <Editor
                     value={formik.values.description}
-                    onChange={(value) => {
-                      formik.setFieldValue('description', value);
-                    }}
+                    onChange={(value) => formik.setFieldValue('description', value)}
                     placeholder="Description"
                     error={!!(formik.touched.description && formik.errors.description)}
                     helperText={(formik.touched.description && formik.errors.description) || ''}
@@ -368,16 +333,12 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              {/* File Uploader */}
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <FileUploader
-                  // @ts-ignore
-                  value={formik.values.attachments}
+                  value={formik.values.attachments as any}
                   multiple={false}
                   showVisibleDocumentCount={1}
-                  onChange={(value) => {
-                    formik.setFieldValue('attachments', value);
-                  }}
+                  onChange={(value) => formik.setFieldValue('attachments', value)}
                   primaryText="Please Upload Your File"
                   secondaryText="Maximum file size is 5MB"
                 />
@@ -385,20 +346,19 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             </SectionCard>
           </Grid>
 
-          {/* Schedule Homework Switch */}
+          {/* Schedule Homework Section */}
           {formik.values.divisions.length > 0 && (
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <SectionCard title="Schedule Homework">
                 {formik.values.divisions.map((div, idx) => (
                   <Grid container spacing={3} key={div.divisionId} ml={0.4}>
-                    <Grid item xs={12} mt={2}>
+                    <Grid size={{ xs: 12 }} mt={2}>
                       <Typography variant="subtitle2" sx={{ mt: 1, mb: -1, lineHeight: 1.2 }}>
                         Div: {div.divisionId}
                       </Typography>
                     </Grid>
 
-                    {/* Publish Date */}
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <ShakingTextField
                         error={
                           typeof formik.errors.divisions?.[idx] === 'object' &&
@@ -419,10 +379,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           }}
                           ampm={false}
                           slotProps={{
-                            popper: {
-                              placement: 'top-start',
-                              sx: { zIndex: 1300 },
-                            },
+                            popper: { placement: 'top-start', sx: { zIndex: 1300 } },
                             textField: {
                               fullWidth: true,
                               size: 'small',
@@ -441,8 +398,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       </ShakingTextField>
                     </Grid>
 
-                    {/* Due Date */}
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <ShakingTextField
                         error={
                           typeof formik.errors.divisions?.[idx] === 'object' &&
@@ -461,10 +417,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           disabled={!div.publishDate}
                           ampm={false}
                           slotProps={{
-                            popper: {
-                              placement: 'top-start',
-                              sx: { zIndex: 1300 },
-                            },
+                            popper: { placement: 'top-start', sx: { zIndex: 1300 } },
                             textField: {
                               fullWidth: true,
                               size: 'small',
@@ -488,8 +441,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             </Grid>
           )}
 
-          {/* Submission Type Radio Group */}
-          <Grid item xs={12}>
+          {/* Submission Type */}
+          <Grid size={{ xs: 12 }}>
             <SectionCard title="Submission Type">
               <FormControl
                 component="fieldset"
@@ -499,10 +452,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 <RadioGroup
                   row
                   name="submissionType"
-                  value={formik.values.submissionType?.toString()} // Convert number to string for matching
+                  value={formik.values.submissionType?.toString()}
                   onChange={(event) =>
                     formik.setFieldValue('submissionType', Number(event.target.value))
-                  } // Convert back to number
+                  }
                 >
                   <FormControlLabel value="0" control={<Radio />} label="Online Text" />
                   <FormControlLabel value="1" control={<Radio />} label="File Upload" />

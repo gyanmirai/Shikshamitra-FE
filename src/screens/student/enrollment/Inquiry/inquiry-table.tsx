@@ -5,25 +5,21 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
-
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
-
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import calculateAge from 'src/utils/calculate-age';
-
+import CustomTooltip from 'src/components/custom-tooltip';
 import { GenderType, GenderOptions } from 'src/enums/gender';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 import { useGetStudentInquiryQuery } from 'src/redux/student/inquiry/inquiry-api';
 import {
   FollowUpStatusType,
   FollowUpStatusTypeColors,
   FollowUpStatusTypeOptions,
 } from 'src/enums/inquiry-status-type';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IInquiryData } from '.';
 

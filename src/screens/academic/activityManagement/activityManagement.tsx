@@ -7,10 +7,21 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState, useCallback } from 'react';
-
 import { Add } from '@mui/icons-material';
+import { Label } from 'src/components/label';
+import { Upload } from 'src/components/upload';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useCallback } from 'react';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Grid,
@@ -23,21 +34,6 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import { Label } from 'src/components/label';
-import { Upload } from 'src/components/upload';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 // Enum for Activity Categories
 enum ActivityCategory {
@@ -387,7 +383,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ onSubmit, onClose, data, is
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '200px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -399,7 +395,8 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ onSubmit, onClose, data, is
                 helperText={formik.touched.activityName && formik.errors.activityName}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <CustomSelect
                 label="Category"
                 options={[
@@ -418,7 +415,8 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ onSubmit, onClose, data, is
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <DateTimePicker
                 label="Start Date"
                 value={formik.values.startDate}
@@ -434,7 +432,8 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ onSubmit, onClose, data, is
                 disablePast
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid size={{ xs: 12 }}>
               <DateTimePicker
                 label="End Date"
                 value={formik.values.endDate}
@@ -670,14 +669,13 @@ const UploadPictures = () => {
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Upload
                 {...uploadProps}
                 thumbnail
                 value={formik.values.docs}
                 onDrop={(acceptedFiles) => {
                   const value = [...formik.values.docs, ...acceptedFiles];
-
                   formik.setFieldValue('docs', value);
                 }}
                 onRemove={(file) => handleRemoveFile(file, formik.values, formik.setFieldValue)}

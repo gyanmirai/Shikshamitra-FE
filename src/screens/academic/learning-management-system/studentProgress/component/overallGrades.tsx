@@ -1,12 +1,11 @@
 'use client';
 
-import Grid2 from '@mui/material/Unstable_Grid2';
-
+import { Grid } from '@mui/material';
 import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
 
 const OverallGrades = () => (
-  <Grid2 container spacing={3}>
-    <Grid2 xs={12} md={6}>
+  <Grid container spacing={3}>
+    <Grid size={{ xs: 12, md: 6 }}>
       <AppCurrentDownload
         title="Grade breakdown"
         chart={{
@@ -17,8 +16,8 @@ const OverallGrades = () => (
           ],
         }}
       />
-    </Grid2>
-  </Grid2>
+    </Grid>
+  </Grid>
 );
 
 export default OverallGrades;

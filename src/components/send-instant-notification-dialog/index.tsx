@@ -1,10 +1,7 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
-import { Box, Button, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
+import { Box, Button, DialogActions } from '@mui/material';
 import CustomPlaceholderInput from 'src/screens/student/studentNotification/textfiled-for-message-with-placeholder';
 
 import { Scrollbar } from '../scrollbar';

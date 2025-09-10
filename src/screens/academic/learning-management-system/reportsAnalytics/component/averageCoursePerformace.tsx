@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-
 import { BarChart } from '@mui/icons-material';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 
 const AverageCoursePerformace = () => (
-  <Grid item xs={12} md={6}>
+  <Grid size={{ xs: 12, md: 6 }}>
     <Paper elevation={3} sx={{ p: 2, bgcolor: '#1976d2' }}>
       <Typography variant="h6" sx={{ color: '#fff', mb: 1 }}>
         Average Course Performance

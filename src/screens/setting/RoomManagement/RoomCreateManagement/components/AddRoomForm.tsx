@@ -5,19 +5,15 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-
-import { Grid, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { Grid, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
 
 interface IRoomFormProps {
   open: UseBooleanReturn;
@@ -87,9 +83,9 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
-          <Grid item xs={12} mb={-3}>
+          <Grid size={{ xs: 12 }} mb={-3}>
             <SectionCard title="Basic Details">
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.roomName && !!formik.errors.roomName}>
                   <TextField
                     fullWidth
@@ -99,9 +95,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     value={formik.values.roomName}
                     onChange={(e) => {
                       const value = e.target.value
-                        // Remove everything except letters, numbers, spaces, hyphens and colons
                         .replace(/[^a-zA-Z-:0-9\s]/g, '')
-                        // Capitalize each word
                         .split(' ')
                         .map((word) =>
                           word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
@@ -116,7 +110,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.capacity && !!formik.errors.capacity}>
                   <TextField
                     fullWidth
@@ -134,7 +128,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.building && !!formik.errors.building}>
                   <CustomSelect
                     label="Building *"
@@ -153,7 +147,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.floor && !!formik.errors.floor}>
                   <CustomSelect
                     label="Floor *"
@@ -172,7 +166,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.roomType && !!formik.errors.roomType}>
                   <CustomSelect
                     label="Room Type *"
@@ -193,9 +187,9 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
             </SectionCard>
           </Grid>
 
-          <Grid item xs={12} mb={-3}>
+          <Grid size={{ xs: 12 }} mb={-3}>
             <SectionCard title="Benches Details">
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={formik.touched.totalBenches && !!formik.errors.totalBenches}
                 >
@@ -216,7 +210,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={formik.touched.benchCapacity && !!formik.errors.benchCapacity}
                 >
@@ -237,7 +231,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.rows && !!formik.errors.rows}>
                   <TextField
                     fullWidth
@@ -254,7 +248,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                 </ShakingTextField>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.columns && !!formik.errors.columns}>
                   <TextField
                     fullWidth
@@ -273,11 +267,11 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
             </SectionCard>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <SectionCard title="Features">
               <Grid container spacing={1} ml={2} mt={1}>
                 {featureOptions.map((feature) => (
-                  <Grid item xs={12} sm={6} key={feature}>
+                  <Grid size={{ xs: 12, sm: 6 }} key={feature}>
                     <FormControlLabel
                       control={
                         <Checkbox

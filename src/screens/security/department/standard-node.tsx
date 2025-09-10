@@ -4,10 +4,13 @@ function StandardNode(props: any) {
   const {
     name,
     title,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     avatarUrl,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     role,
     sx,
     count,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     assignDialog,
     RenderThreeDotsAction,
     item,

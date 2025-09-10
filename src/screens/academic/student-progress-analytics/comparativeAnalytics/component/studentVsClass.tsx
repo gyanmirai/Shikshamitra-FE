@@ -2,14 +2,12 @@
 
 import type { Division, Standards } from 'src/types/school';
 
+import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
-
-import { Box, Grid, useTheme, Typography } from '@mui/material';
-
+import { Box, Grid, Typography } from '@mui/material';
+import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomSelect from 'src/components/custom-select';
 
 const StudentVsClass = () => {
   const [classes3, setClasses3] = useState('');
@@ -44,7 +42,7 @@ const StudentVsClass = () => {
   }, [classData, classes3]);
 
   return (
-    <Grid item xs={12}>
+    <Grid size={{ xs: 12 }}>
       <Typography variant="h6" mb={2}>
         Student vs Class Average
       </Typography>
@@ -56,7 +54,6 @@ const StudentVsClass = () => {
           valueKey="id"
           onChange={(val) => {
             const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-            // formik.setFieldValue('class', selectedClass?.name || '');
             setClasses3(val as string);
             setDivisionOptions(selectedClass?.divisions || []);
           }}
@@ -64,7 +61,7 @@ const StudentVsClass = () => {
           formControlProps={{
             sx: { width: '100%', maxWidth: '150px' },
           }}
-        />{' '}
+        />
         <CustomSelect
           label="Division"
           disabled={!classes3}
@@ -72,15 +69,11 @@ const StudentVsClass = () => {
           valueKey="id"
           options={divisionOptions}
           value={division}
-          onChange={(val) => {
-            // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
-            // formik.setFieldValue('division', selectedDivision?.name || '');
-            setDivision(val as string);
-          }}
+          onChange={(val) => setDivision(val as string)}
           formControlProps={{
             sx: { width: '100%', maxWidth: '150px' },
           }}
-        />{' '}
+        />
         <CustomSelect
           label="Select Student"
           options={[
@@ -91,9 +84,7 @@ const StudentVsClass = () => {
           disabled={!classes3 || !division}
           value={selectedStudent}
           isSearch
-          onChange={(val) => {
-            setSelectedStudent(val as string);
-          }}
+          onChange={(val) => setSelectedStudent(val as string)}
           formControlProps={{
             sx: { width: '100%', maxWidth: '150px' },
           }}

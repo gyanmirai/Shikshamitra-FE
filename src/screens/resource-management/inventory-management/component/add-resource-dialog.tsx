@@ -1,10 +1,7 @@
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useMemo } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -13,6 +10,7 @@ import CancelButton from 'src/components/cancel-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import { UploadBox } from 'src/components/upload/upload-box';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getInitialInventoryItem } from './initialValue';
 import { addResourceValidationSchema } from './validationSchema';
@@ -56,7 +54,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
       <form onSubmit={formik.handleSubmit}>
         <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>
           <Grid container spacing={2}>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.category && Boolean(formik.errors.category)}>
                 <CustomSelect
                   label="Select Category *"
@@ -73,7 +71,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.subCategory && Boolean(formik.errors.subCategory)}
               >
@@ -92,7 +90,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField error={formik.touched.itemName && Boolean(formik.errors.itemName)}>
                 <TextField
                   name="itemName"
@@ -108,7 +106,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={
                   formik.touched.resourceMeasurementUnit &&
@@ -133,7 +131,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField error={formik.touched.quantity && Boolean(formik.errors.quantity)}>
                 <TextField
                   disabled={isEdit}
@@ -148,7 +146,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={
                   formik.touched.purchasedVendorName && Boolean(formik.errors.purchasedVendorName)
@@ -172,7 +170,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={
                   formik.touched.resourcePurchaseDate && Boolean(formik.errors.resourcePurchaseDate)
@@ -202,7 +200,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={
                   formik.touched.warrantyExpiryDate && Boolean(formik.errors.warrantyExpiryDate)
@@ -232,7 +230,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.campusName && Boolean(formik.errors.campusName)}
               >
@@ -252,7 +250,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.buildingName && Boolean(formik.errors.buildingName)}
               >
@@ -272,7 +270,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.floorNumber && Boolean(formik.errors.floorNumber)}
               >
@@ -291,7 +289,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid item xs={6} pb="10px">
+            <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.roomNumber && Boolean(formik.errors.roomNumber)}
               >
@@ -311,7 +309,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12} pb="10px">
+            <Grid size={12} pb="10px">
               <ShakingTextField
                 error={formik.touched.termAndCondition && Boolean(formik.errors.termAndCondition)}
               >
@@ -330,7 +328,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={12}>
               <UploadBox
                 onDrop={() => {}}
                 placeholder={
@@ -356,7 +354,7 @@ const AddResourceDialog: React.FC<IAddResourceDialogProps> = ({
               />
             </Grid>
 
-            {/* <Grid item xs={6} pb="10px">
+            {/* <Grid size={6} pb="10px">
               <ShakingTextField
                 error={formik.touched.storageLocation && Boolean(formik.errors.storageLocation)}
               >

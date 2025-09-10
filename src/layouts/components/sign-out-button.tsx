@@ -1,13 +1,10 @@
 import type { ButtonProps } from '@mui/material/Button';
 import type { Theme, SxProps } from '@mui/material/styles';
 
-import { useDispatch } from 'react-redux';
-import { useState, useCallback } from 'react';
-
 import { LoadingButton } from '@mui/lab';
-
+import { useDispatch } from 'react-redux';
 import { useRouter } from 'src/routes/hooks';
-
+import { useState, useCallback } from 'react';
 import { signOutUser } from 'src/redux/auth/authActions';
 
 // ----------------------------------------------------------------------

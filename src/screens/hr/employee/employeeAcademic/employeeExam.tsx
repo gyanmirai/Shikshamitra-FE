@@ -1,20 +1,16 @@
 import type { LabelColor } from 'src/components/label';
 import type { IExamFormValues } from 'src/screens/examination/scheduleExam/type';
 
-import React, { useMemo, useState } from 'react';
-
-import { Box, Tab, Tabs, Chip } from '@mui/material';
-
 import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
-import ViewTimetableComp from 'src/screens/examination/scheduleExam/components/viewTimetableComp';
-
 import { Label } from 'src/components/label';
+import React, { useMemo, useState } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Tab, Tabs, Chip } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
+import ViewTimetableComp from 'src/screens/examination/scheduleExam/components/viewTimetableComp';
 
 const dummyExamData = [
   {

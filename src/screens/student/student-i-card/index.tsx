@@ -1,28 +1,25 @@
 'use client';
 
+import type { JSX } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import React, { useRef, useState, useEffect } from 'react';
-
-import { Add, ArrowBack } from '@mui/icons-material';
-import { Box, Paper, Button, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import IcardTemplate from 'src/templates/icard';
-
 import { Label } from 'src/components/label';
+import IcardTemplate from 'src/templates/icard';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Add, ArrowBack } from '@mui/icons-material';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
+import React, { useRef, useState, useEffect } from 'react';
 import { LoadingScreen } from 'src/components/loading-screen';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import StudentIDCardCreator from 'src/components/icard-creation';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Paper, Button, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 
 import IcardPreview from './icard-preview';
 
@@ -30,10 +27,10 @@ const StudentIcardScreen = () => {
   const dialog = useBoolean();
   const previewDialog = useBoolean();
 
-  const [cardDimensions, setCardDimensions] = useState();
+  const [cardDimensions] = useState();
 
-  const [cardBackgroundColor, setCardBackgroundColor] = useState();
-  const [cardBackground, setCardBackground] = useState();
+  const [cardBackgroundColor] = useState();
+  const [cardBackground] = useState();
   return (
     <Box>
       <CustomBreadcrumbs

@@ -1,7 +1,10 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { Add } from '@mui/icons-material';
+import { Scrollbar } from 'src/components/scrollbar';
+import capitalizeWords from 'src/utils/capitalizeText';
+import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import {
   Grid,
   Radio,
@@ -13,12 +16,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import capitalizeWords from 'src/utils/capitalizeText';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import CustomSelect from 'src/components/custom-select';
 
 import type { ITransportAddNewRequestDialogProps } from '../member-transport-interface';
 
@@ -88,7 +85,7 @@ const TransportAddNewRequestDialog: React.FC<ITransportAddNewRequestDialogProps>
             {/* Student - Grade & Division */}
             {userType === 'student' && (
               <>
-                <Grid item xs={6}>
+                <Grid size={6}>
                   <CustomSelect
                     label="Standard"
                     options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
@@ -99,7 +96,7 @@ const TransportAddNewRequestDialog: React.FC<ITransportAddNewRequestDialogProps>
                     formControlProps={{ fullWidth: true }}
                   />
                 </Grid>
-                <Grid item xs={6}>
+                <Grid size={6}>
                   <CustomSelect
                     label="Division"
                     options={availableGrades.map((g) => ({ label: g.grade, value: g.grade }))}
@@ -108,7 +105,7 @@ const TransportAddNewRequestDialog: React.FC<ITransportAddNewRequestDialogProps>
                     formControlProps={{ fullWidth: true }}
                   />
                 </Grid>
-                <Grid item xs={6}>
+                <Grid size={6}>
                   <Autocomplete
                     loading={false}
                     noOptionsText="No Student Found"
@@ -123,7 +120,7 @@ const TransportAddNewRequestDialog: React.FC<ITransportAddNewRequestDialogProps>
 
             {/* Employee Number */}
             {userType === 'staff' && (
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <Autocomplete
                   loading={false}
                   noOptionsText="No Employee Found"
@@ -136,7 +133,7 @@ const TransportAddNewRequestDialog: React.FC<ITransportAddNewRequestDialogProps>
             )}
 
             {/* Address Details */}
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="addressLine1"
                 label="Building No./Flat/House No."
@@ -148,7 +145,7 @@ const TransportAddNewRequestDialog: React.FC<ITransportAddNewRequestDialogProps>
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="landmark"
                 label="Landmark"
@@ -160,7 +157,7 @@ const TransportAddNewRequestDialog: React.FC<ITransportAddNewRequestDialogProps>
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="pickupPoint"
                 label="Preferred Pickup/Dropoff Point"

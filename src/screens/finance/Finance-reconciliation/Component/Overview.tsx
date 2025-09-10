@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
-
-import { Box, Card, Grid, Button, Typography, LinearProgress } from '@mui/material';
-
+import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  Box,
+  Card,
+  Grid,
+  Button,
+  TableRow,
+  TableCell,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 import {
   useGetMonthsQuery,
   useGetOverviewDataQuery,
   useGetSummaryCardsQuery,
 } from 'src/redux/finance/reconciliation';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 
 const Overview = () => {
   const [selectedMonth, setSelectedMonth] = useState('November 2024');
@@ -36,7 +42,11 @@ const Overview = () => {
   const handleRefreshData = async () => {};
 
   return isLoading || !overviewData || !months || !summaryCards ? (
-    'Loading reconciliation data...'
+    <TableRow>
+      <TableCell>
+        <Box className="loader" height={24} />
+      </TableCell>
+    </TableRow>
   ) : (
     <Box>
       {/* Header Section with Month Selector and Refresh Button */}
@@ -91,7 +101,7 @@ const Overview = () => {
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {summaryCards.map((card: any, index: number) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
             <Card
               sx={{
                 p: 3,

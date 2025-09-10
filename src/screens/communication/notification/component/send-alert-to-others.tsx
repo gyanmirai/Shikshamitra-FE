@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify/iconify';
+import { UploadBox } from 'src/components/upload/upload-box';
 import {
   Box,
   Grid,
@@ -9,11 +11,6 @@ import {
   Typography,
   FormControlLabel,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Iconify } from 'src/components/iconify/iconify';
-import { UploadBox } from 'src/components/upload/upload-box';
 
 const SendAlertToOthers = () => {
   const [whatsappMedia, setWhatsappMedia] = useState<any>(null);
@@ -126,7 +123,7 @@ const SendAlertToOthers = () => {
         {/* Email Fields */}
         {selectedMethods.email && (
           <>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Email Recipients (comma-separated)"
@@ -136,7 +133,7 @@ const SendAlertToOthers = () => {
                 placeholder="e.g., user1@example.com, user2@example.com"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="CC Recipients (comma-separated)"
@@ -146,7 +143,7 @@ const SendAlertToOthers = () => {
                 placeholder="e.g., cc1@example.com, cc2@example.com"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="Email Subject"
@@ -155,7 +152,7 @@ const SendAlertToOthers = () => {
                 onChange={handleInputChange}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
@@ -173,7 +170,7 @@ const SendAlertToOthers = () => {
         {/* SMS Fields */}
         {selectedMethods.sms && (
           <>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="SMS Recipients (comma-separated)"
@@ -183,7 +180,7 @@ const SendAlertToOthers = () => {
                 placeholder="e.g., 9876543210, 9123456789"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
@@ -201,7 +198,7 @@ const SendAlertToOthers = () => {
         {/* WhatsApp Fields */}
         {selectedMethods.whatsapp && (
           <>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 label="WhatsApp Recipients (comma-separated)"
@@ -211,7 +208,7 @@ const SendAlertToOthers = () => {
                 placeholder="e.g., 9876543210, 9123456789"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
@@ -223,7 +220,7 @@ const SendAlertToOthers = () => {
                 placeholder="Enter WhatsApp message here..."
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle1">Attach Media (Optional)</Typography>
               <UploadBox
                 onDrop={(acceptedFiles) => handleMediaUpload(acceptedFiles)}
@@ -252,7 +249,7 @@ const SendAlertToOthers = () => {
 
             {/* Show Uploaded File Name */}
             {whatsappMedia && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Typography variant="body2" color="textSecondary">
                   Selected File: {whatsappMedia.name}
                 </Typography>

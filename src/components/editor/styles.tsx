@@ -1,9 +1,8 @@
 import type { StackProps } from '@mui/material/Stack';
 
 import Stack from '@mui/material/Stack';
-import { styled } from '@mui/material/styles';
-
 import { varAlpha } from 'src/theme/styles';
+import { styled } from '@mui/material/styles';
 
 import { editorClasses } from './classes';
 
@@ -28,7 +27,7 @@ export const StyledRoot = styled(Stack, {
    * State: error
    */
   ...(error && {
-    border: `solid 1px ${theme.vars.palette.error.main}`,
+    border: `solid 1px ${theme.palette.error.main}`,
   }),
   /**
    * State: disabled
@@ -102,7 +101,7 @@ export const StyledRoot = styled(Stack, {
        * Link
        */
       [`& .${editorClasses.content.link}`]: {
-        color: theme.vars.palette.primary.main,
+        color: theme.palette.primary.main,
       },
       /**
        * Hr Divider
@@ -176,7 +175,10 @@ export const StyledRoot = styled(Stack, {
         padding: theme.spacing(0.25, 0.5),
         color: theme.vars.palette.text.secondary,
         fontSize: theme.typography.body2.fontSize,
-        borderRadius: theme.shape.borderRadius / 2,
+        borderRadius:
+          typeof theme.shape.borderRadius === 'number'
+            ? theme.shape.borderRadius / 2
+            : `calc(${theme.shape.borderRadius} / 2)`,
         backgroundColor: varAlpha(theme.vars.palette.grey['500Channel'], 0.2),
       },
       /**

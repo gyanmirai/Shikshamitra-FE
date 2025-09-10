@@ -2,11 +2,17 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import { UploadBox } from 'src/components/upload';
+import { Scrollbar } from 'src/components/scrollbar';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CustomSelect from 'src/components/custom-select';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -19,15 +25,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Editor } from 'src/components/editor';
-import { Iconify } from 'src/components/iconify';
-import { UploadBox } from 'src/components/upload';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomSelect from 'src/components/custom-select';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { getTakeActionInitialValues } from '../../logDisciplinaryIncident/components/takeActionInitialValues';
 
@@ -49,7 +46,7 @@ const ViewDetailsComp: React.FC<ITakeActionFormProps> = ({ open, onClose, editDa
         <Box display="flex" flexDirection="column" gap={2}>
           <Scrollbar sx={{ p: 2, maxHeight: '70vh', overflowY: 'auto' }}>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   size="small"
                   label="Hostel Name"
@@ -57,14 +54,12 @@ const ViewDetailsComp: React.FC<ITakeActionFormProps> = ({ open, onClose, editDa
                   fullWidth
                   disabled
                   value={formik.values.hostelName}
-                  onChange={(val) => {
-                    formik.setFieldValue('hostelName', val);
-                  }}
+                  onChange={(val) => formik.setFieldValue('hostelName', val)}
                   options={[]}
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth>
                   <Autocomplete
                     multiple
@@ -110,39 +105,29 @@ const ViewDetailsComp: React.FC<ITakeActionFormProps> = ({ open, onClose, editDa
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   label="Incident Date"
                   format="DD-MM-YYYY"
                   disabled
                   value={formik.values.incidentDate}
                   onChange={(val) => formik.setFieldValue('incidentDate', val)}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                    },
-                  }}
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TimePicker
                   label="Incident Time"
                   format="HH:mm"
                   disabled
                   value={formik.values.incidentTime}
                   onChange={(val) => formik.setFieldValue('incidentTime', val)}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                    },
-                  }}
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <CustomSelect
                   size="small"
                   label="Incident Type"
@@ -150,24 +135,21 @@ const ViewDetailsComp: React.FC<ITakeActionFormProps> = ({ open, onClose, editDa
                   fullWidth
                   disabled
                   value={formik.values.incidentType}
-                  onChange={(val) => {
-                    formik.setFieldValue('incidentType', val);
-                  }}
+                  onChange={(val) => formik.setFieldValue('incidentType', val)}
                   options={[]}
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Editor
                   value={formik.values.description}
-                  onChange={(value) => {
-                    formik.setFieldValue('description', value);
-                  }}
+                  onChange={(value) => formik.setFieldValue('description', value)}
                   editable={false}
                   placeholder="Incident Description"
                 />
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <UploadBox
                   onDrop={() => {}}
                   disabled={!formik.values.actionName}
@@ -185,18 +167,15 @@ const ViewDetailsComp: React.FC<ITakeActionFormProps> = ({ open, onClose, editDa
                       <Typography variant="body2">Drag Attachment</Typography>
                     </Box>
                   }
-                  sx={{
-                    py: 2.5,
-                    width: '100%',
-                    height: 'auto',
-                    borderRadius: 1.5,
-                  }}
+                  sx={{ py: 2.5, width: '100%', height: 'auto', borderRadius: 1.5 }}
                 />
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <Typography variant="h6">Taken Action</Typography>
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <Box display="flex" flexDirection="row" gap={2}>
                   {['Warning', 'Parent Meeting', 'Fine', 'Suspension', 'Community Service'].map(
                     (label) => (
@@ -215,17 +194,17 @@ const ViewDetailsComp: React.FC<ITakeActionFormProps> = ({ open, onClose, editDa
                   )}
                 </Box>
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <Editor
                   value={formik.values.note}
-                  onChange={(value) => {
-                    formik.setFieldValue('note', value);
-                  }}
+                  onChange={(value) => formik.setFieldValue('note', value)}
                   editable={false}
                   placeholder="Notes"
                 />
               </Grid>
-              <Grid item xs={12}>
+
+              <Grid size={{ xs: 12 }}>
                 <Box display="flex" flexDirection="row" gap={2}>
                   {['Student', 'Parent', 'Warden'].map((label) => (
                     <FormControlLabel

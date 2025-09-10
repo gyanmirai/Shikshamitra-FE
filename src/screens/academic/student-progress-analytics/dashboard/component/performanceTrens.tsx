@@ -1,15 +1,12 @@
 'use client';
 
 import React from 'react';
-
+import CustomSelect from 'src/components/custom-select';
 import { Box, Card, Grid, Typography } from '@mui/material';
-
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
-import CustomSelect from 'src/components/custom-select';
-
 const PerformanceTrends = () => (
-  <Grid item xs={12}>
+  <Grid size={12}>
     <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="subtitle1">Performance Trends</Typography>

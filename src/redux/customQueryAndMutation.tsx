@@ -1,6 +1,5 @@
 import { toast } from 'sonner';
 import { useEffect } from 'react';
-
 import { Alert } from '@mui/material';
 
 interface IQueryAndMutation<T> {

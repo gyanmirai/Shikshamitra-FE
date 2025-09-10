@@ -1,32 +1,28 @@
 import React from 'react';
 import { useFormik } from 'formik';
-
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useUpdateEmployeeStatusMutation } from 'src/redux/employee/employeeApi';
 import {
   Box,
   Stack,
   Button,
-  useTheme,
   TextField,
   IconButton,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useUpdateEmployeeStatusMutation } from 'src/redux/employee/employeeApi';
 import {
   EmployeeStatusType,
   EmployeeStatusTypeArray,
   EmployeeStatusTypeInformation,
 } from 'src/enums/employee-status-type';
-
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 
 const ChangeStatusForm = ({
   handleClose,
@@ -90,12 +86,7 @@ const ChangeStatusForm = ({
               <Box
                 component="li"
                 {...props}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  width: '100%',
-                }}
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}
               >
                 {option.label}
                 <Box sx={{ marginLeft: 'auto' }}>
@@ -105,14 +96,14 @@ const ChangeStatusForm = ({
                       sx={{
                         color:
                           option.value === EmployeeStatusType.Active
-                            ? theme.palette.success.main
+                            ? theme.vars.palette.success.main
                             : option.value === EmployeeStatusType.Inactive
                               ? theme.palette.error.main
                               : option.value === EmployeeStatusType.Left
-                                ? theme.palette.info.main
+                                ? theme.vars.palette.info.main
                                 : option.value === EmployeeStatusType.Retired
-                                  ? theme.palette.grey[500]
-                                  : theme.palette.grey[500],
+                                  ? theme.vars.palette.grey[500]
+                                  : theme.vars.palette.grey[500],
                       }}
                     >
                       <Iconify icon="mdi:information" width={20} />

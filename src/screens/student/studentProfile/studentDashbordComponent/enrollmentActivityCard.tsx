@@ -1,9 +1,7 @@
 import React from 'react';
-
+import { Label } from 'src/components/label';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Box, Card, Stack, Typography, IconButton } from '@mui/material';
-
-import { Label } from 'src/components/label';
 
 interface EnrollmentActivityProps {
   name: string;

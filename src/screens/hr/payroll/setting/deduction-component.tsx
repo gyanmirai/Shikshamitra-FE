@@ -1,8 +1,17 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { useDeletePayElementMutation } from 'src/redux/payElement/payElementApi';
 import {
   Box,
   Grid,
@@ -14,20 +23,6 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
-
-import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useDeletePayElementMutation } from 'src/redux/payElement/payElementApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
@@ -261,254 +256,263 @@ const DeductionComponentForm = ({
       <DialogScrollContent>
         {/* General Information */}
         <SectionCard title="General Information">
-          <Grid item xs={12} sm={6}>
-            <TextField
-              size="small"
-              fullWidth
-              label="Component Name *"
-              name="componentName"
-              value={formik.values.componentName}
-              onChange={formik.handleChange}
-              error={formik.touched.componentName && Boolean(formik.errors.componentName)}
-              helperText={(formik.touched.componentName && formik.errors.componentName) as string}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              size="small"
-              select
-              fullWidth
-              label="Component Type *"
-              name="componentType"
-              value={formik.values.componentType}
-              onChange={formik.handleChange}
-              error={formik.touched.componentType && Boolean(formik.errors.componentType)}
-              helperText={(formik.touched.componentType && formik.errors.componentType) as string}
-            >
-              {['Deduction', 'Tax', 'Other'].map((opt) => (
-                <MenuItem key={opt} value={opt}>
-                  {opt}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              size="small"
-              fullWidth
-              multiline
-              rows={2}
-              label="Description"
-              name="description"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-            />
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                size="small"
+                fullWidth
+                label="Component Name *"
+                name="componentName"
+                value={formik.values.componentName}
+                onChange={formik.handleChange}
+                error={formik.touched.componentName && Boolean(formik.errors.componentName)}
+                helperText={(formik.touched.componentName && formik.errors.componentName) as string}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                size="small"
+                select
+                fullWidth
+                label="Component Type *"
+                name="componentType"
+                value={formik.values.componentType}
+                onChange={formik.handleChange}
+                error={formik.touched.componentType && Boolean(formik.errors.componentType)}
+                helperText={(formik.touched.componentType && formik.errors.componentType) as string}
+              >
+                {['Deduction', 'Tax', 'Other'].map((opt) => (
+                  <MenuItem key={opt} value={opt}>
+                    {opt}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                size="small"
+                fullWidth
+                multiline
+                rows={2}
+                label="Description"
+                name="description"
+                value={formik.values.description}
+                onChange={formik.handleChange}
+              />
+            </Grid>
           </Grid>
         </SectionCard>
 
-        {/* Earning Configuration */}
+        {/* Deduction Configuration */}
         <SectionCard title="Deduction Configuration">
-          <Grid item xs={12}>
-            <Typography variant="subtitle2">For Provident Fund (PF)</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              size="small"
-              label="Employee Percentage"
-              name="employeePercentage"
-              fullWidth
-              value={formik.values.employeePercentage}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              size="small"
-              label="Employer Percentage"
-              name="employerPercentage"
-              fullWidth
-              value={formik.values.employerPercentage}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  size="small"
-                  name="visibleInPayslip"
-                  checked={formik.values.visibleInPayslip}
-                  onChange={formik.handleChange}
-                />
-              }
-              label="Visible in Payslip"
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2">For Professional Tax (PT)</Typography>
-          </Grid>
-          <Grid item xs={6} sm={3} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              select
-              label="Gender"
-              name="ptGender"
-              fullWidth
-              value={formik.values.ptGender}
-              onChange={formik.handleChange}
-            >
-              {genders.map((gender) => (
-                <MenuItem key={gender} value={gender}>
-                  {gender}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-          <Grid item xs={6} sm={3} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              select
-              label="From Salary"
-              name="ptFromSalary"
-              fullWidth
-              value={formik.values.ptFromSalary}
-              onChange={formik.handleChange}
-            >
-              {salaryRanges.map((range) => (
-                <MenuItem key={range} value={range}>
-                  {range}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-          <Grid item xs={6} sm={3} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              label="To Salary"
-              name="ptToSalary"
-              fullWidth
-              value={formik.values.ptToSalary}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={6} sm={3} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              label="Tax Amount"
-              name="ptTaxAmount"
-              fullWidth
-              value={formik.values.ptTaxAmount}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2">For Tax Deducted at Source (TDS)</Typography>
-          </Grid>
-          <Grid item xs={6} sm={4} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              label="From Salary"
-              name="tdsFromSalary"
-              fullWidth
-              value={formik.values.tdsFromSalary}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={6} sm={4} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              label="To Salary"
-              name="tdsToSalary"
-              fullWidth
-              value={formik.values.tdsToSalary}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              label="TDS Amount/Percentage"
-              name="tdsAmount"
-              fullWidth
-              value={formik.values.tdsAmount}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2">For Labour Welfare Fund (LWF)</Typography>
-          </Grid>
-          <Grid item xs={6} sm={4} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              label="Employee Contribution"
-              name="lwfEmployee"
-              fullWidth
-              value={formik.values.lwfEmployee}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={6} sm={4} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              label="Employer Contribution"
-              name="lwfEmployer"
-              fullWidth
-              value={formik.values.lwfEmployer}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              select
-              label="Deduction Frequency"
-              name="lwfFrequency"
-              fullWidth
-              value={formik.values.lwfFrequency}
-              onChange={formik.handleChange}
-            >
-              {deductionFrequencies.map((freq) => (
-                <MenuItem key={freq} value={freq}>
-                  {freq}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2">For Employee State Insurance (ESI)</Typography>
-          </Grid>
-          <Grid item xs={6} sm={4} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              label="Employee Contribution"
-              name="esiEmployee"
-              fullWidth
-              value={formik.values.esiEmployee}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={6} sm={4} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              label="Employer Contribution"
-              name="esiEmployer"
-              fullWidth
-              value={formik.values.esiEmployer}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4} sx={{ pt: '8px !important' }}>
-            <TextField
-              size="small"
-              label="ESI Eligibility Salary Cap"
-              name="esiCap"
-              fullWidth
-              value={formik.values.esiCap}
-              onChange={formik.handleChange}
-            />
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2">For Provident Fund (PF)</Typography>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                size="small"
+                label="Employee Percentage"
+                name="employeePercentage"
+                fullWidth
+                value={formik.values.employeePercentage}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                size="small"
+                label="Employer Percentage"
+                name="employerPercentage"
+                fullWidth
+                value={formik.values.employerPercentage}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    name="visibleInPayslip"
+                    checked={formik.values.visibleInPayslip}
+                    onChange={formik.handleChange}
+                  />
+                }
+                label="Visible in Payslip"
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2">For Professional Tax (PT)</Typography>
+            </Grid>
+            <Grid size={{ xs: 6, sm: 3 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                select
+                label="Gender"
+                name="ptGender"
+                fullWidth
+                value={formik.values.ptGender}
+                onChange={formik.handleChange}
+              >
+                {genders.map((gender) => (
+                  <MenuItem key={gender} value={gender}>
+                    {gender}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 6, sm: 3 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                select
+                label="From Salary"
+                name="ptFromSalary"
+                fullWidth
+                value={formik.values.ptFromSalary}
+                onChange={formik.handleChange}
+              >
+                {salaryRanges.map((range) => (
+                  <MenuItem key={range} value={range}>
+                    {range}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 6, sm: 3 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                label="To Salary"
+                name="ptToSalary"
+                fullWidth
+                value={formik.values.ptToSalary}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, sm: 3 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                label="Tax Amount"
+                name="ptTaxAmount"
+                fullWidth
+                value={formik.values.ptTaxAmount}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2">For Tax Deducted at Source (TDS)</Typography>
+            </Grid>
+            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                label="From Salary"
+                name="tdsFromSalary"
+                fullWidth
+                value={formik.values.tdsFromSalary}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                label="To Salary"
+                name="tdsToSalary"
+                fullWidth
+                value={formik.values.tdsToSalary}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                label="TDS Amount/Percentage"
+                name="tdsAmount"
+                fullWidth
+                value={formik.values.tdsAmount}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2">For Labour Welfare Fund (LWF)</Typography>
+            </Grid>
+            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                label="Employee Contribution"
+                name="lwfEmployee"
+                fullWidth
+                value={formik.values.lwfEmployee}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                label="Employer Contribution"
+                name="lwfEmployer"
+                fullWidth
+                value={formik.values.lwfEmployer}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                select
+                label="Deduction Frequency"
+                name="lwfFrequency"
+                fullWidth
+                value={formik.values.lwfFrequency}
+                onChange={formik.handleChange}
+              >
+                {deductionFrequencies.map((freq) => (
+                  <MenuItem key={freq} value={freq}>
+                    {freq}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="subtitle2">For Employee State Insurance (ESI)</Typography>
+            </Grid>
+            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                label="Employee Contribution"
+                name="esiEmployee"
+                fullWidth
+                value={formik.values.esiEmployee}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                label="Employer Contribution"
+                name="esiEmployer"
+                fullWidth
+                value={formik.values.esiEmployer}
+                onChange={formik.handleChange}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }} sx={{ pt: '8px !important' }}>
+              <TextField
+                size="small"
+                label="ESI Eligibility Salary Cap"
+                name="esiCap"
+                fullWidth
+                value={formik.values.esiCap}
+                onChange={formik.handleChange}
+              />
+            </Grid>
           </Grid>
         </SectionCard>
       </DialogScrollContent>
+
       <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}

@@ -10,7 +10,6 @@ import type {
 import * as Yup from 'yup';
 import { Form, Formik } from 'formik';
 import React, { useState } from 'react';
-
 import {
   Box,
   Step,

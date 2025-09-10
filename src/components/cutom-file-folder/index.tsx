@@ -1,5 +1,5 @@
+import { CONFIG } from 'src/config-global';
 import React, { useRef, useState } from 'react';
-
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
@@ -21,8 +21,6 @@ import {
   ListItemText,
   DialogContent,
 } from '@mui/material';
-
-import { CONFIG } from 'src/config-global';
 
 import { Iconify } from '../iconify';
 

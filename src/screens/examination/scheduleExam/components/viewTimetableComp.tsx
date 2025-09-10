@@ -1,9 +1,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-
 import { Box, Typography } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IExamFormValues } from '../type';

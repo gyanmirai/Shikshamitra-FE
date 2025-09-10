@@ -3,10 +3,16 @@
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState, useEffect } from 'react';
-
+import { varAlpha } from 'src/theme/styles';
 import { DatePicker } from '@mui/x-date-pickers';
+import React, { useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grade, Assessment, TrendingUp } from '@mui/icons-material';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   List,
@@ -18,15 +24,6 @@ import {
   CardContent,
   ListItemText,
 } from '@mui/material';
-
-import { varAlpha } from 'src/theme/styles';
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
-import CustomSelect from 'src/components/custom-select';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { PerformanceOverTime } from '../gradebook-performance-tracking/progress-report';
 
@@ -52,9 +49,7 @@ const ClassProgress = (props: TabComponentType) => {
         }
       } else {
         const firstClass = classData.items[0];
-        setSearchParams?.({
-          classId: firstClass.id,
-        });
+        setSearchParams?.({ classId: firstClass.id });
         setDivisionOptions(firstClass?.divisions || []);
         // Set first division if available
         if (firstClass?.divisions?.length) {
@@ -76,7 +71,7 @@ const ClassProgress = (props: TabComponentType) => {
         sx={{ px: 1, mb: 2 }}
       />
       <Grid container spacing={3}>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <CustomSelect
             label="Class"
             options={classData?.items || []}
@@ -84,17 +79,12 @@ const ClassProgress = (props: TabComponentType) => {
             valueKey="id"
             onChange={(val) => {
               const selectedClass: Standards = classData.items.find((i: Standards) => i.id === val);
-              // formik.setFieldValue('class', selectedClass?.name || '');
-              setSearchParams?.({
-                classId: val as string,
-              });
+              setSearchParams?.({ classId: val as string });
               setDivisionOptions(selectedClass?.divisions || []);
             }}
             value={classes}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '200px' },
-            }}
-          />{' '}
+            formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
+          />
           <CustomSelect
             label="Division"
             disabled={!classes}
@@ -102,14 +92,8 @@ const ClassProgress = (props: TabComponentType) => {
             valueKey="id"
             options={divisionOptions}
             value={division}
-            onChange={(val) => {
-              // const selectedDivision = divisionOptions.find((i: Division) => val.includes(i.id));
-              // formik.setFieldValue('division', selectedDivision?.name || '');
-              setDivision(val as string);
-            }}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '200px' },
-            }}
+            onChange={(val) => setDivision(val as string)}
+            formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
           />
           &nbsp;
           <CustomSelect
@@ -121,13 +105,9 @@ const ClassProgress = (props: TabComponentType) => {
               { value: 'history', label: 'History' },
               { value: 'art', label: 'Art' },
             ]}
-            onChange={(val) => {
-              setSubject(val as string);
-            }}
             value={subject}
-            formControlProps={{
-              sx: { width: '100%', maxWidth: '200px' },
-            }}
+            onChange={(val) => setSubject(val as string)}
+            formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
           />
           &nbsp;
           <DatePicker
@@ -142,18 +122,16 @@ const ClassProgress = (props: TabComponentType) => {
             slotProps={{ textField: { size: 'small' } }}
           />
         </Grid>
-        <Grid item xs={12}>
+
+        <Grid size={{ xs: 12 }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 sx={{
-                  backgroundColor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.2),
+                  backgroundColor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.2),
                   height: '100%',
                   transition: 'all 0.3s ease',
-                  '&:hover': {
-                    boxShadow: 'var(--shadows-8)',
-                    scale: 1.03,
-                  },
+                  '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
                 }}
               >
                 <CardHeader title="Class Average" avatar={<Grade color="success" />} />
@@ -164,15 +142,13 @@ const ClassProgress = (props: TabComponentType) => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} md={4}>
+
+            <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 sx={{
-                  backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.2),
+                  backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.2),
                   transition: 'all 0.3s ease',
-                  '&:hover': {
-                    boxShadow: 'var(--shadows-8)',
-                    scale: 1.03,
-                  },
+                  '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
                 }}
               >
                 <CardHeader title="Top 5 Performers" avatar={<TrendingUp color="warning" />} />
@@ -187,15 +163,13 @@ const ClassProgress = (props: TabComponentType) => {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid item xs={12} md={4}>
+
+            <Grid size={{ xs: 12, md: 4 }}>
               <Card
                 sx={{
-                  backgroundColor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.2),
+                  backgroundColor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.2),
                   transition: 'all 0.3s ease',
-                  '&:hover': {
-                    boxShadow: 'var(--shadows-8)',
-                    scale: 1.03,
-                  },
+                  '&:hover': { boxShadow: 'var(--shadows-8)', scale: 1.03 },
                 }}
               >
                 <CardHeader title="Bottom 5 Performers" avatar={<Assessment color="error" />} />
@@ -212,7 +186,8 @@ const ClassProgress = (props: TabComponentType) => {
             </Grid>
           </Grid>
         </Grid>
-        <Grid item xs={12}>
+
+        <Grid size={{ xs: 12 }}>
           <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="subtitle1">Performance Trends</Typography>
@@ -224,15 +199,11 @@ const ClassProgress = (props: TabComponentType) => {
                 ]}
                 onChange={() => {}}
                 value=""
-                formControlProps={{
-                  sx: { width: '100%', maxWidth: '200px' },
-                }}
+                formControlProps={{ sx: { width: '100%', maxWidth: '200px' } }}
               />
             </Box>
             <PerformanceOverTime
               id="demo__4"
-              //   title="Performance Over Time"
-              //   subheader="(+43%) than last year"
               chart={{
                 categories: [
                   'Jan',
@@ -258,7 +229,6 @@ const ClassProgress = (props: TabComponentType) => {
                   yaxis: {
                     labels: {
                       formatter(value: number) {
-                        // Map numerical values to custom labels
                         const labelsMap: { [key: number]: string } = {
                           1: 'A',
                           2: 'A+',
@@ -267,8 +237,7 @@ const ClassProgress = (props: TabComponentType) => {
                           5: 'C',
                           6: 'D',
                         };
-
-                        return labelsMap[value] || value.toString(); // Return the mapped label or the value itself as a string
+                        return labelsMap[value] || value.toString();
                       },
                     },
                   },
@@ -278,7 +247,8 @@ const ClassProgress = (props: TabComponentType) => {
             />
           </Card>
         </Grid>
-        <Grid item xs={12}>
+
+        <Grid size={{ xs: 12 }}>
           <Typography variant="h6">Detailed Class Breakdown</Typography>
           <CustomizableTable
             tableId="student-progress-table"
@@ -286,10 +256,7 @@ const ClassProgress = (props: TabComponentType) => {
               { id: 'studentName', label: 'Student Name' },
               { id: 'overallProgress', label: 'Overall Progress' },
               { id: 'attendanceRecord', label: 'Attendance Record' },
-              {
-                id: 'performanceFlags',
-                label: 'Performance Flags',
-              },
+              { id: 'performanceFlags', label: 'Performance Flags' },
               {
                 id: 'action',
                 label: 'Action',
@@ -297,7 +264,6 @@ const ClassProgress = (props: TabComponentType) => {
                 render(value, row) {
                   return (
                     <ThreeDotsActions
-                      // actions={(prop) => actions({ ...props, row })}
                       placement="right-top"
                       showViewIcon
                       handleViewClick={() => {}}

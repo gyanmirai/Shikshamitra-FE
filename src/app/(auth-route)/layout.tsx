@@ -1,6 +1,5 @@
-import { DashboardLayout } from 'src/layouts/dashboard';
-
 import SubLayout from 'src/components/sub-layout';
+import { DashboardLayout } from 'src/layouts/dashboard';
 import AuthRouteLayout from 'src/components/auth-route-layout';
 
 const AuthLayout: React.FC<{ children: React.ReactNode }> = ({

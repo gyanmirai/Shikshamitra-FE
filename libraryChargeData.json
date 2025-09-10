@@ -1,0 +1,237 @@
+{
+    "libraryChargesData" : [
+  {
+    "memberId": "LIB1001",
+    "role": "Student", 
+    "class": "10",
+    "division": "A",
+    "memberName": "Aarav Sharma",
+    "rollNo": "10A45",
+    "contactNo": "9876543210",
+    "bookTitle": "Mathematics Grade 10",
+    "chargeCategory": "Late Book Return",
+    "fineAmount": 50,
+    "dueDate": "2025-09-15",
+    "assignAt": "2025-09-08",
+    "reason": "Returned book 3 days late",
+    "status": 0,
+    "paymentDetails": {
+     
+    }
+  },
+  {
+    "memberId": "LIB1002",
+    "role": "Student",
+    "class": "9", 
+    "division": "B",
+    "memberName": "Riya Verma",
+    "rollNo": "9B32",
+    "contactNo": "9876501234",
+    "bookTitle": "Science Explorer",
+    "chargeCategory": "Lost Book",
+    "fineAmount": 300,
+    "dueDate": "2025-09-20",
+    "assignAt": "2025-09-08",
+    "reason": "Lost issued library book",
+    "status": 1,
+    "paymentDetails": {
+      "paymentMethod": "Demand Draft (DD)",
+      "paymentAmount": 300,
+      "notes": "DD in INR",
+      "amount": 300,
+      "paymentDate": "2025-09-06",
+      "currency": "INR", 
+      "ddNumber": "DD998877",
+      "bankName": "HDFC Bank",
+      "branchName": "MG Road",
+      "issueDate": "2025-09-05",
+      "payeeName": "Riya Verma",
+      "remarks": "Library fine settlement"
+    }
+  },
+  {
+    "memberId": "LIB1003",
+    "role": "Teacher",
+    "class": "11",
+    "division": "C",
+    "memberName": "Suresh Kumar",
+    "rollNo": null,
+    "contactNo": "9998877665",
+    "bookTitle": "Physics Concepts",
+    "chargeCategory": "Damaged Book",
+    "fineAmount": 200,
+    "dueDate": "2025-09-18",
+    "assignAt": "2025-09-08",
+    "reason": "Book returned with torn pages",
+    "status": 0,
+    "paymentDetails": {
+      "paymentMethod": "Bank Transfer (NEFT/RTGS/IMPS)",
+      "paymentAmount": 200,
+      "notes": "Online transfer",
+      "amount": 200,
+      "transactionId": "UTR123456789",
+      "transferDate": "2025-09-07",
+      "accountHolderName": "Suresh Kumar"
+    }
+  },
+  {
+    "memberId": "LIB1004",
+    "role": "Student",
+    "class": "12",
+    "division": "D",
+    "memberName": "Neha Patel",
+    "rollNo": "12D14",
+    "contactNo": "9876123450",
+    "bookTitle": "Chemistry Essentials",
+    "chargeCategory": "Late Book Return",
+    "fineAmount": 100,
+    "dueDate": "2025-09-12",
+    "assignAt": "2025-09-08",
+    "reason": "Returned 5 days late",
+    "status": 1,
+    "paymentDetails": {
+      "paymentMethod": "Credit Card",
+      "paymentAmount": 100,
+      "notes": "Paid with Visa card",
+      "amount": 100,
+      "cardHolderName": "Neha Patel",
+      "last4Digits": "4321",
+      "transactionId": "TXN7654321",
+      "paymentDate": "2025-09-08"
+    }
+  },
+  {
+    "memberId": "LIB1005",
+    "role": "Student",
+    "class": "8",
+    "division": "B",
+    "memberName": "Kabir Joshi",
+    "rollNo": "8B22",
+    "contactNo": "9876001122",
+    "bookTitle": "English Grammar",
+    "chargeCategory": "Lost Book",
+    "fineAmount": 250,
+    "dueDate": "2025-09-19",
+    "assignAt": "2025-09-08",
+    "reason": "Lost library copy",
+    "status": 0,
+    "paymentDetails": {
+      "paymentMethod": "UPI",
+      "paymentAmount": 250,
+      "notes": "UPI transfer via Google Pay",
+      "amount": 250,
+      "upiId": "kabir@upi",
+      "transactionId": "UPI12345XYZ",
+      "paymentDate": "2025-09-08"
+    }
+  },
+  {
+    "memberId": "LIB1006",
+    "role": "Teacher",
+    "class": "9",
+    "division": "C",
+    "memberName": "Anita Singh",
+    "rollNo": null,
+    "contactNo": "9876554433",
+    "bookTitle": "World History",
+    "chargeCategory": "Damaged Book",
+    "fineAmount": 400,
+    "dueDate": "2025-09-25",
+    "assignAt": "2025-09-08",
+    "reason": "Pages missing",
+    "status": 1,
+    "paymentDetails": {
+      "paymentMethod": "Online Payment Gateway",
+      "paymentAmount": 400,
+      "notes": "Paid using Razorpay",
+      "amount": 400,
+      "paymentDate": "2025-09-08",
+      "amountPaid": 400,
+      "currency": "INR",
+      "transactionId": "PG123456789",
+      "paymentGateway": "Razorpay",
+      "remarks": "Instant settlement"
+    }
+  },
+  {
+    "memberId": "LIB1007",
+    "role": "Student",
+    "class": "7",
+    "division": "A",
+    "memberName": "Aditya Mehta",
+    "rollNo": "7A10",
+    "contactNo": "9876332211",
+    "bookTitle": "Geography Atlas",
+    "chargeCategory": "Late Book Return",
+    "fineAmount": 30,
+    "dueDate": "2025-09-14",
+    "assignAt": "2025-09-08",
+    "reason": "Returned 1 day late",
+    "status": 0,
+    "paymentDetails": {
+      "paymentMethod": "Wallet / Prepaid Card",
+      "paymentAmount": 30,
+      "notes": "Paid with Paytm wallet",
+      "amount": 30,
+      "walletProvider": "Paytm",
+      "transactionId": "WALLET998877",
+      "remarks": "Quick payment"
+    }
+  }
+],
+"libraryChargeCategory" : [
+    {
+      "id": "1",
+      "name": "Late Return Fee"
+    },
+    {
+      "id": "2",
+      "name": "Lost Book Charge"
+    },
+    {
+      "id": "3",
+      "name": "Membership Renewal"
+    },
+    {
+      "id": "4",
+      "name": "Reservation Fee"
+    }
+  ],
+  "bookConditionData" :[
+  {
+    "conditionType": "Good",
+    "code": "GD",
+    "createdBy": "Prerna Atre",
+    "createdDate": "01-05-2025",
+    "description": "This type is used when the book condition is good."
+  },
+  {
+    "conditionType": "Fair",
+    "code": "FR",
+    "createdBy": "Dharmik Jinjala",
+    "createdDate": "03-05-2025",
+    "description": "This type is used when the book condition is fair with minor wear."
+  },
+  {
+    "conditionType": "Poor",
+    "code": "PR",
+    "createdBy": "Mayur Solanki",
+    "createdDate": "05-05-2025",
+    "description": "This type is used when the book is in poor condition and needs repair."
+  },
+  {
+    "conditionType": "Damage",
+    "code": "DMG",
+    "createdBy": "Prerna Atre",
+    "createdDate": "07-05-2025",
+    "description": "This type is used when the book is damaged beyond normal use."
+  },
+  {
+    "conditionType": "Lost",
+    "code": "LO",
+    "createdBy": "Dharmik Jinjala",
+    "createdDate": "10-05-2025",
+    "description": "This type is used when the book has been lost."
+  }
+]
+}

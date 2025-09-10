@@ -1,16 +1,12 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
-
-import { formatNumber } from 'src/utils/formate_number';
-
-import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
-
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
+import FormattedAmountInput from 'src/screens/finance/common/input-for-finance';
+import { Box, Grid, Button, Tooltip, TextField, Typography, DialogActions } from '@mui/material';
 
 interface FinanceChequeBounceChargeCollectDialogProps {
   dialogValue: boolean;
@@ -112,9 +108,8 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
               {formik.values.paymentMode.length > 0 && (
                 <Grid container spacing={2} px={2}>
                   {/* Online Payment Details */}
-
                   {formik.values.paymentMode.includes('Online') && (
-                    <Grid item xs={12} md={12}>
+                    <Grid size={{ xs: 12, md: 12 }}>
                       <Box
                         display="flex"
                         justifyContent="space-between"
@@ -173,14 +168,8 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                           size="small"
                           fullWidth
                         />
-                        {/* <FormattedAmountInput
-
-                          label="Online Amount"
-                          value={onlineAmountState}
-                          onChange={handleOnlineAmountChange}
-
-                        /> */}
                       </Box>
+
                       <Box
                         pt="15px"
                         display="flex"
@@ -196,7 +185,7 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
 
                   {/* Card Payment Details */}
                   {formik.values.paymentMode.includes('Card') && (
-                    <Grid item xs={12} md={12}>
+                    <Grid size={{ xs: 12, md: 12 }}>
                       <Typography variant="subtitle2" gutterBottom>
                         Card Details
                       </Typography>
@@ -216,18 +205,17 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                           onChange={handleCardAmountChange}
                         />
                       </Box>
-                      {/* <Divider sx={{ py: "12px", }} /> */}
                     </Grid>
                   )}
 
                   {/* Cheque Payment Details */}
                   {formik.values.paymentMode.includes('Cheque') && (
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                       <Typography variant="subtitle2" gutterBottom>
                         Cheque Details
                       </Typography>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={3}>
+                        <Grid size={{ xs: 12, md: 3 }}>
                           <TextField
                             name="chequeId"
                             label="Cheque Number"
@@ -237,20 +225,17 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                             fullWidth
                           />
                         </Grid>
-                        <Grid item xs={12} md={3}>
+                        <Grid size={{ xs: 12, md: 3 }}>
                           <DatePicker
                             label="Cheque Date"
                             value={formik.values.chequeDate}
                             onChange={(date) => formik.setFieldValue('chequeDate', date)}
                             slotProps={{
-                              textField: {
-                                fullWidth: true,
-                                size: 'small',
-                              },
+                              textField: { fullWidth: true, size: 'small' },
                             }}
                           />
                         </Grid>
-                        <Grid item xs={12} md={3}>
+                        <Grid size={{ xs: 12, md: 3 }}>
                           <TextField
                             name="bankName"
                             label="Bank Name"
@@ -260,7 +245,7 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                             fullWidth
                           />
                         </Grid>
-                        <Grid item xs={12} md={3}>
+                        <Grid size={{ xs: 12, md: 3 }}>
                           <FormattedAmountInput
                             label="ChequeAmount"
                             value={chequeAmountState}
@@ -268,13 +253,12 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                           />
                         </Grid>
                       </Grid>
-
-                      {/* <Divider sx={{ py: "12px", }} /> */}
                     </Grid>
                   )}
 
+                  {/* Bank Account Payment Details */}
                   {formik.values.paymentMode.includes('inAccount') && (
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                       <Box
                         display="flex"
                         justifyContent="space-between"
@@ -317,7 +301,7 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                       </Box>
 
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <TextField
                             name="accountNumber"
                             label="Bank Account Number"
@@ -328,7 +312,7 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                             type="number"
                           />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <TextField
                             name="ifscNumber"
                             label="IFSC Number"
@@ -339,7 +323,7 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                           />
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <CustomSelect
                             label="Bank Name"
                             options={[]}
@@ -349,7 +333,7 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                             formControlProps={{ sx: { minWidth: 410 } }}
                           />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <FormattedAmountInput
                             label="Amount"
                             value={bankAmountState}
@@ -370,22 +354,6 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
                       </Box>
                     </Grid>
                   )}
-
-                  {/* 
-
-                  {formik.values.paymentMode.includes("Cash") && (
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Cash Details
-                      </Typography>
-
-                      <FormattedAmountInput
-                        label="Cash Amount"
-                        value={cashAmountState}
-                        onChange={handleCashAmountChange}
-                      />
-                    </Grid>
-                  )} */}
                 </Grid>
               )}
 

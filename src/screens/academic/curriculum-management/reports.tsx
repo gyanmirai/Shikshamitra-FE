@@ -5,18 +5,14 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React from 'react';
 import * as Yup from 'yup';
 import { Form, Field, Formik } from 'formik';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-
+import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
+import { useGetClassQuery } from 'src/redux/class/classApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Grid, Card, Button, FormControl, FormHelperText } from '@mui/material';
 
 const initialValues = {
   report: '',
@@ -71,7 +67,7 @@ const Reports = (props: TabComponentType) => {
             <Form>
               <Box sx={{ p: 2 }}>
                 <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.report && errors.report} fullWidth>
                       <CustomSelect
                         label="List of Reports"
@@ -97,7 +93,8 @@ const Reports = (props: TabComponentType) => {
                       <FormHelperText>{touched.report && errors.report}</FormHelperText>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
+
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.className && errors.className} fullWidth>
                       <CustomSelect
                         label="Class"
@@ -113,7 +110,7 @@ const Reports = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.subject && errors.subject} fullWidth>
                       <CustomSelect
                         label="Subject"
@@ -132,7 +129,7 @@ const Reports = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.startDate && errors.startDate} fullWidth>
                       <DatePicker
                         label="Start Date"
@@ -146,7 +143,7 @@ const Reports = (props: TabComponentType) => {
                     </Field>
                   </Grid>
 
-                  <Grid item xs={12} sm={6} md={4}>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <Field as={FormControl} error={touched.endDate && errors.endDate} fullWidth>
                       <DatePicker
                         label="End Date"
@@ -159,7 +156,8 @@ const Reports = (props: TabComponentType) => {
                       <FormHelperText>{touched.endDate && errors.endDate}</FormHelperText>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} justifyContent="flex-end" display="flex">
+
+                  <Grid size={{ xs: 12 }} justifyContent="flex-end" display="flex">
                     <Button
                       startIcon={<Iconify icon={GlobalIcons.generateReport} />}
                       type="submit"

@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import GuardRosterScreen from './guard-assigned-screen';

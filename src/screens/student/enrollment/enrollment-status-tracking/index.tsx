@@ -1,8 +1,7 @@
 'use client';
 
-import { Box, Typography, Breadcrumbs, CircularProgress } from '@mui/material';
-
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Typography, Breadcrumbs, CircularProgress } from '@mui/material';
 import { Separator, CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { BreadcrumbsLink } from 'src/components/custom-breadcrumbs/breadcrumb-link';
 

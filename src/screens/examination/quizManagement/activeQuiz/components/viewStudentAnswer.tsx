@@ -1,5 +1,8 @@
 import { useState } from 'react';
-
+import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import {
   Box,
   Chip,
@@ -12,12 +15,6 @@ import {
   Typography,
   FormControlLabel,
 } from '@mui/material';
-
-import { GlobalIcons } from 'src/utils/icons';
-
-import { Editor } from 'src/components/editor';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 
 export const ViewAnswers = () => {
   // Sample data - replace with your actual data

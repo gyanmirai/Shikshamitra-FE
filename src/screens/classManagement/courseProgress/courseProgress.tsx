@@ -4,28 +4,12 @@ import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState, useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-
-import {
-  Box,
-  Slider,
-  MenuList,
-  MenuItem,
-  TextField,
-  Typography,
-  DialogActions,
-  sliderClasses,
-  CircularProgress,
-} from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useCallback } from 'react';
+import { sliderClasses } from '@mui/material/Slider';
+import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
@@ -34,7 +18,18 @@ import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  Box,
+  Slider,
+  MenuList,
+  MenuItem,
+  TextField,
+  Typography,
+  DialogActions,
+  CircularProgress,
+} from '@mui/material';
 
 import CourseCardsGrid from './components/courseCardsGrid';
 import ViewChapterLogs from './components/viewChapterLogs';

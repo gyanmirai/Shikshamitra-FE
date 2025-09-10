@@ -3,11 +3,9 @@ import type { ChartOptions } from 'src/components/chart';
 
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
-import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
 import { fNumber } from 'src/utils/format-number';
-
 import { Chart, useChart } from 'src/components/chart';
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 
@@ -17,10 +15,7 @@ type Props = CardProps & {
   chart: {
     colors?: string[];
     categories?: string[];
-    series: {
-      name: string;
-      data: number[];
-    }[];
+    series: { name: string; data: number[] }[];
     options?: ChartOptions;
   };
 };
@@ -51,12 +46,7 @@ export function AnalyticsConversionRates({ title, subheader, chart, ...other }: 
       style: { fontSize: '10px', colors: ['#FFFFFF', theme.palette.text.primary] },
     },
     plotOptions: {
-      bar: {
-        horizontal: true,
-        borderRadius: 2,
-        barHeight: '48%',
-        dataLabels: { position: 'top' },
-      },
+      bar: { horizontal: true, borderRadius: 2, barHeight: '48%', dataLabels: { position: 'top' } },
     },
     ...chart.options,
   });

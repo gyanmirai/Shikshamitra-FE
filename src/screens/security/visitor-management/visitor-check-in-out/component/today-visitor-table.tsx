@@ -2,21 +2,18 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import React from 'react';
-
+import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
 import { Box, Grid, MenuItem, MenuList } from '@mui/material';
-
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import data from 'src/json/security/visitor-management/visitor-check-in-data.json';
 import {
   VisitorVisitingStatusType,
   VisitorVisitingStatusColors,
   VisitorVisitingStatusOptions,
 } from 'src/enums/visitor-visiting-status';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import type {
   IWalkInVisitorFormValues,
@@ -26,7 +23,7 @@ import type {
 const TodayVisitorTable: React.FC<IWalkInVisitorTableProps> = ({ onClick }) => (
   <>
     <Box display="flex" alignItems="center" flexDirection="row" gap={2} py="20px">
-      <Grid item xs={12} md={3}>
+      <Grid size={{ xs: 12, md: 3 }}>
         <DatePicker
           label="Start Date"
           format="DD-MM-YYYY"
@@ -41,7 +38,8 @@ const TodayVisitorTable: React.FC<IWalkInVisitorTableProps> = ({ onClick }) => (
           }}
         />
       </Grid>
-      <Grid item xs={12} md={3}>
+
+      <Grid size={{ xs: 12, md: 3 }}>
         <DatePicker
           label="End Date"
           format="DD-MM-YYYY"

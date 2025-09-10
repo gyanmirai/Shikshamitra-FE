@@ -3,29 +3,26 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-
-import { DatePicker } from '@mui/x-date-pickers';
-import { Grid, Button, MenuItem, TextField, DialogActions } from '@mui/material';
-
 import { GlobalIcons } from 'src/utils/icons';
-
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Grid, Button, MenuItem, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import StudentRefundInfo from './StudentRefundInfo';
 import { feeRefundProcessvalidationSchema } from './FeeRefundProcessValidation';
 import { paymentMethodsConfig } from '../../FeeCollection/Components/paymentConfigMethods';
 
-import type { IRefundFormProps, IRefundFormValues } from '../type';
+import type { IRefundFormValues, IRefundProcessFormProps } from '../type';
 import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 
-const getInitialPaymentDetails = (method?: string) => {
+export const getInitialPaymentDetails = (method?: string) => {
   if (!method || !(method in paymentMethodsConfig)) return {};
   return paymentMethodsConfig[method as keyof typeof paymentMethodsConfig].reduce(
     (acc, field) => {
@@ -36,11 +33,11 @@ const getInitialPaymentDetails = (method?: string) => {
   );
 };
 
-const RefundProcessForm: React.FC<IRefundFormProps> = ({ open, onClose, student }) => {
+const RefundProcessForm: React.FC<IRefundProcessFormProps> = ({ open, onClose, student }) => {
   const formik = useFormik<IRefundFormValues>({
     initialValues: {
-      paidTerm: student?.paidTerm || '',
-      applicableAmount: student?.applicableAmount || '',
+      paidTerms: student?.paidTerms || [],
+      totalPaidFees: student?.totalPaidFees || '',
       refundAmount: student?.refundAmount || null,
       refundMethod: student?.refundMethod || '',
       reason: student?.reason || '',
@@ -64,29 +61,38 @@ const RefundProcessForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
 
         {/* Disabled Fields */}
         {/* <Grid container spacing={3}> */}
-        <Grid item xs={12}>
+        <Grid size={12}>
           <SectionCard title="Refund Details">
-            <Grid item xs={12} md={6}>
-              <TextField
-                label="Paid Term"
-                value={formik.values.paidTerm}
+            <Grid size={6}>
+              <CustomSelect
+                label="Paid Terms"
+                value={formik.values.paidTerms || []}
+                options={[
+                  { value: 'Term 1', label: 'Term 1' },
+                  { value: 'Term 2', label: 'Term 2' },
+                  { value: 'Term 3', label: 'Term 3' },
+                  { value: 'Term 4', label: 'Term 4' },
+                ]}
+                onChange={(value) => {
+                  formik.setFieldValue('paidTerms', value);
+                }}
+                multiple
                 fullWidth
                 size="small"
                 disabled
               />
             </Grid>
-
-            <Grid item xs={12} md={6}>
+            <Grid size={6}>
               <TextField
                 label="Amount Applicable For Refund"
-                value={formik.values.applicableAmount}
+                value={formik.values.refundAmount}
                 fullWidth
                 size="small"
                 disabled
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={6}>
               <TextField
                 label="Refund Amount"
                 value={formik.values.refundAmount}
@@ -96,7 +102,7 @@ const RefundProcessForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid size={6}>
               <TextField
                 label="Refund Method"
                 value={formik.values.refundMethod}
@@ -106,7 +112,7 @@ const RefundProcessForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={6}>
               <TextField
                 label="Reason of Refund"
                 value={formik.values.reason}
@@ -118,7 +124,7 @@ const RefundProcessForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={6}>
               <ShakingTextField error={formik.touched.remarks && Boolean(formik.errors.remarks)}>
                 <TextField
                   fullWidth
@@ -139,12 +145,12 @@ const RefundProcessForm: React.FC<IRefundFormProps> = ({ open, onClose, student 
           </SectionCard>
         </Grid>
         {formik.values.refundMethod !== 'Cash' && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <SectionCard title="Payment Details">
               {paymentMethodsConfig[
                 formik.values.refundMethod as keyof typeof paymentMethodsConfig
               ]?.map((field: IPaymentFieldConfig) => (
-                <Grid item xs={12} key={`${formik.values.refundMethod}-${field.name}`} sm={6}>
+                <Grid size={6} key={`${formik.values.refundMethod}-${field.name}`}>
                   <ShakingTextField
                     error={
                       !!(

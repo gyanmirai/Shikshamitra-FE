@@ -2,14 +2,11 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState } from 'react';
-
 import { Box } from '@mui/material';
-
+import React, { useState } from 'react';
+import { ChatView } from 'src/sections/chat/view';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
-import { ChatView } from 'src/sections/chat/view';
 
 const AllConversation = (props: TabComponentType) => {
   const [selectedFilter, setSelectedFilter] = useState('staffFaculty');

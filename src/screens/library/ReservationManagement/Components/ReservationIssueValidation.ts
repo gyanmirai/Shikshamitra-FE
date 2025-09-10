@@ -31,6 +31,7 @@ export const getReservationIssueBookSchema = (currentYear: any) =>
       .test('is-valid-dayjs', 'Due date must be a valid date', (value) =>
         value ? dayjs(value as Dayjs).isValid() : false
       )
+      // eslint-disable-next-line func-names
       .test('is-after-issue-date', 'Due date cannot be before Issue date', function (value) {
         const { issueDate } = this.parent;
         if (!value || !issueDate) return true;

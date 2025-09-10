@@ -1,7 +1,5 @@
 import React from 'react';
-
 import { Box, Grid, Typography } from '@mui/material';
-
 import CustomDialog from 'src/components/customDialog';
 
 interface TransportDriverDetailsDialogProps {
@@ -88,7 +86,7 @@ const TransportDriverDetailsDialog: React.FC<TransportDriverDetailsDialogProps> 
 
         {/* Driver Details */}
         <Grid container spacing={2}>
-          <Grid item xs={6}>
+          <Grid size={6}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
               Aadhar Card
             </Typography>
@@ -101,7 +99,7 @@ const TransportDriverDetailsDialog: React.FC<TransportDriverDetailsDialogProps> 
               {data.aadharCard || 'View'}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={6}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
               License Number
             </Typography>
@@ -114,19 +112,19 @@ const TransportDriverDetailsDialog: React.FC<TransportDriverDetailsDialogProps> 
               {data.licenseNumber || 'View'}
             </Typography>
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
               Address
             </Typography>
             <Typography variant="body2">{data.address || 'N/A'}</Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={6}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
               Route Assigned
             </Typography>
             <Typography variant="body2">{data.route || 'No route assigned'}</Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={6}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
               Vehicle Assigned
             </Typography>

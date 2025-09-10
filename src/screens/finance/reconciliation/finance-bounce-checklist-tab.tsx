@@ -1,9 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-
 import { LoadingButton } from '@mui/lab';
+import { varAlpha } from 'src/theme/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Add, Send } from '@mui/icons-material';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomDialog from 'src/components/customDialog';
+import { formatNumber } from 'src/utils/formate_number';
+import { Iconify } from 'src/components/iconify/iconify';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import bounceChequeData from 'src/json/finance/reconicilation/bounceChequeData.json';
 import {
   Box,
   Button,
@@ -13,20 +22,6 @@ import {
   DialogActions,
   InputAdornment,
 } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { GlobalIcons } from 'src/utils/icons';
-import { formatNumber } from 'src/utils/formate_number';
-
-import { varAlpha } from 'src/theme/styles';
-import bounceChequeData from 'src/json/finance/reconicilation/bounceChequeData.json';
-
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import { Iconify } from 'src/components/iconify/iconify';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceChequeBounceChargeCollect from '../fee-collection/charges/component/finance-cheque-bounce-charge-collect';
 
@@ -119,10 +114,12 @@ const FinanceBounceScreen = () => {
               return (
                 <IconButton
                   sx={{
-                    backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+                    backgroundColor: (theme) =>
+                      varAlpha(theme.vars.palette.primary.mainChannel, 0.3),
                     color: (theme) => theme.palette.primary.main,
                     '&:hover': {
-                      backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.3),
+                      backgroundColor: (theme) =>
+                        varAlpha(theme.vars.palette.primary.mainChannel, 0.3),
                     },
                     height: '24px',
                     width: '24px',

@@ -1,6 +1,5 @@
-import { Box, Grid, MenuItem, TextField } from '@mui/material';
-
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Grid, MenuItem, TextField } from '@mui/material';
 
 import { RenderPfRules } from './RenderPfRules';
 import { CardActions } from './InformationFields';
@@ -35,7 +34,7 @@ const RenderPayrollFields = (props: any) => {
         </Box>
       )}
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             fullWidth
@@ -46,7 +45,7 @@ const RenderPayrollFields = (props: any) => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             fullWidth
@@ -57,7 +56,7 @@ const RenderPayrollFields = (props: any) => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             fullWidth
@@ -68,7 +67,7 @@ const RenderPayrollFields = (props: any) => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             fullWidth
@@ -79,7 +78,7 @@ const RenderPayrollFields = (props: any) => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             fullWidth
@@ -90,7 +89,7 @@ const RenderPayrollFields = (props: any) => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             select
@@ -105,13 +104,13 @@ const RenderPayrollFields = (props: any) => {
             <MenuItem value="Type B">Type B</MenuItem>
           </TextField>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <RenderPfRules
           // value={values.pfRule || ''}
           // onChange={(e) => setFormValues({ ...formValues, pfRule: e.target?.value ?? e })}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             fullWidth
@@ -122,7 +121,7 @@ const RenderPayrollFields = (props: any) => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             fullWidth
@@ -133,7 +132,7 @@ const RenderPayrollFields = (props: any) => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             type="number"
@@ -145,7 +144,7 @@ const RenderPayrollFields = (props: any) => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             fullWidth
@@ -156,7 +155,7 @@ const RenderPayrollFields = (props: any) => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             fullWidth
@@ -167,7 +166,7 @@ const RenderPayrollFields = (props: any) => {
             onChange={handleChange}
           />
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
             fullWidth
@@ -188,7 +187,7 @@ export const PayrollFields: FieldsType[] = [
     type: 'text',
     label: 'Bank Name',
     name: 'bankName',
-    gridProps: { xs: 12, md: 12 },
+    gridProps: { size: { xs: 12, md: 12 } },
     renderComp(props) {
       return <RenderPayrollFields {...props} />;
     },

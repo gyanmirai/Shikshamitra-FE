@@ -6,10 +6,17 @@ import type { Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
-
+import { varAlpha } from 'src/theme/styles';
 import { Search } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
+import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
+import { formatCurrency } from 'src/utils/cureencyFormater';
+import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Box,
   Card,
@@ -22,17 +29,6 @@ import {
   CardContent,
   Autocomplete,
 } from '@mui/material';
-
-import { formatCurrency } from 'src/utils/cureencyFormater';
-
-import { varAlpha } from 'src/theme/styles';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
-
-import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const PaySlipGenerationScreen = () => {
   const [employee, setEmployee] = useState<string | null>(null);
@@ -114,11 +110,7 @@ const PaySlipGenerationScreen = () => {
           label="Select Year Month"
           format="MMMM-YYYY"
           sx={{ maxWidth: '250px', width: '100%' }}
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
+          slotProps={{ textField: { size: 'small' } }}
         />
         <Button variant="contained" startIcon={<Search />}>
           Search
@@ -129,7 +121,7 @@ const PaySlipGenerationScreen = () => {
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.success.mainChannel, 0.1),
+            background: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -147,7 +139,7 @@ const PaySlipGenerationScreen = () => {
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.error.mainChannel, 0.1),
+            background: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -165,7 +157,7 @@ const PaySlipGenerationScreen = () => {
         <Card
           sx={{
             flexGrow: 1,
-            background: (theme) => varAlpha(theme.palette.info.mainChannel, 0.1),
+            background: (theme) => varAlpha(theme.vars.palette.info.mainChannel, 0.1),
           }}
         >
           <CardHeader
@@ -187,10 +179,10 @@ const PaySlipGenerationScreen = () => {
           variant="contained"
           color="primary"
           sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
             color: 'primary.main',
             '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
             },
           }}
         >
@@ -202,10 +194,10 @@ const PaySlipGenerationScreen = () => {
           variant="contained"
           color="secondary"
           sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
             color: 'secondary.main',
             '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
             },
           }}
         >
@@ -217,10 +209,10 @@ const PaySlipGenerationScreen = () => {
           variant="contained"
           color="warning"
           sx={{
-            backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+            backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
             color: 'warning.main',
             '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.1),
+              backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
             },
           }}
         >
@@ -228,7 +220,7 @@ const PaySlipGenerationScreen = () => {
         </Button>
       </Box>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Earning Section</Typography>
           <CustomizableTable
             noDataText="No Earning Found"
@@ -277,7 +269,7 @@ const PaySlipGenerationScreen = () => {
             ]}
           />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Deduction Section</Typography>
           <CustomizableTable
             noDataText="No Deduction Found"
@@ -310,9 +302,7 @@ const PaySlipGenerationScreen = () => {
                     <Typography
                       variant="caption"
                       color="error"
-                      sx={{
-                        fontWeight: row.deductionType === 'Total Amount' ? 'bold' : 'normal',
-                      }}
+                      sx={{ fontWeight: row.deductionType === 'Total Amount' ? 'bold' : 'normal' }}
                     >
                       {formatCurrency(value)}
                     </Typography>
@@ -329,7 +319,7 @@ const PaySlipGenerationScreen = () => {
             ]}
           />
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Alert
             variant="outlined"
             icon={false}

@@ -3,15 +3,12 @@ import type { ChartOptions } from 'src/components/chart';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
-
-import { fPercent, fCurrency } from 'src/utils/format-number';
-
 import { CONFIG } from 'src/config-global';
-
 import { Iconify } from 'src/components/iconify';
 import { SvgColor } from 'src/components/svg-color';
 import { Chart, useChart } from 'src/components/chart';
+import { fPercent, fCurrency } from 'src/utils/format-number';
+import { useTheme, alpha as hexAlpha } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 
@@ -22,9 +19,7 @@ type Props = CardProps & {
   chart: {
     colors?: string[];
     categories: string[];
-    series: {
-      data: number[];
-    }[];
+    series: { data: number[] }[];
     options?: ChartOptions;
   };
 };
@@ -38,14 +33,7 @@ export function BookingTotalIncomes({ title, total, percent, chart, sx, ...other
     chart: { sparkline: { enabled: true } },
     colors: chartColors,
     stroke: { width: 3 },
-    grid: {
-      padding: {
-        top: 6,
-        left: 6,
-        right: 6,
-        bottom: 6,
-      },
-    },
+    grid: { padding: { top: 6, left: 6, right: 6, bottom: 6 } },
     xaxis: { categories: chart.categories },
     tooltip: {
       y: { formatter: (value: number) => fCurrency(value), title: { formatter: () => '' } },

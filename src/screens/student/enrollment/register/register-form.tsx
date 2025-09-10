@@ -1,15 +1,16 @@
 import type { BoxProps } from '@mui/material';
 
-import React, { useState, useCallback } from 'react';
-
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box, Grid, Slide, TextField } from '@mui/material';
-
-import { getBase64String } from 'src/utils/get-base64-string';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-
+import React, { useState, useCallback } from 'react';
 import { Category } from 'src/enums/studnet-category';
+import { shikshaMitraToast } from 'src/components/toast';
+import { Box, Grid, Slide, TextField } from '@mui/material';
+import { getBase64String } from 'src/utils/get-base64-string';
+import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   useUpdateBasicDetailsMutation,
   useMoveToRegistrationMutation,
@@ -21,11 +22,6 @@ import {
   useUpdateStudentAdditionalDetailsMutation,
   useUpdateStudentCommunicationDetailsMutation,
 } from 'src/redux/student/registration/registration-api';
-
-import { shikshaMitraToast } from 'src/components/toast';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { allFields } from './register-fields';
 import { validationSchemas } from './register-form-validation';
@@ -565,7 +561,7 @@ const RegisterForm = ({
           <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
             <Grid container spacing={2.5}>
               {allFields[step].map((field: FieldsType) => (
-                <Grid item xs={4} md={4} key={field.name} {...(field.gridProps || {})}>
+                <Grid size={4} key={field.name} {...(field.gridProps || {})}>
                   {field.renderComp ? (
                     field.renderComp({
                       formik,

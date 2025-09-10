@@ -96,7 +96,7 @@ function horizontalVars(theme: Theme) {
     ...colorVars(theme, 'horizontal'),
     '--nav-item-gap': spacing(0.75),
     '--nav-height': '56px',
-    '--nav-item-radius': `${shape.borderRadius * 0.75}px`,
+    '--nav-item-radius': `${Number(shape.borderRadius) * 0.75}px`,
     // root
     '--nav-item-root-height': '32px',
     '--nav-item-root-padding': spacing(0, 0.75),

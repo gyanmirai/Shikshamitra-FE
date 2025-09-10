@@ -4,10 +4,13 @@ import type { Board } from 'src/types/school';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useRef, useState, useEffect, useCallback } from 'react';
-
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { useTabs } from 'src/hooks/use-tabs';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { BoardEnum, BoardList } from 'src/enums/board';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   Tab,
   Box,
@@ -19,12 +22,6 @@ import {
   DialogActions,
   CircularProgress,
 } from '@mui/material';
-
-import { useTabs } from 'src/hooks/use-tabs';
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { BoardEnum, BoardList } from 'src/enums/board';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useGetBoardsQuery,
   useAddBoardMutation,

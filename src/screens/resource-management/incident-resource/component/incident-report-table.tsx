@@ -1,20 +1,17 @@
 import type { LabelColor } from 'src/components/label/types';
 
 import React, { useState } from 'react';
-
 import { useBoolean } from 'src/hooks/use-boolean';
-
+import { Label } from 'src/components/label/label';
+import CustomDialog from 'src/components/customDialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import data from 'src/json/ResourceManagement/incidentReport/incidentReportData.json';
 import {
   IncidentReportStatusType,
   IncidentReportStatusTypeColor,
   IncidentReportStatusTypeOptions,
 } from 'src/enums/incident-report-statusType';
-
-import { Label } from 'src/components/label/label';
-import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 
 import ViewIncidentReportDialog from './view-incident-report-log';
 

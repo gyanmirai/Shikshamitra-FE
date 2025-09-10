@@ -1,11 +1,9 @@
 'use client';
 
 import React from 'react';
-
-import { Box, Grid, Card, styled, Avatar, Typography } from '@mui/material';
-
+import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-
+import { Box, Grid, Card, Avatar, Typography } from '@mui/material';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const StyledAvatar = styled(Avatar)(({ theme }) => ({
@@ -26,25 +24,20 @@ const StatItem = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   marginBottom: theme.spacing(1),
-  '&:hover': {
-    backgroundColor: theme.palette.action.hover,
-  },
+  '&:hover': { backgroundColor: theme.vars.palette.action.hover },
 }));
 
-const StatLabel = styled(Typography)(({ theme }) => ({
-  marginLeft: theme.spacing(1),
-  flex: 1,
-}));
+const StatLabel = styled(Typography)(({ theme }) => ({ marginLeft: theme.spacing(1), flex: 1 }));
 
 const StatValue = styled(Typography)(({ theme }) => ({
   fontWeight: 'bold',
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.vars.palette.background.paper,
   padding: theme.spacing(0.5, 1),
 }));
 
 const StudentProfile = ({ student }: any) => (
   <>
-    <Grid item xs={12} textAlign="center">
+    <Grid size={{ xs: 12 }} textAlign="center">
       <StyledAvatar src={student.avatarUrl} alt={student.name} />
       <Typography variant="h4" component="h1" gutterBottom sx={{ mt: 2 }}>
         {student.name}
@@ -53,7 +46,8 @@ const StudentProfile = ({ student }: any) => (
         Grade {student.grade}
       </Typography>
     </Grid>
-    <Grid item xs={12} sm={6}>
+
+    <Grid size={{ xs: 12, sm: 6 }}>
       <SectionTitle variant="h5">Attendance</SectionTitle>
       <StatItem>
         <Iconify icon="mdi:tick-circle-outline" color="primary" />
@@ -66,7 +60,8 @@ const StudentProfile = ({ student }: any) => (
         <StatValue>{student.attendance.absentDays}</StatValue>
       </StatItem>
     </Grid>
-    <Grid item xs={12} sm={6}>
+
+    <Grid size={{ xs: 12, sm: 6 }}>
       <SectionTitle variant="h5">Behavior & Participation</SectionTitle>
       <StatItem>
         <Iconify icon="mdi:star-outline" color="primary" />
@@ -79,7 +74,8 @@ const StudentProfile = ({ student }: any) => (
         <StatValue>{student.behavior.participationLevel}</StatValue>
       </StatItem>
     </Grid>
-    <Grid item xs={12} md={6}>
+
+    <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ height: '400px', p: 2, boxShadow: 'var(--shadows-2)' }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle1">Performance by Subject</Typography>

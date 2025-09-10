@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { Box, Card, Chip, Typography, CardContent } from '@mui/material';
 
 import type { DashboardCardProps } from './dashboard-card-interface';

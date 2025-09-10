@@ -1,11 +1,8 @@
 import React from 'react';
 import dayjs from 'dayjs';
-
-import { Box, Grid, Radio, Typography } from '@mui/material';
-
 import { formatNumber } from 'src/utils/formate_number';
 import { numberToWords } from 'src/utils/numberToWords';
-
+import { Box, Grid, Radio, Typography } from '@mui/material';
 import ReceiptTable from 'src/screens/finance/viewReceipt/receipt-table';
 import defaultData from 'src/json/finance/create-receipt/fee-receipt-template-one.json';
 
@@ -25,7 +22,7 @@ const TemplateOne: React.FC<ITemplateOneProps> = ({ selectedTemplate, onSelectTe
     const getFormattedRows = (rows: { label: string; value?: string }[]) => (
       <Grid container spacing={1}>
         {rows.map((row, index) => (
-          <Grid item xs={6} key={index} display="flex" justifyContent="flex-start">
+          <Grid size={6} key={index} display="flex" justifyContent="flex-start">
             <Typography fontSize="10px">
               <strong>{row.label}:</strong> {row.value || '-'}
             </Typography>
@@ -64,7 +61,7 @@ const TemplateOne: React.FC<ITemplateOneProps> = ({ selectedTemplate, onSelectTe
   };
   return (
     <Grid container spacing={2} mb={3} justifyContent="flex-start">
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Box
           sx={{
             position: 'relative',
@@ -80,6 +77,7 @@ const TemplateOne: React.FC<ITemplateOneProps> = ({ selectedTemplate, onSelectTe
             },
           }}
         >
+          {/* Radio for selection */}
           <Radio
             checked={selectedTemplate === 'TemplateOne'}
             onChange={() => onSelectTemplate('TemplateOne')}
@@ -87,13 +85,14 @@ const TemplateOne: React.FC<ITemplateOneProps> = ({ selectedTemplate, onSelectTe
             sx={{ position: 'absolute', top: 8, right: 8 }}
           />
 
+          {/* Title */}
           <Typography variant="subtitle2" noWrap sx={{ fontSize: '0.9rem', mb: 5 }}>
             Fee Receipt
           </Typography>
 
-          {/* From & To */}
-          <Grid container sx={{ fontSize: '0.75rem', justifyContent: 'space-between' }}>
-            <Grid item xs={5}>
+          {/* From & To Section */}
+          <Grid container sx={{ fontSize: '0.75rem', justifyContent: 'space-between', gap: 1 }}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Box display="flex" flexDirection="column" alignItems="flex-start">
                 <Typography fontSize="10px" fontWeight="bold">
                   From:
@@ -103,7 +102,7 @@ const TemplateOne: React.FC<ITemplateOneProps> = ({ selectedTemplate, onSelectTe
                 <Typography fontSize="10px">{from.branch}</Typography>
               </Box>
             </Grid>
-            <Grid item xs={5}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Box display="flex" flexDirection="column" alignItems="flex-start">
                 <Typography fontSize="10px" fontWeight="bold">
                   To:
@@ -121,6 +120,7 @@ const TemplateOne: React.FC<ITemplateOneProps> = ({ selectedTemplate, onSelectTe
             </Grid>
           </Grid>
 
+          {/* Payment Details */}
           <Box mt={2} mb={1} display="flex" justifyContent="flex-start">
             {renderPaymentDetails(receipt.paymentDetails)}
           </Box>

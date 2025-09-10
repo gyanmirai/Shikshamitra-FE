@@ -1,22 +1,18 @@
 import type { IChatParticipant, IChatConversations } from 'src/types/chat';
 
-import { useState, useEffect, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Drawer from '@mui/material/Drawer';
 import { useTheme } from '@mui/material/styles';
 import TextField from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
-import InputAdornment from '@mui/material/InputAdornment';
-import ClickAwayListener from '@mui/material/ClickAwayListener';
-
-import { useRouter, usePathname } from 'src/routes/hooks';
-
-import { useResponsive } from 'src/hooks/use-responsive';
-
 import { Iconify } from 'src/components/iconify';
+import IconButton from '@mui/material/IconButton';
 import { Scrollbar } from 'src/components/scrollbar';
+import { useState, useEffect, useCallback } from 'react';
+import { useResponsive } from 'src/hooks/use-responsive';
+import InputAdornment from '@mui/material/InputAdornment';
+import { useRouter, usePathname } from 'src/routes/hooks';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
 
 import { ToggleButton } from './styles';
 import { ChatNavItem } from './chat-nav-item';

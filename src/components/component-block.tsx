@@ -4,7 +4,6 @@ import type { ContainerProps } from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Container from '@mui/material/Container';
-
 import { varAlpha, stylesMode } from 'src/theme/styles';
 
 // ----------------------------------------------------------------------

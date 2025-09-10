@@ -3,19 +3,15 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button } from '@mui/material';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData.json';
-
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Button } from '@mui/material';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import hostelTableData from 'src/json/hostel/hostelConfiguration/hostelTableData.json';
 
 import HostelForm from './components/hostelForm';
 import HostelTable from './components/hostelTable';

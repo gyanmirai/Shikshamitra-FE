@@ -1,29 +1,25 @@
 import type { IFileManager } from 'src/types/file';
 import type { PaperProps } from '@mui/material/Paper';
 
-import { useState, useCallback } from 'react';
-
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
+import { useState, useCallback } from 'react';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import Checkbox from '@mui/material/Checkbox';
-import IconButton from '@mui/material/IconButton';
-import ListItemText from '@mui/material/ListItemText';
-import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
-
-import { useBoolean } from 'src/hooks/use-boolean';
-import { useCopyToClipboard } from 'src/hooks/use-copy-to-clipboard';
-
 import { fData } from 'src/utils/format-number';
-import { fDateTime } from 'src/utils/format-time';
-
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import IconButton from '@mui/material/IconButton';
+import { fDateTime } from 'src/utils/format-time';
+import { useBoolean } from 'src/hooks/use-boolean';
+import ListItemText from '@mui/material/ListItemText';
 import { FileThumbnail } from 'src/components/file-thumbnail';
+import { useCopyToClipboard } from 'src/hooks/use-copy-to-clipboard';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
+import AvatarGroup, { avatarGroupClasses } from '@mui/material/AvatarGroup';
 
 import { FileManagerShareDialog } from './file-manager-share-dialog';
 import { FileManagerFileDetails } from './file-manager-file-details';

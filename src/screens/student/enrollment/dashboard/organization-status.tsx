@@ -1,67 +1,55 @@
 import type { CardProps } from '@mui/material';
 import type { ChartOptions } from 'src/components/chart';
 
-import React, { useState } from 'react';
-
-import { Card, Divider, useTheme, CardHeader } from '@mui/material';
-
+import React from 'react';
+import { useTheme } from '@mui/material/styles';
+import { Card, Divider, CardHeader } from '@mui/material';
 import { Chart, useChart, ChartLegends } from 'src/components/chart';
-
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-const OrganizationStatus = () => {
-  const theme = useTheme();
+const OrganizationStatus = () => (
+  // const theme = useTheme();
 
-  const [selectedOrganization, setSelectedOrganization] = useState<string>('');
-  return (
-    <Card sx={{ height: '100%' }}>
-      <AnalyticsWebsiteVisits
-        title="Class-wise Participation"
-        subheader=""
-        chart={{
-          categories: ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'],
-          series: [
-            {
-              name: 'Participation',
-              data: [9, 2, 8, 9, 8], // Adjust based on actual participation bar height (from the image)
-            },
-          ],
-          options: {
-            tooltip: {
-              custom: ({ series, seriesIndex, dataPointIndex }) => {
-                const participants = [30, 10, 25, 28, 26]; // Example data for each class
-                const scores = [80, 70, 75, 85, 78]; // Average scores for each class
+  // const [selectedOrganization, setSelectedOrganization] = useState<string>('');
+  <Card sx={{ height: '100%' }}>
+    <AnalyticsWebsiteVisits
+      title="Class-wise Participation"
+      subheader=""
+      chart={{
+        categories: ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'],
+        series: [
+          {
+            name: 'Participation',
+            data: [9, 2, 8, 9, 8], // Adjust based on actual participation bar height (from the image)
+          },
+        ],
+        options: {
+          tooltip: {
+            custom: ({ series, seriesIndex, dataPointIndex }) => {
+              const participants = [30, 10, 25, 28, 26]; // Example data for each class
+              const scores = [80, 70, 75, 85, 78]; // Average scores for each class
 
-                return `
+              return `
             <div style="padding: 8px; font-size: 13px;">
               <strong>Class ${dataPointIndex + 1}</strong><br/>
               <span style="color: green;">●</span> Participant: ${participants[dataPointIndex]}<br/>
               <span style="color: orange;">●</span> Average Score: ${scores[dataPointIndex]}%
             </div>
           `;
-              },
             },
           },
-        }}
-        sx={{ height: '100%' }}
-      />
-    </Card>
-  );
-};
-
+        },
+      }}
+      sx={{ height: '100%' }}
+    />
+  </Card>
+);
 export default OrganizationStatus;
 
 type Props = CardProps & {
   title?: string;
   subheader?: string;
-  chart: {
-    colors?: string[];
-    series: {
-      label: string;
-      value: number;
-    }[];
-    options?: ChartOptions;
-  };
+  chart: { colors?: string[]; series: { label: string; value: number }[]; options?: ChartOptions };
 };
 
 export function AnalyticsCurrentVisits({ title, subheader, chart, ...other }: Props) {
