@@ -85,7 +85,7 @@ export interface IClassWiseAnnouncement {
   cratedOn: Dayjs | string | null;
   status: number;
   type: string;
-  attachment: File;
+  attachment: File | null;
   importance_level?: string;
   link: string;
   active?: number;
