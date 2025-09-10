@@ -80,7 +80,9 @@ import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { memberManagementApi } from './memberManagement/memberManagementApi';
 import { reservationDataApi } from './reservationDataApi/reservationDataApi';
+import { bookConditionOptionsApi } from './library/setting/bookConditionApi';
 import { quizManagementApi } from './academics/examination/quiz-management-api';
+import { LibraryChargeApi } from './library/charges-management/charges-get-api';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { reservationBookApi } from './book-reservation-api/book-reservation-api';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
@@ -96,6 +98,7 @@ import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-prefe
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
 import { studentChangeClassApi } from './student/student-change-class/student-change-class-api';
 import { EnrollmentReportApi } from './student/student-enrollment-report/student-enrollemt-report';
+import { libraryChargeCategoryOptionsApi } from './library/charges-management/charge-category-api';
 
 const persistConfig = {
   key: 'root',
@@ -189,6 +192,9 @@ const reducers = combineReducers({
   [reservationDataApi.reducerPath]: reservationDataApi.reducer,
   [feeRefundsTermsApi.reducerPath]: feeRefundsTermsApi.reducer,
   [librarySettingsApi.reducerPath]: librarySettingsApi.reducer,
+  [LibraryChargeApi.reducerPath]: LibraryChargeApi.reducer,
+  [libraryChargeCategoryOptionsApi.reducerPath]: libraryChargeCategoryOptionsApi.reducer,
+  [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
 });
 
 const store = configureStore({
@@ -267,20 +273,23 @@ const store = configureStore({
       expenseDetailsApi.middleware,
       incomeApi.middleware,
       incomeDetailsApi.middleware,
+      issueReturnFormApi.middleware,
       budgetApi.middleware,
       budgetSubCategoryApi.middleware,
       incomeCategoryApi.middleware,
+      bookCategoryOptionsApi.middleware,
       bookManagementApi.middleware,
       bookCategoryApi.middleware,
       memberManagementApi.middleware,
-      issueReturnFormApi.middleware,
       reservationBookApi.middleware,
       bookIssuedApi.middleware,
-      bookCategoryOptionsApi.middleware,
       reservationRequestApi.middleware,
       reservationDataApi.middleware,
       feeRefundsTermsApi.middleware,
       librarySettingsApi.middleware,
+      LibraryChargeApi.middleware,
+      libraryChargeCategoryOptionsApi.middleware,
+      bookConditionOptionsApi.middleware,
     ]),
 });
 

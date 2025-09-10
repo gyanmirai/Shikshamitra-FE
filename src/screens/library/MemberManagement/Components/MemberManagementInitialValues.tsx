@@ -14,6 +14,7 @@ export const getInitialChangeStatusData = (
 ): IChangeStatusPayload => ({
   status: editData?.status || 'Active',
   remarks: editData?.remarks || '',
+  date: editData?.remarks || null,
 });
 
 export const getInitialReservationData = (
@@ -22,4 +23,5 @@ export const getInitialReservationData = (
   bookCategory: editData?.bookCategory || 'Text Book',
   bookTitle: editData?.bookTitle || 'Introduction to Physics',
   requestedDate: editData?.requestedDate || new Date(),
+  dueDate: editData?.dueDate || null,
 });

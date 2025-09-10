@@ -9,6 +9,7 @@ export const getInitialBookData = (editData?: Partial<IBookPayload> | null): IBo
   category: editData?.category || '',
   edition: editData?.edition || '',
   language: editData?.language || '',
+  price: editData?.price || null,
   numberOfCopies: editData?.numberOfCopies || 0,
   bookCoverImages: editData?.bookCoverImages || [],
   copies: editData?.copies || [],

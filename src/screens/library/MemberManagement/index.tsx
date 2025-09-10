@@ -24,7 +24,7 @@ import MemberDetailedViewComponent from './Components/MemberDetailedViewComponen
 const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control member form visibility
   const [open, setOpen] = useState(false);
-  const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
+  const { data: memberData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetMembersQuery,
   });
@@ -33,6 +33,7 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
 
   // State to store currently selected status
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedStatus, setSelectedStatus] = useState<any | null>(null);
 
   // Redux selector to track unsaved changes

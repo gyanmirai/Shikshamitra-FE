@@ -35,7 +35,7 @@ const ReservationManagement = () => {
   const addDialog = useBoolean();
   const issueDialog = useBoolean();
   const deleteDialog = useBoolean();
-  const { data: bookData, isLoading: bookLoading } = useQueryAndMutation({
+  const { data: bookData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBooksQuery,
   });
@@ -136,7 +136,7 @@ const ReservationManagement = () => {
               title={
                 selectedRecord
                   ? 'Update the reserved book details including reservation date and member info.'
-                  : 'Select a member and book to reserve with reservation date.'
+                  : 'This modal allows the librarian to select the required fields (such as member, book, and reservation date) to successfully make a reservation for a book.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

@@ -10,5 +10,6 @@ export const reservationInitialValues = (editData?: any) => ({
 
   bookCategory: editData?.bookCategory || '',
   bookTitle: editData?.bookTitle || '',
-  edition: editData?.edition || '',
+  requestedDate: editData?.requestedDate || null,
+  dueDate: editData?.requestedDate || null,
 });

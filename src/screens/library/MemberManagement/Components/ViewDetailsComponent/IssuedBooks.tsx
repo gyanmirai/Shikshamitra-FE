@@ -20,13 +20,12 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
     currentQueryAndMutation: useGetIssuedBooksQuery,
   });
 
-  return mockIssuedLoading ? (
-    'Loading...'
-  ) : (
+  return (
     <Box>
       <CustomizableTable
         tableId="issued-books-table"
         noDataText="No Issued Books Found"
+        isLoading={mockIssuedLoading}
         columns={[
           { id: 'bookId', label: 'Book Name', align: 'left' },
           { id: 'bookTitle', label: 'Book Category', align: 'left' },
@@ -50,7 +49,7 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
             },
           },
         ]}
-        data={mockIssuedBooks}
+        data={mockIssuedBooks || []}
       />
     </Box>
   );

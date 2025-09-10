@@ -7,9 +7,19 @@ export const getIssueBookSchema = (currentYear: any) =>
     bookCategory: Yup.string().required('Book category is required'),
     bookTitle: Yup.string().required('Book title is required'),
     edition: Yup.string().required('Edition is required'),
-    class: Yup.string().required('Class is required'),
-    division: Yup.string().required('Division is required'),
-    student: Yup.string().required('Student is required'),
+    role: Yup.string().required('Role is required'),
+    // Validate class only if role === 'Student'
+    class: Yup.string().when('role', {
+      is: 'Student',
+      then: (schema) => schema.required('Class is required'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    division: Yup.string().when('role', {
+      is: 'Student',
+      then: (schema) => schema.required('Division is required'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    member: Yup.string().required('Member is required'),
     issueDate: Yup.mixed()
       .required('Issue date is required')
       .test(
@@ -37,6 +47,7 @@ export const getIssueBookSchema = (currentYear: any) =>
         'Due date must be a valid date',
         (value) => value && dayjs(value as any).isValid()
       )
+      // eslint-disable-next-line func-names
       .test('is-after-issue-date', 'Due date cannot be before Issue date', function (value) {
         const { issueDate } = this.parent;
         if (!value || !issueDate) return true;
@@ -54,5 +65,4 @@ export const getIssueBookSchema = (currentYear: any) =>
           `Due date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
-    quantity: Yup.number().min(1, 'Minimum 1 book').required('Quantity is required'),
   });
