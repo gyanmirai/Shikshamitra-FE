@@ -5,7 +5,6 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { uuidv4 } from 'src/utils/uuidv4';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 import { DateTimePicker } from '@mui/x-date-pickers';
@@ -58,20 +57,13 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
 
   // Track if all divisions are selected by comparing initial division length with available options
   const [isAllSelected, setIsAllSelected] = useState(
-    initialValues?.division?.length === divisionOption.length
+    initialValues?.divisions?.length === divisionOption.length
   );
 
   const formik = useFormik<IClassWiseAnnouncementFormikValues>({
     initialValues: getClassInitialValues(initialValues),
     validationSchema: classWiseValidationSchema,
-    onSubmit: (values) => {
-      onSubmit({
-        ...values,
-        id: uuidv4(),
-        publishDate: values.isScheduled ? values.publishDate : dayjs(),
-        status: determineStatus(values.isScheduled, values.publishDate),
-      });
-    },
+    onSubmit: (values) => {},
   });
 
   /**
