@@ -1,35 +1,41 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import { useDispatch, useSelector } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import SchoolWiseAnnouncementInitialData from 'src/json/communication/announcement/SchoolWiseAnnouncementInitialData.json';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetSchoolWiseAnnouncementsQuery } from 'src/redux/communication/announcement/schoolWiseAnnouncement';
 import {
   Box,
   Card,
   Button,
-  DialogActions,
-  DialogContent,
   // eslint-disable-next-line import/no-duplicates
 } from '@mui/material';
 
 import AnnouncementForm from './schoolannouncementForm';
-import AnnouncementDetails from './components/announcementDetail';
 import SchoolWiseAnnouncementTable from './components/schoolWiseAnnouncementTable';
+import SchoolManagementViewDetails from './components/SchoolWiseDetails/SchoolManagementViewDetails';
 
 import type { ISchoolWiseAnnouncement } from './type';
 
 const SchoolWiseAnnounsement = (props: TabComponentType) => {
   // Controls form visibility through URL search parameters
   const [open, setOpen] = useState(false);
+  const { data: announcementData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSchoolWiseAnnouncementsQuery,
+  });
 
   // Stores the announcement being edited
   const [editingAnnouncement, setEditingAnnouncement] = useState<ISchoolWiseAnnouncement | null>(
@@ -46,134 +52,91 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
   // Controls the visibility of publish modal
   const publish_modal = useBoolean();
   // Stores the announcement being published
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [publishingAnnouncement, setPublishingAnnouncement] =
     useState<ISchoolWiseAnnouncement | null>(null);
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
-  // Stores the main table data for announcements
-  const [announcementTableData, setAnnouncementTableData] = useState<ISchoolWiseAnnouncement[]>(
-    SchoolWiseAnnouncementInitialData
-  );
-  /**
-   * Deletes an announcement from the table data based on the provided ID
-   * @param id - The ID of the announcement to delete
-   */
-  const handleDelete = (id: string) => {
-    setAnnouncementTableData((prevData) =>
-      prevData.filter((announcement) => announcement.id !== id)
-    );
-    confirm_dialog.onFalse();
-  };
-
-  /**
-   * Handles the submission of announcement form data
-   * If editing, updates the existing announcement
-   * If creating new, adds a new announcement to the table
-   * @param values - The form values to be submitted
-   */
-  const handleSubmit = (values: any) => {
-    if (editingAnnouncement) {
-      setAnnouncementTableData((prevData) =>
-        prevData.map((announcement) =>
-          announcement.id === editingAnnouncement.id
-            ? { ...values, id: editingAnnouncement.id }
-            : announcement
-        )
-      );
-    } else {
-      const newAnnouncement = {
-        ...values,
-        id: String(announcementTableData.length + 1),
-      };
-      setAnnouncementTableData((prevData) => [...prevData, newAnnouncement]);
-    }
-    handleCloseDialog();
-  };
+  const dispatch = useDispatch();
 
   /**
    * Closes all dialogs and resets form-related states
    * Clears editing announcement, publishing announcement and closes modals
    */
-  const handleCloseDialog = () => {
-    setEditingAnnouncement(null);
-    setOpen(false);
-    publish_modal.onFalse();
-    setPublishingAnnouncement(null);
-  };
+  const handleCloseDialog = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setEditingAnnouncement(null);
+        setOpen(false);
+        publish_modal.onFalse();
+        setPublishingAnnouncement(null);
+        dispatch(setIsChanges(false));
+      }, 200); // Delay for dialog transition
+    };
 
-  /**
-   * Publishes an announcement by updating its status and related fields
-   * @param announcement - The announcement object to be published
-   */
-  const handlePublish = (announcement: ISchoolWiseAnnouncement | null) => {
-    setAnnouncementTableData((prevData) =>
-      prevData.map((item) =>
-        item.id === announcement?.id
-          ? {
-              ...item,
-              status: 'Published',
-              publishDate: dayjs(),
-              isScheduled: false,
-            }
-          : item
-      )
-    );
-    publish_modal.onFalse();
-    setPublishingAnnouncement(null);
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      resetState();
+    } else if (!isChanges) {
+      resetState();
+    }
   };
-  const links = open
-    ? [
-        { name: 'Communication', href: '/communication/dashboard' },
-        { name: 'Announcements' },
-        { name: 'School Wise Announcement' },
-        { name: 'Announcement Form' },
-      ]
-    : [
-        { name: 'Communication', href: '/communication/dashboard' },
-        { name: 'Announcements' },
-        { name: 'School Wise Announcement' },
-      ];
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      <CustomBreadcrumbs
-        heading="School Wise Announcement"
-        description={
-          open
-            ? 'Create or update school-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff.'
-            : 'View and manage all school-wide announcements, including message content, target audience, and publication status. Add new announcements, update existing ones, or remove them as needed.'
-        }
-        links={links}
-        sx={{ px: 1, mb: 2 }}
-        action={
-          <Button
-            size="small"
-            startIcon={open ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
-            variant="contained"
-            onClick={
-              open
-                ? () => handleCloseDialog()
-                : () => {
-                    setOpen(true);
-                  }
-            }
-          >
-            {open ? 'Back' : 'School Wise Announcement'}
-          </Button>
-        }
-      />
+      {open ? (
+        <CustomBreadcrumbs
+          heading="School Wise Announcement"
+          description="Create or update school-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff."
+          links={[
+            { name: 'Communication', href: '/communication/dashboard' },
+            { name: 'Announcements' },
+            { name: 'School Wise Announcement' },
+            { name: 'Announcement Form' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          isBack
+          onBack={() => {
+            handleCloseDialog(null, false);
+          }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="School Wise Announcement"
+          description="View and manage all school-wide announcements, including message content, target audience, and publication status. Add new announcements, update existing ones, or remove them as needed."
+          links={[
+            { name: 'Communication', href: '/communication/dashboard' },
+            { name: 'Announcements' },
+            { name: 'School Wise Announcement' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          action={
+            <Button
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              onClick={() => setOpen(true)}
+            >
+              School Wise Announcement
+            </Button>
+          }
+        />
+      )}
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AnnouncementForm
             initialValues={editingAnnouncement}
-            onSubmit={handleSubmit}
             isEdit={!!editingAnnouncement}
+            onClose={handleCloseDialog}
           />
         </Card>
       ) : (
         <SchoolWiseAnnouncementTable
-          data={announcementTableData}
+          data={announcementData}
           onEdit={(row) => {
             setOpen(true);
+            setEditingAnnouncement(row);
+          }}
+          handleSwitchChange={(row) => {
             setEditingAnnouncement(row);
           }}
           onDelete={(id) => {
@@ -200,13 +163,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         title="Delete"
         content="Are you sure you want to delete?"
         action={
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => {
-              handleDelete(deleteAnnouncement);
-            }}
-          >
+          <Button variant="contained" color="error" onClick={() => {}} size="small">
             Yes
           </Button>
         }
@@ -215,15 +172,27 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
       <ConfirmDialog
         open={publish_modal.value}
         onClose={() => {
-          handleCloseDialog();
+          publish_modal.onFalse();
+          setPublishingAnnouncement(null);
         }}
         title="Publish"
-        content="Are you sure want to Publish?"
+        content={
+          <>
+            Are you sure you want to publish announcement{' '}
+            <strong>{publishingAnnouncement?.title}</strong>?
+          </>
+        }
         action={
           <Button
             variant="contained"
-            color="success"
-            onClick={() => handlePublish(publishingAnnouncement)}
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
+            onClick={() => {
+              publish_modal.onFalse();
+              shikshaMitraToast.success({
+                message: `Announcement "${publishingAnnouncement?.title}" published successfully.`,
+              });
+            }}
+            size="small"
           >
             Publish
           </Button>
@@ -239,18 +208,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         }}
         maxWidth="md"
       >
-        <DialogContent>
-          <AnnouncementDetails announcement={viewAnnouncement} />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={view_dialog.onFalse}
-            variant="outlined"
-          >
-            Close
-          </Button>
-        </DialogActions>
+        <SchoolManagementViewDetails announcement={viewAnnouncement} />
       </CustomDialog>
     </Box>
   );

@@ -1,21 +1,26 @@
 import dayjs from 'dayjs';
 
-import type { IClassAnnouncement } from '../type';
+import type { IClassWiseAnnouncement } from '../type';
 
-export const getClassInitialValues = (initialValues: IClassAnnouncement | null) => ({
+export const getClassInitialValues = (initialValues: IClassWiseAnnouncement | null) => ({
+  id: initialValues?.id || '',
   title: initialValues?.title || '',
   description: initialValues?.description || '',
   audience: initialValues?.audience || [],
-  className: initialValues?.className || [],
-  division: initialValues?.division || [],
-  publishDate: initialValues?.publishDate
-    ? dayjs(initialValues?.publishDate)
-    : dayjs().add(1, 'hours'),
-  expiryDate: initialValues?.expiryDate ? dayjs(initialValues?.expiryDate) : null,
-  category: initialValues?.category || '',
+  organizations: initialValues?.organizations || [],
+  classes: initialValues?.classes || [],
+  divisions: initialValues?.divisions || [],
+  startDate: initialValues?.startDate ? dayjs(initialValues?.startDate) : dayjs().add(1, 'hours'),
+  endDate: initialValues?.endDate ? dayjs(initialValues?.endDate) : null,
+  createdBy: initialValues?.createdBy || '',
+  cratedOn: initialValues?.cratedOn ? dayjs(initialValues?.cratedOn) : null,
+  status: initialValues?.status || 0,
+  type: initialValues?.type || '',
+  attachment: initialValues?.attachment || null,
   importance_level: initialValues?.importance_level || '',
   link: initialValues?.link || '',
+  active: initialValues?.active || 1,
   notification_preferences: initialValues?.notification_preferences || [],
-  isScheduled: initialValues?.isScheduled || false,
-  status: initialValues?.status || 'Published',
+  isAllowAcknoledgement: initialValues?.isAllowAcknoledgement || false,
+  viewedBy: initialValues?.viewedBy || 0,
 });

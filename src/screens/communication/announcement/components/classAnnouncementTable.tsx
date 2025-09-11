@@ -1,151 +1,264 @@
+import type { LabelColor } from 'src/components/label';
+
 import dayjs from 'dayjs';
+import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
-import { Box, Chip, Typography } from '@mui/material';
+import { useTabs } from 'src/hooks/use-tabs';
+import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Tab, Tabs, IconButton, Typography } from '@mui/material';
+import {
+  AnnouncementStatus,
+  AnnouncementStatusColor,
+  AnnouncementStatusOptions,
+} from 'src/enums/communication_announcement_status_type';
 
-import { getImportanceLevelColor } from './getImportantColor';
-
-import type { IClassAnnouncement, IClassWiseAnnouncementTableProps } from '../type';
+import type { IClassWiseAnnouncement, IClassWiseAnnouncementTableProps } from '../type';
 
 const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = ({
   data,
   onEdit,
+  handleSwitchChange,
   onDelete,
   onView,
-  onRequestPublish,
-}: IClassWiseAnnouncementTableProps) => (
-  <CustomizableTable
-    tableId="class-specific-announcement-table"
-    columns={[
-      { id: 'title', label: 'Title' },
+  onPublish,
+}) => {
+  const theme = useTheme();
+
+  // counts for tabs
+  const announcementCounts = useMemo(
+    () => ({
+      all: data?.length || 0,
+      draft: data?.filter((i) => i.status === AnnouncementStatus.Draft)?.length || 0,
+      published: data?.filter((i) => i.status === AnnouncementStatus.Published)?.length || 0,
+      completed: data?.filter((i) => i.status === AnnouncementStatus.Completed)?.length || 0,
+    }),
+    [data]
+  );
+
+  const tabs = useTabs('All');
+
+  const TABS = useMemo(
+    () => [
       {
-        id: 'publishDate',
-        label: 'Publish Date',
-        minWidth: '180px',
-        align: 'left',
-        render: (value) => (
-          <Typography fontSize="12px" gutterBottom>
-            {dayjs(value).format('DD MMM YYYY')}
-          </Typography>
-        ),
+        label: 'All',
+        value: 'All',
+        count: announcementCounts.all,
+        color: 'default',
       },
       {
-        id: 'expiryDate',
-        label: 'Expiry Date',
-        minWidth: '180px',
-        align: 'left',
-        render: (value) => (
-          <Typography fontSize="12px" gutterBottom>
-            {dayjs(value).format('DD MMM YYYY')}
-          </Typography>
-        ),
+        label: 'Draft',
+        value: AnnouncementStatus.Draft,
+        count: announcementCounts.draft,
+        color: 'warning',
       },
       {
-        id: 'className',
-        label: 'Class',
-        render: (value) => (
-          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-            {value.map((className: string) => (
-              <Chip key={className} label={className} size="small" variant="outlined" />
-            ))}
-          </Box>
-        ),
+        label: 'Published',
+        value: AnnouncementStatus.Published,
+        count: announcementCounts.published,
+        color: 'success',
       },
       {
-        id: 'division',
-        label: 'Division',
-        render: (value) => (
-          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-            {value.map((division: string) => (
-              <Chip
-                key={division}
-                label={division}
-                size="small"
-                color="primary"
-                variant="outlined"
-              />
-            ))}
-          </Box>
-        ),
+        label: 'Completed',
+        value: AnnouncementStatus.Completed,
+        count: announcementCounts.completed,
+        color: 'info',
       },
-      {
-        id: 'importance_level',
-        label: 'Importance',
-        render: (value) => {
-          const colors = getImportanceLevelColor(value);
-          return (
-            <Typography
-              component="span"
-              variant="body2"
-              sx={{
-                px: 1.5,
-                py: 0.5,
-                borderRadius: '16px',
-                backgroundColor: colors.bg,
-                color: colors.text,
-                border: `1px solid ${colors.border}`,
-                fontSize: '0.75rem',
-                fontWeight: 500,
-              }}
-            >
-              {value}
-            </Typography>
-          );
-        },
-      },
-      {
-        id: 'audience',
-        label: 'Audience',
-        render: (value) => (
-          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-            {value.map((audience: string) => (
-              <Chip key={audience} label={audience} size="small" variant="outlined" />
-            ))}
-          </Box>
-        ),
-      },
-      {
-        id: 'status',
-        label: 'Status',
-        render: (value, row) =>
-          value === 'Published' ? (
-            <Label variant="soft" color="primary">
-              {value}
-            </Label>
-          ) : (
-            <Label
-              variant="soft"
-              color="warning"
-              onClick={() => onRequestPublish(row as IClassAnnouncement)}
-              sx={{ cursor: 'pointer' }}
-            >
-              {value}
-            </Label>
-          ),
-      },
-      {
-        id: 'action',
-        label: 'Action',
-        isSort: false,
-        render(value, row) {
-          return (
-            <ThreeDotsActions
-              placement="right-top"
-              showEditIcon
-              showDeleteIcon
-              showViewIcon
-              showThreeDots={false}
-              handleEditClick={() => onEdit(row as IClassAnnouncement)}
-              handleDeleteClick={() => onDelete(row.id)}
-              handleViewClick={() => onView(row as IClassAnnouncement)}
+    ],
+    [announcementCounts]
+  );
+
+  const tableData = useMemo(
+    () => (tabs.value === 'All' ? data || [] : data?.filter((i) => i.status === tabs.value)),
+    [data, tabs.value]
+  );
+
+  return (
+    <Box>
+      {/* Tabs */}
+      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
+        <Tabs
+          value={tabs.value}
+          onChange={tabs.onChange}
+          sx={{
+            '& .MuiTabs-flexContainer': { gap: 2 },
+            flexGrow: 1,
+          }}
+        >
+          {TABS.map((tab) => (
+            <Tab
+              sx={{ fontSize: '12px' }}
+              key={tab.value}
+              label={
+                <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                  {tab.label}
+                  <Label color={(tab?.color as LabelColor) || 'default'}>{tab.count}</Label>
+                </Box>
+              }
+              value={tab.value}
             />
-          );
-        },
-      },
-    ]}
-    data={data}
-  />
-);
+          ))}
+        </Tabs>
+      </Box>
+
+      {/* Table */}
+      <CustomizableTable
+        tableId="class-wise-announcement-table"
+        columns={[
+          { id: 'title', label: 'Title', align: 'left' },
+          { id: 'type', label: 'Type', align: 'left' },
+          {
+            id: 'audience',
+            label: 'Audience',
+            align: 'left',
+            render: (value) => <Box>{value.join(', ')}</Box>,
+          },
+          {
+            id: 'organizations',
+            label: 'Organizations',
+            align: 'left',
+            render: (value) => <Box>{value.join(', ')}</Box>,
+          },
+          {
+            id: 'classes',
+            label: 'Classes',
+            align: 'left',
+            render: (value) => <Box>{value.join(', ')}</Box>,
+          },
+          {
+            id: 'divisions',
+            label: 'Divisions',
+            align: 'left',
+            render: (value) => <Box>{value.join(', ')}</Box>,
+          },
+          {
+            id: 'startDate',
+            label: 'Start Date',
+            filterType: 'date',
+            align: 'left',
+            render: (value) => (
+              <Typography fontSize="12px">{dayjs(value).format('DD MMM YYYY')}</Typography>
+            ),
+          },
+          {
+            id: 'endDate',
+            label: 'End Date',
+            filterType: 'date',
+            align: 'left',
+            render: (value) => (
+              <Typography fontSize="12px">{dayjs(value).format('DD MMM YYYY')}</Typography>
+            ),
+          },
+          { id: 'createdBy', label: 'Created By', align: 'left' },
+          { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
+          {
+            id: 'active',
+            label: 'Active',
+            align: 'left',
+            minWidth: 40,
+            isFilter: false,
+            sticky: true,
+            isSort: false,
+            filterType: 'enum',
+            enumOptions: AnnouncementStatusOptions,
+            render(value, row) {
+              const statusColor =
+                value === AnnouncementStatus.Published
+                  ? theme.palette.success.main
+                  : theme.palette.text.secondary;
+
+              return (
+                <CustomTooltip
+                  title={value === 0 ? 'Published' : 'Draft'}
+                  arrow
+                  placement="left"
+                  PopperProps={{
+                    modifiers: [
+                      {
+                        name: 'offset',
+                        options: {
+                          offset: [0, 0],
+                        },
+                      },
+                    ],
+                  }}
+                >
+                  <span>
+                    <IconButton
+                      onClick={() => {
+                        if (value === AnnouncementStatus.Draft) {
+                          onPublish(row as IClassWiseAnnouncement);
+                        }
+                      }}
+                      sx={{
+                        p: 0.6,
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(0,0,0,0.06)',
+                        transition: 'transform 0.2s ease-in-out, background-color 0.2s',
+                        cursor: 'pointer',
+                        '&:hover': { transform: 'scale(1.1)', backgroundColor: 'rgba(0,0,0,0.08)' },
+                      }}
+                      disabled={value === AnnouncementStatus.Published}
+                    >
+                      <Iconify
+                        icon={GlobalIcons.tick}
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          cursor: value === AnnouncementStatus.Draft ? 'pointer' : 'not-allowed',
+                          color: statusColor,
+                        }}
+                      />
+                    </IconButton>
+                  </span>
+                </CustomTooltip>
+              );
+            },
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            align: 'left',
+            filterType: 'enum',
+            enumOptions: AnnouncementStatusOptions,
+            sticky: true,
+            render: (value) => (
+              <Label
+                variant="soft"
+                color={AnnouncementStatusColor[value as AnnouncementStatus] as LabelColor}
+              >
+                {AnnouncementStatus[value as AnnouncementStatus]}
+              </Label>
+            ),
+          },
+          {
+            id: 'action',
+            label: 'Action',
+            isSort: false,
+            isFilter: false,
+            sticky: true,
+            render: (_, row) => (
+              <ThreeDotsActions
+                placement="right-top"
+                showEditIcon
+                showDeleteIcon
+                showViewIcon
+                showThreeDots={false}
+                handleEditClick={() => onEdit(row as IClassWiseAnnouncement)}
+                handleDeleteClick={() => onDelete(row.id)}
+                handleViewClick={() => onView(row as IClassWiseAnnouncement)}
+              />
+            ),
+          },
+        ]}
+        data={tableData || []}
+      />
+    </Box>
+  );
+};
 
 export default ClassWiseAnnouncementTable;

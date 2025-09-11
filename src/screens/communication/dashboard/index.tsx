@@ -143,7 +143,7 @@ const CommunicationDashboard = () => {
               chart={{
                 categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
                 series: [{ name: 'Class 10-A', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] }],
-                colors: [alpha(theme.vars.palette.primary.dark, 0.8)],
+                colors: [alpha(theme.palette.primary.dark, 0.8)],
               }}
               sx={{ height: '100%', boxShadow: 'none' }}
             />

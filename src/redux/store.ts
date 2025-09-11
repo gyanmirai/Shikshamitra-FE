@@ -60,7 +60,7 @@ import { bookCategoryApi } from './bookCategoryApi/bookCategoryApi';
 import { issueReturnFormApi } from './issueRetunApi/issueReturnApi';
 import { budgetSubCategoryApi } from './budgetApi/budgetSubCategory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
-import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
+// import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
 import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
 import { FinanceFeeStructureApi } from './finance/financeFeeStructure';
 import { bookManagementApi } from './bookManagement/bookManagementApi';
@@ -95,8 +95,10 @@ import { StudentAttendanceRuleApi } from './student/attendance-rule/attendance-r
 import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-type-api';
 import { EntranceExamSlotApi } from './student/entrance-exam-slot/entrance-exam-slot-api';
 import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-preference-api';
+import { classWiseAnnouncementApi } from './communication/announcement/classWiseAnnouncement';
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
 import { studentChangeClassApi } from './student/student-change-class/student-change-class-api';
+import { schoolWiseAnnouncementApi } from './communication/announcement/schoolWiseAnnouncement';
 import { EnrollmentReportApi } from './student/student-enrollment-report/student-enrollemt-report';
 import { libraryChargeCategoryOptionsApi } from './library/charges-management/charge-category-api';
 
@@ -135,7 +137,7 @@ const reducers = combineReducers({
   [StudentRegistrationFormApi.reducerPath]: StudentRegistrationFormApi.reducer,
   [StudentRegistrationApi.reducerPath]: StudentRegistrationApi.reducer,
   [paymentStatusOptionApi.reducerPath]: paymentStatusOptionApi.reducer,
-  [budgetCategoryApi.reducerPath]: budgetCategoryApi.reducer,
+  // [budgetCategoryApi.reducerPath]: budgetCategoryApi.reducer,
   [organizationUnitApi.reducerPath]: organizationUnitApi.reducer,
   [BudgetsCategoryApi.reducerPath]: BudgetsCategoryApi.reducer,
   [EntranceExamSlotApi.reducerPath]: EntranceExamSlotApi.reducer,
@@ -195,6 +197,8 @@ const reducers = combineReducers({
   [LibraryChargeApi.reducerPath]: LibraryChargeApi.reducer,
   [libraryChargeCategoryOptionsApi.reducerPath]: libraryChargeCategoryOptionsApi.reducer,
   [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
+  [schoolWiseAnnouncementApi.reducerPath]: schoolWiseAnnouncementApi.reducer,
+  [classWiseAnnouncementApi.reducerPath]: classWiseAnnouncementApi.reducer,
 });
 
 const store = configureStore({
@@ -230,7 +234,7 @@ const store = configureStore({
       StudentRegistrationFormApi.middleware,
       StudentRegistrationApi.middleware,
       paymentStatusOptionApi.middleware,
-      budgetCategoryApi.middleware,
+      // budgetCategoryApi.middleware,
       BudgetsCategoryApi.middleware,
       organizationUnitApi.middleware,
       EntranceExamSlotApi.middleware,
@@ -289,6 +293,8 @@ const store = configureStore({
       LibraryChargeApi.middleware,
       libraryChargeCategoryOptionsApi.middleware,
       bookConditionOptionsApi.middleware,
+      schoolWiseAnnouncementApi.middleware,
+      classWiseAnnouncementApi.middleware,
     ]),
 });
 
