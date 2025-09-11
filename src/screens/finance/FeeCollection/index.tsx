@@ -97,7 +97,7 @@ const FeeCollection = () => {
       )}
       {studentDialog.value && selectedStudent && (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <FeeCollectComponent student={selectedStudent} />
+          <FeeCollectComponent student={selectedStudent} onCancel={handleClose} />
         </Card>
       )}
       {viewDialog.value && selectedStudent && (

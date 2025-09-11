@@ -3,8 +3,8 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 export interface IConcessionDocument {
   id?: number | string; // optional (for editing / backend reference)
   documentName: string;
-  documentSize: string; // e.g. "5mb"
-  acceptedFormat: string; // e.g. "jpg, png, pdf"
+  documentSize: number | string; // e.g. "5mb"
+  acceptedFormat: string[]; // e.g. [{label: 'Image', value: 1}, {label: 'PDF', value: 2}]
 }
 
 export interface IConcessionTypeForm {

@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
 import { Box } from '@mui/material';
+import React, { useMemo } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -13,84 +13,94 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   setEditData,
   onEdit,
   onDelete,
-}) => (
-  <CustomizableTable
-    tableId="concession-table"
-    noDataText={
-      <>
-        No Concession data found
-        <Box
-          onClick={() => {
-            addConcessionType.onTrue();
-            setEditData(null);
-          }}
-          color="primary.main"
-          fontWeight={600}
-          sx={{
-            '&:hover': {
-              cursor: 'pointer',
-              color: 'primary.main',
-              textDecoration: 'underline',
-            },
-          }}
-        >
-          Add Concession
-        </Box>
-      </>
-    }
-    columns={[
-      {
-        id: 'concessionName',
-        label: 'Concession Name',
-        align: 'left',
-      },
-      {
-        id: 'concessionType',
-        label: 'Concession Type',
-        align: 'left',
-      },
-      {
-        id: 'amountPercentage',
-        label: 'Amount/Percentage',
-        align: 'left',
-        render: (value, row) =>
+}) => {
+  const tableData = useMemo(
+    () =>
+      (data || []).map((row: IConcessionTypeForm) => ({
+        ...row,
+        amountPercentageValue:
           row.concessionType === 'fixed'
             ? `₹ ${row.amount?.toLocaleString()}`
             : `${row.percentage}%`,
-      },
-      {
-        id: 'applicableFeeHeads',
-        label: 'Applicable Fee Heads',
-        align: 'left',
-        render: (value, row) => row.applicableFeeHeads.join(', '),
-      },
-      {
-        id: 'documentRequired',
-        label: 'Documents Required',
-        align: 'left',
-        render: (value, row) => (row.documentRequired ? 'Yes' : 'No'),
-      },
-      {
-        id: 'actions',
-        label: 'Actions',
-        align: 'left',
-        isSort: false,
-        isFilter: false,
-        sticky: true,
-        minWidth: 50,
-        render: (value, row) => (
-          <ThreeDotsActions
-            showThreeDots={false}
-            showEditIcon
-            showDeleteIcon
-            handleEditClick={() => onEdit?.(row as IConcessionTypeForm)}
-            handleDeleteClick={() => onDelete?.(row as IConcessionTypeForm)}
-          />
-        ),
-      },
-    ]}
-    data={data || []}
-  />
-);
+        applicableFeeHeadsValue: row.applicableFeeHeads?.join(', '),
+        documentRequiredValue: row.documentRequired ? 'Yes' : 'No',
+      })),
+    [data]
+  );
+
+  return (
+    <CustomizableTable
+      tableId="concession-table"
+      noDataText={
+        <>
+          No Concession data found
+          <Box
+            onClick={() => {
+              addConcessionType.onTrue();
+              setEditData(null);
+            }}
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Add Concession
+          </Box>
+        </>
+      }
+      columns={[
+        {
+          id: 'concessionName',
+          label: 'Concession Name',
+          align: 'left',
+        },
+        {
+          id: 'concessionType',
+          label: 'Concession Type',
+          align: 'left',
+        },
+        {
+          id: 'amountPercentageValue',
+          label: 'Amount/Percentage',
+          align: 'left',
+        },
+        {
+          id: 'applicableFeeHeadsValue',
+          label: 'Applicable Fee Heads',
+          align: 'left',
+        },
+        {
+          id: 'documentRequiredValue',
+          label: 'Documents Required',
+          align: 'left',
+        },
+        {
+          id: 'actions',
+          label: 'Actions',
+          align: 'left',
+          isSort: false,
+          isFilter: false,
+          sticky: true,
+          minWidth: 50,
+          render: (value, row) => (
+            <ThreeDotsActions
+              showThreeDots={false}
+              showEditIcon
+              showDeleteIcon
+              handleEditClick={() => onEdit?.(row as IConcessionTypeForm)}
+              handleDeleteClick={() => onDelete?.(row as IConcessionTypeForm)}
+            />
+          ),
+        },
+      ]}
+      data={tableData || []}
+    />
+  );
+};
 
 export default ConcessionTypeTable;
