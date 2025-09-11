@@ -15,7 +15,7 @@ const TABS = [
   {
     value: 'schoolWiseAnnounsement',
     label: 'School Specific Announsement',
-    component: (props: TabComponentType) => <SchoolWiseAnnounsement {...props} />,
+    component: (props?: TabComponentType) => <SchoolWiseAnnounsement {...props} />,
   },
   {
     value: 'classSpecificAnnouncement',
