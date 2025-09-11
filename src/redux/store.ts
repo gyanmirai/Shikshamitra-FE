@@ -229,7 +229,6 @@ const store = configureStore({
       StudentInquiryApi.middleware,
       StudentRegistrationFormApi.middleware,
       StudentRegistrationApi.middleware,
-      feeHeadApi.middleware,
       paymentStatusOptionApi.middleware,
       budgetCategoryApi.middleware,
       BudgetsCategoryApi.middleware,

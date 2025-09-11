@@ -146,9 +146,6 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
     },
   });
 
-  console.log('formik...errors---', formik.errors);
-  console.log('formik...values---', formik.values);
-
   const selectedCategory = bookCategoryOptions?.find(
     (cat: IBookCategoryOption) => cat.value === formik.values.bookCategory
   );
@@ -407,7 +404,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
             <ShakingTextField error={!!(formik.touched.member && formik.errors.member)}>
               <Autocomplete
                 loading={isLoading}
-                disabled={!formik.values.division}
+                disabled={!formik.values.role}
                 noOptionsText="No Member Found"
                 fullWidth
                 value={tableData.find((s: any) => s.id === formik.values.member) || null}

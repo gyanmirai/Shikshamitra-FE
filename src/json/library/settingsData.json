@@ -86,5 +86,37 @@
       "endTime": "",
       "status": "Off"
     }
+  ],
+  "borrowingReturnRulesData": [
+    {
+      "id": "1",
+      "role": "Student",
+      "maxBooksPerMonth": "",
+      "reservationLimit": ""
+    },
+    {
+      "id": "2",
+      "role": "Teacher",
+      "maxBooksPerMonth": "",
+      "reservationLimit": ""
+    },
+    {
+      "id": "3",
+      "role": "Principal",
+      "maxBooksPerMonth": "",
+      "reservationLimit": ""
+    },
+    {
+      "id": "4",
+      "role": "Clerk",
+      "maxBooksPerMonth": "",
+      "reservationLimit": ""
+    },
+    {
+      "id": "5",
+      "role": "Librarian",
+      "maxBooksPerMonth": "",
+      "reservationLimit": ""
+    }
   ]
 }

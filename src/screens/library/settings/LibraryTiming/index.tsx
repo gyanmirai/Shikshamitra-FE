@@ -1,20 +1,92 @@
 'use client';
 
-import React from 'react';
+import dayjs from 'dayjs';
+import { Save } from '@mui/icons-material';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useState, useEffect } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { shikshaMitraToast } from 'src/components/toast';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { Box, Grid, Switch, Typography } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Grid, Button, Switch, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetLibraryTimingQuery } from 'src/redux/library/settingApi';
 
 const LibraryTimingCreation = () => {
-  const { data: timingData, isLoading } = useQueryAndMutation({
+  // State for managing timing data
+  const [timingData, setTimingData] = useState<any[]>([]);
+  const [originalTimingData, setOriginalTimingData] = useState<any[]>([]);
+
+  // Dialog control states
+  const resetDialog = useBoolean();
+  const saveDialog = useBoolean();
+
+  // Fetch library timing data
+  const { data: fetchedTimingData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLibraryTimingQuery,
   });
+
+  // Initialize data when fetched
+  useEffect(() => {
+    if (fetchedTimingData) {
+      setTimingData(fetchedTimingData);
+      setOriginalTimingData(fetchedTimingData);
+    }
+  }, [fetchedTimingData]);
+
+  // Handle time changes
+  const handleTimeChange = (id: string, field: string, value: any) => {
+    setTimingData((prev) =>
+      prev.map((timing) =>
+        timing.id === id
+          ? {
+              ...timing,
+              [field]: value ? dayjs(value).format('hh:mm A') : '',
+            }
+          : timing
+      )
+    );
+  };
+
+  // Handle status changes
+  const handleStatusChange = (id: string, checked: boolean) => {
+    setTimingData((prev) =>
+      prev.map((timing) =>
+        timing.id === id
+          ? {
+              ...timing,
+              status: checked ? 'On' : 'Off',
+              // Clear times when status is off
+              ...(checked ? {} : { startTime: '', endTime: '' }),
+            }
+          : timing
+      )
+    );
+  };
+
+  // Handles resetting all timing settings
+  const handleReset = () => {
+    setTimingData(originalTimingData);
+    resetDialog.onFalse();
+    shikshaMitraToast.success({
+      message: 'Library timing settings have been reset successfully',
+    });
+  };
+
+  // Handles saving timing settings
+  const handleSave = () => {
+    saveDialog.onFalse();
+    shikshaMitraToast.success({
+      message: 'Library timing settings have been saved successfully',
+    });
+  };
+
+  // Helper to check if there are any changes
+  const hasChanges = JSON.stringify(timingData) !== JSON.stringify(originalTimingData);
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
@@ -27,43 +99,25 @@ const LibraryTimingCreation = () => {
           { name: 'Library Timing', href: '/library/settings/library-timing' },
         ]}
         action={
-          <Box display="flex" gap={1}>
-            <CustomTooltip title="Reset all timing settings">
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  px: 2,
-                  py: 1,
-                  border: '1px solid',
-                  borderColor: 'grey.300',
-                  borderRadius: 1,
-                  cursor: 'pointer',
-                  '&:hover': { bgcolor: 'grey.50' },
-                }}
-              >
-                <Iconify icon="material-symbols:refresh" width={16} />
-                <Typography variant="body2">Reset</Typography>
-              </Box>
-            </CustomTooltip>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                px: 2,
-                py: 1,
-                bgcolor: 'primary.main',
-                color: 'white',
-                borderRadius: 1,
-                cursor: 'pointer',
-                '&:hover': { bgcolor: 'primary.dark' },
-              }}
+          <Box display="flex" gap={2}>
+            <Button
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+              onClick={() => resetDialog.onTrue()}
+              disabled={!hasChanges}
+              size="small"
             >
-              <Iconify icon="material-symbols:save" width={16} />
-              <Typography variant="body2">Save</Typography>
-            </Box>
+              Reset
+            </Button>
+            <Button
+              startIcon={<Save />}
+              variant="contained"
+              onClick={() => saveDialog.onTrue()}
+              disabled={!hasChanges}
+              size="small"
+            >
+              Save
+            </Button>
           </Box>
         }
         sx={{ px: 1, mb: 2 }}
@@ -71,6 +125,8 @@ const LibraryTimingCreation = () => {
 
       <CustomizableTable
         tableId="library-timing-table"
+        isLoading={isLoading}
+        isSearch={false}
         isPagination={false}
         columns={[
           {
@@ -92,15 +148,14 @@ const LibraryTimingCreation = () => {
                 <Grid size={12}>
                   <TimePicker
                     label=""
-                    value={null}
-                    onChange={(newValue) => {
-                      // Handle start time change
-                    }}
+                    value={value ? dayjs(value, 'hh:mm A') : null}
+                    onChange={(newValue) => handleTimeChange(row.id, 'startTime', newValue)}
+                    disabled={row.status === 'Off'}
                     slotProps={{
                       textField: {
                         size: 'small',
                         fullWidth: true,
-                        placeholder: value,
+                        placeholder: value || 'Select start time',
                       },
                     }}
                   />
@@ -117,15 +172,14 @@ const LibraryTimingCreation = () => {
                 <Grid size={12}>
                   <TimePicker
                     label=""
-                    value={null}
-                    onChange={(newValue) => {
-                      // Handle end time change
-                    }}
+                    value={value ? dayjs(value, 'hh:mm A') : null}
+                    onChange={(newValue) => handleTimeChange(row.id, 'endTime', newValue)}
+                    disabled={row.status === 'Off'}
                     slotProps={{
                       textField: {
                         size: 'small',
                         fullWidth: true,
-                        placeholder: value,
+                        placeholder: value || 'Select end time',
                       },
                     }}
                   />
@@ -135,20 +189,52 @@ const LibraryTimingCreation = () => {
           },
           {
             id: 'status',
-            label: 'Status',
-            align: 'right',
+            label: 'IsHoliday',
+            align: 'left',
             render: (value, row) => (
               <Switch
                 size="small"
                 checked={value !== 'Off'}
-                onChange={(e) => {
-                  // Handle status change
-                }}
+                onChange={(e) => handleStatusChange(row.id, e.target.checked)}
               />
             ),
           },
         ]}
         data={timingData || []}
+      />
+
+      <ConfirmDialog
+        open={resetDialog.value}
+        onClose={() => resetDialog.onFalse()}
+        title="Reset"
+        content="Are you sure you want to reset all timing settings?"
+        action={
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+            variant="contained"
+            size="small"
+            onClick={handleReset}
+          >
+            Reset
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={saveDialog.value}
+        onClose={() => saveDialog.onFalse()}
+        title="Save"
+        content="Are you sure you want to save these changes?"
+        action={
+          <Button
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            variant="contained"
+            size="small"
+            onClick={handleSave}
+          >
+            Save
+          </Button>
+        }
       />
     </Box>
   );

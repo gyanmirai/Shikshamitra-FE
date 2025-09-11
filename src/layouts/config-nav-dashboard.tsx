@@ -1483,6 +1483,13 @@ const libraryModule = {
               shortcutKeyName: 'Alt+L+S+3',
             },
             {
+              title: 'Borrowing & Return Rules',
+              path: '/library/settings/borrowing-and-return-rules',
+              _action: 'general-setting',
+              shortcutKey: 'Alt+L+S+4',
+              shortcutKeyName: 'Alt+L+S+4',
+            },
+            {
               title: 'Book Condition',
               path: '/library/settings/book-condition',
               _action: 'book-condition-setting',
