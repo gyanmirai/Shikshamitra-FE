@@ -23,9 +23,14 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
       tableId="concession-details"
       noDataText="Concession Data Not Found"
       columns={[
-        { id: 'concessionType', label: 'Concession Type', align: 'left' },
+        { id: 'concessionType', label: 'Concession Name', align: 'left' },
         { id: 'reason', label: 'Reason of Concession Type', align: 'left' },
-        { id: 'amount', label: 'Amount', align: 'left' },
+        {
+          id: 'amount',
+          label: 'Amount',
+          align: 'left',
+          render: (value) => `₹ ${value.toLocaleString()}`,
+        },
         { id: 'feeHead', label: 'Fee Head', align: 'left', minWidth: '130px' },
         {
           id: 'status',
@@ -46,6 +51,7 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
           label: 'Action',
           align: 'left',
           isSort: false,
+          sticky: true,
           isFilter: false,
           minWidth: 50,
           render(value, row) {

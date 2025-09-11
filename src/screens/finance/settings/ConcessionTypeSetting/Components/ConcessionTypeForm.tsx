@@ -1,26 +1,32 @@
 import type { FormikErrors } from 'formik';
 
+import React from 'react';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { DocumentTypeArray } from 'src/enums/documnet-type';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
+  Chip,
   Paper,
   Radio,
   Button,
   Switch,
+  Checkbox,
   TextField,
   IconButton,
   Typography,
   RadioGroup,
   FormControl,
+  Autocomplete,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -37,8 +43,6 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
   onClose,
   editData,
 }: IConcessionTypeFormProps) => {
-  const [feeHeads, setFeeHeads] = useState(feeHeadOptions);
-
   const formik = useFormik({
     initialValues: getInitialConcessionTypeData(editData),
     validationSchema: concessionTypeValidationSchema,
@@ -47,14 +51,18 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
     },
   });
 
-  console.log('Formik values:', formik.values);
-  console.log('Formik errors:', formik.errors);
+  console.log('formik,,values----', formik.values);
+  console.log('formik,,errors----', formik.errors);
 
   // Document add/remove handlers
   const handleAddDocument = () => {
     formik.setFieldValue('documents', [
       ...(formik.values.documents ?? []),
-      { documentName: '', documentSize: '5mb', acceptedFormat: 'jpg, png' },
+      {
+        documentName: '',
+        documentSize: '',
+        acceptedFormat: [],
+      },
     ]);
   };
 
@@ -68,7 +76,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
               error={!!(formik.touched.concessionName && formik.errors.concessionName) || false}
             >
@@ -85,7 +93,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
               error={!!(formik.touched.concessionType && formik.errors.concessionType)}
             >
@@ -116,7 +124,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             {formik.values.concessionType === 'fixed' ? (
               <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
                 <TextField
@@ -152,7 +160,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
             )}
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
               error={!!(formik.touched.applicableFeeHeads && formik.errors.applicableFeeHeads)}
             >
@@ -173,7 +181,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
             </ShakingTextField>
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField>
               <FormControlLabel
                 control={
@@ -254,33 +262,141 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                       />
                     </ShakingTextField>
 
-                    <ShakingTextField>
+                    <ShakingTextField
+                      error={
+                        !!(
+                          Array.isArray(formik?.touched?.documents) &&
+                          formik?.touched?.documents?.[idx]?.documentSize &&
+                          Array.isArray(formik?.errors?.documents) &&
+                          typeof formik?.errors?.documents?.[idx] === 'object' &&
+                          (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
+                            ?.documentSize
+                        )
+                      }
+                    >
                       <TextField
                         label="Document Size *"
                         size="small"
                         name={`documents.${idx}.documentSize`}
-                        value={doc.documentSize}
+                        value={doc.documentSize === 0 ? '' : doc.documentSize} // show empty if 0
                         onChange={(e) => {
                           const docs = [...(formik.values.documents ?? [])];
-                          docs[idx].documentSize = e.target.value;
+                          const val = e.target.value;
+                          // Allow empty string, otherwise store as number
+                          docs[idx].documentSize = val === '' ? '' : Number(val);
                           formik.setFieldValue('documents', docs);
                         }}
-                        sx={{ minWidth: 80 }}
+                        onKeyDown={(e) => {
+                          if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        error={
+                          !!(
+                            Array.isArray(formik?.touched?.documents) &&
+                            formik?.touched?.documents?.[idx]?.documentSize &&
+                            Array.isArray(formik?.errors?.documents) &&
+                            typeof formik?.errors?.documents?.[idx] === 'object' &&
+                            (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
+                              ?.documentSize
+                          )
+                        }
+                        helperText={
+                          Array.isArray(formik?.touched?.documents) &&
+                          formik?.touched?.documents?.[idx]?.documentSize &&
+                          Array.isArray(formik?.errors?.documents) &&
+                          typeof formik?.errors?.documents?.[idx] === 'object' &&
+                          (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
+                            ?.documentSize
+                            ? (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
+                                ?.documentSize
+                            : ''
+                        }
+                        sx={{ minWidth: 100 }}
                       />
                     </ShakingTextField>
 
-                    <ShakingTextField>
-                      <TextField
-                        label="Accepted Format *"
-                        size="small"
-                        name={`documents.${idx}.acceptedFormat`}
-                        value={doc.acceptedFormat}
-                        onChange={(e) => {
+                    <ShakingTextField
+                      error={
+                        !!(
+                          Array.isArray(formik?.touched?.documents) &&
+                          formik?.touched?.documents?.[idx]?.acceptedFormat &&
+                          Array.isArray(formik?.errors?.documents) &&
+                          typeof formik?.errors?.documents?.[idx] === 'object' &&
+                          (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
+                            ?.acceptedFormat
+                        )
+                      }
+                    >
+                      <Autocomplete
+                        multiple
+                        options={DocumentTypeArray}
+                        disableCloseOnSelect
+                        getOptionLabel={(option) => option.label}
+                        value={DocumentTypeArray.filter((item) =>
+                          doc.acceptedFormat.includes(item.value.toString())
+                        )}
+                        onChange={(_, data) => {
                           const docs = [...(formik.values.documents ?? [])];
-                          docs[idx].acceptedFormat = e.target.value;
+                          docs[idx].acceptedFormat = data.map((item) => item.value.toString());
                           formik.setFieldValue('documents', docs);
                         }}
-                        sx={{ minWidth: 100 }}
+                        isOptionEqualToValue={(option, value) => option.value === value.value}
+                        renderOption={(props, option, { selected }) => (
+                          <li {...props}>
+                            <Checkbox
+                              icon={<CheckBoxOutlineBlankIcon />}
+                              checkedIcon={<CheckBoxIcon />}
+                              style={{ marginRight: 8 }}
+                              checked={selected}
+                            />
+                            {option.label}
+                          </li>
+                        )}
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip
+                              label={option.label}
+                              {...getTagProps({ index })}
+                              key={index}
+                              variant="soft"
+                              size="small"
+                            />
+                          ))
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Accepted Format *"
+                            value={`${doc.acceptedFormat?.length || 0} Document Selected`}
+                            size="small"
+                            sx={{ minWidth: 290 }} // Added minWidth to increase dropdown width
+                            error={
+                              !!(
+                                Array.isArray(formik?.touched?.documents) &&
+                                formik?.touched?.documents?.[idx]?.acceptedFormat &&
+                                Array.isArray(formik?.errors?.documents) &&
+                                typeof formik?.errors?.documents?.[idx] === 'object' &&
+                                (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
+                                  ?.acceptedFormat
+                              )
+                            }
+                            helperText={
+                              Array.isArray(formik?.touched?.documents) &&
+                              formik?.touched?.documents?.[idx]?.acceptedFormat &&
+                              Array.isArray(formik?.errors?.documents) &&
+                              typeof formik?.errors?.documents?.[idx] === 'object' &&
+                              (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
+                                ?.acceptedFormat
+                                ? (
+                                    formik.errors.documents[
+                                      idx
+                                    ] as FormikErrors<IConcessionDocument>
+                                  )?.acceptedFormat
+                                : ''
+                            }
+                          />
+                        )}
                       />
                     </ShakingTextField>
 

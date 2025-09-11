@@ -31,6 +31,7 @@ const PaymentHistory = ({ student }: { student: IStudentFee | null }) => {
           id: 'action',
           label: 'Action',
           align: 'left',
+          sticky: true,
           isSort: false,
           isFilter: false,
           minWidth: 50,
