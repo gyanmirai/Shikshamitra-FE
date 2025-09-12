@@ -11,8 +11,8 @@ import type { IChargeData } from './type';
 interface Props {
   charge: IChargeData | null;
   isActionShow: boolean;
-  onApprove: () => void;
-  onReject: () => void;
+  onApprove?: () => void;
+  onReject?: () => void;
 }
 
 const ChargeDetailsCard: React.FC<Props> = ({
