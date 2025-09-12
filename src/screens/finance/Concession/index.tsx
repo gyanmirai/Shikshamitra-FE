@@ -271,7 +271,7 @@ const Concession = () => {
           setSelectedMode('');
           setSelectedConcession(null);
         }}
-        maxWidth="sm"
+        maxWidth="xs"
       >
         <ReasonApprovalForm onClose={handleClose} mode={selectedMode} />
       </CustomDialog>

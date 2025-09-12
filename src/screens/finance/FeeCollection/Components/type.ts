@@ -76,6 +76,7 @@ export interface IFeeHead {
   paid: number;
   total: number;
   status: number;
+  id: string;
 }
 
 export interface IFeeCharge {
@@ -99,8 +100,8 @@ export interface ITerm {
 
 export interface ITermsToCollectProps {
   terms: ITerm[] | null; // Optional terms data
-  selectedTerms: string[];
-  onTermSelect: (selectedTerms: string[]) => void;
+  selectedTerms: any[];
+  onTermSelect: (selectedTerms: any[]) => void;
   showError?: boolean;
   errorMessage?: string;
 }

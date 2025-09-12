@@ -1,85 +1,134 @@
-
 {
-  "concessionData" : [
-  {
-    "studentName": "Riya Patel",
-    "rollNo": "12",
-    "sibling": "Rahul Patel",
-    "contactNo": "9876543210",
-    "classDivision": "10-A",
-    "grNo": "GR1023",
-    "parentNaforme": "Mehul Patel",
-    "parentName": "Mehul Patel",
-    "email": "riya.patel@example.com",
-    "avatarUrl": "https://example.com/avatars/riya.png",
-    "boardMedium": "English",
-    "concessionType": "Scholarship",
-    "reason": "Merit-based",
-    "status": 1,
-    "totalConcession": 2,
-    "concessions": [
-      {
-        "concessionType": "Scholarship",
-        "reason": "Merit-based",
-        "documentStatus" : 0,
-        "status": 1
-      },
-      {
-        "concessionType": "Sibling Discount",
-        "reason": "Elder brother in same school",
-        "documentStatus" : 1,
-        "status": 0
-      }
-    ]
-  },
-  {
-    "studentName": "Aarav Shah",
-    "rollNo": "8",
-    "contactNo": "9988776655",
-    "classDivision": "9-B",
-    "grNo": "GR2045",
-    "parentNaforme": "Kunal Shah",
-    "parentName": "Kunal Shah",
-    "email": "aarav.shah@example.com",
-    "avatarUrl": "https://example.com/avatars/aarav.png",
-    "boardMedium": "Gujarati",
-    "concessionType": "Financial Aid",
-    "reason": "Low Income Family",
-    "status": 1,
-    "totalConcession": 1,
-    "concessions": [
-      {
-        "concessionType": "Financial Aid",
-        "reason": "Low Income Family",
-        "documentStatus" : 0,
-        "status": 1
-      }
-    ]
-  },
-  {
-    "studentName": "Simran Desai",
-    "rollNo": "5",
-    "sibling": "Priya Desai",
-    "contactNo": "9123456780",
-    "classDivision": "8-C",
-    "grNo": "GR3056",
-    "parentNaforme": "Anita Desai",
-    "parentName": "Anita Desai",
-    "email": "simran.desai@example.com",
-    "avatarUrl": "https://example.com/avatars/simran.png",
-    "boardMedium": "English",
-    "concessionType": "Sports Quota",
-    "reason": "State Level Player",
-    "status": 0,
-    "totalConcession": 1,
-    "concessions": [
-      {
-        "concessionType": "Sports Quota",
-        "reason": "State Level Player",
-        "documentStatus" : 0,
-        "status": 0
-      }
-    ]
-  }
-]
+  "concessionData": [
+    {
+      "studentName": "Riya Patel",
+      "rollNo": "12",
+      "sibling": "Rahul Patel",
+      "contactNo": "9876543210",
+      "classDivision": "10-A",
+      "grNo": "GR1023",
+      "parentName": "Mehul Patel",
+      "email": "riya.patel@example.com",
+      "avatarUrl": "https://randomuser.me/api/portraits/men/15.jpg",
+
+      "boardMedium": "English",
+      "concessionType": "Scholarship",
+      "reason": "Merit-based",
+      "status": 1,
+      "totalConcession": 2,
+      "feecollectionType": "Sibling Discount",
+      "documents": [
+        {
+          "name": "Income Certificate",
+          "type": "PDF",
+          "status": "Uploaded",
+          "file": null
+        },
+        {
+          "name": "Academic Records",
+          "type": "PDF",
+          "status": "Pending",
+          "file": null
+        },
+        {
+          "name": "Sibling Certificate",
+          "type": "PDF",
+          "status": "Uploaded",
+          "file": null
+        }
+      ],
+      "concessions": [
+        {
+          "concessionType": "Scholarship",
+          "reason": "Merit-based",
+          "documentStatus": 0,
+          "status": 1
+        },
+        {
+          "concessionType": "Sibling Discount",
+          "reason": "Elder brother in same school",
+          "documentStatus": 1,
+          "status": 0
+        }
+      ]
+    },
+    {
+      "studentName": "Aarav Shah",
+      "rollNo": "8",
+      "contactNo": "9988776655",
+      "classDivision": "9-B",
+      "grNo": "GR2045",
+      "parentName": "Kunal Shah",
+      "email": "aarav.shah@example.com",
+      "avatarUrl": "https://randomuser.me/api/portraits/men/14.jpg",
+
+      "boardMedium": "Gujarati",
+      "concessionType": "Financial Aid",
+      "reason": "Low Income Family",
+      "status": 1,
+      "totalConcession": 1,
+      "feecollectionType": "",
+      "documents": [
+        {
+          "name": "Income Certificate",
+          "type": "PDF",
+          "status": "Uploaded",
+          "file": null
+        },
+        {
+          "name": "Bank Statement",
+          "type": "PDF",
+          "status": "Pending",
+          "file": null
+        }
+      ],
+      "concessions": [
+        {
+          "concessionType": "Financial Aid",
+          "reason": "Low Income Family",
+          "documentStatus": 0,
+          "status": 1
+        }
+      ]
+    },
+    {
+      "studentName": "Simran Desai",
+      "rollNo": "5",
+      "sibling": "Priya Desai",
+      "contactNo": "9123456780",
+      "classDivision": "8-C",
+      "grNo": "GR3056",
+      "parentName": "Anita Desai",
+      "email": "simran.desai@example.com",
+      "avatarUrl": "https://randomuser.me/api/portraits/men/13.jpg",
+
+      "boardMedium": "English",
+      "concessionType": "Sports Quota",
+      "reason": "State Level Player",
+      "status": 0,
+      "totalConcession": 1,
+      "documents": [
+        {
+          "name": "Sports Certificate",
+          "type": "PDF",
+          "status": "Uploaded",
+          "file": null
+        },
+        {
+          "name": "Medical Certificate",
+          "type": "PDF",
+          "status": "Pending",
+          "file": null
+        }
+      ],
+      "concessions": [
+        {
+          "concessionType": "Sports Quota",
+          "reason": "State Level Player",
+          "documentStatus": 0,
+          "status": 0
+        }
+      ]
+    }
+  ]
 }

@@ -280,33 +280,6 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
               </TextField>
             </ShakingTextField>
           </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.feeHead && formik.errors.feeHead)}>
-              <CustomSelect
-                label="Fee Head *"
-                options={[
-                  { id: 'tuition', name: 'Tuition Fee' },
-                  { id: 'admission', name: 'Admission Fee' },
-                  { id: 'exam', name: 'Examination Fee' },
-                  { id: 'transport', name: 'Transport Fee' },
-                  { id: 'library', name: 'Library Fee' },
-                  { id: 'lab', name: 'Laboratory Fee' },
-                  { id: 'sports', name: 'Sports Fee' },
-                  { id: 'other', name: 'Other Fees' },
-                ]}
-                labelKey="name"
-                valueKey="id"
-                value={formik.values.feeHead}
-                onChange={(val) => {
-                  formik.setFieldValue('feeHead', val);
-                  formik.setFieldTouched('feeHead', false);
-                }}
-                error={!!formik.errors.feeHead && formik.touched.feeHead}
-                helperText={(formik.touched.feeHead && formik.errors.feeHead) as string}
-              />
-            </ShakingTextField>
-          </Grid>
         </Grid>
 
         {formik.values.concessionType && (

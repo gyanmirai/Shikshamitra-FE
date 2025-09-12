@@ -13,7 +13,7 @@ import {
 
 import ChargesList from './ChargesList';
 
-import type { ITermsToCollectProps } from './type';
+import type { ITerm, IFeeCharge, ITermsToCollectProps } from './type';
 
 const TermsToCollect: React.FC<ITermsToCollectProps> = ({
   terms = [],
@@ -34,13 +34,19 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
   };
 
   // Handle term selection/deselection for fee collection
-  const toggleSelect = (id: string) => {
-    const newSelected = selectedTerms.includes(id)
-      ? selectedTerms.filter((t) => t !== id) // Remove from selection if already selected
-      : [...selectedTerms, id]; // Add to selection if not selected
-    onTermSelect(newSelected);
-  };
+  const toggleSelect = (term: ITerm | IFeeCharge) => {
+    // const newSelected = selectedTerms.includes(id)
+    //   ? selectedTerms.filter((t) => t !== id) // Remove from selection if already selected
+    //   : [...selectedTerms, id]; // Add to selection if not selected
+    // onTermSelect(newSelected);
 
+    if (selectedTerms.some((t) => t.id === term.id)) {
+      const newSelected: (ITerm | IFeeCharge)[] = selectedTerms.filter((t) => t.id !== term.id);
+      onTermSelect(newSelected);
+    } else {
+      onTermSelect([...selectedTerms, term]);
+    }
+  };
   return (
     <Card
       sx={{
@@ -68,8 +74,8 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
             <Box display="flex" alignItems="center" justifyContent="space-between" p={1}>
               <Box display="flex" gap={1}>
                 <Checkbox
-                  checked={selectedTerms.includes(term.id)}
-                  onChange={() => toggleSelect(term.id)}
+                  checked={selectedTerms?.some((t) => t.id === term.id) || false}
+                  onChange={() => toggleSelect(term)}
                 />
                 <Box>
                   <Typography variant="subtitle1" fontWeight={600}>
@@ -122,7 +128,11 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                     </Box>
                   </Box>
                 ))}
-                <ChargesList charges={term.charges} selectedCharges={[]} toggleSelect={() => {}} />
+                <ChargesList
+                  charges={term.charges}
+                  selectedCharges={selectedTerms}
+                  toggleSelect={toggleSelect}
+                />
               </Box>
             </Collapse>
           </Box>

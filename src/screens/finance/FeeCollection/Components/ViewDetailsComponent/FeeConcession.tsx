@@ -1,6 +1,8 @@
 import type { LabelColor } from 'src/components/label';
 
+import { Typography } from '@mui/material';
 import { Label } from 'src/components/label';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -18,20 +20,69 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
     type: 'query',
     currentQueryAndMutation: useGetFeeConcessionsQuery,
   });
+
   return (
     <CustomizableTable
       tableId="concession-details"
       noDataText="Concession Data Not Found"
       columns={[
-        { id: 'concessionType', label: 'Concession Name', align: 'left' },
-        { id: 'reason', label: 'Reason of Concession Type', align: 'left' },
+        { id: 'concessionType', label: 'Name', align: 'left', minWidth: '150px' },
+        { id: 'feeHead', label: 'Fee Head', align: 'left', minWidth: '130px' },
+        {
+          id: 'reason',
+          label: 'Reason of Concession Type',
+          align: 'left',
+          minWidth: '230px',
+          render: (value) => (
+            <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{
+                  maxWidth: 200,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  display: 'block',
+                }}
+              >
+                {value}
+              </Typography>
+            </CustomTooltip>
+          ),
+        },
+        {
+          id: 'rejectReason',
+          label: 'Reason of Reject',
+          align: 'left',
+          minWidth: '200px',
+          render: (value, row) =>
+            row.status === 3 ? (
+              <CustomTooltip title={value || '-'} arrow sx={{ textAlign: 'justify' }}>
+                <Typography
+                  variant="caption"
+                  noWrap
+                  sx={{
+                    maxWidth: 180,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    display: 'block',
+                  }}
+                >
+                  {value || '-'}
+                </Typography>
+              </CustomTooltip>
+            ) : (
+              '-'
+            ),
+        },
         {
           id: 'amount',
           label: 'Amount',
           align: 'left',
           render: (value) => `₹ ${value.toLocaleString()}`,
         },
-        { id: 'feeHead', label: 'Fee Head', align: 'left', minWidth: '130px' },
         {
           id: 'status',
           label: 'Status',
@@ -57,7 +108,6 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
           render(value, row) {
             return (
               <ThreeDotsActions
-                // actions={(prop) => actions({ ...props, row })}
                 placement="right-top"
                 showViewIcon
                 showThreeDots={false}

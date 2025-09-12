@@ -46,7 +46,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         chargeCategory: editData.category || '',
         description: editData.description || '',
         amount: editData.amount || '',
-        dueDate: editData.dueDate ? dayjs(editData.dueDate) : null,
+        dueDate: editData.dueDate ? dayjs(editData.dueDate, 'DD-MM-YYYY') : null,
         priority: editData.priority?.toString() || '',
         academicYear: editData.academicYear || '',
         board: editData.board || '',
@@ -79,7 +79,13 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     validationSchema: Yup.object({
       chargeCategory: Yup.string().required('Charge Category is required'),
       description: Yup.string().required('Purpose/Description is required'),
-      amount: Yup.number().min(1, 'Amount must be greater than 0').required('Amount is required'),
+      amount: Yup.string()
+        .required('Amount is required')
+        .transform((value) => value.replace(/[^0-9.]/g, ''))
+        .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
+          const numericValue = Number(value);
+          return numericValue > 0;
+        }),
       dueDate: Yup.mixed()
         .required('Due Date is required')
         .test(
@@ -167,7 +173,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         ...item,
         name: `${item.firstName} ${item.lastName} ${item.middleName}`,
       })) || [],
-    [StudentsData?.items] // Added dependency array
+    [StudentsData?.items]
   );
 
   return (
@@ -199,91 +205,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
             </ShakingTextField>
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.description && errors.description) || false}>
-              <TextField
-                name="description"
-                label="Purpose/Description *"
-                multiline
-                minRows={3}
-                fullWidth
-                value={values.description}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={!!(touched.description && errors.description)}
-                helperText={(touched.description && errors.description) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
-              <NumericFormatCustom
-                size="small"
-                fullWidth
-                label="Amount *"
-                name="amount"
-                value={values.amount || ''}
-                onChange={(e) => {
-                  let val = e.target.value;
-                  val = val.replace(/[₹,\s]/g, '');
-                  setFieldValue('amount', Number(val));
-                  setFieldTouched('amount', false);
-                }}
-                sx={{
-                  width: '100%',
-                  padding: '0',
-                  borderRadius: 1,
-                }}
-                error={!!(touched.amount && errors.amount)}
-                helperText={(touched.amount && errors.amount) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
-              <DatePicker
-                label="Due Date *"
-                name="dueDate"
-                format="DD/MM/YYYY"
-                value={values.dueDate}
-                onChange={(newValue) => setFieldValue('dueDate', newValue)}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    error: !!(touched.dueDate && errors.dueDate),
-                    helperText: (touched.dueDate && errors.dueDate) as string,
-                    onBlur: () => setFieldTouched('dueDate', true),
-                  },
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
-              <CustomSelect
-                name="priority"
-                label="Priority *"
-                options={[
-                  { id: '0', name: 'Low' },
-                  { id: '1', name: 'Medium' },
-                  { id: '2', name: 'High' },
-                ]}
-                labelKey="name"
-                valueKey="id"
-                value={values.priority}
-                onChange={(value) => setFieldValue('priority', value)}
-                error={!!(touched.priority && errors.priority) || false}
-                helperText={(touched.priority && errors.priority) || ''}
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 6 }}>
             <ShakingTextField error={!!(touched.class && errors.class) || false}>
               <CustomSelect
                 name="class"
@@ -321,7 +243,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
             </ShakingTextField>
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 6 }}>
             <ShakingTextField error={!!(touched.divisions && errors.divisions) || false}>
               <CustomSelect
                 name="divisions"
@@ -371,6 +293,52 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
             </ShakingTextField>
           </Grid>
 
+          <Grid size={{ xs: 6 }}>
+            <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
+              <NumericFormatCustom
+                size="small"
+                fullWidth
+                label="Amount *"
+                name="amount"
+                value={values.amount || ''}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  val = val.replace(/[₹,\s]/g, '');
+                  setFieldValue('amount', Number(val));
+                  setFieldTouched('amount', false);
+                }}
+                sx={{
+                  width: '100%',
+                  padding: '0',
+                  borderRadius: 1,
+                }}
+                error={!!(touched.amount && errors.amount)}
+                helperText={(touched.amount && errors.amount) as string}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid size={{ xs: 6 }}>
+            <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
+              <DatePicker
+                label="Due Date *"
+                name="dueDate"
+                format="DD/MM/YYYY"
+                value={dayjs(values.dueDate) || null}
+                onChange={(newValue) => setFieldValue('dueDate', newValue)}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: !!(touched.dueDate && errors.dueDate),
+                    helperText: (touched.dueDate && errors.dueDate) as string,
+                    onBlur: () => setFieldTouched('dueDate', true),
+                  },
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
+
           <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(touched.students && errors.students) || false}>
               <Autocomplete
@@ -397,6 +365,44 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                     helperText={(touched.students && errors.students) as string}
                   />
                 )}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
+              <CustomSelect
+                name="priority"
+                label="Priority *"
+                options={[
+                  { id: '0', name: 'Low' },
+                  { id: '1', name: 'Medium' },
+                  { id: '2', name: 'High' },
+                ]}
+                labelKey="name"
+                valueKey="id"
+                value={values.priority}
+                onChange={(value) => setFieldValue('priority', value)}
+                error={!!(touched.priority && errors.priority) || false}
+                helperText={(touched.priority && errors.priority) || ''}
+                formControlProps={{ fullWidth: true }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(touched.description && errors.description) || false}>
+              <TextField
+                name="description"
+                label="Purpose/Description *"
+                multiline
+                minRows={3}
+                fullWidth
+                value={values.description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={!!(touched.description && errors.description)}
+                helperText={(touched.description && errors.description) as string}
               />
             </ShakingTextField>
           </Grid>

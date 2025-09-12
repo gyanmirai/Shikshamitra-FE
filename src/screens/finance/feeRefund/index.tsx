@@ -83,11 +83,9 @@ const FeeRefund = () => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       onConfirmDialg.onFalse();
       setSelectedMode('');
-      setSelectedFeeRefund(null);
     } else if (!isChanges) {
       onConfirmDialg.onFalse();
       setSelectedMode('');
-      setSelectedFeeRefund(null);
     }
   };
   useEffect(() => {
@@ -285,7 +283,7 @@ const FeeRefund = () => {
           setSelectedMode('');
           setSelectedFeeRefund(null);
         }}
-        maxWidth="sm"
+        maxWidth="xs"
       >
         <FeeRefundReasonApprovalForm onClose={handleRequstClose} mode={selectedMode} />
       </CustomDialog>

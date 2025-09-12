@@ -16,7 +16,7 @@ import TermsToRefund from './TermsToRefund';
 import { getInitialPaymentDetails } from '../Components/RefundProcessForm';
 import { paymentMethodsConfig } from '../../FeeCollection/Components/paymentConfigMethods';
 
-import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
+import type { ITerm, IFeeHead, IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 
 export default function FeeRefundDetailsForm({ formik }: any) {
   const theme = useTheme();
@@ -25,55 +25,63 @@ export default function FeeRefundDetailsForm({ formik }: any) {
     currentQueryAndMutation: useGetRefundTermsQuery,
   });
 
-  console.log('formik values====', formik.values);
-
-  console.log('formik errors====', formik.errors);
-  console.log('formik.erroe for fields----', formik.errors.paymentDetails?.amount);
-
   // update totalAmount when selections change
+  // useEffect(() => {
+  //   let total = 0;
+
+  //   if (!feeTermsData) return;
+
+  //   formik.values.selectedTerms.forEach((termId: string) => {
+  //     const term = feeTermsData.find((t: any) => t.id === termId);
+  //     if (term) {
+  //       total += term.paid || 0;
+  //     }
+  //   });
+
+  //   // Heads/Charges only if parent term is NOT selected
+  //   feeTermsData.forEach((term: any) => {
+  //     if (!formik.values.selectedTerms.includes(term.id)) {
+  //       // Fee heads
+  //       formik.values.selectedFeeHeads.forEach((key: string) => {
+  //         const [termId, headName] = key.split('-');
+  //         if (term.id === termId) {
+  //           const head = term.feeHeads.find((h: any) => h.name === headName);
+  //           if (head) total += head.paid || 0;
+  //         }
+  //       });
+
+  //       // Charges
+  //       formik.values.selectedCharges.forEach((key: string) => {
+  //         const [termId, chargeId] = key.split('-');
+  //         if (term.id === termId) {
+  //           const charge = term.charges.find((c: any) => c.id === chargeId);
+  //           if (charge) total += charge.paid || 0;
+  //         }
+  //       });
+  //     }
+  //   });
+
+  //   formik.setFieldValue('totalAmount', total === 0 ? '' : total.toString());
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [
+  //   formik.values.selectedTerms,
+  //   formik.values.selectedFeeHeads,
+  //   formik.values.selectedCharges,
+  //   feeTermsData,
+  // ]);
+
   useEffect(() => {
-    let total = 0;
-
-    if (!feeTermsData) return;
-
-    formik.values.selectedTerms.forEach((termId: string) => {
-      const term = feeTermsData.find((t: any) => t.id === termId);
-      if (term) {
-        total += term.paid || 0;
-      }
-    });
-
-    // Heads/Charges only if parent term is NOT selected
-    feeTermsData.forEach((term: any) => {
-      if (!formik.values.selectedTerms.includes(term.id)) {
-        // Fee heads
-        formik.values.selectedFeeHeads.forEach((key: string) => {
-          const [termId, headName] = key.split('-');
-          if (term.id === termId) {
-            const head = term.feeHeads.find((h: any) => h.name === headName);
-            if (head) total += head.paid || 0;
-          }
-        });
-
-        // Charges
-        formik.values.selectedCharges.forEach((key: string) => {
-          const [termId, chargeId] = key.split('-');
-          if (term.id === termId) {
-            const charge = term.charges.find((c: any) => c.id === chargeId);
-            if (charge) total += charge.paid || 0;
-          }
-        });
-      }
-    });
-
-    formik.setFieldValue('totalAmount', total === 0 ? '' : total.toString());
+    if (formik.values.selectedTerms.length === 0) {
+      formik.setFieldValue('totalAmount', '');
+    } else {
+      const amount = formik.values.selectedTerms.reduce(
+        (pre: number, items: any) => pre + (items.total - items.paid),
+        0
+      );
+      formik.setFieldValue('totalAmount', amount === 0 ? '' : amount.toString());
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    formik.values.selectedTerms,
-    formik.values.selectedFeeHeads,
-    formik.values.selectedCharges,
-    feeTermsData,
-  ]);
+  }, [formik.values.selectedTerms]);
 
   return (
     <Box display="flex" flexDirection="column">
@@ -82,7 +90,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
           <TermsToRefund
             terms={feeTermsData}
             selectedTerms={formik.values.selectedTerms}
-            onTermSelect={(selectedTerms: string[]) =>
+            onTermSelect={(selectedTerms: (ITerm | IFeeHead)[]) =>
               formik.setFieldValue('selectedTerms', selectedTerms)
             }
             selectedFeeHeads={formik.values.selectedFeeHeads}
@@ -115,25 +123,6 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                     disabled
                     size="small"
                   />
-                </Grid>
-                {/* Refund Amount */}
-                <Grid size={6}>
-                  <ShakingTextField
-                    error={!!(formik.touched.refundAmount && formik.errors.refundAmount)}
-                  >
-                    <NumericFormatCustom
-                      fullWidth
-                      label="Refund Amount *"
-                      size="small"
-                      name="refundAmount"
-                      value={formik.values.refundAmount}
-                      onChange={formik.handleChange}
-                      error={formik.touched.refundAmount && Boolean(formik.errors.refundAmount)}
-                      helperText={
-                        (formik.touched.refundAmount && formik.errors.refundAmount) as string
-                      }
-                    />
-                  </ShakingTextField>
                 </Grid>
                 {/* Refund Method */}
                 <Grid size={6}>
@@ -181,6 +170,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                           {field.type === 'date' ? (
                             <DatePicker
                               label={field.label}
+                              format="DD/MM/YYYY"
                               value={value ? dayjs(value) : null}
                               onChange={(date) => formik.setFieldValue(fieldPath, date)}
                               // onBlur={() => formik.setFieldTouched(fieldPath, true)}

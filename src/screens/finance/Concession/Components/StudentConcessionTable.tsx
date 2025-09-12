@@ -3,15 +3,9 @@
 import React, { useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Box, Avatar, MenuList, MenuItem } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import {
-  Box,
-  Avatar,
-  MenuList,
-  MenuItem,
-  Typography,
-} from '@mui/material';
 
 import type { IStudentInfo } from '../type';
 import type { IViewConcessionRequestProps } from '../../ConcessionAdmin/type';
@@ -32,17 +26,15 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        <>
-          <MenuItem
-            onClick={() => {
-              onViewAllConcession?.(row as IStudentInfo);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon={GlobalIcons.eye} />
-            View Concession
-          </MenuItem>
-        </>
+        <MenuItem
+          onClick={() => {
+            onViewAllConcession?.(row as IStudentInfo);
+            pop.onClose();
+          }}
+        >
+          <Iconify icon={GlobalIcons.eye} />
+          View Concession
+        </MenuItem>
       </MenuList>
     ),
     [onViewAllConcession]
@@ -61,8 +53,8 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
           minWidth: 150,
           render: (value, row) => (
             <Box display="flex" alignItems="center" gap={1}>
-              <Avatar src={row.avatarUrl} alt={row.studentName} sx={{ width: 32, height: 32 }} />
-              <Typography variant="body2">{row.studentName}</Typography>
+              <Avatar src={row.avatarUrl} sx={{ width: 32, height: 32 }} />
+              {row.studentName}
             </Box>
           ),
         },
@@ -99,16 +91,22 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
           minWidth: 150,
         },
         {
+          id: 'feecollectionType',
+          label: 'Fee Collection Type',
+          align: 'left',
+          minWidth: '180px',
+        },
+        {
           id: 'actions',
-          label: 'Actions',
+          label: 'Action',
           align: 'left',
           isSort: false,
           isFilter: false,
           sticky: true,
-          minWidth: 60,
+          minWidth: 40,
           render: (value, row) => (
             <ThreeDotsActions
-              showThreeDots={!!onRequestConcession}
+              showThreeDots={false}
               placement="right-center"
               showViewIcon={!!onViewConcession}
               handleViewClick={() => onViewConcession?.(row as IViewConcessionRequestProps)}

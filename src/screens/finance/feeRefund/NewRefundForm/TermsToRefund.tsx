@@ -14,13 +14,13 @@ import {
 
 import ChargesList from '../../FeeCollection/Components/ChargesList';
 
-import type { ITerm } from '../../FeeCollection/Components/type';
+import type { ITerm, IFeeHead } from '../../FeeCollection/Components/type';
 
 export interface ITermsToRefundProps {
   terms: ITerm[] | null;
 
-  selectedTerms: string[]; // ["term1", "term2"]
-  onTermSelect: (selected: string[]) => void;
+  selectedTerms: (ITerm | IFeeHead)[]; // ["term1", "term2"]
+  onTermSelect: (selected: (ITerm | IFeeHead)[]) => void;
 
   selectedFeeHeads: string[]; // ["termId-headName"]
   onFeeHeadSelect: (selected: string[]) => void;
@@ -48,39 +48,46 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
 
   const toggleExpand = (id: string) => setExpanded(expanded === id ? null : id);
 
-  const toggleTerm = (id: string, term: ITerm) => {
-    let updatedTerms = [...selectedTerms];
-    let updatedHeads = [...selectedFeeHeads];
-    let updatedCharges = [...selectedCharges];
-
-    if (updatedTerms.includes(id)) {
-      // remove term
-      updatedTerms = updatedTerms.filter((t) => t !== id);
-
-      // also deselect all its heads and charges
-      updatedHeads = updatedHeads.filter((key) => !key.startsWith(`${id}-`));
-      updatedCharges = updatedCharges.filter((key) => !key.startsWith(`${id}-`));
+  const toggleTerm = (term: ITerm | IFeeHead) => {
+    if (selectedTerms.some((t) => t.id === term.id)) {
+      const newSelected: (ITerm | IFeeHead)[] = selectedTerms.filter((t) => t.id !== term.id);
+      onTermSelect(newSelected);
     } else {
-      // add term
-      updatedTerms.push(id);
-
-      // collect all heads
-      const termHeads = term.feeHeads.map((h) => `${id}-${h.name}`);
-      termHeads.forEach((key) => {
-        if (!updatedHeads.includes(key)) updatedHeads.push(key);
-      });
-
-      // collect all charges
-      const termCharges = term?.charges?.map((c) => `${id}-${c.id}`);
-      termCharges?.forEach((key) => {
-        if (!updatedCharges.includes(key)) updatedCharges.push(key);
-      });
+      onTermSelect([...selectedTerms, term]);
     }
 
-    // update all at once
-    onTermSelect(updatedTerms);
-    onFeeHeadSelect?.(updatedHeads);
-    onChargeSelect?.(updatedCharges);
+    // let updatedTerms = [...selectedTerms];
+    // let updatedHeads = [...selectedFeeHeads];
+    // let updatedCharges = [...selectedCharges];
+
+    // if (updatedTerms.includes(id)) {
+    //   // remove term
+    //   updatedTerms = updatedTerms.filter((t) => t !== id);
+
+    //   // also deselect all its heads and charges
+    //   updatedHeads = updatedHeads.filter((key) => !key.startsWith(`${id}-`));
+    //   updatedCharges = updatedCharges.filter((key) => !key.startsWith(`${id}-`));
+    // } else {
+    //   // add term
+    //   updatedTerms.push(id);
+
+    //   // collect all heads
+    //   const termHeads = term.feeHeads.map((h) => `${id}-${h.name}`);
+    //   termHeads.forEach((key) => {
+    //     if (!updatedHeads.includes(key)) updatedHeads.push(key);
+    //   });
+
+    //   // collect all charges
+    //   const termCharges = term?.charges?.map((c) => `${id}-${c.id}`);
+    //   termCharges?.forEach((key) => {
+    //     if (!updatedCharges.includes(key)) updatedCharges.push(key);
+    //   });
+    // }
+
+    // // update all at once
+    // onTermSelect(updatedTerms);
+    // onFeeHeadSelect?.(updatedHeads);
+    // onChargeSelect?.(updatedCharges);
   };
 
   return (
@@ -94,8 +101,8 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
             <Box display="flex" alignItems="center" justifyContent="space-between" p={2}>
               <Box display="flex" alignItems="center" gap={1}>
                 <Checkbox
-                  checked={selectedTerms.includes(term.id)}
-                  onChange={() => toggleTerm(term.id, term)}
+                  checked={selectedTerms?.some((t) => t.id === term.id) || false}
+                  onChange={() => toggleTerm(term)}
                 />
                 <Box>
                   <Typography variant="subtitle1" fontWeight={600}>
@@ -123,7 +130,7 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
                   Select Fee Heads to Refund
                 </Typography>
 
-                {term.feeHeads.map((head) => {
+                {term.feeHeads.map((head, indx) => {
                   const key = `${term.id}-${head.name}`;
                   const isSelected = selectedFeeHeads.includes(key);
 
@@ -150,8 +157,8 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
                     >
                       <Box display="flex" alignItems="center" gap={1}>
                         <Checkbox
-                          checked={selectedFeeHeads.includes(key)}
-                          onChange={handleToggleHead}
+                          checked={selectedTerms?.some((t) => t.id === term.id) || false}
+                          onChange={() => toggleTerm({ ...head, id: `head${indx}` })}
                         />
                         <Typography>{head.name}</Typography>
                       </Box>
@@ -175,17 +182,8 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
 
                 <ChargesList
                   charges={term.charges}
-                  selectedCharges={selectedCharges}
-                  toggleSelect={(chargeId) => {
-                    const key = `${term.id}-${chargeId}`;
-                    let updated = [...selectedCharges];
-                    if (updated.includes(key)) {
-                      updated = updated.filter((k) => k !== key);
-                    } else {
-                      updated.push(key);
-                    }
-                    onChargeSelect(updated); // ✅ send full array
-                  }}
+                  selectedCharges={selectedTerms}
+                  toggleSelect={toggleTerm}
                 />
               </Box>
             </Collapse>

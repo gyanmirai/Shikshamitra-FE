@@ -17,7 +17,7 @@ import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/Inform
 import FeeTermsComponent from './FeeTermsComponent';
 import { paymentMethodsConfig } from './paymentConfigMethods';
 
-import type { ITerm, IPaymentFieldConfig, IPaymentDetailsFormProps } from './type';
+import type { IPaymentFieldConfig, IPaymentDetailsFormProps } from './type';
 
 export const buildInitialValues = () => {
   const initialValues: Record<string, any> = {
@@ -92,16 +92,17 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
     currentQueryAndMutation: useGetFeeTermsQuery,
   });
 
-  // Calculate total payable amount based on selected terms
-  const selectedTermsData =
-    feeTermsData?.filter((term: ITerm) => formik.values.selectedTerms.includes(term.id)) || [];
-  // Update totalAmount in formik when selectedTerms change
   useEffect(() => {
-    const amount = selectedTermsData.reduce(
-      (sum: number, term: ITerm) => sum + (term.total - term.paid),
-      0
-    );
-    formik.setFieldValue('totalAmount', amount === 0 ? '' : amount.toString());
+    if (formik.values.selectedTerms.length === 0) {
+      formik.setFieldValue('totalAmount', '');
+    } else {
+      const amount = formik.values.selectedTerms.reduce(
+        (pre: number, items: any) => pre + (items.total - items.paid),
+        0
+      );
+
+      formik.setFieldValue('totalAmount', amount === 0 ? '' : amount.toString());
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.selectedTerms]);
 

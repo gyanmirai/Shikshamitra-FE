@@ -10,6 +10,8 @@ export interface IChargeData {
     id: string;
     name: string;
     division: string;
+    rollNo?: string; // Added for table
+    grNo?: string; // Added for table
   }[]; // optional detailed list
   amount: number;
   priority: number;
@@ -20,6 +22,11 @@ export interface IChargeData {
   board: string;
   medium: string;
   additionalNotes?: string;
+
+  // Added missing properties for RequestorInfoCard
+  requestorName?: string;
+  department?: string;
+  requestedOn?: string;
 }
 
 export interface IChargeFormProps {
