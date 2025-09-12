@@ -1,3 +1,4 @@
+import { Box } from '@mui/system';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetOutstandingFeesQuery } from 'src/redux/feeCollection/outstandingFeeData';
@@ -14,7 +15,15 @@ const OutstandingFee = ({ student }: { student: IStudentFee | null }) => {
       tableId="student-fee-details"
       noDataText="Fee Data Not Found"
       columns={[
-        { id: 'feeHead', label: 'Fee Head', align: 'left', isFilter: true },
+        { id: 'installmentName', label: 'Installment Name', align: 'left', isFilter: true },
+        {
+          id: 'feeHead',
+          label: 'Fee Head',
+          align: 'left',
+          isFilter: true,
+          render: (value) =>
+            Array.isArray(value) ? <Box>{value.join(', ')}</Box> : <Box>{value}</Box>,
+        },
         {
           id: 'amount',
           label: 'Amount',

@@ -1,67 +1,111 @@
 import React from 'react';
-import { Box, Card, Grid, Chip, Typography, CardContent } from '@mui/material';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
 
 import type { RequestorInfoProps } from './type';
 
-const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => {
-  const displayedStudents = charge?.studentList?.slice(0, 3) || []; // show first 3
-  const remainingCount = (charge?.studentList?.length || 0) - displayedStudents.length;
+const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => (
+  <Box sx={{ p: 2 }}>
+    <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
+      <CardContent>
+        <Typography variant="h6" color="#00A76F" gutterBottom>
+          Requestor Information
+        </Typography>
 
-  return (
-    <Box sx={{ p: 2 }}>
-      <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-        <CardContent>
-          <Typography variant="h6" color="primary.main" gutterBottom>
-            Requestor Information
+        {/* First Row - Basic Info */}
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid size={{ xs: 12, md: 2 }}>
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                Name
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                {charge?.requestorName || 'Dharmik Jinjala'}
+              </Typography>
+            </Box>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 5 }}>
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                Affected Students
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                Class: {charge?.class} • Division: {charge?.divisions?.join(', ') || 'ALL'} • Total
+                Students: {charge?.students || 80}
+              </Typography>
+            </Box>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 2 }}>
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                Department
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                {charge?.department || 'Science'}
+              </Typography>
+            </Box>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 3 }}>
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                Requested On
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                {charge?.requestedOn || '20-08-2025'}
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
+
+        {/* Affected Students Table Section */}
+        <Box>
+          <Typography variant="h6" color="#00A76F" gutterBottom>
+            Affected Students
           </Typography>
 
-          <Grid container spacing={3}>
-            {/* Left Section */}
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              <Box mb={2}>
-                <Typography variant="subtitle2">Category</Typography>
-                <Typography variant="body1">{charge?.category}</Typography>
-              </Box>
-
-              <Box mb={2}>
-                <Typography variant="subtitle2">Academic Year</Typography>
-                <Typography variant="body1">{charge?.academicYear}</Typography>
-              </Box>
-
-              <Box>
-                <Typography variant="subtitle2">Due Date</Typography>
-                <Typography variant="body1">{charge?.dueDate}</Typography>
-              </Box>
-            </Grid>
-
-            {/* Right Section */}
-            <Grid size={{ xs: 12, sm: 6, md: 8 }}>
-              <Box mb={2}>
-                <Typography variant="subtitle2">Affected Students</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Class: {charge?.class} • Division: {charge?.divisions.join(', ')} • Total
-                  Students: {charge?.students}
-                </Typography>
-              </Box>
-
-              <Grid container spacing={1}>
-                {displayedStudents.map((student) => (
-                  <Grid size="auto" key={student.id}>
-                    <Chip label={`${student.name} | ${student.division}`} variant="outlined" />
-                  </Grid>
-                ))}
-                {remainingCount > 0 && (
-                  <Grid size="auto">
-                    <Chip label={`+ ${remainingCount} more students...`} />
-                  </Grid>
-                )}
-              </Grid>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-    </Box>
-  );
-};
+          <CustomizableTable
+            tableId="affected-students"
+            noDataText="No students found"
+            columns={[
+              { id: 'name', label: 'Name', align: 'left' },
+              { id: 'class', label: 'Class', align: 'left' },
+              { id: 'division', label: 'Division', align: 'left' },
+              {
+                id: 'rollNo',
+                label: 'Roll No.',
+                align: 'left',
+                filterType: 'number',
+                minWidth: 100,
+              },
+              { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 100 },
+            ]}
+            data={
+              charge?.studentList?.map((student, index) => ({
+                name: student.name,
+                class: charge?.class || '10',
+                division: student.division,
+                rollNo: student.rollNo || String(index + 1).padStart(2, '0'),
+                grNo: student.grNo || `GR${String(index + 1).padStart(3, '0')}`,
+              })) || [
+                {
+                  name: 'Dharmik Jinjala',
+                  class: '10',
+                  division: 'A',
+                  rollNo: '01',
+                  grNo: 'GR001',
+                },
+                { name: 'Prerna Atre', class: '10', division: 'B', rollNo: '05', grNo: 'GR002' },
+                { name: 'Mayur Solanki', class: '10', division: 'C', rollNo: '08', grNo: 'GR003' },
+              ]
+            }
+          />
+        </Box>
+      </CardContent>
+    </Card>
+  </Box>
+);
 
 export default RequestorInfoCard;

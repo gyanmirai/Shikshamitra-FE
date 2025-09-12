@@ -23,15 +23,17 @@ export default function ConcessionsCard() {
   const total = concessions.reduce((acc, c) => acc + c.amount, 0);
 
   return (
-    <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+    <Card sx={{ borderRadius: 3, boxShadow: 3, height: '100%' }}>
       <CardContent>
         {/* Header */}
-        <Typography variant="h6" fontWeight="bold">
-          Concessions Applied
-        </Typography>
-        <Typography variant="body2" color="text.secondary" mb={2}>
-          Total Savings: ₹{total.toLocaleString('en-IN')}
-        </Typography>
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+          <Typography variant="h6" fontWeight="bold">
+            Concessions Applied
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Total Savings: ₹{total.toLocaleString('en-IN')}
+          </Typography>
+        </Box>
 
         <Stack spacing={1.5}>
           {concessions.map((item, index) => (
@@ -56,7 +58,7 @@ export default function ConcessionsCard() {
               </Box>
 
               <Typography variant="subtitle1" fontWeight="600" color="green">
-                -₹{item.amount.toLocaleString('en-IN')}
+                ₹{item.amount.toLocaleString('en-IN')}
               </Typography>
             </Box>
           ))}

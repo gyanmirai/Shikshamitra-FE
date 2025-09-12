@@ -108,7 +108,7 @@ const ChargesManagement = ({ addChargeDialog }: any) => {
         }}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Create Charge</Typography>
+            <Typography variant="h5">Add Charge</Typography>
             <CustomTooltip
               arrow
               placement="right"

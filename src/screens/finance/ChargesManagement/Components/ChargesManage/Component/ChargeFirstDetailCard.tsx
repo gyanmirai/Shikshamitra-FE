@@ -1,5 +1,6 @@
 import React from 'react';
 import { Label } from 'src/components/label';
+import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
 
 import type { IChargeData } from './type';
@@ -18,9 +19,10 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
     3: { label: 'High', color: 'error' },
   };
 
+  // Set default priority to 2 (Medium) if charge.priority doesn't exist
   const priority = charge?.priority
     ? priorityMap[charge.priority]
-    : { label: 'Unknown', color: 'default' };
+    : priorityMap[2] || { label: 'Medium', color: 'primary' };
 
   return (
     <Box sx={{ p: 2 }}>
@@ -30,33 +32,41 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
             Request Information
           </Typography>
 
-          <Grid container spacing={2}>
-            {/* Basic Details */}
-            <Grid size={{ xs: 12 }}>
-              <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-                flexWrap="wrap"
-                gap={2}
-              >
+          <Grid container spacing={3}>
+            {/* Left Column - Basic Details */}
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Box display="flex" flexDirection="column" gap={2}>
                 <Box>
-                  <Typography variant="subtitle2">Category</Typography>
-                  <Typography variant="body1">{charge?.category}</Typography>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Category
+                  </Typography>
+                  <Typography variant="body1" fontWeight={500}>
+                    {charge?.category}
+                  </Typography>
                 </Box>
 
                 <Box>
-                  <Typography variant="subtitle2">Amount</Typography>
-                  <Typography variant="body1">₹ {charge?.amount}</Typography>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Amount
+                  </Typography>
+                  <Typography variant="body1" fontWeight={500}>
+                    {formatNumber(charge?.amount ?? 0, 'INR')}
+                  </Typography>
                 </Box>
 
                 <Box>
-                  <Typography variant="subtitle2">Due Date</Typography>
-                  <Typography variant="body1">{charge?.dueDate}</Typography>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Due Date
+                  </Typography>
+                  <Typography variant="body1" fontWeight={500}>
+                    {charge?.dueDate}
+                  </Typography>
                 </Box>
 
                 <Box>
-                  <Typography variant="subtitle2">Priority</Typography>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Priority
+                  </Typography>
                   <Label
                     color={
                       priority.color as
@@ -67,6 +77,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
                         | 'error'
                         | 'warning'
                     }
+                    sx={{ width: 'fit-content' }}
                   >
                     {priority.label}
                   </Label>
@@ -74,51 +85,51 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
               </Box>
             </Grid>
 
-            {/* Description */}
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Description
-              </Typography>
-              <Box
-                sx={{
-                  border: '1px solid #e0e0e0',
-                  borderRadius: 1,
-                  p: 2,
-                  bgcolor: '#fafafa',
-                  minHeight: '120px',
-                  overflow: 'auto',
-                }}
-              >
-                <Typography
-                  component="pre"
-                  sx={{ whiteSpace: 'pre-wrap', fontSize: '0.875rem', m: 0 }}
-                >
-                  {charge?.description || '—'}
-                </Typography>
-              </Box>
-            </Grid>
+            {/* Right Column - Description and Additional Notes */}
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Box display="flex" flexDirection="column" gap={3}>
+                {/* Purpose/Description Section */}
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Purpose/Description
+                  </Typography>
+                  <Box
+                    sx={{
+                      border: 1,
+                      borderColor: 'grey.300',
+                      borderRadius: 1,
+                      borderStyle: 'dashed',
+                      p: 2,
+                      backgroundColor: 'grey.50',
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                      {charge?.description ||
+                        'Annual tuition fee applicable for Class 10 students in divisions A and B.'}
+                    </Typography>
+                  </Box>
+                </Box>
 
-            {/* Additional Notes */}
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Additional Notes
-              </Typography>
-              <Box
-                sx={{
-                  border: '1px solid #e0e0e0',
-                  borderRadius: 1,
-                  p: 2,
-                  bgcolor: '#fafafa',
-                  minHeight: '120px',
-                  overflow: 'auto',
-                }}
-              >
-                <Typography
-                  component="pre"
-                  sx={{ whiteSpace: 'pre-wrap', fontSize: '0.875rem', m: 0 }}
-                >
-                  {charge?.additionalNotes || '—'}
-                </Typography>
+                {/* Additional Details Section */}
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    Additional Details
+                  </Typography>
+                  <Box
+                    sx={{
+                      border: 1,
+                      borderColor: 'grey.300',
+                      borderRadius: 1,
+                      borderStyle: 'dashed',
+                      p: 2,
+                      backgroundColor: 'grey.50',
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                      {charge?.additionalNotes || 'Installments allowed in two parts.'}
+                    </Typography>
+                  </Box>
+                </Box>
               </Box>
             </Grid>
           </Grid>

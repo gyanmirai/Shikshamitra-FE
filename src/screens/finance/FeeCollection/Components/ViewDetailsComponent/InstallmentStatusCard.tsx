@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Card, Chip, Stack, Typography, CardContent, LinearProgress } from '@mui/material';
+import { Label } from 'src/components/label';
+import { Box, Card, Stack, Typography, CardContent, LinearProgress } from '@mui/material';
 
 const installments = [
   {
@@ -59,43 +60,53 @@ export default function InstallmentStatusCard() {
                 p: 2,
               }}
             >
+              {/* First line: Quarter and Amount */}
               <Box
                 sx={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  mb: 1,
                 }}
               >
                 <Typography fontWeight="600">
                   {index + 1}. {item.quarter}
                 </Typography>
-                <Chip
-                  label={item.status}
-                  size="small"
-                  sx={{
-                    bgcolor:
-                      item.status === 'Paid' ? 'rgba(46, 125, 50, 0.1)' : 'rgba(237, 108, 2, 0.1)',
-                    color: item.status === 'Paid' ? 'green' : 'orange',
-                    fontWeight: 600,
-                  }}
-                />
+                <Typography variant="body1" fontWeight="500">
+                  ₹{item.amount.toLocaleString('en-IN')}
+                </Typography>
               </Box>
-
-              <Typography variant="body1" fontWeight="500">
-                ₹{item.amount.toLocaleString('en-IN')}
-              </Typography>
-
-              <Typography
-                variant="body2"
+              {/* Second line: Date and Chip */}
+              <Box
                 sx={{
-                  color: item.status === 'Paid' ? 'green' : 'orange',
-                  mt: 0.5,
-                  fontWeight: 500,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mt: 1,
                 }}
               >
-                {item.status === 'Paid' ? 'Paid' : 'Due'}: {item.date}
-              </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: item.status === 'Paid' ? 'green' : 'orange',
+                    fontWeight: 500,
+                  }}
+                >
+                  {item.status === 'Paid' ? 'Paid' : 'Due'}: {item.date}
+                </Typography>
+                <Label
+                  color={item.status === 'Paid' ? 'success' : 'warning'}
+                  variant="soft"
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    height: 22,
+                    px: 1,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {item.status}
+                </Label>
+              </Box>
             </Box>
           ))}
         </Stack>

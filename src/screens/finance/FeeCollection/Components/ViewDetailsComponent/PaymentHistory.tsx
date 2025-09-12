@@ -1,3 +1,4 @@
+import { Box } from '@mui/system';
 import { IconButton } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -26,7 +27,13 @@ const PaymentHistory = ({ student }: { student: IStudentFee | null }) => {
           align: 'left',
           render: (value) => `₹ ${value.toLocaleString()}`,
         },
-        { id: 'paymentMethod', label: 'Payment Method', align: 'left' },
+        {
+          id: 'paymentMethod',
+          label: 'Payment Method',
+          align: 'left',
+          render: (value) =>
+            Array.isArray(value) ? <Box>{value.join(', ')}</Box> : <Box>{value}</Box>,
+        },
         {
           id: 'action',
           label: 'Action',

@@ -8,7 +8,6 @@ import { Box, Tab, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 import FeeConcession from './ViewDetailsComponent/FeeConcession';
 import PaymentHistory from './ViewDetailsComponent/PaymentHistory';
@@ -91,6 +90,22 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
           />
         ))}
       </CustomTabs>
+
+      <Box sx={{ px: 2, mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button
+          variant="contained"
+          startIcon={<CreditCardIcon />}
+          color="primary"
+          size="small"
+          onClick={() => {
+            collectFeesDialog.onTrue();
+            viewDialog.onFalse();
+          }}
+        >
+          Collect Fees
+        </Button>
+      </Box>
+
       <Box px={1} pt={2}>
         {CurrentComponent?.({ student })}
       </Box>
@@ -105,21 +120,9 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
           justifyItems: 'space-between',
         }}
       >
-        <Button variant="outlined" startIcon={<ArrowForwardIcon />} size="small">
+        {/* <Button variant="outlined" startIcon={<ArrowForwardIcon />} size="small">
           Send Reminder
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<CreditCardIcon />}
-          color="primary"
-          size="small"
-          onClick={() => {
-            collectFeesDialog.onTrue();
-            viewDialog.onFalse();
-          }}
-        >
-          Collect Fees
-        </Button>
+        </Button> */}
       </Box>
     </Card>
   );

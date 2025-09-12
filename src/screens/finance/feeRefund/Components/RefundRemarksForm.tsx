@@ -5,7 +5,6 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
@@ -64,26 +63,6 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
             <NumericFormatCustom
               label="Refund Amount"
               value={`₹${formik.values.refundAmount}`}
-              fullWidth
-              size="small"
-              disabled
-            />
-          </Grid>
-
-          <Grid size={6}>
-            <CustomSelect
-              label="Fee Heads"
-              value={formik.values.applicableFeeHeads?.map((fh) => fh.feeHead) || []}
-              options={[
-                { value: 'Technology Fee', label: 'Technology Fee' },
-                { value: 'Sports Fee', label: 'Sports Fee' },
-                { value: 'Late Fee', label: 'Late Fee' },
-                { value: 'Lab Fee', label: 'Lab Fee' },
-                { value: 'Library Fee', label: 'Library Fee' },
-                { value: 'Tuition Fee', label: 'Tuition Fee' },
-              ]}
-              onChange={() => {}}
-              multiple
               fullWidth
               size="small"
               disabled

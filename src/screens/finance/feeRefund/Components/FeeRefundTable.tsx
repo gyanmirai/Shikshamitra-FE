@@ -1,16 +1,18 @@
 'use client';
 
 import type { LabelColor } from 'src/components/label';
-import type { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
 
 import React, { useCallback } from 'react';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Box, Avatar, MenuList, MenuItem } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { FeeRefundStatusOptions, FeeRefundStatusTypeColors } from 'src/enums/feeRefund-status-type';
+import {
+  FeeRefundStatusType,
+  FeeRefundStatusOptions,
+  FeeRefundStatusTypeColors,
+} from 'src/enums/feeRefund-status-type';
 
 import type { IStudentFeeData, IStudentFeeTableProps } from '../type';
 
@@ -25,31 +27,22 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
-        <MenuItem
-          onClick={() => {
-            // Close the popover menu and trigger refund request
-            pop.onClose();
-            onRequestRefund?.(row);
-          }}
-        >
-          {/* Icon and text for refund request action */}
-          <Iconify icon={GlobalIcons.addIcon} sx={{ height: '16px', width: '16px' }} />
-          Request Refund
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            // Close the popover menu and trigger refund request
-            pop.onClose();
-            onProcessRefund?.(row);
-          }}
-        >
-          {/* Icon and text for refund request action */}
-          <Iconify icon={GlobalIcons.addIcon} sx={{ height: '16px', width: '16px' }} />
-          Process for Refund
-        </MenuItem>
+        {row.status === FeeRefundStatusType.Approved && (
+          <MenuItem
+            onClick={() => {
+              // Close the popover menu and trigger refund request
+              pop.onClose();
+              onProcessRefund?.(row);
+            }}
+          >
+            {/* Icon and text for refund request action */}
+            <Iconify icon="uil:process" sx={{ height: '16px', width: '16px' }} />
+            Process for Refund
+          </MenuItem>
+        )}
       </MenuList>
     ),
-    [onProcessRefund, onRequestRefund] // Re-create callback only when onRequestRefund changes
+    [onProcessRefund] // Re-create callback only when onRequestRefund changes
   );
   return (
     <CustomizableTable
@@ -76,10 +69,11 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
           align: 'left',
           isFilter: true,
           filterType: 'number',
-          minWidth: 80,
+          minWidth: 100,
         },
         { id: 'class', label: 'Class', align: 'left', isFilter: true },
         { id: 'division', label: 'Division', align: 'left', isFilter: true },
+        { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: 120 },
         {
           id: 'refundAmount',
           label: 'Refund Amount',
@@ -126,6 +120,7 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
           render(value, row) {
             return (
               <ThreeDotsActions
+                disabled={row.status !== FeeRefundStatusType.Approved}
                 actions={(prop) => actions({ ...prop, row })}
                 showViewIcon
                 handleViewClick={() => {
