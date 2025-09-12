@@ -1,20 +1,20 @@
 export enum BankStatementsStatusType {
-  Processed,
-  Processing,
+  Cleared,
+  Bounced,
 }
 
 export const BankStatementsStatusOptions = [
   {
-    label: 'processed',
-    value: BankStatementsStatusType.Processed,
+    label: 'Bounced',
+    value: BankStatementsStatusType.Bounced,
   },
   {
-    label: 'processing',
-    value: BankStatementsStatusType.Processing,
+    label: 'Cleared',
+    value: BankStatementsStatusType.Cleared,
   },
 ];
 
 export const BankStatementsStatusColor = {
-  [BankStatementsStatusType.Processed]: 'success',
-  [BankStatementsStatusType.Processing]: 'info',
+  [BankStatementsStatusType.Cleared]: 'success',
+  [BankStatementsStatusType.Bounced]: 'warning',
 };

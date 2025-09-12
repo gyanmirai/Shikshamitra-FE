@@ -2,16 +2,7 @@ import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  Box,
-  Card,
-  Grid,
-  Button,
-  TableRow,
-  TableCell,
-  Typography,
-  LinearProgress,
-} from '@mui/material';
+import { Box, Card, Grid, Button, Typography, LinearProgress } from '@mui/material';
 import {
   useGetMonthsQuery,
   useGetOverviewDataQuery,
@@ -42,11 +33,9 @@ const Overview = () => {
   const handleRefreshData = async () => {};
 
   return isLoading || !overviewData || !months || !summaryCards ? (
-    <TableRow>
-      <TableCell>
-        <Box className="loader" height={24} />
-      </TableCell>
-    </TableRow>
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 120 }}>
+      <Box className="loader" height={24} />
+    </Box>
   ) : (
     <Box>
       {/* Header Section with Month Selector and Refresh Button */}

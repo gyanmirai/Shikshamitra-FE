@@ -3,5 +3,5 @@ export interface IFinanceReconciliationClearAndBounceChequeDialogProps {
   dialogValue: boolean;
   data: any;
   onSave: (values: any) => void;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
 }
