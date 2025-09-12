@@ -42,11 +42,30 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
     columns={[
       {
         id: 'feeCategoryName',
-        label: 'Fee Category Name',
+        label: 'Name',
         align: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
             {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'description',
+        label: 'Description',
+        align: 'left',
+        render: (value) => (
+          <Typography
+            variant="caption"
+            fontSize="13px"
+            sx={{
+              maxWidth: 300,
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden',
+            }}
+          >
+            {value || '-'}
           </Typography>
         ),
       },

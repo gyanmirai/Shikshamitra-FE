@@ -102,7 +102,11 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
             isFilter={false}
             isPagination={false}
             columns={[
-              { id: 'subCategory', label: 'Sub Category', align: 'left' },
+              {
+                id: 'subCategory',
+                label: values.budgetCategory === 'Income' ? 'Income Category' : 'Expense Category',
+                align: 'left',
+              },
               {
                 id: 'amount',
                 label: 'Amount',

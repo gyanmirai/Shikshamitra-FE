@@ -1,7 +1,6 @@
 import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
-import { useMemo } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
@@ -16,36 +15,32 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
 
   // Category options
   const budgetCategoryOptions = [
+    { value: 'Income', label: 'Income' },
+    { value: 'Expense', label: 'Expense' },
+  ];
+
+  const incomeCategories = [
+    { value: 'Tuition Fees', label: 'Tuition Fees' },
+    { value: 'Exam Fees', label: 'Exam Fees' },
+    { value: 'Transport Fees', label: 'Transport Fees' },
+    { value: 'Donations', label: 'Donations' },
+    { value: 'Grants', label: 'Grants' },
+  ];
+
+  const expenseCategories = [
     { value: 'Academic', label: 'Academic' },
     { value: 'Administrative', label: 'Administrative' },
     { value: 'Infrastructure', label: 'Infrastructure' },
+    { value: 'Maintenance', label: 'Maintenance' },
+    { value: 'Utilities', label: 'Utilities' },
   ];
 
-  // Map of subcategories by category
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const budgetSubCategoryMap: Record<string, { value: string; label: string }[]> = {
-    Academic: [
-      { value: 'Lab Equipment', label: 'Laboratory Equipment' },
-      { value: 'Staff Training', label: 'Staff Training' },
-      { value: 'Books & Journals', label: 'Books & Journals' },
-    ],
-    Administrative: [
-      { value: 'Office Supplies', label: 'Office Supplies' },
-      { value: 'Staff Salaries', label: 'Staff Salaries' },
-      { value: 'Workshops', label: 'Workshops' },
-    ],
-    Infrastructure: [
-      { value: 'Building Maintenance', label: 'Building Maintenance' },
-      { value: 'Furniture', label: 'Furniture' },
-      { value: 'IT Equipment', label: 'IT Equipment' },
-    ],
-  };
-
-  // Subcategory options will change dynamically
-  const budgetSubCategoryOptions = useMemo(
-    () => budgetSubCategoryMap[formik.values.budgetCategory] || [],
-    [budgetSubCategoryMap, formik.values.budgetCategory]
-  );
+  const budgetSubCategoryOptions =
+    formik.values.budgetCategory === 'Income'
+      ? incomeCategories
+      : formik.values.budgetCategory === 'Expense'
+        ? expenseCategories
+        : [];
 
   // Department options
   const departmentOptions = [
@@ -110,7 +105,11 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
             error={!!(formik.touched.budgetSubCategories && formik.errors.budgetSubCategories)}
           >
             <ResponsiveMultiSelect
-              label="Budget Sub Category *"
+              label={
+                formik.values.budgetCategory === 'Income'
+                  ? 'Income Category *'
+                  : 'Expense Category *'
+              }
               options={budgetSubCategoryOptions}
               value={formik.values.budgetSubCategories}
               disabled={!formik.values.budgetCategory}

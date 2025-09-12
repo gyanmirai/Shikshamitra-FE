@@ -32,6 +32,7 @@ import BudgetDetailsCard from './Components/BudgetView';
 const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control budget form visibility
   const [open, setOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: budgetData, isLoading: paymentTermsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBudgetDataQuery,

@@ -186,13 +186,9 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 name="chargeCategory"
                 label="Charge Category *"
                 options={[
-                  { id: 'Tuition Fee', name: 'Tuition Fee' },
-                  { id: 'COMPETITION', name: 'Competition Fee' },
-                  { id: 'EXAM', name: 'Exam Fee' },
-                  { id: 'LAB', name: 'Lab Fee' },
-                  { id: 'LIBRARY', name: 'Library Fee' },
-                  { id: 'TRANSPORT', name: 'Transport Fee' },
-                  { id: 'SPORTS', name: 'Sports Fee' },
+                  { id: '1', name: 'Library Fine' },
+                  { id: '2', name: 'Transport Damage' },
+                  { id: '3', name: 'Hostel Maintenance' },
                 ]}
                 labelKey="name"
                 valueKey="id"
@@ -285,6 +281,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                     }
                   }
                   setFieldTouched('divisions', false);
+                  setFieldValue('students', []);
                 }}
                 formControlProps={{ sx: { width: '100%' } }}
                 error={!!(touched.divisions && errors.divisions)}
@@ -293,6 +290,37 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
             </ShakingTextField>
           </Grid>
 
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(touched.students && errors.students) || false}>
+              <Autocomplete
+                loading={isLoading}
+                multiple
+                fullWidth
+                value={values.students}
+                disabled={values.divisions.length === 0}
+                onChange={(e, value: any) => setFieldValue('students', value)}
+                renderTags={(tagValue, getTagProps) =>
+                  tagValue.map((option, index) => {
+                    const { key, ...chipProps } = getTagProps({ index });
+                    return <Chip key={key} label={option.name} size="small" {...chipProps} />;
+                  })
+                }
+                options={tableData}
+                getOptionLabel={(option: any) => option?.name || ''}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    size="small"
+                    label="Select Student *"
+                    fullWidth
+                    error={!!(touched.students && errors.students)}
+                    helperText={(touched.students && errors.students) as string}
+                  />
+                )}
+              />
+            </ShakingTextField>
+          </Grid>
           <Grid size={{ xs: 6 }}>
             <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
               <NumericFormatCustom
@@ -303,9 +331,12 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 value={values.amount || ''}
                 onChange={(e) => {
                   let val = e.target.value;
-                  val = val.replace(/[₹,\s]/g, '');
-                  setFieldValue('amount', Number(val));
-                  setFieldTouched('amount', false);
+                  // Remove currency symbol, commas, spaces and negative signs
+                  val = val.replace(/\D/g, '');
+                  // Convert to number and ensure it's positive
+                  if (/^\d*$/.test(val)) {
+                    setFieldValue('amount', val); // keep it as string while typing
+                  }
                 }}
                 sx={{
                   width: '100%',
@@ -335,36 +366,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                     onBlur: () => setFieldTouched('dueDate', true),
                   },
                 }}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.students && errors.students) || false}>
-              <Autocomplete
-                loading={isLoading}
-                multiple
-                fullWidth
-                value={values.students}
-                onChange={(e, value: any) => setFieldValue('students', value)}
-                renderTags={(tagValue, getTagProps) =>
-                  tagValue.map((option, index) => (
-                    <Chip label={option.name} size="small" {...getTagProps({ index })} />
-                  ))
-                }
-                options={tableData}
-                getOptionLabel={(option: any) => option?.name || ''}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Select Student *"
-                    fullWidth
-                    error={!!(touched.students && errors.students)}
-                    helperText={(touched.students && errors.students) as string}
-                  />
-                )}
               />
             </ShakingTextField>
           </Grid>

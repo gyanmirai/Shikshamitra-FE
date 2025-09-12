@@ -135,7 +135,7 @@ const FeeRefund = () => {
       )}
 
       {!addRefundRequest.value && (
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, ml: 1 }}>
           <CustomSelect
             label="Board"
             options={boards || []}
@@ -146,7 +146,7 @@ const FeeRefund = () => {
               setSelectedBoard(value as string);
               setSelectedMedium('');
             }}
-            formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           />
           <CustomSelect
             label="Medium"
@@ -156,7 +156,7 @@ const FeeRefund = () => {
             valueKey="id"
             value={selectedMedium}
             onChange={(value) => setSelectedMedium(value as string)}
-            formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+            formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           />
         </Box>
       )}

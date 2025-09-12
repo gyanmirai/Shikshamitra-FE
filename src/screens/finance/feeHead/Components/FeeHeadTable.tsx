@@ -52,7 +52,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
       columns={[
         {
           id: 'feeHeadName',
-          label: 'Fee Head Name',
+          label: 'Name',
           align: 'left',
           render: (value) => (
             <Typography variant="caption" fontSize="13px">

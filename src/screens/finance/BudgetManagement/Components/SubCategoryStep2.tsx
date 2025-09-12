@@ -6,16 +6,13 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Grid, Chip, TextField, Typography, IconButton } from '@mui/material';
 
+import type { IBudgetFormValues } from './type';
+
 interface ISubCategory {
   category: string;
   subCategory: string;
   amount: number | string;
   notes: string;
-}
-
-interface IBudgetFormValues {
-  totalBudgetAmount: number | string;
-  subCategories: ISubCategory[];
 }
 
 const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
@@ -46,11 +43,12 @@ const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
             border: '1px dashed #ccc',
             borderRadius: 2,
             mb: 2,
-            pb: 2,
+            pt: 1.5,
+            pb: 1.5,
           }}
         >
           {/* Index */}
-          <Grid size={{ xs: 12, md: 1 }}>
+          <Grid size={{ xs: 12, md: 1 }} pl={1}>
             <Typography variant="h6">{index + 1}.</Typography>
           </Grid>
 
@@ -62,7 +60,9 @@ const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
           {/* Sub Category */}
           <Grid size={{ xs: 12, md: 3 }}>
             <TextField
-              label="Sub Category"
+              label={
+                values.budgetCategory === 'Income' ? 'Income Category *' : 'Expense Category *'
+              }
               value={item.subCategory}
               fullWidth
               disabled

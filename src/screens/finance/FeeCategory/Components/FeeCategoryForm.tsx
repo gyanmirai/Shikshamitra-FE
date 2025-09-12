@@ -68,6 +68,18 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
               />
             </ShakingTextField>
           </Grid>
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Description"
+              name="description"
+              size="small"
+              value={formik.values.description}
+              onChange={formik.handleChange}
+            />
+          </Grid>
         </Grid>
       </DialogScrollContent>
 

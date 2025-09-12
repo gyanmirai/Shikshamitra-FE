@@ -2,8 +2,8 @@
   "chargesData": [
     {
       "id": "CH-001",
-      "category": "Tuition Fee",
-      "class": "10",
+      "category": "Library Fine",
+      "class": "10",  
       "divisions": ["A", "B"],
       "students": 70,
       "studentList": [
@@ -24,7 +24,7 @@
     },
     {
       "id": "CH-002",
-      "category": "Lab Fee",
+      "category": "Transport Damage",
       "class": "9",
       "divisions": ["A", "C"],
       "students": 55,
@@ -46,7 +46,7 @@
     },
     {
       "id": "CH-003",
-      "category": "Sports Fee",
+      "category": "Hostel Maintenance",
       "class": "8",
       "divisions": ["A", "B", "C"],
       "students": 120,
@@ -69,7 +69,7 @@
     },
     {
       "id": "CH-004",
-      "category": "Exam Fee",
+      "category": "Tuition Fees Fine",
       "class": "10",
       "divisions": ["B", "C"],
       "students": 65,
@@ -91,7 +91,7 @@
     },
     {
       "id": "CH-005",
-      "category": "Library Fee",
+      "category": "Competition Fees",
       "class": "7",
       "divisions": ["A", "D"],
       "students": 60,
