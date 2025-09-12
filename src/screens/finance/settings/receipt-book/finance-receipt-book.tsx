@@ -120,13 +120,12 @@ const FinanceReceiptBookSetting = () => {
           tableId="finance-receipt-book-setting-table"
           columns={[
             { id: 'receiptBookName', label: 'Receipt Book Name', align: 'left' },
+            { id: 'receiptBookCode', label: 'Receipt Book Code', align: 'left' },
             { id: 'prefix', label: 'Prefix', align: 'left' },
             { id: 'suffix', label: 'Suffix', align: 'left' },
             { id: 'startingNumber', label: 'Starting No.', align: 'left' },
             { id: 'endingNumber', label: 'Ending No.', align: 'left' },
             { id: 'description', label: 'Description', align: 'left' },
-            { id: 'receiptBookName', label: 'Receipt Book', align: 'left' },
-            { id: 'receiptBookCode', label: 'Receipt Book Code', align: 'left' },
             {
               id: 'toggle',
               label: 'Active',

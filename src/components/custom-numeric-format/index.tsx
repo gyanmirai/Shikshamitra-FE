@@ -18,6 +18,7 @@ const NumericFormatCustom = ({
     thousandSeparator
     valueIsNumericString={false}
     prefix="₹ "
+    allowNegative={false}
     thousandsGroupStyle="lakh"
     variant="outlined"
     {...props}

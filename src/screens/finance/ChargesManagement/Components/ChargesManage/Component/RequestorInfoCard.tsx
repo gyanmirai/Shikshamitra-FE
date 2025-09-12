@@ -9,51 +9,56 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => (
     <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
       <CardContent>
         <Typography variant="h6" color="#00A76F" gutterBottom>
-          Requestor Information
+          Applied for
         </Typography>
 
         {/* First Row - Basic Info */}
         <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid size={{ xs: 12, md: 2 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                 Name
               </Typography>
-              <Typography variant="body1" fontWeight={600}>
+              <Typography variant="body1" fontWeight={400}>
                 {charge?.requestorName || 'Dharmik Jinjala'}
               </Typography>
             </Box>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 5 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                 Affected Students
               </Typography>
-              <Typography variant="body1" fontWeight={600}>
-                Class: {charge?.class} • Division: {charge?.divisions?.join(', ') || 'ALL'} • Total
-                Students: {charge?.students || 80}
+              <Typography variant="body1" fontWeight={400}>
+                Class : {charge?.class}
+              </Typography>
+              <Typography variant="body1" fontWeight={400}>
+                Division : {charge?.divisions?.join(', ') || 'ALL'}
+              </Typography>
+              <Typography variant="body1" fontWeight={400}>
+                Total Students : {charge?.students || 80}
               </Typography>
             </Box>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 2 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                 Department
               </Typography>
-              <Typography variant="body1" fontWeight={600}>
+              <Typography variant="body1" fontWeight={400}>
                 {charge?.department || 'Science'}
               </Typography>
             </Box>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 3 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                 Requested On
               </Typography>
-              <Typography variant="body1" fontWeight={600}>
+              <Typography variant="body1" fontWeight={400}>
                 {charge?.requestedOn || '20-08-2025'}
               </Typography>
             </Box>
@@ -70,7 +75,7 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => (
             tableId="affected-students"
             noDataText="No students found"
             columns={[
-              { id: 'name', label: 'Name', align: 'left' },
+              { id: 'name', label: 'Name', align: 'left', sticky: true },
               { id: 'class', label: 'Class', align: 'left' },
               { id: 'division', label: 'Division', align: 'left' },
               {

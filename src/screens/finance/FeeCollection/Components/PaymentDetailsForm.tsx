@@ -119,7 +119,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
           />
         </Grid>
 
-        <Grid size={{ xs: 6 }}>
+        <Grid size={{ xs: 6 }} mt={2} mb={2}>
           <Card
             sx={{
               p: 2,
@@ -200,6 +200,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                       ? dayjs(formik.values[method][field.name])
                                       : null
                                   }
+                                  format="DD/MM/YYYY"
                                   onChange={(date) =>
                                     formik.setFieldValue(`${method}.${field.name}`, date)
                                   }

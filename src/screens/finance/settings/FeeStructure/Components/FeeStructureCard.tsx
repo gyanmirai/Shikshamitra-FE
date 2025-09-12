@@ -50,7 +50,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
               </Grid>
               <Grid size={2} pt={0}>
                 <Chip
-                  label={`Category : ${item.feeCategory}`}
+                  label={`Fee Category : ${item.feeCategory}`}
                   variant="outlined"
                   size="small"
                   sx={{

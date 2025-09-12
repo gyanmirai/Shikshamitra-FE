@@ -130,7 +130,10 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                     label="Total Installments *"
                     type="number"
                     value={formik.values.totalInstallments || ''}
-                    onChange={formik.handleChange}
+                    onChange={(e) => {
+                      formik.handleChange(e);
+                      formik.setFieldTouched('totalInstallments', true);
+                    }}
                     error={!!(formik.touched.totalInstallments && formik.errors.totalInstallments)}
                     helperText={formik.touched.totalInstallments && formik.errors.totalInstallments}
                     variant="outlined"

@@ -74,7 +74,6 @@ export const budgetValidationSchema = (currentYear: any) => [
           amount: Yup.number()
             .min(1, 'Amount must be greater than 0')
             .required('Amount is required'),
-          notes: Yup.string().required('Notes are required'),
         })
       )
       .min(1, 'At least one subcategory is required'),

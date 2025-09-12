@@ -74,6 +74,25 @@ const ChargesTable = ({
         render: (value) => `₹ ${value.toLocaleString()}`,
       },
       {
+        id: 'description',
+        label: 'Description',
+        align: 'left',
+        render: (value) => (
+          <Typography
+            variant="caption"
+            fontSize="13px"
+            sx={{
+              maxWidth: 300,
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden',
+            }}
+          >
+            {value || '-'}
+          </Typography>
+        ),
+      },
+      {
         id: 'priority',
         label: 'Priority',
         align: 'left',

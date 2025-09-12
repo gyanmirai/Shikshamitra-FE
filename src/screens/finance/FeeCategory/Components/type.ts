@@ -1,6 +1,7 @@
 export interface IFeeCategory {
   id: string;
   feeCategoryName: string;
+  description?: string;
 }
 export interface IFeeCategoryTableProps {
   data: IFeeCategory[];

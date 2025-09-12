@@ -11,9 +11,16 @@ import type { IChargeData } from './type';
 interface Props {
   charge: IChargeData | null;
   isActionShow: boolean;
+  onApprove?: () => void;
+  onReject?: () => void;
 }
 
-const ChargeDetailsCard: React.FC<Props> = ({ charge, isActionShow = false }) => (
+const ChargeDetailsCard: React.FC<Props> = ({
+  charge,
+  isActionShow = false,
+  onApprove,
+  onReject,
+}) => (
   <Box sx={{ height: '100%' }}>
     <Scrollbar sx={{ height: '500px' }}>
       <ChargeFirstDetailsCard charge={charge} />
@@ -24,7 +31,7 @@ const ChargeDetailsCard: React.FC<Props> = ({ charge, isActionShow = false }) =>
       <Button
         variant="contained"
         color="error"
-        onClick={() => {}}
+        onClick={onReject}
         size="small"
         startIcon={<Iconify icon={GlobalIcons.cancel} />}
       >
@@ -34,7 +41,7 @@ const ChargeDetailsCard: React.FC<Props> = ({ charge, isActionShow = false }) =>
       <Button
         variant="contained"
         color="success"
-        onClick={() => {}}
+        onClick={onApprove}
         size="small"
         startIcon={<Iconify icon={GlobalIcons.submit} />}
       >
