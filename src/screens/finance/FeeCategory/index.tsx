@@ -129,7 +129,7 @@ const FeeCategoryCreation = () => {
               sx={{ textAlign: 'justify' }}
               title={
                 selectedFeeCategory
-                  ? 'You can update the fee category name.'
+                  ? 'Update existing fee category by entering its name (e.g., Academic, Transport, Hostel).'
                   : 'Create a new fee category by entering its name (e.g., Academic, Transport, Hostel).'
               }
             >
@@ -167,7 +167,7 @@ const FeeCategoryCreation = () => {
               deleteFeeCategoryDialog.onFalse();
               setSelectedFeeCategory(null);
               shikshaMitraToast.success({
-                message: `Fee Category ${selectedFeeCategory?.feeCategoryName} deleted successfully`,
+                message: `Fee Category : ${selectedFeeCategory?.feeCategoryName} deleted successfully`,
               });
               // handle delete action
             }}

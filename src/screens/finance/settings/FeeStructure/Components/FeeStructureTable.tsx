@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -50,7 +49,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         </>
       }
       columns={[
-        { id: 'feeStructureName', label: 'Fee Structure Name', align: 'left' },
+        { id: 'feeStructureName', label: 'Name', align: 'left' },
         {
           id: 'board',
           label: 'Board/Medium',
@@ -77,7 +76,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
           render(value, row) {
             const statusColor =
               value === FeeStructureLockStatusType.Locked
-                ? theme.palette.error.main
+                ? theme.palette.grey[500]
                 : theme.vars.palette.success.main;
 
             return (
@@ -110,7 +109,11 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
                   }}
                 >
                   <Iconify
-                    icon={GlobalIcons.lockIcon}
+                    icon={
+                      value === FeeStructureLockStatusType.Locked
+                        ? 'mdi:lock-open-outline'
+                        : 'mdi:lock-outline'
+                    }
                     sx={{ width: 20, height: 20, color: '#fff' }}
                   />
                 </IconButton>

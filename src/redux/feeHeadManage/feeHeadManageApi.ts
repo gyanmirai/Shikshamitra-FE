@@ -5,8 +5,8 @@ import feeHeadData from '../../../feeHeadData.json';
 
 const isDev = process.env.NODE_ENV === 'development';
 
-export const feeHeadApi = createApi({
-  reducerPath: 'FeeHeadApi',
+export const FeeHeadManagementApi = createApi({
+  reducerPath: 'feeHeadManagementApi',
   baseQuery: isDev
     ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
     : async ({ url }) => {
@@ -33,4 +33,4 @@ export const feeHeadApi = createApi({
   }),
 });
 
-export const { useGetFeeHeadsQuery } = feeHeadApi;
+export const { useGetFeeHeadsQuery } = FeeHeadManagementApi;

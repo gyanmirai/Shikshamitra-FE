@@ -10,7 +10,6 @@ import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
 
 import type { IFeeStructure, IClassWiseFeeData } from '../type';
 
@@ -69,15 +68,8 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
         const className = classItem.name;
 
         // initialize with ONE empty fee structure
-        updatedClassWiseFees[className] = [
-          {
-            feeStructureName: '',
-            status: FeeStructureClassStatusType.Remaining,
-            feeItems: [],
-          },
-        ];
+        updatedClassWiseFees[className] = [];
       });
-
       formik.setFieldValue('feeStructureClasses', updatedClassWiseFees);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -220,7 +212,7 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
         >
           <CustomSelect
             name="paymentMethod"
-            label="Payment Method *"
+            label="Payment Methods *"
             multiple
             options={[
               { id: 'cash', name: 'Cash' },

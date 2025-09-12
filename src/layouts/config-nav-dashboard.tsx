@@ -1081,6 +1081,7 @@ const financeModule = {
           path: '/finance/dashboard',
           _action: 'finance-dashboard',
           shortcutKey: 'Alt+F+1',
+          caption: 'Coming Soon',
           shortcutKeyName: 'Alt+F+1',
         },
         // {
@@ -1140,6 +1141,7 @@ const financeModule = {
           _action: 'fee-refund',
           shortcutKey: 'Alt+F+4',
           shortcutKeyName: 'Alt+F+4',
+          caption: 'Coming Soon',
         },
         {
           title: 'Reconciliation',
@@ -1215,13 +1217,16 @@ const financeModule = {
           _action: 'finance-reports',
           shortcutKey: 'Alt+F+11',
           shortcutKeyName: 'Alt+F+11',
+          caption: 'Coming Soon',
         },
         {
           title: 'Notification',
           path: '/finance/finance-notification',
           _action: 'finance-notification',
           shortcutKey: 'Alt+F+N',
+          disabled: 'true',
           shortcutKeyName: 'Alt+F+N',
+          caption: 'Coming Soon',
         },
         {
           title: 'Setting',
@@ -1293,20 +1298,20 @@ const financeModule = {
               shortcutKey: 'Alt+F+S+6',
               shortcutKeyName: 'Alt+F+S+6',
             },
-            {
-              title: 'Budget Category',
-              path: '/finance/settings/budget-category',
-              _action: 'budget-category-setting',
-              shortcutKey: 'Alt+F+S+8',
-              shortcutKeyName: 'Alt+F+S+8',
-            },
-            {
-              title: 'Budget Sub Category',
-              path: '/finance/settings/budget-sub-category',
-              _action: 'budget-sub-category-setting',
-              shortcutKey: 'Alt+F+S+9',
-              shortcutKeyName: 'Alt+F+S+9',
-            },
+            // {
+            //   title: 'Budget Category',
+            //   path: '/finance/settings/budget-category',
+            //   _action: 'budget-category-setting',
+            //   shortcutKey: 'Alt+F+S+8',
+            //   shortcutKeyName: 'Alt+F+S+8',
+            // },
+            // {
+            //   title: 'Budget Sub Category',
+            //   path: '/finance/settings/budget-sub-category',
+            //   _action: 'budget-sub-category-setting',
+            //   shortcutKey: 'Alt+F+S+9',
+            //   shortcutKeyName: 'Alt+F+S+9',
+            // },
             {
               title: 'Expense Category',
               path: '/finance/settings/expenseCategories',

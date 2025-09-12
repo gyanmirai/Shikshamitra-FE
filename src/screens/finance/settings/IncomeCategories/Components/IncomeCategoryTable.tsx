@@ -51,16 +51,6 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         ),
       },
       {
-        id: 'budget',
-        label: 'Budget',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
-      },
-      {
         id: 'description',
         label: 'Description',
         align: 'left',

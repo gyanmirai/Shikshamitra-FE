@@ -4,11 +4,13 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -25,6 +27,7 @@ import {
   Switch,
   TextField,
   Typography,
+  Autocomplete,
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
@@ -128,12 +131,7 @@ const FinanceChargeCategory = () => {
           { name: 'Charge Category', href: '/finance/settings/charge-category' },
         ]}
         action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon="eva:plus-fill" />}
-            onClick={handleAdd}
-          >
+          <Button variant="contained" size="small" startIcon={<Add />} onClick={handleAdd}>
             Charge Type
           </Button>
         }
@@ -156,6 +154,14 @@ const FinanceChargeCategory = () => {
           {
             id: 'isRefundable',
             label: 'Approval Required',
+            minWidth: '200px',
+            isSort: true,
+            isFilter: true,
+            align: 'left',
+          },
+          {
+            id: 'roles',
+            label: 'Roles',
             minWidth: '200px',
             isSort: true,
             isFilter: true,
@@ -243,7 +249,20 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
   const validationSchema = Yup.object().shape({
     chargeName: Yup.string().required('Charge Category Name is required'),
     isRefundable: Yup.boolean().required(),
+    roles: Yup.array().when('isRefundable', {
+      is: true,
+      then: (schema) =>
+        schema
+          .min(1, 'At least one role must be selected when approval is required')
+          .required('Role is required when approval is required'),
+      otherwise: (schema) => schema.optional(),
+    }),
     description: Yup.string().optional(),
+  });
+
+  const { data, isLoading: roleLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRolesQuery,
   });
 
   // Initialize formik form with initial values and submit handler
@@ -251,6 +270,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
     initialValues: {
       chargeName: editData?.chargeName || '',
       isRefundable: editData?.isRefundable === 'Yes' || false,
+      roles: editData?.roles || [],
       description: editData?.description || '',
     },
     validationSchema,
@@ -355,6 +375,33 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
                   label="Approval Required?"
                 />
               </Box>
+
+              {formik.values.isRefundable && (
+                <ShakingTextField error={!!(formik.touched.roles && formik.errors.roles) || false}>
+                  <Autocomplete
+                    disabled={isLoading}
+                    multiple
+                    options={data?.items || []}
+                    value={formik.values.roles}
+                    getOptionLabel={(option: any) => option?.name || ''}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Role *"
+                        size="small"
+                        fullWidth
+                        sx={{ width: '100%', minWidth: '200px' }}
+                        error={formik.touched.roles && Boolean(formik.errors.roles)}
+                        helperText={(formik.touched.roles && formik.errors.roles) as string}
+                      />
+                    )}
+                    onChange={(e, newValue) => {
+                      formik.setFieldValue('roles', newValue);
+                    }}
+                  />
+                </ShakingTextField>
+              )}
 
               {/* Description Field */}
               <ShakingTextField

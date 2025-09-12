@@ -1,12 +1,11 @@
-// AddFeeHeadDialogContent.tsx
 import type { FormikProps } from 'formik';
 
 import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Button, DialogActions } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { Button, DialogActions, FormHelperText } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IFeeStructure } from '../type';
@@ -36,9 +35,13 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
   onClose,
 }) => {
   const [selectedFeeHead, setSelectedFeeHead] = useState<string[]>([]);
+  const [error, setError] = useState('');
 
   const handleSubmit = () => {
-    if (!selectedFeeHead.length) return;
+    if (!selectedFeeHead.length) {
+      setError('Please select at least one Fee Head');
+      return;
+    }
 
     // ✅ Get current fee structure array for the class
     const classFeeStructures = formik.values.feeStructureClasses[className] || [];
@@ -53,6 +56,16 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
 
     const updatedItems = [...(currentStructure.feeItems || [])];
 
+    // ✅ Prevent duplicates
+    const existingHeads = new Set(updatedItems.map((item) => item.feeHead));
+    const duplicates = selectedFeeHead.filter((feeHeadValue) => existingHeads.has(feeHeadValue));
+
+    if (duplicates.length) {
+      setError(`Fee Head(s) already added: ${duplicates.join(', ')}`);
+      return;
+    }
+
+    // ✅ Add only new fee heads
     selectedFeeHead.forEach((feeHeadValue) => {
       const selected = feeHeadOptions.find((opt) => opt.feeHead === feeHeadValue);
       if (selected) {
@@ -78,8 +91,9 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
     // ✅ Set back in formik
     formik.setFieldValue(`feeStructureClasses.${className}`, updatedClassFeeStructures);
 
-    onClose(null, true);
     setSelectedFeeHead([]);
+    setError('');
+    onClose(null, true);
   };
 
   return (
@@ -87,15 +101,19 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
       <DialogScrollContent>
         <CustomSelect
           name="feeHead"
-          label="Fee Head"
+          label="Fee Head *"
           multiple
           options={feeHeadOptions}
           value={selectedFeeHead}
           labelKey="feeHead"
           valueKey="feeHead"
-          onChange={(value) => setSelectedFeeHead(value as string[])}
-          formControlProps={{ fullWidth: true }}
+          onChange={(value) => {
+            setSelectedFeeHead(value as string[]);
+            if (error) setError('');
+          }}
+          formControlProps={{ fullWidth: true, error: !!error }}
         />
+        {error && <FormHelperText error>{error}</FormHelperText>}
       </DialogScrollContent>
 
       <DialogActions>

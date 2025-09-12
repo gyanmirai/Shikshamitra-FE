@@ -4,10 +4,10 @@ import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { Box, MenuList, MenuItem } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Avatar, MenuList, MenuItem, Typography } from '@mui/material';
 import { useGetAllBoardQuery, useGetAllMediumQuery } from 'src/redux/feeCollection/feeCollection';
 import {
   FeeCollectionStatusType,
@@ -65,7 +65,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           options={allBoard}
           valueKey="name"
           labelKey="name"
-          formControlProps={{ sx: { width: '25%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
           value={board}
           onChange={(value) => {
             setBoard(value as string);
@@ -80,7 +80,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           label="Medium"
           valueKey="name"
           labelKey="name"
-          formControlProps={{ sx: { width: '25%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
       </Box>
       <CustomizableTable
@@ -108,11 +108,33 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           </>
         }
         columns={[
-          { id: 'name', label: 'Name', align: 'left', isFilter: true, sticky: true },
+          {
+            id: 'name',
+            label: 'Name',
+            align: 'left',
+            isFilter: true,
+            minWidth: '200px',
+            sticky: true,
+            render: (value, row) => (
+              <Box display="flex" alignItems="center" gap={1}>
+                <Avatar src={row.avatarUrl} alt={row.name} sx={{ width: 32, height: 32 }} />
+                <Typography variant="body2">{row.name}</Typography>
+              </Box>
+            ),
+          },
           { id: 'className', label: 'Class', isFilter: true, align: 'left', minWidth: '90px' },
           { id: 'division', label: 'Division', isFilter: true, align: 'left', minWidth: '90px' },
           { id: 'grNumber', label: 'GR No.', align: 'left', isFilter: true, minWidth: '90px' },
           { id: 'rollNumber', label: 'Roll No.', align: 'left', isFilter: true, minWidth: '90px' },
+          {
+            id: 'paybleFees',
+            label: 'Payble Fees',
+            align: 'left',
+            isFilter: true,
+            filterType: 'number',
+            minWidth: '120px',
+            render: (value) => `₹ ${value.toLocaleString()}`,
+          },
           {
             id: 'totalFees',
             label: 'Total Fees',

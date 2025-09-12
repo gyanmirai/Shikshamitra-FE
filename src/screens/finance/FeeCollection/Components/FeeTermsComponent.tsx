@@ -65,8 +65,8 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
             key={term.id}
             sx={{ border: '1px solid #ddd', borderRadius: 2, mb: 1.5, overflow: 'hidden' }}
           >
-            <Box display="flex" alignItems="center" justifyContent="space-between" p={2}>
-              <Box display="flex" alignItems="center" gap={1}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" p={1}>
+              <Box display="flex" gap={1}>
                 <Checkbox
                   checked={selectedTerms.includes(term.id)}
                   onChange={() => toggleSelect(term.id)}
@@ -107,7 +107,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                   >
                     <Typography>{head.name}</Typography>
                     <Box display="flex" alignItems="center" gap={1}>
-                      <Typography fontWeight={500}>
+                      <Typography fontWeight={400}>
                         ₹ {head.paid.toLocaleString()}/ ₹ {head.total.toLocaleString()}
                       </Typography>
                       <Label

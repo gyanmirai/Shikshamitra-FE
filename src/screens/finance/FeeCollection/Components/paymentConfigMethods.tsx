@@ -1,4 +1,6 @@
 export const paymentMethodsConfig = {
+  Cash: [{ name: 'amount', label: 'Amount', type: 'amount', required: true, min: 0 }],
+
   Cheque: [
     { name: 'amount', label: 'Amount', type: 'amount', required: true, min: 0 },
     { name: 'chequeNumber', label: 'Cheque Number', type: 'text', required: true },

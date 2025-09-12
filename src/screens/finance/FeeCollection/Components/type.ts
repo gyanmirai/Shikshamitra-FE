@@ -8,6 +8,8 @@ export interface IFeeData {
   medium: string;
   className: string;
   division: string;
+  paybleFees?: number;
+  charges?: number;
   totalFees: number;
   paidFees: number;
   pendingFees: number;

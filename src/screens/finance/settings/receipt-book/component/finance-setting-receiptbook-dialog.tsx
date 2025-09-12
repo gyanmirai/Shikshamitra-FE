@@ -4,9 +4,9 @@ import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { DialogScrollContent } from 'src/components/customDialog';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -34,8 +34,16 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
       id: isEdit
         ? (data?.id ?? Math.floor(Math.random() * 10000))
         : Math.floor(Math.random() * 10000),
+
       receiptBookName: isEdit ? (data?.receiptBookName ?? '') : '',
       receiptBookCode: isEdit ? (data?.receiptBookCode ?? '') : '',
+      prefix: isEdit ? (data?.prefix ?? '') : '',
+      suffix: isEdit ? (data?.suffix ?? '') : '',
+      startingNumber: isEdit ? (data?.startingNumber ?? 0) : '',
+      endingNumber: isEdit ? (data?.endingNumber ?? 0) : '',
+      description: isEdit ? (data?.description ?? '') : '',
+      toggle: isEdit ? (data?.toggle ?? false) : false,
+      action: isEdit ? (data?.action ?? '') : '',
     }),
     [data, isEdit]
   );
@@ -65,65 +73,37 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <form onSubmit={formik.handleSubmit}>
-        <Scrollbar sx={{ p: 2, height: '100%' }}>
-          <Grid container spacing={3}>
-            {/* Receipt Book Name Field */}
-            <Grid size={{ xs: 12, sm: 12 }}>
-              {(() => {
-                const field = 'receiptBookName';
-                const error = formik.touched[field] && Boolean(formik.errors[field]);
-                const helperText = formik.touched[field] && formik.errors[field];
-                return (
-                  <ShakingTextField error={error}>
-                    <TextField
-                      size="small"
-                      fullWidth
-                      autoFocus
-                      name={field}
-                      label="Receipt Book Name *"
-                      value={formik.values[field]}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                        formik.setFieldValue(field, value);
-                      }}
-                      error={error}
-                      helperText={helperText}
-                    />
-                  </ShakingTextField>
-                );
-              })()}
-            </Grid>
-
-            {/* Receipt Book Code Field */}
-            <Grid size={{ xs: 12, sm: 12 }} pb="20px">
-              {(() => {
-                const field = 'receiptBookCode';
-                const error = formik.touched[field] && Boolean(formik.errors[field]);
-                const helperText = formik.touched[field] && formik.errors[field];
-                return (
-                  <ShakingTextField error={error}>
-                    <TextField
-                      size="small"
-                      fullWidth
-                      name={field}
-                      label="Receipt Book Code *"
-                      value={formik.values[field]}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                        formik.setFieldValue(field, value);
-                      }}
-                      error={error}
-                      helperText={helperText}
-                    />
-                  </ShakingTextField>
-                );
-              })()}
-            </Grid>
+      <DialogScrollContent>
+        <Grid container spacing={3}>
+          {/* Receipt Book Name Field */}
+          <Grid size={{ xs: 12, sm: 12 }}>
+            {(() => {
+              const field = 'receiptBookName';
+              const error = formik.touched[field] && Boolean(formik.errors[field]);
+              const helperText = formik.touched[field] && formik.errors[field];
+              return (
+                <ShakingTextField error={error}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    autoFocus
+                    name={field}
+                    label="Receipt Book Name *"
+                    value={formik.values[field]}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                      formik.setFieldValue(field, value);
+                    }}
+                    error={error}
+                    helperText={helperText}
+                  />
+                </ShakingTextField>
+              );
+            })()}
           </Grid>
 
           {/* Receipt Book Code Field */}
-          <Grid size={{ xs: 12, sm: 12 }} pb="20px">
+          <Grid size={{ xs: 12, sm: 12 }}>
             {(() => {
               const field = 'receiptBookCode';
               const error = formik.touched[field] && Boolean(formik.errors[field]);
@@ -137,9 +117,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     label="Receipt Book Code *"
                     value={formik.values[field]}
                     onChange={(e) => {
-                      const value = e.target.value
-                        // Remove everything except letters and spaces
-                        .replace(/[^a-zA-Z0-9\s]/g, '');
+                      const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
                       formik.setFieldValue(field, value);
                     }}
                     error={error}
@@ -149,38 +127,167 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
               );
             })()}
           </Grid>
-        </Scrollbar>
 
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={() => {
-              onClose(null, false);
-            }}
-            variant="outlined"
-            size="small"
-          >
-            Cancel
-          </Button>
-          <Button
-            startIcon={
-              <Iconify
-                icon={data ? GlobalIcons.edit : GlobalIcons.submit}
-                width={data ? 16 : 20}
-                height={data ? 16 : 20}
-              />
-            }
-            type="submit"
-            variant="contained"
-            size="small"
-            onClick={(e: any) => {
-              formik.handleSubmit(e);
-            }}
-          >
-            {data ? 'Update' : 'Submit'}
-          </Button>
-        </DialogActions>
-      </form>
+          {/* Prefix Field */}
+          <Grid size={{ xs: 12, sm: 12 }}>
+            {(() => {
+              const field = 'prefix';
+              const error = formik.touched[field] && Boolean(formik.errors[field]);
+              const helperText = formik.touched[field] && formik.errors[field];
+              return (
+                <ShakingTextField error={error}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    name={field}
+                    label="Prefix *"
+                    value={formik.values[field]}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                      formik.setFieldValue(field, value);
+                    }}
+                    error={error}
+                    helperText={helperText}
+                  />
+                </ShakingTextField>
+              );
+            })()}
+          </Grid>
+
+          {/* Suffix Field */}
+          <Grid size={{ xs: 12, sm: 12 }}>
+            {(() => {
+              const field = 'suffix';
+              const error = formik.touched[field] && Boolean(formik.errors[field]);
+              const helperText = formik.touched[field] && formik.errors[field];
+              return (
+                <ShakingTextField error={error}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    name={field}
+                    label="Suffix *"
+                    value={formik.values[field]}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
+                      formik.setFieldValue(field, value);
+                    }}
+                    error={error}
+                    helperText={helperText}
+                  />
+                </ShakingTextField>
+              );
+            })()}
+          </Grid>
+
+          {/* Starting Number Field */}
+          <Grid size={{ xs: 12, sm: 12 }}>
+            {(() => {
+              const field = 'startingNumber';
+              const error = formik.touched[field] && Boolean(formik.errors[field]);
+              const helperText = formik.touched[field] && formik.errors[field];
+              return (
+                <ShakingTextField error={error}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    type="number"
+                    name={field}
+                    label="Starting Number *"
+                    value={formik.values[field]}
+                    onChange={(e) => {
+                      formik.setFieldValue(field, e.target.value);
+                    }}
+                    error={error}
+                    helperText={helperText}
+                  />
+                </ShakingTextField>
+              );
+            })()}
+          </Grid>
+
+          {/* Ending Number Field */}
+          <Grid size={{ xs: 12, sm: 12 }}>
+            {(() => {
+              const field = 'endingNumber';
+              const error = formik.touched[field] && Boolean(formik.errors[field]);
+              const helperText = formik.touched[field] && formik.errors[field];
+              return (
+                <ShakingTextField error={error}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    type="number"
+                    name={field}
+                    label="Ending Number *"
+                    value={formik.values[field]}
+                    onChange={(e) => {
+                      formik.setFieldValue(field, e.target.value);
+                    }}
+                    error={error}
+                    helperText={helperText}
+                  />
+                </ShakingTextField>
+              );
+            })()}
+          </Grid>
+
+          {/* Description Field */}
+          <Grid size={{ xs: 12, sm: 12 }}>
+            {(() => {
+              const field = 'description';
+              const error = formik.touched[field] && Boolean(formik.errors[field]);
+              const helperText = formik.touched[field] && formik.errors[field];
+              return (
+                <ShakingTextField error={error}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    multiline
+                    minRows={3}
+                    name={field}
+                    label="Description"
+                    value={formik.values[field]}
+                    onChange={(e) => formik.setFieldValue(field, e.target.value)}
+                    error={error}
+                    helperText={helperText}
+                  />
+                </ShakingTextField>
+              );
+            })()}
+          </Grid>
+        </Grid>
+      </DialogScrollContent>
+
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={() => {
+            onClose(null, false);
+          }}
+          variant="outlined"
+          size="small"
+        >
+          Cancel
+        </Button>
+        <Button
+          startIcon={
+            <Iconify
+              icon={data ? GlobalIcons.edit : GlobalIcons.submit}
+              width={data ? 16 : 20}
+              height={data ? 16 : 20}
+            />
+          }
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
+          type="submit"
+          variant="contained"
+          size="small"
+        >
+          {data ? 'Update' : 'Submit'}
+        </Button>
+      </DialogActions>
     </BackPopUpChecked>
   );
 };

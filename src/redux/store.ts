@@ -1,15 +1,6 @@
 import storage from 'redux-persist/lib/storage';
+import { persistStore, persistReducer } from 'redux-persist';
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import {
-  FLUSH,
-  PAUSE,
-  PURGE,
-  PERSIST,
-  REGISTER,
-  REHYDRATE,
-  persistStore,
-  persistReducer,
-} from 'redux-persist';
 
 import { PFApi } from './PF/PFApi';
 import { StudentApi } from './student';
@@ -27,7 +18,6 @@ import { FeeRefundApi } from './finance/feeRefund';
 import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
-import { feeHeadApi } from './feeHeadApi/feeHeadApi';
 import { chargesApi } from './chargesApi/chargesApi';
 import { feeTermsApi } from './feeCollection/feeTerms';
 import { PaymentTermApi } from './finance/paymentTerm';
@@ -46,7 +36,7 @@ import { ConcessionApi } from './feeConcession/feeConcession';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { feeRefundsTermsApi } from './finance/feeRefundTerms';
 import { ExpenseCategoryApi } from './finance/expenseCategory';
-import { BudgetsCategoryApi } from './finance/budgetsCategory';
+// import { BudgetsCategoryApi } from ./feeHeadManage/feeHeadManageApi
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
@@ -67,6 +57,7 @@ import { bookManagementApi } from './bookManagement/bookManagementApi';
 import { StudentAdmissionApi } from './student/admission/admission-api';
 import { studentGroupApi } from './student/student-group/student-group';
 import { financeFeeCollectionApi } from './feeCollection/feeCollection';
+import { FeeHeadManagementApi } from './feeHeadManage/feeHeadManageApi';
 import { BulkStudentApi } from './student/buik-student/bulk-student-api';
 import { CoreSubjectApi } from './subject/core-subject/core-subject-api';
 import { StudentCertificateApi } from './student/certificate/certificate';
@@ -137,9 +128,10 @@ const reducers = combineReducers({
   [StudentRegistrationFormApi.reducerPath]: StudentRegistrationFormApi.reducer,
   [StudentRegistrationApi.reducerPath]: StudentRegistrationApi.reducer,
   [paymentStatusOptionApi.reducerPath]: paymentStatusOptionApi.reducer,
+  [FeeHeadManagementApi.reducerPath]: FeeHeadManagementApi.reducer,
   // [budgetCategoryApi.reducerPath]: budgetCategoryApi.reducer,
   [organizationUnitApi.reducerPath]: organizationUnitApi.reducer,
-  [BudgetsCategoryApi.reducerPath]: BudgetsCategoryApi.reducer,
+  // [BudgetsCategoryApi.reducerPath]: BudgetsCategoryApi.reducer,
   [EntranceExamSlotApi.reducerPath]: EntranceExamSlotApi.reducer,
   [EntranceExamApi.reducerPath]: EntranceExamApi.reducer,
   [FollowUpApi.reducerPath]: FollowUpApi.reducer,
@@ -171,7 +163,6 @@ const reducers = combineReducers({
   [FeeRefundApi.reducerPath]: FeeRefundApi.reducer,
   [studentInvoiceApi.reducerPath]: studentInvoiceApi.reducer,
   [studentReceiptApi.reducerPath]: studentReceiptApi.reducer,
-  [feeHeadApi.reducerPath]: feeHeadApi.reducer,
   [feeCategoryApi.reducerPath]: feeCategoryApi.reducer,
   [ChargeCategoryApi.reducerPath]: ChargeCategoryApi.reducer,
   [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
@@ -205,9 +196,10 @@ const store = configureStore({
   reducer: persistReducer(persistConfig, reducers),
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-      },
+      // serializableCheck: {
+      //   ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      // },
+      serializableCheck: false,
     }).concat([
       userApi.middleware,
       roleApi.middleware,
@@ -235,7 +227,7 @@ const store = configureStore({
       StudentRegistrationApi.middleware,
       paymentStatusOptionApi.middleware,
       // budgetCategoryApi.middleware,
-      BudgetsCategoryApi.middleware,
+      // BudgetsCategoryApi.middleware,
       organizationUnitApi.middleware,
       EntranceExamSlotApi.middleware,
       EntranceExamApi.middleware,
@@ -267,6 +259,7 @@ const store = configureStore({
       receiptApi.middleware,
       FeeRefundApi.middleware,
       studentInvoiceApi.middleware,
+      FeeHeadManagementApi.middleware,
       studentReceiptApi.middleware,
       feeCategoryApi.middleware,
       ChargeCategoryApi.middleware,

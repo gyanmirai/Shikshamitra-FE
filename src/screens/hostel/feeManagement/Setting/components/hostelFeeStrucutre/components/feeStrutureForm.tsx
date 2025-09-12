@@ -16,7 +16,7 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 
-import HostelFeeHead from '../../hostelFeeHead/hostelFeeHead';
+// import HostelFeeHead from '../../hostelFeeHead/hostelFeeHead';
 import HostelPaymentMethodDialog from './hostelPaymentMethod';
 import { hostelFeeStrctureValidationSchema } from './validationSchema';
 
@@ -148,7 +148,8 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
                   maxWidth="md"
                 >
                   <Scrollbar sx={{ height: '300px' }}>
-                    <HostelFeeHead />
+                    fgh
+                    {/* <HostelFeeHead /> */}
                   </Scrollbar>
                 </CustomDialog>
               )}

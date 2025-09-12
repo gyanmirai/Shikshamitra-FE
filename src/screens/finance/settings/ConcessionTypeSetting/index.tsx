@@ -19,6 +19,7 @@ import { useGetConcessionTypeQuery } from 'src/redux/finance/concessionType';
 
 import ConcessionTypeTable from './Components/ConcessionTable';
 import ConcessionTypeForm from './Components/ConcessionTypeForm';
+import ConcessionDocumentTable from './Components/ConcessionDocuments';
 
 import type { IConcessionTypeForm } from './type';
 
@@ -27,10 +28,12 @@ const ConcessionType = () => {
   const [selectedConcessionType, setSelectedConcessionType] = useState<IConcessionTypeForm | null>(
     null
   );
+  console.log('selectedConcessionType---', selectedConcessionType);
 
   // Custom hook to manage dialog open/close state
   const addConcessionTypeDialog = useBoolean();
   const deleteConcessionTypeDialog = useBoolean();
+  const viewConcessionTypeDialog = useBoolean();
 
   // Fetch concession type data
   const { data: concessionTypes, isLoading: concessionTypesLoading } = useQueryAndMutation({
@@ -131,6 +134,10 @@ const ConcessionType = () => {
             deleteConcessionTypeDialog.onTrue();
             setSelectedConcessionType(data);
           }}
+          onView={(data) => {
+            viewConcessionTypeDialog.onTrue();
+            setSelectedConcessionType(data);
+          }}
         />
 
         <ConfirmDialog
@@ -172,6 +179,30 @@ const ConcessionType = () => {
             </Button>
           }
         />
+
+        <CustomDialog
+          open={viewConcessionTypeDialog.value}
+          handleClose={() => {
+            viewConcessionTypeDialog.onFalse();
+            setSelectedConcessionType(null);
+          }}
+          maxWidth="md"
+          title={
+            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+              <Typography variant="h5">View Concession Type Details</Typography>
+              <CustomTooltip
+                arrow
+                placement="right"
+                sx={{ textAlign: 'justify' }}
+                title="View detailed information about this concession type including applicable rules and conditions"
+              >
+                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              </CustomTooltip>
+            </Box>
+          }
+        >
+          <ConcessionDocumentTable data={selectedConcessionType} />
+        </CustomDialog>
       </>
     </Box>
   );

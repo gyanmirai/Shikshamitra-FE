@@ -13,11 +13,11 @@ import { Box, Tab, Card, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
-import SetFeeHeadDialog from './dialogs/set-fee-head-dialog';
+// import SetFeeHeadDialog from './dialogs/set-fee-head-dialog';
 import SetPaymentTerm from './component/setting-up-payment-term';
 import SetPaymentMethodComponent from './component/set-payment-method';
 import SetLateFeeTypeMethod from './component/set-late-fee-type-method';
-import SetDefaultFeeComponent from './component/set-default-fee-component';
+// import SetDefaultFeeComponent from './component/set-default-fee-component';
 import AddPaymentTermDialog from './dialogs/finance-add-payment-term-dialog';
 import AddPaymentMethodDialog from './dialogs/finance-add-payment-method-dialog';
 import AddPaymentStatusDialog from './dialogs/finance-add-payment-status-dialog';
@@ -53,7 +53,7 @@ const FinanceGeneralSettingTab = () => {
         onClick: () => {
           setFeeHeadDialog.onTrue();
         },
-        component: (props: any) => <SetDefaultFeeComponent {...props} />,
+        component: (props: any) => <>tfghj</>,
       },
       {
         value: 'setPaymentMethodComponents',
@@ -279,7 +279,8 @@ const FinanceGeneralSettingTab = () => {
             </Box>
           }
         >
-          <SetFeeHeadDialog
+          rth
+          {/* <SetFeeHeadDialog
             onClose={() => {
               setFeeHeadDialog.onFalse();
             }}
@@ -288,7 +289,7 @@ const FinanceGeneralSettingTab = () => {
             onSave={() => {
               setFeeHeadDialog.onFalse();
             }}
-          />
+          /> */}
         </CustomDialog>
       )}
 

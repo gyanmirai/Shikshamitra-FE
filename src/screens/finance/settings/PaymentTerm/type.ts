@@ -4,7 +4,6 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 export interface IInstallment {
   id: number;
   installmentName: string;
-  percentage: number; // store as number (e.g., 25 for 25%)
   dueDate: string | null | Dayjs; // ISO date string e.g., "2025-03-30"
   reminderDate: string | null | Dayjs;
   gracePeriod: number | null;

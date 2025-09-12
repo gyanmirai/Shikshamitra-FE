@@ -10,7 +10,12 @@ export const paymentTermValidationSchema = (currentYear: any) =>
       .required('Payment Term Name is required')
       .min(2, 'Must be at least 2 characters')
       .max(50, 'Cannot exceed 50 characters'),
-    totalInstallments: Yup.string().required('Total Installment is required'),
+    totalInstallments: Yup.number()
+      .typeError('Total installments must be a number')
+      .min(1, 'At least 1 installment required')
+      .max(12, 'Maximum 12 installments allowed')
+      .required('Total installments is required'),
+
     // academicYearId: Yup.string().required('Academic Year is required'),
 
     // board: Yup.string().required('Board is required'),
@@ -22,16 +27,22 @@ export const paymentTermValidationSchema = (currentYear: any) =>
     paymentTerm: Yup.string().required('Payment Term is required'),
 
     installments: Yup.array()
+      .test(
+        'total-100',
+        'Total percentage across installments must be exactly 100',
+        (installments = []) => {
+          if (!installments.length) return true; // skip if empty
+          const total = installments.reduce(
+            (sum, inst) => sum + (typeof inst?.percentage === 'number' ? inst.percentage : 0),
+            0
+          );
+          return total === 100;
+        }
+      )
       .of(
         Yup.object().shape({
           installmentName: Yup.string().required('Installment Name is required'),
-          percentage: Yup.number()
-            .transform((value, originalValue) =>
-              String(originalValue).trim() === '' ? undefined : Number(originalValue)
-            )
-            .required('Percentage is required')
-            .min(1, 'Percentage must be at least 1')
-            .max(100, 'Percentage cannot exceed 100'),
+
           dueDate: Yup.mixed()
             .required('Due Date is required')
             .test(
@@ -88,23 +99,8 @@ export const paymentTermValidationSchema = (currentYear: any) =>
       )
       .required('Installments are required')
       .min(1, 'At least one installment is required')
-      .test(
-        'total-percentage',
-        'Total percentage of installments cannot exceed 100',
-        (installments) => {
-          if (!installments || installments.length === 0) return true;
-
-          const total = installments.reduce(
-            (sum, inst) => sum + (typeof inst.percentage === 'number' ? inst.percentage : 0),
-            0
-          );
-
-          return total <= 100;
-        }
-      )
       .test('unique-due-dates', 'Due Dates must be unique across installments', (installments) => {
         if (!installments) return true;
-
         for (let i = 0; i < installments.length; i += 1) {
           for (let j = i + 1; j < installments.length; j += 1) {
             if (

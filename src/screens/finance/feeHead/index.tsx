@@ -14,9 +14,9 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadApi/feeHeadApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 
 import FeeHeadForm from './Components/FeeHeadForm';
 import FeeHeadTable from './Components/FeeHeadTable';
