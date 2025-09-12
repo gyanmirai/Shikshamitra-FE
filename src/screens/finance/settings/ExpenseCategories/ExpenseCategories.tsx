@@ -7,7 +7,6 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -148,14 +147,6 @@ const FinanceExpenseCategory = () => {
             align: 'left',
           },
           {
-            id: 'budget',
-            label: 'Budget',
-            minWidth: '200px',
-            isSort: true,
-            isFilter: true,
-            align: 'left',
-          },
-          {
             id: 'description',
             label: 'Description',
             minWidth: '300px',
@@ -243,29 +234,15 @@ const ExpenseCategoryDialog = ({ open, onClose, editData, onSave }: ExpenseCateg
   const [isLoading, setIsLoading] = useState(false);
 
   // Get budget options from API
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: budgetOptions = [] } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBudgetOptionsQuery,
   });
 
-  // Prepare budget options for dropdown
-  const budgetDropdownOptions = Array.isArray(budgetOptions)
-    ? budgetOptions.map((item) => ({
-        id: typeof item === 'string' ? item : item.name,
-        name: typeof item === 'string' ? item : item.name,
-      }))
-    : [];
-
-  // Handle budget change
-  const handleBudgetChange = (value: string | number | string[] | number[]) => {
-    formik.setFieldValue('budget', value);
-    formik.setFieldTouched('budget', false);
-  };
-
   // Form validation schema using Yup
   const validationSchema = Yup.object().shape({
     expenseCategoryName: Yup.string().required('Expense Category Name is required'),
-    budget: Yup.string().required('Budget is required'),
     description: Yup.string().optional(),
   });
 
@@ -273,7 +250,6 @@ const ExpenseCategoryDialog = ({ open, onClose, editData, onSave }: ExpenseCateg
   const formik = useFormik({
     initialValues: {
       expenseCategoryName: editData?.expenseCategoryName || '',
-      budget: editData?.budget || '',
       description: editData?.description || '',
     },
     validationSchema,
@@ -364,26 +340,6 @@ const ExpenseCategoryDialog = ({ open, onClose, editData, onSave }: ExpenseCateg
                       ? formik.errors.expenseCategoryName
                       : undefined
                   }
-                />
-              </ShakingTextField>
-
-              {/* Budget Dropdown */}
-              <ShakingTextField error={!!(formik.touched.budget && formik.errors.budget) || false}>
-                <CustomSelect
-                  name="budget"
-                  label="Budget *"
-                  options={budgetDropdownOptions}
-                  value={formik.values.budget}
-                  labelKey="name"
-                  valueKey="id"
-                  onChange={handleBudgetChange}
-                  error={!!(formik.touched.budget && formik.errors.budget) || false}
-                  helperText={
-                    formik.touched.budget && typeof formik.errors.budget === 'string'
-                      ? formik.errors.budget
-                      : ''
-                  }
-                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                 />
               </ShakingTextField>
 

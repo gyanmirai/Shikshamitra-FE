@@ -23,6 +23,7 @@ export interface IConcessionTableProps {
   addConcessionType: UseBooleanReturn;
   setEditData: (row: IConcessionTypeForm | null) => void;
   onEdit?: (row: IConcessionTypeForm) => void;
+  onView?: (row: IConcessionTypeForm) => void;
   onDelete?: (row: IConcessionTypeForm) => void;
 }
 

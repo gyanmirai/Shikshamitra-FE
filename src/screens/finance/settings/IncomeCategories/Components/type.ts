@@ -3,7 +3,6 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 export interface IIncomeCategory {
   id: string;
   incomeCategoryName: string;
-  budget: string;
   description?: string;
 }
 

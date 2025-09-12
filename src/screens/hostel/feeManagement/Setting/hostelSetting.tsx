@@ -8,7 +8,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import HostelFeeHead from './components/hostelFeeHead/hostelFeeHead';
+// import HostelFeeHead from './components/hostelFeeHead/hostelFeeHead';
 import HostelFeeStructure from './components/hostelFeeStrucutre/feeStructure';
 import HostelPaymentMethodComponent from './components/hostelFeeStrucutre/components/hostelPaymentMethodComp';
 
@@ -16,7 +16,7 @@ const TABS = [
   {
     value: 'feeHead',
     label: 'Fee Head Management',
-    component: (props: TabComponentType) => <HostelFeeHead {...props} />,
+    component: (props: TabComponentType) => <>dfghj</>,
   },
   {
     value: 'paymentMethod',

@@ -7,7 +7,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Grid, Button, Switch, TextField, IconButton, Typography } from '@mui/material';
+import { Box, Grid, Chip, Button, Switch, IconButton, Typography } from '@mui/material';
 
 import AddFeeHeadDialogContent from './AddFeeHeadForm';
 
@@ -36,7 +36,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
               container
               key={index}
               sx={{
-                border: '1px dashed #000',
+                border: '1px dashed #808080',
                 borderRadius: 1,
                 spacing: 3,
                 alignItems: 'center',
@@ -49,36 +49,31 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                 <Typography variant="h6">{index + 1}.</Typography>
               </Grid>
               <Grid size={2} pt={0}>
-                <TextField
-                  label="Category"
+                <Chip
+                  label={`Category : ${item.feeCategory}`}
+                  variant="outlined"
                   size="small"
-                  disabled
-                  value={item.feeCategory}
-                  onChange={(e) => {
-                    const updatedItems = [...feeItems];
-                    updatedItems[index].feeCategory = e.target.value;
-                    const currentClassData = formik.values.feeStructureClasses[className];
-
-                    formik.setFieldValue(`feeStructureClasses.${className}`, {
-                      ...currentClassData,
-                      feeItems: updatedItems,
-                    });
+                  sx={{
+                    '& .MuiChip-label': {
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    },
                   }}
-                  fullWidth
                 />
               </Grid>
               <Grid size={2} pt={0}>
-                <TextField
-                  label="Fee Head"
-                  disabled
+                <Chip
+                  label={`Fee Head : ${item.feeHead}`}
+                  variant="outlined"
                   size="small"
-                  value={item.feeHead}
-                  onChange={(e) => {
-                    const updatedItems = [...feeItems];
-                    updatedItems[index].feeHead = e.target.value;
-                    formik.setFieldValue(`feeStructureClasses.${className}.feeItems`, updatedItems);
+                  sx={{
+                    '& .MuiChip-label': {
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    },
                   }}
-                  fullWidth
                 />
               </Grid>
               <Grid size={2} pt={0}>
@@ -166,7 +161,6 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
         sx={{
           display: 'flex',
           justifyContent: 'center',
-          border: '1px dashed #000',
           borderRadius: 1,
           p: 1,
           mt: 2,

@@ -25,7 +25,7 @@ export const FeeStructureClassStatusTypeColors: Record<
   FeeStructureClassStatusType,
   ButtonProps['color']
 > = {
-  [FeeStructureClassStatusType.Current]: 'success',
+  [FeeStructureClassStatusType.Current]: 'info',
   [FeeStructureClassStatusType.Completed]: 'success',
-  [FeeStructureClassStatusType.Remaining]: 'inherit',
+  [FeeStructureClassStatusType.Remaining]: 'warning',
 };

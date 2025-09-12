@@ -1,24 +1,38 @@
 [
-    {
-      "id": 1,
-      "receiptBookName": "GSEB",
-      "receiptBookCode": "GSE55B",
-      "toggle": true,
-      "action": "view"
-    },
-    {
-      "id": 2,
-      "receiptBookName": "CBSE",
-      "receiptBookCode": "CBS12E",
-      "toggle": true,
-      "action": "view"
-    },
-    {
-      "id": 3,
-      "receiptBookName": "OTHER",
-      "receiptBookCode": "OTH12a",
-      "toggle": false,
-      "action": "view"
-    }
-  ]
-  
+  {
+    "id": 1,
+    "receiptBookName": "GSEB",
+    "receiptBookCode": "GSE55B",
+    "prefix": "GS",
+    "suffix": "25",
+    "startingNumber": 1000,
+    "endingNumber": 2000,
+    "description": "GSEB Board receipt book",
+    "toggle": true,
+    "action": "view"
+  },
+  {
+    "id": 2,
+    "receiptBookName": "CBSE",
+    "receiptBookCode": "CBS12E",
+    "prefix": "CB",
+    "suffix": "20",
+    "startingNumber": 2001,
+    "endingNumber": 3000,
+    "description": "CBSE Board receipt book",
+    "toggle": true,
+    "action": "view"
+  },
+  {
+    "id": 3,
+    "receiptBookName": "OTHER",
+    "receiptBookCode": "OTH12a",
+    "prefix": "OT",
+    "suffix": "30",
+    "startingNumber": 3001,
+    "endingNumber": 4000,
+    "description": "Other receipts",
+    "toggle": false,
+    "action": "view"
+  }
+]

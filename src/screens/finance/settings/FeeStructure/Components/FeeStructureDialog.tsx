@@ -1,10 +1,10 @@
-// AddFeeStructureDialog.tsx
 import type { FormikProps } from 'formik';
 
-import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import { Button, TextField, DialogActions } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -15,35 +15,69 @@ interface Props {
   formik: FormikProps<IFeeStructure>;
   className: string;
   onClose: (e: any, isSubmit: boolean) => void;
+  editIndex?: number | null; // pass index if editing
 }
 
-const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose }) => {
+const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose, editIndex }) => {
   const [feeStructureName, setFeeStructureName] = useState('');
+  const [error, setError] = useState('');
+
+  // Pre-fill name if editing
+  useEffect(() => {
+    if (editIndex !== null && editIndex !== undefined) {
+      const existing = formik.values.feeStructureClasses[className][editIndex];
+      if (existing) {
+        setFeeStructureName(existing.feeStructureName);
+      }
+    }
+  }, [editIndex, className, formik.values.feeStructureClasses]);
 
   const handleSubmit = () => {
+    if (!feeStructureName.trim()) {
+      setError('Fee Structure Name is required');
+      return;
+    }
+
     const updated = [...formik.values.feeStructureClasses[className]];
 
-    updated.push({
-      feeStructureName: feeStructureName || `Fee Structure ${updated.length + 1}`,
-      status: FeeStructureClassStatusType.Current,
-      feeItems: [],
-    });
+    if (editIndex !== null && editIndex !== undefined) {
+      // Edit mode
+      updated[editIndex] = {
+        ...updated[editIndex],
+        feeStructureName,
+      };
+    } else {
+      // Add mode
+      updated.push({
+        feeStructureName: feeStructureName || `Fee Structure ${updated.length + 1}`,
+        status: FeeStructureClassStatusType.Current,
+        feeItems: [],
+      });
+    }
 
     formik.setFieldValue(`feeStructureClasses.${className}`, updated);
+    setFeeStructureName('');
+    setError('');
     onClose(null, true);
   };
 
   return (
     <BackPopUpChecked initialValues={feeStructureName} currentValues={feeStructureName}>
       <DialogScrollContent>
-        <TextField
-          fullWidth
-          size="small"
-          label="Fee Structure Name"
-          value={feeStructureName}
-          onChange={(e) => setFeeStructureName(e.target.value)}
-          margin="normal"
-        />
+        <ShakingTextField error={!!error}>
+          <TextField
+            fullWidth
+            size="small"
+            label="Fee Structure Name *"
+            value={feeStructureName}
+            onChange={(e) => {
+              setFeeStructureName(e.target.value);
+              if (error) setError('');
+            }}
+            error={!!error}
+            helperText={error}
+          />
+        </ShakingTextField>
       </DialogScrollContent>
 
       <DialogActions>
@@ -62,7 +96,7 @@ const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose }) 
           onClick={handleSubmit}
           size="small"
         >
-          Submit
+          {editIndex !== null && editIndex !== undefined ? 'Update' : 'Submit'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>

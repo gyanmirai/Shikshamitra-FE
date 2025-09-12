@@ -41,16 +41,6 @@ export const buildValidationSchema = () =>
   Yup.object({
     selectedMethods: Yup.array().min(1, 'Select at least one payment method'),
     selectedTerms: Yup.array().min(1, 'Select at least one term to collect'),
-    receivedAmount: Yup.number()
-      .transform((value, originalValue) => {
-        if (typeof originalValue === 'string') {
-          const cleaned = originalValue.replace(/[₹,\s]/g, '');
-          return Number(cleaned);
-        }
-        return value;
-      })
-      .required('Received amount is required')
-      .positive('Amount must be positive'),
     totalAmount: Yup.number()
       .transform((value, originalValue) => {
         if (typeof originalValue === 'string') {
@@ -128,7 +118,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
           />
         </Grid>
 
-        <Grid size={{ xs: 6 }} mt={2} mb={2}>
+        <Grid size={{ xs: 6 }}>
           <Card
             sx={{
               p: 2,
@@ -160,25 +150,6 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                     disabled
                     size="small"
                   />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.receivedAmount && formik.errors.receivedAmount)}
-                  >
-                    <NumericFormatCustom
-                      fullWidth
-                      label="Received Amount *"
-                      size="small"
-                      name="receivedAmount"
-                      value={formik.values.receivedAmount}
-                      onChange={formik.handleChange}
-                      error={formik.touched.receivedAmount && Boolean(formik.errors.receivedAmount)}
-                      helperText={
-                        (formik.touched.receivedAmount && formik.errors.receivedAmount) as string
-                      }
-                    />
-                  </ShakingTextField>
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 6 }}>

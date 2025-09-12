@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -158,7 +157,7 @@ const FeeStructure = () => {
 
       <ConfirmDialog
         open={confirmDialog.value}
-        icon={selectedFeeStructure?.status === 0 ? 'warning' : 'success'}
+        icon={selectedFeeStructure?.status === 0 ? 'mdi:lock-outline' : 'mdi:lock-open-outline'}
         onClose={() => {
           confirmDialog.onFalse();
           setTimeout(() => {
@@ -171,11 +170,21 @@ const FeeStructure = () => {
             <>
               Are you sure you want move <strong>{selectedFeeStructure.feeStructureName}</strong>{' '}
               Fee Structure to {selectedFeeStructure.status === 0 ? 'lock' : 'unlock'} ?
+              {selectedFeeStructure.status === 1 && (
+                <div style={{ marginTop: '8px', color: '#d32f2f' }}>
+                  Note: Please take approval from admin before unlocking the fee structure.
+                </div>
+              )}
             </>
           ) : (
             <>
               Are you sure you want move <strong>{selectedFeeStructure?.feeStructureName}</strong>{' '}
               Fee Structure to {selectedFeeStructure?.status === 0 ? 'lock' : 'unlock'} ?
+              {selectedFeeStructure?.status === 1 && (
+                <div style={{ marginTop: '8px', color: '#d32f2f' }}>
+                  Note: Please take approval from admin before unlocking the fee structure.
+                </div>
+              )}
             </>
           )
         }
@@ -186,7 +195,7 @@ const FeeStructure = () => {
             startIcon={
               <Iconify
                 icon={
-                  selectedFeeStructure?.status === 0 ? GlobalIcons.lockIcon : GlobalIcons.lockIcon
+                  selectedFeeStructure?.status === 0 ? 'mdi:lock-outline' : 'mdi:lock-open-outline'
                 }
               />
             }

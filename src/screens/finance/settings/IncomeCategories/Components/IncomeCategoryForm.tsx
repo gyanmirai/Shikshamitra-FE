@@ -4,7 +4,6 @@ import React from 'react';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -65,35 +64,6 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
                   formik.touched.incomeCategoryName && Boolean(formik.errors.incomeCategoryName)
                 }
                 helperText={formik.touched.incomeCategoryName && formik.errors.incomeCategoryName}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          {/* Budget */}
-          <Grid size={12}>
-            <ShakingTextField error={!!(formik.touched.budget && formik.errors.budget) || false}>
-              <CustomSelect
-                name="budget"
-                label="Budget *"
-                options={[
-                  { id: 'Income Budget 2025', name: 'Income Budget 2025' },
-                  { id: 'Annual Income Budget 2025', name: 'Annual Income Budget 2025' },
-                  {
-                    id: 'Cultural & Sports Event Income 2025',
-                    name: 'Cultural & Sports Event Income 2025',
-                  },
-                  { id: 'Annual Tuition Income 2025', name: 'Annual Tuition Income 2025' },
-                ]}
-                value={formik.values.budget || ''}
-                labelKey="name"
-                valueKey="id"
-                onChange={(value) => {
-                  formik.setFieldValue('budget', value);
-                  formik.setFieldTouched('budget', false);
-                }}
-                error={!!(formik.touched.budget && formik.errors.budget) || false}
-                helperText={(formik.touched.budget && formik.errors.budget) || ''}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </ShakingTextField>
           </Grid>

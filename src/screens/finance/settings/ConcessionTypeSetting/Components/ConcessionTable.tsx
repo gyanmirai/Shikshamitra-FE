@@ -13,6 +13,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   setEditData,
   onEdit,
   onDelete,
+  onView,
 }) => {
   const tableData = useMemo(
     () =>
@@ -56,12 +57,12 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
       columns={[
         {
           id: 'concessionName',
-          label: 'Concession Name',
+          label: 'Name',
           align: 'left',
         },
         {
           id: 'concessionType',
-          label: 'Concession Type',
+          label: 'Based On',
           align: 'left',
         },
         {
@@ -90,6 +91,10 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
           render: (value, row) => (
             <ThreeDotsActions
               showThreeDots={false}
+              showViewIcon
+              handleViewClick={() => {
+                onView?.(row as IConcessionTypeForm);
+              }}
               showEditIcon
               showDeleteIcon
               handleEditClick={() => onEdit?.(row as IConcessionTypeForm)}

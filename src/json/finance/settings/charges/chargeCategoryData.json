@@ -1,19 +1,22 @@
 {
-    "chargeCategories": [
-        {
-            "id": "1",
-            "chargeName": "Library Fine",
-            "isRefundable": "Yes"
-        },
-        {
-            "id": "2",
-            "chargeName": "Transport Damage",
-            "isRefundable": "No"
-        },
-        {
-            "id": "3",
-            "chargeName": "Hostel Maintenance",
-            "isRefundable": "Yes"
-        }
-    ]
+  "chargeCategories": [
+    {
+      "id": "1",
+      "chargeName": "Library Fine",
+      "isRefundable": "Yes",
+      "roles": ["Admin", "Librarian"]
+    },
+    {
+      "id": "2",
+      "chargeName": "Transport Damage",
+      "isRefundable": "No",
+      "roles": ["Admin", "Transport Manager"]
+    },
+    {
+      "id": "3",
+      "chargeName": "Hostel Maintenance",
+      "isRefundable": "Yes",
+      "roles": ["Admin", "Hostel Manager"]
+    }
+  ]
 }
