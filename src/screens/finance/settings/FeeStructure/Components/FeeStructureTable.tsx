@@ -61,7 +61,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
           ),
         },
         { id: 'receiptBook', label: 'Receipt Book', align: 'left' },
-        { id: 'paymentTerm', label: 'Payment Term', align: 'left' },
+        // { id: 'paymentTerm', label: 'Payment Term', align: 'left' },
         { id: 'totalClass', label: 'Total Class', align: 'left' },
         {
           id: 'status',

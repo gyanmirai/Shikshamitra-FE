@@ -80,6 +80,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
       </Grid>
 
       {/* Legend */}
+
       <Grid size={12}>
         <Box display="flex" alignItems="center" gap={3} mb={2}>
           {[
@@ -87,23 +88,24 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
             FeeStructureClassStatusType.Completed,
             FeeStructureClassStatusType.Remaining,
           ].map((statusKey) => {
-            // count how many classes have first structure with this status
-            const count = Object.values(feeStructureClasses).filter(
-              (cls) => cls[0]?.status === statusKey
-            ).length;
+            const count = Object.values(feeStructureClasses)
+              .flat()
+              .filter((cls: any) => cls.status === statusKey).length;
 
             const dotColor =
               statusKey === FeeStructureClassStatusType.Current
-                ? theme.vars.palette.success.main
+                ? theme.vars.palette.info.main
                 : statusKey === FeeStructureClassStatusType.Completed
-                  ? theme.vars.palette.success.light
-                  : theme.vars.palette.grey[400];
+                  ? theme.vars.palette.success.main
+                  : theme.vars.palette.warning.main;
 
             return (
               <Box key={statusKey} display="flex" alignItems="center" gap={1}>
-                <FiberManualRecordIcon sx={{ fontSize: 12, color: dotColor }} />
+                <FiberManualRecordIcon sx={{ fontSize: 12, color: dotColor.toString() }} />
                 <Typography variant="body2" color="text.primary">
-                  {FeeStructureClassStatusType[statusKey]} ({String(count).padStart(2, '0')})
+                  {FeeStructureClassStatusType[statusKey]}{' '}
+                  {statusKey !== FeeStructureClassStatusType.Current &&
+                    `(${String(count).padStart(2, '0')})`}
                 </Typography>
               </Box>
             );

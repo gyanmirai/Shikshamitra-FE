@@ -27,6 +27,7 @@ export interface IPaymentTermTableProps {
   editData: IPaymentTerm | null;
   setEditData: (value: IPaymentTerm | null) => void;
   onEdit?: (row: IPaymentTerm) => void;
+  onDelete?: (row: IPaymentTerm) => void;
 }
 
 export interface IFeeStructureFormProps {

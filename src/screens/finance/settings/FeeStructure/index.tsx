@@ -86,6 +86,7 @@ const FeeStructure = () => {
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fee Structure', href: '/finance/fee-structure' },
+            { name: 'View Fee Structure', href: '' },
           ]}
           sx={{ px: 1, mb: 2 }}
         />

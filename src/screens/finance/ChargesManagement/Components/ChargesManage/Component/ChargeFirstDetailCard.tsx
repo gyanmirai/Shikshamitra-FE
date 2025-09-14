@@ -29,7 +29,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
       <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
         <CardContent>
           <Typography variant="h6" color="primary.main" gutterBottom>
-            Request Information
+            Applied for
           </Typography>
 
           <Grid container spacing={3}>

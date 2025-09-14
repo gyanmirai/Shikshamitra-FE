@@ -302,7 +302,15 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 renderTags={(tagValue, getTagProps) =>
                   tagValue.map((option, index) => {
                     const { key, ...chipProps } = getTagProps({ index });
-                    return <Chip key={key} label={option.name} size="small" {...chipProps} />;
+                    return (
+                      <Chip
+                        key={key}
+                        label={option.name}
+                        size="small"
+                        {...chipProps}
+                        variant="soft"
+                      />
+                    );
                   })
                 }
                 options={tableData}

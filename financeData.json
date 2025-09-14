@@ -16,7 +16,7 @@
     "feeStructureClasses": {
       "1": [  
         {
-          "feeStructureName": "Class 1 Structure",
+          "feeStructureName": "General Structure",
           "status": 0,
           "feeItems": [
             {
@@ -55,14 +55,91 @@
               "required": true
             }
           ]
-        }
+        },
+                 {
+    "feeStructureName": "RTE Structure",
+    "status": 0,
+    "feeItems": [
+      {
+        "feeCategory": "Tuition",
+        "feeHead": "Tuition Fee",
+        "amount": 0,
+        "isOneTime": false,
+        "required": true
+      },
+      {
+        "feeCategory": "Hostel",
+        "feeHead": "Hostel Fee",
+        "amount": 5000,
+        "isOneTime": false,
+        "required": false
+      },
+      {
+        "feeCategory": "Transport",
+        "feeHead": "Transport Fee",
+        "amount": 4000,
+        "isOneTime": false,
+        "required": false
+      },
+      {
+        "feeCategory": "Admission",
+        "feeHead": "Admission Fee",
+        "amount": 0,
+        "isOneTime": true,
+        "required": false
+      },
+      {
+        "feeCategory": "Sports",
+        "feeHead": "Sport Fee",
+        "amount": 3000,
+        "isOneTime": false,
+        "required": false
+      }
+    ]
+  }
       ],
       "2": [
-        {
-          "feeStructureName": "",
-          "status": 2,
-          "feeItems": []
-        }
+          {
+    "feeStructureName": "RTE Structure",
+    "status": 0,
+    "feeItems": [
+      {
+        "feeCategory": "Tuition",
+        "feeHead": "Tuition Fee",
+        "amount": 0,
+        "isOneTime": false,
+        "required": true
+      },
+      {
+        "feeCategory": "Hostel",
+        "feeHead": "Hostel Fee",
+        "amount": 5000,
+        "isOneTime": false,
+        "required": false
+      },
+      {
+        "feeCategory": "Transport",
+        "feeHead": "Transport Fee",
+        "amount": 4000,
+        "isOneTime": false,
+        "required": false
+      },
+      {
+        "feeCategory": "Admission",
+        "feeHead": "Admission Fee",
+        "amount": 0,
+        "isOneTime": true,
+        "required": false
+      },
+      {
+        "feeCategory": "Sports",
+        "feeHead": "Sport Fee",
+        "amount": 3000,
+        "isOneTime": false,
+        "required": false
+      }
+    ]
+  }
       ],
       "3": [
         {
@@ -138,7 +215,7 @@
     "status": 1
   },
   {
-    "feeStructureName": "Class 2 Structure",
+    "feeStructureName": "General Structure",
     "academicYear": "2025-2026",
     "board": "GSEB",
     "receiptBook": "CBSE",

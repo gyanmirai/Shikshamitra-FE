@@ -34,9 +34,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
       id: isEdit
         ? (data?.id ?? Math.floor(Math.random() * 10000))
         : Math.floor(Math.random() * 10000),
-
       receiptBookName: isEdit ? (data?.receiptBookName ?? '') : '',
-      receiptBookCode: isEdit ? (data?.receiptBookCode ?? '') : '',
       prefix: isEdit ? (data?.prefix ?? '') : '',
       suffix: isEdit ? (data?.suffix ?? '') : '',
       startingNumber: isEdit ? (data?.startingNumber ?? 0) : '',
@@ -89,32 +87,6 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     autoFocus
                     name={field}
                     label="Receipt Book Name *"
-                    value={formik.values[field]}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                      formik.setFieldValue(field, value);
-                    }}
-                    error={error}
-                    helperText={helperText}
-                  />
-                </ShakingTextField>
-              );
-            })()}
-          </Grid>
-
-          {/* Receipt Book Code Field */}
-          <Grid size={{ xs: 12, sm: 12 }}>
-            {(() => {
-              const field = 'receiptBookCode';
-              const error = formik.touched[field] && Boolean(formik.errors[field]);
-              const helperText = formik.touched[field] && formik.errors[field];
-              return (
-                <ShakingTextField error={error}>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    name={field}
-                    label="Receipt Book Code *"
                     value={formik.values[field]}
                     onChange={(e) => {
                       const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
