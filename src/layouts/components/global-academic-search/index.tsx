@@ -122,7 +122,6 @@ const GlobalAcademicSearch = () => {
   }, [currentBoard, currentMedium, currentYear]);
 
   const pathname = usePathname();
-  console.log('🚀 ~ GlobalAcademicSearch ~ pathname:', pathname);
 
   const isFinanceRoute = pathname.startsWith('/finance');
 
