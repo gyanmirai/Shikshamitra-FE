@@ -5,8 +5,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
+import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,12 +13,11 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Card, Button, DialogContent, DialogActions } from '@mui/material';
 import { useGetClassWiseAnnouncementsQuery } from 'src/redux/communication/announcement/classWiseAnnouncement';
 
 import AnnouncementForm from './components/classWiseAnnouncementForm';
-import AnnouncementDetails from './components/classAnnouncementDetails';
 import ClassWiseAnnouncementTable from './components/classAnnouncementTable';
+import ClassManagementViewDetails from './components/ClassWiseDetails/ClassWiseAnnouncementDetails';
 
 const ClassWiseAnnounsement = (props: TabComponentType) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -111,6 +109,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AnnouncementForm
+            onClose={handleCloseDialog}
             initialValues={editingAnnouncement}
             onSubmit={() => {}}
             isEdit={!!editingAnnouncement}
@@ -160,7 +159,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
       <ConfirmDialog
         open={publish_modal.value}
         onClose={() => {}}
-        title="Delete"
+        title="Publish"
         content="Are you sure want to Publish?"
         action={
           <Button variant="contained" color="success" onClick={() => {}}>
@@ -178,18 +177,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
         }}
         maxWidth="md"
       >
-        <DialogContent>
-          <AnnouncementDetails announcement={viewAnnouncement} />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            onClick={view_dialog.onFalse}
-            variant="outlined"
-          >
-            Close
-          </Button>
-        </DialogActions>
+        <ClassManagementViewDetails announcement={viewAnnouncement} />
       </CustomDialog>
     </Box>
   );

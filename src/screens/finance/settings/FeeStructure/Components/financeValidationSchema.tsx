@@ -8,7 +8,6 @@ export const finaceFeeStructureValidationSchema = [
     board: yup.string().required('Board is required'),
     medium: yup.string().required('Medium is required'),
     receiptBook: yup.string().required('Receipt Book is required'),
-    paymentTerm: yup.string().required('Payment Term is required'),
     paymentMethod: yup.array().of(yup.string()).min(1, 'At least one Payment Method is required'),
   }),
 

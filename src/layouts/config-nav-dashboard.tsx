@@ -947,36 +947,6 @@ const communicationModule = {
           _action: 'eventsAndCalendar',
           shortcutKey: 'Alt+C+E',
           shortcutKeyName: 'Alt+C+E',
-          children: [
-            {
-              title: 'Events & Holidays',
-              _action: 'events-holidays',
-              path: '/communication/events-holidays',
-              shortcutKey: 'Alt+H+V',
-              shortcutKeyName: 'Alt+H+V',
-            },
-            {
-              title: 'All Events',
-              path: '/communication/eventsAndCalendar/allEvents',
-              _action: 'eventsAndCalendar-allEvents',
-              shortcutKey: 'Alt+C+E+1',
-              shortcutKeyName: 'Alt+C+E+1',
-            },
-            {
-              title: 'Upcoming Events',
-              path: '/communication/eventsAndCalendar/upcomingEvents',
-              _action: 'eventsAndCalendar-upcomingEvents',
-              shortcutKey: 'Alt+C+E+2',
-              shortcutKeyName: 'Alt+C+E+2',
-            },
-            {
-              title: 'Event Archieves',
-              path: '/communication/eventsAndCalendar/eventArchieves',
-              _action: 'eventsAndCalendar-eventArchieves',
-              shortcutKey: 'Alt+C+E+3',
-              shortcutKeyName: 'Alt+C+E+3',
-            },
-          ],
         },
         {
           title: 'Feedback & Survey',

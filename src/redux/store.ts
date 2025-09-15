@@ -76,6 +76,7 @@ import { quizManagementApi } from './academics/examination/quiz-management-api';
 import { LibraryChargeApi } from './library/charges-management/charges-get-api';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { reservationBookApi } from './book-reservation-api/book-reservation-api';
+import { eventAnnouncementApi } from './communication/announcement/eventDataApi';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
 import { studentGrNumberApi } from './student/studentGrNumber/student-gr-number-api';
 import { paymentStatusOptionApi } from './paymentStatusOption/paymentStatusOptionApi';
@@ -190,6 +191,7 @@ const reducers = combineReducers({
   [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
   [schoolWiseAnnouncementApi.reducerPath]: schoolWiseAnnouncementApi.reducer,
   [classWiseAnnouncementApi.reducerPath]: classWiseAnnouncementApi.reducer,
+  [eventAnnouncementApi.reducerPath]: eventAnnouncementApi.reducer,
 });
 
 const store = configureStore({
@@ -216,7 +218,7 @@ const store = configureStore({
       payElementApi.middleware,
       payrollStructureApi.middleware,
       PFApi.middleware,
-      EventHolidayApi.middleware,
+      // EventHolidayApi.middleware,
       ProfessionalApi.middleware,
       StudentAttendanceRuleApi.middleware,
       StudentAttendanceTypeApi.middleware,
@@ -288,6 +290,7 @@ const store = configureStore({
       bookConditionOptionsApi.middleware,
       schoolWiseAnnouncementApi.middleware,
       classWiseAnnouncementApi.middleware,
+      eventAnnouncementApi.middleware,
     ]),
 });
 
