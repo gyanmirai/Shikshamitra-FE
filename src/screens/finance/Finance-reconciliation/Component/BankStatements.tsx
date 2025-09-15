@@ -3,16 +3,17 @@ import type { LabelColor } from 'src/components/label';
 import React from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Box, MenuItem, MenuList } from '@mui/material';
+import { formatNumber } from 'src/utils/formate_number';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 import { useGetBankStatementsQuery } from 'src/redux/finance/reconciliation';
 import {
-  BankStatementsStatusType,
-  BankStatementsStatusColor,
-  BankStatementsStatusOptions,
-} from 'src/enums/finance-reconcilition-bankstatements-status';
+  PamentMethodsStatusColor,
+  PaymentMethodsStatusType,
+  PaymentMethodsStatusOptions,
+} from 'src/enums/finance-reconcilition-status';
 
 const BankStatements = () => {
   // API call to get bank statements data
@@ -23,7 +24,6 @@ const BankStatements = () => {
 
   // Extract data arrays from API response
   const bankStatements = data?.data || [];
-  const bankOptions = data?.bankOptions || [];
 
   return (
     <Box>
@@ -34,60 +34,114 @@ const BankStatements = () => {
           tableId="bank-statements-table"
           columns={[
             {
-              id: 'statementId',
-              label: 'Statement ID',
+              id: 'studentName',
+              label: 'Student Name',
               minWidth: '150px',
               align: 'left',
+              isFilter: true,
+              filterType: 'string',
               sticky: true,
-              isFilter: true,
-              filterType: 'string',
             },
             {
-              id: 'bankName',
-              label: 'Bank Name',
-              minWidth: '150px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'enum',
-              enumOptions: bankOptions,
-            },
-            {
-              id: 'accountNumber',
-              label: 'Account Number',
-              minWidth: '160px',
+              id: 'class',
+              label: 'Class',
+              minWidth: '80px',
               align: 'left',
               isFilter: true,
               filterType: 'string',
             },
             {
-              id: 'uploadDate',
-              label: 'Upload Date',
-              minWidth: '130px',
+              id: 'division',
+              label: 'Division',
+              minWidth: '100px',
               align: 'left',
               isFilter: true,
-              filterType: 'date',
+              filterType: 'string',
             },
             {
-              id: 'transactions',
-              label: 'Transactions',
+              id: 'grNumber',
+              label: 'GR No.',
               minWidth: '120px',
               align: 'left',
               isFilter: true,
               filterType: 'number',
             },
             {
+              id: 'rollNumber',
+              label: 'Roll No.',
+              minWidth: '120px',
+              align: 'left',
+              isFilter: true,
+              filterType: 'number',
+            },
+            {
+              id: 'chequeNo',
+              label: 'Cheque No.',
+              minWidth: '120px',
+              align: 'left',
+              isFilter: true,
+              filterType: 'string',
+            },
+            {
+              id: 'bankName',
+              label: 'Bank Name',
+              minWidth: '130px',
+              align: 'left',
+              isFilter: true,
+              filterType: 'string',
+            },
+            {
+              id: 'amount',
+              label: 'Amount',
+              minWidth: '80px',
+              align: 'left',
+              isFilter: true,
+              filterType: 'string',
+              render(value) {
+                return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+              },
+            },
+            {
+              id: 'chargesAmount',
+              label: 'Charges Amount',
+              minWidth: '160px',
+              align: 'left',
+              isFilter: true,
+              filterType: 'string',
+              render(value) {
+                return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+              },
+            },
+            {
+              id: 'receivedChequeDate',
+              label: 'Received Cheque Date',
+              minWidth: '200px',
+              align: 'left',
+              isFilter: true,
+              filterType: 'date',
+            },
+            {
+              id: 'remarks',
+              label: 'Remarks',
+              minWidth: '200px',
+              align: 'left',
+              isFilter: true,
+              filterType: 'string',
+            },
+            {
               id: 'status',
+              sticky: true,
               label: 'Status',
               minWidth: '100px',
               align: 'left',
               isFilter: true,
               filterType: 'enum',
-              enumOptions: BankStatementsStatusOptions,
+              enumOptions: PaymentMethodsStatusOptions,
               render(value, row) {
-                const color = BankStatementsStatusColor[
-                  value as BankStatementsStatusType
+                const color = PamentMethodsStatusColor[
+                  value as PaymentMethodsStatusType
                 ] as LabelColor;
-                return <Label color={color}>{BankStatementsStatusType[value]}</Label>;
+                return <Label color={color}>{PaymentMethodsStatusType[value]}</Label>;
               },
             },
             {
@@ -103,14 +157,16 @@ const BankStatements = () => {
                   <ThreeDotsActions
                     actions={({ popover }) => (
                       <MenuList>
-                        <MenuItem
-                          onClick={(e) => {
-                            popover.onClose();
-                          }}
-                        >
-                          <Iconify icon="mdi:download" />
-                          Download Statement
-                        </MenuItem>
+                        {PaymentMethodsStatusType[row.status] === 'Bounced' && (
+                          <MenuItem
+                            onClick={() => {
+                              popover.onClose();
+                            }}
+                          >
+                            <Iconify icon="mdi:bell-ring" />
+                            Send Notification
+                          </MenuItem>
+                        )}
                       </MenuList>
                     )}
                     placement="right-top"
