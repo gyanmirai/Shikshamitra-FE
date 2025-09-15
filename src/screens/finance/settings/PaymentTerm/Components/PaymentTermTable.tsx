@@ -13,6 +13,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   setEditData,
   onEdit,
   editData,
+  onDelete,
 }) => (
   <CustomizableTable
     tableId="payment-term-table"
@@ -63,6 +64,8 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
             showThreeDots={false}
             showEditIcon
             handleEditClick={() => onEdit?.(row as IPaymentTerm)}
+            showDeleteIcon
+            handleDeleteClick={() => onDelete?.(row as IPaymentTerm)}
           />
         ),
       },

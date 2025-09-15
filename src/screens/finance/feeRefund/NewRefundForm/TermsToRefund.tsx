@@ -98,7 +98,7 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
       <Scrollbar sx={{ maxHeight: 'calc(100vh - 300px)' }}>
         {terms?.map((term) => (
           <Box key={term.id} sx={{ border: '1px solid #ddd', borderRadius: 2, mb: 1.5 }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between" p={2}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" p={1}>
               <Box display="flex" alignItems="center" gap={1}>
                 <Checkbox
                   checked={selectedTerms?.some((t) => t.id === term.id) || false}

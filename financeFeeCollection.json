@@ -213,9 +213,9 @@
       "paid": 4000,
       "total": 10000,
       "feeHeads": [
-        { "name": "Tuition Fee", "paid": 4000, "total": 4000, "status": 1 },
-        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
-        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
+        { "name": "Tuition Fee", "paid": 4000, "total": 4000, "status": 0 },
+        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 1 },
+        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 1 }
       ],
       "charges": [
         { "name": "Late Fee", "paid": 500, "dueDate": "30-01-2025", "total": 500, "status": 0 },
@@ -231,9 +231,9 @@
       "paid": 0,
       "total": 10000,
       "feeHeads": [
-        { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 0 },
-        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
-        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
+        { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 1 },
+        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 1 },
+        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 1 }
       ]
     },
     {
@@ -243,9 +243,9 @@
       "paid": 0,
       "total": 10000,
       "feeHeads": [
-        { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 0 },
-        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 0 },
-        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 0 }
+        { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 1 },
+        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 1 },
+        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 1 }
       ]
     }
   ],

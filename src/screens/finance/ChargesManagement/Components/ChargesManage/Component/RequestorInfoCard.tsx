@@ -9,7 +9,7 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => (
     <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
       <CardContent>
         <Typography variant="h6" color="#00A76F" gutterBottom>
-          Applied for
+          Requestor Information
         </Typography>
 
         {/* First Row - Basic Info */}

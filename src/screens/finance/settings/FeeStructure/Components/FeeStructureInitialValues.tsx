@@ -8,7 +8,7 @@ export const getInitialFeeStructureData = (
   board: editData?.board || '',
   medium: editData?.medium || '',
   receiptBook: editData?.receiptBook || '',
-  paymentTerm: editData?.paymentTerm || '',
+  // paymentTerm: editData?.paymentTerm || '',
   paymentMethod: editData?.paymentMethod || [],
   totalFeeHead: editData?.totalFeeHead ?? 0,
   totalClass: editData?.totalClass ?? 0,

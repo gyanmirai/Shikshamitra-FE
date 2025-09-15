@@ -183,28 +183,6 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
         </ShakingTextField>
       </Grid>
 
-      {/* Payment Term */}
-      <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField error={!!(formik?.touched?.paymentTerm && formik?.errors?.paymentTerm)}>
-          <CustomSelect
-            name="paymentTerm"
-            label="Payment Term *"
-            options={[
-              { id: 'monthly', name: 'Monthly' },
-              { id: 'quarterly', name: 'Quarterly' },
-              { id: 'halfYearly', name: 'Half Yearly' },
-              { id: 'yearly', name: 'Yearly' },
-            ]}
-            labelKey="name"
-            valueKey="id"
-            value={formik?.values?.paymentTerm}
-            onChange={(val) => formik.setFieldValue('paymentTerm', val)}
-            error={formik?.touched?.paymentTerm && Boolean(formik?.errors?.paymentTerm)}
-            helperText={(formik?.touched?.paymentTerm && formik?.errors?.paymentTerm) as string}
-          />
-        </ShakingTextField>
-      </Grid>
-
       {/* Payment Method */}
       <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField

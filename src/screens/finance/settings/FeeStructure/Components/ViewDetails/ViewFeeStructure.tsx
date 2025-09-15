@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import ClassSelectionView from './ClassSelectionView';
 import FeeStructureViewCard from './FeeStructureViewCard';
+import ViewBasicDetailsOfStructure from './ViewBasicDetailsOfStructure';
 
 import type { IFeeStructure } from '../../type';
 
@@ -14,12 +15,15 @@ const ViewFeeStructure = ({
   onClose: () => void;
   data: IFeeStructure | null;
 }) => {
+  const [expanded, setExpanded] = useState<number | false>(0); // 0 = first open by default
+
   const [selectedClass, setSelectedClass] = React.useState<string | null>(null);
 
   if (!feeStructure) return null;
 
   return (
     <>
+      <ViewBasicDetailsOfStructure feeStructure={feeStructure} />
       {/* Class Selection */}
       <ClassSelectionView
         feeStructureClasses={feeStructure.feeStructureClasses}
@@ -38,7 +42,11 @@ const ViewFeeStructure = ({
             <FeeStructureViewCard
               key={idx}
               className={selectedClass}
-              feeItems={structure.feeItems}
+              feeStructure={structure}
+              index={idx}
+              expanded={expanded === idx} // ✅ pass boolean
+              onChange={() => setExpanded(expanded === idx ? false : idx)} // ✅ toggle
+              feeStructureMain={feeStructure}
             />
           );
         })}

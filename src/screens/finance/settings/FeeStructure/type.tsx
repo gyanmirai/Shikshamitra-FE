@@ -23,7 +23,7 @@ export interface IFeeStructure {
   medium?: string;
   status: number;
   receiptBook: string;
-  paymentTerm: string;
+  // paymentTerm: string;
   totalFeeHead?: number;
   totalClass?: number;
   paymentMethod: string[];

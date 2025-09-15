@@ -6,7 +6,6 @@ export interface IReceiptBook {
   startingNumber: number | string; // From "Starting Number"
   endingNumber: number | string; // From "Ending Number"
   description?: string; // From "Description"
-  receiptBookCode: string; // You already have this in your existing type
   toggle?: boolean; // Optional toggle
   action?: string; // Optional action
 }
