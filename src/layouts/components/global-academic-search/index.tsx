@@ -4,6 +4,7 @@ import type { Board, Medium, AcademicYear } from 'src/types/school';
 
 import { keyframes } from '@mui/system';
 import { styled } from '@mui/material/styles';
+import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -120,6 +121,11 @@ const GlobalAcademicSearch = () => {
     }
   }, [currentBoard, currentMedium, currentYear]);
 
+  const pathname = usePathname();
+  console.log('🚀 ~ GlobalAcademicSearch ~ pathname:', pathname);
+
+  const isFinanceRoute = pathname.startsWith('/finance');
+
   return isYearLoading || isBoardLoading ? (
     <Skeleton variant="rounded" height={56} sx={{ minWidth: '300px', width: '100%' }} />
   ) : (
@@ -131,39 +137,72 @@ const GlobalAcademicSearch = () => {
         placement="left"
       >
         <AnimatedWrapper error={!currentYear?.name}>
-          <Autocomplete
-            options={options}
-            getOptionLabel={(option) => option.label}
-            value={(selectedDivision ?? {}) as any}
-            loading={isYearLoading || isBoardLoading}
-            clearIcon={false}
-            disableClearable
-            size="small"
-            onChange={async (event, newValue) => {
-              const confirmed = await showConfirm({
-                title: 'Change Academic Year, Board and Medium',
-                message: !currentYear?.name
-                  ? `Are you sure you want to set academic year, board and medium  ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`
-                  : `Are you sure you want to change academic year, board and medium from  ${currentYear?.name || ''} / ${currentBoard?.name || ''} / ${currentMedium?.name || ''} to ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`,
-                icon: 'warning',
-              });
-              if (confirmed) {
-                dispatch(setCurrentYear(newValue?.academicYear));
-                dispatch(setCurrentBoard(newValue?.board));
-                dispatch(setCurrentMedium(newValue?.medium));
-                setSelectedDivision(newValue);
-              }
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                variant="filled"
-                size="small"
-                label="Academic Year, Board and Medium"
-              />
-            )}
-            sx={{ minWidth: '280px', width: '100%', '& *': { fontSize: '14px !important' } }}
-          />
+          {isFinanceRoute ? (
+            <Autocomplete
+              options={Array.from(
+                new Map(options.map((item) => [item.academicYear.name, item])).values()
+              )}
+              getOptionLabel={(option) => option.academicYear.name}
+              value={(selectedDivision ?? {}) as any}
+              loading={isYearLoading || isBoardLoading}
+              clearIcon={false}
+              disableClearable
+              size="small"
+              onChange={async (event, newValue) => {
+                const confirmed = await showConfirm({
+                  title: 'Change Academic Year, Board and Medium',
+                  message: !currentYear?.name
+                    ? `Are you sure you want to set academic year ${newValue?.academicYear?.name}?`
+                    : `Are you sure you want to change academic year from  ${currentYear?.name || ''} to ${newValue?.academicYear?.name} ?`,
+                  icon: 'warning',
+                });
+                if (confirmed) {
+                  dispatch(setCurrentYear(newValue?.academicYear));
+                  dispatch(setCurrentBoard(newValue?.board));
+                  dispatch(setCurrentMedium(newValue?.medium));
+                  setSelectedDivision(newValue);
+                }
+              }}
+              renderInput={(params) => (
+                <TextField {...params} variant="filled" size="small" label="Academic Year" />
+              )}
+              sx={{ minWidth: '200px', width: '100%', '& *': { fontSize: '14px !important' } }}
+            />
+          ) : (
+            <Autocomplete
+              options={options}
+              getOptionLabel={(option) => option.label}
+              value={(selectedDivision ?? {}) as any}
+              loading={isYearLoading || isBoardLoading}
+              clearIcon={false}
+              disableClearable
+              size="small"
+              onChange={async (event, newValue) => {
+                const confirmed = await showConfirm({
+                  title: 'Change Academic Year, Board and Medium',
+                  message: !currentYear?.name
+                    ? `Are you sure you want to set academic year, board and medium  ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`
+                    : `Are you sure you want to change academic year, board and medium from  ${currentYear?.name || ''} / ${currentBoard?.name || ''} / ${currentMedium?.name || ''} to ${newValue?.academicYear?.name} / ${newValue?.board?.name} / ${newValue?.medium?.name} ?`,
+                  icon: 'warning',
+                });
+                if (confirmed) {
+                  dispatch(setCurrentYear(newValue?.academicYear));
+                  dispatch(setCurrentBoard(newValue?.board));
+                  dispatch(setCurrentMedium(newValue?.medium));
+                  setSelectedDivision(newValue);
+                }
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="filled"
+                  size="small"
+                  label="Academic Year, Board and Medium"
+                />
+              )}
+              sx={{ minWidth: '280px', width: '100%', '& *': { fontSize: '14px !important' } }}
+            />
+          )}
         </AnimatedWrapper>
       </CustomTooltip>
     </>
