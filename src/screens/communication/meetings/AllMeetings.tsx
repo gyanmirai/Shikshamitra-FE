@@ -2,26 +2,28 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import dayjs from 'dayjs';
-import { Label } from 'src/components/label';
+import React, { useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
+import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import meetingData from 'src/json/communication/meetings/meetingData.json';
-import { Box, Chip, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 import AddNewMeeting from './meetingForm';
-import ViewMeetingDialog from './viewDialog';
+import MeetingTable from './MeetingTable';
+import MeetingDetails from './meetingDetails';
 
 import type { IMeeting } from './type';
 
 const AllMeetings = (props: TabComponentType) => {
-  // State to store and manage the meetings data table
-  const [meetingTableData, setMeetingTableData] = useState<IMeeting[]>(meetingData);
+  // const { data: meetingData } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetMeetingDetailsQuery,
+  // });
+
   // State to store the currently selected meeting for editing or viewing
   const [selectedMeeting, setSelectedMeeting] = useState<IMeeting | null>(null);
   // State to track whether the form is in edit mode (true) or create mode (false)
@@ -29,6 +31,8 @@ const AllMeetings = (props: TabComponentType) => {
   // State to control the visibility of the confirmation dialog
   const confirmDialog = useBoolean();
   const viewDialog = useBoolean();
+  // Controls the visibility of publish modal
+  const publish_modal = useBoolean();
   // // State to control the visibility of the meeting dialog/modal
   // const [params, setParams] = useSearchParam({ isForm: 'false' });
   const [open, setOpen] = useState(false);
@@ -36,62 +40,28 @@ const AllMeetings = (props: TabComponentType) => {
    * Handles closing the meeting dialog/form
    * Resets form state, selected meeting and edit mode
    */
-  const handleCloseDialog = () => {
-    setOpen(false);
-    setSelectedMeeting(null);
-    setIsEdit(false);
-    viewDialog.onFalse();
-    confirmDialog.onFalse();
-  };
+  const handleCloseDialog = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setOpen(false);
+        setSelectedMeeting(null);
+        setIsEdit(false);
+        viewDialog.onFalse();
+        confirmDialog.onFalse();
+      }, 200); // Delay for dialog transition
+    };
 
-  /**
-   * Handles submission of meeting form
-   * Updates existing meeting if in edit mode, adds new meeting if in create mode
-   * @param values - The form values containing meeting details
-   */
-  const handleSubmit = (values: any) => {
-    if (isEdit) {
-      setMeetingTableData((prevData) =>
-        prevData.map((meeting) =>
-          meeting.id === selectedMeeting?.id
-            ? { ...values, id: selectedMeeting?.id }
-            : selectedMeeting
-        )
-      );
+    if (isSubmit) {
+      resetState();
     } else {
-      const newMeeting = {
-        ...values,
-        id: String(meetingTableData.length + 1),
-      };
-      setMeetingTableData((prevData) => [...prevData, newMeeting]);
+      // Check if there are unsaved changes
+      const hasUnsavedChanges = selectedMeeting !== null || isEdit;
+
+      if (hasUnsavedChanges && !window.confirm('Are you sure you want to leave this page?')) {
+        return;
+      }
+      resetState();
     }
-    handleCloseDialog();
-  };
-
-  const actions = useCallback(
-    ({ popover: pop }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          {/* {(row.status === 'Cancelled' || row.status === 'Scheduled') && ( */}
-          <MenuItem onClick={() => {}}>
-            <Iconify icon="mdi:bell" sx={{ mr: 1 }} />
-            Notify Audience
-          </MenuItem>
-          {/* )} */}
-        </MenuList>
-      </>
-    ),
-    []
-  );
-
-  /**
-   * Handles deletion of a meeting
-   * Removes meeting with specified ID from the meeting table data
-   * @param id - The ID of the meeting to delete
-   */
-  const handleDelete = (id: number | undefined) => {
-    setMeetingTableData((prevData) => prevData.filter((meeting) => meeting.id !== id));
   };
 
   return (
@@ -107,23 +77,18 @@ const AllMeetings = (props: TabComponentType) => {
               { name: 'Meeting Form' },
             ]}
             sx={{ px: 1, mb: 2 }}
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="eva:arrow-back-fill" />}
-                onClick={handleCloseDialog}
-              >
-                Back
-              </Button>
-            }
+            isBack
+            onBack={() => {
+              handleCloseDialog(null, false);
+            }}
           />
           <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
             <AddNewMeeting
               initialValues={selectedMeeting}
-              onSubmit={handleSubmit}
               isEdit={isEdit}
-              onClose={handleCloseDialog}
+              onClose={() => {
+                handleCloseDialog(null, false);
+              }}
             />
           </Card>
         </>
@@ -151,167 +116,79 @@ const AllMeetings = (props: TabComponentType) => {
               </Button>
             }
           />
-          <CustomizableTable
-            tableId="meetingTable"
-            columns={[
-              { id: 'title', label: 'Title' },
-              { id: 'meetingType', label: 'Meeting Type', minWidth: '180px', align: 'left' },
-              {
-                id: 'meetingDate',
-                label: 'Meeting Date',
-                minWidth: '180px',
-                align: 'left',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('DD MMM YYYY')}
-                  </Typography>
-                ),
-              },
-              {
-                id: 'meetingTime',
-                label: 'Meeting Time',
-                minWidth: '180px',
-                align: 'left',
-                render: (value, row) => (
-                  <Typography fontSize="12px" gutterBottom>
-                    {dayjs(value).format('HH:mm')}
-                  </Typography>
-                ),
-              },
-              {
-                id: 'audience',
-                label: 'Audience',
-                render: (value: any) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value.map((audience: string) => (
-                      <Chip
-                        key={audience}
-                        label={audience}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                    ))}
-                  </Box>
-                ),
-              },
-              {
-                id: 'organization',
-                label: 'Organizations',
-                render: (value: any) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value && value.length > 0
-                      ? value.map((org: string) => (
-                          <Chip key={org} label={org} size="small" variant="outlined" />
-                        ))
-                      : '-'}
-                  </Box>
-                ),
-              },
-              {
-                id: 'className',
-                label: 'Class',
-                render: (value: any) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value && value.length > 0
-                      ? value.map((org: string) => (
-                          <Chip key={org} label={org} size="small" variant="outlined" />
-                        ))
-                      : '-'}
-                  </Box>
-                ),
-              },
-              {
-                id: 'division',
-                label: 'Division',
-                render: (value: any) => (
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {value && value.length > 0
-                      ? value.map((org: string) => (
-                          <Chip key={org} label={org} size="small" variant="outlined" />
-                        ))
-                      : '-'}
-                  </Box>
-                ),
-              },
-              {
-                id: 'status',
-                label: 'Status',
-                render: (value: any, row: any) => (
-                  <Label
-                    variant="soft"
-                    color={
-                      value === 'Scheduled'
-                        ? 'secondary'
-                        : value === 'Completed'
-                          ? 'primary'
-                          : value === 'Cancelled'
-                            ? 'error'
-                            : 'default'
-                    }
-                  >
-                    {value}
-                  </Label>
-                ),
-              },
-              {
-                id: 'action',
-                label: 'Action',
-                sticky: true,
-                isSort: false,
-                isFilter: false,
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      actions={(prop) => actions({ ...prop, row })}
-                      placement="right-top"
-                      showEditIcon
-                      showDeleteIcon
-                      showViewIcon
-                      handleEditClick={() => {
-                        setOpen(true);
-                        setSelectedMeeting(row as IMeeting);
-                        setIsEdit(true);
-                      }}
-                      handleDeleteClick={() => {
-                        confirmDialog.onTrue();
-                        setSelectedMeeting(row as IMeeting);
-                      }}
-                      handleViewClick={() => {
-                        setSelectedMeeting(row as IMeeting);
-                        viewDialog.onTrue();
-                      }}
-                    />
-                  );
-                },
-              },
-            ]}
-            data={meetingTableData}
+          <MeetingTable
+            data={[]}
+            onEdit={(row) => {
+              setOpen(true);
+              setSelectedMeeting(row);
+            }}
+            onDelete={(row) => {
+              confirmDialog.onTrue();
+              setSelectedMeeting(row);
+            }}
+            onView={(row) => {
+              viewDialog.onTrue();
+              setSelectedMeeting(row);
+            }}
+            onPublish={(row) => {
+              setSelectedMeeting(row);
+            }}
           />
         </>
       )}
 
-      <ViewMeetingDialog
+      <CustomDialog
+        title="Meeting Details"
         open={viewDialog.value}
-        onClose={handleCloseDialog}
-        meeting={selectedMeeting}
-      />
+        handleClose={() => {
+          setSelectedMeeting(null);
+          viewDialog.onFalse();
+        }}
+        maxWidth="md"
+      >
+        <MeetingDetails meeting={selectedMeeting} />
+      </CustomDialog>
+
       <ConfirmDialog
         open={confirmDialog.value}
         onClose={() => {
-          handleCloseDialog();
+          setSelectedMeeting(null);
+          confirmDialog.onFalse();
         }}
         title="Delete"
         content="Are you sure you want to delete?"
         action={
+          <Button variant="contained" color="error" onClick={() => {}} size="small">
+            Yes
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={publish_modal.value}
+        onClose={() => {
+          publish_modal.onFalse();
+          setSelectedMeeting(null);
+        }}
+        title="Publish"
+        content={
+          <>
+            Are you sure you want to publish announcement <strong>{selectedMeeting?.title}</strong>?
+          </>
+        }
+        action={
           <Button
             variant="contained"
-            color="error"
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
-              handleDelete(selectedMeeting?.id);
+              publish_modal.onFalse();
+              shikshaMitraToast.success({
+                message: `Announcement "${selectedMeeting?.title}" published successfully.`,
+              });
             }}
+            size="small"
           >
-            Yes
+            Publish
           </Button>
         }
       />
