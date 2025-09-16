@@ -3,12 +3,23 @@ import type { Dayjs } from 'dayjs';
 export interface IMeeting {
   id: number;
   title: string;
-  status: string;
+  status: number;
+
+  // Newly added
+  type: string; // e.g., General, Parent-Teacher, Staff, etc.
+  importance_level: string; // e.g., High, Medium, Low
+  description: string;
+  attachment?: string[]; // list of file URLs or IDs
+
+  // Audience & Participants
   audience: string[];
-  organization: string[];
-  className: string[];
-  division: string[];
+  organizations: string[];
+  classes: string[];
+  divisions: string[];
   students: string[];
+  startDate: string | Dayjs | null;
+  endDate: string | Dayjs | null;
+  // Meeting details
   meetingDate: string | Dayjs | null;
   meetingTime: string | Dayjs | null;
   meetingAgenda: string;
@@ -18,6 +29,7 @@ export interface IMeeting {
   isRecurring: boolean;
   day?: string;
   repeatFrequency?: string;
+  mode?: string;
   repeatUntil?: string | Dayjs | number;
 }
 
@@ -40,8 +52,7 @@ export interface IViewMeetingDialogProps {
  * @property {boolean} [isEdit] - Optional flag to indicate if form is in edit mode
  */
 export interface AddNewMeetingProps {
-  onSubmit: (values: any) => void;
   initialValues?: any | null;
   isEdit?: boolean;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
 }

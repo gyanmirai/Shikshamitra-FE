@@ -2,16 +2,26 @@ import dayjs from 'dayjs';
 
 import type { IMeeting } from './type';
 
-const getMeetingInitialValues = (initialValues: IMeeting) => ({
+export const getInitialMeetingValues = (initialValues?: IMeeting) => ({
+  id: initialValues?.id || 0,
   title: initialValues?.title || '',
   status: initialValues?.status || '',
+  type: initialValues?.type || '',
+  importance_level: initialValues?.importance_level || '',
+  description: initialValues?.description || '',
+  attachment: initialValues?.attachment || [],
+  startDate: initialValues?.startDate ? dayjs(initialValues?.startDate) : dayjs().add(1, 'hours'),
+  endDate: initialValues?.endDate ? dayjs(initialValues?.endDate) : null,
+  // Audience & Participants
   audience: initialValues?.audience || [],
-  organization: initialValues?.organization || [],
-  className: initialValues?.className || [],
-  division: initialValues?.division || [],
+  organizations: initialValues?.organizations || [],
+  classes: initialValues?.classes || [],
+  divisions: initialValues?.divisions || [],
   students: initialValues?.students || [],
-  meetingDate: initialValues?.meetingDate ? dayjs(initialValues?.meetingDate) : dayjs(),
-  meetingTime: initialValues?.meetingTime ? dayjs(initialValues?.meetingTime) : null,
+
+  // Meeting details
+  meetingDate: initialValues?.meetingDate ? dayjs(initialValues.meetingDate) : dayjs(),
+  meetingTime: initialValues?.meetingTime ? dayjs(initialValues.meetingTime) : null,
   meetingAgenda: initialValues?.meetingAgenda || '',
   link: initialValues?.link || '',
   meetingType: initialValues?.meetingType || '',
@@ -19,5 +29,6 @@ const getMeetingInitialValues = (initialValues: IMeeting) => ({
   isRecurring: initialValues?.isRecurring || false,
   day: initialValues?.day || '',
   repeatFrequency: initialValues?.repeatFrequency || '',
-  repeatUntil: initialValues?.repeatUntil ? dayjs(initialValues?.repeatUntil) : null,
+  mode: initialValues?.mode || '',
+  repeatUntil: initialValues?.repeatUntil ? dayjs(initialValues.repeatUntil) : null,
 });

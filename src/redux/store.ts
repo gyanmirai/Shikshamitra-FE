@@ -36,10 +36,8 @@ import { ConcessionApi } from './feeConcession/feeConcession';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { feeRefundsTermsApi } from './finance/feeRefundTerms';
 import { ExpenseCategoryApi } from './finance/expenseCategory';
-// import { BudgetsCategoryApi } from ./feeHeadManage/feeHeadManageApi
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
-import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
 import { feeConcessionApi } from './feeCollection/feeConcession';
 import { incomeDetailsApi } from './incomeApi/incomeDetailedApi';
 import { StudentInquiryApi } from './student/inquiry/inquiry-api';
@@ -48,9 +46,9 @@ import { paymentHistoryApi } from './feeCollection/paymentHistory';
 import { bookIssuedApi } from './bookIssuedData/bookIssuedDataApi';
 import { bookCategoryApi } from './bookCategoryApi/bookCategoryApi';
 import { issueReturnFormApi } from './issueRetunApi/issueReturnApi';
+import { holidayApi } from './communication/holiday/holidayDataApi';
 import { budgetSubCategoryApi } from './budgetApi/budgetSubCategory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
-// import { budgetCategoryApi } from './budgetCategory/budgetCategoryApi';
 import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
 import { FinanceFeeStructureApi } from './finance/financeFeeStructure';
 import { bookManagementApi } from './bookManagement/bookManagementApi';
@@ -63,6 +61,7 @@ import { CoreSubjectApi } from './subject/core-subject/core-subject-api';
 import { StudentCertificateApi } from './student/certificate/certificate';
 import { studentInvoiceApi } from './invoiceAndReceipt/studentInvoiceApi';
 import { studentReceiptApi } from './invoiceAndReceipt/studentReceiptApi';
+import { meetingDetailsApi } from './communication/meeting/meetingDataApi';
 import { EntranceExamApi } from './student/entrance-exam/entrance-exam-api';
 import { shiftManagementApi } from './shiftManagement/shift-management-api';
 import { StudentLeaveApi } from './student/student-leave/student-leave-api';
@@ -118,7 +117,6 @@ const reducers = combineReducers({
   [payElementApi.reducerPath]: payElementApi.reducer,
   [payrollStructureApi.reducerPath]: payrollStructureApi.reducer,
   [PFApi.reducerPath]: PFApi.reducer,
-  [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
   [ProfessionalApi.reducerPath]: ProfessionalApi.reducer,
   [StudentAttendanceRuleApi.reducerPath]: StudentAttendanceRuleApi.reducer,
   [StudentAttendanceTypeApi.reducerPath]: StudentAttendanceTypeApi.reducer,
@@ -129,9 +127,7 @@ const reducers = combineReducers({
   [StudentRegistrationApi.reducerPath]: StudentRegistrationApi.reducer,
   [paymentStatusOptionApi.reducerPath]: paymentStatusOptionApi.reducer,
   [FeeHeadManagementApi.reducerPath]: FeeHeadManagementApi.reducer,
-  // [budgetCategoryApi.reducerPath]: budgetCategoryApi.reducer,
   [organizationUnitApi.reducerPath]: organizationUnitApi.reducer,
-  // [BudgetsCategoryApi.reducerPath]: BudgetsCategoryApi.reducer,
   [EntranceExamSlotApi.reducerPath]: EntranceExamSlotApi.reducer,
   [EntranceExamApi.reducerPath]: EntranceExamApi.reducer,
   [FollowUpApi.reducerPath]: FollowUpApi.reducer,
@@ -190,6 +186,8 @@ const reducers = combineReducers({
   [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
   [schoolWiseAnnouncementApi.reducerPath]: schoolWiseAnnouncementApi.reducer,
   [classWiseAnnouncementApi.reducerPath]: classWiseAnnouncementApi.reducer,
+  [holidayApi.reducerPath]: holidayApi.reducer,
+  [meetingDetailsApi.reducerPath]: meetingDetailsApi.reducer,
 });
 
 const store = configureStore({
@@ -216,7 +214,6 @@ const store = configureStore({
       payElementApi.middleware,
       payrollStructureApi.middleware,
       PFApi.middleware,
-      EventHolidayApi.middleware,
       ProfessionalApi.middleware,
       StudentAttendanceRuleApi.middleware,
       StudentAttendanceTypeApi.middleware,
@@ -226,8 +223,6 @@ const store = configureStore({
       StudentRegistrationFormApi.middleware,
       StudentRegistrationApi.middleware,
       paymentStatusOptionApi.middleware,
-      // budgetCategoryApi.middleware,
-      // BudgetsCategoryApi.middleware,
       organizationUnitApi.middleware,
       EntranceExamSlotApi.middleware,
       EntranceExamApi.middleware,
@@ -288,6 +283,8 @@ const store = configureStore({
       bookConditionOptionsApi.middleware,
       schoolWiseAnnouncementApi.middleware,
       classWiseAnnouncementApi.middleware,
+      // meetingDetailsApi.middleware,
+      // holidayApi.middleware,
     ]),
 });
 

@@ -1016,6 +1016,13 @@ const communicationModule = {
           shortcutKeyName: 'Alt+C+T',
         },
         {
+          title: 'Holidays',
+          path: '/communication/holidays',
+          _action: 'meetings',
+          shortcutKey: 'Alt+C+T',
+          shortcutKeyName: 'Alt+C+T',
+        },
+        {
           title: 'Notification',
           path: '/communication/notification',
           _action: 'notification',
