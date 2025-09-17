@@ -1,16 +1,15 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Scrollbar } from 'src/components/scrollbar';
-import capitalizeWords from 'src/utils/capitalizeText';
-import CustomDialog from 'src/components/customDialog';
-import SubmitButton from 'src/components/submit-button';
 import { Iconify } from 'src/components/iconify/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Grid, TextField, Typography, DialogActions } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { reconciliationDialogValidationSchema } from '../validationSchema';
 
@@ -38,239 +37,228 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
     validationSchema: reconciliationDialogValidationSchema,
     onSubmit: (values: any) => {
       onSave(values);
+      onClose(null, true);
     },
   });
   return (
-    <CustomDialog
-      title={
-        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
-          <Typography variant="h5">
-            {fromClearCheck ? 'Clearing Cheque' : 'Bounce Cheque'}
-          </Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            title={
-              fromClearCheck
-                ? 'If a payment is made by cheque and it has been cleared, simply click the Cleared Cheque button to ensure our system reflects the latest data accurately.'
-                : 'This is the Bounced Cheque dialog, where you can mark a cheque as bounced. You can manually enter the reason for the bounce and apply any applicable bounced cheque charges before updating the system.'
-            }
-          >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
-        </Box>
-      }
-      // title={fromClearCheck ? 'Clear Cheque' : 'Bounce Cheque'}
-      open={dialogValue}
-      handleClose={onClose}
-      maxWidth="md"
-    >
-      <Box>
-        <form onSubmit={formik.handleSubmit}>
-          <Scrollbar sx={{ p: 2, height: '100%' }}>
-            <Box pt="10px" display="flex" flexDirection="column" gap={3}>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 6 }}>
-                  <TextField
-                    name="grNumber"
-                    label="GR Number"
-                    value={formik.values.grNumber}
-                    onChange={formik.handleChange}
-                    size="small"
-                    type="text"
-                    fullWidth
-                    disabled
-                  />
-                </Grid>
-                <Grid size={{ xs: 6 }}>
-                  <TextField
-                    name="studentName"
-                    label="Student Name"
-                    value={formik.values.studentName}
-                    onChange={formik.handleChange}
-                    size="small"
-                    type="text"
-                    fullWidth
-                    disabled
-                  />
-                </Grid>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <CustomDialog
+        title={
+          <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+            <Typography variant="h5">
+              {fromClearCheck ? 'Clearing Cheque' : 'Bounce Cheque'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              title={
+                fromClearCheck
+                  ? 'If a payment is made by cheque and it has been cleared, simply click the Cleared Cheque button to ensure our system reflects the latest data accurately.'
+                  : 'This is the Bounced Cheque dialog, where you can mark a cheque as bounced. You can manually enter the reason for the bounce and apply any applicable bounced cheque charges before updating the system.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        open={dialogValue}
+        handleClose={() => onClose(null, false)}
+        maxWidth="md"
+      >
+        <DialogScrollContent>
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                name="grNumber"
+                label="GR Number"
+                value={formik.values.grNumber}
+                onChange={formik.handleChange}
+                size="small"
+                type="text"
+                fullWidth
+                disabled
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                name="studentName"
+                label="Student Name"
+                value={formik.values.studentName}
+                onChange={formik.handleChange}
+                size="small"
+                type="text"
+                fullWidth
+                disabled
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                name="class"
+                label="Class"
+                value={formik.values.class}
+                onChange={formik.handleChange}
+                size="small"
+                type="text"
+                fullWidth
+                disabled
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                name="chequeNo"
+                label="Cheque No"
+                value={formik.values.chequeNo}
+                onChange={formik.handleChange}
+                size="small"
+                type="number"
+                fullWidth
+                disabled
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                name="bankName"
+                label="Bank Name"
+                value={formik.values.bankName}
+                onChange={formik.handleChange}
+                size="small"
+                type="text"
+                fullWidth
+                disabled
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <DatePicker
+                label="Cheque Date"
+                value={formik.values.chequeDate}
+                onChange={(newValue) => formik.setFieldValue('chequeDate', newValue)}
+                format="DD-MM-YYYY"
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                disabled
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                name="amount"
+                label="Paid Amount"
+                value={formik.values.amount}
+                onChange={formik.handleChange}
+                size="small"
+                type="text"
+                fullWidth
+                disabled
+              />
+            </Grid>
+
+            {fromClearCheck && (
+              <Grid size={{ xs: 6 }}>
+                <DatePicker
+                  label="Cheque Clear Date"
+                  value={formik.values.chequeClearDate}
+                  onChange={(newValue) => formik.setFieldValue('chequeClearDate', newValue)}
+                  format="DD-MM-YYYY"
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                />
               </Grid>
+            )}
 
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 6 }}>
-                  <TextField
-                    name="class"
-                    label="Class"
-                    value={formik.values.class}
-                    onChange={formik.handleChange}
-                    size="small"
-                    type="text"
-                    fullWidth
-                    disabled
-                  />
-                </Grid>
-                <Grid size={{ xs: 6 }}>
-                  <TextField
-                    name="chequeNo"
-                    label="Cheque No"
-                    value={formik.values.chequeNo}
-                    onChange={formik.handleChange}
-                    size="small"
-                    type="number"
-                    fullWidth
-                    disabled
-                  />
-                </Grid>
+            {!fromClearCheck && (
+              <Grid size={{ xs: 6 }}>
+                <DatePicker
+                  label="Cheque Bounce Date *"
+                  value={formik.values.checkBounceDate}
+                  onChange={(newValue) => formik.setFieldValue('checkBounceDate', newValue)}
+                  format="DD-MM-YYYY"
+                  slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                />
               </Grid>
+            )}
 
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 6 }}>
-                  <TextField
-                    name="bankName"
-                    label="Bank Name"
-                    value={formik.values.bankName}
-                    onChange={formik.handleChange}
+            {!fromClearCheck && (
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ShakingTextField
+                  error={
+                    formik.touched.checkBounceCharges && Boolean(formik.errors.checkBounceCharges)
+                  }
+                >
+                  <NumericFormatCustom
                     size="small"
-                    type="text"
-                    fullWidth
-                    disabled
-                  />
-                </Grid>
-                <Grid size={{ xs: 6 }}>
-                  <DatePicker
-                    label="Cheque Date"
-                    value={formik.values.chequeDate}
-                    onChange={(newValue) => formik.setFieldValue('chequeDate', newValue)}
-                    format="DD-MM-YYYY"
-                    slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                    disabled
-                  />
-                </Grid>
-              </Grid>
-
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 6 }}>
-                  <TextField
-                    name="amount"
-                    label="Paid Amount"
-                    value={formik.values.amount}
+                    name="checkBounceCharges"
+                    label="Bounce Charges *"
+                    value={formik.values.checkBounceCharges}
                     onChange={formik.handleChange}
-                    size="small"
-                    type="text"
                     fullWidth
-                    disabled
-                  />
-                </Grid>
-
-                {fromClearCheck && (
-                  <Grid size={{ xs: 6 }}>
-                    <DatePicker
-                      label="Cheque Clear Date"
-                      value={formik.values.chequeClearDate}
-                      onChange={(newValue) => formik.setFieldValue('chequeClearDate', newValue)}
-                      format="DD-MM-YYYY"
-                      slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                    />
-                  </Grid>
-                )}
-
-                {!fromClearCheck && (
-                  <Grid size={{ xs: 6 }}>
-                    <DatePicker
-                      label="Cheque Bounce Date *"
-                      value={formik.values.checkBounceDate}
-                      onChange={(newValue) => formik.setFieldValue('checkBounceDate', newValue)}
-                      format="DD-MM-YYYY"
-                      slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                    />
-                  </Grid>
-                )}
-              </Grid>
-
-              {/* Bounce Charges */}
-              {!fromClearCheck && (
-                <Grid size={{ xs: 6, xl: 6 }}>
-                  <ShakingTextField
                     error={
                       formik.touched.checkBounceCharges && Boolean(formik.errors.checkBounceCharges)
                     }
-                  >
-                    <NumericFormatCustom
-                      size="small"
-                      name="checkBounceCharges"
-                      label="Bounce Charges *"
-                      value={formik.values.checkBounceCharges}
-                      onChange={formik.handleChange}
-                      fullWidth
-                      error={
-                        formik.touched.checkBounceCharges &&
-                        Boolean(formik.errors.checkBounceCharges)
-                      }
-                      helperText={
-                        formik.touched.checkBounceCharges &&
-                        (formik.errors.checkBounceCharges as string)
-                      }
-                    />
-                  </ShakingTextField>
-                </Grid>
-              )}
+                    helperText={
+                      formik.touched.checkBounceCharges &&
+                      (formik.errors.checkBounceCharges as string)
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
+            )}
 
-              {!fromClearCheck && (
-                <Grid container spacing={2} pb="10px">
-                  {/* Check Bounce Reason */}
-                  <Grid size={{ xs: 12 }}>
-                    <ShakingTextField
-                      error={
-                        formik.touched.checkBounceReason && Boolean(formik.errors.checkBounceReason)
-                      }
-                    >
-                      <TextField
-                        size="small"
-                        label="Check Bounce Reason *"
-                        name="checkBounceReason"
-                        multiline
-                        rows={2}
-                        value={formik.values.checkBounceReason}
-                        onChange={formik.handleChange}
-                        autoFocus
-                        fullWidth
-                        error={
-                          formik.touched.checkBounceReason &&
-                          Boolean(formik.errors.checkBounceReason)
-                        }
-                        helperText={
-                          formik.touched.checkBounceReason &&
-                          (formik.errors.checkBounceReason as string)
-                        }
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                </Grid>
-              )}
-            </Box>
+            {!fromClearCheck && (
+              <Grid size={{ xs: 12 }}>
+                <ShakingTextField
+                  error={
+                    formik.touched.checkBounceReason && Boolean(formik.errors.checkBounceReason)
+                  }
+                >
+                  <TextField
+                    size="small"
+                    label="Check Bounce Reason *"
+                    name="checkBounceReason"
+                    multiline
+                    rows={2}
+                    value={formik.values.checkBounceReason}
+                    onChange={formik.handleChange}
+                    autoFocus
+                    fullWidth
+                    error={
+                      formik.touched.checkBounceReason && Boolean(formik.errors.checkBounceReason)
+                    }
+                    helperText={
+                      formik.touched.checkBounceReason &&
+                      (formik.errors.checkBounceReason as string)
+                    }
+                  />
+                </ShakingTextField>
+              </Grid>
+            )}
+          </Grid>
+        </DialogScrollContent>
 
-            <Box pt="17px" />
-
-            <TextField
-              multiline
-              rows={3}
-              name="remarks"
-              label="Remarks"
-              value={formik.values.remarks}
-              onChange={(e) => {
-                formik.setFieldValue('remarks', capitalizeWords(e.target.value));
-              }}
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Box display="flex" gap={2} width="100%" flexDirection="row" justifyContent="flex-end">
+            <Button
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={() => onClose(null, false)}
+              variant="outlined"
               size="small"
-              type="text"
-              fullWidth
-            />
-          </Scrollbar>
-          <DialogActions>
-            <SubmitButton onClick={() => {}} />
-          </DialogActions>
-        </form>
-      </Box>
-    </CustomDialog>
+              type="button"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              size="small"
+              onClick={(e: any) => formik.handleSubmit(e)}
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+            >
+              Submit
+            </Button>
+          </Box>
+        </DialogActions>
+      </CustomDialog>
+    </BackPopUpChecked>
   );
 };
 

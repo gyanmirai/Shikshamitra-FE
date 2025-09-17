@@ -441,7 +441,7 @@ const LeaveHistory = (props: any) => {
 
 export default LeaveHistory;
 
-const ApproveRejectForm = ({
+export const ApproveRejectForm = ({
   handleClose,
   editData,
 }: {

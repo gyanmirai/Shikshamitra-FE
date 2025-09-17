@@ -1,213 +1,82 @@
 {
-  "overviewData": {
-    "id": 1,
-    "lastUpdated": "12-07-2025 | 12:30 PM",
-    "totalTransactions": 1247,
-    "matches": 1198,
-    "unmatched": 49,
-    "discrepancies": 12,
-    "overallProgress": 96.1
-  },
-
-  "months": [
-    { "id": 1, "value": "November 2024", "label": "November 2024" },
-    { "id": 2, "value": "October 2024", "label": "October 2024" },
-    { "id": 3, "value": "September 2024", "label": "September 2024" },
-    { "id": 4, "value": "August 2024", "label": "August 2024" },
-    { "id": 5, "value": "July 2024", "label": "July 2024" },
-    { "id": 6, "value": "June 2024", "label": "June 2024" }
-  ],
-
-  "summaryCards": [
+  "cheueDetails": [
     {
+      "srNo": 1,
+      "studentName": "Aarav Sharma",
+      "class": "5",
+      "division": "A",
+      "chequeNo": "784512",
+      "bankName": "State Bank of India",
+      "chequeDate": "01-11-2024",
+      "amount": "1500",
       "id": 1,
-      "title": "Total Transactions",
-      "value": 1247,
-      "icon": "material-symbols:receipt-long-outline",
-      "color": "#E3F2FD",
-      "iconColor": "#2196F3"
+      "chargesAmount": "300",
+      "feeHead": "Library",
+      "grNumber": "GR01",
+      "rollNumber": "01",
+      "receivedChequeDate": "01-11-2024",
+      "remarks": "No discrepancies found",
+      "status": 1
     },
     {
+      "srNo": 2,
+      "studentName": "Diya Mehta",
+      "class": "6",
+      "division": "A",
+      "chequeNo": "234589",
+      "bankName": "HDFC Bank",
+      "chequeDate": "01-11-2024",
+      "amount": "2000",
       "id": 2,
-      "title": "Matches",
-      "value": 1198,
-      "icon": "material-symbols:check-circle-outline",
-      "color": "#E8F5E8",
-      "iconColor": "#4CAF50"
+      "chargesAmount": "300",
+      "feeHead": "Library",
+      "grNumber": "GR02",
+      "rollNumber": "02",
+      "receivedChequeDate": "01-11-2024",
+      "remarks": "Under review",
+      "status": 0
     },
     {
+      "srNo": 3,
+      "studentName": "Rohan Patel",
+      "class": "7",
+      "division": "B",
+      "chequeNo": "985632",
+      "bankName": "ICICI Bank",
+      "chequeDate": "01-08-2024",
+      "amount": "2500",
       "id": 3,
-      "title": "Unmatched",
-      "value": 49,
-      "icon": "material-symbols:warning-outline",
-      "color": "#FFF3E0",
-      "iconColor": "#FF9800"
+      "chargesAmount": "300",
+      "feeHead": "Library",
+      "grNumber": "GR03",
+      "rollNumber": "03",
+      "receivedChequeDate": "01-11-2024",
+      "remarks": " Payment verified and accepted.",
+      "status": 1
     },
     {
+      "srNo": 4,
+      "studentName": "Ishita Desai",
+      "class": "8",
+      "division": "D",
+      "chequeNo": "567890",
+      "bankName": "Axis Bank",
+      "chequeDate": "05-11-2024",
+      "amount": "800",
       "id": 4,
-      "title": "Discrepancies",
-      "value": 12,
-      "icon": "material-symbols:error-outline",
-      "color": "#FFEBEE",
-      "iconColor": "#F44336"
+      "chargesAmount": "300",
+      "feeHead": "Library",
+      "grNumber": "GR04",
+      "rollNumber": "04",
+      "receivedChequeDate": "01-11-2024",
+      "remarks": "Details do not match records",
+      "status": 2
     }
   ],
-
-
-
-  "discrepancy": {
-    "statusOptions": [
-      { "id": 1, "label": "Pending", "value": 0 },
-      { "id": 2, "label": "Investigating", "value": 1 },
-      { "id": 3, "label": "Resolved", "value": 2 }
-    ],
-    "typeOptions": [
-      { "id": 1, "label": "Missing Bank Entry", "value": "Missing Bank Entry" },
-      { "id": 2, "label": "Amount Mismatch", "value": "Amount Mismatch" },
-      { "id": 3, "label": "Duplicate Entry", "value": "Duplicate Entry" }
-    ],
-    "data": [
-      {
-        "id": "REC-001",
-        "type": "Missing Bank Entry",
-        "student": "Dharmik Jinjala",
-        "classDivision": "10-A",
-        "amount": "₹ 10,000",
-        "transactionId": "TXN123456",
-        "date": "12-12-2024",
-        "status": 2
-      },
-      {
-        "id": "REC-002",
-        "type": "Amount Mismatch",
-        "student": "Parth Ghusar",
-        "classDivision": "11-B",
-        "amount": "₹ 12,000",
-        "transactionId": "TXN789012",
-        "date": "10-12-2024",
-        "status": 0
-      },
-      {
-        "id": "REC-003",
-        "type": "Duplicate Entry",
-        "student": "Prerna Atre",
-        "classDivision": "12-D",
-        "amount": "₹ 1,000",
-        "transactionId": "TXN123458",
-        "date": "06-12-2024",
-        "status": 0
-      },
-      {
-        "id": "REC-004",
-        "type": "Missing Bank Entry",
-        "student": "Mayur Solanki",
-        "classDivision": "6-A",
-        "amount": "₹ 500",
-        "transactionId": "TXN123450",
-        "date": "26-12-2024",
-        "status": 1
-      },
-      {
-        "id": "REC-005",
-        "type": "Duplicate Entry",
-        "student": "Vishal Makwana",
-        "classDivision": "9-D",
-        "amount": "₹ 6,350",
-        "transactionId": "TXN123488",
-        "date": "21-12-2024",
-        "status": 2
-      }
-    ],
-    "tableColumns": [
-      {
-        "id": "id",
-        "label": "ID",
-        "minWidth": "80px",
-        "align": "left",
-        "sticky": true,
-        "isFilter": true,
-        "filterType": "string"
-      },
-      {
-        "id": "type",
-        "label": "Type",
-        "minWidth": "150px",
-        "align": "left",
-        "isFilter": true,
-        "filterType": "enum"
-      },
-      {
-        "id": "student",
-        "label": "Student",
-        "minWidth": "150px",
-        "align": "left",
-        "isFilter": true,
-        "filterType": "string"
-      },
-      {
-        "id": "classDivision",
-        "label": "Class/Division",
-        "minWidth": "130px",
-        "align": "left",
-        "isFilter": true,
-        "filterType": "string"
-      },
-      {
-        "id": "amount",
-        "label": "Amount",
-        "minWidth": "100px",
-        "align": "left",
-        "isFilter": true,
-        "filterType": "string"
-      },
-      {
-        "id": "transactionId",
-        "label": "Transaction ID",
-        "minWidth": "140px",
-        "align": "left",
-        "isFilter": true,
-        "filterType": "string"
-      },
-      {
-        "id": "date",
-        "label": "Date",
-        "minWidth": "100px",
-        "align": "left",
-        "isFilter": true,
-        "filterType": "date"
-      },
-      {
-        "id": "status",
-        "label": "Status",
-        "minWidth": "100px",
-        "align": "left",
-        "isFilter": true,
-        "filterType": "enum"
-      },
-      {
-        "id": "actions",
-        "label": "Actions",
-        "isFilter": false,
-        "isSort": false,
-        "sticky": true,
-        "align": "left",
-        "minWidth": "60px"
-      }
-    ],
-    "statusColorMapping": {
-      "0": { "color": "warning", "variant": "outlined" },
-      "1": { "color": "info", "variant": "filled" },
-      "2": { "color": "success", "variant": "filled" },
-      "default": { "color": "default", "variant": "outlined" }
-    }
-  },
-
-
-
   "bankStatements": {
     "statusOptions": [
-      { "id": 1, "label": "Processing", "value": 0 },
-      { "id": 2, "label": "Processed", "value": 1 }
+      { "id": 1, "label": "Cleared", "value": 0 },
+      { "id": 2, "label": "Bounced", "value": 1 }
     ],
     "bankOptions": [
       { "id": 1, "label": "State Bank of India", "value": "State Bank of India" },
@@ -218,48 +87,71 @@
     ],
     "data": [
       {
-        "id": 1,
-        "statementId": "STMT-001",
+        "srNo": 1,
+        "studentName": "Aarav Sharma",
+        "class": "5",
+        "division": "A",
+        "chequeNo": "784512",
         "bankName": "State Bank of India",
-        "accountNumber": "****1234",
-        "uploadDate": "12-12-2024",
-        "transactions": "156",
+        "chequeDate": "01-11-2024",
+        "amount": "1500",
+        "id": 1,
+        "chargesAmount": "300",
+        "feeHead": "Library",
+        "grNumber": "GR01",
+        "rollNumber": "01",
+        "receivedChequeDate": "01-11-2024",
         "status": 1
       },
       {
-        "id": 2,
-        "statementId": "STMT-002",
+        "srNo": 2,
+        "studentName": "Diya Mehta",
+        "class": "6",
+        "division": "A",
+        "chequeNo": "234589",
         "bankName": "HDFC Bank",
-        "accountNumber": "****5678",
-        "uploadDate": "10-12-2024",
-        "transactions": "89",
-        "status": 1
-      },
-      {
-        "id": 3,
-        "statementId": "STMT-003",
-        "bankName": "Bank of Baroda",
-        "accountNumber": "****5679",
-        "uploadDate": "06-12-2024",
-        "transactions": "83",
-        "status": 1
-      },
-      {
-        "id": 4,
-        "statementId": "STMT-004",
-        "bankName": "IDFC Bank",
-        "accountNumber": "****3456",
-        "uploadDate": "26-12-2024",
-        "transactions": "34",
+        "chequeDate": "01-11-2024",
+        "amount": "2000",
+        "id": 2,
+        "chargesAmount": "300",
+        "feeHead": "Library",
+        "grNumber": "GR02",
+        "rollNumber": "02",
+        "receivedChequeDate": "01-11-2024",
         "status": 0
       },
       {
-        "id": 5,
-        "statementId": "STMT-005",
+        "srNo": 3,
+        "studentName": "Rohan Patel",
+        "class": "7",
+        "division": "B",
+        "chequeNo": "985632",
         "bankName": "ICICI Bank",
-        "accountNumber": "****9876",
-        "uploadDate": "21-12-2024",
-        "transactions": "50",
+        "chequeDate": "01-08-2024",
+        "amount": "2500",
+        "id": 3,
+        "chargesAmount": "300",
+        "feeHead": "Library",
+        "grNumber": "GR03",
+        "rollNumber": "03",
+        "receivedChequeDate": "01-11-2024",
+        "status": 1
+      },
+      {
+        "srNo": 4,
+        "studentName": "Ishita Desai",
+        "class": "8",
+        "division": "D",
+        "chequeNo": "567890",
+        "bankName": "Axis Bank",
+        "chequeDate": "05-11-2024",
+        "amount": "800",
+        "id": 4,
+        "chargesAmount": "300",
+        "feeHead": "Library",
+        "grNumber": "GR04",
+        "rollNumber": "04",
+        "receivedChequeDate": "01-11-2024",
         "status": 0
       }
     ],
@@ -330,119 +222,244 @@
     }
   },
 
-
-
-  "uploadDialog": {
-    "statementNameOptions": [
-      { "id": 1, "value": "Monthly - November 2024", "label": "Monthly - November 2024" },
-      { "id": 2, "value": "Monthly - December 2024", "label": "Monthly - December 2024" },
-      { "id": 3, "value": "Quarterly - Q4 2024", "label": "Quarterly - Q4 2024" },
-      { "id": 4, "value": "Annual - 2024", "label": "Annual - 2024" }
-    ],
-    "bankOptions": [
-      { "id": 1, "value": "State Bank of India", "label": "State Bank of India" },
-      { "id": 2, "value": "HDFC Bank", "label": "HDFC Bank" },
-      { "id": 3, "value": "ICICI Bank", "label": "ICICI Bank" },
-      { "id": 4, "value": "Punjab National Bank", "label": "Punjab National Bank" },
-      { "id": 5, "value": "Bank of Baroda", "label": "Bank of Baroda" },
-      { "id": 6, "value": "Axis Bank", "label": "Axis Bank" },
-      { "id": 7, "value": "Kotak Mahindra Bank", "label": "Kotak Mahindra Bank" },
-      { "id": 8, "value": "IndusInd Bank", "label": "IndusInd Bank" }
-    ],
-    "statementPeriodOptions": [
-      { "id": 1, "value": "January 2025", "label": "January 2025" },
-      { "id": 2, "value": "February 2025", "label": "February 2025" },
-      { "id": 3, "value": "March 2025", "label": "March 2025" },
-      { "id": 4, "value": "April 2025", "label": "April 2025" },
-      { "id": 5, "value": "May 2025", "label": "May 2025" },
-      { "id": 6, "value": "June 2025", "label": "June 2025" },
-      { "id": 7, "value": "July 2025", "label": "July 2025" },
-      { "id": 8, "value": "August 2025", "label": "August 2025" },
-      { "id": 9, "value": "September 2025", "label": "September 2025" },
-      { "id": 10, "value": "October 2025", "label": "October 2025" },
-      { "id": 11, "value": "November 2024", "label": "November 2024" },
-      { "id": 12, "value": "December 2024", "label": "December 2024" }
-    ],
-    "validationSchema": {
-      "statementName": {
-        "required": true,
-        "message": "Statement Name is required"
-      },
-      "selectedBank": {
-        "required": true,
-        "message": "Bank selection is required"
-      },
-      "statementPeriod": {
-        "required": true,
-        "message": "Statement Period is required"
-      },
-      "description": {
-        "required": false
-      }
+  "demandDraft": [
+    {
+      "srNo": 1,
+      "studentName": "Aarav Sharma",
+      "class": "5",
+      "division": "A",
+      "grNumber": "GR01",
+      "rollNumber": "01",
+      "ddNumber": "DD784512",
+      "bankName": "State Bank of India",
+      "amount": "3500",
+      "chargesAmount": "150",
+      "currency": "INR",
+      "paymentDate": "01-11-2024",
+      "issueDate": "01-11-2024",
+      "branchName": "Main Branch",
+      "payeeName": "School Library",
+  
+      "receivedDDDate": "01-11-2024",
+      "remarks": "Awaiting verification",
+      "status": 0
     },
-    "formFields": [
-      {
-        "id": "statementName",
-        "name": "statementName",
-        "label": "Statement Name *",
-        "type": "select",
-        "placeholder": "Statement Name *",
-        "required": true
-      },
-      {
-        "id": "selectedBank",
-        "name": "selectedBank",
-        "label": "Bank Name *",
-        "type": "select",
-        "placeholder": "Select Bank *",
-        "required": true
-      },
-      {
-        "id": "statementPeriod",
-        "name": "statementPeriod",
-        "label": "Statement Period *",
-        "type": "select",
-        "placeholder": "Select Statement Period *",
-        "required": true
-      },
-      {
-        "id": "description",
-        "name": "description",
-        "label": "Description",
-        "type": "textarea",
-        "placeholder": "Description",
-        "required": false,
-        "rows": 3
-      }
-    ],
-    "fileUpload": {
-      "acceptedFormats": [".pdf", ".csv", ".xlsx", ".xls"],
-      "title": "Upload Statement File",
-      "dropText": "Drop your bank statement here or click to browse",
-      "supportedFormatsText": "Supported formats: PDF, CSV, Excel",
-      "successMessage": "uploaded successfully",
-      "icon": "solar:cloud-upload-bold"
+    {
+      "srNo": 2,
+      "studentName": "Diya Mehta",
+      "class": "6",
+      "division": "A",
+      "grNumber": "GR02",
+      "rollNumber": "02",
+      "ddNumber": "DD234589",
+      "bankName": "HDFC Bank",
+      "amount": "4000",
+      "chargesAmount": "200",
+      "currency": "INR",
+      "paymentDate": "02-11-2024",
+      "issueDate": "02-11-2024",
+      "branchName": "City Branch",
+      "payeeName": "School Library",
+      "remarks": " All details matched",
+      "receivedDDDate": "02-11-2024",
+     
+      "status": 1
     },
-    "dialog": {
-      "title": "Bank Statement Upload",
-      "tooltipText": "Upload your bank statement to begin reconciliation. Provide statement details and attach the file for processing.",
-      "maxWidth": "sm",
-      "width": "580px",
-      "buttons": {
-        "cancel": {
-          "text": "Cancel",
-          "icon": "cancel",
-          "variant": "outlined"
-        },
-        "submit": {
-          "text": "Process Statement",
-          "icon": "material-symbols:description",
-          "variant": "contained"
-        }
-      }
+    {
+      "srNo": 3,
+      "studentName": "Rohan Patel",
+      "class": "7",
+      "division": "B",
+      "grNumber": "GR03",
+      "rollNumber": "03",
+      "ddNumber": "DD985632",
+      "bankName": "ICICI Bank",
+      "amount": "2500",
+      "chargesAmount": "100",
+      "currency": "INR",
+      "paymentDate": "03-11-2024",
+      "issueDate": "03-11-2024",
+      "branchName": "West Branch",
+      "payeeName": "School Library",
+      
+      "receivedDDDate": "03-11-2024",
+      "remarks": "Amount mismatch",
+      "status": 2
     },
-    "successToast": {
-      "message": "Bank Statement {fileName} uploaded and processed successfully"
+    {
+      "srNo": 4,
+      "studentName": "Ishita Desai",
+      "class": "8",
+      "division": "D",
+      "grNumber": "GR04",
+      "rollNumber": "04",
+      "ddNumber": "DD567890",
+      "bankName": "Axis Bank",
+      "amount": "3000",
+      "chargesAmount": "120",
+      "currency": "INR",
+      "paymentDate": "04-11-2024",
+      "issueDate": "04-11-2024",
+      "branchName": "East Branch",
+      "payeeName": "School Library",
+      
+      "receivedDDDate": "04-11-2024",
+      "remarks": "Payment verified and accepted",
+      "status": 1
     }
-  }
+  ],
+  "bankTransferData": [
+    {
+      "srNo": 1,
+      "studentName": "Aarav Sharma",
+      "class": "5",
+      "division": "A",
+      "grNumber": "GR01",
+      "rollNumber": "01",
+      "amount": "5000",
+      "transactionId": "UTR123456789",
+      "transferDate": "12-09-2025",
+      "accountHolderName": "Aarav Sharma",
+      "remarks": "Payment verified and accepted",
+      "status": 1
+    },
+    {
+      "srNo": 2,
+      "studentName": "Diya Mehta",
+      "class": "6",
+      "division": "B",
+      "grNumber": "GR02",
+      "rollNumber": "02",
+      "amount": "7500",
+      "transactionId": "UTR987654321",
+      "transferDate": "13-09-2025",
+      "accountHolderName": "Diya Mehta",
+      "remarks": "Awaiting bank clearance",
+      "status": 0
+    }
+  ],
+  "creditCardData": [
+    {
+      "srNo": 1,
+      "studentName": "Aarav Sharma",
+      "class": "5",
+      "division": "A",
+      "grNumber": "GR01",
+      "rollNumber": "01",
+      "amount": "2500",
+      "cardHolderName": "Aarav Sharma",
+      "last4Digits": "1234",
+      "transactionId": "TXN123456",
+      "paymentDate": "10-09-2025",
+      "remarks": "Transaction successful",
+      "status": 1
+    },
+    {
+      "srNo": 2,
+      "studentName": "Diya Mehta",
+      "class": "6",
+      "division": "B",
+      "grNumber": "GR02",
+      "rollNumber": "02",
+      "amount": "3200",
+      "cardHolderName": "Diya Mehta",
+      "last4Digits": "5678",
+      "transactionId": "TXN654321",
+      "paymentDate": "11-09-2025",
+      "remarks": "Payment not received",
+      "status": 2
+    }
+  ],
+  "upiData": [
+    {
+      "srNo": 1,
+      "studentName": "Aarav Sharma",
+      "class": "5",
+      "division": "A",
+      "grNumber": "GR01",
+      "rollNumber": "01",
+      "amount": "1200",
+      "upiId": "aarav@ybl",
+      "transactionId": "TXNUPI123456",
+      "paymentDate": "10-09-2025",
+      "remarks": "Under review",
+      "status": 0
+    },
+    {
+      "srNo": 2,
+      "studentName": "Diya Mehta",
+      "class": "6",
+      "division": "B",
+      "grNumber": "GR02",
+      "rollNumber": "02",
+      "amount": "1800",
+      "upiId": "diya@okicici",
+      "transactionId": "TXNUPI654321",
+      "paymentDate": "11-09-2025",
+      "remarks": "Transaction successful",
+      "status": 1
+    }
+  ],
+  "onlineGatewayData": [
+    {
+      "srNo": 1,
+      "studentName": "Aarav Sharma",
+      "class": "5",
+      "division": "A",
+      "grNumber": "GR01",
+      "rollNumber": "01",
+      "amount": "2000",
+      "paymentDate": "12-09-2025",
+      "amountPaid": "2000",
+      "currency": "INR",
+      "transactionId": "PGTXN123456",
+      "paymentGatewayName": "Razorpay",
+      "remarks": "Transaction successful",
+      "status": 1
+    },
+    {
+      "srNo": 2,
+      "studentName": "Diya Mehta",
+      "class": "6",
+      "division": "B",
+      "grNumber": "GR02",
+      "rollNumber": "02",
+      "amount": "3500",
+      "paymentDate": "13-09-2025",
+      "amountPaid": "3500",
+      "currency": "INR",
+      "transactionId": "PGTXN654321",
+      "paymentGatewayName": "Paytm",
+      "remarks": " Invalid transaction ID",
+      "status": 2
+    }
+  ],
+  "walletData": [
+    {
+      "srNo": 1,
+      "studentName": "Aarav Sharma",
+      "class": "5",
+      "division": "A",
+      "grNumber": "GR01",
+      "rollNumber": "01",
+      "amount": "1500",
+      "walletProviderName": "Paytm",
+      "transactionId": "WALLET123456",
+      "remarks": "Payment processing",
+      "status": 0
+    },
+    {
+      "srNo": 2,
+      "studentName": "Diya Mehta",
+      "class": "6",
+      "division": "B",
+      "grNumber": "GR02",
+      "rollNumber": "02",
+      "amount": "2200",
+      "walletProviderName": "PhonePe",
+      "transactionId": "WALLET654321",
+      "remarks": "Transaction successful",
+      "status": 1
+    }
+  ]
 }
