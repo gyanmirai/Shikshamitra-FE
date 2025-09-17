@@ -8,6 +8,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -47,9 +48,20 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
     initialValues: buildInitialBookReturnValues(editData),
     validationSchema: bookReturnValidationSchema,
     onSubmit: (values) => {
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `${values.bookTitle} book return updated successfully`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `${values.bookTitle} book returned successfully`,
+        });
+      }
+
       onClose(values, true);
     },
   });
+  console.log('🚀 ~ ReturnBookForm ~ formik:', formik);
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
@@ -210,20 +222,22 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Fine Amount */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.fineAmount && formik.errors.fineAmount)}>
-              <NumericFormatCustom
-                size="small"
-                label="Fine Amount *"
-                name="fineAmount"
-                value={formik.values.fineAmount}
-                onChange={formik.handleChange}
-                fullWidth
-                error={!!(formik.touched.fineAmount && formik.errors.fineAmount)}
-                helperText={(formik.touched.fineAmount && formik.errors.fineAmount) as string}
-              />
-            </ShakingTextField>
-          </Grid>
+          {formik.values.bookCondition === 'Damaged' && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.fineAmount && formik.errors.fineAmount)}>
+                <NumericFormatCustom
+                  size="small"
+                  label="Fine Amount *"
+                  name="fineAmount"
+                  value={formik.values.fineAmount}
+                  onChange={formik.handleChange}
+                  fullWidth
+                  error={!!(formik.touched.fineAmount && formik.errors.fineAmount)}
+                  helperText={(formik.touched.fineAmount && formik.errors.fineAmount) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+          )}
 
           {/* Reserved List */}
           {showReservation && (
@@ -232,13 +246,14 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
               <CustomizableTable
                 tableId="reserved-list"
                 columns={[
-                  { id: 'memberId', label: 'Member ID', align: 'left' },
-                  { id: 'memberName', label: 'Member Name', align: 'left' },
+                  { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
+                  { id: 'memberName', label: 'Member Name', align: 'left', minWidth: '140px' },
                   {
                     id: 'notificationSentOn',
                     label: 'Notification Sent on',
                     align: 'left',
                     filterType: 'date',
+                    minWidth: '190px',
                   },
                   {
                     id: 'status',

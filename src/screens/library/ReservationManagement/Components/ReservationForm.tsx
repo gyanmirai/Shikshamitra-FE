@@ -48,6 +48,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
     type: 'query',
     currentQueryAndMutation: useGetRolesQuery,
   });
+
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -214,7 +215,15 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                 disabled={!formik.values.role}
                 noOptionsText="No Member Found"
                 fullWidth
-                value={tableData.find((s: any) => s.id === formik.values.member) || null}
+                value={
+                  (formik.values.role === 'Student'
+                    ? tableData.find((s: any) => s.id === formik.values.member)
+                    : [
+                        { id: '1', name: 'Prerna Atre' },
+                        { id: '2', name: 'Raj Baku' },
+                        { id: '3', name: 'Dharmik Jinjala' },
+                      ].find((s: any) => s.id === formik.values.member)) || null
+                }
                 onChange={(e, value: any) => {
                   formik.setFieldValue('member', value?.id || '');
                 }}
@@ -228,7 +237,15 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                     />
                   ))
                 }
-                options={formik.values.role === 'Student' ? tableData : []}
+                options={
+                  formik.values.role === 'Student'
+                    ? tableData
+                    : [
+                        { id: '1', name: 'Prerna Atre' },
+                        { id: '2', name: 'Raj Baku' },
+                        { id: '3', name: 'Dharmik Jinjala' },
+                      ]
+                }
                 getOptionLabel={(option: any) => option?.name || ''}
                 renderInput={(params) => (
                   <TextField
@@ -257,8 +274,8 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                 options={
                   bookCategoryOptions?.map((item: IBookCategoryOption) => ({
                     id: item.id,
-                    label: item.label,
-                    value: item.value,
+                    label: item.categoryName,
+                    value: item.categoryName,
                   })) ?? []
                 }
                 value={formik.values.bookCategory}

@@ -10,7 +10,7 @@
       "category": "Textbook",
       "language": "English",
       "edition": "3rd",
-      "numberOfCopies": 5,
+      "numberOfCopies": 20,
       "createdOn": "15-03-2024",
       "damagedBook": 10,
       "availableBook": 6
@@ -25,7 +25,7 @@
       "category": "Programming",
       "language": "English",
       "edition": "1st",
-      "numberOfCopies": 3,
+      "numberOfCopies": 5,
       "createdOn": "15-03-2024",
       "damagedBook": 2,
       "availableBook": 1

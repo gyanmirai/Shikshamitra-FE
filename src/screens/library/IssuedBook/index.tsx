@@ -50,9 +50,11 @@ const IssueReturnBook = () => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       addDialog.onFalse();
       setSelectedRecord(null);
+      returnDialog.onFalse();
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
       addDialog.onFalse();
+      returnDialog.onFalse();
       setSelectedRecord(null);
     }
   };

@@ -292,6 +292,12 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                       const value = e.target.value.replace(/[^0-9]/g, '');
                       formik.setFieldValue('numberOfCopies', value);
                     }}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onWheel={(e) => (e.target as HTMLElement).blur()}
                     error={!!(formik.touched.numberOfCopies && formik.errors.numberOfCopies)}
                     helperText={formik.touched.numberOfCopies && formik.errors.numberOfCopies}
                     size="small"
@@ -300,25 +306,27 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
               </Grid>
 
               <Grid size={{ xs: 12, md: 4 }}>
-                <NumericFormatCustom
-                  size="small"
-                  fullWidth
-                  label="Price *"
-                  name="price"
-                  value={formik.values.price}
-                  onChange={(e) => {
-                    let val = e.target.value;
-                    // remove ₹, commas, spaces
-                    val = val.replace(/[₹ ,\s]/g, '');
-                    formik.setFieldValue('price', val ? Number(val) : '');
-                  }}
-                  error={!!(formik.touched.price && formik.errors.price)}
-                  helperText={(formik.touched.price && formik.errors.price) as string}
-                  prefix="₹"
-                  thousandSeparator=","
-                  decimalScale={2}
-                  fixedDecimalScale
-                />
+                <ShakingTextField error={!!(formik.touched.price && formik.errors.price)}>
+                  <NumericFormatCustom
+                    size="small"
+                    fullWidth
+                    label="Price *"
+                    name="price"
+                    value={formik.values.price}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      // remove ₹, commas, spaces
+                      val = val.replace(/[₹ ,\s]/g, '');
+                      formik.setFieldValue('price', val ? Number(val) : '');
+                    }}
+                    error={!!(formik.touched.price && formik.errors.price)}
+                    helperText={(formik.touched.price && formik.errors.price) as string}
+                    prefix="₹"
+                    thousandSeparator=","
+                    decimalScale={2}
+                    fixedDecimalScale
+                  />
+                </ShakingTextField>
               </Grid>
               <Grid size={12}>
                 <CustomUpload
@@ -376,7 +384,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                                 onChange={(e) => {
                                   const val = e.target.value
                                     // Remove everything except letters and spaces
-                                    .replace(/[^a-zA-Z\s]/g, '')
+                                    .replace(/[^a-zA-Z0-9-]/g, '')
                                     // Keep original case
                                     .split(' ')
                                     .map((word) => word || '')
@@ -531,33 +539,11 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                         },
                         {
                           id: 'electiveSubject',
-                          label: '',
+                          label: 'Vendor',
                           minWidth: '',
                           align: 'left',
                           isSort: false,
                           isFilter: false,
-                          renderColumn: (value) => (
-                            <CustomSelect
-                              label="Resources"
-                              options={[
-                                { value: 'amazon', label: 'Amazon' },
-                                { value: 'flipkart', label: 'Flipkart' },
-                                { value: 'local_store', label: 'Local Bookstore' },
-                                { value: 'publisher_direct', label: 'Direct from Publisher' },
-                                { value: 'other', label: 'Other' },
-                              ]}
-                              name="vendor"
-                              value=""
-                              onChange={(val) => {
-                                // const updated = [...copies];
-                                // updated[row.copyNo - 1].vendor = val as string;
-                                // setCopies(updated);
-                                // formik.setFieldValue('copies', updated);
-                                // formik.setFieldTouched(`copies.${row.copyNo - 1}.vendor`, true);
-                              }}
-                              formControlProps={{ sx: { minWidth: 275 } }}
-                            />
-                          ),
                           render: (_, row: any) => (
                             <ShakingTextField
                               error={

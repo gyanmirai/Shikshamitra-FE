@@ -10,6 +10,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -142,6 +143,15 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
     validationSchema: getIssueBookSchema(currentYear),
     // enableReinitialize: true,
     onSubmit: (values) => {
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `${values.bookTitle} book issue updated successfully`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `${values.bookTitle} book issued successfully`,
+        });
+      }
       onClose(values, true);
     },
   });
@@ -407,7 +417,15 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                 disabled={!formik.values.role}
                 noOptionsText="No Member Found"
                 fullWidth
-                value={tableData.find((s: any) => s.id === formik.values.member) || null}
+                value={
+                  (formik.values.role === 'Student'
+                    ? tableData.find((s: any) => s.id === formik.values.member)
+                    : [
+                        { id: '1', name: 'Prerna Atre' },
+                        { id: '2', name: 'Raj Baku' },
+                        { id: '3', name: 'Dharmik Jinjala' },
+                      ].find((s: any) => s.id === formik.values.member)) || null
+                }
                 onChange={(e, value: any) => {
                   formik.setFieldValue('member', value?.id || '');
                 }}
@@ -421,7 +439,15 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                     />
                   ))
                 }
-                options={formik.values.role === 'Student' ? tableData : []}
+                options={
+                  formik.values.role === 'Student'
+                    ? tableData
+                    : [
+                        { id: '1', name: 'Prerna Atre' },
+                        { id: '2', name: 'Raj Baku' },
+                        { id: '3', name: 'Dharmik Jinjala' },
+                      ]
+                }
                 getOptionLabel={(option: any) => option?.name || ''}
                 renderInput={(params) => (
                   <TextField
@@ -447,9 +473,12 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
             <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>
               <DatePicker
                 label="Issue Date *"
-                value={dayjs(formik.values.issueDate)}
-                onChange={(newValue) => formik.setFieldValue('issueDate', newValue)}
                 format="DD-MM-YYYY"
+                value={formik.values.issueDate}
+                onChange={(newValue) => formik.setFieldValue('issueDate', newValue)}
+                minDate={dayjs(currentYear?.startDate)}
+                maxDate={dayjs(currentYear?.endDate)}
+                sx={{ minWidth: 180, width: '100%' }}
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -467,9 +496,12 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
             <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate)}>
               <DatePicker
                 label="Due Date *"
-                value={dayjs(formik.values.dueDate)}
-                onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
                 format="DD-MM-YYYY"
+                value={formik.values.dueDate}
+                onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
+                minDate={dayjs(currentYear?.startDate)}
+                maxDate={dayjs(currentYear?.endDate)}
+                sx={{ minWidth: 180, width: '100%' }}
                 slotProps={{
                   textField: {
                     fullWidth: true,

@@ -31,7 +31,6 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
   selectedMember,
 }) => {
   const theme = useTheme();
-
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const { data: bookCategoryOptions, isLoading: bookCategoryLoading } = useQueryAndMutation({
@@ -46,7 +45,7 @@ const MakeReservationForm: React.FC<IMakeReservationFormProps> = ({
 
   const formik = useFormik<IMakeReservationPayload>({
     initialValues: getInitialReservationData(),
-    validationSchema: makeReservationValidationSchema,
+    validationSchema: makeReservationValidationSchema(currentYear),
     validateOnChange: true,
     onSubmit: (values) => {
       shikshaMitraToast.success({

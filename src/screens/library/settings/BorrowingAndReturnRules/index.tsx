@@ -213,6 +213,7 @@ const BorrowingReturnRules = () => {
                   type="number"
                   value={value === 0 ? '0' : value || ''}
                   onChange={(e) => handleFieldChange(row.id, 'maxBooksPerMonth', e.target.value)}
+                  onWheel={(e) => (e.target as HTMLElement).blur()}
                   sx={{ width: '100%' }}
                   inputProps={{ min: 0, max: 10 }}
                   error={formik.touched[fieldName] && Boolean(formik.errors[fieldName])}
@@ -235,6 +236,7 @@ const BorrowingReturnRules = () => {
                   type="number"
                   value={value === 0 ? '0' : value || ''}
                   onChange={(e) => handleFieldChange(row.id, 'reservationLimit', e.target.value)}
+                  onWheel={(e) => (e.target as HTMLElement).blur()}
                   sx={{ width: '100%' }}
                   inputProps={{ min: 0, max: 10 }}
                   error={formik.touched[fieldName] && Boolean(formik.errors[fieldName])}

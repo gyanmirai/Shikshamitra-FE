@@ -61,10 +61,12 @@ const ReservationManagement = () => {
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       addDialog.onFalse();
+      issueDialog.onFalse();
       setSelectedRecord(null);
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
       addDialog.onFalse();
+      issueDialog.onFalse();
       setSelectedRecord(null);
     }
   };
@@ -95,25 +97,57 @@ const ReservationManagement = () => {
         sx={{ px: 1, mb: 2 }}
       />
       <Box sx={{ display: 'flex', gap: 2 }}>
-        <CustomSelect
-          options={bookCategoryData || []}
-          label="Book Category"
-          value={selectedBookCategory}
-          onChange={(val) => setSelectedBookCategory(val as string)}
-          labelKey="categoryName"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-        />
-        <CustomSelect
-          options={bookData || []}
-          label="Book Title"
-          value={selectedBook}
-          onChange={(val) => setSelectedBook(val as string)}
-          labelKey="title"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-          disabled={!selectedBookCategory}
-        />
+        <CustomTooltip
+          placement="top"
+          title={
+            selectedBookCategory
+              ? bookCategoryData?.find((cat: any) => cat.id === selectedBookCategory)?.categoryName
+              : undefined
+          }
+        >
+          <Box sx={{ width: '100%', maxWidth: 248 }}>
+            <CustomSelect
+              options={bookCategoryData || []}
+              label="Book Category"
+              value={selectedBookCategory}
+              onChange={(val) => setSelectedBookCategory(val as string)}
+              labelKey="categoryName"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
+            />
+          </Box>
+        </CustomTooltip>
+        <CustomTooltip
+          placement="top"
+          title={
+            selectedBook
+              ? bookData?.find((book: any) => book.id === selectedBook)?.title
+              : undefined
+          }
+        >
+          <Box sx={{ width: '100%', maxWidth: 248 }}>
+            <CustomSelect
+              options={bookData || []}
+              label="Book Title"
+              value={selectedBook}
+              onChange={(val) => setSelectedBook(val as string)}
+              labelKey="title"
+              valueKey="id"
+              formControlProps={{
+                sx: {
+                  maxWidth: '248px',
+                  width: '100%',
+                  '& .MuiListItemText-root': {
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  },
+                },
+              }}
+              disabled={!selectedBookCategory}
+            />
+          </Box>
+        </CustomTooltip>
       </Box>
 
       {/* Dialog for Add/Edit */}

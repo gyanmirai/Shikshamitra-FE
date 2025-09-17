@@ -45,6 +45,7 @@ export interface ITitle {
 }
 
 export interface IBookCategoryOption {
+  categoryName: any;
   id: string;
   label: string;
   value: string;
