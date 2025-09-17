@@ -36,6 +36,8 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
     type: 'query',
     currentQueryAndMutation: useGetBookCategoryOptionsQuery,
   });
+
+  console.log('bookCategoryOptions----', bookCategoryOptions);
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID

@@ -11,9 +11,11 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Tab, Tabs, Typography, IconButton } from '@mui/material';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { EventStatus, EventStatusColor, EventStatusOptions } from 'src/enums/event-type';
 
 import type { IEventAnnouncement } from '../type';
+import type { IAudience } from '../../announcement/type';
 
 interface IEventAnnouncementTableProps {
   data: IEventAnnouncement[];
@@ -37,8 +39,8 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
     () => ({
       all: data?.length || 0,
       active: data?.filter((i) => i.status === EventStatus.Active)?.length || 0,
-      upcoming: data?.filter((i) => i.status === EventStatus.Archive)?.length || 0,
-      archive: data?.filter((i) => i.status === EventStatus.Upcoming)?.length || 0,
+      upcoming: data?.filter((i) => i.status === EventStatus.Upcoming)?.length || 0,
+      archive: data?.filter((i) => i.status === EventStatus.Archive)?.length || 0,
     }),
     [data]
   );
@@ -51,19 +53,19 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
       label: 'Active',
       value: EventStatus.Active,
       count: announcementCounts.active,
-      color: 'warning',
+      color: 'success',
     },
     {
-      label: 'Published',
+      label: 'Upcoming',
       value: EventStatus.Upcoming,
       count: announcementCounts.upcoming,
-      color: 'success',
+      color: 'info',
     },
     {
       label: 'Archive',
       value: EventStatus.Archive,
       count: announcementCounts.archive,
-      color: 'info',
+      color: 'warning',
     },
   ];
 
@@ -105,13 +107,24 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
         tableId="event-announcement-table"
         data={tableData || []}
         columns={[
-          { id: 'title', label: 'Title', align: 'left' },
+          { id: 'title', label: 'Title', align: 'left', sticky: true },
           { id: 'type', label: 'Type', align: 'left' },
           {
             id: 'audience',
             label: 'Audience',
             align: 'left',
-            render: (val) => <Box>{val?.join(', ')}</Box>,
+            render: (value, row) => (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {row.audience?.map((aud: IAudience) => (
+                  <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <SubjectColorIndicator color={aud.color} />
+                    <Typography variant="caption" fontSize="13px">
+                      {aud.name}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            ),
           },
           {
             id: 'classes',
@@ -172,24 +185,49 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
                   : theme.palette.text.secondary;
 
               return (
-                <CustomTooltip title="Publish" arrow>
+                <CustomTooltip
+                  title={row.status === EventStatus.Active ? 'Active' : 'Upcoming'}
+                  arrow
+                  placement="left"
+                  PopperProps={{
+                    modifiers: [
+                      {
+                        name: 'offset',
+                        options: {
+                          offset: [0, 0],
+                        },
+                      },
+                    ],
+                  }}
+                >
                   <span>
                     <IconButton
                       onClick={() => {
-                        if (row.status === EventStatus.Archive)
+                        if (
+                          row.status === EventStatus.Upcoming ||
+                          row.status === EventStatus.Archive
+                        ) {
                           onPublish(row as IEventAnnouncement);
+                        }
                       }}
                       disabled={row.status === EventStatus.Active}
                       sx={{
                         p: 0.6,
                         borderRadius: '50%',
                         backgroundColor: 'rgba(0,0,0,0.06)',
+                        transition: 'transform 0.2s ease-in-out, background-color 0.2s',
+                        cursor: 'pointer',
                         '&:hover': { transform: 'scale(1.1)', backgroundColor: 'rgba(0,0,0,0.08)' },
                       }}
                     >
                       <Iconify
                         icon={GlobalIcons.tick}
-                        sx={{ width: 20, height: 20, color: statusColor }}
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          cursor: row.status === EventStatus.Active ? 'not-allowed' : 'pointer',
+                          color: statusColor,
+                        }}
                       />
                     </IconButton>
                   </span>

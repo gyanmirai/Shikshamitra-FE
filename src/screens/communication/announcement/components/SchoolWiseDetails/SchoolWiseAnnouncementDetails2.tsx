@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Box, Grid, Card, Stack, Button, Divider, Typography } from '@mui/material';
-import { Groups, Visibility, AttachFile, Notifications } from '@mui/icons-material';
+import { Visibility, AttachFile } from '@mui/icons-material';
+import { Box, Card, Stack, Button, Typography } from '@mui/material';
 
 import type { ISchoolWiseAnnouncement } from '../../type';
 
@@ -12,63 +12,17 @@ export default function SchoolWiseAnnouncementDetailCard({
   announcement: ISchoolWiseAnnouncement | null;
 }) {
   return (
-    <Card sx={{ p: 2, mb: 2, boxShadow: 3 }}>
-      {/* Description */}
-      <Typography variant="body2" color="text.secondary" mb={0.5}>
-        Description
-      </Typography>
-      <Typography variant="body1" mb={2}>
-        {announcement?.description}
-      </Typography>
-
-      {/* Audience, Viewed By, Delivery Channel */}
-      <Grid container spacing={2} alignItems="center">
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Groups fontSize="small" color="action" />
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Target Audience
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {announcement?.audience?.join(', ') || '—'}
-              </Typography>
-            </Box>
-          </Stack>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Visibility fontSize="small" color="action" />
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Viewed by
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {announcement?.viewedBy || 0}
-              </Typography>
-            </Box>
-          </Stack>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Notifications fontSize="small" color="action" />
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Delivery Channel
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {announcement?.notification_preferences?.join(', ') || '—'}
-              </Typography>
-            </Box>
-          </Stack>
-        </Grid>
-      </Grid>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* Attachment */}
+    <Box>
+      <Card sx={{ p: 2, mb: 2, boxShadow: 3 }}>
+        {/* Description */}
+        <Typography variant="body2" color="text.secondary" mb={0.5}>
+          Description
+        </Typography>
+        <Typography variant="body1" mb={2}>
+          {announcement?.description}
+        </Typography>
+        {/* Attachment */}
+      </Card>
       {announcement?.link && (
         <Stack
           direction="row"
@@ -96,6 +50,6 @@ export default function SchoolWiseAnnouncementDetailCard({
           </Button>
         </Stack>
       )}
-    </Card>
+    </Box>
   );
 }

@@ -11,13 +11,14 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Tab, Tabs, IconButton, Typography } from '@mui/material';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   AnnouncementStatus,
   AnnouncementStatusColor,
   AnnouncementStatusOptions,
 } from 'src/enums/communication_announcement_status_type';
 
-import type { IClassWiseAnnouncement, IClassWiseAnnouncementTableProps } from '../type';
+import type { IAudience, IClassWiseAnnouncement, IClassWiseAnnouncementTableProps } from '../type';
 
 const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = ({
   data,
@@ -109,13 +110,24 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
       <CustomizableTable
         tableId="class-wise-announcement-table"
         columns={[
-          { id: 'title', label: 'Title', align: 'left' },
+          { id: 'title', label: 'Title', align: 'left', sticky: true },
           { id: 'type', label: 'Type', align: 'left' },
           {
             id: 'audience',
             label: 'Audience',
             align: 'left',
-            render: (value) => <Box>{value.join(', ')}</Box>,
+            render: (value, row) => (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {row.audience?.map((aud: IAudience) => (
+                  <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <SubjectColorIndicator color={aud.color} />
+                    <Typography variant="caption" fontSize="13px">
+                      {aud.name}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            ),
           },
           {
             id: 'organizations',

@@ -189,6 +189,7 @@ const reducers = combineReducers({
   [classWiseAnnouncementApi.reducerPath]: classWiseAnnouncementApi.reducer,
   [holidayApi.reducerPath]: holidayApi.reducer,
   [meetingDetailsApi.reducerPath]: meetingDetailsApi.reducer,
+  [eventAnnouncementApi.reducerPath]: eventAnnouncementApi.reducer,
 });
 
 const store = configureStore({
@@ -285,6 +286,7 @@ const store = configureStore({
       bookConditionOptionsApi.middleware,
       schoolWiseAnnouncementApi.middleware,
       classWiseAnnouncementApi.middleware,
+      eventAnnouncementApi.middleware,
       // meetingDetailsApi.middleware,
       // holidayApi.middleware,
     ]),

@@ -19,6 +19,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { Box, Grid, Button, Switch, TextField, DialogActions, FormHelperText } from '@mui/material';
 
+import { audienceOptions } from '../announcement/schoolannouncementForm';
 import { getEventInitialValues } from './components/getEventInitialValues';
 import { eventAnnouncementValidationSchema } from './components/getValidationEventSchema';
 
@@ -242,17 +243,24 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
 
             {/* Start Time DatePicker */}
             <Grid size={{ xs: 12 }}>
-              <SectionCard title="Scheduling & Control">
+              <SectionCard title="Scheduling">
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField
                     error={!!(formik.touched.startDate && formik.errors.startDate) || false}
                   >
                     <DatePicker
-                      label="Start Date *"
-                      format="DD/MM/YYYY"
+                      label="Start Date/Time *"
+                      format="DD/MM/YYYY hh:mm"
                       value={dayjs(formik.values.startDate)}
                       onChange={(newValue) => {
                         formik.setFieldValue('startDate', newValue);
+                        // Calculate duration in days between start and end date
+                        if (newValue && formik.values.startDate) {
+                          const start = dayjs(formik.values.startDate);
+                          const end = dayjs(newValue);
+                          const durationInDays = end.diff(start, 'day');
+                          formik.setFieldValue('duration', Math.max(0, durationInDays));
+                        }
                       }}
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
@@ -276,13 +284,21 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                     error={!!(formik.touched.endDate && formik.errors.endDate) || false}
                   >
                     <DatePicker
-                      label="End Date *"
-                      format="DD/MM/YYYY"
+                      label="End Date/Time *"
+                      format="DD/MM/YYYY hh:mm"
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
                       value={dayjs(formik.values.endDate)}
                       onChange={(newValue) => {
                         formik.setFieldValue('endDate', newValue);
+                        formik.setFieldTouched('endDate', false);
+                        // Calculate duration in days between start and end date
+                        if (newValue && formik.values.startDate) {
+                          const start = dayjs(formik.values.startDate);
+                          const end = dayjs(newValue);
+                          const durationInDays = end.diff(start, 'day');
+                          formik.setFieldValue('duration', Math.max(0, durationInDays));
+                        }
                       }}
                       sx={{ minWidth: 180, width: '100%' }}
                       slotProps={{
@@ -294,6 +310,22 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                       }}
                     />
                   </ShakingTextField>
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="Duration (in days) *"
+                    name="duration"
+                    type="number"
+                    value={formik.values.duration}
+                    disabled
+                    InputProps={{
+                      inputProps: { min: 0 },
+                    }}
+                    error={formik.touched.duration && Boolean(formik.errors.duration)}
+                    helperText={formik.touched.duration && formik.errors.duration}
+                    size="small"
+                  />
                 </Grid>
               </SectionCard>
             </Grid>
@@ -449,14 +481,16 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                   <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                     <CustomSelect
                       label="Select Audience *"
-                      options={[
-                        { value: 'Staff', label: 'Staff' },
-                        { value: 'Students', label: 'Students' },
-                        { value: 'Parents', label: 'Parents' },
-                      ]}
+                      options={audienceOptions}
                       multiple
-                      value={formik.values.audience}
-                      onChange={(val) => formik.setFieldValue('audience', val)}
+                      value={formik.values.audience.map((aud) => aud.name)} // show only names in the UI
+                      onChange={(val) => {
+                        const selectedObjects = audienceOptions.filter((opt) =>
+                          (val as string[]).includes(opt.name)
+                        );
+                        formik.setFieldValue('audience', selectedObjects);
+                      }}
+                      labelKey="name"
                       formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
                       error={formik.touched.audience && Boolean(formik.errors.audience)}
                       helperText={
@@ -497,7 +531,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                     >
                       <TextField
                         fullWidth
-                        label="Online Meeting Link"
+                        label="Online Meeting Link *"
                         name="onlineLink"
                         size="small"
                         value={formik.values.onlineLink}
@@ -512,7 +546,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                     <ShakingTextField error={!!(formik.touched.venue && formik.errors.venue)}>
                       <TextField
                         fullWidth
-                        label="Venue"
+                        label="Venue *"
                         size="small"
                         name="venue"
                         value={formik.values.venue}

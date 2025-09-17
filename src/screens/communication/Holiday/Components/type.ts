@@ -1,5 +1,7 @@
 import type { Dayjs } from 'dayjs';
 
+import type { IAudience } from '../../announcement/type';
+
 export interface IHoliday {
   id: string;
   holidayName: string; // Holiday Name (e.g., Independence Day 2025)
@@ -12,8 +14,8 @@ export interface IHoliday {
 
   // Audience selection
   organizations: string[]; // Organization(s) (e.g., All, specific org IDs)
-  audience: string[]; // Target Audience (Students, Parents, Teachers, etc.)
-
+  audience: IAudience[];
+  classes: string[];
   createdBy: string;
   createdOn: Dayjs | string | null;
   status: number; // Draft / Published / Archived

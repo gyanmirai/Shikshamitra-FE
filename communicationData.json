@@ -5,7 +5,23 @@
     "id": "ANN-001",
     "title": "School Sports Day Announcement",
     "description": "Annual Sports Day will be held on 25th September. All students are required to wear their house uniforms.",
-    "audience": ["Students", "Teachers", "Parents"],
+    "audience": [
+      {
+        "value": "Students",
+        "name": "Students",
+        "color": "#1890ff"
+      },
+      {
+        "value": "Teachers", 
+        "name": "Teachers",
+        "color": "#52c41a"
+      },
+      {
+        "value": "Parents",
+        "name": "Parents", 
+        "color": "#faad14"
+      }
+    ],
     "startDate": "2025-09-15T09:00:00.000Z",
     "endDate": "2025-09-25T18:00:00.000Z",
     "createdBy": "admin@school.com",
@@ -24,7 +40,23 @@
     "id": "ANN-002",
     "title": "Class 10 Parent-Teacher Meeting",
     "description": "Parent-Teacher Meeting for Class 10 students will be held on 20th September at 10 AM in the school auditorium.",
-    "audience": ["Parents", "Teachers"],
+     "audience": [
+      {
+        "value": "Students",
+        "name": "Students",
+        "color": "#1890ff"
+      },
+      {
+        "value": "Teachers", 
+        "name": "Teachers",
+        "color": "#52c41a"
+      },
+      {
+        "value": "Parents",
+        "name": "Parents", 
+        "color": "#faad14"
+      }
+    ],
     "startDate": "2025-09-18T10:00:00.000Z",
     "endDate": "2025-09-20T13:00:00.000Z",
     "createdBy": "principal@school.com",
@@ -43,7 +75,23 @@
     "id": "ANN-003",
     "title": "Holiday Notice - Gandhi Jayanti",
     "description": "School will remain closed on 2nd October in observance of Gandhi Jayanti.",
-    "audience": ["Students", "Teachers", "Parents"],
+     "audience": [
+      {
+        "value": "Students",
+        "name": "Students",
+        "color": "#1890ff"
+      },
+      {
+        "value": "Teachers", 
+        "name": "Teachers",
+        "color": "#52c41a"
+      },
+      {
+        "value": "Parents",
+        "name": "Parents", 
+        "color": "#faad14"
+      }
+    ],
     "startDate": "2025-09-29T08:00:00.000Z",
     "endDate": "2025-10-02T23:59:00.000Z",
     "createdBy": "admin@school.com",
@@ -64,7 +112,23 @@
     "id": "ANN-101",
     "title": "Parent-Teacher Meeting",
     "description": "A parent-teacher meeting will be held to discuss student progress.",
-    "audience": ["Parents", "Teachers"],
+     "audience": [
+      {
+        "value": "Students",
+        "name": "Students",
+        "color": "#1890ff"
+      },
+      {
+        "value": "Teachers", 
+        "name": "Teachers",
+        "color": "#52c41a"
+      },
+      {
+        "value": "Parents",
+        "name": "Parents", 
+        "color": "#faad14"
+      }
+    ],
     "organizations": ["Org-1"],
     "classes": ["Class-10", "Class-12"],
     "divisions": ["A", "B"],
@@ -86,7 +150,23 @@
     "id": "ANN-102",
     "title": "Annual Sports Day",
     "description": "Annual sports day will be organized for all students.",
-    "audience": ["Students", "Parents"],
+     "audience": [
+      {
+        "value": "Students",
+        "name": "Students",
+        "color": "#1890ff"
+      },
+      {
+        "value": "Teachers", 
+        "name": "Teachers",
+        "color": "#52c41a"
+      },
+      {
+        "value": "Parents",
+        "name": "Parents", 
+        "color": "#faad14"
+      }
+    ],
     "organizations": ["Org-1", "Org-2"],
     "classes": ["Class-8", "Class-9", "Class-10"],
     "divisions": ["A", "B", "C"],
@@ -108,7 +188,23 @@
     "id": "ANN-103",
     "title": "Exam Timetable Published",
     "description": "Mid-term examination timetable has been published on the portal.",
-    "audience": ["Students"],
+   "audience": [
+      {
+        "value": "Students",
+        "name": "Students",
+        "color": "#1890ff"
+      },
+      {
+        "value": "Teachers", 
+        "name": "Teachers",
+        "color": "#52c41a"
+      },
+      {
+        "value": "Parents",
+        "name": "Parents", 
+        "color": "#faad14"
+      }
+    ],
     "organizations": ["Org-3"],
     "classes": ["Class-11", "Class-12"],
     "divisions": ["Science", "Commerce"],
@@ -132,7 +228,23 @@
     "id": "1",
     "title": "Annual Sports Day",
     "description": "A fun-filled sports event for all classes with various competitions.",
-    "audience": ["students", "teachers", "parents"],
+    "audience": [
+      {
+        "value": "Students",
+        "name": "Students",
+        "color": "#1890ff"
+      },
+      {
+        "value": "Teachers", 
+        "name": "Teachers",
+        "color": "#52c41a"
+      },
+      {
+        "value": "Parents",
+        "name": "Parents", 
+        "color": "#faad14"
+      }
+    ],
     "organizations": ["Sports Committee"],
     "classes": ["10", "11", "12"],
     "divisions": ["A", "B", "C"],
@@ -153,7 +265,23 @@
     "id": "2",
     "title": "Online Coding Workshop",
     "description": "A workshop on competitive programming conducted by industry experts.",
-    "audience": ["students"],
+   "audience": [
+      {
+        "value": "Students",
+        "name": "Students",
+        "color": "#1890ff"
+      },
+      {
+        "value": "Teachers", 
+        "name": "Teachers",
+        "color": "#52c41a"
+      },
+      {
+        "value": "Parents",
+        "name": "Parents", 
+        "color": "#faad14"
+      }
+    ],
     "organizations": ["Computer Science Club"],
     "classes": ["9", "10", "11", "12"],
     "divisions": ["A", "B"],
@@ -174,7 +302,23 @@
     "id": "3",
     "title": "Parent-Teacher Meeting",
     "description": "Discussion on student academic progress and future planning.",
-    "audience": ["parents", "teachers"],
+   "audience": [
+      {
+        "value": "Students",
+        "name": "Students",
+        "color": "#1890ff"
+      },
+      {
+        "value": "Teachers", 
+        "name": "Teachers",
+        "color": "#52c41a"
+      },
+      {
+        "value": "Parents",
+        "name": "Parents", 
+        "color": "#faad14"
+      }
+    ],
     "organizations": ["Academic Committee"],
     "classes": ["1", "2", "3", "4"],
     "divisions": ["A"],

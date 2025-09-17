@@ -10,6 +10,7 @@ export const getClassInitialValues = (initialValues: IClassWiseAnnouncement | nu
   organizations: initialValues?.organizations || [],
   classes: initialValues?.classes || [],
   divisions: initialValues?.divisions || [],
+  duration: initialValues?.duration ?? 0,
   startDate: initialValues?.startDate ? dayjs(initialValues?.startDate) : dayjs().add(1, 'hours'),
   endDate: initialValues?.endDate ? dayjs(initialValues?.endDate) : null,
   createdBy: initialValues?.createdBy || '',
