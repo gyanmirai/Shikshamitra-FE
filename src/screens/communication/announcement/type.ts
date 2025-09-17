@@ -111,6 +111,7 @@ export interface IClassWiseAnnouncementFormValues {
 }
 
 export interface IClassWiseAnnouncementFormProps {
+  onClose: (e: any, isSubmit: boolean) => void;
   onSubmit: (values: IClassWiseAnnouncement) => void;
   initialValues?: IClassWiseAnnouncement | null;
   isEdit?: boolean;

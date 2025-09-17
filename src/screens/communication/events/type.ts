@@ -29,18 +29,27 @@ export interface IEvent {
  * @property {string} eventOrganizer - Name of the event organizer
  * @property {string} eventBudget - Budget allocated for the event
  */
-export interface IEventFormValues {
-  eventTitle: string;
-  eventVenue: string;
-  organization: string[];
-  className: string[];
-  eventStartDate: Dayjs | null | string;
-  eventEndDate: Dayjs | null | string;
-  eventType: string;
-  audience: string[];
+export interface IEventAnnouncement {
+  id: string;
+  title: string;
   description: string;
-  eventOrganizer: string;
-  eventBudget: string;
+  audience: string[]; // same as school-wise
+  organizations: string[]; // newly added
+  classes: string[]; // newly added
+  divisions: string[]; // newly added
+  startDate: Dayjs | string | null;
+  endDate: Dayjs | string | null;
+  createdBy: string;
+  createdOn: Dayjs | string | null; // fixed typo
+  status: number;
+  type: string;
+  attachment: File | null;
+  importance_level?: string;
+  link: string;
+  active?: number;
+  eventMode: 'offline' | 'online'; // fixed union type
+  onlineLink?: string; // for online events
+  venue?: string; // for offline events
 }
 
 /**
@@ -50,8 +59,9 @@ export interface IEventFormValues {
  * @property {boolean} isEdit - Flag indicating if the form is in edit mode
  */
 export interface IAddEventProps {
-  onSubmit: (values: IEventFormValues) => void;
-  initialValues?: IEventFormValues | null;
+  initialValues?: IEventAnnouncement | null;
+  onClose: (e: any, isSubmit: boolean) => void;
+
   isEdit?: boolean;
 }
 
