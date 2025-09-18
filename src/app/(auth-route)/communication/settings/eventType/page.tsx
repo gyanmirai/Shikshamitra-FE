@@ -1,6 +1,6 @@
 import React from 'react';
-import EventType from 'src/screens/communication/settings/announcementSetting/eventType';
+import EventTypeCreation from 'src/screens/communication/settings/EventType';
 
-const EventTypeScreen = () => <EventType />;
+const page = () => <EventTypeCreation />;
 
-export default EventTypeScreen;
+export default page;
