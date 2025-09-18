@@ -1,0 +1,6 @@
+import React from 'react';
+import HolidayTypeCreation from 'src/screens/communication/settings/HolidayType';
+
+const page = () => <HolidayTypeCreation />;
+
+export default page;

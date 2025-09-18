@@ -495,5 +495,163 @@
     "mode": "In-Person",
     "repeatUntil": "2026-06-01"
   }
+],
+  "announcementTypeData": [
+    {
+      "announcementType": "Holiday",
+      "description": "Used for declaring holidays and school closures",
+      "createdBy": "Admin",
+      "createdDate": "2025-09-01T10:15:00Z"
+    },
+    {
+      "announcementType": "Exam",
+      "description": "Used for publishing exam schedules and related updates",
+      "createdBy": "Principal",
+      "createdDate": "2025-09-05T09:00:00Z"
+    },
+    {
+      "announcementType": "Event",
+      "description": "Cultural, sports, or annual day events",
+      "createdBy": "Teacher",
+      "createdDate": "2025-09-10T14:30:00Z"
+    },
+    {
+      "announcementType": "General",
+      "description": "General announcements for staff, parents, and students",
+      "createdBy": "Admin",
+      "createdDate": "2025-09-12T08:45:00Z"
+    }
+  ],
+  "eventTypeData" : [
+  {
+    "eventType": "Annual Day",
+    "description": "Annual cultural and award ceremony for students and staff.",
+    "createdBy": "Admin",
+    "createdDate": "2025-09-10T10:30:00Z"
+  },
+  {
+    "eventType": "Sports Day",
+    "description": "Inter-school sports competitions and activities.",
+    "createdBy": "Principal",
+    "createdDate": "2025-08-25T09:00:00Z"
+  },
+  {
+    "eventType": "Science Fair",
+    "description": "Exhibition of science projects by students.",
+    "createdBy": "Teacher",
+    "createdDate": "2025-07-15T14:20:00Z"
+  }
+],
+"holidayTypeData": [
+    {
+      "holidayType": "Public Holiday",
+      "description": "National or state-wide holiday",
+      "createdBy": "Admin",
+      "createdDate": "2025-09-01T10:00:00Z"
+    },
+    {
+      "holidayType": "School Holiday",
+      "description": "Holiday declared by school management",
+      "createdBy": "Principal",
+      "createdDate": "2025-08-15T09:30:00Z"
+    }
+  ],
+  "surveyTypeData" : [
+  {
+    "surveyType": "Feedback",
+    "description": "Collect feedback from students and staff.",
+    "createdBy": "Admin",
+    "createdDate": "2025-09-18"
+  },
+  {
+    "surveyType": "Assessment",
+    "description": "Conduct academic assessments for various subjects.",
+    "createdBy": "Teacher1",
+    "createdDate": "2025-09-15"
+  },
+  {
+    "surveyType": "Poll",
+    "description": "Short polls for quick opinions on school matters.",
+    "createdBy": "Admin",
+    "createdDate": "2025-09-10"
+  },
+  {
+    "surveyType": "Event Feedback",
+    "description": "Gather feedback after school events or workshops.",
+    "createdBy": "EventCoordinator",
+    "createdDate": "2025-09-12"
+  }
+],
+ "meetingTypeData": [
+    {
+      "meetingType": "Team Meeting",
+      "description": "Regular team sync-up meeting",
+      "createdBy": "Prerna Atre",
+      "createdDate": "2025-09-18T10:00:00Z"
+    },
+    {
+      "meetingType": "Client Meeting",
+      "description": "Discussion with external clients",
+      "createdBy": "Jignesh Patel",
+      "createdDate": "2025-09-15T14:30:00Z"
+    },
+    {
+      "meetingType": "Project Kickoff",
+      "description": "Initial meeting to start a new project",
+      "createdBy": "Ravi Kumar",
+      "createdDate": "2025-09-10T09:00:00Z"
+    },
+    {
+      "meetingType": "One-on-One",
+      "description": "Individual performance or feedback discussion",
+      "createdBy": "Anita Shah",
+      "createdDate": "2025-09-12T16:00:00Z"
+    }
+  ],
+   "importanceLevelData": [
+    {
+      "levelName": "High",
+      "description": "Requires immediate attention and action.",
+      "createdBy": "Admin",
+      "createdDate": "2025-09-18T10:30:00Z"
+    },
+    {
+      "levelName": "Medium",
+      "description": "Important but not urgent; should be addressed soon.",
+      "createdBy": "Admin",
+      "createdDate": "2025-09-18T10:35:00Z"
+    },
+    {
+      "levelName": "Low",
+      "description": "Can be addressed at a later time; low priority.",
+      "createdBy": "Admin",
+      "createdDate": "2025-09-18T10:40:00Z"
+    }
+  ],
+  "deliveryChannelTypeData" : [
+  {
+    "deliveryChannel": "Email",
+    "description": "Send communication through email",
+    "createdBy": "Admin",
+    "createdDate": "2025-09-18T10:30:00Z"
+  },
+  {
+    "deliveryChannel": "SMS",
+    "description": "Send communication via text messages",
+    "createdBy": "System",
+    "createdDate": "2025-09-18T11:00:00Z"
+  },
+  {
+    "deliveryChannel": "Mobile App Notification",
+    "description": "Push notifications to the mobile app",
+    "createdBy": "Admin",
+    "createdDate": "2025-09-18T11:15:00Z"
+  },
+  {
+    "deliveryChannel": "In-App Message",
+    "description": "Display messages within the web app",
+    "createdBy": "Moderator",
+    "createdDate": "2025-09-18T12:00:00Z"
+  }
 ]
 }
