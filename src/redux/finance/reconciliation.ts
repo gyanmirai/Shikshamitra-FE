@@ -24,7 +24,7 @@ export const ReconciliationApi = createApi({
         if (url === '/bankTransferData') {
           return { data: reconciliationData.bankTransferData };
         }
-        if (url === 'creditCardData') {
+        if (url === '/creditCardData') {
           return { data: reconciliationData.creditCardData };
         }
         if (url === '/upiData') {
