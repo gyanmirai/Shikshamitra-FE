@@ -1429,20 +1429,20 @@ const libraryModule = {
           shortcutKey: 'Alt+L+S',
           shortcutKeyName: 'Alt+L+S',
           children: [
-            {
-              title: 'General Setting',
-              path: '/library/settings/general-setting',
-              _action: 'general-setting',
-              shortcutKey: 'Alt+L+S+1',
-              shortcutKeyName: 'Alt+L+S+1',
-            },
-            {
-              title: 'Notification Setting',
-              path: '/library/settings/notification-setting',
-              _action: 'notification-setting',
-              shortcutKey: 'Alt+L+S+2',
-              shortcutKeyName: 'Alt+L+S+2',
-            },
+            // {
+            //   title: 'General Setting',
+            //   path: '/library/settings/general-setting',
+            //   _action: 'general-setting',
+            //   shortcutKey: 'Alt+L+S+1',
+            //   shortcutKeyName: 'Alt+L+S+1',
+            // },
+            // {
+            //   title: 'Notification Setting',
+            //   path: '/library/settings/notification-setting',
+            //   _action: 'notification-setting',
+            //   shortcutKey: 'Alt+L+S+2',
+            //   shortcutKeyName: 'Alt+L+S+2',
+            // },
             {
               title: 'Book Category',
               path: '/library/settings/book-category',

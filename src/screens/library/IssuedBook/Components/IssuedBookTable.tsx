@@ -46,12 +46,18 @@ const BookIssueReturnTable = ({
       tableId="library-book-table"
       noDataText="No Book Records Found"
       columns={[
-        { id: 'memberId', label: 'Member ID', align: 'left' },
-        { id: 'memberName', label: 'Member Name', align: 'left' },
-        { id: 'bookCategory', label: 'Book Category', align: 'left' },
-        { id: 'bookTitle', label: 'Book Title', align: 'left' },
-        { id: 'requestedDate', label: 'Issue Date', align: 'left', filterType: 'date' },
-        { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date' },
+        { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
+        { id: 'memberName', label: 'Member Name', align: 'left', minWidth: '140px' },
+        { id: 'bookCategory', label: 'Book Category', align: 'left', minWidth: '140px' },
+        { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '120px' },
+        {
+          id: 'requestedDate',
+          label: 'Issue Date',
+          align: 'left',
+          filterType: 'date',
+          minWidth: '120px',
+        },
+        { id: 'dueDate', label: 'Due Date', align: 'left', filterType: 'date', minWidth: '120px' },
         {
           id: 'status',
           label: 'Status',

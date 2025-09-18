@@ -52,11 +52,11 @@ const LibraryChargesTable = ({
       tableId="library-charges-table"
       noDataText="No Charge Records Found"
       columns={[
-        { id: 'memberId', label: 'Member ID', align: 'left' },
-        { id: 'memberName', label: 'Member Name', align: 'left' },
+        { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '130px' },
+        { id: 'memberName', label: 'Member Name', align: 'left', minWidth: '150px' },
         { id: 'role', label: 'Role', align: 'left' },
-        { id: 'chargeCategory', label: 'Charge Category', align: 'left' },
-        { id: 'fineAmount', label: 'Fine Amount', align: 'left' },
+        { id: 'chargeCategory', label: 'Charge Category', align: 'left', minWidth: '160px' },
+        { id: 'fineAmount', label: 'Fine Amount', align: 'left', minWidth: '130px' },
         { id: 'reason', label: 'Reason', align: 'left' },
         {
           id: 'status',

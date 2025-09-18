@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
 export const memberValidationSchema = Yup.object().shape({
@@ -43,31 +44,70 @@ export const changeStatusValidationSchema = Yup.object().shape({
     }),
 });
 
-export const makeReservationValidationSchema = Yup.object().shape({
-  bookCategory: Yup.string()
-    .trim()
-    .required('Book category is required')
-    .oneOf(
-      ['Text Book', 'Reference Book', 'Novel', 'Magazine', 'Journal'],
-      'Please select a valid book category'
-    ),
+export const makeReservationValidationSchema = (currentYear: any) =>
+  Yup.object().shape({
+    bookCategory: Yup.string()
+      .trim()
+      .required('Book category is required')
+      .oneOf(
+        ['Text Book', 'Reference Book', 'Novel', 'Magazine', 'Journal'],
+        'Please select a valid book category'
+      ),
 
-  bookTitle: Yup.string()
-    .trim()
-    .required('Book title is required')
-    .oneOf(
-      [
-        'Introduction to Physics',
-        'Advanced Mathematics',
-        'Chemistry Fundamentals',
-        'Biology Basics',
-        'History of India',
-      ],
-      'Please select a valid book title'
-    ),
+    bookTitle: Yup.string()
+      .trim()
+      .required('Book title is required')
+      .oneOf(
+        [
+          'Introduction to Physics',
+          'Advanced Mathematics',
+          'Chemistry Fundamentals',
+          'Biology Basics',
+          'History of India',
+        ],
+        'Please select a valid book title'
+      ),
 
-  requestedDate: Yup.date()
-    .required('Requested date is required')
-    .min(new Date(), 'Requested date cannot be in the past')
-    .typeError('Please enter a valid date'),
-});
+    requestedDate: Yup.mixed()
+      .required('Requested date is required')
+      .test(
+        'is-valid-dayjs',
+        'Requested date must be a valid date',
+        (value) => value && dayjs(value as any).isValid()
+      )
+      .test(
+        'min-date',
+        (value) => `Requested date cannot be in the past`,
+        (value) => value && dayjs(value as any).isSameOrAfter(dayjs(), 'day')
+      )
+      .test(
+        'max-date',
+        (value) =>
+          `Requested date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+      ),
+
+    dueDate: Yup.mixed()
+      .nullable()
+      .required('Due date is required')
+      .test(
+        'is-valid-dayjs',
+        'Due date must be a valid date',
+        (value) => value && dayjs(value as any).isValid()
+      )
+      .test(
+        'is-after-requested-date',
+        'Due date must be after the requested date',
+        function (value) {
+          const { requestedDate } = this.parent;
+          if (!value || !requestedDate) return true;
+          return dayjs(value as any).isAfter(dayjs(requestedDate), 'day');
+        }
+      )
+      .test(
+        'max-date',
+        (value) =>
+          `Due date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+      ),
+  });

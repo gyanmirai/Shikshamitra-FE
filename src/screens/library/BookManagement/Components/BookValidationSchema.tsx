@@ -60,7 +60,6 @@ export const bookValidationSchema = Yup.object().shape({
             is: true,
             then: (schema) => schema.required('RFID ID is required if RFID is enabled'),
           }),
-        vendor: Yup.string().trim().required('Vendor is required'),
       })
     )
     .required('At least one copy is required')

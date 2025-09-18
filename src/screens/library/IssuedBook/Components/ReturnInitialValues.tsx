@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 export const buildInitialBookReturnValues = (data?: any) => ({
   memberId: data?.memberId ?? '',
   memberName: data?.memberName ?? '',
-  bookCategory: data?.bookCategory ?? '',
+  bookCategory: data?.bookCategory ?? 'Text Book',
   bookTitle: data?.bookTitle ?? '',
   edition: data?.edition ?? '',
   className: data?.className ?? '',

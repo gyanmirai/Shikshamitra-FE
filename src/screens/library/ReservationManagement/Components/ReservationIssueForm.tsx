@@ -103,8 +103,8 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
                 options={
                   bookCategoryOptions?.map((item: IBookCategoryOption) => ({
                     id: item?.id,
-                    label: item?.label,
-                    value: item?.value,
+                    label: item?.categoryName,
+                    value: item?.categoryName,
                   })) ?? []
                 }
                 value={formik.values.bookCategory}

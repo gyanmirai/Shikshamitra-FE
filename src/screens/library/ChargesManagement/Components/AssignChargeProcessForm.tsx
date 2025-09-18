@@ -51,9 +51,6 @@ const CollectChargesForm: React.FC<ICollectChargesProps> = ({ open, onClose, cha
       onClose(null, true);
     },
   });
-  console.log('formik----values---', formik.errors);
-
-  console.log('formik----erroes---', formik.values);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -207,12 +204,11 @@ const CollectChargesForm: React.FC<ICollectChargesProps> = ({ open, onClose, cha
                     Boolean(formik.errors.paymentDetails?.paymentAmount)
                   }
                 >
-                  <TextField
+                  <NumericFormatCustom
                     fullWidth
-                    label="Amount"
+                    label="Amount *"
                     name="paymentDetails.paymentAmount"
                     size="small"
-                    type="number"
                     value={formik.values.paymentDetails.paymentAmount ?? ''}
                     onChange={formik.handleChange}
                     error={

@@ -49,6 +49,12 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
     currentQueryAndMutation: useGetLibraryChargeCategoryOptionsQuery,
   });
 
+  const bookTitleOptions = [
+    { id: 'title1', label: 'Introduction to Physics', value: 'Introduction to Physics' },
+    { id: 'title2', label: 'Advanced Chemistry', value: 'Advanced Chemistry' },
+    { id: 'title3', label: 'Introduction to Physics', value: 'Introduction to Physics' },
+  ];
+
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -212,10 +218,18 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
             <ShakingTextField error={!!(formik.touched.member && formik.errors.member)}>
               <Autocomplete
                 loading={isLoading}
-                disabled={!formik.values.division}
+                // disabled={!formik.values.division}
                 noOptionsText="No Member Found"
                 fullWidth
-                value={tableData.find((s: any) => s.id === formik.values.member) || null}
+                value={
+                  (formik.values.role === 'Student'
+                    ? tableData.find((s: any) => s.id === formik.values.member)
+                    : [
+                        { id: '1', name: 'Prerna Atre' },
+                        { id: '2', name: 'Raj Baku' },
+                        { id: '3', name: 'Dharmik Jinjala' },
+                      ].find((s: any) => s.id === formik.values.member)) || null
+                }
                 onChange={(e, value: any) => {
                   formik.setFieldValue('member', value?.id || '');
                 }}
@@ -229,7 +243,15 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                     />
                   ))
                 }
-                options={formik.values.role === 'Student' ? tableData : []}
+                options={
+                  formik.values.role === 'Student'
+                    ? tableData
+                    : [
+                        { id: '1', name: 'Prerna Atre' },
+                        { id: '2', name: 'Raj Baku' },
+                        { id: '3', name: 'Dharmik Jinjala' },
+                      ]
+                }
                 getOptionLabel={(option: any) => option?.name || ''}
                 renderInput={(params) => (
                   <TextField
@@ -252,70 +274,86 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
 
           {/* Book Title */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <CustomSelect
-              label="Book Title *"
-              options={[]} // Replace with actual book title options
-              value={formik.values.bookTitle}
-              onChange={(val) => formik.setFieldValue('bookTitle', val)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ fullWidth: true }}
-              error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}
-              helperText={(formik.touched.bookTitle && formik.errors.bookTitle) as string}
-            />
+            <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
+              <CustomSelect
+                label="Book Title *"
+                options={bookTitleOptions}
+                value={formik.values.bookTitle}
+                onChange={(val) => formik.setFieldValue('bookTitle', val)}
+                labelKey="label"
+                valueKey="value"
+                formControlProps={{ fullWidth: true }}
+                error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}
+                helperText={(formik.touched.bookTitle && formik.errors.bookTitle) as string}
+              />
+            </ShakingTextField>
           </Grid>
 
           {/* Charge Category */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <CustomSelect
-              label="Charge Category *"
-              options={chargeCategoryOptions || []}
-              value={formik.values.chargeCategory}
-              onChange={(val) => formik.setFieldValue('chargeCategory', val)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ fullWidth: true }}
+            <ShakingTextField
               error={!!(formik.touched.chargeCategory && formik.errors.chargeCategory)}
-              helperText={(formik.touched.chargeCategory && formik.errors.chargeCategory) as string}
-            />
+            >
+              <CustomSelect
+                label="Charge Category *"
+                options={chargeCategoryOptions || []}
+                value={formik.values.chargeCategory}
+                onChange={(val) => formik.setFieldValue('chargeCategory', val)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ fullWidth: true }}
+                error={!!(formik.touched.chargeCategory && formik.errors.chargeCategory)}
+                helperText={
+                  (formik.touched.chargeCategory && formik.errors.chargeCategory) as string
+                }
+              />
+            </ShakingTextField>
           </Grid>
 
           {/* Amount */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <NumericFormatCustom
-              size="small"
-              fullWidth
-              label="Amount *"
-              name="amount"
-              value={formik.values.amount}
-              onChange={(e) => {
-                let val = e.target.value;
-                // remove ₹, commas, spaces
-                val = val.replace(/[₹,\s]/g, '');
-                formik.setFieldValue('amount', val ? Number(val) : '');
-              }}
-              error={!!(formik.touched.amount && formik.errors.amount)}
-              helperText={(formik.touched.amount && formik.errors.amount) as string}
-            />
+            <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
+              <NumericFormatCustom
+                size="small"
+                fullWidth
+                label="Amount *"
+                name="amount"
+                value={formik.values.amount}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  // remove ₹, commas, spaces
+                  val = val.replace(/[₹,\s]/g, '');
+                  formik.setFieldValue('amount', val ? Number(val) : '');
+                }}
+                error={!!(formik.touched.amount && formik.errors.amount)}
+                helperText={(formik.touched.amount && formik.errors.amount) as string}
+              />
+            </ShakingTextField>
           </Grid>
 
           {/* Due Date */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <DatePicker
-              label="Due Date *"
-              value={dayjs(formik.values.dueDate)}
-              onChange={(newValue) => {
-                formik.setFieldValue('dueDate', newValue);
-              }}
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                  error: !!(formik.touched.dueDate && formik.errors.dueDate),
-                  helperText: (formik.touched.dueDate && formik.errors.dueDate) as string,
-                },
-              }}
-            />
+            <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate)}>
+              <DatePicker
+                label="Due Date *"
+                format="DD/MM/YYYY"
+                value={formik.values.dueDate}
+                onChange={(newValue) => {
+                  formik.setFieldValue('dueDate', newValue);
+                }}
+                minDate={dayjs(currentYear?.startDate)}
+                maxDate={dayjs(currentYear?.endDate)}
+                sx={{ minWidth: 180, width: '100%' }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    fullWidth: true,
+                    error: !!(formik.touched.dueDate && formik.errors.dueDate),
+                    helperText: (formik.touched.dueDate && formik.errors.dueDate) as string,
+                  },
+                }}
+              />
+            </ShakingTextField>
           </Grid>
 
           {/* Reason */}

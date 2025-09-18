@@ -124,7 +124,7 @@ const LibraryChargesManagement = () => {
         maxWidth="sm"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">{selectedRecord ? 'Update Charge' : 'Add Charge'}</Typography>
+            <Typography variant="h5">{selectedRecord ? 'Collect Charge' : 'Add Charge'}</Typography>
             <CustomTooltip
               arrow
               placement="right"
