@@ -11,6 +11,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import { Grid, Button, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
@@ -28,6 +29,11 @@ import type {
   IssueBookFormProps,
   IBookCategoryOption,
 } from '../../IssuedBook/Components/type';
+
+const BOOK_CATEGORY_OPTIONS = [
+  { id: '1', label: 'Text Book', value: 'Text Book' },
+  { id: '2', label: 'Reference Book', value: 'Reference Book' },
+];
 
 const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }) => {
   //   Fetch issued/returned books
@@ -87,6 +93,9 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
     initialValues: getIssueBookInitialValues(editData),
     validationSchema: getReservationIssueBookSchema(currentYear),
     onSubmit: (values) => {
+      shikshaMitraToast.success({
+        message: editData ? 'Issue Book successfully' : 'Reservation submitted successfully',
+      });
       onClose(values, true);
     },
   });
@@ -100,13 +109,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
             <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
               <CustomSelect
                 label="Book Category *"
-                options={
-                  bookCategoryOptions?.map((item: IBookCategoryOption) => ({
-                    id: item?.id,
-                    label: item?.categoryName,
-                    value: item?.categoryName,
-                  })) ?? []
-                }
+                options={BOOK_CATEGORY_OPTIONS}
                 value={formik.values.bookCategory}
                 onChange={(val) => {
                   if (formik.values.bookCategory !== val) {
@@ -233,13 +236,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
           Cancel
         </Button>
         <Button
-          startIcon={
-            <Iconify
-              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-              width={16}
-              height={16}
-            />
-          }
+          startIcon={<Iconify icon={GlobalIcons.submit} width={16} height={16} />}
           onClick={(e: any) => {
             formik.handleSubmit(e);
           }}
@@ -247,7 +244,8 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
           size="small"
           variant="contained"
         >
-          {editData ? 'Update' : 'Submit'}
+          {/* {editData ? 'Update' : 'Submit'} */}
+          Submit
         </Button>
       </DialogActions>
     </BackPopUpChecked>

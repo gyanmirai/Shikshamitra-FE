@@ -63,21 +63,21 @@
       "day": "Thursday",
       "startTime": "10:00 AM",
       "endTime": "06:00 PM",
-      "status": "Off"
+      "status": "On"
     },
     {
       "id": "5",
       "day": "Friday",
       "startTime": "10:00 AM",
       "endTime": "06:00 PM",
-      "status": "Off"
+      "status": "On"
     },
     {
       "id": "6",
       "day": "Saturday",
-      "startTime": "10:00 AM",
-      "endTime": "02:00 PM",
-      "status": "On"
+      "startTime": "",
+      "endTime": "",
+      "status": "Off"
     },
     {
       "id": "7",

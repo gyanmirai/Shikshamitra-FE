@@ -37,7 +37,6 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
     currentQueryAndMutation: useGetBookCategoryOptionsQuery,
   });
 
-  console.log('bookCategoryOptions----', bookCategoryOptions);
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -269,15 +268,15 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
           </Grid>
 
           {/* Book Category */}
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
               <CustomSelect
                 label="Book Category *"
                 options={
                   bookCategoryOptions?.map((item: IBookCategoryOption) => ({
                     id: item.id,
-                    label: item.categoryName,
-                    value: item.categoryName,
+                    label: item.label,
+                    value: item.value,
                   })) ?? []
                 }
                 value={formik.values.bookCategory}
@@ -297,7 +296,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
           </Grid>
 
           {/* Book Title */}
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
               <CustomSelect
                 label="Book Title *"

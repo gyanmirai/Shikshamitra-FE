@@ -53,6 +53,8 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
     { id: 'title1', label: 'Introduction to Physics', value: 'Introduction to Physics' },
     { id: 'title2', label: 'Advanced Chemistry', value: 'Advanced Chemistry' },
     { id: 'title3', label: 'Introduction to Physics', value: 'Introduction to Physics' },
+    { id: 'title4', label: 'Science Explorer', value: 'Science Explorer' },
+    { id: 'title5', label: 'Mathematics Grade 10', value: 'Mathematics Grade 10' },
   ];
 
   // Get current board, medium and medium setter from global state
@@ -139,7 +141,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {/* Role */}
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.role && formik.errors.role)}>
@@ -298,7 +300,16 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                 label="Charge Category *"
                 options={chargeCategoryOptions || []}
                 value={formik.values.chargeCategory}
-                onChange={(val) => formik.setFieldValue('chargeCategory', val)}
+                onChange={(val) => {
+                  formik.setFieldValue('chargeCategory', val);
+                  // Find selected charge category and set its amount
+                  const selectedCategory = (chargeCategoryOptions || []).find(
+                    (cat: any) => cat.id === val
+                  );
+                  if (selectedCategory && selectedCategory.amount !== undefined) {
+                    formik.setFieldValue('amount', selectedCategory.amount);
+                  }
+                }}
                 labelKey="name"
                 valueKey="id"
                 formControlProps={{ fullWidth: true }}
@@ -319,12 +330,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                 label="Amount *"
                 name="amount"
                 value={formik.values.amount}
-                onChange={(e) => {
-                  let val = e.target.value;
-                  // remove ₹, commas, spaces
-                  val = val.replace(/[₹,\s]/g, '');
-                  formik.setFieldValue('amount', val ? Number(val) : '');
-                }}
+                disabled
                 error={!!(formik.touched.amount && formik.errors.amount)}
                 helperText={(formik.touched.amount && formik.errors.amount) as string}
               />
@@ -337,7 +343,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
               <DatePicker
                 label="Due Date *"
                 format="DD/MM/YYYY"
-                value={formik.values.dueDate}
+                value={formik.values.dueDate ? dayjs(formik.values.dueDate) : null}
                 onChange={(newValue) => {
                   formik.setFieldValue('dueDate', newValue);
                 }}

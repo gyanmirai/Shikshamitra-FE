@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -208,18 +209,23 @@ const BorrowingReturnRules = () => {
               const fieldName = `${row.id}_maxBooksPerMonth`;
 
               return (
-                <TextField
-                  size="small"
-                  type="number"
-                  value={value === 0 ? '0' : value || ''}
-                  onChange={(e) => handleFieldChange(row.id, 'maxBooksPerMonth', e.target.value)}
-                  onWheel={(e) => (e.target as HTMLElement).blur()}
-                  sx={{ width: '100%' }}
-                  inputProps={{ min: 0, max: 10 }}
+                <ShakingTextField
                   error={formik.touched[fieldName] && Boolean(formik.errors[fieldName])}
-                  helperText={(formik.touched[fieldName] && formik.errors[fieldName]) as string}
-                  disabled={saveLoading}
-                />
+                >
+                  <TextField
+                    size="small"
+                    type="number"
+                    label="Max Books Per Month"
+                    value={value === 0 ? '0' : value || ''}
+                    onChange={(e) => handleFieldChange(row.id, 'maxBooksPerMonth', e.target.value)}
+                    onWheel={(e) => (e.target as HTMLElement).blur()}
+                    sx={{ width: '100%' }}
+                    inputProps={{ min: 0, max: 10 }}
+                    error={formik.touched[fieldName] && Boolean(formik.errors[fieldName])}
+                    helperText={(formik.touched[fieldName] && formik.errors[fieldName]) as string}
+                    disabled={saveLoading}
+                  />
+                </ShakingTextField>
               );
             },
           },
@@ -231,18 +237,27 @@ const BorrowingReturnRules = () => {
               const fieldName = `${row.id}_reservationLimit`;
 
               return (
-                <TextField
-                  size="small"
-                  type="number"
-                  value={value === 0 ? '0' : value || ''}
-                  onChange={(e) => handleFieldChange(row.id, 'reservationLimit', e.target.value)}
-                  onWheel={(e) => (e.target as HTMLElement).blur()}
-                  sx={{ width: '100%' }}
-                  inputProps={{ min: 0, max: 10 }}
-                  error={formik.touched[fieldName] && Boolean(formik.errors[fieldName])}
-                  helperText={(formik.touched[fieldName] && formik.errors[fieldName]) as string}
-                  disabled={saveLoading}
-                />
+                <Box mb={2}>
+                  <ShakingTextField
+                    error={formik.touched[fieldName] && Boolean(formik.errors[fieldName])}
+                  >
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="Reservation Limit"
+                      value={value === 0 ? '0' : value || ''}
+                      onChange={(e) =>
+                        handleFieldChange(row.id, 'reservationLimit', e.target.value)
+                      }
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
+                      sx={{ width: '100%' }}
+                      inputProps={{ min: 0, max: 10 }}
+                      error={formik.touched[fieldName] && Boolean(formik.errors[fieldName])}
+                      helperText={(formik.touched[fieldName] && formik.errors[fieldName]) as string}
+                      disabled={saveLoading}
+                    />
+                  </ShakingTextField>
+                </Box>
               );
             },
           },

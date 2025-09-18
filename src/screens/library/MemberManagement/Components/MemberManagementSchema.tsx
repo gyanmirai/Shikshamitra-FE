@@ -2,29 +2,22 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
 export const memberValidationSchema = Yup.object().shape({
-  role: Yup.string()
-    .trim()
-    .required('Role is required')
-    .oneOf(['Student', 'Teacher', 'Staff', 'Admin'], 'Please select a valid role'),
-
+  role: Yup.string().trim().required('Role is required'),
   class: Yup.string()
     .trim()
-    .required('Class is required')
-    .oneOf(
-      ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
-      'Please select a valid class'
-    ),
-
+    .when('role', {
+      is: (role: string) => role === 'Student',
+      then: (schema) => schema.required('Class is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
   division: Yup.string()
     .trim()
-    .required('Division is required')
-    .oneOf(['A', 'B', 'C', 'D'], 'Please select a valid division'),
-
-  student: Yup.string()
-    .trim()
-    .required('Student is required')
-    .min(2, 'Student name must be at least 2 characters')
-    .max(100, 'Student name cannot exceed 100 characters'),
+    .when('role', {
+      is: (role: string) => role === 'Student',
+      then: (schema) => schema.required('Division is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+  student: Yup.string().trim().required('Member is required'),
 });
 
 export const changeStatusValidationSchema = Yup.object().shape({

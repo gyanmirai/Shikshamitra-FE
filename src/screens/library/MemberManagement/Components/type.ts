@@ -19,6 +19,7 @@ export interface IMemberTableProps {
 }
 
 export interface IMemberPayload {
+  member: any;
   role: string;
   class: string;
   division: string;

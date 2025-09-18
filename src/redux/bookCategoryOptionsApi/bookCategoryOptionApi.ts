@@ -11,8 +11,8 @@ export const bookCategoryOptionsApi = createApi({
     ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
     : async ({ url }) => {
         // Handle mock route
-        if (url === '/bookCategoryData') {
-          return { data: issueReturnData.bookCategoryData };
+        if (url === '/bookCategoryOptionsData') {
+          return { data: issueReturnData.bookCategoryOptionsData };
         }
         return {
           error: {
@@ -25,7 +25,7 @@ export const bookCategoryOptionsApi = createApi({
   endpoints: (builder) => ({
     getBookCategoryOptions: builder.query({
       query: () => ({
-        url: '/bookCategoryData',
+        url: '/bookCategoryOptionsData',
         method: 'GET',
       }),
       providesTags: ['BookCategoryOptions'],

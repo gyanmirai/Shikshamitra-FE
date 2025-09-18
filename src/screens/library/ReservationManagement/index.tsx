@@ -17,14 +17,15 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetBooksQuery } from 'src/redux/bookManagement/bookManagementApi';
-import { useGetBookCategoriesQuery } from 'src/redux/bookCategoryApi/bookCategoryApi';
 import { useGetReservationsQuery } from 'src/redux/reservationDataApi/reservationDataApi';
+import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
 
 import ReservationForm from './Components/ReservationForm';
 import ReservedBookTable from './Components/ReservationTable';
 import ReservationIssueBookForm from './Components/ReservationIssueForm';
 
 import type { IReservedBookData } from './Components/type';
+import type { ITitle, IBookCategoryOption } from '../IssuedBook/Components/type';
 
 const ReservationManagement = () => {
   // State for selected record
@@ -40,9 +41,9 @@ const ReservationManagement = () => {
     currentQueryAndMutation: useGetBooksQuery,
   });
 
-  const { data: bookCategoryData } = useQueryAndMutation({
+  const { data: bookCategoryOptions } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetBookCategoriesQuery,
+    currentQueryAndMutation: useGetBookCategoryOptionsQuery,
   });
 
   //   Fetch reservations
@@ -101,12 +102,27 @@ const ReservationManagement = () => {
           placement="top"
           title={
             selectedBookCategory
-              ? bookCategoryData?.find((cat: any) => cat.id === selectedBookCategory)?.categoryName
+              ? bookCategoryOptions?.find((cat: any) => cat.id === selectedBookCategory)
+                  ?.categoryName
               : undefined
           }
         >
-          <Box sx={{ width: '100%', maxWidth: 248 }}>
+          <Box sx={{ width: '100%', maxWidth: 248, ml: 1 }}>
             <CustomSelect
+              label="Book Category *"
+              options={
+                bookCategoryOptions?.map((item: IBookCategoryOption) => ({
+                  id: item.id,
+                  label: item.label,
+                  value: item.value,
+                })) ?? []
+              }
+              value={selectedBookCategory}
+              onChange={(val) => setSelectedBookCategory(val as string)}
+              formControlProps={{ fullWidth: true }}
+            />
+
+            {/* <CustomSelect
               options={bookCategoryData || []}
               label="Book Category"
               value={selectedBookCategory}
@@ -114,7 +130,7 @@ const ReservationManagement = () => {
               labelKey="categoryName"
               valueKey="id"
               formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-            />
+            /> */}
           </Box>
         </CustomTooltip>
         <CustomTooltip
@@ -127,6 +143,21 @@ const ReservationManagement = () => {
         >
           <Box sx={{ width: '100%', maxWidth: 248 }}>
             <CustomSelect
+              label="Book Title *"
+              options={
+                bookCategoryOptions
+                  ?.find((cat: IBookCategoryOption) => cat.value === selectedBookCategory)
+                  ?.titles?.map((title: ITitle) => ({
+                    id: title.id,
+                    label: title.label,
+                    value: title.value,
+                  })) ?? []
+              }
+              value={selectedBook}
+              onChange={(val) => setSelectedBook(val as string)}
+              formControlProps={{ fullWidth: true }}
+            />
+            {/* <CustomSelect
               options={bookData || []}
               label="Book Title"
               value={selectedBook}
@@ -145,7 +176,7 @@ const ReservationManagement = () => {
                 },
               }}
               disabled={!selectedBookCategory}
-            />
+            /> */}
           </Box>
         </CustomTooltip>
       </Box>

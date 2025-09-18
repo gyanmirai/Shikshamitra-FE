@@ -58,8 +58,8 @@ const MemberManagementTable: React.FC<IMemberTableProps> = ({
                         popover.onClose();
                       }}
                     >
-                      <Iconify icon="solar:calendar-bold" />
-                      Make Reservation
+                      {/* <Iconify icon="solar:calendar-bold" /> */}
+                      {/* Make Reservation */}
                     </MenuItem>
                     <MenuItem
                       onClick={() => {
