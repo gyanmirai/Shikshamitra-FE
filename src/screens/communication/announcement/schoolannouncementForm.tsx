@@ -7,9 +7,10 @@ import React from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -35,12 +36,19 @@ import type { ISchoolWiseAnnouncementFormProps } from './type';
 
 const channels = ['In-App', 'Email', 'SMS', 'Whatsapp'];
 
+export const audienceOptions = [
+  { value: 'Staff', name: 'Staff', color: '#4CAF50' },
+  { value: 'Students', name: 'Students', color: '#2196F3' },
+  { value: 'Parents', name: 'Parents', color: '#FF9800' },
+];
+
 const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
   initialValues = null,
   isEdit = false,
   onClose,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const theme = useTheme();
 
   const formik = useFormik({
     initialValues: getSchoolWiseAnnouncementInitialValues(initialValues),
@@ -49,7 +57,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
       onClose(null, true);
     },
   });
-
+  console.log('formik values----', formik.values);
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
@@ -106,15 +114,17 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                 <Grid size={{ xs: 12, md: 6, sm: 3 }}>
                   <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                     <CustomSelect
-                      label="Select Audience"
-                      options={[
-                        { value: 'Staff', label: 'Staff' },
-                        { value: 'Students', label: 'Students' },
-                        { value: 'Parents', label: 'Parents' },
-                      ]}
+                      label="Select Audience *"
+                      options={audienceOptions}
                       multiple
-                      value={formik.values.audience}
-                      onChange={(val) => formik.setFieldValue('audience', val)}
+                      value={formik.values.audience.map((aud) => aud.name)} // show only names in the UI
+                      onChange={(val) => {
+                        const selectedObjects = audienceOptions.filter((opt) =>
+                          (val as string[]).includes(opt.name)
+                        );
+                        formik.setFieldValue('audience', selectedObjects);
+                      }}
+                      labelKey="name"
                       formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
                       error={formik.touched.audience && Boolean(formik.errors.audience)}
                       helperText={
@@ -154,18 +164,25 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                   <ShakingTextField
                     error={!!(formik.touched.description && formik.errors.description)}
                   >
-                    <TextField
-                      fullWidth
-                      label="Announcement Description"
-                      name="description"
-                      multiline
+                    {/* <Editor
                       value={formik.values.description}
-                      onChange={formik.handleChange}
-                      error={formik.touched.description && Boolean(formik.errors.description)}
-                      helperText={formik.touched.description && formik.errors.description}
-                      size="small"
-                      rows={4}
-                    />
+                      onChange={(value) => {
+                        formik.setFieldValue('description', value);
+                      }}
+                      placeholder="Description *"
+                      sx={{
+                        border: `1px solid ${theme.vars.palette.grey[500]}`,
+                        borderRadius: 1,
+                        '&:hover': { borderColor: theme.vars.palette.text.primary },
+                        ...(!!formik.errors.description && {
+                          borderColor: theme.palette.error.main,
+                        }),
+                        '&:focus-within': {
+                          borderColor: theme.vars.palette.text.primary,
+                          borderWidth: 2,
+                        },
+                      }}
+                    /> */}
                   </ShakingTextField>
                 </Grid>
 
@@ -177,77 +194,6 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                     onChange={(value) => formik.setFieldValue('attachment', value)}
                     primaryText="Please Upload Your File"
                     secondaryText="Maximum file size is 5MB"
-                  />
-                </Grid>
-              </SectionCard>
-            </Grid>
-
-            {/* Start Time DatePicker */}
-            <Grid size={{ xs: 12 }}>
-              <SectionCard title="Basic Information">
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.startDate && formik.errors.startDate) || false}
-                  >
-                    <DatePicker
-                      label="Start Date *"
-                      format="DD/MM/YYYY"
-                      value={dayjs(formik.values.startDate)}
-                      onChange={(newValue) => {
-                        formik.setFieldValue('startDate', newValue);
-                      }}
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      sx={{ minWidth: 180, width: '100%' }}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          error: !!(formik.touched.startDate && formik.errors.startDate) || false,
-                          helperText: formik.touched.startDate && formik.errors.startDate,
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-
-                {/* End Time DatePicker */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.endDate && formik.errors.endDate) || false}
-                  >
-                    <DatePicker
-                      label="End Date *"
-                      format="DD/MM/YYYY"
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      value={dayjs(formik.values.endDate)}
-                      onChange={(newValue) => {
-                        formik.setFieldValue('endDate', newValue);
-                      }}
-                      sx={{ minWidth: 180, width: '100%' }}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          error: !!(formik.touched.endDate && formik.errors.endDate) || false,
-                          helperText: formik.touched.endDate && formik.errors.endDate,
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-
-                <Grid size={{ xs: 12 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={formik.values.isAllowAcknoledgement}
-                        onChange={(e) =>
-                          formik.setFieldValue('isAllowAcknoledgement', e.target.checked)
-                        }
-                      />
-                    }
-                    label="Allow Acknowledgement? (checkbox → recipients click “I’ve read this”)"
                   />
                 </Grid>
               </SectionCard>
@@ -303,6 +249,110 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                       )}
                   </Box>
                 </Grid>
+              </SectionCard>
+            </Grid>
+            {/* Start Time DatePicker */}
+            <Grid size={{ xs: 12 }}>
+              <SectionCard title="Scheduling">
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.startDate && formik.errors.startDate) || false}
+                  >
+                    <DateTimePicker
+                      label="Start Date/Time *"
+                      format="DD/MM/YYYY hh:mm"
+                      value={dayjs(formik.values.startDate)}
+                      onChange={(newValue) => {
+                        formik.setFieldValue('startDate', newValue);
+                        // Calculate duration in days between start and end date
+                        if (newValue && formik.values.startDate) {
+                          const start = dayjs(formik.values.startDate);
+                          const end = dayjs(newValue);
+                          const durationInDays = end.diff(start, 'day');
+                          formik.setFieldValue('duration', Math.max(0, durationInDays));
+                        }
+                      }}
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
+                      sx={{ minWidth: 180, width: '100%' }}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: !!(formik.touched.startDate && formik.errors.startDate) || false,
+                          helperText: formik.touched.startDate && formik.errors.startDate,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+
+                {/* End Time DatePicker */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.endDate && formik.errors.endDate) || false}
+                  >
+                    <DateTimePicker
+                      label="End Date/Time *"
+                      format="DD/MM/YYYY hh:mm"
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
+                      value={dayjs(formik.values.endDate)}
+                      onChange={(newValue) => {
+                        formik.setFieldValue('endDate', newValue);
+                        formik.setFieldTouched('endDate', false);
+                        // Calculate duration in days between start and end date
+                        if (newValue && formik.values.startDate) {
+                          const start = dayjs(formik.values.startDate);
+                          const end = dayjs(newValue);
+                          const durationInDays = end.diff(start, 'day');
+                          formik.setFieldValue('duration', Math.max(0, durationInDays));
+                        }
+                      }}
+                      sx={{ minWidth: 180, width: '100%' }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          error: !!(formik.touched.endDate && formik.errors.endDate) || false,
+                          helperText: formik.touched.endDate && formik.errors.endDate,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="Duration (in days) *"
+                    name="duration"
+                    type="number"
+                    value={formik.values.duration}
+                    disabled
+                    InputProps={{
+                      inputProps: { min: 0 },
+                    }}
+                    error={formik.touched.duration && Boolean(formik.errors.duration)}
+                    helperText={formik.touched.duration && formik.errors.duration}
+                    size="small"
+                  />
+                </Grid>
+
+                {formik.values.notification_preferences.includes('inApp') && (
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formik.values.isAllowAcknoledgement}
+                          onChange={(e) =>
+                            formik.setFieldValue('isAllowAcknoledgement', e.target.checked)
+                          }
+                        />
+                      }
+                      label="Allow Acknowledgement? (checkbox → recipients click “I’ve read this”)"
+                    />
+                  </Grid>
+                )}
               </SectionCard>
             </Grid>
           </Scrollbar>

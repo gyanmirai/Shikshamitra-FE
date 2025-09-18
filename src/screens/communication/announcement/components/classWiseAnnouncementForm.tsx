@@ -10,9 +10,9 @@ import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
-import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -30,6 +30,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { audienceOptions } from '../schoolannouncementForm';
 import { getClassInitialValues } from './getClassInitialValues';
 import { classWiseValidationSchema } from '../validationSchema';
 
@@ -83,23 +84,21 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
   // Update divisions list when class selection changes
   useEffect(() => {
     if (formik.values.classes.length === 0) {
-      // Reset divisions when no classes selected
       setAllDivision([]);
-      formik.setFieldValue('divisions', []);
+      if (!isEdit) formik.setFieldValue('divisions', []); // only reset on create
       return;
     }
 
     if (formik.values.classes.length === 1 && formik.values.classes[0] !== 'all') {
-      // Handle single class selection
       const selectedClass = allClass.find((cls: any) => cls?.id === formik.values.classes[0]);
       const divisions = selectedClass?.divisions || [];
       setAllDivision(divisions);
 
-      // Auto-select all divisions for the selected class
-      const divisionIds = divisions.map((div: any) => div.id);
-      formik.setFieldValue('divisions', [...divisionIds]);
+      if (!isEdit) {
+        const divisionIds = divisions.map((div: any) => div.id);
+        formik.setFieldValue('divisions', [...divisionIds]);
+      }
     } else {
-      // Handle multiple classes or "all" selection
       setAllDivision([
         {
           id: 'all',
@@ -112,8 +111,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
           standardId: '',
         },
       ]);
-
-      formik.setFieldValue('divisions', ['all']);
+      if (!isEdit) formik.setFieldValue('divisions', ['all']);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allClass, formik.values.classes]);
@@ -122,66 +120,27 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
   useEffect(() => {
     if (formik.values.organizations.length === 0) {
       setAllClass([]);
-      formik.setFieldValue('classes', []);
+      if (!isEdit) formik.setFieldValue('classes', []); // only reset on create
       return;
     }
 
-    if (formik.values.organizations.includes('all')) {
-      // If "All" organizations selected → merge all org classes
-      const mergedStandards = allOrganization
-        .filter((org: any) => org.id !== 'all')
-        .flatMap((org: any) => org.standards || []);
+    const mergedStandards = formik.values.organizations.includes('all')
+      ? allOrganization
+          .filter((org: any) => org.id !== 'all')
+          .flatMap((org: any) => org.standards || [])
+      : formik.values.organizations
+          .map(
+            (orgId: string) =>
+              allOrganization.find((org: any) => org?.id === orgId)?.standards || []
+          )
+          .flat();
 
-      // Add "All" option
-      const withAll = [
-        {
-          id: 'all',
-          name: 'All',
-          creationTime: '',
-          creatorId: '',
-          lastModificationTime: '',
-          lastModifierId: '',
-          educationMediumStageId: '',
-          divisions: [],
-        },
-        ...mergedStandards,
-      ];
+    const withAll = [{ id: 'all', name: 'All', divisions: [] }, ...mergedStandards];
+    setAllClass(withAll);
 
-      setAllClass(withAll);
-      // 🚫 Do not auto-select classes
-      formik.setFieldValue('classes', []);
-    } else {
-      // Specific organizations selected → merge their classes
-      const mergedStandards = formik.values.organizations
-        .map(
-          (orgId: string) => allOrganization.find((org: any) => org?.id === orgId)?.standards || []
-        )
-        .flat();
-
-      // Add "All" option
-      const withAll = [
-        {
-          id: 'all',
-          name: 'All',
-          creationTime: '',
-          creatorId: '',
-          lastModificationTime: '',
-          lastModifierId: '',
-          educationMediumStageId: '',
-          divisions: [],
-        },
-        ...mergedStandards,
-      ];
-
-      setAllClass(withAll);
-      // 🚫 Do not auto-select classes
-      formik.setFieldValue('classes', []);
-    }
+    if (!isEdit) formik.setFieldValue('classes', []); // only reset on create
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allOrganization, formik.values.organizations]);
-
-  console.log('formik----values---', formik.values);
-  console.log('formik----erroes---', formik.errors);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -440,18 +399,20 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                     )}
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 4, sm: 6 }}>
+                <Grid size={{ xs: 12, md: 6, sm: 3 }}>
                   <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                     <CustomSelect
-                      label="Select Audience"
-                      options={[
-                        { value: 'Staff', label: 'Staff' },
-                        { value: 'Students', label: 'Students' },
-                        { value: 'Parents', label: 'Parents' },
-                      ]}
+                      label="Select Audience *"
+                      options={audienceOptions}
                       multiple
-                      value={formik.values.audience}
-                      onChange={(val) => formik.setFieldValue('audience', val)}
+                      value={formik.values.audience.map((aud) => aud.name)} // show only names in the UI
+                      onChange={(val) => {
+                        const selectedObjects = audienceOptions.filter((opt) =>
+                          (val as string[]).includes(opt.name)
+                        );
+                        formik.setFieldValue('audience', selectedObjects);
+                      }}
+                      labelKey="name"
                       formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
                       error={formik.touched.audience && Boolean(formik.errors.audience)}
                       helperText={
@@ -461,77 +422,6 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                       }
                     />
                   </ShakingTextField>
-                </Grid>
-              </SectionCard>
-            </Grid>
-
-            {/* Start Time DatePicker */}
-            <Grid size={{ xs: 12 }}>
-              <SectionCard title="Scheduling & Control">
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.startDate && formik.errors.startDate) || false}
-                  >
-                    <DatePicker
-                      label="Start Date *"
-                      format="DD/MM/YYYY"
-                      value={dayjs(formik.values.startDate)}
-                      onChange={(newValue) => {
-                        formik.setFieldValue('startDate', newValue);
-                      }}
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      sx={{ minWidth: 180, width: '100%' }}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          error: !!(formik.touched.startDate && formik.errors.startDate) || false,
-                          helperText: formik.touched.startDate && formik.errors.startDate,
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-
-                {/* End Time DatePicker */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.endDate && formik.errors.endDate) || false}
-                  >
-                    <DatePicker
-                      label="End Date *"
-                      format="DD/MM/YYYY"
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      value={dayjs(formik.values.endDate)}
-                      onChange={(newValue) => {
-                        formik.setFieldValue('endDate', newValue);
-                      }}
-                      sx={{ minWidth: 180, width: '100%' }}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          error: !!(formik.touched.endDate && formik.errors.endDate) || false,
-                          helperText: formik.touched.endDate && formik.errors.endDate,
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-
-                <Grid size={{ xs: 12 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={formik.values.isAllowAcknoledgement}
-                        onChange={(e) =>
-                          formik.setFieldValue('isAllowAcknoledgement', e.target.checked)
-                        }
-                      />
-                    }
-                    label="Allow Acknowledgement? (checkbox → recipients click “I’ve read this”)"
-                  />
                 </Grid>
               </SectionCard>
             </Grid>
@@ -588,6 +478,110 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                 </Grid>
               </SectionCard>
             </Grid>
+            {/* Start Time DatePicker */}
+            <Grid size={{ xs: 12 }}>
+              <SectionCard title="Scheduling">
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.startDate && formik.errors.startDate) || false}
+                  >
+                    <DateTimePicker
+                      label="Start Date/Time *"
+                      format="DD/MM/YYYY hh:mm"
+                      value={dayjs(formik.values.startDate)}
+                      onChange={(newValue) => {
+                        formik.setFieldValue('startDate', newValue);
+                        // Calculate duration in days between start and end date
+                        if (newValue && formik.values.startDate) {
+                          const start = dayjs(formik.values.startDate);
+                          const end = dayjs(newValue);
+                          const durationInDays = end.diff(start, 'day');
+                          formik.setFieldValue('duration', Math.max(0, durationInDays));
+                        }
+                      }}
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
+                      sx={{ minWidth: 180, width: '100%' }}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: !!(formik.touched.startDate && formik.errors.startDate) || false,
+                          helperText: formik.touched.startDate && formik.errors.startDate,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+
+                {/* End Time DatePicker */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.endDate && formik.errors.endDate) || false}
+                  >
+                    <DateTimePicker
+                      label="End Date/Time *"
+                      format="DD/MM/YYYY hh:mm"
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
+                      value={dayjs(formik.values.endDate)}
+                      onChange={(newValue) => {
+                        formik.setFieldValue('endDate', newValue);
+                        formik.setFieldTouched('endDate', false);
+                        // Calculate duration in days between start and end date
+                        if (newValue && formik.values.startDate) {
+                          const start = dayjs(formik.values.startDate);
+                          const end = dayjs(newValue);
+                          const durationInDays = end.diff(start, 'day');
+                          formik.setFieldValue('duration', Math.max(0, durationInDays));
+                        }
+                      }}
+                      sx={{ minWidth: 180, width: '100%' }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          error: !!(formik.touched.endDate && formik.errors.endDate) || false,
+                          helperText: formik.touched.endDate && formik.errors.endDate,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="Duration (in days) *"
+                    name="duration"
+                    type="number"
+                    value={formik.values.duration}
+                    disabled
+                    InputProps={{
+                      inputProps: { min: 0 },
+                    }}
+                    error={formik.touched.duration && Boolean(formik.errors.duration)}
+                    helperText={formik.touched.duration && formik.errors.duration}
+                    size="small"
+                  />
+                </Grid>
+
+                {formik.values.notification_preferences.includes('inApp') && (
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formik.values.isAllowAcknoledgement}
+                          onChange={(e) =>
+                            formik.setFieldValue('isAllowAcknoledgement', e.target.checked)
+                          }
+                        />
+                      }
+                      label="Allow Acknowledgement? (checkbox → recipients click “I’ve read this”)"
+                    />
+                  </Grid>
+                )}
+              </SectionCard>
+            </Grid>
           </Scrollbar>
           <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
@@ -617,316 +611,6 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
       </form>
     </BackPopUpChecked>
   );
-  // <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-  //   <Box display="flex" flexDirection="column" gap={2} height="100%">
-  //     <Scrollbar sx={{ p: 2, height: '100%' }}>
-  //       <Grid container spacing={2}>
-  //         {/* Title */}
-  //         <Grid size={{ xs: 12, md: 6 }}>
-  //           <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
-  //             <TextField
-  //               fullWidth
-  //               label="Title"
-  //               name="title"
-  //               value={formik.values.title}
-  //               onChange={formik.handleChange}
-  //               error={formik.touched.title && Boolean(formik.errors.title)}
-  //               helperText={formik.touched.title && formik.errors.title}
-  //               size="small"
-  //             />
-  //           </ShakingTextField>
-  //         </Grid>
-
-  //         {/* Class */}
-  //         <Grid size={{ xs: 12, md: 6 }}>
-  //           <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
-  //             <CustomSelect
-  //               options={classData?.items || []}
-  //               value={formik.values.className}
-  //               onChange={(val) => formik.setFieldValue('className', val)}
-  //               label="Class"
-  //               isLoading={isLoading}
-  //               multiple
-  //               labelKey="name"
-  //               valueKey="name"
-  //               formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
-  //               error={formik.touched.className && Boolean(formik.errors.className)}
-  //               helperText={
-  //                 Array.isArray(formik.errors.className)
-  //                   ? formik.errors.className.join(', ')
-  //                   : (formik.touched.className && formik.errors.className) || undefined
-  //               }
-  //             />
-  //           </ShakingTextField>
-  //         </Grid>
-
-  //         {/* Division */}
-  //         <Grid size={{ xs: 12, md: 6 }}>
-  //           <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
-  //             <CustomSelect
-  //               label="Select Divisions"
-  //               options={[
-  //                 {
-  //                   value: isAllSelected ? 'deselectAll' : 'all',
-  //                   label: isAllSelected ? 'Deselect All' : 'All',
-  //                 },
-  //                 ...divisionOption,
-  //               ]}
-  //               value={formik.values.division}
-  //               onChange={(val) => handleDivisionChange(val as string[])}
-  //               multiple
-  //               formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
-  //               error={formik.touched.division && Boolean(formik.errors.division)}
-  //               helperText={
-  //                 Array.isArray(formik.errors.division)
-  //                   ? formik.errors.division.join(', ')
-  //                   : (formik.touched.division && formik.errors.division) || undefined
-  //               }
-  //             />
-  //           </ShakingTextField>
-  //         </Grid>
-
-  //         {/* Audience */}
-  //         <Grid size={{ xs: 12, md: 6 }}>
-  //           <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
-  //             <CustomSelect
-  //               label="Select Audience"
-  //               options={[
-  //                 { value: 'Students', label: 'Students' },
-  //                 { value: 'Parents', label: 'Parents' },
-  //               ]}
-  //               multiple
-  //               value={formik.values.audience}
-  //               onChange={(val) => formik.setFieldValue('audience', val)}
-  //               formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
-  //               error={formik.touched.audience && Boolean(formik.errors.audience)}
-  //               helperText={
-  //                 Array.isArray(formik.errors.audience)
-  //                   ? formik.errors.audience.join(', ')
-  //                   : (formik.touched.audience && formik.errors.audience) || undefined
-  //               }
-  //             />
-  //           </ShakingTextField>
-  //         </Grid>
-
-  //         {/* Expiry Date */}
-  //         <Grid size={{ xs: 12, md: 6 }}>
-  //           <ShakingTextField error={!!(formik.touched.expiryDate && formik.errors.expiryDate)}>
-  //             <DateTimePicker
-  //               label="Expiry Date & Time"
-  //               value={formik.values.expiryDate}
-  //               onChange={(value) => formik.setFieldValue('expiryDate', value)}
-  //               format="DD-MM-YYYY HH:mm"
-  //               slotProps={{
-  //                 textField: {
-  //                   size: 'small',
-  //                   fullWidth: true,
-  //                   error: formik.touched.expiryDate && Boolean(formik.errors.expiryDate),
-  //                   helperText: formik.touched.expiryDate && formik.errors.expiryDate,
-  //                 },
-  //               }}
-  //               disablePast
-  //             />
-  //           </ShakingTextField>
-  //         </Grid>
-
-  //         {/* Category */}
-  //         <Grid size={{ xs: 12, md: 6 }}>
-  //           <ShakingTextField error={!!(formik.touched.category && formik.errors.category)}>
-  //             <CustomSelect
-  //               label="Select Category"
-  //               options={[
-  //                 { value: 'academic', label: 'Academic' },
-  //                 { value: 'administrative', label: 'Administrative' },
-  //                 { value: 'extracurriculam', label: 'Extracurriculam' },
-  //               ]}
-  //               value={formik.values.category}
-  //               onChange={(val) => formik.setFieldValue('category', val)}
-  //               formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
-  //               error={formik.touched.category && Boolean(formik.errors.category)}
-  //               helperText={(formik.touched.category && formik.errors.category) || undefined}
-  //             />
-  //           </ShakingTextField>
-  //         </Grid>
-
-  //         {/* Importance Level */}
-  //         <Grid size={{ xs: 12, md: 6 }}>
-  //           <ShakingTextField
-  //             error={!!(formik.touched.importance_level && formik.errors.importance_level)}
-  //           >
-  //             <CustomSelect
-  //               label="Importance Level"
-  //               options={[
-  //                 { value: 'urgent', label: 'Urgent' },
-  //                 { value: 'critical', label: 'Critical' },
-  //                 { value: 'high', label: 'High' },
-  //                 { value: 'medium', label: 'Medium' },
-  //                 { value: 'low', label: 'Low' },
-  //                 { value: 'informational', label: 'Informational' },
-  //               ]}
-  //               value={formik.values.importance_level}
-  //               onChange={(val) => formik.setFieldValue('importance_level', val)}
-  //               formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
-  //               error={formik.touched.importance_level && Boolean(formik.errors.importance_level)}
-  //               helperText={
-  //                 (formik.touched.importance_level && formik.errors.importance_level) || undefined
-  //               }
-  //             />
-  //           </ShakingTextField>
-  //         </Grid>
-
-  //         {/* Schedule Switch */}
-  //         <Grid size={{ xs: 12, md: 6 }}>
-  //           <FormControlLabel
-  //             control={
-  //               <Switch
-  //                 checked={formik.values.isScheduled}
-  //                 onChange={(e) => formik.setFieldValue('isScheduled', e.target.checked)}
-  //               />
-  //             }
-  //             label="Schedule Announcement"
-  //           />
-  //         </Grid>
-
-  //         {/* Conditional Schedule Date */}
-  //         {formik.values.isScheduled && (
-  //           <Grid size={{ xs: 12, md: 6 }}>
-  //             <ShakingTextField
-  //               error={!!(formik.touched.publishDate && formik.errors.publishDate)}
-  //             >
-  //               <DateTimePicker
-  //                 label="Schedule Date & Time"
-  //                 value={formik.values.publishDate}
-  //                 format="DD-MM-YYYY HH:mm"
-  //                 onChange={handleDateChange}
-  //                 slotProps={{
-  //                   textField: {
-  //                     size: 'small',
-  //                     fullWidth: true,
-  //                     error: formik.touched.publishDate && Boolean(formik.errors.publishDate),
-  //                   },
-  //                 }}
-  //                 disablePast
-  //               />
-  //             </ShakingTextField>
-  //           </Grid>
-  //         )}
-
-  //         {/* Description */}
-  //         <Grid size={{ xs: 12 }}>
-  //           <ShakingTextField error={!!(formik.touched.description && formik.errors.description)}>
-  //             <TextField
-  //               fullWidth
-  //               label="Announcement Description"
-  //               name="description"
-  //               multiline
-  //               value={formik.values.description}
-  //               onChange={formik.handleChange}
-  //               error={formik.touched.description && Boolean(formik.errors.description)}
-  //               helperText={formik.touched.description && formik.errors.description}
-  //               size="small"
-  //               rows={4}
-  //             />
-  //           </ShakingTextField>
-  //         </Grid>
-
-  //         {/* Upload */}
-  //         <Grid size={{ xs: 12 }}>
-  //           <UploadBox
-  //             onDrop={() => {}}
-  //             placeholder={
-  //               <Box
-  //                 sx={{
-  //                   display: 'flex',
-  //                   flexDirection: 'column',
-  //                   alignItems: 'center',
-  //                   gap: 0.5,
-  //                   color: 'text.disabled',
-  //                 }}
-  //               >
-  //                 <Iconify icon="eva:cloud-upload-fill" width={40} />
-  //                 <Typography variant="body2">Upload Document</Typography>
-  //               </Box>
-  //             }
-  //             sx={{ py: 2.5, width: '100%', height: 'auto', borderRadius: 1.5 }}
-  //           />
-  //         </Grid>
-
-  //         {/* Link */}
-  //         <Grid size={{ xs: 12, md: 6 }}>
-  //           <ShakingTextField error={!!(formik.touched.link && formik.errors.link)}>
-  //             <TextField
-  //               fullWidth
-  //               label="Link"
-  //               name="link"
-  //               value={formik.values.link}
-  //               onChange={formik.handleChange}
-  //               error={formik.touched.link && Boolean(formik.errors.link)}
-  //               helperText={formik.touched.link && formik.errors.link}
-  //               size="small"
-  //               InputProps={{
-  //                 startAdornment: (
-  //                   <InputAdornment position="start">
-  //                     <Iconify icon="typcn:attachment" />
-  //                   </InputAdornment>
-  //                 ),
-  //               }}
-  //             />
-  //           </ShakingTextField>
-  //         </Grid>
-
-  //         {/* Notification Preferences */}
-  //         <Grid size={{ xs: 12 }}>
-  //           <Typography variant="subtitle2" gutterBottom>
-  //             Notification Preferences
-  //           </Typography>
-  //           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-  //             {['email', 'sms', 'app'].map((type) => {
-  //               const icons: Record<string, string> = {
-  //                 email: 'mdi:email-outline',
-  //                 sms: 'mdi:message-outline',
-  //                 app: 'mdi:bell-outline',
-  //               };
-  //               const labels: Record<string, string> = {
-  //                 email: 'Email',
-  //                 sms: 'SMS',
-  //                 app: 'App Notification',
-  //               };
-  //               return (
-  //                 <FormControlLabel
-  //                   key={type}
-  //                   control={
-  //                     <Checkbox
-  //                       checked={formik.values.notification_preferences.includes(type)}
-  //                       onChange={() => handleNotificationPreferenceChange(type)}
-  //                     />
-  //                   }
-  //                   label={
-  //                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-  //                       <Iconify icon={icons[type]} />
-  //                       <Typography variant="body2">{labels[type]}</Typography>
-  //                     </Box>
-  //                   }
-  //                 />
-  //               );
-  //             })}
-  //           </Box>
-  //           {formik.touched.notification_preferences &&
-  //             formik.errors.notification_preferences && (
-  //               <FormHelperText error>
-  //                 {String(formik.errors.notification_preferences)}
-  //               </FormHelperText>
-  //             )}
-  //         </Grid>
-  //       </Grid>
-  //     </Scrollbar>
-  //     <DialogActions>
-  //       <Button type="submit" variant="contained">
-  //         {isEdit ? 'Update' : 'Create'}
-  //       </Button>
-  //     </DialogActions>
-  //   </Box>
-  // </form>
 };
 
 export default AnnouncementForm;

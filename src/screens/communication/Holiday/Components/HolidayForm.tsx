@@ -1,5 +1,5 @@
 import type { RootState } from 'src/redux/store';
-import type { Organization } from 'src/types/school';
+import type { Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -18,11 +18,14 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import { holidayValidationSchema } from './getHolidayValidationSchema';
+import { audienceOptions } from '../../announcement/schoolannouncementForm';
 
 import type { IHoliday, IHolidayFormProps } from './type';
 
 const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEdit = false }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  // State to store list of all classes/standards
+  const [allClass, setAllClass] = useState<Standards[]>([]);
   // Redux state for current board, medium and medium setter
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   // State to store list of all organizations/branches
@@ -54,6 +57,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
       holidayType: initialValues?.holidayType || '',
       importanceLevel: initialValues?.importanceLevel || 'Normal',
       startDate: initialValues?.startDate || null,
+      classes: initialValues?.classes || [],
       endDate: initialValues?.endDate || null,
       description: initialValues?.description || '',
       attachment: initialValues?.attachment || null,
@@ -68,6 +72,31 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
       onClose(null, true);
     },
   });
+  // Update classes list when organization selection changes
+  useEffect(() => {
+    if (formik.values.organizations.length === 0) {
+      setAllClass([]);
+      if (!isEdit) formik.setFieldValue('classes', []); // only reset on create
+      return;
+    }
+
+    const mergedStandards = formik.values.organizations.includes('all')
+      ? allOrganization
+          .filter((org: any) => org.id !== 'all')
+          .flatMap((org: any) => org.standards || [])
+      : formik.values.organizations
+          .map(
+            (orgId: string) =>
+              allOrganization.find((org: any) => org?.id === orgId)?.standards || []
+          )
+          .flat();
+
+    const withAll = [{ id: 'all', name: 'All', divisions: [] }, ...mergedStandards];
+    setAllClass(withAll);
+
+    if (!isEdit) formik.setFieldValue('classes', []); // only reset on create
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allOrganization, formik.values.organizations]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -121,7 +150,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                     error={!!(formik.touched.importanceLevel && formik.errors.importanceLevel)}
                   >
                     <CustomSelect
-                      label="Importance Level *"
+                      label="Importance Level"
                       value={formik.values.importanceLevel}
                       onChange={(val) => formik.setFieldValue('importanceLevel', val)}
                       options={[
@@ -268,20 +297,84 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
+                  <ShakingTextField error={!!(formik.touched.classes && formik.errors.classes)}>
+                    <CustomSelect
+                      options={allClass}
+                      label="Class *"
+                      multiple
+                      value={formik.values.classes}
+                      onChange={(val) => {
+                        const value = val as string[];
+
+                        const allClassIds =
+                          allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
+                        const isAllClicked = value.includes('all');
+                        const wasAllPreviouslySelected = (
+                          formik.values.classes as string[]
+                        ).includes('all');
+
+                        if (isAllClicked && !wasAllPreviouslySelected) {
+                          // "All" was just clicked - select all classes
+                          formik.setFieldValue('classes', ['all', ...allClassIds]);
+                        } else if (!isAllClicked && wasAllPreviouslySelected) {
+                          // "All" was just unchecked - deselect all classes
+                          formik.setFieldValue('classes', []);
+                        } else if (isAllClicked && wasAllPreviouslySelected) {
+                          // Individual item was selected/deselected while "All" was already selected
+                          const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                          if (selectedWithoutAll.length === allClassIds.length) {
+                            // All individual items are selected, keep "All" selected
+                            formik.setFieldValue('classes', ['all', ...allClassIds]);
+                          } else {
+                            // Not all individual items are selected, remove "All"
+                            formik.setFieldValue('classes', selectedWithoutAll);
+                          }
+                        } else {
+                          // "All" is not selected, handle individual selections
+                          const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                          if (selectedWithoutAll.length === allClassIds.length) {
+                            // All individual items are selected, add "All"
+                            formik.setFieldValue('classes', ['all', ...allClassIds]);
+                          } else {
+                            // Not all items selected, just keep individual selections
+                            formik.setFieldValue('classes', selectedWithoutAll);
+                          }
+                        }
+                      }}
+                      onBlur={() => formik.setFieldTouched('classes', true)}
+                      error={formik.touched.classes && Boolean(formik.errors.classes)}
+                      helperText={(formik.touched.classes && formik.errors.classes) as string}
+                      labelKey="name"
+                      valueKey="id"
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                      disabled={!formik.values.organizations}
+                    />
+                  </ShakingTextField>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6, sm: 3 }}>
                   <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                     <CustomSelect
-                      label="Audience *"
-                      options={[
-                        { value: 'Students', label: 'Students' },
-                        { value: 'Parents', label: 'Parents' },
-                        { value: 'Teachers', label: 'Teachers' },
-                      ]}
-                      value={formik.values.audience}
-                      onChange={(val) => formik.setFieldValue('audience', val)}
+                      label="Select Audience *"
+                      options={audienceOptions}
                       multiple
+                      value={formik.values.audience.map((aud) => aud.name)} // show only names in the UI
+                      onChange={(val) => {
+                        const selectedObjects = audienceOptions.filter((opt) =>
+                          (val as string[]).includes(opt.name)
+                        );
+                        formik.setFieldValue('audience', selectedObjects);
+                      }}
+                      labelKey="name"
+                      formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
                       error={formik.touched.audience && Boolean(formik.errors.audience)}
-                      helperText={(formik.touched.audience && formik.errors.audience) as string}
-                      formControlProps={{ fullWidth: true }}
+                      helperText={
+                        Array.isArray(formik.errors.audience)
+                          ? formik.errors.audience.join(', ')
+                          : (formik.touched.audience && formik.errors.audience) || undefined
+                      }
                     />
                   </ShakingTextField>
                 </Grid>

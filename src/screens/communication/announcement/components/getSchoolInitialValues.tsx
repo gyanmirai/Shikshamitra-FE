@@ -14,6 +14,7 @@ export const getSchoolWiseAnnouncementInitialValues = (
   createdBy: initialValues?.createdBy || '',
   cratedOn: initialValues?.cratedOn ? dayjs(initialValues.cratedOn) : dayjs(),
   status: initialValues?.status ?? 0,
+  duration: initialValues?.duration ?? 0,
   type: initialValues?.type || '',
   attachment: initialValues?.attachment || (null as unknown as File),
   importance_level: initialValues?.importance_level || '',

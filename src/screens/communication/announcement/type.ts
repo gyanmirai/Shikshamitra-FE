@@ -1,16 +1,23 @@
 import type { Dayjs } from 'dayjs';
 
+export interface IAudience {
+  value: string;
+  name: string;
+  color: string;
+}
+
 export interface ISchoolWiseAnnouncement {
   id: string;
   title: string;
   description: string;
-  audience: string[];
+  audience: IAudience[];
   startDate: Dayjs | string | null;
   endDate: Dayjs | string | null;
   createdBy: string;
   cratedOn: Dayjs | string | null;
   status: number;
   type: string;
+  duration: number;
   attachment: File;
   importance_level?: string;
   link: string;
@@ -75,7 +82,7 @@ export interface IClassWiseAnnouncement {
   id: string;
   title: string;
   description: string;
-  audience: string[]; // same as school-wise
+  audience: IAudience[];
   organizations: string[]; // newly added
   classes: string[]; // newly added
   divisions: string[]; // newly added
@@ -85,6 +92,7 @@ export interface IClassWiseAnnouncement {
   cratedOn: Dayjs | string | null;
   status: number;
   type: string;
+  duration: number;
   attachment: File | null;
   importance_level?: string;
   link: string;

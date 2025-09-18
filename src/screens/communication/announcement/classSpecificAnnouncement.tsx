@@ -70,12 +70,12 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {open ? (
         <CustomBreadcrumbs
-          heading="Class Wise Announcement"
+          heading="Class Announcement"
           description="Create or update class-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff."
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Announcements' },
-            { name: 'Class Wise Announcement' },
+            { name: 'Class Announcement' },
             { name: 'Announcement Form' },
           ]}
           sx={{ px: 1, mb: 2 }}
@@ -86,12 +86,12 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Class Wise Announcement"
+          heading="Class Announcement"
           description="View and manage all class-wide announcements, including message content, target audience, and publication status. Add new announcements, update existing ones, or remove them as needed."
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Announcements' },
-            { name: 'Class Wise Announcement' },
+            { name: 'Class Announcement' },
           ]}
           sx={{ px: 1, mb: 2 }}
           action={
@@ -101,7 +101,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
               variant="contained"
               onClick={() => setOpen(true)}
             >
-              Class Wise Announcement
+              Class Announcement
             </Button>
           }
         />
@@ -169,7 +169,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
       />
 
       <CustomDialog
-        title="Announcement Details"
+        title={`${viewAnnouncement?.title}`}
         open={view_dialog.value}
         handleClose={() => {
           setViewAnnouncement(null);

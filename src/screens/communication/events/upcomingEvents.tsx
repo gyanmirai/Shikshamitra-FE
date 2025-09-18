@@ -130,8 +130,12 @@ const UpcomingEvents = (props: TabComponentType) => {
           setEditingEvent(null);
           confirm_dialog.onFalse();
         }}
+        content={
+          <>
+            Are you sure you want to delete <strong>{editingEvent?.title}</strong>?
+          </>
+        }
         title="Delete"
-        content="Are you sure you want to delete?"
         action={
           <Button variant="contained" color="error" onClick={() => {}} size="small">
             Yes
@@ -148,7 +152,7 @@ const UpcomingEvents = (props: TabComponentType) => {
         title="Publish"
         content={
           <>
-            Are you sure you want to publish announcement <strong>{editingEvent?.title}</strong>?
+            Are you sure you want to publish event <strong>{editingEvent?.title}</strong>?
           </>
         }
         action={
@@ -158,7 +162,7 @@ const UpcomingEvents = (props: TabComponentType) => {
             onClick={() => {
               publish_modal.onFalse();
               shikshaMitraToast.success({
-                message: `Announcement "${editingEvent?.title}" published successfully.`,
+                message: `Event "${editingEvent?.title}" published successfully.`,
               });
             }}
             size="small"
@@ -169,7 +173,7 @@ const UpcomingEvents = (props: TabComponentType) => {
       />
 
       <CustomDialog
-        title="Event Details"
+        title={`${editingEvent?.title}`}
         open={view_dialog.value}
         handleClose={() => {
           setEditingEvent(null);

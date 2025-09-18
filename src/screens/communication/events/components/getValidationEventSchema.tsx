@@ -8,7 +8,7 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
     id: Yup.string().nullable(), // not required for creation
     title: Yup.string().required('Title is required'),
     description: Yup.string().required('Description is required'),
-    type: Yup.string().required('Announcement Type is required'),
+    type: Yup.string().required('Event Type is required'),
     organizations: Yup.array()
       .of(Yup.string())
       .min(1, 'At least one organization is required')
@@ -70,8 +70,6 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
           `End Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
-
-    importance_level: Yup.string().required('Importance level is required'),
 
     link: Yup.string().url('Must be a valid URL').nullable(),
 

@@ -1,5 +1,7 @@
 import type { Dayjs } from 'dayjs';
 
+import type { IAudience } from '../announcement/type';
+
 export interface IEvent {
   id: string;
   eventTitle: string;
@@ -33,13 +35,14 @@ export interface IEventAnnouncement {
   id: string;
   title: string;
   description: string;
-  audience: string[]; // same as school-wise
+  audience: IAudience[];
   organizations: string[]; // newly added
   classes: string[]; // newly added
   divisions: string[]; // newly added
   startDate: Dayjs | string | null;
   endDate: Dayjs | string | null;
   createdBy: string;
+  duration: number;
   createdOn: Dayjs | string | null; // fixed typo
   status: number;
   type: string;

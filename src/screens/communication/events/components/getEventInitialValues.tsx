@@ -9,6 +9,7 @@ export const getEventInitialValues = (initialValues: IEventAnnouncement | null) 
   audience: initialValues?.audience || [],
   organizations: initialValues?.organizations || [],
   classes: initialValues?.classes || [],
+  duration: initialValues?.duration ?? 0,
   divisions: initialValues?.divisions || [],
   startDate: initialValues?.startDate ? dayjs(initialValues?.startDate) : dayjs().add(1, 'hours'),
   endDate: initialValues?.endDate ? dayjs(initialValues?.endDate) : null,

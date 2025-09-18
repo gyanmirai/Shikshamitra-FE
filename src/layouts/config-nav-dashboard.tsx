@@ -926,14 +926,14 @@ const communicationModule = {
           shortcutKeyName: 'Alt+C+A',
           children: [
             {
-              title: 'School Wise Announsement',
+              title: 'School Announcement',
               path: '/communication/announcement/schoolWiseAnnounsement',
               _action: 'announcement-schoolWiseAnnounsement',
               shortcutKey: 'Alt+C+A+1',
               shortcutKeyName: 'Alt+C+A+1',
             },
             {
-              title: 'Class Wise Announcement',
+              title: 'Class Announcement',
               path: '/communication/announcement/classSpecificAnnouncement',
               _action: 'announcement-classSpecificAnnouncement',
               shortcutKey: 'Alt+C+A+2',
