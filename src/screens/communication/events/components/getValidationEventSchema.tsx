@@ -101,4 +101,42 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
     createdBy: Yup.string().nullable(),
     createdOn: Yup.mixed().nullable(),
     status: Yup.number().required('Status is required'),
+
+    day: Yup.string().when('type', {
+      is: 'meeting',
+      then: (schema) => schema.required('Day is required'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    meetingDate: Yup.mixed().when('type', {
+      is: 'meeting',
+      then: (schema) =>
+        schema
+          .required('Meeting date is required')
+          .test(
+            'is-valid-dayjs',
+            'Meeting date must be valid',
+            (value) => value && dayjs(value as any).isValid()
+          ),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    meetingTime: Yup.mixed().when('type', {
+      is: 'meeting',
+      then: (schema) => schema.required('Meeting time is required'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    isRecurring: Yup.boolean().when('type', {
+      is: 'meeting',
+      then: (schema) => schema,
+      otherwise: (schema) => schema.nullable(),
+    }),
+    repeatFrequency: Yup.string().when(['type', 'isRecurring'], {
+      is: (type: string, isRecurring: boolean) => type === 'meeting' && isRecurring === true,
+      then: (schema) => schema.required('Repeat frequency is required'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    repeatUntil: Yup.mixed().when(['type', 'isRecurring'], {
+      is: (type: string, isRecurring: boolean) => type === 'meeting' && isRecurring === true,
+      then: (schema) => schema.required('Repeat until date is required'),
+      otherwise: (schema) => schema.nullable(),
+    }),
   });

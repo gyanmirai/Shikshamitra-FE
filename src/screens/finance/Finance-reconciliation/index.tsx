@@ -104,7 +104,7 @@ const reconciliationTabConfig = [
 const FinanceReconciliation = () => {
   // Tab state
   // const tabs = useTabs(ReconciliationtatusType.All);
-  const [params, setSearchParams] = useSearchParam({ tab: ReconciliationtatusType.All });
+  const [params, setSearchParams] = useSearchParam({ tab: ReconciliationtatusType.Cheque });
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 

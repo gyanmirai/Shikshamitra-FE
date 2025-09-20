@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
 export const upcomingEventvalidationSchema = Yup.object().shape({
@@ -29,9 +30,28 @@ export const upcomingEventvalidationSchema = Yup.object().shape({
   eventType: Yup.string().required('Event type is required'),
   description: Yup.string().required('Description is required'),
   eventOrganizer: Yup.string().required('Event organizer is required'),
-
+  day: Yup.string().required('Day is required'),
   eventBudget: Yup.number()
     .typeError('Budget must be a number')
     .positive('Budget must be a positive number')
     .required('Event budget is required'),
+  meetingDate: Yup.mixed()
+    .required('Meeting date is required')
+    .test(
+      'is-valid-dayjs',
+      'Meeting date must be valid',
+      (value) => value && dayjs(value as any).isValid()
+    ),
+
+  meetingTime: Yup.mixed().required('Meeting time is required'),
+  isRecurring: Yup.boolean(),
+
+  repeatFrequency: Yup.string().when('isRecurring', {
+    is: true,
+    then: (schema) => schema.required('Repeat frequency is required'),
+  }),
+  repeatUntil: Yup.mixed().when('isRecurring', {
+    is: true,
+    then: (schema) => schema.required('Repeat until date is required'),
+  }),
 });

@@ -24,4 +24,11 @@ export const getEventInitialValues = (initialValues: IEventAnnouncement | null) 
   eventMode: initialValues?.eventMode || 'offline',
   onlineLink: initialValues?.onlineLink || '',
   venue: initialValues?.venue || '',
+
+  isRecurring: initialValues?.isRecurring || false,
+  repeatFrequency: initialValues?.repeatFrequency || '',
+  meetingDate: initialValues?.meetingDate ? dayjs(initialValues.meetingDate) : dayjs(),
+  meetingTime: initialValues?.meetingTime ? dayjs(initialValues.meetingTime) : null,
+  repeatUntil: initialValues?.repeatUntil ? dayjs(initialValues.repeatUntil) : null,
+  day: initialValues?.day || '',
 });

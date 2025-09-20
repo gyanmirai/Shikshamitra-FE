@@ -4,10 +4,15 @@ import { Label } from 'src/components/label';
 import { Box, Grid, Card, Typography } from '@mui/material';
 import { EventStatus, EventStatusColor } from 'src/enums/event-type';
 import {
+  Today,
+  Repeat,
   Category,
+  EventNote,
   AccessTime,
   LocationOn,
+  EventRepeat,
   PriorityHigh,
+  CalendarMonth,
   Link as LinkIcon,
   Event as EventIcon,
 } from '@mui/icons-material';
@@ -123,6 +128,73 @@ const EventDetailsCard = ({ event }: { event: IEventAnnouncement | null }) => {
             value={event?.eventMode === 'online' ? event?.onlineLink || '—' : event?.venue || '—'}
           />
         </Grid>
+
+        {/* Recurring */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <InfoItem icon={<Repeat />} label="Recurring" value={event?.isRecurring ? 'Yes' : 'No'} />
+        </Grid>
+
+        {/* Repeat Frequency */}
+        {event?.isRecurring && (
+          <Grid size={{ xs: 12, md: 4 }}>
+            <InfoItem
+              icon={<CalendarMonth />}
+              label="Repeat Frequency"
+              value={event?.repeatFrequency || '—'}
+            />
+          </Grid>
+        )}
+
+        {/* Meeting Date */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <InfoItem
+            icon={<Today />}
+            label="Meeting Date"
+            value={
+              event?.meetingDate
+                ? new Date(event.meetingDate as string).toLocaleDateString('en-GB')
+                : '—'
+            }
+          />
+        </Grid>
+
+        {/* Meeting Time */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <InfoItem
+            icon={<AccessTime />}
+            label="Meeting Time"
+            value={
+              event?.meetingTime
+                ? new Date(event.meetingTime as string).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : '—'
+            }
+          />
+        </Grid>
+
+        {/* Repeat Until */}
+        {event?.isRecurring && (
+          <Grid size={{ xs: 12, md: 4 }}>
+            <InfoItem
+              icon={<EventRepeat />}
+              label="Repeat Until"
+              value={
+                event?.repeatUntil
+                  ? new Date(event.repeatUntil as string).toLocaleDateString('en-GB')
+                  : '—'
+              }
+            />
+          </Grid>
+        )}
+
+        {/* Day (for Weekly) */}
+        {event?.repeatFrequency === 'Weekly' && (
+          <Grid size={{ xs: 12, md: 4 }}>
+            <InfoItem icon={<EventNote />} label="Day" value={event?.day || '—'} />
+          </Grid>
+        )}
       </Grid>
     </Card>
   );

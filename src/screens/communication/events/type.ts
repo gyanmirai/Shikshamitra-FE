@@ -53,6 +53,13 @@ export interface IEventAnnouncement {
   eventMode: 'offline' | 'online'; // fixed union type
   onlineLink?: string; // for online events
   venue?: string; // for offline events
+
+  isRecurring: boolean;
+  repeatFrequency?: string; // e.g., Daily, Weekly, Monthly
+  meetingDate: string | Dayjs | null;
+  meetingTime: string | Dayjs | null;
+  repeatUntil?: string | Dayjs | number;
+  day?: string; // e.g., Monday, Tuesday
 }
 
 /**
