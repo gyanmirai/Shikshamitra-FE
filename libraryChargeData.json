@@ -180,58 +180,62 @@
   }
 ],
 "libraryChargeCategory" : [
-    {
-      "id": "1",
-      "name": "Late Return Fee"
-    },
-    {
-      "id": "2",
-      "name": "Lost Book Charge"
-    },
-    {
-      "id": "3",
-      "name": "Membership Renewal"
-    },
-    {
-      "id": "4",
-      "name": "Reservation Fee"
-    }
+  {
+    "id": "Late Book Return",
+    "name": "Late Book Return",
+    "amount": 50
+  },
+  {
+    "id": "Lost Book",
+    "name": "Lost Book",
+    "amount": 300
+  },
+  {
+    "id": "Membership Renewal",
+    "name": "Membership Renewal",
+    "amount": 100
+  },
+  {
+    "id": "Reservation Fee",
+    "name": "Reservation Fee",
+    "amount": 30
+  }
   ],
   "bookConditionData" :[
   {
-    "conditionType": "Good",
-    "code": "GD",
-    "createdBy": "Prerna Atre",
-    "createdDate": "01-05-2025",
-    "description": "This type is used when the book condition is good."
+  "conditionType": "Good",
+  "code": "GD",
+  "createdBy": "Prerna Atre",
+  "createdDate": "01-05-2025",
+  "description": "This type is used when the book condition is good."
   },
   {
-    "conditionType": "Fair",
-    "code": "FR",
-    "createdBy": "Dharmik Jinjala",
-    "createdDate": "03-05-2025",
-    "description": "This type is used when the book condition is fair with minor wear."
+  "conditionType": "Fair",
+  "code": "FR",
+  "createdBy": "Dharmik Jinjala",
+  "createdDate": "03-05-2025",
+  "description": "This type is used when the book condition is fair with minor wear."
   },
   {
-    "conditionType": "Poor",
-    "code": "PR",
-    "createdBy": "Mayur Solanki",
-    "createdDate": "05-05-2025",
-    "description": "This type is used when the book is in poor condition and needs repair."
+  "conditionType": "Poor",
+  "code": "PR",
+  "createdBy": "Mayur Solanki",
+  "createdDate": "05-05-2025",
+  "description": "This type is used when the book is in poor condition and needs repair."
   },
   {
-    "conditionType": "Damage",
-    "code": "DMG",
-    "createdBy": "Prerna Atre",
-    "createdDate": "07-05-2025",
-    "description": "This type is used when the book is damaged beyond normal use."
+  "conditionType": "Damage",
+  "code": "DMG",
+  "createdBy": "Prerna Atre",
+  "createdDate": "07-05-2025",
+  "description": "This type is used when the book is damaged beyond normal use."
   },
   {
-    "conditionType": "Lost",
-    "code": "LO",
-    "createdBy": "Dharmik Jinjala",
-    "createdDate": "10-05-2025",
-    "description": "This type is used when the book has been lost."
+  "conditionType": "Lost",
+  "code": "LO",
+  "createdBy": "Dharmik Jinjala",
+  "createdDate": "10-05-2025",
+  "description": "This type is used when the book has been lost."
   }
 ]
 }

@@ -43,8 +43,8 @@ const ReservedBookTable = ({
       tableId="reserved-book-table"
       noDataText="No Reserved Books Found"
       columns={[
+        { id: 'memberName', label: 'Member Name', align: 'left', sticky: true },
         { id: 'memberId', label: 'Member ID', align: 'left' },
-        { id: 'memberName', label: 'Member Name', align: 'left' },
         { id: 'role', label: 'Role', align: 'left' },
         { id: 'reservedOn', label: 'Reserved On', align: 'left', filterType: 'date' },
         {

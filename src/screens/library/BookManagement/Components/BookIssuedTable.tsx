@@ -18,12 +18,30 @@ const IssuedBooksTable = () => {
         isLoading={yearLoading}
         noDataText="Issued Book Data Not Found"
         columns={[
-          { id: 'memberId', label: 'Member ID', align: 'left' },
-          { id: 'memberName', label: 'Member Name', align: 'left' },
+          { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
+          { id: 'memberName', label: 'Member Name', align: 'left', minWidth: '150px' },
           { id: 'role', label: 'Role', align: 'left' },
-          { id: 'copyNo', label: 'Copy No', align: 'left', filterType: 'number' },
-          { id: 'issuedOn', label: 'Issued on', align: 'left', filterType: 'date' },
-          { id: 'returnOn', label: 'Return on', align: 'left', filterType: 'date' },
+          {
+            id: 'copyNo',
+            label: 'Copy No',
+            align: 'left',
+            filterType: 'number',
+            minWidth: '100px',
+          },
+          {
+            id: 'issuedOn',
+            label: 'Issued on',
+            align: 'left',
+            filterType: 'date',
+            minWidth: '120px',
+          },
+          {
+            id: 'returnOn',
+            label: 'Return on',
+            align: 'left',
+            filterType: 'date',
+            minWidth: '120px',
+          },
         ]}
         data={issuedBooks || []}
       />

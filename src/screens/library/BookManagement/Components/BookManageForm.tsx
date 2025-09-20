@@ -383,21 +383,25 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                                 value={formik.values.copies[row.copyNo - 1]?.accessionNo || ''}
                                 onChange={(e) => {
                                   const val = e.target.value
-                                    // Remove everything except letters and spaces
                                     .replace(/[^a-zA-Z0-9-]/g, '')
-                                    // Keep original case
                                     .split(' ')
                                     .map((word) => word || '')
                                     .join(' ');
 
-                                  const updated = [...copies];
-                                  updated[row.copyNo - 1].accessionNo = val;
-                                  setCopies(updated);
-                                  formik.setFieldValue('copies', updated);
-                                  formik.setFieldTouched(
-                                    `copies.${row.copyNo - 1}.accessionNo`,
-                                    false
-                                  );
+                                  // Allow max 12 digits/characters
+                                  if (val.length <= 12) {
+                                    formik.setFieldValue(
+                                      `copies.${row.copyNo - 1}.accessionNo`,
+                                      val
+                                    );
+                                    const updated = [...copies];
+                                    updated[row.copyNo - 1].accessionNo = val;
+                                    setCopies(updated);
+                                    formik.setFieldTouched(
+                                      `copies.${row.copyNo - 1}.accessionNo`,
+                                      false
+                                    );
+                                  }
                                 }}
                                 error={
                                   !!(

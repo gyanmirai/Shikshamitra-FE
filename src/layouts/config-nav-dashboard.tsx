@@ -1428,6 +1428,7 @@ const libraryModule = {
           _action: 'library-reports',
           shortcutKey: 'Alt+L+5',
           shortcutKeyName: 'Alt+L+5',
+          caption: 'Coming Soon',
         },
         {
           title: 'Setting',

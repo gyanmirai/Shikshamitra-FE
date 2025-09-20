@@ -9,11 +9,21 @@ export const collectChargeValidationSchema = Yup.object({
     .shape({
       paymentMethod: Yup.string().required('Payment method is required'),
       paymentAmount: Yup.number()
+        .transform((value, originalValue) => {
+          // Remove ₹, commas, spaces, etc.
+          if (typeof originalValue === 'string') {
+            const cleaned = originalValue.replace(/[₹,\s]/g, '');
+            return cleaned === '' ? undefined : Number(cleaned);
+          }
+          return value;
+        })
         .required('Payment amount is required')
         .min(1, 'Payment amount must be greater than 0')
-        // eslint-disable-next-line func-names
         .test('max-amount', 'Payment cannot exceed assigned charge', function (value) {
           const { assignedAmount } = this.parent;
+          // If assignedAmount is not a number, skip the test
+          // eslint-disable-next-line no-restricted-globals
+          if (typeof assignedAmount !== 'number' || isNaN(assignedAmount)) return true;
           return value == null || value <= assignedAmount;
         }),
       notes: Yup.string().nullable(),

@@ -52,7 +52,9 @@ export const bookValidationSchema = Yup.object().shape({
         copyNo: Yup.number()
           .required('Copy number is required')
           .min(1, 'Copy number must be at least 1'),
-        accessionNo: Yup.string().trim().required('Accession number is required'),
+        accessionNo: Yup.string()
+          .matches(/^\d{12}$/, 'Accession number must be 12 digits')
+          .required('Accession number is required'),
         rfidEnabled: Yup.boolean().required(),
         rfidId: Yup.string()
           .nullable()

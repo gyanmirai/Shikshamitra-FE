@@ -7,6 +7,7 @@ export const getInitialMemberData = (
   class: editData?.class || '',
   division: editData?.division || '',
   student: editData?.student || '',
+  member: editData?.member || null,
 });
 
 export const getInitialChangeStatusData = (
