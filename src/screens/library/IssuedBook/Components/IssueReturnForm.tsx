@@ -1,8 +1,5 @@
-import type { LabelColor } from 'src/components/label';
-
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -26,11 +23,6 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import {
-  LibraryBookStatus,
-  LibraryBookStatusColors,
-  LibraryBookStatusOptions,
-} from 'src/enums/library-book-status';
 
 import { buildInitialBookReturnValues } from './ReturnInitialValues';
 import { bookReturnValidationSchema } from './ReturnValidatioSchema';
@@ -44,6 +36,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
     type: 'query',
     currentQueryAndMutation: useGetReservationBooksQuery,
   });
+  console.log('🚀 ~ ReturnBookForm ~ reservedBooks:', reservedBooks);
   const formik = useFormik({
     initialValues: buildInitialBookReturnValues(editData),
     validationSchema: bookReturnValidationSchema,
@@ -61,7 +54,6 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
       onClose(values, true);
     },
   });
-  console.log('🚀 ~ ReturnBookForm ~ formik:', formik);
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
@@ -207,7 +199,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
               error={!!(formik.touched.bookCondition && formik.errors.bookCondition)}
             >
               <CustomSelect
-                label="Book Condition *"
+                label="Book Condition Category*"
                 options={[
                   { id: 'good', value: 'Good', label: 'Good' },
                   { id: 'damaged', value: 'Damaged', label: 'Damaged' },
@@ -255,18 +247,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
                     filterType: 'date',
                     minWidth: '190px',
                   },
-                  {
-                    id: 'status',
-                    label: 'Status',
-                    align: 'left',
-                    filterType: 'enum',
-                    enumOptions: LibraryBookStatusOptions,
-                    sticky: true,
-                    render(value, row) {
-                      const color = LibraryBookStatusColors[value as LibraryBookStatus];
-                      return <Label color={color as LabelColor}>{LibraryBookStatus[value]}</Label>;
-                    },
-                  },
+
                   {
                     id: 'actions',
                     label: 'Action',

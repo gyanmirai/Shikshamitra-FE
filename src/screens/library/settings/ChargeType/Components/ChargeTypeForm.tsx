@@ -7,9 +7,9 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Button, Switch, TextField, DialogActions, FormControlLabel } from '@mui/material';
 
 import { getChargeTypeInitialValues } from './ChargeInitialValues';
 import { chargeTypeValidationSchema } from './ChargeTypeValidationSchema';
@@ -23,11 +23,11 @@ const ChargeTypeForm: React.FC<IChargeTypeFormProps> = ({ open, onClose, editDat
     onSubmit: (values) => {
       if (editData) {
         shikshaMitraToast.success({
-          message: `${values.chargeType} Charge Type updated successfully`,
+          message: `${values.chargeType} Charge Category updated successfully`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `${values.chargeType} Charge Type added successfully`,
+          message: `${values.chargeType} Charge Category added successfully`,
         });
       }
       onClose(null, true);
@@ -45,7 +45,7 @@ const ChargeTypeForm: React.FC<IChargeTypeFormProps> = ({ open, onClose, editDat
             >
               <TextField
                 fullWidth
-                label="Charge Type *"
+                label="Category Name *"
                 name="chargeType"
                 size="small"
                 value={formik.values.chargeType}
@@ -67,21 +67,37 @@ const ChargeTypeForm: React.FC<IChargeTypeFormProps> = ({ open, onClose, editDat
             </ShakingTextField>
           </Grid>
 
-          {/* Amount */}
-          <Grid size={12}>
-            <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
-              <NumericFormatCustom
-                fullWidth
-                label="Amount *"
-                size="small"
-                name="amount"
-                value={formik.values.amount}
-                onChange={formik.handleChange}
-                error={formik.touched.amount && Boolean(formik.errors.amount)}
-                helperText={(formik.touched.amount && formik.errors.amount) as string}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ShakingTextField>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formik.values.isFixed}
+                    onChange={() => formik.setFieldValue('isFixed', !formik.values.isFixed)}
+                  />
+                }
+                label="Fixed Amount"
               />
             </ShakingTextField>
           </Grid>
+
+          {/* Amount */}
+          {formik.values.isFixed && (
+            <Grid size={12}>
+              <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
+                <NumericFormatCustom
+                  fullWidth
+                  label="Amount *"
+                  size="small"
+                  name="amount"
+                  value={formik.values.amount}
+                  onChange={formik.handleChange}
+                  error={formik.touched.amount && Boolean(formik.errors.amount)}
+                  helperText={(formik.touched.amount && formik.errors.amount) as string}
+                />
+              </ShakingTextField>
+            </Grid>
+          )}
 
           {/* Description */}
           <Grid size={12}>

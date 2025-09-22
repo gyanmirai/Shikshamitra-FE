@@ -7,6 +7,7 @@ import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -125,6 +126,7 @@ const LibraryTimingCreation = () => {
 
       <CustomizableTable
         tableId="library-timing-table"
+        isFilter={false}
         isLoading={isLoading}
         isSearch={false}
         isPagination={false}
@@ -133,6 +135,8 @@ const LibraryTimingCreation = () => {
             id: 'day',
             label: 'Day',
             align: 'left',
+            isSort: false,
+            isFilter: false,
             render: (value) => (
               <Typography variant="body2" fontWeight={500}>
                 {value}
@@ -143,6 +147,8 @@ const LibraryTimingCreation = () => {
             id: 'startTime',
             label: 'Start Time',
             align: 'left',
+            isSort: false,
+            isFilter: false,
             render: (value, row) => (
               <Grid container spacing={1}>
                 <Grid size={12}>
@@ -167,6 +173,8 @@ const LibraryTimingCreation = () => {
             id: 'endTime',
             label: 'End Time',
             align: 'left',
+            isSort: false,
+            isFilter: false,
             render: (value, row) => (
               <Grid container spacing={1}>
                 <Grid size={12}>
@@ -189,14 +197,25 @@ const LibraryTimingCreation = () => {
           },
           {
             id: 'status',
-            label: 'IsHoliday',
+            label: 'Is On Day',
             align: 'left',
+            isSort: false,
+            isFilter: false,
             render: (value, row) => (
-              <Switch
-                size="small"
-                checked={value !== 'Off'}
-                onChange={(e) => handleStatusChange(row.id, e.target.checked)}
-              />
+              <CustomTooltip
+                placement="top"
+                title={
+                  value !== 'Off'
+                    ? 'Library is open on this day. Toggle to mark as closed.'
+                    : 'Library is closed on this day. Toggle to mark as open.'
+                }
+              >
+                <Switch
+                  size="small"
+                  checked={value !== 'Off'}
+                  onChange={(e) => handleStatusChange(row.id, e.target.checked)}
+                />
+              </CustomTooltip>
             ),
           },
         ]}

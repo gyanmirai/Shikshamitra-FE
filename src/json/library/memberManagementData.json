@@ -7,7 +7,7 @@
       "name": "Dharmik Jinjala",
       "currentIssue": 4,
       "overdueReturn": 1,
-      "memberStatus": "Active"
+      "memberStatus": "0"
     },
     {
       "id": "2",
@@ -16,7 +16,7 @@
       "name": "Prerna Atre",
       "currentIssue": 1,
       "overdueReturn": 0,
-      "memberStatus": "Active"
+      "memberStatus": "0"
     },
     {
       "id": "3",
@@ -25,7 +25,7 @@
       "name": "Parth Ghusar",
       "currentIssue": 2,
       "overdueReturn": 0,
-      "memberStatus": "Inactive"
+      "memberStatus": "1"
     },
     {
       "id": "4",
@@ -34,7 +34,7 @@
       "name": "Mayur Solanki",
       "currentIssue": 0,
       "overdueReturn": 2,
-      "memberStatus": "Active"
+      "memberStatus": "0"
     },
     {
       "id": "5",
@@ -43,7 +43,7 @@
       "name": "Raj Baku",
       "currentIssue": 7,
       "overdueReturn": 0,
-      "memberStatus": "Inactive"
+      "memberStatus": "1"
     }
   ],
   "roleOptions": [

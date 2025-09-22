@@ -62,12 +62,12 @@ const ChargeTypeCreation = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Charge Type"
-        description="This screen displays all the created charge types (such as late return fee, damage fee, etc.) and provides an option to add new charge types."
+        heading="Charge Category"
+        description="This screen displays all the created charge types (such as late return fee, damage fee, etc.) and provides an option to add new charge category."
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/setting' },
-          { name: 'Charge Type', href: '/library/settings/charge-type' },
+          { name: 'Charge Category', href: '/library/settings/charge-type' },
         ]}
         action={
           <Button
@@ -76,7 +76,7 @@ const ChargeTypeCreation = () => {
             startIcon={<Add />}
             variant="contained"
           >
-            Charge Type
+            Charge Category
           </Button>
         }
         sx={{ px: 1, mb: 2 }}
@@ -109,7 +109,7 @@ const ChargeTypeCreation = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedChargeType ? 'Update Charge Type' : 'Add Charge Type'}
+              {selectedChargeType ? 'Update Charge Category' : 'Add Charge Category'}
             </Typography>
             <CustomTooltip
               arrow
@@ -155,7 +155,7 @@ const ChargeTypeCreation = () => {
               deleteChargeTypeDialog.onFalse();
               setSelectedChargeType(null);
               shikshaMitraToast.success({
-                message: `Charge Type ${selectedChargeType?.chargeType} deleted successfully`,
+                message: `Charge Category ${selectedChargeType?.chargeType} deleted successfully`,
               });
               // handle delete API call here
             }}

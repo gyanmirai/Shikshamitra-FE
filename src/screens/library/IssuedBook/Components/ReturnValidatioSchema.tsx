@@ -1,7 +1,7 @@
 import * as Yup from 'yup';
 
 export const bookReturnValidationSchema = Yup.object().shape({
-  bookCondition: Yup.string().required('Book Condition is required'),
+  bookCondition: Yup.string().required('Category Name is required'),
 
   fineAmount: Yup.string().when('bookCondition', {
     is: 'Damaged',
