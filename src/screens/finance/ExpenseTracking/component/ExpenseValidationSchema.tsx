@@ -5,7 +5,6 @@ export const getExpenseFormSchema = (currentYear: any) =>
   Yup.object().shape({
     expenseCategory: Yup.string().required('Expense category is required'),
     budget: Yup.string().required('Budget is required'),
-    budgetSubCategory: Yup.string().required('Budget sub category is required'),
     expenseName: Yup.string().required('Expense name is required'),
     amount: Yup.number()
       .required('Amount is required')

@@ -12,8 +12,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetHolidaysQuery } from 'src/redux/communication/holiday/holidayDataApi';
 
 import HolidayForm from './Components/HolidayForm';
 import HolidayTable from './Components/HolidayTable';
@@ -23,10 +25,10 @@ import type { IHoliday } from './Components/type';
 const HolidayManagement = (props: TabComponentType) => {
   const [open, setOpen] = useState(false);
 
-  //   const { data: holidayData } = useQueryAndMutation({
-  //     type: 'query',
-  //     currentQueryAndMutation: useGetHolidaysQuery,
-  //   });
+  const { data: holidayData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHolidaysQuery,
+  });
 
   const [editingHoliday, setEditingHoliday] = useState<IHoliday | null>(null);
   const [viewHoliday, setViewHoliday] = useState<IHoliday | null>(null);
@@ -104,7 +106,7 @@ const HolidayManagement = (props: TabComponentType) => {
         </Card>
       ) : (
         <HolidayTable
-          data={[]}
+          data={holidayData}
           onEdit={(row) => {
             setOpen(true);
             setEditingHoliday(row);

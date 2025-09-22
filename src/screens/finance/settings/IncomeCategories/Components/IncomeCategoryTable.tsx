@@ -42,7 +42,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
     columns={[
       {
         id: 'incomeCategoryName',
-        label: 'Income Category Name',
+        label: 'Name',
         align: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">

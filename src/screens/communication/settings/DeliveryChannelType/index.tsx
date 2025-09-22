@@ -12,8 +12,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetDeliveryChannelTypeOptionsQuery } from 'src/redux/communication/setting/deliveryChannelApi';
 
 import DeliveryChannelTable from './Components/DelieveryChannelTypeTable';
 import DeliveryChannelTypeForm from './Components/DeliveryChannelTypeForm';
@@ -24,7 +26,10 @@ const DeliveryChannelTypeCreation = () => {
   // Dialog control states
   const deleteDialog = useBoolean();
   const addDialog = useBoolean();
-
+  const { data: deliveryChannelData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetDeliveryChannelTypeOptionsQuery,
+  });
   // State management
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedDeliveryChannelType, setSelectedDeliveryChannelType] =
@@ -85,7 +90,7 @@ const DeliveryChannelTypeCreation = () => {
         }}
         onAddDeliveryChannel={addDialog}
         setEditData={setSelectedDeliveryChannelType}
-        data={[]} // Replace with actual data
+        data={deliveryChannelData} // Replace with actual data
       />
 
       <CustomDialog

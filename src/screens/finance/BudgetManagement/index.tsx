@@ -22,6 +22,8 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import BudgetTable from './Components/BudgetTable';
 import NewBudgetForm from './Components/BudgetForm';
 import BudgetDetailsCard from './Components/BudgetView';
+import BudgetApproval from './Components/BudgetReviewDetails';
+import ReasonApprovalForm from '../Concession/Components/ConcessionRequestApprove';
 
 // import NewBudgetForm from './components/budgetFormComponent';
 // import ViewBudgetComp from './components/viewBudgetComp';
@@ -43,7 +45,8 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
 
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-
+  const onConfirmDialg = useBoolean();
+  const [selectedMode, setSelectedMode] = useState('');
   // Boolean hook to control delete confirmation dialog
   const deleteDialog = useBoolean();
 
@@ -52,6 +55,7 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
 
   // Boolean hook to control detail view dialog
   const viewDialog = useBoolean();
+  const reviewDialog = useBoolean();
 
   /**
    * Handles the deletion of a budget entry
@@ -68,9 +72,15 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       setOpen(false);
       dispatch(setIsChanges(false));
+      onConfirmDialg.onFalse();
+      reviewDialog.onFalse();
+      setSelectedMode('');
       setSelectedBudget(null);
     } else if (!isChanges) {
       setOpen(false);
+      onConfirmDialg.onFalse();
+      reviewDialog.onFalse();
+      setSelectedMode('');
       setSelectedBudget(null);
     }
   };
@@ -142,6 +152,10 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
             viewDialog.onTrue();
             setSelectedBudget(data);
           }}
+          onReview={(data) => {
+            reviewDialog.onTrue();
+            setSelectedBudget(data);
+          }}
         />
       )}
 
@@ -208,6 +222,112 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
             }, 200);
           }}
         />
+      </CustomDialog>
+
+      {/* View Details */}
+      {/* View Budget Dialog */}
+      <CustomDialog
+        open={viewDialog.value}
+        handleClose={() => {
+          viewDialog.onFalse();
+          setTimeout(() => {
+            setSelectedBudget(null);
+          }, 200);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">View Budget</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="This modal shows the complete details of the selected budget including category, amount, allocations, and other relevant information."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        maxWidth="md"
+      >
+        <BudgetDetailsCard
+          budget={selectedBudget}
+          handleClose={() => {
+            viewDialog.onFalse();
+            setTimeout(() => {
+              setSelectedBudget(null);
+            }, 200);
+          }}
+        />
+      </CustomDialog>
+
+      {/* Review Budget Dialog */}
+      <CustomDialog
+        open={reviewDialog.value}
+        handleClose={() => {
+          reviewDialog.onFalse();
+          setTimeout(() => {
+            setSelectedBudget(null);
+          }, 200);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Review Budget</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Review and approve/reject the budget request with comments and status updates."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        maxWidth="md"
+      >
+        <BudgetApproval
+          budget={selectedBudget}
+          onApprove={() => {
+            onConfirmDialg.onTrue();
+            setSelectedMode('Approve');
+            // Handle approve logic
+          }}
+          onReject={() => {
+            onConfirmDialg.onTrue();
+            setSelectedMode('Reject');
+            // Handle reject logic
+          }}
+        />
+      </CustomDialog>
+
+      <CustomDialog
+        open={onConfirmDialg.value}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedMode === 'Approve' ? 'Approve Concession' : 'Reject Concession'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                selectedMode === 'Approve'
+                  ? "Approve the student's concession request"
+                  : "Reject the student's concession request"
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        handleClose={() => {
+          onConfirmDialg.onFalse();
+          setSelectedMode('');
+          setSelectedBudget(null);
+        }}
+        maxWidth="xs"
+      >
+        <ReasonApprovalForm onClose={handleClose} mode={selectedMode} />
       </CustomDialog>
     </Box>
   );

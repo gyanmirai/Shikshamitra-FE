@@ -10,7 +10,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useGetMeetingDetailsQuery } from 'src/redux/communication/meeting/meetingDataApi';
 
 import AddNewMeeting from './meetingForm';
 import MeetingTable from './MeetingTable';
@@ -19,10 +21,10 @@ import MeetingDetails from './meetingDetails';
 import type { IMeeting } from './type';
 
 const AllMeetings = (props: TabComponentType) => {
-  // const { data: meetingData } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetMeetingDetailsQuery,
-  // });
+  const { data: meetingData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetMeetingDetailsQuery,
+  });
 
   // State to store the currently selected meeting for editing or viewing
   const [selectedMeeting, setSelectedMeeting] = useState<IMeeting | null>(null);
@@ -117,7 +119,7 @@ const AllMeetings = (props: TabComponentType) => {
             }
           />
           <MeetingTable
-            data={[]}
+            data={meetingData}
             onEdit={(row) => {
               setOpen(true);
               setSelectedMeeting(row);

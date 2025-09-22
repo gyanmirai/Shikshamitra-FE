@@ -12,8 +12,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetHolidayTypeOptionsQuery } from 'src/redux/communication/setting/holidayTypeApi';
 
 import HolidayTypeForm from './Components/HoliayTypeForm';
 // Replace with actual API hook when available
@@ -23,10 +25,10 @@ import type { IHolidayType } from './type';
 
 const HolidayTypeCreation = () => {
   // Custom hook to fetch holiday type data
-  // const { data: holidayTypeData } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetHolidayTypeOptionsQuery,
-  // });
+  const { data: holidayTypeData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHolidayTypeOptionsQuery,
+  });
 
   // Dialog control states
   const deleteHolidayTypeDialog = useBoolean();
@@ -93,7 +95,7 @@ const HolidayTypeCreation = () => {
         onAddHolidayType={addHolidayTypeDialog}
         setOpenDialog={setOpen}
         setEditData={setSelectedHolidayType}
-        data={[]}
+        data={holidayTypeData}
       />
 
       <CustomDialog

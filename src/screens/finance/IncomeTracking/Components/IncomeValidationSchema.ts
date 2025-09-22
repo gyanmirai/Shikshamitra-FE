@@ -7,7 +7,6 @@ export const getIncomeFormSchema = (currentYear: any) =>
   Yup.object().shape({
     incomeCategory: Yup.string().required('Income category is required'),
     budget: Yup.string().required('Budget is required'),
-    budgetSubCategory: Yup.string().required('Budget sub category is required'),
     incomeName: Yup.string().required('Income name is required'),
     amount: Yup.number()
       .required('Amount is required')

@@ -87,7 +87,11 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                 label="Concession Name *"
                 name="concessionName"
                 value={formik.values.concessionName}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                  const capitalized = onlyLetters.replace(/\b\w/g, (c) => c.toUpperCase());
+                  formik.setFieldValue('concessionName', capitalized);
+                }}
                 size="small"
                 error={!!(formik.touched.concessionName && formik.errors.concessionName)}
                 helperText={formik.touched.concessionName && formik.errors.concessionName}
@@ -239,33 +243,12 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                     Document
                   </Button>
                 </Box>
-                {(formik?.values?.documents ?? [])?.length > 0 && (
-                  <Scrollbar sx={{ height: '150px' }}>
-                    {formik?.values?.documents?.map((doc, idx) => (
-                      <Box key={idx} display="flex" alignItems="center" gap={2} mb={2}>
-                        <ShakingTextField
-                          error={
-                            !!(
-                              Array.isArray(formik?.touched?.documents) &&
-                              formik?.touched?.documents?.[idx]?.documentName &&
-                              Array.isArray(formik?.errors?.documents) &&
-                              typeof formik?.errors?.documents?.[idx] === 'object' &&
-                              (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
-                                ?.documentName
-                            )
-                          }
-                        >
-                          <TextField
-                            label="Document Name *"
-                            size="small"
-                            name={`documents.${idx}.documentName`}
-                            value={doc.documentName}
-                            onChange={(e) => {
-                              const docs = [...(formik.values.documents ?? [])];
-                              docs[idx].documentName = e.target.value;
-                              formik.setFieldValue('documents', docs);
-                            }}
-                            sx={{ minWidth: 180 }}
+                <Box display="flex" flexDirection="column">
+                  {(formik?.values?.documents ?? [])?.length > 0 && (
+                    <Scrollbar sx={{ height: '150px' }}>
+                      {formik?.values?.documents?.map((doc, idx) => (
+                        <Box key={idx} display="flex" alignItems="center" gap={3} mb={2} mt={2}>
+                          <ShakingTextField
                             error={
                               !!(
                                 Array.isArray(formik?.touched?.documents) &&
@@ -276,52 +259,49 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                   ?.documentName
                               )
                             }
-                            helperText={
-                              Array.isArray(formik?.touched?.documents) &&
-                              formik?.touched?.documents?.[idx]?.documentName &&
-                              Array.isArray(formik?.errors?.documents) &&
-                              typeof formik?.errors?.documents?.[idx] === 'object' &&
-                              (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
-                                ?.documentName
-                                ? (
+                          >
+                            <TextField
+                              label="Document Name *"
+                              size="small"
+                              name={`documents.${idx}.documentName`}
+                              value={doc.documentName}
+                              onChange={(e) => {
+                                const docs = [...(formik.values.documents ?? [])];
+                                docs[idx].documentName = e.target.value;
+                                formik.setFieldValue('documents', docs);
+                              }}
+                              sx={{ minWidth: 180 }}
+                              error={
+                                !!(
+                                  Array.isArray(formik?.touched?.documents) &&
+                                  formik?.touched?.documents?.[idx]?.documentName &&
+                                  Array.isArray(formik?.errors?.documents) &&
+                                  typeof formik?.errors?.documents?.[idx] === 'object' &&
+                                  (
                                     formik.errors.documents[
                                       idx
                                     ] as FormikErrors<IConcessionDocument>
                                   )?.documentName
-                                : ''
-                            }
-                          />
-                        </ShakingTextField>
-
-                        <ShakingTextField
-                          error={
-                            !!(
-                              Array.isArray(formik?.touched?.documents) &&
-                              formik?.touched?.documents?.[idx]?.documentSize &&
-                              Array.isArray(formik?.errors?.documents) &&
-                              typeof formik?.errors?.documents?.[idx] === 'object' &&
-                              (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
-                                ?.documentSize
-                            )
-                          }
-                        >
-                          <TextField
-                            label="Document Size (Mb) *"
-                            size="small"
-                            name={`documents.${idx}.documentSize`}
-                            value={doc.documentSize === 0 ? '' : doc.documentSize} // show empty if 0
-                            onChange={(e) => {
-                              const docs = [...(formik.values.documents ?? [])];
-                              const val = e.target.value;
-                              // Allow empty string, otherwise store as number
-                              docs[idx].documentSize = val === '' ? '' : Number(val);
-                              formik.setFieldValue('documents', docs);
-                            }}
-                            onKeyDown={(e) => {
-                              if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                                e.preventDefault();
+                                )
                               }
-                            }}
+                              helperText={
+                                Array.isArray(formik?.touched?.documents) &&
+                                formik?.touched?.documents?.[idx]?.documentName &&
+                                Array.isArray(formik?.errors?.documents) &&
+                                typeof formik?.errors?.documents?.[idx] === 'object' &&
+                                (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
+                                  ?.documentName
+                                  ? (
+                                      formik.errors.documents[
+                                        idx
+                                      ] as FormikErrors<IConcessionDocument>
+                                    )?.documentName
+                                  : ''
+                              }
+                            />
+                          </ShakingTextField>
+
+                          <ShakingTextField
                             error={
                               !!(
                                 Array.isArray(formik?.touched?.documents) &&
@@ -332,81 +312,132 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                   ?.documentSize
                               )
                             }
-                            helperText={
-                              Array.isArray(formik?.touched?.documents) &&
-                              formik?.touched?.documents?.[idx]?.documentSize &&
-                              Array.isArray(formik?.errors?.documents) &&
-                              typeof formik?.errors?.documents?.[idx] === 'object' &&
-                              (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
-                                ?.documentSize
-                                ? (
+                          >
+                            <TextField
+                              label="Document Size (Mb) *"
+                              size="small"
+                              name={`documents.${idx}.documentSize`}
+                              value={doc.documentSize ?? ''}
+                              onChange={(e) => {
+                                const docs = [...(formik.values.documents ?? [])];
+                                const val = e.target.value;
+
+                                if (val === '') {
+                                  // Store undefined when input is empty
+                                  docs[idx].documentSize = '';
+                                } else if (val.length <= 2) {
+                                  docs[idx].documentSize = Number(val);
+                                }
+
+                                formik.setFieldValue('documents', docs);
+                              }}
+                              onKeyDown={(e) => {
+                                if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                                  e.preventDefault();
+                                }
+                              }}
+                              error={
+                                !!(
+                                  Array.isArray(formik?.touched?.documents) &&
+                                  formik?.touched?.documents?.[idx]?.documentSize &&
+                                  Array.isArray(formik?.errors?.documents) &&
+                                  typeof formik?.errors?.documents?.[idx] === 'object' &&
+                                  (
                                     formik.errors.documents[
                                       idx
                                     ] as FormikErrors<IConcessionDocument>
                                   )?.documentSize
-                                : ''
-                            }
-                            sx={{ minWidth: 100 }}
-                          />
-                        </ShakingTextField>
+                                )
+                              }
+                              helperText={
+                                Array.isArray(formik?.touched?.documents) &&
+                                formik?.touched?.documents?.[idx]?.documentSize &&
+                                Array.isArray(formik?.errors?.documents) &&
+                                typeof formik?.errors?.documents?.[idx] === 'object' &&
+                                (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
+                                  ?.documentSize
+                                  ? (
+                                      formik.errors.documents[
+                                        idx
+                                      ] as FormikErrors<IConcessionDocument>
+                                    )?.documentSize
+                                  : ''
+                              }
+                              sx={{ minWidth: 100 }}
+                            />
+                          </ShakingTextField>
 
-                        <ShakingTextField
-                          error={
-                            !!(
-                              Array.isArray(formik?.touched?.documents) &&
-                              formik?.touched?.documents?.[idx]?.acceptedFormat &&
-                              Array.isArray(formik?.errors?.documents) &&
-                              typeof formik?.errors?.documents?.[idx] === 'object' &&
-                              (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
-                                ?.acceptedFormat
-                            )
-                          }
-                        >
-                          <Autocomplete
-                            multiple
-                            options={DocumentTypeArray}
-                            disableCloseOnSelect
-                            getOptionLabel={(option) => option.label}
-                            value={DocumentTypeArray.filter((item) =>
-                              doc.acceptedFormat.includes(item.value.toString())
-                            )}
-                            onChange={(_, data) => {
-                              const docs = [...(formik.values.documents ?? [])];
-                              docs[idx].acceptedFormat = data.map((item) => item.value.toString());
-                              formik.setFieldValue('documents', docs);
-                            }}
-                            isOptionEqualToValue={(option, value) => option.value === value.value}
-                            renderOption={(props, option, { selected }) => (
-                              <li {...props}>
-                                <Checkbox
-                                  icon={<CheckBoxOutlineBlankIcon />}
-                                  checkedIcon={<CheckBoxIcon />}
-                                  style={{ marginRight: 8 }}
-                                  checked={selected}
-                                />
-                                {option.label}
-                              </li>
-                            )}
-                            renderTags={(value, getTagProps) =>
-                              value.map((option, index) => (
-                                <Chip
-                                  label={option.label}
-                                  {...getTagProps({ index })}
-                                  key={index}
-                                  variant="soft"
-                                  size="small"
-                                />
-                              ))
+                          <ShakingTextField
+                            error={
+                              !!(
+                                Array.isArray(formik?.touched?.documents) &&
+                                formik?.touched?.documents?.[idx]?.acceptedFormat &&
+                                Array.isArray(formik?.errors?.documents) &&
+                                typeof formik?.errors?.documents?.[idx] === 'object' &&
+                                (formik.errors.documents[idx] as FormikErrors<IConcessionDocument>)
+                                  ?.acceptedFormat
+                              )
                             }
-                            renderInput={(params) => (
-                              <TextField
-                                {...params}
-                                label="Accepted Format *"
-                                value={`${doc.acceptedFormat?.length || 0} Document Selected`}
-                                size="small"
-                                sx={{ minWidth: 290 }} // Added minWidth to increase dropdown width
-                                error={
-                                  !!(
+                          >
+                            <Autocomplete
+                              multiple
+                              options={DocumentTypeArray}
+                              disableCloseOnSelect
+                              getOptionLabel={(option) => option.label}
+                              value={DocumentTypeArray.filter((item) =>
+                                doc.acceptedFormat.includes(item.value.toString())
+                              )}
+                              onChange={(_, data) => {
+                                const docs = [...(formik.values.documents ?? [])];
+                                docs[idx].acceptedFormat = data.map((item) =>
+                                  item.value.toString()
+                                );
+                                formik.setFieldValue('documents', docs);
+                              }}
+                              isOptionEqualToValue={(option, value) => option.value === value.value}
+                              renderOption={(props, option, { selected }) => (
+                                <li {...props}>
+                                  <Checkbox
+                                    icon={<CheckBoxOutlineBlankIcon />}
+                                    checkedIcon={<CheckBoxIcon />}
+                                    style={{ marginRight: 8 }}
+                                    checked={selected}
+                                  />
+                                  {option.label}
+                                </li>
+                              )}
+                              renderTags={(value, getTagProps) =>
+                                value.map((option, index) => (
+                                  <Chip
+                                    label={option.label}
+                                    {...getTagProps({ index })}
+                                    key={index}
+                                    variant="soft"
+                                    size="small"
+                                  />
+                                ))
+                              }
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Accepted Format *"
+                                  value={`${doc.acceptedFormat?.length || 0} Document Selected`}
+                                  size="small"
+                                  sx={{ minWidth: 290 }} // Added minWidth to increase dropdown width
+                                  error={
+                                    !!(
+                                      Array.isArray(formik?.touched?.documents) &&
+                                      formik?.touched?.documents?.[idx]?.acceptedFormat &&
+                                      Array.isArray(formik?.errors?.documents) &&
+                                      typeof formik?.errors?.documents?.[idx] === 'object' &&
+                                      (
+                                        formik.errors.documents[
+                                          idx
+                                        ] as FormikErrors<IConcessionDocument>
+                                      )?.acceptedFormat
+                                    )
+                                  }
+                                  helperText={
                                     Array.isArray(formik?.touched?.documents) &&
                                     formik?.touched?.documents?.[idx]?.acceptedFormat &&
                                     Array.isArray(formik?.errors?.documents) &&
@@ -416,37 +447,39 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                         idx
                                       ] as FormikErrors<IConcessionDocument>
                                     )?.acceptedFormat
-                                  )
-                                }
-                                helperText={
-                                  Array.isArray(formik?.touched?.documents) &&
-                                  formik?.touched?.documents?.[idx]?.acceptedFormat &&
-                                  Array.isArray(formik?.errors?.documents) &&
-                                  typeof formik?.errors?.documents?.[idx] === 'object' &&
-                                  (
-                                    formik.errors.documents[
-                                      idx
-                                    ] as FormikErrors<IConcessionDocument>
-                                  )?.acceptedFormat
-                                    ? (
-                                        formik.errors.documents[
-                                          idx
-                                        ] as FormikErrors<IConcessionDocument>
-                                      )?.acceptedFormat
-                                    : ''
-                                }
-                              />
-                            )}
-                          />
-                        </ShakingTextField>
+                                      ? (
+                                          formik.errors.documents[
+                                            idx
+                                          ] as FormikErrors<IConcessionDocument>
+                                        )?.acceptedFormat
+                                      : ''
+                                  }
+                                />
+                              )}
+                            />
+                          </ShakingTextField>
 
-                        <IconButton color="error" onClick={() => handleRemoveDocument(idx)}>
-                          <Iconify icon={GlobalIcons.delete} />
-                        </IconButton>
-                      </Box>
-                    ))}
-                  </Scrollbar>
-                )}
+                          <IconButton color="error" onClick={() => handleRemoveDocument(idx)}>
+                            <Iconify icon={GlobalIcons.delete} />
+                          </IconButton>
+                        </Box>
+                      ))}
+                    </Scrollbar>
+                  )}
+                  <Typography
+                    sx={{
+                      margin: 0,
+                      position: 'static',
+                      whiteSpace: 'normal',
+                      color: 'error.main',
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    {formik.touched.documents &&
+                      typeof formik.errors.documents === 'string' &&
+                      formik.errors.documents}
+                  </Typography>
+                </Box>
               </Paper>
             </Grid>
           )}

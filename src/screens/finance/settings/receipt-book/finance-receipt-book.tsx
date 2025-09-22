@@ -119,7 +119,7 @@ const FinanceReceiptBookSetting = () => {
           }
           tableId="finance-receipt-book-setting-table"
           columns={[
-            { id: 'receiptBookName', label: 'Receipt Book Name', align: 'left' },
+            { id: 'receiptBookName', label: 'Name', align: 'left' },
 
             { id: 'prefix', label: 'Prefix', align: 'left' },
             { id: 'suffix', label: 'Suffix', align: 'left' },
@@ -227,7 +227,7 @@ const FinanceReceiptBookSetting = () => {
                 title={
                   isEdit
                     ? 'Update receipt book details to manage financial records and transactions.'
-                    : 'Create new receipt book to organize and track financial transactions.'
+                    : 'This screen displays all the created receipt books in the system, providing an organized view for tracking financial receipts. It also allows admins to create new receipt books when needed, helping maintain systematic records and ensuring transparency in financial documentation.'
                 }
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -255,17 +255,17 @@ const FinanceReceiptBookSetting = () => {
           }, 200); // Adjust delay (in ms) as needed
           activeDialog.onFalse();
         }}
-        title={selectedEntry?.toggle === true ? 'InActive' : 'Active'}
+        title={selectedEntry?.toggle === true ? 'Inactive' : 'Active'}
         content={
           selectedEntry && Array.isArray(selectedEntry.receiptBookName) ? (
             <>
               Are you sure you want move <strong>{selectedEntry.receiptBookName}</strong> receipt
-              book to {selectedEntry.toggle === true ? 'InActive' : 'Active'} ?
+              book to {selectedEntry.toggle === true ? 'Inactive' : 'Active'} ?
             </>
           ) : (
             <>
               Are you sure you want move <strong>{selectedEntry?.receiptBookName}</strong> receipt
-              book to {selectedEntry?.toggle === true ? 'InActive' : 'Active'} ?
+              book to {selectedEntry?.toggle === true ? 'Inactive' : 'Active'} ?
             </>
           )
         }
@@ -279,7 +279,7 @@ const FinanceReceiptBookSetting = () => {
               />
             }
             onClick={() => {
-              const status = selectedEntry?.toggle === true ? 'InActive' : 'Active';
+              const status = selectedEntry?.toggle === true ? 'Inactive' : 'Active';
               shikshaMitraToast.success({
                 message:
                   selectedEntry && Array.isArray(selectedEntry.receiptBookName) ? (
@@ -300,7 +300,7 @@ const FinanceReceiptBookSetting = () => {
               activeDialog.onFalse();
             }}
           >
-            {selectedEntry?.toggle === true ? 'InActive' : 'Active'}
+            {selectedEntry?.toggle === true ? 'Inactive' : 'Active'}
           </Button>
         }
       />

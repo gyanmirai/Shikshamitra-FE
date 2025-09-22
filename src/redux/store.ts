@@ -46,7 +46,7 @@ import { paymentHistoryApi } from './feeCollection/paymentHistory';
 import { bookIssuedApi } from './bookIssuedData/bookIssuedDataApi';
 import { bookCategoryApi } from './bookCategoryApi/bookCategoryApi';
 import { issueReturnFormApi } from './issueRetunApi/issueReturnApi';
-import { holidayApi } from './communication/holiday/holidayDataApi';
+import { communicationApi } from './communication/communicationApi';
 import { budgetSubCategoryApi } from './budgetApi/budgetSubCategory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
@@ -61,8 +61,6 @@ import { CoreSubjectApi } from './subject/core-subject/core-subject-api';
 import { StudentCertificateApi } from './student/certificate/certificate';
 import { studentInvoiceApi } from './invoiceAndReceipt/studentInvoiceApi';
 import { studentReceiptApi } from './invoiceAndReceipt/studentReceiptApi';
-import { meetingDetailsApi } from './communication/meeting/meetingDataApi';
-import { eventTypeOptionsApi } from './communication/setting/eventTypeApi';
 import { EntranceExamApi } from './student/entrance-exam/entrance-exam-api';
 import { shiftManagementApi } from './shiftManagement/shift-management-api';
 import { StudentLeaveApi } from './student/student-leave/student-leave-api';
@@ -72,16 +70,11 @@ import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { memberManagementApi } from './memberManagement/memberManagementApi';
 import { reservationDataApi } from './reservationDataApi/reservationDataApi';
 import { bookConditionOptionsApi } from './library/setting/bookConditionApi';
-import { surveyTypeOptionsApi } from './communication/setting/surveyTypeApi';
-import { holidayTypeOptionsApi } from './communication/setting/holidayTypeApi';
 import { quizManagementApi } from './academics/examination/quiz-management-api';
 import { LibraryChargeApi } from './library/charges-management/charges-get-api';
 import { StudentRegistrationApi } from './student/registration/registration-api';
 import { reservationBookApi } from './book-reservation-api/book-reservation-api';
-import { eventAnnouncementApi } from './communication/announcement/eventDataApi';
-// import { announcementTypeApi } from './communication/setting/announcementTypeApi';
 import { StudentDocumentTypeApi } from './student/document-type/document-type-api';
-import { importanceLevelOptionsApi } from './communication/setting/importanceLevel';
 import { studentGrNumberApi } from './student/studentGrNumber/student-gr-number-api';
 import { paymentStatusOptionApi } from './paymentStatusOption/paymentStatusOptionApi';
 import { reservationRequestApi } from './reservationRequestApi/reservationRequestApi';
@@ -91,12 +84,8 @@ import { StudentAttendanceRuleApi } from './student/attendance-rule/attendance-r
 import { StudentAttendanceTypeApi } from './student/attendance-type/attendance-type-api';
 import { EntranceExamSlotApi } from './student/entrance-exam-slot/entrance-exam-slot-api';
 import { inquiryPreferenceApi } from './student/inquiry-preference/inquiry-preference-api';
-import { deliveryChannelTypeOptionsApi } from './communication/setting/deliveryChannelApi';
-import { announcementTypeOptionsApi } from './communication/setting/announcementTypeSetting';
-import { classWiseAnnouncementApi } from './communication/announcement/classWiseAnnouncement';
 import { StudentRegistrationFormApi } from './student/registration-form/registration-form-api';
 import { studentChangeClassApi } from './student/student-change-class/student-change-class-api';
-import { schoolWiseAnnouncementApi } from './communication/announcement/schoolWiseAnnouncement';
 import { EnrollmentReportApi } from './student/student-enrollment-report/student-enrollemt-report';
 import { libraryChargeCategoryOptionsApi } from './library/charges-management/charge-category-api';
 
@@ -192,18 +181,7 @@ const reducers = combineReducers({
   [LibraryChargeApi.reducerPath]: LibraryChargeApi.reducer,
   [libraryChargeCategoryOptionsApi.reducerPath]: libraryChargeCategoryOptionsApi.reducer,
   [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
-  [schoolWiseAnnouncementApi.reducerPath]: schoolWiseAnnouncementApi.reducer,
-  [classWiseAnnouncementApi.reducerPath]: classWiseAnnouncementApi.reducer,
-  [holidayApi.reducerPath]: holidayApi.reducer,
-  [meetingDetailsApi.reducerPath]: meetingDetailsApi.reducer,
-  [eventAnnouncementApi.reducerPath]: eventAnnouncementApi.reducer,
-  [holidayTypeOptionsApi.reducerPath]: holidayTypeOptionsApi.reducer,
-  [eventTypeOptionsApi.reducerPath]: eventTypeOptionsApi.reducer,
-  [surveyTypeOptionsApi.reducerPath]: surveyTypeOptionsApi.reducer,
-  [announcementTypeOptionsApi.reducerPath]: announcementTypeOptionsApi.reducer,
-  [importanceLevelOptionsApi.reducerPath]: importanceLevelOptionsApi.reducer,
-  [deliveryChannelTypeOptionsApi.reducerPath]: deliveryChannelTypeOptionsApi.reducer,
-  // [announcementTypeApi.reducerPath]: announcementTypeApi.reducer,
+  [communicationApi.reducerPath]: communicationApi.reducer,
 });
 
 const store = configureStore({
@@ -298,14 +276,7 @@ const store = configureStore({
       LibraryChargeApi.middleware,
       libraryChargeCategoryOptionsApi.middleware,
       bookConditionOptionsApi.middleware,
-      schoolWiseAnnouncementApi.middleware,
-      classWiseAnnouncementApi.middleware,
-      eventAnnouncementApi.middleware,
-      // deliveryChannelTypeOptionsApi.middleware
-      // importanceLevelOptionsApi.middleware
-      // announcementTypeOptionsApi.middleware,
-      // announcementTypeApi.middleware,
-      // surveyTypeOptionsApi.middleware,
+      communicationApi.middleware,
       // meetingDetailsApi.middleware,
       // holidayApi.middleware,
     ]),

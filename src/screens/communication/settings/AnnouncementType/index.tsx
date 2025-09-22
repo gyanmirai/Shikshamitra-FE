@@ -16,6 +16,9 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 // Replace with actual API hook when available
 
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetAnnouncementTypeOptionsQuery } from 'src/redux/communication/setting/announcementTypeSetting';
+
 import AnnouncementTypeForm from './Components/AnnouncementTypeForm';
 import AnnouncementTypeTable from './Components/AnnouncementTypeTable';
 
@@ -23,10 +26,10 @@ import type { IAnnouncementType } from './Components/type';
 
 const AnnouncementTypeCreation = () => {
   // Custom hook to fetch announcement type data
-  //   const { data: announcementTypeData } = useQueryAndMutation({
-  //     type: 'query',
-  //     currentQueryAndMutation: useGetAnnouncementTypeOptionsQuery,
-  //   });
+  const { data: announcementTypeData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAnnouncementTypeOptionsQuery,
+  });
 
   // Dialog control states
   const deleteAnnouncementTypeDialog = useBoolean();
@@ -95,7 +98,7 @@ const AnnouncementTypeCreation = () => {
         onAddAnnouncementType={addAnnouncementTypeDialog}
         setOpenDialog={setOpen}
         setEditData={setSelectedAnnouncementType}
-        data={[]}
+        data={announcementTypeData}
       />
 
       <CustomDialog

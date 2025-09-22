@@ -90,7 +90,7 @@ const FeeCategoryCreation = () => {
             Fee Category
           </Button>
         }
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
       />
 
       <FeeCategoryTable
