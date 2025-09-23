@@ -1,20 +1,32 @@
 export enum BudgetStatusType {
+  Pending,
   Active,
-  Draft,
+  Inactive,
+  Archive,
 }
 
 export const BudgetStatusOptions = [
+  {
+    label: 'Pending',
+    value: BudgetStatusType.Pending,
+  },
   {
     label: 'Active',
     value: BudgetStatusType.Active,
   },
   {
-    label: 'Draft',
-    value: BudgetStatusType.Draft,
+    label: 'Inactive',
+    value: BudgetStatusType.Inactive,
+  },
+  {
+    label: 'Archive',
+    value: BudgetStatusType.Archive,
   },
 ];
 
 export const BudgetStatusTypeColors = {
+  [BudgetStatusType.Pending]: 'warning',
   [BudgetStatusType.Active]: 'success',
-  [BudgetStatusType.Draft]: 'warning',
+  [BudgetStatusType.Inactive]: 'error',
+  [BudgetStatusType.Archive]: 'default',
 };

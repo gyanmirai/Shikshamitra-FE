@@ -21,6 +21,7 @@ const NewBudgetForm = ({ onClose, editData }: { onClose: () => void; editData?: 
     <CustomStepperWithFormik
       scrollbarHeight="400px"
       initialValues={{
+        board: '',
         budgetTitle: '',
         budgetCategory: '',
         budgetSubCategories: [], // dropdown selection

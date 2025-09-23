@@ -1,27 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { communicationApi } from '../communicationApi';
 
-import communicationData from '../../../../communicationData.json';
-
-const isDev = process.env.NODE_ENV === 'development';
-
-export const deliveryChannelTypeOptionsApi = createApi({
-  reducerPath: 'DeliveryChannelTypeOptionsApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/deliveryChannelTypeData') {
-          return { data: communicationData.deliveryChannelTypeData };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['DeliveryChannelTypeOptions'],
+export const deliveryChannelTypeOptionsApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
     getDeliveryChannelTypeOptions: builder.query({
       query: () => ({
@@ -31,6 +10,7 @@ export const deliveryChannelTypeOptionsApi = createApi({
       providesTags: ['DeliveryChannelTypeOptions'],
     }),
   }),
+  overrideExisting: false,
 });
 
 export const { useGetDeliveryChannelTypeOptionsQuery } = deliveryChannelTypeOptionsApi;

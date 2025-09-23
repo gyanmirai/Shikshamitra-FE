@@ -1,5 +1,7 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -7,6 +9,7 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -15,6 +18,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -100,14 +104,28 @@ const FinanceExpenseCategory = () => {
     setSelectedItem(null);
     addDialog.onTrue();
   };
+  // Redux state and dispatch
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
 
-  // Handle dialog close
-  const handleDialogClose = () => {
-    addDialog.onFalse();
-    editDialog.onFalse();
-    setTimeout(() => {
-      setSelectedItem(null);
-    }, 200);
+  /**
+   * Handles closing the expense category dialog
+   */
+  const handleDialogClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      addDialog.onFalse();
+      editDialog.onFalse();
+      setTimeout(() => {
+        setSelectedItem(null);
+      }, 200);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      addDialog.onFalse();
+      editDialog.onFalse();
+      setTimeout(() => {
+        setSelectedItem(null);
+      }, 200);
+    }
   };
 
   return (
@@ -135,12 +153,29 @@ const FinanceExpenseCategory = () => {
 
       <CustomizableTable
         tableId="expense-category-table"
-        noDataText={<>No Expense Category Data Found</>}
+        noDataText={
+          <>
+            No Expense Category Data Found{' '}
+            <Box
+              onClick={handleAdd}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Expense Category
+            </Box>
+          </>
+        }
         isLoading={isLoading}
         columns={[
           {
             id: 'expenseCategoryName',
-            label: 'Expense Category Name',
+            label: 'Name',
             minWidth: '220px',
             isSort: true,
             isFilter: true,
@@ -184,12 +219,49 @@ const FinanceExpenseCategory = () => {
       />
 
       {/* Add/Edit Dialog */}
-      <ExpenseCategoryDialog
+      <CustomDialog
         open={addDialog.value || editDialog.value}
-        onClose={handleDialogClose}
-        editData={selectedItem}
-        onSave={handleSave}
-      />
+        handleClose={() => {
+          addDialog.onFalse();
+          editDialog.onFalse();
+          setTimeout(() => {
+            setSelectedItem(null);
+          }, 200);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h6">
+              {selectedItem ? 'Update Expense Category' : 'Add Expense Category'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="This modal allows the user to fill in all required fields to create a new expense category."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        maxWidth="sm"
+        fullWidth
+        paperProps={{
+          sx: {
+            width: '580px',
+            maxWidth: '90vw',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        }}
+      >
+        <ExpenseCategoryDialog
+          open={addDialog.value || editDialog.value}
+          onClose={handleDialogClose}
+          editData={selectedItem}
+          onSave={handleSave}
+        />
+      </CustomDialog>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
@@ -225,7 +297,7 @@ export default FinanceExpenseCategory;
 
 interface ExpenseCategoryDialogProps {
   open: boolean;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   editData?: any | null;
   onSave: (values: any) => Promise<void>;
 }
@@ -270,129 +342,97 @@ const ExpenseCategoryDialog = ({ open, onClose, editData, onSave }: ExpenseCateg
   // Handle dialog cancellation and form reset
   const handleClose = () => {
     formik.resetForm();
-    onClose();
+    onClose(null, false);
   };
 
   return (
-    <CustomDialog
-      open={open}
-      handleClose={handleClose}
-      title={
-        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-          <Typography variant="h6">
-            {editData ? 'Update Expense Category' : 'Add Expense Category'}
-          </Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            sx={{ textAlign: 'justify' }}
-            title="This modal allows the user to fill in all required fields to create a new expense category."
-          >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
-        </Box>
-      }
-      maxWidth="sm"
-      fullWidth
-      paperProps={{
-        sx: {
-          width: '580px',
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-        },
-      }}
-    >
-      <Box>
-        <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-          <DialogScrollContent>
-            <Stack spacing={3} p={0}>
-              {/* Expense Category Name Field */}
-              <ShakingTextField
+    <Box>
+      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+        <DialogScrollContent>
+          <Stack spacing={3} p={0}>
+            {/* Expense Category Name Field */}
+            <ShakingTextField
+              error={
+                !!(formik.touched.expenseCategoryName && formik.errors.expenseCategoryName) || false
+              }
+            >
+              <TextField
+                size="small"
+                value={formik.values.expenseCategoryName}
+                name="expenseCategoryName"
+                fullWidth
+                label="Expense Category Name *"
+                onChange={(e: any) => {
+                  const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                  const newName = onlyLetters
+                    .split(' ')
+                    .map(
+                      (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    )
+                    .join(' ');
+                  formik.setFieldValue('expenseCategoryName', newName);
+                }}
                 error={
-                  !!(formik.touched.expenseCategoryName && formik.errors.expenseCategoryName) ||
-                  false
+                  formik.touched.expenseCategoryName && Boolean(formik.errors.expenseCategoryName)
                 }
-              >
-                <TextField
-                  size="small"
-                  value={formik.values.expenseCategoryName}
-                  name="expenseCategoryName"
-                  fullWidth
-                  label="Expense Category Name *"
-                  onChange={(e: any) => {
-                    const withoutNumbers = e.target.value.replace(/[0-9]/g, '');
-                    const newName = withoutNumbers
-                      .split(' ')
-                      .map(
-                        (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                      )
-                      .join(' ');
-                    formik.setFieldValue('expenseCategoryName', newName);
-                  }}
-                  error={
-                    formik.touched.expenseCategoryName && Boolean(formik.errors.expenseCategoryName)
-                  }
-                  helperText={
-                    formik.touched.expenseCategoryName &&
-                    typeof formik.errors.expenseCategoryName === 'string'
-                      ? formik.errors.expenseCategoryName
-                      : undefined
-                  }
-                />
-              </ShakingTextField>
-
-              {/* Description Field */}
-              <ShakingTextField
-                error={!!(formik.touched.description && formik.errors.description) || false}
-              >
-                <TextField
-                  multiline
-                  rows={4}
-                  size="small"
-                  value={formik.values.description}
-                  name="description"
-                  fullWidth
-                  label="Description"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
-              </ShakingTextField>
-            </Stack>
-          </DialogScrollContent>
-        </BackPopUpChecked>
-
-        {/* Dialog action buttons */}
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            size="small"
-            variant="outlined"
-            onClick={handleClose}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            size="small"
-            type="submit"
-            variant="contained"
-            loading={isLoading}
-            startIcon={
-              <Iconify
-                icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-                width={editData ? 16 : 20}
-                height={editData ? 16 : 20}
+                helperText={
+                  formik.touched.expenseCategoryName &&
+                  typeof formik.errors.expenseCategoryName === 'string'
+                    ? formik.errors.expenseCategoryName
+                    : undefined
+                }
               />
-            }
-            onClick={(e: any) => {
-              formik.handleSubmit(e);
-            }}
-          >
-            {editData ? 'Update' : 'Submit'}
-          </LoadingButton>
-        </DialogActions>
-      </Box>
-    </CustomDialog>
+            </ShakingTextField>
+
+            {/* Description Field */}
+            <ShakingTextField
+              error={!!(formik.touched.description && formik.errors.description) || false}
+            >
+              <TextField
+                multiline
+                rows={4}
+                size="small"
+                value={formik.values.description}
+                name="description"
+                fullWidth
+                label="Description"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            </ShakingTextField>
+          </Stack>
+        </DialogScrollContent>
+      </BackPopUpChecked>
+
+      {/* Dialog action buttons */}
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          size="small"
+          variant="outlined"
+          onClick={handleClose}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          size="small"
+          type="submit"
+          variant="contained"
+          loading={isLoading}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
+        >
+          {editData ? 'Update' : 'Submit'}
+        </LoadingButton>
+      </DialogActions>
+    </Box>
   );
 };

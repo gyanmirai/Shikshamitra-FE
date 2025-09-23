@@ -264,34 +264,19 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.budget && formik.errors.budget)}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Budget *"
-                    name="budget"
-                    disabled
-                    value={formik.values.budget}
-                    onChange={formik.handleChange}
-                    error={!!(formik.touched.budget && formik.errors.budget)}
-                    helperText={formik.touched.budget && formik.errors.budget}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.budgetSubCategory && formik.errors.budgetSubCategory)}
-                >
                   <CustomSelect
-                    label="Budget Sub Category *"
-                    options={subCategoryOptions}
-                    value={formik.values.budgetSubCategory}
-                    onChange={(val) => formik.setFieldValue('budgetSubCategory', val)}
-                    error={!!(formik.touched.budgetSubCategory && formik.errors.budgetSubCategory)}
-                    helperText={
-                      (formik.touched.budgetSubCategory &&
-                        formik.errors.budgetSubCategory) as string
-                    }
+                    label="Budget Title *"
+                    options={[
+                      { value: 'FY2023-24Q1', label: 'FY 2023-24 Q1 Budget' },
+                      { value: 'FY2023-24Q2', label: 'FY 2023-24 Q2 Budget' },
+                      { value: 'FY2023-24Q3', label: 'FY 2023-24 Q3 Budget' },
+                      { value: 'FY2023-24Q4', label: 'FY 2023-24 Q4 Budget' },
+                      { value: 'AnnualBudget2024', label: 'Annual Budget 2024' },
+                    ]}
+                    value={formik.values.budget}
+                    onChange={(val) => formik.setFieldValue('budget', val)}
+                    error={!!(formik.touched.budget && formik.errors.budget)}
+                    helperText={(formik.touched.budget && formik.errors.budget) as string}
                     formControlProps={{ fullWidth: true }}
                   />
                 </ShakingTextField>

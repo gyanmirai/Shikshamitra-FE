@@ -80,14 +80,22 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                 <NumericFormatCustom
                   size="small"
                   fullWidth
-                  label="Amount"
+                  label="Amount *"
                   name={`feeStructureClasses.${className}[${index}].feeItems.${index}.amount`}
                   value={item.amount || ''}
                   onChange={(e) => {
                     let val = e.target.value;
-                    val = val.replace(/[₹,\s]/g, '');
+                    val = val.replace(/[₹,\s]/g, ''); // remove ₹, , and spaces
+
+                    // Allow only numbers
+                    if (!/^\d*$/.test(val)) return;
+
+                    // Restrict to 5 digits max
+                    if (val.length > 5) return;
+
                     const updatedItems = [...feeItems];
                     updatedItems[index].amount = Number(val);
+
                     formik.setFieldValue(
                       `feeStructureClasses.${className}[${structureIndex}].feeItems[${index}].amount`,
                       Number(val)

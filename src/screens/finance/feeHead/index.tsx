@@ -87,7 +87,7 @@ const FeeHeadCreation = () => {
             Fee Head
           </Button>
         }
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
       />
 
       <FeeHeadTable
@@ -128,7 +128,7 @@ const FeeHeadCreation = () => {
               title={
                 selectedFeeHead
                   ? 'You can update the fee head details including name, category, and description.'
-                  : 'Create a new fee head by entering its name, selecting the related fee category, and marking it as mandatory if required.'
+                  : 'This modal allows creating a new fee head by selecting the appropriate fee category and entering the fee head name. It helps in organizing the fee structure into well-defined categories and heads, ensuring clarity and accuracy in financial management.'
               }
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
@@ -148,11 +148,11 @@ const FeeHeadCreation = () => {
           }, 200);
           activeDialog.onFalse();
         }}
-        title={selectedEntry?.toggle === true ? 'InActive' : 'Active'}
+        title={selectedEntry?.toggle === true ? 'Inactive' : 'Active'}
         content={
           <>
             Are you sure you want move <strong>{selectedEntry?.feeHeadName}</strong> fee head to{' '}
-            {selectedEntry?.toggle === true ? 'InActive' : 'Active'}?
+            {selectedEntry?.toggle === true ? 'Inactive' : 'Active'}?
           </>
         }
         action={
@@ -165,7 +165,7 @@ const FeeHeadCreation = () => {
               />
             }
             onClick={() => {
-              const status = selectedEntry?.toggle === true ? 'InActive' : 'Active';
+              const status = selectedEntry?.toggle === true ? 'Inactive' : 'Active';
               shikshaMitraToast.success({
                 message: (
                   <>
@@ -180,7 +180,7 @@ const FeeHeadCreation = () => {
               activeDialog.onFalse();
             }}
           >
-            {selectedEntry?.toggle === true ? 'InActive' : 'Active'}
+            {selectedEntry?.toggle === true ? 'Inactive' : 'Active'}
           </Button>
         }
       />

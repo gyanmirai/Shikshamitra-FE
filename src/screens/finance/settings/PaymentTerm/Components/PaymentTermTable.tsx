@@ -42,7 +42,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
     columns={[
       {
         id: 'paymentTermName',
-        label: 'Payment Term Name',
+        label: 'Name',
         align: 'left',
       },
       {

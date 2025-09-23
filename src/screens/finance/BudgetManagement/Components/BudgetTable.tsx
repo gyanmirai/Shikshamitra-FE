@@ -6,15 +6,11 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { BudgetStatusType } from 'src/enums/budget-status';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Tab, Tabs, Button, MenuItem, MenuList } from '@mui/material';
-import {
-  BudgetStatusType,
-  BudgetStatusOptions,
-  BudgetStatusTypeColors,
-} from 'src/enums/budget-status';
 
 interface IBudgetTableProps {
   data: any[];
@@ -22,6 +18,7 @@ interface IBudgetTableProps {
   setEditData?: (value: any) => void;
   onDelete?: (id: string) => void;
   onViewDetail?: (data: any) => void;
+  onReview?: (data: any) => void;
 }
 
 const BudgetTable: React.FC<IBudgetTableProps> = ({
@@ -30,17 +27,20 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
   setEditData,
   onDelete,
   onViewDetail,
+  onReview,
 }) => {
   const archiveDialog = useBoolean();
   const [selectedBudget, setSelectedBudget] = React.useState<string | null>(null);
 
   // Tabs setup
-  const tabs = useTabs('All');
+  const tabs = useTabs(0);
 
   const budgetCounts = useMemo(
     () => ({
+      pending: data?.filter((i) => i.status === BudgetStatusType.Pending)?.length || 0,
       active: data?.filter((i) => i.status === BudgetStatusType.Active)?.length || 0,
-      archived: data?.filter((i) => i.status === BudgetStatusType.Draft)?.length || 0,
+      Inactive: data?.filter((i) => i.status === BudgetStatusType.Inactive)?.length || 0,
+      archieve: data?.filter((i) => i.status === BudgetStatusType.Archive)?.length || 0,
     }),
     [data]
   );
@@ -48,10 +48,10 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
   const TABS = useMemo(
     () => [
       {
-        label: 'All',
-        value: 'All',
-        count: data?.length || 0,
-        color: 'default',
+        label: 'Pending',
+        value: BudgetStatusType.Pending,
+        count: budgetCounts.pending,
+        color: 'warning',
       },
       {
         label: 'Active',
@@ -60,14 +60,22 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
         color: 'success',
       },
       {
+        label: 'Inactive',
+        value: BudgetStatusType.Inactive,
+        count: budgetCounts.Inactive,
+        color: 'error',
+      },
+      {
         label: 'Archive',
-        value: BudgetStatusType.Draft,
-        count: budgetCounts.archived,
-        color: 'warning',
+        value: BudgetStatusType.Archive,
+        count: budgetCounts.archieve,
+        color: 'default',
       },
     ],
-    [budgetCounts, data]
+    [budgetCounts]
   );
+
+  console.log('tabs vale-----', tabs.value);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
     tabs.onChange(event, newValue);
@@ -78,24 +86,84 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
     return data?.filter((i) => i.status === tabs.value);
   }, [data, tabs.value]);
 
-  const actions = ({ popover: pop, row }: any) => (
-    <MenuList>
-      <MenuItem
-        onClick={() => {
-          setSelectedBudget(row.budgetTitle);
-          archiveDialog.onTrue();
-          pop.onClose();
-        }}
-      >
-        <Iconify icon={GlobalIcons.archive} />
-        Archive
-      </MenuItem>
-    </MenuList>
-  );
+  const getActionsForStatus = (status: string, row: any, pop: any) => {
+    switch (status) {
+      case 'pending':
+        return (
+          <MenuList>
+            <MenuItem
+              onClick={() => {
+                onReview?.(row);
+                pop.onClose();
+              }}
+            >
+              <Iconify icon={GlobalIcons.eye} />
+              Review
+            </MenuItem>
+          </MenuList>
+        );
+
+      case 'active':
+        return (
+          <MenuList>
+            <MenuItem
+              onClick={() => {
+                // mark inactive logic
+                pop.onClose();
+              }}
+            >
+              <Iconify icon={GlobalIcons.cancel} />
+              Inactive
+            </MenuItem>
+          </MenuList>
+        );
+
+      case 'inactive':
+        return (
+          <MenuList>
+            <MenuItem
+              onClick={() => {
+                onViewDetail?.(row);
+                pop.onClose();
+              }}
+            >
+              <Iconify icon={GlobalIcons.eye} />
+              View
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                onDelete?.(row.id);
+                pop.onClose();
+              }}
+            >
+              <Iconify icon={GlobalIcons.delete} />
+              Delete
+            </MenuItem>
+          </MenuList>
+        );
+
+      case 'archive':
+        return (
+          <MenuList>
+            <MenuItem
+              onClick={() => {
+                onViewDetail?.(row);
+                pop.onClose();
+              }}
+            >
+              <Iconify icon={GlobalIcons.eye} />
+              View
+            </MenuItem>
+          </MenuList>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <Box>
-      {/* Tabs */}
       <Box display="flex" justifyContent="flex-start" sx={{ mt: '4px', mb: 2 }}>
         <Tabs
           value={tabs.value}
@@ -112,10 +180,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               label={
                 <Box display="flex" justifyContent="center" gap={1} alignItems="center">
                   {tab.label}{' '}
-                  <Label
-                    variant={tab.value === 'All' ? 'filled' : 'soft'}
-                    color={(tab?.color as LabelColor) || 'default'}
-                  >
+                  <Label variant="soft" color={(tab?.color as LabelColor) || 'default'}>
                     {tab.count}
                   </Label>
                 </Box>
@@ -127,78 +192,184 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
       </Box>
 
       {/* Table */}
-      <CustomizableTable
-        tableId="budget-table"
-        noDataText="Budget Data Not Found"
-        columns={[
-          { id: 'budgetTitle', label: 'Budget Title', align: 'left', minWidth: '150px' },
-          { id: 'budgetCategory', label: 'Type', align: 'left' },
-          {
-            id: 'startDate',
-            label: 'Start Date',
-            align: 'left',
-            filterType: 'date',
-            minWidth: '120px',
-          },
-          {
-            id: 'endDate',
-            label: 'End Date',
-            align: 'left',
-            filterType: 'date',
-            minWidth: '120px',
-          },
-          {
-            id: 'totalBudgetAmount',
-            label: 'Total Budget Amount',
-            align: 'left',
-            minWidth: '190px',
-            filterType: 'number',
-          },
-          { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
-          { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
-          {
-            id: 'status',
-            label: 'Status',
-            align: 'left',
-            filterType: 'enum',
-            enumOptions: BudgetStatusOptions,
-            sticky: true,
-            render(value, row) {
-              const color = BudgetStatusTypeColors[value as BudgetStatusType] as LabelColor;
-              return <Label color={color}>{BudgetStatusType[value as BudgetStatusType]}</Label>;
+      {tabs.value === 0 ? (
+        <CustomizableTable
+          tableId="budget-table-pending"
+          noDataText="Pending Budgets Not Found"
+          columns={[
+            { id: 'budgetTitle', label: 'Budget Title', align: 'left' },
+            { id: 'budgetCategory', label: 'Type', align: 'left' },
+            { id: 'startDate', label: 'Start Date', align: 'left', filterType: 'date' },
+            { id: 'endDate', label: 'End Date', align: 'left', filterType: 'date' },
+            {
+              id: 'totalBudgetAmount',
+              label: 'Total Budget Amount',
+              align: 'left',
+              filterType: 'number',
             },
-          },
-          {
-            id: 'action',
-            label: 'Actions',
-            minWidth: 80,
-            align: 'left',
-            isSort: false,
-            sticky: true,
-            isFilter: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  actions={(prop) => actions({ ...prop, row })}
-                  placement="right-top"
-                  showDeleteIcon
-                  showEditIcon
-                  handleDeleteClick={() => onDelete?.(row.id)}
-                  handleEditClick={() => {
-                    setOpenDialog?.(true);
-                    setEditData?.(row);
-                  }}
-                  showViewIcon
-                  handleViewClick={() => {
-                    onViewDetail?.(row);
-                  }}
-                />
-              );
+            { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
+            { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
+            {
+              id: 'action',
+              label: 'Actions',
+              align: 'left',
+              isFilter: false,
+              isSort: false,
+              sticky: true,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    showViewIcon
+                    showEditIcon
+                    showDeleteIcon
+                    handleViewClick={() => {
+                      onViewDetail?.(row);
+                    }}
+                    handleEditClick={() => {
+                      setOpenDialog?.(true);
+                      setEditData?.(row);
+                    }}
+                    handleDeleteClick={() => {
+                      onDelete?.(row.id);
+                    }}
+                    actions={(prop) => getActionsForStatus('pending', row, prop.popover)}
+                    placement="right-top"
+                  />
+                );
+              },
             },
-          },
-        ]}
-        data={tableData || []}
-      />
+          ]}
+          data={tableData || []}
+        />
+      ) : tabs.value === 1 ? (
+        <CustomizableTable
+          tableId="budget-table-active"
+          noDataText="Active Budgets Not Found"
+          columns={[
+            { id: 'budgetTitle', label: 'Budget Title', align: 'left' },
+            { id: 'budgetCategory', label: 'Type', align: 'left' },
+            { id: 'startDate', label: 'Start Date', align: 'left', filterType: 'date' },
+            { id: 'endDate', label: 'End Date', align: 'left', filterType: 'date' },
+            {
+              id: 'totalBudgetAmount',
+              label: 'Total Budget Amount',
+              align: 'left',
+              filterType: 'number',
+            },
+            { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
+            { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
+            {
+              id: 'action',
+              label: 'Actions',
+              isFilter: false,
+              isSort: false,
+              align: 'left',
+              sticky: true,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    showViewIcon
+                    showDeleteIcon
+                    handleViewClick={() => {
+                      onViewDetail?.(row);
+                    }}
+                    handleDeleteClick={() => {
+                      onDelete?.(row.id);
+                    }}
+                    actions={(prop) => getActionsForStatus('active', row, prop.popover)}
+                    placement="right-top"
+                  />
+                );
+              },
+            },
+          ]}
+          data={tableData || []}
+        />
+      ) : tabs.value === 2 ? (
+        <CustomizableTable
+          tableId="budget-table-inactive"
+          noDataText="Inactive Budgets Not Found"
+          columns={[
+            { id: 'budgetTitle', label: 'Budget Title', align: 'left' },
+            { id: 'budgetCategory', label: 'Type', align: 'left' },
+            { id: 'startDate', label: 'Start Date', align: 'left', filterType: 'date' },
+            { id: 'endDate', label: 'End Date', align: 'left', filterType: 'date' },
+            {
+              id: 'totalBudgetAmount',
+              label: 'Total Budget Amount',
+              align: 'left',
+              filterType: 'number',
+            },
+            { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
+            { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
+            {
+              id: 'action',
+              label: 'Actions',
+              isFilter: false,
+              isSort: false,
+              align: 'left',
+              sticky: true,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    showViewIcon
+                    showDeleteIcon
+                    handleViewClick={() => {
+                      onViewDetail?.(row);
+                    }}
+                    handleDeleteClick={() => {
+                      onDelete?.(row.id);
+                    }}
+                    showThreeDots={false}
+                    placement="right-top"
+                  />
+                );
+              },
+            },
+          ]}
+          data={tableData || []}
+        />
+      ) : (
+        <CustomizableTable
+          tableId="budget-table-archive"
+          noDataText="Archived Budgets Not Found"
+          columns={[
+            { id: 'budgetTitle', label: 'Budget Title', align: 'left' },
+            { id: 'budgetCategory', label: 'Type', align: 'left' },
+            { id: 'startDate', label: 'Start Date', align: 'left', filterType: 'date' },
+            { id: 'endDate', label: 'End Date', align: 'left', filterType: 'date' },
+            {
+              id: 'totalBudgetAmount',
+              label: 'Total Budget Amount',
+              align: 'left',
+              filterType: 'number',
+            },
+            { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
+            { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
+            {
+              id: 'action',
+              label: 'Actions',
+              align: 'left',
+              isFilter: false,
+              isSort: false,
+              sticky: true,
+              render(value, row) {
+                return (
+                  <ThreeDotsActions
+                    showViewIcon
+                    handleViewClick={() => {
+                      onViewDetail?.(row);
+                    }}
+                    showThreeDots={false}
+                    placement="right-top"
+                  />
+                );
+              },
+            },
+          ]}
+          data={tableData || []}
+        />
+      )}
 
       {/* Confirm Dialog */}
       <ConfirmDialog

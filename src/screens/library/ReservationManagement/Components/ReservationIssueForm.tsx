@@ -41,7 +41,7 @@ const ReservationIssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose,
     type: 'query',
     currentQueryAndMutation: useGetBookCategoryOptionsQuery,
   });
-
+  console.log('bookCategoryOptions----', bookCategoryOptions);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);

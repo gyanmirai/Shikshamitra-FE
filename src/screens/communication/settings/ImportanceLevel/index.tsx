@@ -12,8 +12,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetImportanceLevelOptionsQuery } from 'src/redux/communication/setting/importanceLevel';
 
 import ImportanceLevelForm from './Components/ImportanceLevelForm';
 import ImportanceLevelTable from './Components/ImportanceLevelTable';
@@ -21,6 +23,10 @@ import ImportanceLevelTable from './Components/ImportanceLevelTable';
 import type { IImportanceLevel } from './type';
 
 const ImportanceLevelCreation = () => {
+  const { data: importanceData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetImportanceLevelOptionsQuery,
+  });
   const deleteImportanceLevelDialog = useBoolean();
   const addImportanceLevelDialog = useBoolean();
   const [selectedImportanceLevel, setSelectedImportanceLevel] = useState<IImportanceLevel | null>(
@@ -73,7 +79,7 @@ const ImportanceLevelCreation = () => {
       />
 
       <ImportanceLevelTable
-        data={[]} // Replace with actual API data
+        data={importanceData} // Replace with actual API data
         onAddImportanceLevel={addImportanceLevelDialog}
         setOpenDialog={() => {}}
         setEditData={setSelectedImportanceLevel}

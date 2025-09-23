@@ -6,6 +6,7 @@ export interface IBudgetSubCategoryDetail {
 }
 
 export interface IBudgetFormValues {
+  board: string;
   budgetTitle: string;
   budgetCategory: string;
   budgetSubCategories: string[]; // dropdown multiple selection

@@ -12,8 +12,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetEventTypeOptionsQuery } from 'src/redux/communication/setting/eventTypeApi';
 
 // Replace with actual API hook when available
 import EventTypeForm from './Components/EventTypeForm';
@@ -23,10 +25,10 @@ import type { IEventType } from './type';
 
 const EventTypeCreation = () => {
   // Custom hook to fetch event type data
-  // const { data: eventTypeData } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetEventTypeOptionsQuery,
-  // });
+  const { data: eventTypeData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEventTypeOptionsQuery,
+  });
 
   // Dialog control states
   const deleteEventTypeDialog = useBoolean();
@@ -93,7 +95,7 @@ const EventTypeCreation = () => {
         onAddEventType={addEventTypeDialog}
         setOpenDialog={setOpen}
         setEditData={setSelectedEventType}
-        data={[]}
+        data={eventTypeData}
       />
 
       <CustomDialog

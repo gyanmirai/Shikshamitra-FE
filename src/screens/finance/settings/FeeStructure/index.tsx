@@ -61,8 +61,10 @@ const FeeStructure = () => {
           heading="Fee Structure"
           description={
             selectedFeeStructure
-              ? 'Update existing fee structure details including fee categories, amounts, payment schedules, and applicable student groups to ensure accurate fee management.'
-              : 'View and manage all created fee structures. Use the actions to view details, make changes, or delete a structure. Click "Create New Fee Structure" to define a new fee configuration.'
+              ? 'Modify the selected fee structure by updating categories, amounts, schedules, and student groups. Your changes will affect how fees are calculated and collected.'
+              : addFeeStructureDialog.value
+                ? 'Create a new fee structure by defining categories, setting amounts, configuring payment schedules, and assigning student groups. This will establish how fees are collected.'
+                : 'Browse and manage existing fee structures. View complete details, make modifications, or remove structures as needed. Create new structures to expand fee configurations.'
           }
           isBack
           onBack={() => {
@@ -85,7 +87,13 @@ const FeeStructure = () => {
           }}
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Fee Structure', href: '/finance/fee-structure' },
+            {
+              name: 'Fee Structure',
+              href: '/finance/settings/create-fee-structure',
+              onClick(e) {
+                viewFeeStructureDialog.onFalse();
+              },
+            },
             { name: 'View Fee Structure', href: '' },
           ]}
           sx={{ px: 1, mb: 2 }}
@@ -108,7 +116,7 @@ const FeeStructure = () => {
               Fee Structure
             </Button>
           }
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       )}
       <>
@@ -158,7 +166,7 @@ const FeeStructure = () => {
 
       <ConfirmDialog
         open={confirmDialog.value}
-        icon={selectedFeeStructure?.status === 0 ? 'mdi:lock-outline' : 'mdi:lock-open-outline'}
+        icon="error"
         onClose={() => {
           confirmDialog.onFalse();
           setTimeout(() => {

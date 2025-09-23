@@ -4,10 +4,10 @@ import * as Yup from 'yup';
 export const budgetValidationSchema = (currentYear: any) => [
   // Step 1 – Basic Budget Info
   Yup.object().shape({
+    board: Yup.string().required('Board is required'),
     budgetTitle: Yup.string().required('Budget Title is required'),
     budgetCategory: Yup.string().required('Budget Category is required'),
     budgetSubCategories: Yup.array().min(1, 'Select at least one sub-category'),
-
     startDate: Yup.mixed()
       .test(
         'is-valid-date',

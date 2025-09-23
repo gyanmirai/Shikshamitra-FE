@@ -1,5 +1,7 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -8,6 +10,7 @@ import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
@@ -17,11 +20,13 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetChargeCategoryQuery } from 'src/redux/finance/chargeCategory';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
+  Chip,
   Stack,
   Button,
   Switch,
@@ -111,13 +116,28 @@ const FinanceChargeCategory = () => {
     addDialog.onTrue();
   };
 
-  // Handle dialog close
-  const handleDialogClose = () => {
-    setTimeout(() => {
-      setSelectedItem(null);
-    }, 200);
-    addDialog.onFalse();
-    editDialog.onFalse();
+  // Redux state and dispatch
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+
+  /**
+   * Handles closing the charge category dialog
+   */
+  const handleDialogClose = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      addDialog.onFalse();
+      editDialog.onFalse();
+      setTimeout(() => {
+        setSelectedItem(null);
+      }, 200);
+      dispatch(setIsChanges(false));
+    } else if (!isChanges) {
+      addDialog.onFalse();
+      editDialog.onFalse();
+      setTimeout(() => {
+        setSelectedItem(null);
+      }, 200);
+    }
   };
 
   return (
@@ -145,7 +165,7 @@ const FinanceChargeCategory = () => {
         columns={[
           {
             id: 'chargeName',
-            label: 'Charge Name',
+            label: 'Name',
             minWidth: '200px',
             isSort: true,
             isFilter: true,
@@ -197,12 +217,40 @@ const FinanceChargeCategory = () => {
       />
 
       {/* Add/Edit Dialog */}
-      <ChargeCategoryDialog
+      <CustomDialog
         open={addDialog.value || editDialog.value}
-        onClose={handleDialogClose}
-        editData={selectedItem}
-        onSave={handleSave}
-      />
+        handleClose={() => {
+          addDialog.onFalse();
+          editDialog.onFalse();
+          setTimeout(() => {
+            setSelectedItem(null);
+          }, 200);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h6">
+              {selectedItem ? 'Update Charge Category' : 'Add Charge Category'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="This modal allows you to create a new charge Category by defining its name, selecting whether it is fixed or percentage-based, and entering the respective amount or percentage."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        maxWidth="sm"
+        fullWidth
+      >
+        <ChargeCategoryDialog
+          open={addDialog.value || editDialog.value}
+          onClose={handleDialogClose}
+          editData={selectedItem}
+          onSave={handleSave}
+        />
+      </CustomDialog>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
@@ -237,7 +285,7 @@ export default FinanceChargeCategory;
 
 interface ChargeCategoryDialogProps {
   open: boolean;
-  onClose: () => void;
+  onClose: (e: any, isSubmit: boolean) => void;
   editData?: any | null;
   onSave: (values: any) => Promise<void>;
 }
@@ -295,164 +343,147 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
   // Handle dialog cancellation and form reset
   const handleClose = () => {
     formik.resetForm();
-    onClose();
+    onClose(null, false);
   };
 
   return (
-    <CustomDialog
-      open={open}
-      handleClose={handleClose}
-      title={
-        <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-          <Typography variant="h6">
-            {editData ? 'Update Charge Category' : 'Add Charge Category'}
-          </Typography>
-          <CustomTooltip
-            arrow
-            placement="right"
-            sx={{ textAlign: 'justify' }}
-            title="This modal allows you to create a new charge Category by defining its name, selecting whether it is fixed or percentage-based, and entering the respective amount or percentage."
-          >
-            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-          </CustomTooltip>
-        </Box>
-      }
-      maxWidth="sm"
-      fullWidth
-      paperProps={{
-        sx: {
-          width: '580px',
-          maxWidth: '90vw',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-        },
-      }}
-    >
-      <Box>
-        <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-          <DialogScrollContent>
-            <Stack spacing={3} p={0}>
-              {/* Charge Category Name Field */}
-              <ShakingTextField
-                error={!!(formik.touched.chargeName && formik.errors.chargeName) || false}
-              >
-                <TextField
-                  size="small"
-                  value={formik.values.chargeName}
-                  name="chargeName"
-                  fullWidth
-                  label="Charge Category Name *"
-                  onChange={(e: any) => {
-                    const withoutNumbers = e.target.value.replace(/[0-9]/g, '');
-                    const newName = withoutNumbers
-                      .split(' ')
-                      .map(
-                        (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                      )
-                      .join(' ');
-                    formik.setFieldValue('chargeName', newName);
-                  }}
-                  error={formik.touched.chargeName && Boolean(formik.errors.chargeName)}
-                  helperText={
-                    formik.touched.chargeName && typeof formik.errors.chargeName === 'string'
-                      ? formik.errors.chargeName
-                      : undefined
-                  }
-                />
-              </ShakingTextField>
-
-              {/* Approval Required Switch */}
-              <Box>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formik.values.isRefundable}
-                      onChange={(e) => formik.setFieldValue('isRefundable', e.target.checked)}
-                      name="isRefundable"
-                    />
-                  }
-                  label="Approval Required?"
-                />
-              </Box>
-
-              {formik.values.isRefundable && (
-                <ShakingTextField error={!!(formik.touched.roles && formik.errors.roles) || false}>
-                  <Autocomplete
-                    disabled={isLoading}
-                    multiple
-                    options={data?.items || []}
-                    value={formik.values.roles}
-                    getOptionLabel={(option: any) => option?.name || ''}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Role *"
-                        size="small"
-                        fullWidth
-                        sx={{ width: '100%', minWidth: '200px' }}
-                        error={formik.touched.roles && Boolean(formik.errors.roles)}
-                        helperText={(formik.touched.roles && formik.errors.roles) as string}
-                      />
-                    )}
-                    onChange={(e, newValue) => {
-                      formik.setFieldValue('roles', newValue);
-                    }}
-                  />
-                </ShakingTextField>
-              )}
-
-              {/* Description Field */}
-              <ShakingTextField
-                error={!!(formik.touched.description && formik.errors.description) || false}
-              >
-                <TextField
-                  multiline
-                  rows={4}
-                  size="small"
-                  value={formik.values.description}
-                  name="description"
-                  fullWidth
-                  label="Description"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
-              </ShakingTextField>
-            </Stack>
-          </DialogScrollContent>
-        </BackPopUpChecked>
-
-        {/* Dialog action buttons */}
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            size="small"
-            variant="outlined"
-            onClick={handleClose}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            size="small"
-            type="submit"
-            variant="contained"
-            loading={isLoading}
-            startIcon={
-              <Iconify
-                icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
-                width={editData ? 16 : 20}
-                height={editData ? 16 : 20}
+    <Box>
+      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+        <DialogScrollContent>
+          <Stack spacing={3} p={0}>
+            {/* Charge Category Name Field */}
+            <ShakingTextField
+              error={!!(formik.touched.chargeName && formik.errors.chargeName) || false}
+            >
+              <TextField
+                size="small"
+                value={formik.values.chargeName}
+                name="chargeName"
+                fullWidth
+                label="Charge Category Name *"
+                onChange={(e: any) => {
+                  const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                  const newName = onlyLetters
+                    .split(' ')
+                    .map(
+                      (word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    )
+                    .join(' ');
+                  formik.setFieldValue('chargeName', newName);
+                }}
+                error={formik.touched.chargeName && Boolean(formik.errors.chargeName)}
+                helperText={
+                  formik.touched.chargeName && typeof formik.errors.chargeName === 'string'
+                    ? formik.errors.chargeName
+                    : undefined
+                }
               />
-            }
-            onClick={(e: any) => {
-              formik.handleSubmit(e);
-            }}
-          >
-            {editData ? 'Update' : 'Submit'}
-          </LoadingButton>
-        </DialogActions>
-      </Box>
-    </CustomDialog>
+            </ShakingTextField>
+
+            {/* Approval Required Switch */}
+            <Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formik.values.isRefundable}
+                    onChange={(e) => formik.setFieldValue('isRefundable', e.target.checked)}
+                    name="isRefundable"
+                  />
+                }
+                label="Approval Required?"
+              />
+            </Box>
+
+            {formik.values.isRefundable && (
+              <ShakingTextField error={!!(formik.touched.roles && formik.errors.roles) || false}>
+                <Autocomplete
+                  disabled={isLoading}
+                  multiple
+                  options={data?.items || []}
+                  value={formik.values.roles}
+                  getOptionLabel={(option: any) => option?.name || ''}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  renderTags={(tagValue, getTagProps) =>
+                    tagValue.map((option, index) => {
+                      const tagProps = getTagProps({ index });
+                      return (
+                        <Chip
+                          // Key is already provided by getTagProps
+                          label={option.name}
+                          variant="soft"
+                          size="small"
+                          {...tagProps} // now safe to spread the rest
+                        />
+                      );
+                    })
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Role *"
+                      size="small"
+                      fullWidth
+                      sx={{ width: '100%', minWidth: '200px' }}
+                      error={formik.touched.roles && Boolean(formik.errors.roles)}
+                      helperText={(formik.touched.roles && formik.errors.roles) as string}
+                    />
+                  )}
+                  onChange={(e, newValue) => {
+                    formik.setFieldValue('roles', newValue);
+                  }}
+                />
+              </ShakingTextField>
+            )}
+
+            {/* Description Field */}
+            <ShakingTextField
+              error={!!(formik.touched.description && formik.errors.description) || false}
+            >
+              <TextField
+                multiline
+                rows={4}
+                size="small"
+                value={formik.values.description}
+                name="description"
+                fullWidth
+                label="Description"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            </ShakingTextField>
+          </Stack>
+        </DialogScrollContent>
+      </BackPopUpChecked>
+
+      {/* Dialog action buttons */}
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          size="small"
+          variant="outlined"
+          onClick={handleClose}
+        >
+          Cancel
+        </Button>
+        <LoadingButton
+          size="small"
+          type="submit"
+          variant="contained"
+          loading={isLoading}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
+        >
+          {editData ? 'Update' : 'Submit'}
+        </LoadingButton>
+      </DialogActions>
+    </Box>
   );
 };

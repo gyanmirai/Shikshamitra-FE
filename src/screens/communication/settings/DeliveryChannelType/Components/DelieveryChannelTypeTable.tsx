@@ -1,5 +1,6 @@
 // DeliveryChannelTable.tsx
 import React from 'react';
+import dayjs from 'dayjs';
 import { Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -53,7 +54,7 @@ const DeliveryChannelTable: React.FC<IDeliveryChannelTableProps> = ({
         label: 'Description',
         align: 'left',
         render: (value) => (
-          <Typography variant="caption" fontSize="13px" sx={{ color: 'text.secondary' }}>
+          <Typography variant="caption" fontSize="13px">
             {value || '--'}
           </Typography>
         ),
@@ -74,9 +75,7 @@ const DeliveryChannelTable: React.FC<IDeliveryChannelTableProps> = ({
         align: 'left',
         filterType: 'date',
         render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
         ),
       },
       {

@@ -6,6 +6,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
@@ -40,8 +41,8 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
   const [selectedFeeStructure, setSelectedFeeStrcture] = useState<any>(null);
   const addNewFeeStructureDialog = useBoolean();
   const [selectedClass, setSelectedClass] = useState('');
-  // 🔹 Handle Add Fee Structure globally
-  console.log('formik values----', formik.values);
+  console.log('formik erroesss====', formik.errors);
+  console.log('formik values======', formik.values);
 
   const [currentClickableClass, setCurrentClickableClass] = useState<string | null>(null);
 
@@ -266,7 +267,19 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
       <CustomDialog
         open={addNewFeeStructureDialog.value}
         handleClose={addNewFeeStructureDialog.onFalse}
-        title="Add Fee Structure"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Add Fee Structure</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Create a new fee structure by defining fee items and their amounts. This helps organize class-wise fee collection by grouping related fee components together into a structured format."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         <AddFeeStructureDialog
           formik={formik}
@@ -279,7 +292,19 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
       <CustomDialog
         open={!!editFeeStructure}
         handleClose={() => setEditFeeStructure(null)}
-        title="Edit Fee Structure"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Edit Fee Structure</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Modify an existing fee structure by updating fee items and their amounts. You can adjust the structure name, add/remove fee items, and update amounts as needed."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
       >
         {editFeeStructure && (
           <AddFeeStructureDialog
@@ -294,7 +319,7 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
       {/* Delete Fee Structure Confirm */}
       <ConfirmDialog
         open={deleteFeeStructureDialog.value}
-        icon="warning"
+        icon="error"
         onClose={() => {
           deleteFeeStructureDialog.onFalse();
           setTimeout(() => {

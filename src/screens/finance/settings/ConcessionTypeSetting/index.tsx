@@ -83,7 +83,7 @@ const ConcessionType = () => {
             Concession Type
           </Button>
         }
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
       />
       <>
         {/* Form card for creating/editing concession types */}
@@ -142,7 +142,7 @@ const ConcessionType = () => {
 
         <ConfirmDialog
           open={deleteConcessionTypeDialog.value}
-          icon="warning"
+          icon="error"
           onClose={() => {
             deleteConcessionTypeDialog.onFalse();
             setTimeout(() => {

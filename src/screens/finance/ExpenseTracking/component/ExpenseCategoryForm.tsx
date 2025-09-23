@@ -268,21 +268,25 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.budget && formik.errors.budget)}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Budget *"
-                    name="budget"
-                    disabled
+                  <CustomSelect
+                    label="Budget Title *"
+                    options={[
+                      { value: 'FY2023-24Q1', label: 'FY 2023-24 Q1 Budget' },
+                      { value: 'FY2023-24Q2', label: 'FY 2023-24 Q2 Budget' },
+                      { value: 'FY2023-24Q3', label: 'FY 2023-24 Q3 Budget' },
+                      { value: 'FY2023-24Q4', label: 'FY 2023-24 Q4 Budget' },
+                      { value: 'AnnualBudget2024', label: 'Annual Budget 2024' },
+                    ]}
                     value={formik.values.budget}
-                    onChange={formik.handleChange}
+                    onChange={(val) => formik.setFieldValue('budget', val)}
                     error={!!(formik.touched.budget && formik.errors.budget)}
-                    helperText={formik.touched.budget && formik.errors.budget}
+                    helperText={(formik.touched.budget && formik.errors.budget) as string}
+                    formControlProps={{ fullWidth: true }}
                   />
                 </ShakingTextField>
               </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }}>
+              {/* <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.budgetSubCategory && formik.errors.budgetSubCategory)}
                 >
@@ -299,7 +303,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                     formControlProps={{ fullWidth: true }}
                   />
                 </ShakingTextField>
-              </Grid>
+              </Grid> */}
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField

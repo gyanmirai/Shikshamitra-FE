@@ -1,27 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { communicationApi } from '../communicationApi';
 
-import communicationData from '../../../../communicationData.json';
-
-const isDev = process.env.NODE_ENV === 'development';
-
-export const announcementTypeOptionsApi = createApi({
-  reducerPath: 'AnnouncementTypeOptionsApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/announcementTypeData') {
-          return { data: communicationData.announcementTypeData };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['AnnouncementTypeOptions'],
+export const announcementTypeOptionsApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
     getAnnouncementTypeOptions: builder.query({
       query: () => ({
@@ -31,6 +10,7 @@ export const announcementTypeOptionsApi = createApi({
       providesTags: ['AnnouncementTypeOptions'],
     }),
   }),
+  overrideExisting: false,
 });
 
 export const { useGetAnnouncementTypeOptionsQuery } = announcementTypeOptionsApi;

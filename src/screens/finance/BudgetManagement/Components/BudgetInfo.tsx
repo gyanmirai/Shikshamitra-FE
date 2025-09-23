@@ -1,10 +1,15 @@
 import type { FormikProps } from 'formik';
+import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 
@@ -13,6 +18,19 @@ import type { IBudgetFormValues } from './type';
 const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
   const formik = props;
 
+  // Redux state selectors for current academic selections
+  const { currentYear, currentBoard, currentMedium } = useSelector(
+    (state: RootState) => state.globalState
+  );
+  const { data: board, isLoading: boardLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBoardsQuery,
+  });
+  const [boards, setBoards] = useState([]);
+  console.log('formik.values----', formik.values);
+  useEffect(() => {
+    setBoards(currentYear.boards || []);
+  }, [currentYear]);
   // Category options
   const budgetCategoryOptions = [
     { value: 'Income', label: 'Income' },
@@ -52,7 +70,25 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={3}>
-        {/* Budget Title */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <ShakingTextField error={!!(formik.touched.board && formik.errors.board) || false}>
+            <CustomSelect
+              name="board"
+              label="Board *"
+              isLoading={boardLoading}
+              options={boards || []}
+              labelKey="name"
+              valueKey="id"
+              value={formik.values.board}
+              onChange={(value) => {
+                formik.setFieldValue('board', value);
+              }}
+              error={!!(formik.touched.board && formik.errors.board) || false}
+              helperText={(formik.touched.board && formik.errors.board) || ''}
+              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+            />
+          </ShakingTextField>
+        </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.budgetTitle && formik.errors.budgetTitle)}>
             <TextField
