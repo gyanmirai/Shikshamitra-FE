@@ -199,7 +199,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           </Grid>
 
           {/* Book Title */}
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 5 }}>
             <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
               <CustomSelect
                 label="Book Title *"
@@ -230,7 +230,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           </Grid>
 
           {/* Edition */}
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <ShakingTextField error={!!(formik.touched.edition && formik.errors.edition)}>
               <CustomSelect
                 label="Edition *"

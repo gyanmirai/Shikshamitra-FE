@@ -5,35 +5,40 @@
     "categoryName": "Fiction",
     "code": "FIC", 
     "createdBy": "admin",
-    "createdDate": "29-08-2025"
+    "createdDate": "29-08-2025",
+    "description": "Books that contain stories created from the imagination, including novels and short stories."
   },
   {
     "id": "2",
     "categoryName": "Non-Fiction",
     "code": "NFIC",
     "createdBy": "admin",
-    "createdDate": "29-08-2025"
+    "createdDate": "29-08-2025",
+    "description": "Books based on factual information, including biographies, memoirs, and informational texts."
   },
   {
     "id": "3",
     "categoryName": "Science",
     "code": "SCI",
     "createdBy": "librarian",
-    "createdDate": "29-08-2025"
+    "createdDate": "29-08-2025",
+    "description": "Books that explore scientific concepts, discoveries, and the natural world."
   },
   {
     "id": "4",
     "categoryName": "Mathematics",
     "code": "MATH",
     "createdBy": "librarian",
-    "createdDate": "29-08-2025"
+    "createdDate": "29-08-2025",
+    "description": "Books covering mathematical theories, problems, and educational resources."
   },
   {
     "id": "5",
     "categoryName": "History",
     "code": "HIS",
     "createdBy": "admin",
-    "createdDate": "29-08-2025"
+    "createdDate": "29-08-2025",
+    "description": "Books that discuss historical events, figures, and periods from around the world."
   }
 ]
 }

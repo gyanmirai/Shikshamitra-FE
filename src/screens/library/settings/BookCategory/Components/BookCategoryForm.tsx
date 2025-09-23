@@ -68,26 +68,6 @@ const BookCategoryForm: React.FC<IBookCategoryFormProps> = ({ open, onClose, edi
             </ShakingTextField>
           </Grid>
 
-          {/* Code */}
-          <Grid size={12}>
-            <ShakingTextField error={!!(formik.touched.code && formik.errors.code) || false}>
-              <TextField
-                fullWidth
-                label="Code *"
-                name="code"
-                size="small"
-                value={formik.values.code}
-                onChange={(e) => {
-                  const rawValue = e.target.value;
-                  const uppercaseValue = rawValue.toUpperCase().replace(/[^A-Z0-9\-_]/g, '');
-                  formik.setFieldValue('code', uppercaseValue);
-                }}
-                error={formik.touched.code && Boolean(formik.errors.code)}
-                helperText={(formik.touched.code && formik.errors.code) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-
           {/* Description */}
           <Grid size={12}>
             <TextField

@@ -63,12 +63,12 @@ const BookConditionCreation = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Book Condition"
+        heading="Book Condition Category"
         description="Manage conditions of books such as Low, Medium, High, Damage, Lost, etc. Use actions to edit or delete existing conditions. Click ‘Add Condition’ to create a new one."
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/setting' },
-          { name: 'Book Condition', href: '/library/book-condition' },
+          { name: 'Book Condition Category', href: '/library/book-condition' },
         ]}
         action={
           <Button
@@ -77,7 +77,7 @@ const BookConditionCreation = () => {
             startIcon={<Add />}
             variant="contained"
           >
-            Book Condition
+            Book Condition Category
           </Button>
         }
         sx={{ px: 1, mb: 2 }}
@@ -110,7 +110,9 @@ const BookConditionCreation = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedBookCondition ? 'Update Book Condition' : 'Add Book Condition'}
+              {selectedBookCondition
+                ? 'Update Book Condition Category'
+                : 'Add Book Condition Category'}
             </Typography>
             <CustomTooltip
               arrow
@@ -156,7 +158,7 @@ const BookConditionCreation = () => {
               deleteBookConditionDialog.onFalse();
               setSelectedBookCondition(null);
               shikshaMitraToast.success({
-                message: `Book Condition ${selectedBookCondition?.conditionType} deleted successfully`,
+                message: `Book Condition Category ${selectedBookCondition?.conditionType} deleted successfully`,
               });
               // handle delete API call here
             }}

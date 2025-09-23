@@ -5,35 +5,40 @@
       "chargeType": "Late Return Fee",
       "amount": 150,
       "createdBy": "Dharmik Jinjala",
-      "createdDate": "01-05-2025"
+      "createdDate": "01-05-2025",
+      "description": "A fee charged when a borrowed book is returned after its due date."
     },
     {
       "id": "2",
       "chargeType": "Book Damage Fee",
       "amount": 200,
       "createdBy": "Prerna Atre",
-      "createdDate": "04-05-2025"
+      "createdDate": "04-05-2025",
+      "description": "A fee imposed for returning a book in damaged condition."
     },
     {
       "id": "3",
       "chargeType": "Lost Book Fee",
       "amount": 300,
       "createdBy": "Dharmik Jinjala",
-      "createdDate": "06-05-2025"
+      "createdDate": "06-05-2025",
+      "description": "A fee charged when a borrowed book is lost and not returned."
     },
     {
       "id": "4",
       "chargeType": "Membership Renewal",
       "amount": 50,
       "createdBy": "Mayur Solanki",
-      "createdDate": "08-05-2025"
+      "createdDate": "08-05-2025",
+      "description": "A fee for renewing library membership for continued access."
     },
     {
       "id": "5",
       "chargeType": "Reservation Cancel",
       "amount": 150,
       "createdBy": "Prerna Atre",
-      "createdDate": "10-05-2025"
+      "createdDate": "10-05-2025",
+      "description": "A fee charged when a reserved book is cancelled by the member."
     }
   ],
   "libraryTimingData": [

@@ -1,7 +1,8 @@
 import * as Yup from 'yup';
 
 export const chargeTypeValidationSchema = Yup.object().shape({
-  chargeType: Yup.string().required('Charge Type is required'),
+  chargeType: Yup.string().required('Category Name is required'),
+  isFixed: Yup.boolean(),
   amount: Yup.number()
     .transform((value, originalValue) => {
       if (typeof originalValue === 'string') {
@@ -10,8 +11,14 @@ export const chargeTypeValidationSchema = Yup.object().shape({
       }
       return value;
     })
-    .required('Amount is required')
-    .positive('Amount must be positive')
-    .min(1, 'Amount must be greater than 0'),
+    .when('isFixed', {
+      is: true,
+      then: (schema) =>
+        schema
+          .required('Amount is required')
+          .positive('Amount must be positive')
+          .min(1, 'Amount must be greater than 0'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
   description: Yup.string().nullable(),
 });

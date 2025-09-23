@@ -29,7 +29,7 @@ const createFieldValidationSchema = () =>
     })
     .nullable()
     .min(0, 'Must be at least 0')
-    .max(10, 'Maximum 10 books allowed')
+    .max(99, 'Maximum 99 books allowed')
     .integer('Must be a whole number');
 
 const BorrowingReturnRules = () => {
@@ -190,11 +190,15 @@ const BorrowingReturnRules = () => {
         tableId="borrowing-return-rules-table"
         isLoading={isLoading}
         isPagination={false}
+        isSearch={false}
+        isFilter={false}
         columns={[
           {
             id: 'role',
             label: 'Role',
             align: 'left',
+            isSort: false,
+            isFilter: false,
             render: (value) => (
               <Typography variant="body2" fontWeight={500}>
                 {value}
@@ -203,36 +207,47 @@ const BorrowingReturnRules = () => {
           },
           {
             id: 'maxBooksPerMonth',
-            label: 'Max Books Per Month',
+            label: 'Max Books (Month)',
             align: 'left',
+            isSort: false,
+            isFilter: false,
             render: (value, row) => {
               const fieldName = `${row.id}_maxBooksPerMonth`;
 
               return (
-                <ShakingTextField
-                  error={formik.touched[fieldName] && Boolean(formik.errors[fieldName])}
-                >
-                  <TextField
-                    size="small"
-                    type="number"
-                    label="Max Books Per Month"
-                    value={value === 0 ? '0' : value || ''}
-                    onChange={(e) => handleFieldChange(row.id, 'maxBooksPerMonth', e.target.value)}
-                    onWheel={(e) => (e.target as HTMLElement).blur()}
-                    sx={{ width: '100%' }}
-                    inputProps={{ min: 0, max: 10 }}
+                <Box mb={2}>
+                  <ShakingTextField
                     error={formik.touched[fieldName] && Boolean(formik.errors[fieldName])}
-                    helperText={(formik.touched[fieldName] && formik.errors[fieldName]) as string}
-                    disabled={saveLoading}
-                  />
-                </ShakingTextField>
+                  >
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="Max Books (Month)"
+                      value={value === 0 ? '0' : value || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        if (val.length <= 2) {
+                          handleFieldChange(row.id, 'maxBooksPerMonth', val);
+                        }
+                      }}
+                      onWheel={(e) => (e.target as HTMLElement).blur()}
+                      sx={{ width: '100%' }}
+                      inputProps={{ min: 0, max: 99, maxLength: 2 }}
+                      error={formik.touched[fieldName] && Boolean(formik.errors[fieldName])}
+                      helperText={(formik.touched[fieldName] && formik.errors[fieldName]) as string}
+                      disabled={saveLoading}
+                    />
+                  </ShakingTextField>
+                </Box>
               );
             },
           },
           {
             id: 'reservationLimit',
-            label: 'Reservation Limit',
+            label: 'Reservation Limit (Month)',
             align: 'left',
+            isSort: false,
+            isFilter: false,
             render: (value, row) => {
               const fieldName = `${row.id}_reservationLimit`;
 
@@ -244,14 +259,17 @@ const BorrowingReturnRules = () => {
                     <TextField
                       size="small"
                       type="number"
-                      label="Reservation Limit"
+                      label="Reservation Limit (Month)"
                       value={value === 0 ? '0' : value || ''}
-                      onChange={(e) =>
-                        handleFieldChange(row.id, 'reservationLimit', e.target.value)
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        if (val.length <= 2) {
+                          handleFieldChange(row.id, 'reservationLimit', val);
+                        }
+                      }}
                       onWheel={(e) => (e.target as HTMLElement).blur()}
                       sx={{ width: '100%' }}
-                      inputProps={{ min: 0, max: 10 }}
+                      inputProps={{ min: 0, max: 99, maxLength: 2 }}
                       error={formik.touched[fieldName] && Boolean(formik.errors[fieldName])}
                       helperText={(formik.touched[fieldName] && formik.errors[fieldName]) as string}
                       disabled={saveLoading}

@@ -18,7 +18,7 @@ const ChargeTypeTable: React.FC<IChargeTypeTableProps> = ({
     tableId="charge-type-data-table"
     noDataText={
       <>
-        Charge Type Data Not Found{' '}
+        Charge Category Data Not Found{' '}
         <Typography
           component="span"
           color="primary.main"
@@ -35,14 +35,14 @@ const ChargeTypeTable: React.FC<IChargeTypeTableProps> = ({
             setEditData(null);
           }}
         >
-          Add Charge Type
+          Add Charge Category
         </Typography>
       </>
     }
     columns={[
       {
         id: 'chargeType',
-        label: 'Charge Type',
+        label: 'Category Name',
         align: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
@@ -54,32 +54,19 @@ const ChargeTypeTable: React.FC<IChargeTypeTableProps> = ({
         id: 'amount',
         label: 'Amount',
         align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            ₹{value}
-          </Typography>
-        ),
+        filterType: 'number',
+        render(value) {
+          return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2,
+          }).format(value);
+        },
       },
       {
-        id: 'createdBy',
-        label: 'Created By',
+        id: 'description',
+        label: 'Description',
         align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
-      },
-      {
-        id: 'createdDate',
-        label: 'Created Date',
-        align: 'left',
-        filterType: 'date',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
       },
       {
         id: 'action',

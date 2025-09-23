@@ -6,12 +6,12 @@
       "bookCategory": "Science",
       "bookTitle": "Introduction to Physics",
       "edition": "3rd Edition",
-      "dueDate": "2025-09-20",
-      "returnDate": "2025-09-15",
+      "dueDate": "20-09-2025",
+      "returnDate": "15-09-2025",
       "bookCondition": "",
       "fineAmount": "",
-      "requestedDate": "2025-08-20",
-      "status": 0
+      "requestedDate": "20-08-2025",
+      "status": 1
     },
     {
       "memberId": "M002",
@@ -19,11 +19,11 @@
       "bookCategory": "Literature",
       "bookTitle": "Pride and Prejudice",
       "edition": "2nd Edition",
-      "dueDate": "2025-09-15",
-      "returnDate": "2025-09-20",
+      "dueDate": "15-09-2025",
+      "returnDate": "20-09-2025",
       "bookCondition": "",
       "fineAmount": "",
-      "requestedDate": "2025-08-15",
+      "requestedDate": "15-08-2025",
       "status": 1
     },
     {
@@ -32,11 +32,11 @@
       "bookCategory": "Mathematics",
       "bookTitle": "Discrete Mathematics",
       "edition": "5th Edition",
-      "dueDate": "2025-09-18",
-      "returnDate": "2025-09-18",
+      "dueDate": "18-09-2025",
+      "returnDate": "18-09-2025",
       "bookCondition": "",
       "fineAmount": "",
-      "requestedDate": "2025-08-18",
+      "requestedDate": "18-08-2025",
       "status": 2
     },
     {
@@ -45,11 +45,11 @@
       "bookCategory": "History",
       "bookTitle": "World War II",
       "edition": "1st Edition",
-      "dueDate": "2025-09-10",
-      "returnDate": "2025-09-25",
+      "dueDate": "10-09-2025",
+      "returnDate": "25-09-2025",
       "bookCondition": "",
       "fineAmount": "",
-      "requestedDate": "2025-08-10",
+      "requestedDate": "10-08-2025",
       "status": 3
     }
   ],
@@ -136,7 +136,7 @@
       "dueDate": "30-09-2025"
     }
   ],
-   "reservationData": [
+  "reservationData": [
     {
       "memberId": "DDVS001",
       "memberName": "Dharmik Jinjala",
@@ -305,7 +305,7 @@
       "id": 2,
       "title": "Clean Code",
       "isbn": "9780132350884",
-      "author": "Robert C. Martin", 
+      "author": "Robert C. Martin",
       "publisher": "Prentice Hall",
       "subject": "Software Engineering",
       "category": "Programming",
@@ -362,42 +362,42 @@
       "availableBook": 2
     }
   ],
-  "bookIssuedData" : [
-  {
-    "memberId": "LIB001",
-    "memberName": "Dharmik Jinjala",
-    "copyNo": 1,
-    "issuedOn": "10-08-2025",
-    "returnOn": "30-08-2025",
-    "status": 0,
-    "role": "Student"
-  },
-  {
-    "memberId": "LIB002", 
-    "memberName": "Prerna Atre",
-    "copyNo": 2,
-    "issuedOn": "06-08-2025",
-    "returnOn": "26-08-2025",
-    "status": 1,
-    "role": "Teacher"
-  },
-  {
-    "memberId": "LIB003",
-    "memberName": "Mayur Solanki",
-    "copyNo": 1,
-    "issuedOn": "29-07-2025",
-    "returnOn": "19-08-2025",
-    "status": 1,
-    "role": "Student"
-  },
-  {
-    "memberId": "LIB004",
-    "memberName": "Parth Ghussar",
-    "copyNo": 1,
-    "issuedOn": "12-06-2025",
-    "returnOn": "02-07-2025",
-    "status": 1,
-    "role": "Student"
-  }
-]
+  "bookIssuedData": [
+    {
+      "memberId": "LIB001",
+      "memberName": "Dharmik Jinjala",
+      "copyNo": 1,
+      "issuedOn": "10-08-2025",
+      "returnOn": "30-08-2025",
+      "status": 0,
+      "role": "Student"
+    },
+    {
+      "memberId": "LIB002",
+      "memberName": "Prerna Atre",
+      "copyNo": 2,
+      "issuedOn": "06-08-2025",
+      "returnOn": "26-08-2025",
+      "status": 1,
+      "role": "Teacher"
+    },
+    {
+      "memberId": "LIB003",
+      "memberName": "Mayur Solanki",
+      "copyNo": 1,
+      "issuedOn": "29-07-2025",
+      "returnOn": "19-08-2025",
+      "status": 1,
+      "role": "Student"
+    },
+    {
+      "memberId": "LIB004",
+      "memberName": "Parth Ghussar",
+      "copyNo": 1,
+      "issuedOn": "12-06-2025",
+      "returnOn": "02-07-2025",
+      "status": 1,
+      "role": "Student"
+    }
+  ]
 }

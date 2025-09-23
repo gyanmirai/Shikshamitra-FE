@@ -1,12 +1,12 @@
+import type { LabelColor } from 'src/components/label';
+
 import React from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, MenuItem, MenuList } from '@mui/material';
+import { Box, MenuItem, MenuList } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import {
-  MemberStatusOptions,
-  MemberStatusTypeColors,
-} from 'src/enums/member-management-statusType';
+import { MemberStatusType, MemberStatusTypeColors } from 'src/enums/member-management-statusType';
 
 import type { IMemberTableProps } from './type';
 
@@ -31,11 +31,8 @@ const MemberManagementTable: React.FC<IMemberTableProps> = ({
           label: 'Member Status',
           align: 'left',
           render(value, row) {
-            // Find the status type based on the label
-            const statusType = MemberStatusOptions.find((option) => option.label === value)?.value;
-            const color = statusType !== undefined ? MemberStatusTypeColors[statusType] : 'default';
-
-            return <Chip label={value} color={color as any} size="small" variant="soft" />;
+            const color = MemberStatusTypeColors[value as MemberStatusType];
+            return <Label color={color as LabelColor}>{MemberStatusType[value]}</Label>;
           },
         },
         {

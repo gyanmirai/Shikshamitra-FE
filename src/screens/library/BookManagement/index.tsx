@@ -76,7 +76,10 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
                 ? 'Update existing book details such as title, author, category, and availability.'
                 : 'Add a new book by entering details like title, author, category, and availability.'
             }
-            links={[{ name: 'Library', href: '/library/dashboard' }, { name: 'Book Management' }]}
+            links={[
+              { name: 'Library', href: '/library/dashboard' },
+              { name: 'Book Management Form' },
+            ]}
             sx={{ px: 1 }}
             isBack
             onBack={() => {

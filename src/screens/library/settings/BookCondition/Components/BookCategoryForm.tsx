@@ -44,7 +44,7 @@ const BookConditionForm: React.FC<IBookConditionFormProps> = ({ open, onClose, e
             >
               <TextField
                 fullWidth
-                label="Book Condition Type Name *"
+                label="Category Name *"
                 name="conditionType"
                 size="small"
                 value={formik.values.conditionType}
@@ -60,26 +60,6 @@ const BookConditionForm: React.FC<IBookConditionFormProps> = ({ open, onClose, e
                 }}
                 error={formik.touched.conditionType && Boolean(formik.errors.conditionType)}
                 helperText={(formik.touched.conditionType && formik.errors.conditionType) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          {/* Code */}
-          <Grid size={12}>
-            <ShakingTextField error={!!(formik.touched.code && formik.errors.code) || false}>
-              <TextField
-                fullWidth
-                label="Code *"
-                name="code"
-                size="small"
-                value={formik.values.code}
-                onChange={(e) => {
-                  const rawValue = e.target.value;
-                  const uppercaseValue = rawValue.toUpperCase().replace(/[^A-Z0-9\-_]/g, '');
-                  formik.setFieldValue('code', uppercaseValue);
-                }}
-                error={formik.touched.code && Boolean(formik.errors.code)}
-                helperText={(formik.touched.code && formik.errors.code) as string}
               />
             </ShakingTextField>
           </Grid>

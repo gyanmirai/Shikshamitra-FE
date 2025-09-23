@@ -51,30 +51,9 @@ const CategoryTable: React.FC<IBookCategoryTableProps> = ({
         ),
       },
       {
-        id: 'code',
-        label: 'Code',
+        id: 'description',
+        label: 'Description',
         align: 'left',
-      },
-      {
-        id: 'createdBy',
-        label: 'Created By',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
-      },
-      {
-        id: 'createdDate',
-        label: 'Created Date',
-        align: 'left',
-        filterType: 'date',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
       },
       {
         id: 'action',
