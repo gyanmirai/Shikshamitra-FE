@@ -25,51 +25,6 @@ export default function FeeRefundDetailsForm({ formik }: any) {
     currentQueryAndMutation: useGetRefundTermsQuery,
   });
 
-  // update totalAmount when selections change
-  // useEffect(() => {
-  //   let total = 0;
-
-  //   if (!feeTermsData) return;
-
-  //   formik.values.selectedTerms.forEach((termId: string) => {
-  //     const term = feeTermsData.find((t: any) => t.id === termId);
-  //     if (term) {
-  //       total += term.paid || 0;
-  //     }
-  //   });
-
-  //   // Heads/Charges only if parent term is NOT selected
-  //   feeTermsData.forEach((term: any) => {
-  //     if (!formik.values.selectedTerms.includes(term.id)) {
-  //       // Fee heads
-  //       formik.values.selectedFeeHeads.forEach((key: string) => {
-  //         const [termId, headName] = key.split('-');
-  //         if (term.id === termId) {
-  //           const head = term.feeHeads.find((h: any) => h.name === headName);
-  //           if (head) total += head.paid || 0;
-  //         }
-  //       });
-
-  //       // Charges
-  //       formik.values.selectedCharges.forEach((key: string) => {
-  //         const [termId, chargeId] = key.split('-');
-  //         if (term.id === termId) {
-  //           const charge = term.charges.find((c: any) => c.id === chargeId);
-  //           if (charge) total += charge.paid || 0;
-  //         }
-  //       });
-  //     }
-  //   });
-
-  //   formik.setFieldValue('totalAmount', total === 0 ? '' : total.toString());
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [
-  //   formik.values.selectedTerms,
-  //   formik.values.selectedFeeHeads,
-  //   formik.values.selectedCharges,
-  //   feeTermsData,
-  // ]);
-
   useEffect(() => {
     if (formik.values.selectedTerms.length === 0) {
       formik.setFieldValue('totalAmount', '');
@@ -169,7 +124,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                         <ShakingTextField error={Boolean(touched && error)}>
                           {field.type === 'date' ? (
                             <DatePicker
-                              label={field.label}
+                              label={`${field.label} *`}
                               format="DD/MM/YYYY"
                               value={value ? dayjs(value) : null}
                               onChange={(date) => formik.setFieldValue(fieldPath, date)}
@@ -188,7 +143,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                             <TextField
                               select
                               fullWidth
-                              label={field.label}
+                              label={`${field.label} *`}
                               name={fieldPath}
                               value={value || ''}
                               onChange={formik.handleChange}
@@ -209,7 +164,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                               multiline
                               minRows={2}
                               size="small"
-                              label={field.label}
+                              label={`${field.label} *`}
                               name={fieldPath}
                               value={value || ''}
                               onChange={formik.handleChange}
@@ -221,7 +176,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                             <NumericFormatCustom
                               fullWidth
                               size="small"
-                              label={field.label}
+                              label={`${field.label} *`}
                               name={fieldPath}
                               value={value || ''}
                               onChange={formik.handleChange}
@@ -234,7 +189,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                               fullWidth
                               type={field.type}
                               size="small"
-                              label={field.label}
+                              label={`${field.label} *`}
                               name={fieldPath}
                               value={value || ''}
                               onChange={formik.handleChange}

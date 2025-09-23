@@ -1,16 +1,10 @@
 // TermsToRefund.tsx
-import type { LabelColor } from 'src/components/label';
 
 import React, { useState } from 'react';
-import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { Box, Card, Divider, Checkbox, Collapse, Typography, IconButton } from '@mui/material';
-import {
-  FeeCollectionStatusType,
-  FeeCollectionStatusTypeColors,
-} from 'src/enums/fee-collection-type';
 
 import ChargesList from '../../FeeCollection/Components/ChargesList';
 
@@ -166,15 +160,6 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
                         <Typography fontWeight={500}>
                           ₹ {head.paid.toLocaleString()}/ ₹ {head.total.toLocaleString()}
                         </Typography>
-                        <Label
-                          color={
-                            FeeCollectionStatusTypeColors[
-                              head.status as FeeCollectionStatusType
-                            ] as LabelColor
-                          }
-                        >
-                          {FeeCollectionStatusType[head.status as FeeCollectionStatusType]}
-                        </Label>
                       </Box>
                     </Card>
                   );

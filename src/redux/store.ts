@@ -14,11 +14,9 @@ import { mediumApi } from './medium/mediumApi';
 import { tenantApi } from './tenant/tenantApi';
 import { incomeApi } from './incomeApi/incomeApi';
 import { budgetApi } from './budgetApi/budgetApi';
-import { FeeRefundApi } from './finance/feeRefund';
 import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
-import { chargesApi } from './chargesApi/chargesApi';
 import { feeTermsApi } from './feeCollection/feeTerms';
 import { PaymentTermApi } from './finance/paymentTerm';
 import { librarySettingsApi } from './library/settingApi';
@@ -32,9 +30,9 @@ import { ConcessionTypeApi } from './finance/concessionType';
 import { ChargeCategoryApi } from './finance/chargeCategory';
 import { expenseApi } from './finance/expenseApi/expenseApi';
 import { incomeCategoryApi } from './finance/incomeCategory';
-import { ConcessionApi } from './feeConcession/feeConcession';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { feeRefundsTermsApi } from './finance/feeRefundTerms';
+import { financeModuleApi } from './finance/financeModuleApi';
 import { ExpenseCategoryApi } from './finance/expenseCategory';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
@@ -150,16 +148,14 @@ const reducers = combineReducers({
   [PaymentTermApi.reducerPath]: PaymentTermApi.reducer,
   [ReconciliationApi.reducerPath]: ReconciliationApi.reducer,
   [ConcessionTypeApi.reducerPath]: ConcessionTypeApi.reducer,
-  [ConcessionApi.reducerPath]: ConcessionApi.reducer,
   [invoiceApi.reducerPath]: invoiceApi.reducer,
   [receiptApi.reducerPath]: receiptApi.reducer,
-  [FeeRefundApi.reducerPath]: FeeRefundApi.reducer,
   [studentInvoiceApi.reducerPath]: studentInvoiceApi.reducer,
   [studentReceiptApi.reducerPath]: studentReceiptApi.reducer,
   [feeCategoryApi.reducerPath]: feeCategoryApi.reducer,
   [ChargeCategoryApi.reducerPath]: ChargeCategoryApi.reducer,
   [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
-  [chargesApi.reducerPath]: chargesApi.reducer,
+  [financeModuleApi.reducerPath]: financeModuleApi.reducer,
   [expenseApi.reducerPath]: expenseApi.reducer,
   [expenseDetailsApi.reducerPath]: expenseDetailsApi.reducer,
   [incomeApi.reducerPath]: incomeApi.reducer,
@@ -244,17 +240,15 @@ const store = configureStore({
       PaymentTermApi.middleware,
       ReconciliationApi.middleware,
       ConcessionTypeApi.middleware,
-      ConcessionApi.middleware,
       invoiceApi.middleware,
       receiptApi.middleware,
-      FeeRefundApi.middleware,
       studentInvoiceApi.middleware,
       FeeHeadManagementApi.middleware,
       studentReceiptApi.middleware,
       feeCategoryApi.middleware,
       ChargeCategoryApi.middleware,
       ExpenseCategoryApi.middleware,
-      chargesApi.middleware,
+      financeModuleApi.middleware,
       expenseApi.middleware,
       expenseDetailsApi.middleware,
       incomeApi.middleware,

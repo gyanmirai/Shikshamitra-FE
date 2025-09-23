@@ -109,7 +109,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
           color="success"
           onClick={onApprove}
           size="small"
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={<Iconify icon={GlobalIcons.tick} />}
         >
           Approve
         </Button>

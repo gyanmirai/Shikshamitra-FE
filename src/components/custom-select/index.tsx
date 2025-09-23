@@ -26,6 +26,7 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   error?: boolean;
   helperText?: string;
   isLoading?: boolean;
+  disabled?: boolean;
   noOptionsMessage?: string;
   sx?: SxProps;
   labelKey?: T;
@@ -45,6 +46,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   error = false,
   helperText,
   isLoading = false,
+  disabled = false,
   noOptionsMessage = 'No data available',
   sx = {},
   labelKey = 'label' as T,
@@ -86,6 +88,7 @@ const CustomSelect = <T extends string, J extends boolean>({
             onChange={handleChange}
             size="small"
             label={label}
+            disabled={disabled}
             renderValue={
               multiple
                 ? (selected: string | string[] | number | number[]) => (
@@ -94,6 +97,7 @@ const CustomSelect = <T extends string, J extends boolean>({
                         <Chip
                           key={val}
                           size="small"
+                          disabled={disabled}
                           variant="soft"
                           label={options.find((option) => option[valueKey] === val)?.[labelKey]}
                           onDelete={() => handleDelete(val)}

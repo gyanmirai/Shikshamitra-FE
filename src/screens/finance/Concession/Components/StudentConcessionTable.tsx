@@ -91,8 +91,8 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
           minWidth: 150,
         },
         {
-          id: 'feecollectionType',
-          label: 'Fee Collection Type',
+          id: 'concessionType',
+          label: 'Concession Type',
           align: 'left',
           minWidth: '180px',
         },

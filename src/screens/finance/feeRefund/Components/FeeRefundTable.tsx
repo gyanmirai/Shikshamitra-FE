@@ -47,7 +47,7 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
   return (
     <CustomizableTable
       tableId="student-fee-table"
-      noDataText={<>No Student Fee Data Found</>}
+      noDataText={<>No student refund fee data found.</>}
       columns={[
         {
           id: 'name',
