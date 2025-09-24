@@ -66,6 +66,7 @@ const ReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) => {
           variant="contained"
           color={mode === 'Reject' ? 'error' : 'success'}
           size="small"
+          startIcon={<Iconify icon={mode === 'Reject' ? GlobalIcons.cancel : GlobalIcons.tick} />}
           onClick={(e: any) => {
             formik.handleSubmit(e);
           }}

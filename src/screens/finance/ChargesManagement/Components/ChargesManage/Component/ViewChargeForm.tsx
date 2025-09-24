@@ -43,7 +43,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
         color="success"
         onClick={onApprove}
         size="small"
-        startIcon={<Iconify icon={GlobalIcons.submit} />}
+        startIcon={<Iconify icon={GlobalIcons.tick} />}
       >
         Approve
       </Button>

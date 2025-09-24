@@ -282,7 +282,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         </Button>
         <Button
           type="submit"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}

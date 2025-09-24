@@ -1,12 +1,5 @@
-import type { LabelColor } from 'src/components/label';
-
 import React from 'react';
-import { Label } from 'src/components/label';
 import { Box, Checkbox, Typography } from '@mui/material';
-import {
-  FeeCollectionStatusType,
-  FeeCollectionStatusTypeColors,
-} from 'src/enums/fee-collection-type';
 
 import type { ITerm, IFeeHead, IFeeCharge } from './type';
 
@@ -62,15 +55,6 @@ const ChargesList: React.FC<ChargesListProps> = ({ charges, selectedCharges, tog
             <Typography fontWeight={400}>
               ₹ {ch.paid.toLocaleString()} / ₹ {ch.total.toLocaleString()}
             </Typography>
-            <Label
-              color={
-                FeeCollectionStatusTypeColors[
-                  ch.status as unknown as FeeCollectionStatusType
-                ] as LabelColor
-              }
-            >
-              {FeeCollectionStatusType[ch.status as unknown as FeeCollectionStatusType]}
-            </Label>
           </Box>
         </Box>
       </Box>

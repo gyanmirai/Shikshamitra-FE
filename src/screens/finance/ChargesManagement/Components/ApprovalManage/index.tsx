@@ -5,7 +5,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetChargesQuery } from 'src/redux/chargesApi/chargesApi';
+import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
 
 import ChargesApprovalTable from './Components/ApptovalChangeTable';
 import ChargeDetailsCard from '../ChargesManage/Component/ViewChargeForm';

@@ -15,7 +15,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetConcessionsQuery } from 'src/redux/feeConcession/feeConcession';
+import { useGetConcessionsQuery } from 'src/redux/finance/ConcessionManagement/concessionApi';
 
 import ReasonApprovalForm from './Components/ConcessionRequestApprove';
 import StudentConcessionTable from './Components/StudentConcessionTable';
@@ -107,7 +107,7 @@ const Concession = () => {
         }
         sx={{ px: 1, mb: 2 }}
       />
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, ml: 1 }}>
         <CustomSelect
           label="Board"
           options={boards || []}
@@ -118,7 +118,7 @@ const Concession = () => {
             setSelectedBoard(value as string);
             setSelectedMedium('');
           }}
-          formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
         <CustomSelect
           label="Medium"
@@ -128,7 +128,7 @@ const Concession = () => {
           valueKey="id"
           value={selectedMedium}
           onChange={(value) => setSelectedMedium(value as string)}
-          formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
       </Box>
       <StudentConcessionTable

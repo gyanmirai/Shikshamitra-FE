@@ -13,9 +13,9 @@ import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeRefundQuery } from 'src/redux/finance/feeRefund';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetFeeRefundQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import RefundRemarksForm from './Components/RefundRemarksForm';
 import RefundProcessForm from './Components/RefundProcessForm';
@@ -99,16 +99,22 @@ const FeeRefund = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {addRefundRequest.value ? (
         <CustomBreadcrumbs
-          heading="Fee Refund"
+          heading="Fee Refund Form"
           description="Form to record and request student fee refunds."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Fee Refund', href: '/finance/fee-refund' },
+            {
+              name: 'Fee Refund',
+              href: '/finance/fee-refund',
+              onClick(e) {
+                addRefundRequest.onFalse();
+              },
+            },
+            { name: 'Fee Refund Form' },
           ]}
           isBack={addRefundRequest.value}
           onBack={() => {
-            addRefundRequest.onFalse();
-            setSelectedFeeRefund(null);
+            handleClose(null, false);
           }}
           sx={{ px: 1, mb: 2 }}
         />

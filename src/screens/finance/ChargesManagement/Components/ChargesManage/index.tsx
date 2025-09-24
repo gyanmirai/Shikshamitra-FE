@@ -11,9 +11,9 @@ import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetChargesQuery } from 'src/redux/chargesApi/chargesApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
 
 import ChargeForm from './Component/ChargeForm';
 import ChargesTable from './Component/ChargesTable';
@@ -103,7 +103,7 @@ const ChargesManagement = () => {
         heading="Charges Management"
         description="This screen shows a list of all existing charges with an option to create a new one. charges including tuition fees, exam fees, and other miscellaneous charges."
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Charges Management' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
         action={
           <Button
             sx={{ width: '160px' }}

@@ -9,14 +9,24 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import {
+  Grid,
+  Chip,
+  Button,
+  Checkbox,
+  TextField,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
 
 import type { IChargeFormProps } from './type';
 
@@ -212,24 +222,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 value={values.class}
                 onChange={(value) => {
                   setFieldValue('class', value);
-                  const selectedClassDivisions =
-                    allClass.find((cls) => cls.id === value)?.divisions || [];
-                  const divisionsWithAll = [
-                    {
-                      id: 'all',
-                      name: 'All',
-                      creationTime: '',
-                      creatorId: '',
-                      lastModificationTime: '',
-                      lastModifierId: '',
-                      strength: 0,
-                      standardId: '',
-                    },
-                    ...selectedClassDivisions,
-                  ];
-                  setAllDivision(divisionsWithAll);
-                  const allDivisionIds = ['all', ...selectedClassDivisions.map((div) => div.id)];
-                  setFieldValue('divisions', allDivisionIds);
+                  setFieldTouched('class', false);
+                  setFieldValue('divisions', []);
                 }}
                 error={!!(touched.class && errors.class) || false}
                 helperText={(touched.class && errors.class) || ''}
@@ -296,6 +290,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 loading={isLoading}
                 multiple
                 fullWidth
+                disableCloseOnSelect
                 value={values.students}
                 disabled={values.divisions.length === 0}
                 onChange={(e, value: any) => setFieldValue('students', value)}
@@ -316,6 +311,17 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 options={tableData}
                 getOptionLabel={(option: any) => option?.name || ''}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderOption={(props, option, { selected }) => (
+                  <li {...props} key={option.id}>
+                    <Checkbox
+                      icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                      checkedIcon={<CheckBoxIcon fontSize="small" />}
+                      style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.name}
+                  </li>
+                )}
                 renderInput={(params) => (
                   <TextField
                     {...params}

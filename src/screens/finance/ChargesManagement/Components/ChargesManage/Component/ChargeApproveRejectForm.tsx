@@ -65,6 +65,7 @@ const ChargeReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) =
           type="submit"
           variant="contained"
           color={mode === 'Reject' ? 'error' : 'success'}
+          startIcon={<Iconify icon={mode === 'Reject' ? GlobalIcons.cancel : GlobalIcons.tick} />}
           size="small"
           onClick={(e: any) => {
             formik.handleSubmit(e);
