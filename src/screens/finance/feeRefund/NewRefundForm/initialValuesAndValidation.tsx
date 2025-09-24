@@ -6,6 +6,8 @@ import * as Yup from 'yup';
 import { getInitialPaymentDetails } from '../Components/RefundProcessForm';
 import { paymentMethodsConfig } from '../../FeeCollection/Components/paymentConfigMethods';
 
+import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
+
 export const buildRefundInitialValues = (editData?: Partial<any> | null) => {
   const initialValues: Record<string, any> = {
     board: editData?.board || '',
@@ -33,7 +35,7 @@ export const buildRefundInitialValues = (editData?: Partial<any> | null) => {
   return initialValues;
 };
 
-export const buildRefundValidationSchema = () =>
+export const buildRefundValidationSchema = (currentYear: any) =>
   Yup.object({
     board: Yup.string().required('Board is required'),
     medium: Yup.string().required('Medium is required'),
@@ -75,35 +77,100 @@ export const buildRefundValidationSchema = () =>
       .positive('Amount must be positive'),
     reason: Yup.string().required('Reason is required'),
     notes: Yup.string(),
-    paymentDetails: Yup.object().when(['refundMethod'], ([refundMethod], schema) => {
+    paymentDetails: Yup.object().when(['refundMethod'], ([refundMethod], schema, context) => {
       if (!refundMethod || !paymentMethodsConfig[refundMethod as keyof typeof paymentMethodsConfig])
-        return schema; // no validation if method not chosen
+        return schema;
 
       return Yup.object(
         Object.fromEntries(
           paymentMethodsConfig[refundMethod as keyof typeof paymentMethodsConfig].map((field) => [
             field.name,
-            field.required
-              ? field.type === 'date'
-                ? Yup.mixed()
-                    .required(`${field.label} is required`)
-                    .test(
-                      'is-valid-dayjs',
-                      `${field.label} must be a valid date`,
-                      (value) => value && dayjs(value as Dayjs).isValid()
-                    )
-                : Yup.string().required(`${field.label} is required`)
-              : field.type === 'date'
-                ? Yup.mixed()
-                    .nullable()
-                    .test(
-                      'is-valid-dayjs',
-                      `${field.label} must be a valid date`,
-                      (value) => !value || dayjs(value as Dayjs).isValid()
-                    )
-                : Yup.string(),
+            buildFieldValidation(field, currentYear, context?.parent),
           ])
         )
       );
     }),
   });
+
+export const buildFieldValidation = (
+  field: IPaymentFieldConfig,
+  currentYear: any,
+  formValues: any
+) => {
+  let schema: Yup.Schema<any>;
+
+  if (field.type === 'date') {
+    schema = field.required
+      ? Yup.mixed()
+          .required(`${field.label} is required`)
+          .test(
+            'is-valid-dayjs',
+            `${field.label} must be a valid date`,
+            (value) => value && dayjs(value as Dayjs).isValid()
+          )
+          .test(
+            'min-date',
+            (value) =>
+              `${field.label} must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+          )
+          .test(
+            'max-date',
+            (value) =>
+              `${field.label} must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+          )
+      : Yup.mixed()
+          .nullable()
+          .test(
+            'is-valid-dayjs',
+            `${field.label} must be a valid date`,
+            (value) => !value || dayjs(value as Dayjs).isValid()
+          )
+          .test(
+            'min-date',
+            (value) =>
+              `${field.label} must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              !value || dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+          )
+          .test(
+            'max-date',
+            (value) =>
+              `${field.label} must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              !value || dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+          );
+  } else if (field.type === 'amount' || field.type === 'number') {
+    schema = Yup.number()
+      .typeError(`${field.label} must be a number`)
+      .transform((val, orig) => {
+        if (typeof orig === 'string') return Number(orig.replace(/[₹,\s]/g, ''));
+        return val;
+      })
+      .min(field.min ?? 0, `${field.label} must be greater than ${field.min ?? 0}`);
+    schema = schema.test(
+      'max-total',
+      `${field.label} cannot be greater than Total Amount`,
+      (value) => {
+        if (value == null) return true;
+        const total = formValues?.totalAmount;
+        return total == null || value <= total;
+      }
+    );
+    if (field.required) schema = schema.required(`${field.label} is required`);
+  } else {
+    schema = Yup.string();
+    if (field.required) schema = schema.required(`${field.label} is required`);
+  }
+
+  if (field.pattern) {
+    schema = (schema as Yup.StringSchema).matches(
+      new RegExp(field.pattern),
+      field.patternMessage || `${field.label} is invalid`
+    );
+  }
+  return schema;
+};

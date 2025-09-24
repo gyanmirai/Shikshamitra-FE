@@ -1,4 +1,7 @@
+import type { RootState } from 'src/redux/store';
+
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -23,9 +26,11 @@ const FeeRefundFormComponent = ({
   onCancel?: (e: any, isSubmit: boolean) => void;
   loading?: boolean;
 }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const formik = useFormik({
     initialValues: buildRefundInitialValues(),
-    validationSchema: buildRefundValidationSchema(),
+    validationSchema: buildRefundValidationSchema(currentYear),
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {

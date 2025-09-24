@@ -51,7 +51,8 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           onCollectFee(row as IFeeData);
         }}
       >
-        <Iconify icon="solar:wallet-bold" sx={{ height: '16px', width: '16px' }} /> Collect Fee
+        <Iconify icon="fluent:payment-16-regular" sx={{ height: '16px', width: '16px' }} />
+        Collect Fee
       </MenuItem>
     </MenuList>
   );

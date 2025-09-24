@@ -72,26 +72,34 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
 
   return (
     <Card sx={{ boxShadow: 'var(--shadows-4)' }}>
-      <CustomTabs value={tabs.value} onChange={tabs.onChange}>
-        {TABS.map((tab) => (
-          <Tab
-            key={tab.value}
-            value={tab.value}
-            label={
-              <Box display="flex" alignItems="center" gap={1}>
-                {tab.icon}
-                {tab.label}
-              </Box>
-            }
-            sx={{
-              fontSize: '14px',
-              textTransform: 'none',
-            }}
-          />
-        ))}
-      </CustomTabs>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          pr: 2,
+          mt: 2,
+        }}
+      >
+        <CustomTabs value={tabs.value} onChange={tabs.onChange}>
+          {TABS.map((tab) => (
+            <Tab
+              key={tab.value}
+              value={tab.value}
+              label={
+                <Box display="flex" alignItems="center" gap={1}>
+                  {tab.icon}
+                  {tab.label}
+                </Box>
+              }
+              sx={{
+                fontSize: '14px',
+                textTransform: 'none',
+              }}
+            />
+          ))}
+        </CustomTabs>
 
-      <Box sx={{ px: 2, mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
         <Button
           variant="contained"
           startIcon={<CreditCardIcon />}

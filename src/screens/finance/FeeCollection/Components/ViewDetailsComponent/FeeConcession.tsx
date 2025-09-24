@@ -39,6 +39,7 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
                 variant="caption"
                 noWrap
                 sx={{
+                  fontSize: '13px',
                   maxWidth: 200,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -64,6 +65,7 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
                   noWrap
                   sx={{
                     maxWidth: 180,
+                    fontSize: '13px',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',

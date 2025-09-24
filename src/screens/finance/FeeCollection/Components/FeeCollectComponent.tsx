@@ -1,4 +1,7 @@
+import type { RootState } from 'src/redux/store';
+
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -24,9 +27,12 @@ const FeeCollectComponent = ({
   onCancel?: (e: any, isSubmit: boolean) => void;
   loading?: boolean;
 }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const formik = useFormik({
     initialValues: buildInitialValues(),
-    validationSchema: buildValidationSchema(),
+    validationSchema: buildValidationSchema(currentYear),
+    enableReinitialize: true,
     onSubmit: (values) => {
       // This logic will be moved from PaymentDetailsForm
       if (onSubmit) {
@@ -37,6 +43,7 @@ const FeeCollectComponent = ({
       }
     },
   });
+  console.log('formik----', formik.errors);
 
   return (
     <Box display="flex" flexDirection="column" height="100%">

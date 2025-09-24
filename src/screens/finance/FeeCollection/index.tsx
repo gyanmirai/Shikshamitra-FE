@@ -48,9 +48,19 @@ const FeeCollection = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {studentDialog.value ? (
         <CustomBreadcrumbs
-          heading="Fee Collection"
+          heading="Fee Collection Form"
           description="Select the applicable fee term and enter payment details. Once completed, click 'Generate Receipt' to collect the fee."
-          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Fee Collection' }]}
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            {
+              name: 'Fee Collection',
+              href: '/finance/fee-collection',
+              onClick() {
+                studentDialog.onFalse();
+              },
+            },
+            { name: 'Fee Collection Form' },
+          ]}
           sx={{ px: 1, mb: 2 }}
           isBack={studentDialog.value}
           onBack={() => {

@@ -116,6 +116,8 @@ export interface IPaymentFieldConfig {
   required?: boolean;
   min?: number;
   max?: number;
+  pattern?: string;
+  patternMessage?: string;
   options?: string[];
 }
 

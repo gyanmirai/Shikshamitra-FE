@@ -23,7 +23,7 @@ export default function InstallmentStatusCard() {
   const progress = (paid / total) * 100;
 
   return (
-    <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+    <Card sx={{ borderRadius: 3, boxShadow: 3, height: '100%' }}>
       <CardContent>
         {/* Header */}
         <Typography variant="h6" fontWeight="bold">
