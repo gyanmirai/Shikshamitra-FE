@@ -27,7 +27,7 @@ const CollectChargesForm: React.FC<ICollectChargesProps> = ({ open, onClose, cha
   const formik = useFormik<ICollectChargesFormValues>({
     initialValues: {
       role: charge?.role || '',
-      class: charge?.class || '',
+      class: charge?.classNo || '',
       division: charge?.division || '',
       memberName: charge?.memberName || '',
       bookTitle: charge?.bookTitle || '',
@@ -125,7 +125,7 @@ const CollectChargesForm: React.FC<ICollectChargesProps> = ({ open, onClose, cha
               <Grid size={{ xs: 12, md: 6 }}>
                 <DatePicker
                   label="Due Date"
-                  value={formik.values.dueDate ? dayjs(formik.values.dueDate) : null}
+                  value={formik.values.dueDate ? dayjs(formik.values.dueDate, 'DD/MM/YYYY') : null}
                   disabled
                   sx={{ width: '100%' }}
                   slotProps={{

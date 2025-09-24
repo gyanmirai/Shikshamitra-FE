@@ -4,6 +4,12 @@
       "memberId": "M001",
       "memberName": "Rahul Sharma",
       "bookCategory": "Science",
+      "role": "Student",
+      "classNo": "12th",
+      "division": "B",
+      "grNo": "GR12345",
+      "accessionNo": "A1001",
+      "contactNo": "9876543210",
       "bookTitle": "Introduction to Physics",
       "edition": "3rd Edition",
       "dueDate": "20-09-2025",
@@ -17,6 +23,12 @@
       "memberId": "M002",
       "memberName": "Anjali Patel",
       "bookCategory": "Literature",
+      "role": "Employee",
+      "classNo": "-",
+      "division": "-",
+      "grNo": "-",
+      "accessionNo": "A1002",
+      "contactNo": "9123456780",
       "bookTitle": "Pride and Prejudice",
       "edition": "2nd Edition",
       "dueDate": "15-09-2025",
@@ -29,6 +41,12 @@
     {
       "memberId": "M003",
       "memberName": "Amit Verma",
+      "role": "Student",
+      "classNo": "11th",
+      "division": "A",
+      "accessionNo": "A1003",
+      "grNo": "GR67890",
+      "contactNo": "9988776655",
       "bookCategory": "Mathematics",
       "bookTitle": "Discrete Mathematics",
       "edition": "5th Edition",
@@ -43,6 +61,12 @@
       "memberId": "M004",
       "memberName": "Sneha Reddy",
       "bookCategory": "History",
+      "role": "Employee",
+      "classNo": "-",
+      "division": "-",
+      "grNo": "-",
+      "accessionNo": "A1004",
+      "contactNo": "9876501234",
       "bookTitle": "World War II",
       "edition": "1st Edition",
       "dueDate": "10-09-2025",
@@ -50,7 +74,7 @@
       "bookCondition": "",
       "fineAmount": "",
       "requestedDate": "10-08-2025",
-      "status": 3
+      "status": 2
     }
   ],
   "reservedBookData": [
@@ -70,48 +94,50 @@
       "memberId": "DDVS003",
       "memberName": "Mayur Solanki",
       "notificationSentOn": "20-08-2025",
-      "status": 2
+      "status": 1
     }
   ],
   "bookCategoryOptionsData": [
     {
       "id": "cat1",
-      "label": "Text Book",
-      "value": "Text Book",
-      "titles": [
-        {
-          "id": "title1",
-          "label": "Introduction to Physics",
-          "value": "Introduction to Physics",
-          "author": "H.C. Verma",
-          "quantity": 25,
-          "editions": [
-            { "id": "ed1", "label": "01", "value": "01" },
-            { "id": "ed2", "label": "02", "value": "02" }
-          ]
+      "label": "Introduction to Physics",
+      "value": "Introduction to Physics",
+      "categoryName": "Text Book",
+      "quantity": 5,
+      "editions": [
+      {
+          "id": "ed1",
+          "label": "1",
+          "value": "1"
         },
         {
-          "id": "title2",
-          "label": "Advanced Chemistry",
-          "value": "Advanced Chemistry",
-          "author": "O.P. Tandon",
-          "quantity": 0,
-          "editions": [{ "id": "ed1", "label": "01", "value": "01" }]
+          "id": "ed2",
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "id": "ed3",
+          "label": "3",
+          "value": "3"
         }
       ]
     },
     {
       "id": "cat2",
-      "label": "Reference Book",
-      "value": "Reference Book",
-      "titles": [
+      "label": "Computer Networks",
+      "value": "Computer Networks",
+      "categoryName": "Reference Book",
+      
+      "editions":[
         {
-          "id": "title3",
-          "label": "Introduction to Physics",
-          "value": "Introduction to Physics",
-          "author": "Resnick & Halliday",
-          "quantity": 10,
-          "editions": [{ "id": "ed3", "label": "01", "value": "01" }]
+          "id": "ed1",
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "id": "ed2",
+          "label": "2",
+          "value": "2"
         }
       ]
     }
@@ -141,7 +167,12 @@
       "memberId": "DDVS001",
       "memberName": "Dharmik Jinjala",
       "role": "Student",
+      "classNo": "10th",
+      "division": "A",
+      "grNo": "GR1001",
+      "contactNo": "9876543210",
       "reservedOn": "10-08-2025",
+      "dueDate": "20-09-2025",
       "bookCategory": "Text Book",
       "bookTitle": "Introduction to Physics",
       "edition": "01"
@@ -149,8 +180,13 @@
     {
       "memberId": "DDVS002",
       "memberName": "Prerna Atre",
-      "role": "Teacher",
+      "role": "Employee",
+      "contactNo": "9123456780",
+      "classNo": "-",
+      "division": "-",
+      "grNo": "-",
       "reservedOn": "12-08-2025",
+      "dueDate": "22-09-2025",
       "bookCategory": "Reference Book",
       "bookTitle": "Computer Networks",
       "edition": "05"
@@ -159,7 +195,12 @@
       "memberId": "DDVS003",
       "memberName": "Mayur Solanki",
       "role": "Student",
+      "classNo": "12th",
+      "division": "B",
+      "grNo": "GR1002",
+      "contactNo": "9988776655",
       "reservedOn": "15-08-2025",
+      "dueDate": "25-09-2025",
       "bookCategory": "Magazine",
       "bookTitle": "Science Today",
       "edition": "August 2025"
@@ -167,14 +208,19 @@
     {
       "memberId": "DDVS004",
       "memberName": "Krishna Patel",
-      "role": "Librarian",
-      "reservedOn": "18-08-2025"
+      "role": "Employee",
+      "contactNo": "9876501234",
+      "classNo": "-",
+      "division": "-",
+      "grNo": "-",
+      "reservedOn": "18-08-2025",
+      "dueDate": "28-09-2025"
     }
   ],
   "bookTitleData": [
     {
       "id": 1,
-      "title": "Introduction to Algorithms",
+      "title": "Introduction to Algorithms (Textbook)",
       "isbn": "9780262033848",
       "author": "Thomas H. Cormen",
       "publisher": "MIT Press",
@@ -189,7 +235,7 @@
     },
     {
       "id": 2,
-      "title": "Clean Code",
+      "title": "Clean Code (Programming)",
       "isbn": "9780132350884",
       "author": "Robert C. Martin",
       "publisher": "Prentice Hall",
@@ -204,7 +250,7 @@
     },
     {
       "id": 3,
-      "title": "The Pragmatic Programmer",
+      "title": "The Pragmatic Programmer (Programming)",
       "isbn": "9780201616224",
       "author": "Andrew Hunt, David Thomas",
       "publisher": "Addison-Wesley",
@@ -219,7 +265,7 @@
     },
     {
       "id": 4,
-      "title": "Artificial Intelligence: A Modern Approach",
+      "title": "Artificial Intelligence: A Modern Approach (Textbook)",
       "isbn": "9780136042594",
       "author": "Stuart Russell, Peter Norvig",
       "publisher": "Pearson",
@@ -234,7 +280,7 @@
     },
     {
       "id": 5,
-      "title": "Design Patterns: Elements of Reusable Object-Oriented Software",
+      "title": "Design Patterns: Elements of Reusable Object-Oriented Software (Reference)",
       "isbn": "9780201633610",
       "author": "Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides",
       "publisher": "Addison-Wesley",
@@ -366,7 +412,9 @@
     {
       "memberId": "LIB001",
       "memberName": "Dharmik Jinjala",
-      "copyNo": 1,
+      "classNo": "10th",
+      "division": "A",
+      "accessionNo": "A1005",
       "issuedOn": "10-08-2025",
       "returnOn": "30-08-2025",
       "status": 0,
@@ -376,15 +424,21 @@
       "memberId": "LIB002",
       "memberName": "Prerna Atre",
       "copyNo": 2,
+      "classNo": "-",
+      "division": "-",
+      "accessionNo": "A1006",
       "issuedOn": "06-08-2025",
       "returnOn": "26-08-2025",
       "status": 1,
-      "role": "Teacher"
+      "role": "Employee"
     },
     {
       "memberId": "LIB003",
       "memberName": "Mayur Solanki",
       "copyNo": 1,
+      "classNo": "12th",
+      "division": "B",
+      "accessionNo": "A1007",
       "issuedOn": "29-07-2025",
       "returnOn": "19-08-2025",
       "status": 1,
@@ -394,9 +448,22 @@
       "memberId": "LIB004",
       "memberName": "Parth Ghussar",
       "copyNo": 1,
+      "classNo": "11th",
+      "division": "C",
+      "accessionNo": "A1008",
       "issuedOn": "12-06-2025",
       "returnOn": "02-07-2025",
       "status": 1,
+      "role": "Student"
+    }
+  ],
+  "rolesData": [
+    {
+      "id": 1,
+      "role": "Employee"
+    },
+    {
+      "id": 2,
       "role": "Student"
     }
   ]

@@ -9,7 +9,7 @@ export default function LibraryChargeInfo({ charge }: { charge: ILibraryChargeDa
     <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, mb: 2 }}>
       {/* Heading */}
       <Typography variant="h6" mb={2} color="primary.main">
-        Library Charge Details
+        Basic Information
       </Typography>
 
       <Grid container spacing={2}>
@@ -49,7 +49,7 @@ export default function LibraryChargeInfo({ charge }: { charge: ILibraryChargeDa
             Class / Division
           </Typography>
           <Typography variant="body1" fontWeight={600}>
-            {charge?.class}
+            {charge?.classNo}
             {charge?.division ? `-${charge?.division}` : ''}
           </Typography>
         </Grid>

@@ -11,14 +11,16 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useGetRolesQuery } from 'src/redux/role/roleApi';
+import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { DialogScrollContent } from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetRoleOptionsQuery } from 'src/redux/library/roleApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetReservationBooksQuery } from 'src/redux/book-reservation-api/book-reservation-api';
 import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
 import { useGetReservationRequestDataQuery } from 'src/redux/reservationRequestApi/reservationRequestApi';
 import {
@@ -35,7 +37,7 @@ import {
 import { getInitialValues } from './IssueInitialValues';
 import { getIssueBookSchema } from './IssurFormValidationSchema';
 
-import type { ITitle, IEdition, IssueBookFormProps, IBookCategoryOption } from './type';
+import type { IEdition, IssueBookFormProps, IBookCategoryOption } from './type';
 
 const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }) => {
   //   Fetch issued/returned books
@@ -48,6 +50,12 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
     type: 'query',
     currentQueryAndMutation: useGetReservationRequestDataQuery,
   });
+
+  const { data: reservedBooks } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetReservationBooksQuery,
+  });
+
   const [bookSelected, setBookSelected] = useState(false);
   const [showReservation, setShowReservation] = useState(false);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -62,10 +70,12 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
-  const { data, isLoading } = useQueryAndMutation({
+
+  const { data: roleData, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetRolesQuery,
+    currentQueryAndMutation: useGetRoleOptionsQuery,
   });
+
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -157,11 +167,11 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
   });
 
   const selectedCategory = bookCategoryOptions?.find(
-    (cat: IBookCategoryOption) => cat.value === formik.values.bookCategory
+    (cat: IBookCategoryOption) => cat.value === formik.values.bookTitle
   );
 
-  const selectedBook = selectedCategory?.titles.find(
-    (title: ITitle) => title.value === formik.values.bookTitle
+  const selectedBook = bookCategoryOptions?.find(
+    (item: IBookCategoryOption) => item.value === formik.values.bookTitle
   );
 
   const availableQuantity = selectedBook?.quantity || 0;
@@ -170,61 +180,67 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
+          {/* Book Title */}
+          <Grid size={{ xs: 12, md: 5 }}>
+            <CustomTooltip
+              placement="top"
+              title={
+                formik.values.bookTitle
+                  ? bookCategoryOptions?.find(
+                      (item: IBookCategoryOption) => item.value === formik.values.bookTitle
+                    )?.label || ''
+                  : undefined
+              }
+            >
+              <Autocomplete
+                options={
+                  bookCategoryOptions?.map((item: IBookCategoryOption) => ({
+                    id: item.id,
+                    label: item.label,
+                    value: item.value,
+                    categoryName: item.categoryName,
+                  })) ?? []
+                }
+                getOptionLabel={(option) => option.label}
+                value={
+                  bookCategoryOptions?.find(
+                    (item: IBookCategoryOption) => item.value === formik.values.bookTitle
+                  ) || null
+                }
+                onChange={(_, value) => {
+                  formik.setFieldValue('bookTitle', value?.value || '');
+                  formik.setFieldTouched('bookTitle', false);
+                  formik.setFieldValue('bookCategory', value?.categoryName || '');
+                  formik.setFieldValue('edition', ''); // reset child
+                  setBookSelected(!!value);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Book Title *"
+                    size="small"
+                    fullWidth
+                    error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}
+                    helperText={(formik.touched.bookTitle && formik.errors.bookTitle) as string}
+                  />
+                )}
+                isOptionEqualToValue={(option, value) => option.value === value.value}
+              />
+            </CustomTooltip>
+          </Grid>
+
           {/* Book Category */}
           <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
-              <CustomSelect
-                label="Book Category *"
-                options={
-                  bookCategoryOptions?.map((item: IBookCategoryOption) => ({
-                    id: item?.id,
-                    label: item?.label,
-                    value: item?.value,
-                  })) ?? []
-                }
-                value={formik.values.bookCategory}
-                onChange={(val) => {
-                  if (formik.values.bookCategory !== val) {
-                    formik.setFieldValue('bookCategory', val);
-                    formik.setFieldTouched('bookCategory', false);
-                    formik.setFieldValue('bookTitle', '');
-                    formik.setFieldValue('edition', '');
-                  }
-                }}
+              <TextField
+                label="Book Category"
+                disabled
+                value={formik.values.bookCategory || ''}
+                InputProps={{ readOnly: true }}
+                size="small"
+                fullWidth
                 error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}
                 helperText={(formik.touched.bookCategory && formik.errors.bookCategory) as string}
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          {/* Book Title */}
-          <Grid size={{ xs: 12, md: 5 }}>
-            <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
-              <CustomSelect
-                label="Book Title *"
-                disabled={!formik.values.bookCategory}
-                options={
-                  bookCategoryOptions
-                    ?.find(
-                      (cat: IBookCategoryOption) => cat?.value === formik?.values?.bookCategory
-                    )
-                    ?.titles?.map((title: ITitle) => ({
-                      id: title?.id,
-                      label: title?.label,
-                      value: title?.value,
-                    })) ?? []
-                }
-                value={formik.values.bookTitle}
-                onChange={(val) => {
-                  formik.setFieldValue('bookTitle', val);
-                  formik.setFieldTouched('bookTitle', false);
-                  formik.setFieldValue('edition', ''); // reset child
-                  setBookSelected(!!val);
-                }}
-                error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}
-                helperText={(formik.touched.bookTitle && formik.errors.bookTitle) as string}
-                formControlProps={{ fullWidth: true }}
               />
             </ShakingTextField>
           </Grid>
@@ -237,8 +253,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                 disabled={!formik.values.bookTitle}
                 options={
                   bookCategoryOptions
-                    ?.find((cat: IBookCategoryOption) => cat.value === formik.values.bookCategory)
-                    ?.titles?.find((title: ITitle) => title.value === formik.values.bookTitle)
+                    ?.find((item: IBookCategoryOption) => item.value === formik.values.bookTitle)
                     ?.editions?.map((edition: IEdition) => ({
                       id: edition?.id,
                       label: edition?.label,
@@ -258,7 +273,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
           </Grid>
 
           {/* Availability Indicator + Reservation */}
-          {bookSelected && (
+          {formik.values.edition && (
             <>
               <Grid size={12}>
                 {availableQuantity > 0 ? (
@@ -274,7 +289,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                       },
                     }}
                   >
-                    Book Available - {availableQuantity}
+                    Book Available - ({availableQuantity})
                   </Alert>
                 ) : (
                   <Alert
@@ -320,8 +335,8 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                   <CustomizableTable
                     tableId="reservation-table"
                     columns={[
-                      { id: 'memberId', label: 'Member ID', align: 'left' },
                       { id: 'memberName', label: 'Member Name', align: 'left' },
+                      { id: 'memberId', label: 'Member ID', align: 'left' },
                       {
                         id: 'reservationDate',
                         label: 'Reservation Date',
@@ -341,9 +356,11 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
             <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>
               <Autocomplete
                 disabled={isLoading}
-                options={data?.items || []}
-                value={data?.items?.find((item: any) => item.name === formik.values.role) || null}
-                getOptionLabel={(option: any) => option?.name || ''}
+                options={roleData || []}
+                value={
+                  (roleData || []).find((item: any) => item.role === formik.values.role) || null
+                }
+                getOptionLabel={(option: any) => option?.role || ''}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -356,7 +373,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                   />
                 )}
                 onChange={(e, value) => {
-                  formik.setFieldValue('role', value?.name || '');
+                  formik.setFieldValue('role', value?.role || '');
                 }}
               />
             </ShakingTextField>

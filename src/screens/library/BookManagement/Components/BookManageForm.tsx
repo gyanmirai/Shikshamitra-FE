@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
@@ -310,7 +311,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                   <NumericFormatCustom
                     size="small"
                     fullWidth
-                    label="Price *"
+                    label="Price (per book) *"
                     name="price"
                     value={formik.values.price}
                     onChange={(e) => {
@@ -361,7 +362,26 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                         },
                         {
                           id: 'accessionNo',
-                          label: 'Accession No.',
+                          label: '',
+                          renderColumn(value) {
+                            return (
+                              <Box display="flex" alignItems="center" gap={1}>
+                                Accession No.
+                                <CustomTooltip
+                                  arrow
+                                  placement="right"
+                                  sx={{ textAlign: 'justify' }}
+                                  title="Enter the unique Accession Number for this copy. Only letters, numbers, and hyphens are allowed. Maximum 12 characters."
+                                >
+                                  <Iconify
+                                    icon="lucide:info"
+                                    sx={{ cursor: 'pointer' }}
+                                    color="info.main"
+                                  />
+                                </CustomTooltip>
+                              </Box>
+                            );
+                          },
                           minWidth: 170,
                           align: 'left',
                           render: (value, row) => (
@@ -441,6 +461,8 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                           label: 'RFID Enabled',
                           minWidth: 130,
                           align: 'left',
+                          isFilter: false,
+                          isSort: false,
                           render: (value, row) => (
                             <ShakingTextField
                               error={
@@ -475,6 +497,8 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                           label: 'RFID ID',
                           minWidth: 160,
                           align: 'left',
+                          isFilter: false,
+                          isSort: false,
                           render: (value, row) => (
                             <ShakingTextField
                               error={
@@ -607,7 +631,7 @@ const BookForm: React.FC<IBookFormProps> = ({ open, onClose, editData }) => {
                                     )?.vendor
                                   )
                                 }
-                                formControlProps={{ sx: { minWidth: 275 } }}
+                                formControlProps={{ sx: { minWidth: 275, marginBottom: 2 } }}
                               />
                             </ShakingTextField>
                           ),

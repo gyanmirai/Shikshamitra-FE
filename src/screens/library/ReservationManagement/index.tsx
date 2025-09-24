@@ -8,8 +8,6 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -17,6 +15,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetBooksQuery } from 'src/redux/bookManagement/bookManagementApi';
+import { Box, Button, TextField, Typography, Autocomplete } from '@mui/material';
 import { useGetReservationsQuery } from 'src/redux/reservationDataApi/reservationDataApi';
 import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
 
@@ -25,12 +24,11 @@ import ReservedBookTable from './Components/ReservationTable';
 import ReservationIssueBookForm from './Components/ReservationIssueForm';
 
 import type { IReservedBookData } from './Components/type';
-import type { ITitle, IBookCategoryOption } from '../IssuedBook/Components/type';
+import type { ITitle } from '../IssuedBook/Components/type';
 
 const ReservationManagement = () => {
   // State for selected record
   const [selectedRecord, setSelectedRecord] = useState<IReservedBookData | null>(null);
-  const [selectedBookCategory, setSelectedBookCategory] = useState('');
   const [selectedBook, setSelectedBook] = useState('');
   // Dialog states
   const addDialog = useBoolean();
@@ -97,86 +95,46 @@ const ReservationManagement = () => {
         }
         sx={{ px: 1, mb: 2 }}
       />
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        <CustomTooltip
-          placement="top"
-          title={
-            selectedBookCategory
-              ? bookCategoryOptions?.find((cat: any) => cat.id === selectedBookCategory)
-                  ?.categoryName
-              : undefined
-          }
-        >
-          <Box sx={{ width: '100%', maxWidth: 248, ml: 1 }}>
-            <CustomSelect
-              label="Book Category *"
-              options={
-                bookCategoryOptions?.map((item: IBookCategoryOption) => ({
-                  id: item.id,
-                  label: item.label,
-                  value: item.value,
-                })) ?? []
-              }
-              value={selectedBookCategory}
-              onChange={(val) => setSelectedBookCategory(val as string)}
-              formControlProps={{ fullWidth: true }}
-            />
-
-            {/* <CustomSelect
-              options={bookCategoryData || []}
-              label="Book Category"
-              value={selectedBookCategory}
-              onChange={(val) => setSelectedBookCategory(val as string)}
-              labelKey="categoryName"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-            /> */}
-          </Box>
-        </CustomTooltip>
+      <Box sx={{ display: 'flex', gap: 2, ml: 1 }}>
+        {/* Book Title Autocomplete */}
         <CustomTooltip
           placement="top"
           title={
             selectedBook
-              ? bookData?.find((book: any) => book.id === selectedBook)?.title
+              ? bookData?.find((item: ITitle) => item.id === selectedBook)?.title || ''
               : undefined
           }
         >
-          <Box sx={{ width: '100%', maxWidth: 248 }}>
-            <CustomSelect
-              label="Book Title *"
+          <Box sx={{ width: '100%' }}>
+            <Autocomplete
               options={
-                bookCategoryOptions
-                  ?.find((cat: IBookCategoryOption) => cat.value === selectedBookCategory)
-                  ?.titles?.map((title: ITitle) => ({
-                    id: title.id,
-                    label: title.label,
-                    value: title.value,
-                  })) ?? []
+                bookData?.map((item: ITitle) => ({
+                  id: item.id,
+                  label: item.title,
+                  value: item.id,
+                })) ?? []
               }
-              value={selectedBook}
-              onChange={(val) => setSelectedBook(val as string)}
-              formControlProps={{ fullWidth: true }}
-            />
-            {/* <CustomSelect
-              options={bookData || []}
-              label="Book Title"
-              value={selectedBook}
-              onChange={(val) => setSelectedBook(val as string)}
-              labelKey="title"
-              valueKey="id"
-              formControlProps={{
-                sx: {
-                  maxWidth: '248px',
-                  width: '100%',
-                  '& .MuiListItemText-root': {
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  },
-                },
+              getOptionLabel={(option) => option.label}
+              value={
+                selectedBook
+                  ? bookData
+                      ?.map((item: ITitle) => ({
+                        id: item.id,
+                        label: item.title,
+                        value: item.id,
+                      }))
+                      .find((option: { value: string }) => option.value === selectedBook) || null
+                  : null
+              }
+              onChange={(_, value) => {
+                setSelectedBook(value?.value ?? '');
               }}
-              disabled={!selectedBookCategory}
-            /> */}
+              renderInput={(params) => (
+                <TextField {...params} label="Book Title *" size="small" fullWidth />
+              )}
+              isOptionEqualToValue={(option, value) => option.value === value?.value}
+              sx={{ width: '100%' }}
+            />
           </Box>
         </CustomTooltip>
       </Box>
@@ -261,17 +219,16 @@ const ReservationManagement = () => {
       {/* Delete Confirmation */}
       <ConfirmDialog
         open={deleteDialog.value}
-        icon="warning"
         onClose={() => {
           deleteDialog.onFalse();
           setTimeout(() => {
             setSelectedRecord(null);
           }, 200);
         }}
-        title="Delete Reservation"
+        title="Remove Reservation"
         content={
           <>
-            Are you sure you want to delete reservation for{' '}
+            Are you sure you want to remove reservation for{' '}
             <strong>{selectedRecord?.memberName}</strong> -{' '}
             <strong>{selectedRecord?.bookTitle}</strong>?
           </>
@@ -286,7 +243,7 @@ const ReservationManagement = () => {
               shikshaMitraToast.success({
                 message: (
                   <>
-                    Reservation for <strong>{selectedRecord?.bookTitle}</strong> deleted
+                    Reservation for <strong>{selectedRecord?.bookTitle}</strong> removed
                     successfully.
                   </>
                 ),

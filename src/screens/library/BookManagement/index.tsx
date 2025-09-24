@@ -70,7 +70,7 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
       {showBreadCumb &&
         (open ? (
           <CustomBreadcrumbs
-            heading="Book Management"
+            heading="Book Management Form"
             description={
               selectedBook?.title
                 ? 'Update existing book details such as title, author, category, and availability.'
@@ -78,6 +78,11 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
             }
             links={[
               { name: 'Library', href: '/library/dashboard' },
+              {
+                name: 'Book Management',
+                href: '/library/book-management',
+                onClick: () => setOpen(false),
+              },
               { name: 'Book Management Form' },
             ]}
             sx={{ px: 1 }}

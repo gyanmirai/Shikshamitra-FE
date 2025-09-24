@@ -192,7 +192,6 @@ const LibraryChargesManagement = () => {
       {/* Delete Confirmation */}
       <ConfirmDialog
         open={deleteDialog.value}
-        icon="warning"
         onClose={() => {
           deleteDialog.onFalse();
           setTimeout(() => {
@@ -202,8 +201,8 @@ const LibraryChargesManagement = () => {
         title="Delete Charge"
         content={
           <>
-            Are you sure you want to delete charge for <strong>{selectedRecord?.memberName}</strong>{' '}
-            - <strong>{selectedRecord?.chargeCategory}</strong>?
+            Are you sure you want to delete the <strong>{selectedRecord?.chargeCategory}</strong>{' '}
+            charge For <strong>{selectedRecord?.memberName}</strong>?
           </>
         }
         action={
@@ -216,7 +215,8 @@ const LibraryChargesManagement = () => {
               shikshaMitraToast.success({
                 message: (
                   <>
-                    Charge <strong>{selectedRecord?.chargeCategory}</strong> deleted successfully.
+                    The <strong>{selectedRecord?.chargeCategory}</strong> Charge for{' '}
+                    <strong>{selectedRecord?.memberName}</strong> was deleted successfully
                   </>
                 ),
               });

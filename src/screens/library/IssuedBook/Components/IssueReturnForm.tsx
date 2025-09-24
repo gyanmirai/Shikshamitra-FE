@@ -1,5 +1,8 @@
+import type { LabelColor } from 'src/components/label';
+
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -23,6 +26,11 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
+import {
+  ReservedBookStatus,
+  ReservedBookStatusColors,
+  ReservedBookStatusOptions,
+} from 'src/enums/reserved-book-status';
 
 import { buildInitialBookReturnValues } from './ReturnInitialValues';
 import { bookReturnValidationSchema } from './ReturnValidatioSchema';
@@ -31,12 +39,13 @@ import type { ReturnBookFormProps } from './type';
 
 const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData }) => {
   const [showReservation, setShowReservation] = useState(true);
+
   //   Fetch issued/returned books
   const { data: reservedBooks, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReservationBooksQuery,
   });
-  console.log('🚀 ~ ReturnBookForm ~ reservedBooks:', reservedBooks);
+
   const formik = useFormik({
     initialValues: buildInitialBookReturnValues(editData),
     validationSchema: bookReturnValidationSchema,
@@ -81,11 +90,13 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
               <CustomSelect
                 label="Book Category *"
                 options={[
-                  { id: 'text', value: 'Text Book', label: 'Text Book' },
-                  { id: 'ref', value: 'Reference Book', label: 'Reference Book' },
-                  { id: 'science', value: 'Science Book', label: 'Science Book' },
+                  { value: 'text', label: 'Text Book' },
+                  { value: 'ref', label: 'Reference Book' },
+                  { value: 'Science', label: 'Science Book' },
                 ]}
                 disabled
+                labelKey="label"
+                valueKey="value"
                 value={formik.values.bookCategory}
                 onChange={(val) => formik.setFieldValue('bookCategory', val)}
                 error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}
@@ -96,7 +107,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Book Title */}
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 5 }}>
             <TextField
               fullWidth
               size="small"
@@ -111,7 +122,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Edition */}
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <TextField
               fullWidth
               size="small"
@@ -160,9 +171,9 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
             <DatePicker
               label="Due Date *"
               disabled
-              value={dayjs(formik.values.dueDate)}
+              value={dayjs(formik.values.dueDate, 'DD/MM/YYYY')}
               onChange={(val) => formik.setFieldValue('dueDate', val)}
-              format="DD-MM-YYYY"
+              format="DD/MM/YYYY"
               slotProps={{
                 textField: {
                   fullWidth: true,
@@ -178,9 +189,9 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           <Grid size={{ xs: 12, md: 6 }}>
             <DatePicker
               label="Return Date *"
-              value={dayjs(formik.values.returnDate)}
+              value={dayjs(formik.values.returnDate, 'DD/MM/YYYY')}
               onChange={(val) => formik.setFieldValue('returnDate', val)}
-              format="DD-MM-YYYY"
+              format="DD/MM/YYYY"
               disabled
               slotProps={{
                 textField: {
@@ -238,8 +249,8 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
               <CustomizableTable
                 tableId="reserved-list"
                 columns={[
-                  { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
                   { id: 'memberName', label: 'Member Name', align: 'left', minWidth: '140px' },
+                  { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
                   {
                     id: 'notificationSentOn',
                     label: 'Notification Sent on',
@@ -247,7 +258,18 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
                     filterType: 'date',
                     minWidth: '190px',
                   },
-
+                  {
+                    id: 'status',
+                    label: 'Status',
+                    align: 'left',
+                    filterType: 'enum',
+                    enumOptions: ReservedBookStatusOptions,
+                    sticky: true,
+                    render(value, row) {
+                      const color = ReservedBookStatusColors[value as ReservedBookStatus];
+                      return <Label color={color as LabelColor}>{ReservedBookStatus[value]}</Label>;
+                    },
+                  },
                   {
                     id: 'actions',
                     label: 'Action',

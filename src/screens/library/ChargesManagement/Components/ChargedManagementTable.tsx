@@ -1,19 +1,30 @@
 import type { LabelColor } from 'src/components/label';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import React, { useCallback } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { MenuItem, MenuList } from '@mui/material';
+import { Scrollbar } from 'src/components/scrollbar';
+import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import {
-  LibraryChargeStatusType,
-  LibraryChargeStatusOptions,
-  LibraryChargeStatusTypeColors,
-} from 'src/enums/library_charges_type';
+import { Box, Tab, Tabs, MenuItem, MenuList } from '@mui/material';
+import { LibraryChargeStatusType } from 'src/enums/library_charges_type';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 
 import type { ILibraryChargeData } from './type';
+
+const TABS = [
+  {
+    label: 'Paid',
+    value: LibraryChargeStatusType.Paid,
+    color: 'success',
+  },
+  {
+    label: 'Pending',
+    value: LibraryChargeStatusType.Pending,
+    color: 'warning',
+  },
+];
 
 const LibraryChargesTable = ({
   data,
@@ -30,6 +41,32 @@ const LibraryChargesTable = ({
   onDeleteCharge: (row: ILibraryChargeData) => void;
   onViewCharges: (row: ILibraryChargeData) => void;
 }) => {
+  const [tabValue, setTabValue] = useState(LibraryChargeStatusType.Paid);
+  const currentIndex = TABS.findIndex((tab) => tab.value === tabValue);
+
+  // Calculate total paid and pending amounts
+  const totals = useMemo(() => {
+    const paid = data
+      ?.filter((i) => i.status === LibraryChargeStatusType.Paid)
+      .reduce((sum, i) => sum + (Number(i.fineAmount) || 0), 0);
+    const pending = data
+      ?.filter((i) => i.status === LibraryChargeStatusType.Pending)
+      .reduce((sum, i) => sum + (Number(i.fineAmount) || 0), 0);
+    return { paid, pending };
+  }, [data]);
+
+  // Count charges by status for tab labels
+  const chargeCounts = useMemo(
+    () => ({
+      paid: data?.filter((i) => i.status === LibraryChargeStatusType.Paid)?.length || 0,
+      pending: data?.filter((i) => i.status === LibraryChargeStatusType.Pending)?.length || 0,
+    }),
+    [data]
+  );
+
+  // Filter table data based on selected tab
+  const tableData = useMemo(() => data?.filter((i) => i.status === tabValue), [data, tabValue]);
+
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
@@ -46,70 +83,134 @@ const LibraryChargesTable = ({
     ),
     [onCollectCharges]
   );
-
+  const isBackClick = false;
   return (
-    <CustomizableTable
-      tableId="library-charges-table"
-      noDataText="No Charge Records Found"
-      columns={[
-        { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '130px' },
-        { id: 'memberName', label: 'Member Name', align: 'left', minWidth: '150px' },
-        { id: 'role', label: 'Role', align: 'left' },
-        { id: 'chargeCategory', label: 'Charge Category', align: 'left', minWidth: '160px' },
-        { id: 'fineAmount', label: 'Fine Amount', align: 'left', minWidth: '130px' },
-        { id: 'reason', label: 'Reason', align: 'left' },
-        {
-          id: 'status',
-          label: 'Status',
-          align: 'left',
-          filterType: 'enum',
-          enumOptions: LibraryChargeStatusOptions,
-          sticky: true,
-          render(value, row) {
-            const color = LibraryChargeStatusTypeColors[
-              value as LibraryChargeStatusType
-            ] as LabelColor;
-            return (
-              <Label
-                color={color as 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info'}
-              >
-                {LibraryChargeStatusType[value as LibraryChargeStatusType]}
-              </Label>
-            );
+    <Box>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mt: '4px', mb: 2, ml: 3 }}
+      >
+        <Tabs
+          value={tabValue}
+          onChange={(_, newValue) => setTabValue(newValue)}
+          orientation="horizontal"
+          sx={{
+            '& .MuiTabs-flexContainer': { gap: 2 },
+            minWidth: 200,
+          }}
+        >
+          {TABS.map((tab) => (
+            <Tab
+              key={tab.value}
+              label={
+                <Box display="flex" alignItems="center" gap={1}>
+                  {tab.label}
+                  <Label color={tab.color as LabelColor}>
+                    {tab.value === LibraryChargeStatusType.Paid
+                      ? chargeCounts.paid
+                      : chargeCounts.pending}
+                  </Label>
+                </Box>
+              }
+              value={tab.value}
+              sx={{ fontSize: '12px' }}
+            />
+          ))}
+        </Tabs>
+        <Box>
+          {tabValue === LibraryChargeStatusType.Paid ? (
+            <Label variant="soft" color="success" sx={{ fontSize: '14px', px: 2, width: 180 }}>
+              Total Paid: ₹{totals.paid}
+            </Label>
+          ) : (
+            <Label variant="soft" color="warning" sx={{ fontSize: '14px', px: 2, width: 180 }}>
+              Total Pending: ₹{totals.pending}
+            </Label>
+          )}
+        </Box>
+      </Box>
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
           },
-        },
-        {
-          id: 'actions',
-          label: 'Action',
-          align: 'left',
-          isSort: false,
-          isFilter: false,
-          minWidth: 80,
-          sticky: true,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                actions={(prop) => actions({ ...prop, row })}
-                placement="right-top"
-                showEditIcon
-                handleEditClick={() => {
-                  onEditCharge(row as ILibraryChargeData);
-                }}
-                showDeleteIcon
-                handleDeleteClick={() => {
-                  onDeleteCharge(row as ILibraryChargeData);
-                }}
-                showViewIcon
-                handleViewClick={() => {
-                  onViewCharges(row as ILibraryChargeData);
-                }}
-              />
-            );
-          },
-        },
-      ]}
-      data={data || []}
-    />
+        }}
+      >
+        <Scrollbar sx={{ p: 1 }}>
+          <CustomizableTable
+            tableId="library-charges-table"
+            noDataText="No Charge Records Found"
+            columns={[
+              {
+                id: 'memberName',
+                label: 'Member Name',
+                align: 'left',
+                minWidth: '150px',
+                sticky: true,
+              },
+              { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '130px' },
+              { id: 'role', label: 'Role', align: 'left' },
+              { id: 'grNo', label: 'GR No', align: 'left', minWidth: '120px' },
+              { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
+              { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
+              { id: 'contactNo', label: 'Contact No', align: 'left', minWidth: '130px' },
+              { id: 'chargeCategory', label: 'Charge Category', align: 'left', minWidth: '160px' },
+              {
+                id: 'fineAmount',
+                label: 'Amount',
+                align: 'left',
+                filterType: 'number',
+                render(value) {
+                  return new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    minimumFractionDigits: 2,
+                  }).format(value);
+                },
+              },
+              { id: 'reason', label: 'Reason', align: 'left' },
+
+              {
+                id: 'actions',
+                label: 'Actions',
+                align: 'left',
+                isSort: false,
+                isFilter: false,
+                minWidth: 80,
+                sticky: true,
+                render(value, row) {
+                  return (
+                    <ThreeDotsActions
+                      actions={(prop) => actions({ ...prop, row })}
+                      placement="right-top"
+                      showThreeDots={row.status === LibraryChargeStatusType.Pending}
+                      showEditIcon
+                      handleEditClick={() => {
+                        onEditCharge(row as ILibraryChargeData);
+                      }}
+                      showDeleteIcon
+                      handleDeleteClick={() => {
+                        onDeleteCharge(row as ILibraryChargeData);
+                      }}
+                      showViewIcon
+                      handleViewClick={() => {
+                        onViewCharges(row as ILibraryChargeData);
+                      }}
+                    />
+                  );
+                },
+              },
+            ]}
+            data={tableData || []}
+          />
+        </Scrollbar>
+      </FormSlider>
+    </Box>
   );
 };
 

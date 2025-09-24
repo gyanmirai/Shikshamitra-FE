@@ -92,7 +92,7 @@ const IssueReturnBook = () => {
           addDialog.onFalse();
           setSelectedRecord(null);
         }}
-        maxWidth="sm"
+        maxWidth="md"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
@@ -132,7 +132,7 @@ const IssueReturnBook = () => {
           returnDialog.onFalse();
           setSelectedRecord(null);
         }}
-        maxWidth="sm"
+        maxWidth="md"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Return Book</Typography>
