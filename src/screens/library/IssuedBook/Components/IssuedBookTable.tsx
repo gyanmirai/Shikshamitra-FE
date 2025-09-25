@@ -6,8 +6,8 @@ import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Tab, Tabs, MenuItem, MenuList } from '@mui/material';
-import { LibraryBookStatus } from 'src/enums/library-book-status'; // Make sure this import path is correct
+import { LibraryBookStatus } from 'src/enums/library-book-status';
+import { Box, Tab, Tabs, MenuItem, MenuList } from '@mui/material'; // Make sure this import path is correct
 
 import { Scrollbar } from 'src/components/scrollbar';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
@@ -125,13 +125,14 @@ const BookIssueReturnTable = ({
               },
               { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
               { id: 'role', label: 'Role', align: 'left', minWidth: '100px' },
+              { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '120px' },
+              { id: 'accessionNo', label: 'Accession No', align: 'left', minWidth: '150px' },
               { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
               { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
               { id: 'grNo', label: 'GR No', align: 'left', minWidth: '120px' },
               { id: 'contactNo', label: 'Contact No', align: 'left', minWidth: '120px' },
-              { id: 'accessionNo', label: 'Accession No', align: 'left', minWidth: '150px' },
               { id: 'bookCategory', label: 'Book Category', align: 'left', minWidth: '140px' },
-              { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '120px' },
+
               {
                 id: 'requestedDate',
                 label: 'Issue Date',
@@ -148,7 +149,7 @@ const BookIssueReturnTable = ({
               },
               {
                 id: 'actions',
-                label: 'Actions',
+                label: 'Action',
                 align: 'left',
                 isSort: false,
                 isFilter: false,

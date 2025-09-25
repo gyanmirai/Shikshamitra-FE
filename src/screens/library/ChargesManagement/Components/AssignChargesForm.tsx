@@ -12,11 +12,11 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetRoleOptionsQuery } from 'src/redux/library/roleApi';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Chip, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
@@ -39,10 +39,12 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
-  const { data, isLoading } = useQueryAndMutation({
+
+  const { data: roleData, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetRolesQuery,
+    currentQueryAndMutation: useGetRoleOptionsQuery,
   });
+  console.log('🚀 ~ AssignChargesForm ~ data:', roleData);
 
   const { data: chargeCategoryOptions } = useQueryAndMutation({
     type: 'query',
@@ -64,10 +66,14 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
     initialValues: assignLibraryChargeInitialValues(editData),
     validationSchema: assignLibraryChargeValidationSchema(currentYear),
     onSubmit: (values) => {
+      const bookTitle =
+        editData?.bookTitle ||
+        (values.bookTitle && typeof values.bookTitle === 'string' ? values.bookTitle : '') ||
+        '';
       shikshaMitraToast.success({
         message: editData
-          ? 'Reservation updated successfully'
-          : 'Reservation submitted successfully',
+          ? `Charges for "${bookTitle}" updated successfully`
+          : `Charges for "${bookTitle}" assigned successfully`,
       });
       onClose(null, true);
     },
@@ -147,9 +153,11 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
             <ShakingTextField error={!!(formik.touched.role && formik.errors.role)}>
               <Autocomplete
                 disabled={isLoading}
-                options={data?.items || []}
-                value={data?.items?.find((item: any) => item.name === formik.values.role) || null}
-                getOptionLabel={(option: any) => option.name || ''}
+                options={roleData || []}
+                value={
+                  (roleData || []).find((item: any) => item.role === formik.values.role) || null
+                }
+                getOptionLabel={(option: any) => option?.role || ''}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -162,12 +170,11 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                   />
                 )}
                 onChange={(e, value) => {
-                  formik.setFieldValue('role', value?.name ?? '');
+                  formik.setFieldValue('role', value?.role || '');
                 }}
               />
             </ShakingTextField>
           </Grid>
-
           {formik.values.role === 'Student' && (
             <>
               {/* Class */}
@@ -343,7 +350,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
               <DatePicker
                 label="Due Date *"
                 format="DD/MM/YYYY"
-                value={formik.values.dueDate ? dayjs(formik.values.dueDate) : null}
+                value={formik.values.dueDate}
                 onChange={(newValue) => {
                   formik.setFieldValue('dueDate', newValue);
                 }}

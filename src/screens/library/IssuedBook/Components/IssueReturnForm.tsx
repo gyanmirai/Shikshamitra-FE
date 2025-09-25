@@ -84,28 +84,6 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
-          {/* Book Category */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
-              <CustomSelect
-                label="Book Category *"
-                options={[
-                  { value: 'text', label: 'Text Book' },
-                  { value: 'ref', label: 'Reference Book' },
-                  { value: 'Science', label: 'Science Book' },
-                ]}
-                disabled
-                labelKey="label"
-                valueKey="value"
-                value={formik.values.bookCategory}
-                onChange={(val) => formik.setFieldValue('bookCategory', val)}
-                error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}
-                helperText={(formik.touched.bookCategory && formik.errors.bookCategory) as string}
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
-
           {/* Book Title */}
           <Grid size={{ xs: 12, md: 5 }}>
             <TextField
@@ -118,6 +96,21 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
               onChange={formik.handleChange}
               error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}
               helperText={(formik.touched.bookTitle && formik.errors.bookTitle) as string}
+            />
+          </Grid>
+
+          {/* Book Category */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <TextField
+              fullWidth
+              size="small"
+              disabled
+              label="Book Category *"
+              name="bookCategory"
+              value={formik.values.bookCategory}
+              onChange={formik.handleChange}
+              error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}
+              helperText={(formik.touched.bookCategory && formik.errors.bookCategory) as string}
             />
           </Grid>
 

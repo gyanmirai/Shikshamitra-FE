@@ -43,6 +43,7 @@ export interface ITitle {
   author: string;
   quantity: number;
   editions: IEdition[];
+  category: string;
 }
 
 export interface IBookCategoryOption {

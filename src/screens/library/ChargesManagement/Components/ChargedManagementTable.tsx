@@ -155,10 +155,6 @@ const LibraryChargesTable = ({
               },
               { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '130px' },
               { id: 'role', label: 'Role', align: 'left' },
-              { id: 'grNo', label: 'GR No', align: 'left', minWidth: '120px' },
-              { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
-              { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
-              { id: 'contactNo', label: 'Contact No', align: 'left', minWidth: '130px' },
               { id: 'chargeCategory', label: 'Charge Category', align: 'left', minWidth: '160px' },
               {
                 id: 'fineAmount',
@@ -173,8 +169,11 @@ const LibraryChargesTable = ({
                   }).format(value);
                 },
               },
+              { id: 'grNo', label: 'GR No', align: 'left', minWidth: '120px' },
+              { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
+              { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
+              { id: 'contactNo', label: 'Contact No', align: 'left', minWidth: '130px' },
               { id: 'reason', label: 'Reason', align: 'left' },
-
               {
                 id: 'actions',
                 label: 'Actions',
