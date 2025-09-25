@@ -68,7 +68,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                 Refund Details
               </Typography>
 
-              <Grid container spacing={2}>
+              <Grid container spacing={3}>
                 {/* Total Refundable */}
                 <Grid size={6}>
                   <NumericFormatCustom
@@ -93,7 +93,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                       value={formik.values.refundMethod}
                       onChange={(value) => {
                         formik.setFieldValue('refundMethod', value);
-                        formik.setFieldTouched('refundMethod', true, false);
+                        formik.setFieldTouched('refundMethod', false);
                         formik.setFieldValue(
                           'paymentDetails',
                           getInitialPaymentDetails(value as string)
@@ -124,10 +124,11 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                         <ShakingTextField error={Boolean(touched && error)}>
                           {field.type === 'date' ? (
                             <DatePicker
-                              label={`${field.label} *`}
+                              label={`${field.label}${field.required ? ' *' : ''}`}
                               format="DD/MM/YYYY"
                               value={value ? dayjs(value) : null}
                               onChange={(date) => formik.setFieldValue(fieldPath, date)}
+                              disablePast
                               // onBlur={() => formik.setFieldTouched(fieldPath, true)}
                               sx={{ width: '100%' }}
                               slotProps={{
@@ -143,7 +144,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                             <TextField
                               select
                               fullWidth
-                              label={`${field.label} *`}
+                              label={`${field.label}${field.required ? ' *' : ''}`}
                               name={fieldPath}
                               value={value || ''}
                               onChange={formik.handleChange}
@@ -164,7 +165,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                               multiline
                               minRows={2}
                               size="small"
-                              label={`${field.label} *`}
+                              label={`${field.label}${field.required ? ' *' : ''}`}
                               name={fieldPath}
                               value={value || ''}
                               onChange={formik.handleChange}
@@ -176,7 +177,7 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                             <NumericFormatCustom
                               fullWidth
                               size="small"
-                              label={`${field.label} *`}
+                              label={`${field.label}${field.required ? ' *' : ''}`}
                               name={fieldPath}
                               value={value || ''}
                               onChange={formik.handleChange}
@@ -189,10 +190,43 @@ export default function FeeRefundDetailsForm({ formik }: any) {
                               fullWidth
                               type={field.type}
                               size="small"
-                              label={`${field.label} *`}
+                              label={`${field.label}${field.required ? ' *' : ''}`}
                               name={fieldPath}
                               value={value || ''}
-                              onChange={formik.handleChange}
+                              onChange={(e) => {
+                                const newValue = e.target.value;
+
+                                if (field.pattern) {
+                                  // Allow empty string for deletion
+                                  if (newValue === '') {
+                                    formik.setFieldValue(fieldPath, newValue);
+                                    return;
+                                  }
+
+                                  let typingRegex;
+
+                                  // Match patterns like ^[0-9]{6}$ or ^[a-zA-Z]{3,5}$
+                                  const match = field.pattern.match(
+                                    /^\^(\[.*\])\{(\d+)(?:,(\d+))?\}\$$/
+                                  );
+                                  if (match) {
+                                    const charClass = match[1]; // e.g., [0-9]
+                                    const minLength = parseInt(match[2], 10);
+                                    const maxLength = match[3] ? parseInt(match[3], 10) : minLength;
+                                    typingRegex = new RegExp(`^${charClass}{0,${maxLength}}$`);
+                                  } else {
+                                    // fallback: remove ^ and $ for typing-safe regex
+                                    const typingSafePattern = field.pattern
+                                      .replace(/^\^/, '')
+                                      .replace(/\$$/, '');
+                                    typingRegex = new RegExp(`^[${typingSafePattern}]*$`);
+                                  }
+
+                                  if (!typingRegex.test(newValue)) return; // block invalid chars
+                                }
+
+                                formik.setFieldValue(fieldPath, newValue);
+                              }}
                               onBlur={formik.handleBlur}
                               error={Boolean(touched && error)}
                               helperText={touched && typeof error === 'string' ? error : ''}

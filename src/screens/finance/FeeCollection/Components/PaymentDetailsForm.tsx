@@ -36,53 +36,189 @@ export const buildInitialValues = () => {
   });
   return initialValues;
 };
-export const buildValidationSchema = () =>
+
+export const buildValidationSchema = (currentYear: any) =>
   Yup.object({
     selectedMethods: Yup.array().min(1, 'Select at least one payment method'),
     selectedTerms: Yup.array().min(1, 'Select at least one term to collect'),
     totalAmount: Yup.number()
       .transform((value, originalValue) => {
         if (typeof originalValue === 'string') {
-          const cleaned = originalValue.replace(/[₹,\s]/g, '');
-          return Number(cleaned);
+          const cleaned = originalValue.replace(/[₹,\s,]/g, '');
+          const n = Number(cleaned);
+          return Number.isNaN(n) ? value : n;
         }
         return value;
       })
       .required('Total amount is required')
       .positive('Amount must be positive'),
     notes: Yup.string(),
+
+    // per-method schemas generated from config (each will validate required, pattern, date etc.)
     ...Object.fromEntries(
       Object.entries(paymentMethodsConfig).map(([method, fields]) => [
         method,
         Yup.object(
           Object.fromEntries(
-            fields.map((field) => [
-              field.name,
-              field.required
-                ? field.type === 'date'
-                  ? Yup.mixed()
-                      .required(`${field.label} is required`)
-                      .test(
-                        'is-valid-dayjs',
-                        `${field.label} must be a valid date`,
-                        (value) => value && dayjs(value as Dayjs).isValid()
-                      )
-                  : Yup.string().required(`${field.label} is required`)
-                : field.type === 'date'
-                  ? Yup.mixed()
-                      .nullable()
-                      .test(
-                        'is-valid-dayjs',
-                        `${field.label} must be a valid date`,
-                        (value) => !value || dayjs(value as Dayjs).isValid()
-                      )
-                  : Yup.string(),
-            ])
+            fields.map((field) => [field.name, buildCollectionFieldValidation(field, currentYear)])
           )
         ),
       ])
     ),
-  });
+  })
+    // Individual amount validation - each payment method amount should not exceed totalAmount
+    .test(
+      'individual-payment-amounts',
+      'Individual payment amount cannot exceed total amount',
+      function (values: any) {
+        if (!values) return true;
+
+        // Parse totalAmount robustly
+        const totalRaw = values.totalAmount ?? 0;
+        const total = Number(String(totalRaw).replace(/[₹,\s,]/g, '')) || 0;
+
+        if (Array.isArray(values.selectedMethods)) {
+          // eslint-disable-next-line no-restricted-syntax
+          for (const method of values.selectedMethods) {
+            const methodData = values[method];
+            // eslint-disable-next-line no-continue
+            if (!methodData) continue;
+
+            const amountRaw = methodData.amount;
+            // eslint-disable-next-line no-continue
+            if (amountRaw == null || amountRaw === '') continue;
+
+            const parsed = Number(String(amountRaw).replace(/[₹,\s,]/g, ''));
+            if (!Number.isNaN(parsed) && parsed > total) {
+              return this.createError({
+                path: `${method}.amount`,
+                message: `${method} amount (₹${parsed.toLocaleString()}) cannot be greater than total amount (₹${total.toLocaleString()})`,
+              });
+            }
+          }
+        }
+
+        return true;
+      }
+    )
+    // Root-level test to ensure sum(amounts for selected methods) <= totalAmount
+    .test(
+      'sum-of-payment-amounts',
+      'Sum of all payment amounts should not be greater than Total Amount',
+      function (values: any) {
+        if (!values) return true;
+
+        // Parse totalAmount robustly
+        const totalRaw = values.totalAmount ?? 0;
+        const total = Number(String(totalRaw).replace(/[₹,\s,]/g, '')) || 0;
+
+        let sum = 0;
+        const methodAmounts: { method: string; amount: number }[] = [];
+
+        if (Array.isArray(values.selectedMethods)) {
+          // eslint-disable-next-line no-restricted-syntax
+          for (const method of values.selectedMethods) {
+            const methodData = values[method];
+            // eslint-disable-next-line no-continue
+            if (!methodData) continue;
+
+            const amountRaw = methodData.amount;
+            // eslint-disable-next-line no-continue
+            if (amountRaw == null || amountRaw === '') continue;
+
+            const parsed = Number(String(amountRaw).replace(/[₹,\s,]/g, ''));
+            if (!Number.isNaN(parsed)) {
+              sum += parsed;
+              methodAmounts.push({ method, amount: parsed });
+            }
+          }
+        }
+
+        if (sum > total) {
+          const methodBreakdown = methodAmounts
+            .map(({ method, amount }) => `${method}: ₹${amount.toLocaleString()}`)
+            .join(', ');
+
+          return this.createError({
+            message: `Sum of payment amounts (₹${sum.toLocaleString()}) exceeds total amount (₹${total.toLocaleString()}). Breakdown: ${methodBreakdown}`,
+          });
+        }
+
+        return true;
+      }
+    );
+
+export const buildCollectionFieldValidation = (field: IPaymentFieldConfig, currentYear: any) => {
+  let schema: Yup.Schema<any>;
+
+  if (field.type === 'date') {
+    schema = field.required
+      ? Yup.mixed()
+          .required(`${field.label} is required`)
+          .test(
+            'is-valid-dayjs',
+            `${field.label} must be a valid date`,
+            (value) => value && dayjs(value as Dayjs).isValid()
+          )
+          .test(
+            'min-date',
+            `${field.label} must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+          )
+          .test(
+            'max-date',
+            `${field.label} must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+          )
+      : Yup.mixed()
+          .nullable()
+          .test(
+            'is-valid-dayjs',
+            `${field.label} must be a valid date`,
+            (value) => !value || dayjs(value as Dayjs).isValid()
+          )
+          .test(
+            'min-date',
+            `${field.label} must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              !value || dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+          )
+          .test(
+            'max-date',
+            `${field.label} must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              !value || dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+          );
+  } else if (field.type === 'amount' || field.type === 'number') {
+    schema = Yup.number()
+      .typeError(`${field.label} must be a number`)
+      .transform((val, orig) => {
+        if (typeof orig === 'string') {
+          const cleaned = orig.replace(/[₹,\s,]/g, '');
+          const n = Number(cleaned);
+          return Number.isNaN(n) ? undefined : n;
+        }
+        return val;
+      })
+      .min(field.min ?? 0, `${field.label} must be greater than ${field.min ?? 0}`);
+
+    if (field.required) schema = schema.required(`${field.label} is required`);
+  } else {
+    schema = Yup.string();
+    if (field.required) schema = schema.required(`${field.label} is required`);
+  }
+
+  if (field.pattern) {
+    schema = (schema as Yup.StringSchema).matches(
+      new RegExp(field.pattern),
+      field.patternMessage || `${field.label} is invalid`
+    );
+  }
+
+  return schema;
+};
 
 export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps) {
   const theme = useTheme();
@@ -139,7 +275,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                 Payment Details
               </Typography>
 
-              <Grid container spacing={2}>
+              <Grid container spacing={3}>
                 {/* Terms Selection Section */}
 
                 <Grid size={{ xs: 12 }}>
@@ -192,7 +328,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                       <Typography variant="h6" color="primary.main">
                         {method}
                       </Typography>
-                      <Grid container spacing={2}>
+                      <Grid container spacing={3} mt={1}>
                         {paymentMethodsConfig[method as keyof typeof paymentMethodsConfig]?.map(
                           (field: IPaymentFieldConfig) => (
                             <Grid size={{ xs: 6 }} key={`${method}-${field.name}`}>
@@ -206,7 +342,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                   }
                                 >
                                   <DatePicker
-                                    label={`${field.label} *`}
+                                    label={`${field.label}${field.required ? ' *' : ''}`}
                                     value={
                                       formik.values[method][field.name]
                                         ? dayjs(formik.values[method][field.name])
@@ -241,7 +377,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                   <TextField
                                     select
                                     fullWidth
-                                    label={`${field.label} *`}
+                                    label={`${field.label}${field.required ? ' *' : ''}`}
                                     name={`${method}.${field.name}`}
                                     value={formik.values[method][field.name]}
                                     onChange={formik.handleChange}
@@ -276,7 +412,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                     sx={{ width: '100%' }}
                                     minRows={2}
                                     size="small"
-                                    label={`${field.label} *`}
+                                    label={`${field.label}${field.required ? ' *' : ''}`}
                                     name={`${method}.${field.name}`}
                                     value={formik.values[method][field.name]}
                                     onChange={formik.handleChange}
@@ -300,7 +436,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                   <NumericFormatCustom
                                     size="small"
                                     fullWidth
-                                    label={`${field.label} *`}
+                                    label={`${field.label}${field.required ? ' *' : ''}`}
                                     name={`${method}.${field.name}`}
                                     value={formik.values[method][field.name]}
                                     onChange={formik.handleChange}
@@ -324,11 +460,44 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                   <TextField
                                     fullWidth
                                     type={field.type}
-                                    label={`${field.label} *`}
+                                    label={`${field.label}${field.required ? ' *' : ''}`}
                                     size="small"
                                     name={`${method}.${field.name}`}
                                     value={formik.values[method][field.name]}
-                                    onChange={formik.handleChange}
+                                    onChange={(e) => {
+                                      const newValue = e.target.value;
+                                      if (field.pattern) {
+                                        // Allow empty string for deletion
+                                        if (newValue === '') {
+                                          formik.setFieldValue(`${method}.${field.name}`, newValue);
+                                          return;
+                                        }
+                                        let typingRegex;
+
+                                        // Match patterns like ^[0-9]{6}$ or ^[a-zA-Z]{3,5}$
+                                        const match = field.pattern.match(
+                                          /^\^(\[.*\])\{(\d+)(?:,(\d+))?\}\$$/
+                                        );
+                                        if (match) {
+                                          const charClass = match[1]; // e.g., [0-9]
+                                          const minLength = parseInt(match[2], 10);
+                                          const maxLength = match[3]
+                                            ? parseInt(match[3], 10)
+                                            : minLength;
+                                          typingRegex = new RegExp(
+                                            `^${charClass}{0,${maxLength}}$`
+                                          );
+                                        } else {
+                                          // fallback: remove ^ and $ for typing-safe regex
+                                          const typingSafePattern = field.pattern
+                                            .replace(/^\^/, '')
+                                            .replace(/\$$/, '');
+                                          typingRegex = new RegExp(`^[${typingSafePattern}]*$`);
+                                        }
+                                        if (!typingRegex.test(newValue)) return; // block invalid chars
+                                      }
+                                      formik.setFieldValue(`${method}.${field.name}`, newValue);
+                                    }}
                                     error={
                                       (formik.touched as any)[method]?.[field.name] &&
                                       Boolean((formik.errors as any)[method]?.[field.name])

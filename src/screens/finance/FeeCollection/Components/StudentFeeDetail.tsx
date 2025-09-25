@@ -24,115 +24,106 @@ export const FeeSummaryCard = ({
   const theme = useTheme();
 
   return (
-    <Card
-      sx={{
-        p: 2,
-        borderRadius: 3,
-        boxShadow: 2,
-        bgcolor: theme.vars.palette.background.paper,
-      }}
-    >
-      <Box display="flex" gap={2} alignItems="center">
-        {/* Avatar */}
+    <Box display="flex" gap={2} alignItems="center">
+      {/* Avatar */}
 
-        {/* Student Info + Fees */}
-        <Box flex={1} display="flex" flexDirection="column" gap={2}>
-          {/* Top Row: Name + Status */}
-          {showHeader && (
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Box display="flex" alignItems="center" gap={2}>
-                <Avatar alt={student?.name} src="" sx={{ width: 50, height: 50 }} />
-                <Box>
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    {student?.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {student?.className} | Roll No : {student?.rollNumber}
-                  </Typography>
-                </Box>
+      {/* Student Info + Fees */}
+      <Box flex={1} display="flex" flexDirection="column" gap={2}>
+        {/* Top Row: Name + Status */}
+        {showHeader && (
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Box display="flex" alignItems="center" gap={2}>
+              <Avatar alt={student?.name} src="" sx={{ width: 50, height: 50 }} />
+              <Box>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  {student?.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {student?.className} | Roll No : {student?.rollNumber}
+                </Typography>
               </Box>
-
-              <Label
-                color={
-                  FeeCollectionStatusTypeColors[
-                    student?.status as unknown as FeeCollectionStatusType
-                  ] as LabelColor
-                }
-              >
-                {FeeCollectionStatusType[student?.status as unknown as FeeCollectionStatusType]}
-              </Label>
             </Box>
-          )}
 
-          {/* Fee Info Row */}
+            <Label
+              color={
+                FeeCollectionStatusTypeColors[
+                  student?.status as unknown as FeeCollectionStatusType
+                ] as LabelColor
+              }
+            >
+              {FeeCollectionStatusType[student?.status as unknown as FeeCollectionStatusType]}
+            </Label>
+          </Box>
+        )}
 
-          <Grid container spacing={2} columns={{ xs: 12, sm: 12, md: 12, lg: 60 }}>
-            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
-              <FinanceCollectionCard
-                icon="mdi:currency-inr"
-                title="Total Fees"
-                count={formatNumber(student?.totalFees ?? 0, 'INR')}
-                color="text.primary"
-                bgColor="background.neutral"
-                href="#"
-                labels={[]}
-              />
-            </Grid>
+        {/* Fee Info Row */}
 
-            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
-              <FinanceCollectionCard
-                icon="mdi:cash-check"
-                title="Paid Fees"
-                count={formatNumber(student?.paidFees ?? 0, 'INR')}
-                color="success.main"
-                bgColor="success.lighter"
-                href="#"
-                labels={[]}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
-              <FinanceCollectionCard
-                icon="mdi:cash-clock"
-                title="Pending Fees"
-                count={formatNumber(student?.pendingFees ?? 0, 'INR')}
-                color="warning.main"
-                bgColor="warning.lighter"
-                href="#"
-                labels={[]}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
-              <FinanceCollectionCard
-                icon="mdi:cash-remove"
-                title="Overdue Fees"
-                count={formatNumber(student?.overdueFees ?? 0, 'INR')}
-                color="error.main"
-                bgColor="error.lighter"
-                href="#"
-                labels={[]}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
-              <FinanceCollectionCard
-                icon="mdi:cash-plus"
-                title="Charges"
-                count={formatNumber(
-                  Number(student?.chargesPaid ?? 0) + Number(student?.chargesTotal ?? 0),
-                  'INR'
-                )}
-                color="info.main"
-                bgColor="info.lighter"
-                href="#"
-                labels={[]}
-              />
-            </Grid>
+        <Grid container spacing={2} columns={{ xs: 12, sm: 12, md: 12, lg: 60 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
+            <FinanceCollectionCard
+              icon="mdi:currency-inr"
+              title="Total Fees"
+              count={formatNumber(student?.totalFees ?? 0, 'INR')}
+              color="text.primary"
+              bgColor="background.neutral"
+              href="#"
+              labels={[]}
+            />
           </Grid>
-        </Box>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
+            <FinanceCollectionCard
+              icon="mdi:cash-check"
+              title="Paid Fees"
+              count={formatNumber(student?.paidFees ?? 0, 'INR')}
+              color="success.main"
+              bgColor="success.lighter"
+              href="#"
+              labels={[]}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
+            <FinanceCollectionCard
+              icon="mdi:cash-clock"
+              title="Pending Fees"
+              count={formatNumber(student?.pendingFees ?? 0, 'INR')}
+              color="warning.main"
+              bgColor="warning.lighter"
+              href="#"
+              labels={[]}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
+            <FinanceCollectionCard
+              icon="mdi:cash-remove"
+              title="Overdue Fees"
+              count={formatNumber(student?.overdueFees ?? 0, 'INR')}
+              color="error.main"
+              bgColor="error.lighter"
+              href="#"
+              labels={[]}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 12 }}>
+            <FinanceCollectionCard
+              icon="mdi:cash-plus"
+              title="Charges"
+              count={formatNumber(
+                Number(student?.chargesPaid ?? 0) + Number(student?.chargesTotal ?? 0),
+                'INR'
+              )}
+              color="info.main"
+              bgColor="info.lighter"
+              href="#"
+              labels={[]}
+            />
+          </Grid>
+        </Grid>
       </Box>
-    </Card>
+    </Box>
   );
 };
 

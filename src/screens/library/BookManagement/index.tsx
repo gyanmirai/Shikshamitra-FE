@@ -17,8 +17,8 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetBooksQuery } from 'src/redux/bookManagement/bookManagementApi';
 
-import BookForm from './Components/BookManageForm';
 import BookDetails from './Components/BookDetails';
+import BookFormStepper from './BookFormComponents/BookForm';
 import BookManagementTable from './Components/BookManagementTable';
 
 const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
@@ -106,7 +106,7 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
         ))}
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
-          <BookForm open={open} onClose={handleClose} editData={selectedBook} />
+          <BookFormStepper onClose={handleClose} editData={selectedBook} />
         </Card>
       ) : (
         <BookManagementTable
