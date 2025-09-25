@@ -12,10 +12,11 @@ export interface ILibraryChargeData {
   fineAmount: number; // ₹ value, use number for consistency
   reason: string;
   status: LibraryChargeStatusType; // enum for statuses
-  class?: string;
+  classNo?: string;
   division?: string;
   dueDate?: Dayjs | string;
   assignAt?: Dayjs | string;
+  returnDate?: Dayjs | string;
   paymentDetails?: {
     notes?: string;
     paymentAmount?: number | null;

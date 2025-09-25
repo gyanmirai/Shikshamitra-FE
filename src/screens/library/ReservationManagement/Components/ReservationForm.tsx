@@ -11,12 +11,12 @@ import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetRoleOptionsQuery } from 'src/redux/library/roleApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
@@ -25,7 +25,7 @@ import { reservationInitialValues } from './ResevationInitialValues';
 import { reservationValidationSchema } from './ReservationValidation';
 
 import type { IReservationFormProps } from './type';
-import type { ITitle, IBookCategoryOption } from '../../IssuedBook/Components/type';
+import type { IBookCategoryOption } from '../../IssuedBook/Components/type';
 
 const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -45,9 +45,10 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
-  const { data, isLoading } = useQueryAndMutation({
+
+  const { data: roleData, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetRolesQuery,
+    currentQueryAndMutation: useGetRoleOptionsQuery,
   });
 
   // Get current board, medium and medium setter from global state
@@ -140,9 +141,11 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
             <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>
               <Autocomplete
                 disabled={isLoading}
-                options={data?.items || []}
-                value={data?.items?.find((item: any) => item.name === formik.values.role) || null}
-                getOptionLabel={(option: any) => option?.name || ''}
+                options={roleData || []}
+                value={
+                  (roleData || []).find((item: any) => item.role === formik.values.role) || null
+                }
+                getOptionLabel={(option: any) => option?.role || ''}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -155,7 +158,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                   />
                 )}
                 onChange={(e, value) => {
-                  formik.setFieldValue('role', value?.name || '');
+                  formik.setFieldValue('role', value?.role || '');
                 }}
               />
             </ShakingTextField>
@@ -267,60 +270,60 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
             </ShakingTextField>
           </Grid>
 
-          {/* Book Category */}
+          {/* Book Title */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
-              <CustomSelect
-                label="Book Category *"
+            <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
+              <Autocomplete
                 options={
                   bookCategoryOptions?.map((item: IBookCategoryOption) => ({
                     id: item.id,
                     label: item.label,
                     value: item.value,
+                    categoryName: item.categoryName,
                   })) ?? []
                 }
-                value={formik.values.bookCategory}
-                onChange={(val) => {
-                  if (formik.values.bookCategory !== val) {
-                    formik.setFieldValue('bookCategory', val);
-                    formik.setFieldTouched('bookCategory', false);
-                    formik.setFieldValue('bookTitle', '');
-                    formik.setFieldValue('edition', '');
-                  }
+                getOptionLabel={(option) => option.label}
+                value={
+                  bookCategoryOptions?.find(
+                    (item: IBookCategoryOption) => item.value === formik.values.bookTitle
+                  ) || null
+                }
+                onChange={(_, value) => {
+                  formik.setFieldValue('bookTitle', value?.value || '');
+                  formik.setFieldValue('bookCategory', value?.categoryName || '');
+                  formik.setFieldTouched('bookTitle', false);
                 }}
-                error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}
-                helperText={(formik.touched.bookCategory && formik.errors.bookCategory) as string}
-                formControlProps={{ fullWidth: true }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Book Title *"
+                    size="small"
+                    fullWidth
+                    error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}
+                    helperText={(formik.touched.bookTitle && formik.errors.bookTitle) as string}
+                  />
+                )}
+                isOptionEqualToValue={(option, value) => option.value === value.value}
+                sx={{ width: '100%' }}
               />
             </ShakingTextField>
           </Grid>
 
-          {/* Book Title */}
+          {/* Book Category */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
-              <CustomSelect
-                label="Book Title *"
-                options={
-                  bookCategoryOptions
-                    ?.find((cat: IBookCategoryOption) => cat.value === formik.values.bookCategory)
-                    ?.titles?.map((title: ITitle) => ({
-                      id: title.id,
-                      label: title.label,
-                      value: title.value,
-                    })) ?? []
-                }
-                value={formik.values.bookTitle}
-                onChange={(val) => {
-                  formik.setFieldValue('bookTitle', val);
-                  formik.setFieldTouched('bookTitle', false);
-                  formik.setFieldValue('edition', ''); // reset child
-                }}
-                error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}
-                helperText={(formik.touched.bookTitle && formik.errors.bookTitle) as string}
-                formControlProps={{ fullWidth: true }}
+            <ShakingTextField error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}>
+              <TextField
+                label="Book Category"
+                value={formik.values.bookCategory || ''}
+                InputProps={{ readOnly: true }}
+                size="small"
+                fullWidth
+                error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}
+                helperText={(formik.touched.bookCategory && formik.errors.bookCategory) as string}
               />
             </ShakingTextField>
           </Grid>
+
           {/* Start Time DatePicker */}
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
@@ -328,8 +331,8 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
             >
               <DatePicker
                 label="Requested Date *"
+                value={dayjs(formik.values.requestedDate, 'DD/MM/YYYY')}
                 format="DD/MM/YYYY"
-                value={formik.values.requestedDate}
                 onChange={(newValue) => {
                   formik.setFieldValue('requestedDate', newValue);
                 }}

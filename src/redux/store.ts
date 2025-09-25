@@ -14,6 +14,7 @@ import { mediumApi } from './medium/mediumApi';
 import { tenantApi } from './tenant/tenantApi';
 import { incomeApi } from './incomeApi/incomeApi';
 import { budgetApi } from './budgetApi/budgetApi';
+import { roleOptionsApi } from './library/roleApi';
 import { divisionApi } from './division/divisionApi';
 import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
@@ -178,6 +179,7 @@ const reducers = combineReducers({
   [libraryChargeCategoryOptionsApi.reducerPath]: libraryChargeCategoryOptionsApi.reducer,
   [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
   [communicationApi.reducerPath]: communicationApi.reducer,
+  [roleOptionsApi.reducerPath]: roleOptionsApi.reducer,
 });
 
 const store = configureStore({
@@ -273,6 +275,7 @@ const store = configureStore({
       communicationApi.middleware,
       // meetingDetailsApi.middleware,
       // holidayApi.middleware,
+      roleOptionsApi.middleware,
     ]),
 });
 

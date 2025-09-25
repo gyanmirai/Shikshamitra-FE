@@ -36,6 +36,7 @@ export interface IEdition {
 }
 
 export interface ITitle {
+  title: any;
   id: string;
   label: string;
   value: string;
