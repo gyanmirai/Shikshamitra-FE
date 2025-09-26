@@ -7,8 +7,9 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
+import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { importanceLevelValidationSchema } from './ImportanceLevelValidation';
 import { getImportanceLevelInitialValues } from './ImportanceLevelInitialValues';
@@ -22,11 +23,11 @@ const ImportanceLevelForm: React.FC<IImportanceLevelFormProps> = ({ open, onClos
     onSubmit: (values) => {
       if (editData) {
         shikshaMitraToast.success({
-          message: `${values.levelName} updated successfully`,
+          message: `Importance level : ${values.levelName} has been successfully updated`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `${values.levelName} added successfully`,
+          message: `Importance level : ${values.levelName} has been successfully added`,
         });
       }
       onClose(null, true);
@@ -36,7 +37,7 @@ const ImportanceLevelForm: React.FC<IImportanceLevelFormProps> = ({ open, onClos
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {/* Importance Level Name */}
           <Grid size={12}>
             <ShakingTextField
@@ -63,7 +64,21 @@ const ImportanceLevelForm: React.FC<IImportanceLevelFormProps> = ({ open, onClos
               />
             </ShakingTextField>
           </Grid>
-
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(formik.touched.color && formik.errors.color) || false}>
+              <Typography
+                variant="subtitle2"
+                sx={{ mb: 1 }}
+                color={formik.touched.color && formik.errors.color ? 'error.main' : 'text.primary'}
+              >
+                Importance Level Color *
+              </Typography>
+              <ColorPickerCircle
+                onSelect={(color: string) => formik.setFieldValue('color', color)}
+                initialColor={formik.values.color}
+              />
+            </ShakingTextField>
+          </Grid>
           {/* Description */}
           <Grid size={12}>
             <TextField

@@ -93,9 +93,9 @@ const CustomSelect = <T extends string, J extends boolean>({
               multiple
                 ? (selected: string | string[] | number | number[]) => (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                      {(Array.isArray(selected) ? selected : [selected]).map((val) => (
+                      {(Array.isArray(selected) ? selected : [selected]).map((val, index) => (
                         <Chip
-                          key={val}
+                          key={index}
                           size="small"
                           disabled={disabled}
                           variant="soft"

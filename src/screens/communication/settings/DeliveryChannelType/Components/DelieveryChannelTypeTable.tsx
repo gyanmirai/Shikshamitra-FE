@@ -1,9 +1,9 @@
 // DeliveryChannelTable.tsx
 import React from 'react';
-import dayjs from 'dayjs';
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
 import type { IDeliveryChannel, IDeliveryChannelTableProps } from '../type';
 
@@ -41,12 +41,15 @@ const DeliveryChannelTable: React.FC<IDeliveryChannelTableProps> = ({
     columns={[
       {
         id: 'deliveryChannel',
-        label: 'Channel Name',
+        label: 'Name',
         align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <SubjectColorIndicator color={row.color} />
+            <Typography variant="caption" fontSize="13px">
+              {value}
+            </Typography>
+          </Box>
         ),
       },
       {
@@ -57,25 +60,6 @@ const DeliveryChannelTable: React.FC<IDeliveryChannelTableProps> = ({
           <Typography variant="caption" fontSize="13px">
             {value || '--'}
           </Typography>
-        ),
-      },
-      {
-        id: 'createdBy',
-        label: 'Created By',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
-      },
-      {
-        id: 'createdDate',
-        label: 'Created Date',
-        align: 'left',
-        filterType: 'date',
-        render: (value) => (
-          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
         ),
       },
       {

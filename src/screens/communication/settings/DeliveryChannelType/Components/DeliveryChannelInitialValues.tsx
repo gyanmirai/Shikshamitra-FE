@@ -4,4 +4,5 @@ import type { IDeliveryChannel } from '../type';
 export const getDeliveryChannelInitialValues = (editData?: IDeliveryChannel | null) => ({
   deliveryChannel: editData?.deliveryChannel || '',
   description: editData?.description || '',
+  color: editData?.color || '',
 });

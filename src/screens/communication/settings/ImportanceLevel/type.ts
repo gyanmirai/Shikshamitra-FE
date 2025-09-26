@@ -3,8 +3,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 export interface IImportanceLevel {
   levelName: string;
   description: string;
-  createdBy: string;
-  createdDate: string;
+  color: string;
 }
 
 export interface IImportanceLevelTableProps {

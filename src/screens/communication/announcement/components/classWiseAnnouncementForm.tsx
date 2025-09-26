@@ -471,7 +471,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                   </Box>
                   {formik.touched.notification_preferences &&
                     formik.errors.notification_preferences && (
-                      <FormHelperText error sx={{ pl: -4 }}>
+                      <FormHelperText error sx={{ pl: -4, position: 'unset' }}>
                         {String(formik.errors.notification_preferences)}
                       </FormHelperText>
                     )}
@@ -486,7 +486,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                     error={!!(formik.touched.startDate && formik.errors.startDate) || false}
                   >
                     <DateTimePicker
-                      label="Start Date/Time *"
+                      label="Start Date-Time *"
                       format="DD/MM/YYYY hh:mm"
                       value={dayjs(formik.values.startDate)}
                       onChange={(newValue) => {
@@ -499,7 +499,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                           formik.setFieldValue('duration', Math.max(0, durationInDays));
                         }
                       }}
-                      minDate={dayjs(currentYear?.startDate)}
+                      minDateTime={dayjs()} // <- disables past date and time
                       maxDate={dayjs(currentYear?.endDate)}
                       sx={{ minWidth: 180, width: '100%' }}
                       slotProps={{
@@ -520,7 +520,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                     error={!!(formik.touched.endDate && formik.errors.endDate) || false}
                   >
                     <DateTimePicker
-                      label="End Date/Time *"
+                      label="End Date-Time *"
                       format="DD/MM/YYYY hh:mm"
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
