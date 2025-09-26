@@ -68,7 +68,7 @@ const BookInformationCard: React.FC<IBookInformationCardProps> = ({ book }) => {
             </Grid>
             <Grid size={{ xs: 12, sm: 2, md: 3 }}>
               <Typography variant="subtitle2" color="text.secondary">
-                Number of Copies
+                No. of Copies
               </Typography>
               <Typography variant="body1">{book?.numberOfCopies}</Typography>
             </Grid>

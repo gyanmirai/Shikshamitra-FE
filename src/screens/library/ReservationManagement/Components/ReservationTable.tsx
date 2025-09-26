@@ -41,7 +41,7 @@ const ReservedBookTable = ({
   return (
     <CustomizableTable
       tableId="reserved-book-table"
-      noDataText="No Reserved Books Found"
+      noDataText="No Reserved Student Data Found"
       columns={[
         { id: 'memberName', label: 'Member Name', align: 'left', sticky: true, minWidth: '150px' },
         { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
@@ -55,8 +55,8 @@ const ReservedBookTable = ({
         },
         { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
         { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
-        { id: 'grNo', label: 'GR No', align: 'left', minWidth: '80px' },
-        { id: 'contactNo', label: 'Contact No', align: 'left', minWidth: '120px' },
+        { id: 'grNo', label: 'GR No.', align: 'left', minWidth: '80px' },
+        { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '120px' },
         {
           id: 'actions',
           label: 'Actions',

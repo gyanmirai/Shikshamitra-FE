@@ -24,7 +24,7 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
     <Box>
       <CustomizableTable
         tableId="issued-books-table"
-        noDataText="No Issued Books Found"
+        noDataText="No Issued Books Data Found"
         isLoading={mockIssuedLoading}
         columns={[
           { id: 'bookId', label: 'Book Name', align: 'left' },

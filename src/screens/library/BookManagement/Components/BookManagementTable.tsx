@@ -9,7 +9,7 @@ const BookManagementTable: React.FC<IBookTableProps> = ({ data, onView, onEdit, 
   <Box>
     <CustomizableTable
       tableId="book-table"
-      noDataText="No Books Found"
+      noDataText="No Books Data Found"
       columns={[
         { id: 'title', label: 'Title', align: 'left', minWidth: '250px' },
         { id: 'category', label: 'Category', align: 'left' },

@@ -27,6 +27,7 @@ import type { ILibraryBookData } from './Components/type';
 const IssueReturnBook = () => {
   // State for selected record
   const [selectedRecord, setSelectedRecord] = useState<ILibraryBookData | null>(null);
+  const [reservedRecordToDelete, setReservedRecordToDelete] = useState<any>(null);
 
   // Dialog states
   const addDialog = useBoolean();
@@ -82,7 +83,7 @@ const IssueReturnBook = () => {
             Issue Book
           </Button>
         }
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
       />
 
       {/* Dialog for Add/Edit */}
@@ -147,24 +148,32 @@ const IssueReturnBook = () => {
           </Box>
         }
       >
-        <ReturnBookForm open={returnDialog} onClose={handleClose} editData={selectedRecord} />
+        <ReturnBookForm
+          open={returnDialog}
+          onClose={handleClose}
+          editData={selectedRecord}
+          onDelete={(row) => {
+            setReservedRecordToDelete(row);
+            deleteDialog.onTrue();
+          }}
+        />
       </CustomDialog>
 
-      {/* Delete Confirmation */}
+      {/* Delete Confirmation for Reserved Record */}
       <ConfirmDialog
         open={deleteDialog.value}
-        icon="warning"
         onClose={() => {
           deleteDialog.onFalse();
           setTimeout(() => {
-            setSelectedRecord(null);
+            setReservedRecordToDelete(null);
           }, 200);
         }}
-        title="Delete Record"
+        title="Delete Reservation"
         content={
           <>
-            Are you sure you want to delete record for <strong>{selectedRecord?.memberName}</strong>{' '}
-            - <strong>{selectedRecord?.bookTitle}</strong>?
+            Are you sure you want to delete reservation for{' '}
+            <strong>{reservedRecordToDelete?.memberName}</strong> -{' '}
+            <strong>{reservedRecordToDelete?.bookTitle}</strong>?
           </>
         }
         action={
@@ -173,16 +182,17 @@ const IssueReturnBook = () => {
             color="error"
             size="small"
             onClick={() => {
-              // Handle delete action here
+              // TODO: Handle delete API call here
               shikshaMitraToast.success({
                 message: (
                   <>
-                    Record for <strong>{selectedRecord?.bookTitle}</strong> deleted successfully.
+                    Reservation<strong>{reservedRecordToDelete?.bookTitle}</strong> deleted
+                    successfully
                   </>
                 ),
               });
               deleteDialog.onFalse();
-              setSelectedRecord(null);
+              setReservedRecordToDelete(null);
             }}
           >
             Yes

@@ -32,16 +32,7 @@ export const bookValidationSchema = [
 
     category: yup.string().trim().required('Category is required'),
 
-    edition: yup.string().trim().required('Edition is required'),
-
     language: yup.string().trim().required('Language is required'),
-
-    numberOfCopies: yup
-      .number()
-      .required('Number of copies is required')
-      .integer('Number of copies must be a whole number')
-      .min(1, 'Must have at least 1 copy')
-      .max(1000, 'Cannot exceed 1000 copies'),
 
     price: yup
       .number()
