@@ -331,7 +331,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
             >
               <DatePicker
                 label="Requested Date *"
-                value={dayjs(formik.values.requestedDate, 'DD/MM/YYYY')}
+                value={formik.values.requestedDate}
                 format="DD/MM/YYYY"
                 onChange={(newValue) => {
                   formik.setFieldValue('requestedDate', newValue);

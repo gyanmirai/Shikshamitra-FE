@@ -182,51 +182,53 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
         <Grid container spacing={3}>
           {/* Book Title */}
           <Grid size={{ xs: 12, md: 5 }}>
-            <CustomTooltip
-              placement="top"
-              title={
-                formik.values.bookTitle
-                  ? bookCategoryOptions?.find(
+            <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
+              <CustomTooltip
+                placement="top"
+                title={
+                  formik.values.bookTitle
+                    ? bookCategoryOptions?.find(
+                        (item: IBookCategoryOption) => item.value === formik.values.bookTitle
+                      )?.label || ''
+                    : undefined
+                }
+              >
+                <Autocomplete
+                  options={
+                    bookCategoryOptions?.map((item: IBookCategoryOption) => ({
+                      id: item.id,
+                      label: item.label,
+                      value: item.value,
+                      categoryName: item.categoryName,
+                    })) ?? []
+                  }
+                  getOptionLabel={(option) => option.label}
+                  value={
+                    bookCategoryOptions?.find(
                       (item: IBookCategoryOption) => item.value === formik.values.bookTitle
-                    )?.label || ''
-                  : undefined
-              }
-            >
-              <Autocomplete
-                options={
-                  bookCategoryOptions?.map((item: IBookCategoryOption) => ({
-                    id: item.id,
-                    label: item.label,
-                    value: item.value,
-                    categoryName: item.categoryName,
-                  })) ?? []
-                }
-                getOptionLabel={(option) => option.label}
-                value={
-                  bookCategoryOptions?.find(
-                    (item: IBookCategoryOption) => item.value === formik.values.bookTitle
-                  ) || null
-                }
-                onChange={(_, value) => {
-                  formik.setFieldValue('bookTitle', value?.value || '');
-                  formik.setFieldTouched('bookTitle', false);
-                  formik.setFieldValue('bookCategory', value?.categoryName || '');
-                  formik.setFieldValue('edition', ''); // reset child
-                  setBookSelected(!!value);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Book Title *"
-                    size="small"
-                    fullWidth
-                    error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}
-                    helperText={(formik.touched.bookTitle && formik.errors.bookTitle) as string}
-                  />
-                )}
-                isOptionEqualToValue={(option, value) => option.value === value.value}
-              />
-            </CustomTooltip>
+                    ) || null
+                  }
+                  onChange={(_, value) => {
+                    formik.setFieldValue('bookTitle', value?.value || '');
+                    formik.setFieldTouched('bookTitle', false);
+                    formik.setFieldValue('bookCategory', value?.categoryName || '');
+                    formik.setFieldValue('edition', ''); // reset child
+                    setBookSelected(!!value);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Book Title *"
+                      size="small"
+                      fullWidth
+                      error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}
+                      helperText={(formik.touched.bookTitle && formik.errors.bookTitle) as string}
+                    />
+                  )}
+                  isOptionEqualToValue={(option, value) => option.value === value.value}
+                />
+              </CustomTooltip>
+            </ShakingTextField>
           </Grid>
 
           {/* Book Category */}

@@ -110,7 +110,7 @@ const ReservationManagement = () => {
               options={
                 bookData?.map((item: ITitle) => ({
                   id: item.id,
-                  label: item.title,
+                  label: `${item.title} (${item.category})`,
                   value: item.id,
                 })) ?? []
               }

@@ -12,11 +12,11 @@ const BookManagementTable: React.FC<IBookTableProps> = ({ data, onView, onEdit, 
       noDataText="No Books Found"
       columns={[
         { id: 'title', label: 'Title', align: 'left', minWidth: '250px' },
+        { id: 'category', label: 'Category', align: 'left' },
+        { id: 'subject', label: 'Subject', align: 'left', minWidth: '150px' },
         { id: 'isbn', label: 'ISBN', align: 'left' },
         { id: 'author', label: 'Author', align: 'left', minWidth: '150px' },
         { id: 'publisher', label: 'Publisher', align: 'left' },
-        { id: 'subject', label: 'Subject', align: 'left', minWidth: '150px' },
-        { id: 'category', label: 'Category', align: 'left' },
         { id: 'language', label: 'Language', align: 'left', minWidth: '100px' },
         {
           id: 'action',

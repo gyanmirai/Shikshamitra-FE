@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 export const assignLibraryChargeInitialValues = (editData?: any) => ({
   role: editData?.role || '',
 
@@ -12,6 +14,6 @@ export const assignLibraryChargeInitialValues = (editData?: any) => ({
   // Charge details
   chargeCategory: editData?.chargeCategory || '',
   amount: editData?.amount || '',
-  dueDate: editData?.dueDate || '',
+  dueDate: editData?.dueDate ? dayjs(editData?.dueDate, 'DD-MM-YYYY') : null,
   reason: editData?.reason || '',
 });

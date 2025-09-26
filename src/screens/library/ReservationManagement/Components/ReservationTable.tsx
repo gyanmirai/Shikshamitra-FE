@@ -59,7 +59,7 @@ const ReservedBookTable = ({
         { id: 'contactNo', label: 'Contact No', align: 'left', minWidth: '120px' },
         {
           id: 'actions',
-          label: 'Action',
+          label: 'Actions',
           align: 'left',
           isSort: false,
           isFilter: false,
