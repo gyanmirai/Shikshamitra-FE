@@ -80,7 +80,7 @@ const EventTypeCreation = () => {
             Event Type
           </Button>
         }
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
       />
 
       <EventTypeTable
@@ -155,7 +155,7 @@ const EventTypeCreation = () => {
               deleteEventTypeDialog.onFalse();
               setSelectedEventType(null);
               shikshaMitraToast.success({
-                message: `Event Type ${selectedEventType?.eventType} deleted successfully`,
+                message: `Event Type : ${selectedEventType?.eventType} deleted successfully`,
               });
               // handle delete API call here
             }}

@@ -110,151 +110,267 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
       </Box>
 
       {/* Table */}
-      <CustomizableTable
-        tableId="school-wise-announcement-table"
-        columns={[
-          { id: 'title', label: 'Announcement', align: 'left', sticky: true },
-          { id: 'type', label: 'Type', align: 'left' },
-          {
-            id: 'audience',
-            label: 'Audience',
-            align: 'left',
-            render: (value, row) => (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {row.audience?.map((aud: IAudience) => (
-                  <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <SubjectColorIndicator color={aud.color} />
-                    <Typography variant="caption" fontSize="13px">
-                      {aud.name}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'startDate',
-            label: 'Start Date',
-            filterType: 'date',
-            align: 'left',
-            render: (value) => (
-              <Typography fontSize="12px">{dayjs(value).format('DD MMM YYYY')}</Typography>
-            ),
-          },
-          {
-            id: 'endDate',
-            label: 'End Date',
-            filterType: 'date',
-            align: 'left',
-            render: (value) => (
-              <Typography fontSize="12px">{dayjs(value).format('DD MMM YYYY')}</Typography>
-            ),
-          },
-          { id: 'createdBy', label: 'Created By', align: 'left' },
-          { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
-          {
-            id: 'active',
-            label: 'Active',
-            align: 'left',
-            minWidth: 40,
-            isFilter: false,
-            sticky: true,
-            isSort: false,
-            filterType: 'enum',
-            enumOptions: AnnouncementStatusOptions,
-            render(value, row) {
-              const statusColor =
-                value === AnnouncementStatus.Published
-                  ? theme.palette.success.main
-                  : theme.palette.text.secondary;
-
-              return (
-                <CustomTooltip
-                  title={value === 0 ? 'Published' : 'Draft'}
-                  arrow
-                  placement="left"
-                  PopperProps={{
-                    modifiers: [
-                      {
-                        name: 'offset',
-                        options: {
-                          offset: [0, 0], // Try 0 or adjust closer
-                        },
-                      },
-                    ],
-                  }}
-                >
-                  <span>
-                    <IconButton
-                      onClick={() => {
-                        // Only allow click action when status is draft (1)
-                        if (value === AnnouncementStatus.Draft) {
-                          onPublish(row as ISchoolWiseAnnouncement);
-                        }
-                      }}
-                      sx={{
-                        p: 0.6, // some padding for a more clickable area
-                        borderRadius: '50%',
-                        backgroundColor: 'rgba(0,0,0,0.06)', // light background to indicate clickability
-                        transition: 'transform 0.2s ease-in-out, background-color 0.2s',
-                        cursor: 'pointer',
-                        '&:hover': { transform: 'scale(1.1)', backgroundColor: 'rgba(0,0,0,0.08)' },
-                      }}
-                      disabled={value === AnnouncementStatus.Published}
-                    >
-                      <Iconify
-                        icon={GlobalIcons.tick}
-                        sx={{
-                          width: 20,
-                          height: 20,
-                          cursor: value === AnnouncementStatus.Draft ? 'pointer' : 'not-allowed',
-                          color: statusColor,
-                        }}
-                      />
-                    </IconButton>
-                  </span>
-                </CustomTooltip>
-              );
+      {tabs.value === 'All' ? (
+        <CustomizableTable
+          tableId="school-wise-announcement-table"
+          columns={[
+            { id: 'title', label: 'Announcement', align: 'left', sticky: true },
+            { id: 'type', label: 'Type', align: 'left' },
+            {
+              id: 'audience',
+              label: 'Audience',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {row.audience?.map((aud: IAudience) => (
+                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SubjectColorIndicator color={aud.color} />
+                      <Typography variant="caption" fontSize="13px">
+                        {aud.name}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ),
             },
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            align: 'left',
-            filterType: 'enum',
-            enumOptions: AnnouncementStatusOptions,
-            sticky: true,
-            render: (value, row) => (
-              <Label
-                variant="soft"
-                color={AnnouncementStatusColor[value as AnnouncementStatus] as LabelColor}
-              >
-                {AnnouncementStatus[value as AnnouncementStatus]}
-              </Label>
-            ),
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            isSort: false,
-            isFilter: false,
-            sticky: true,
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                showEditIcon
-                showDeleteIcon
-                showViewIcon
-                showThreeDots={false}
-                handleEditClick={() => onEdit(row as ISchoolWiseAnnouncement)}
-                handleDeleteClick={() => onDelete(row.id)}
-                handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
-              />
-            ),
-          },
-        ]}
-        data={tableData || []}
-      />
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left' },
+            {
+              id: 'createdOn',
+              label: 'Created On',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
+            {
+              id: 'active',
+              label: 'Active',
+              align: 'left',
+              minWidth: 40,
+              isFilter: false,
+              sticky: true,
+              isSort: false,
+              filterType: 'enum',
+              enumOptions: AnnouncementStatusOptions,
+              render(value, row) {
+                const statusColor =
+                  value === AnnouncementStatus.Published
+                    ? theme.palette.success.main
+                    : theme.palette.text.secondary;
+
+                return (
+                  <CustomTooltip title={value === 0 ? 'Published' : 'Draft'} arrow placement="left">
+                    <span>
+                      <IconButton
+                        onClick={() =>
+                          value === AnnouncementStatus.Draft &&
+                          onPublish(row as ISchoolWiseAnnouncement)
+                        }
+                        sx={{
+                          p: 0.6,
+                          borderRadius: '50%',
+                          backgroundColor: 'rgba(0,0,0,0.06)',
+                          '&:hover': {
+                            transform: 'scale(1.1)',
+                            backgroundColor: 'rgba(0,0,0,0.08)',
+                          },
+                        }}
+                        disabled={value === AnnouncementStatus.Published}
+                      >
+                        <Iconify
+                          icon={GlobalIcons.tick}
+                          sx={{ width: 20, height: 20, color: statusColor }}
+                        />
+                      </IconButton>
+                    </span>
+                  </CustomTooltip>
+                );
+              },
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              align: 'left',
+              filterType: 'enum',
+              enumOptions: AnnouncementStatusOptions,
+              sticky: true,
+              render: (value, row) => (
+                <Label
+                  variant="soft"
+                  color={AnnouncementStatusColor[value as AnnouncementStatus] as LabelColor}
+                >
+                  {AnnouncementStatus[value as AnnouncementStatus]}
+                </Label>
+              ),
+            },
+            {
+              id: 'action',
+              label: 'Action',
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              render: (_, row) => (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showViewIcon
+                  showThreeDots={false}
+                  handleEditClick={() => onEdit(row as ISchoolWiseAnnouncement)}
+                  handleDeleteClick={() => onDelete(row.id)}
+                  handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
+                />
+              ),
+            },
+          ]}
+          data={tableData || []}
+        />
+      ) : tabs.value === 0 ? (
+        <CustomizableTable
+          tableId="school-wise-announcement-table-draft"
+          columns={[
+            { id: 'title', label: 'Announcement', align: 'left', sticky: true },
+            { id: 'type', label: 'Type', align: 'left' },
+            {
+              id: 'audience',
+              label: 'Audience',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {row.audience?.map((aud: IAudience) => (
+                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SubjectColorIndicator color={aud.color} />
+                      <Typography variant="caption" fontSize="13px">
+                        {aud.name}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ),
+            },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left' },
+            { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
+            {
+              id: 'action',
+              label: 'Action',
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              render: (_, row) => (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showViewIcon
+                  showThreeDots={false}
+                  handleEditClick={() => onEdit(row as ISchoolWiseAnnouncement)}
+                  handleDeleteClick={() => onDelete(row.id)}
+                  handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
+                />
+              ),
+            },
+          ]}
+          data={tableData || []}
+        />
+      ) : tabs.value === 1 || tabs.value === 2 ? (
+        <CustomizableTable
+          tableId="school-wise-announcement-table-readonly"
+          columns={[
+            { id: 'title', label: 'Announcement', align: 'left', sticky: true },
+            { id: 'type', label: 'Type', align: 'left' },
+            {
+              id: 'audience',
+              label: 'Audience',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {row.audience?.map((aud: IAudience) => (
+                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SubjectColorIndicator color={aud.color} />
+                      <Typography variant="caption" fontSize="13px">
+                        {aud.name}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ),
+            },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left' },
+            { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
+            {
+              id: 'action',
+              label: 'Action',
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              render: (_, row) => (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showViewIcon
+                  showThreeDots={false}
+                  handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
+                />
+              ),
+            },
+          ]}
+          data={tableData || []}
+        />
+      ) : null}
     </Box>
   );
 };

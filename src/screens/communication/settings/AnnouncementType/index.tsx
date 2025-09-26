@@ -82,7 +82,7 @@ const AnnouncementTypeCreation = () => {
             Announcement Type
           </Button>
         }
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
       />
 
       <AnnouncementTypeTable
@@ -158,7 +158,7 @@ const AnnouncementTypeCreation = () => {
               deleteAnnouncementTypeDialog.onFalse();
               setSelectedAnnouncementType(null);
               shikshaMitraToast.success({
-                message: `Announcement Type ${selectedAnnouncementType?.announcementType} deleted successfully`,
+                message: `Announcement Type : ${selectedAnnouncementType?.announcementType} deleted successfully`,
               });
               // handle delete API call here
             }}

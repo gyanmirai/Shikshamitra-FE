@@ -5,6 +5,8 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
@@ -70,13 +72,20 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {open ? (
         <CustomBreadcrumbs
-          heading="Class Announcement"
+          heading="Class Announcement Form"
           description="Create or update class-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff."
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Announcements' },
-            { name: 'Class Announcement' },
-            { name: 'Announcement Form' },
+            {
+              name: 'Class Announcement',
+              href: '/communication/announcement/classSpecificAnnouncement',
+              onClick(e) {
+                setOpen(false);
+                setEditingAnnouncement(null);
+              },
+            },
+            { name: 'Class Announcement Form' },
           ]}
           sx={{ px: 1, mb: 2 }}
           isBack
@@ -158,11 +167,19 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
 
       <ConfirmDialog
         open={publish_modal.value}
-        onClose={() => {}}
+        onClose={() => {
+          publish_modal.onFalse();
+          setPublishingAnnouncement(null);
+        }}
         title="Publish"
         content="Are you sure want to Publish?"
         action={
-          <Button variant="contained" color="success" onClick={() => {}}>
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
+            onClick={() => {}}
+            size="small"
+          >
             Publish
           </Button>
         }

@@ -152,7 +152,7 @@ const DeliveryChannelTypeCreation = () => {
               deleteDialog.onFalse();
               setSelectedDeliveryChannelType(null);
               shikshaMitraToast.success({
-                message: `Delivery Channel Type ${selectedDeliveryChannelType?.deliveryChannel} deleted successfully`,
+                message: `Delivery Channel Type : ${selectedDeliveryChannelType?.deliveryChannel} deleted successfully`,
               });
               // handle delete API call here
             }}

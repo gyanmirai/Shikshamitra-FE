@@ -147,7 +147,7 @@ const ImportanceLevelCreation = () => {
             onClick={() => {
               deleteImportanceLevelDialog.onFalse();
               shikshaMitraToast.success({
-                message: `Importance Level ${selectedImportanceLevel?.levelName} deleted successfully`,
+                message: `Importance Level : ${selectedImportanceLevel?.levelName} deleted successfully`,
               });
               setSelectedImportanceLevel(null);
               // handle delete API call here

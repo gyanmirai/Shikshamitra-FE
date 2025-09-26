@@ -7,13 +7,14 @@ import React from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
+import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
@@ -34,12 +35,11 @@ import { getSchoolWiseAnnouncementInitialValues } from './components/getSchoolIn
 
 import type { ISchoolWiseAnnouncementFormProps } from './type';
 
-const channels = ['In-App', 'Email', 'SMS', 'Whatsapp'];
-
 export const audienceOptions = [
   { value: 'Staff', name: 'Staff', color: '#4CAF50' },
   { value: 'Students', name: 'Students', color: '#2196F3' },
   { value: 'Parents', name: 'Parents', color: '#FF9800' },
+  { value: 'Teachers', name: 'Teachers', color: '#9C27B0' },
 ];
 
 const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
@@ -48,8 +48,11 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
   onClose,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const theme = useTheme();
-
+  // Roles API
+  const { data, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRolesQuery,
+  });
   const formik = useFormik({
     initialValues: getSchoolWiseAnnouncementInitialValues(initialValues),
     validationSchema: schoolWiseValidationSchema(currentYear),
@@ -57,7 +60,6 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
       onClose(null, true);
     },
   });
-  console.log('formik values----', formik.values);
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
@@ -203,12 +205,12 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               <SectionCard title="Delivery Channels">
                 <Grid size={{ xs: 12 }}>
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    {['inApp', 'email', 'sms', 'whatsapp'].map((type) => {
+                    {['In-App', 'Email', 'SMS', 'Whatsapp'].map((type) => {
                       const labels: Record<string, string> = {
-                        inApp: 'In-App',
-                        email: 'Email',
-                        sms: 'SMS',
-                        whatsapp: 'Whatsapp',
+                        'In-App': 'In-App',
+                        Email: 'Email',
+                        SMS: 'SMS',
+                        Whatsapp: 'Whatsapp',
                       };
 
                       return (
@@ -241,16 +243,19 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                         />
                       );
                     })}
-                    {formik.touched.notification_preferences &&
-                      formik.errors.notification_preferences && (
-                        <FormHelperText error sx={{ pr: 3 }}>
-                          {String(formik.errors.notification_preferences)}
-                        </FormHelperText>
-                      )}
                   </Box>
+
+                  {/* Helper Text inside SectionCard */}
+                  {formik.touched.notification_preferences &&
+                    formik.errors.notification_preferences && (
+                      <FormHelperText error sx={{ mt: 1, position: 'unset' }}>
+                        {String(formik.errors.notification_preferences)}
+                      </FormHelperText>
+                    )}
                 </Grid>
               </SectionCard>
             </Grid>
+
             {/* Start Time DatePicker */}
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Scheduling">
@@ -259,11 +264,12 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                     error={!!(formik.touched.startDate && formik.errors.startDate) || false}
                   >
                     <DateTimePicker
-                      label="Start Date/Time *"
+                      label="Start Date-Time *"
                       format="DD/MM/YYYY hh:mm"
                       value={dayjs(formik.values.startDate)}
                       onChange={(newValue) => {
                         formik.setFieldValue('startDate', newValue);
+
                         // Calculate duration in days between start and end date
                         if (newValue && formik.values.startDate) {
                           const start = dayjs(formik.values.startDate);
@@ -272,14 +278,14 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                           formik.setFieldValue('duration', Math.max(0, durationInDays));
                         }
                       }}
-                      minDate={dayjs(currentYear?.startDate)}
+                      minDateTime={dayjs()} // <- disables past date and time
                       maxDate={dayjs(currentYear?.endDate)}
                       sx={{ minWidth: 180, width: '100%' }}
                       slotProps={{
                         textField: {
                           fullWidth: true,
                           size: 'small',
-                          error: !!(formik.touched.startDate && formik.errors.startDate) || false,
+                          error: !!(formik.touched.startDate && formik.errors.startDate),
                           helperText: formik.touched.startDate && formik.errors.startDate,
                         },
                       }}
@@ -293,7 +299,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                     error={!!(formik.touched.endDate && formik.errors.endDate) || false}
                   >
                     <DateTimePicker
-                      label="End Date/Time *"
+                      label="End Date-Time *"
                       format="DD/MM/YYYY hh:mm"
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
