@@ -24,7 +24,7 @@ const ReservedBooks: React.FC<ReservedBooksProps> = ({ member }) => {
     <Box>
       <CustomizableTable
         tableId="reserved-books-table"
-        noDataText="No Reserved Books Found"
+        noDataText="No Reserved Books Data Found"
         isLoading={memberLoading}
         columns={[
           { id: 'bookTitle', label: 'Book Title', align: 'left' },

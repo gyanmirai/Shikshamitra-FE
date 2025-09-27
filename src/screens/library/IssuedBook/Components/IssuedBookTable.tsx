@@ -73,7 +73,7 @@ const BookIssueReturnTable = ({
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
+      <Box display="flex" justifyContent="space-between" sx={{ mb: 1 }}>
         <Tabs
           value={tabValue}
           onChange={(_, newValue) => setTabValue(newValue)}
@@ -114,7 +114,7 @@ const BookIssueReturnTable = ({
         <Scrollbar sx={{ p: 1 }}>
           <CustomizableTable
             tableId="library-book-table"
-            noDataText="No Book Records Found"
+            noDataText="No Issue Book Data Found "
             columns={[
               {
                 id: 'memberName',
@@ -126,11 +126,11 @@ const BookIssueReturnTable = ({
               { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
               { id: 'role', label: 'Role', align: 'left', minWidth: '100px' },
               { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '120px' },
-              { id: 'accessionNo', label: 'Accession No', align: 'left', minWidth: '150px' },
+              { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '150px' },
               { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
               { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
-              { id: 'grNo', label: 'GR No', align: 'left', minWidth: '120px' },
-              { id: 'contactNo', label: 'Contact No', align: 'left', minWidth: '120px' },
+              { id: 'grNo', label: 'GR No.', align: 'left', minWidth: '120px' },
+              { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '120px' },
               { id: 'bookCategory', label: 'Book Category', align: 'left', minWidth: '140px' },
 
               {

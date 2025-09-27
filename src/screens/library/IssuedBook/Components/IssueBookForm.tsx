@@ -336,6 +336,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                   <Typography variant="subtitle1">Reserved List</Typography>
                   <CustomizableTable
                     tableId="reservation-table"
+                    noDataText="No Reservation Data Found "
                     columns={[
                       { id: 'memberName', label: 'Member Name', align: 'left' },
                       { id: 'memberId', label: 'Member ID', align: 'left' },

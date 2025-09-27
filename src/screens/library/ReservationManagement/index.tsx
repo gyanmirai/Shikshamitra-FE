@@ -184,7 +184,7 @@ const ReservationManagement = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Issue book to member"
+              title="Select a member and book to issue with issue date and due date."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

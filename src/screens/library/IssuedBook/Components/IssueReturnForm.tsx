@@ -37,7 +37,7 @@ import { bookReturnValidationSchema } from './ReturnValidatioSchema';
 
 import type { ReturnBookFormProps } from './type';
 
-const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData }) => {
+const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData, onDelete }) => {
   const [showReservation, setShowReservation] = useState(true);
 
   //   Fetch issued/returned books
@@ -241,6 +241,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
               <Typography variant="subtitle1">Reserved List</Typography>
               <CustomizableTable
                 tableId="reserved-list"
+                noDataText="No Reservation Data Found "
                 columns={[
                   { id: 'memberName', label: 'Member Name', align: 'left', minWidth: '140px' },
                   { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
@@ -275,7 +276,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
                       return (
                         <ThreeDotsActions
                           showDeleteIcon
-                          handleDeleteClick={() => {}}
+                          handleDeleteClick={() => onDelete?.(row as any)}
                           actions={(prop) => actions({ ...prop, row })}
                           placement="right-top"
                         />

@@ -2,27 +2,38 @@ import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
-import CustomSelect from 'src/components/custom-select';
+import Autocomplete from '@mui/material/Autocomplete';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, IconButton, DialogActions } from '@mui/material';
 import { useGetSelectStatusOptionsQuery } from 'src/redux/memberManagement/memberManagementApi';
 
 import type { IChangeStatusPayload, IChangeStatusFormProps } from './type';
 
 const ChangeStatusForm: React.FC<IChangeStatusFormProps> = ({ open, onClose }) => {
+  const theme = useTheme();
   const { data: selectStatusOptions, isLoading: selectStatusLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSelectStatusOptionsQuery,
   });
+
+  // Ensure options have label, value, description
+  const options = (selectStatusOptions || []).map((opt: any) => ({
+    label: opt.label || opt.value,
+    value: opt.value,
+    description: opt.description || '',
+  }));
+
   const formik = useFormik<IChangeStatusPayload>({
     initialValues: {
-      status: 'Active',
+      status: options[0]?.value || 'Active',
       date: dayjs(),
       remarks: 'Active for this member.',
     },
@@ -44,15 +55,58 @@ const ChangeStatusForm: React.FC<IChangeStatusFormProps> = ({ open, onClose }) =
           {/* Select Status */}
           <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.status && formik.errors.status)}>
-              <CustomSelect
-                label="Select Status *"
-                name="status"
-                options={selectStatusOptions || []}
-                value={formik.values.status}
-                onChange={(value) => formik.setFieldValue('status', value)}
-                error={!!(formik.touched.status && formik.errors.status)}
-                helperText={(formik.touched.status && formik.errors.status) as string}
-                formControlProps={{ fullWidth: true }}
+              <Autocomplete
+                options={options}
+                value={
+                  options.find((opt: { value: string }) => opt.value === formik.values.status) ||
+                  options[0]
+                }
+                onChange={(_, newValue) => {
+                  formik.setFieldValue('status', newValue?.value || options[0]?.value);
+                }}
+                size="small"
+                disableClearable
+                getOptionLabel={(option) => String(option.label)}
+                renderOption={(props, option) => (
+                  <Box
+                    component="li"
+                    {...props}
+                    sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}
+                  >
+                    {option.label}
+                    <Box sx={{ marginLeft: 'auto' }}>
+                      <CustomTooltip title={option.description} placement="right">
+                        <IconButton
+                          size="small"
+                          sx={{
+                            color:
+                              option.value === 'Active'
+                                ? theme.palette.success.main
+                                : option.value === 'Inactive'
+                                  ? theme.palette.error.main
+                                  : option.value === 'Left'
+                                    ? theme.palette.info.main
+                                    : option.value === 'Retired'
+                                      ? theme.palette.grey[500]
+                                      : theme.palette.grey[500],
+                          }}
+                        >
+                          <Iconify icon="mdi:information" width={20} />
+                        </IconButton>
+                      </CustomTooltip>
+                    </Box>
+                  </Box>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    size="small"
+                    label="Select Status *"
+                    fullWidth
+                    error={!!(formik.touched.status && formik.errors.status)}
+                    helperText={formik.touched.status && formik.errors.status}
+                  />
+                )}
               />
             </ShakingTextField>
           </Grid>

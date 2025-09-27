@@ -27,6 +27,7 @@ export interface ReturnBookFormProps {
   open: UseBooleanReturn;
   onClose: (values: any, submitted: boolean) => void;
   editData?: any;
+  onDelete?: (row: ILibraryBookData) => void;
 }
 
 export interface IEdition {

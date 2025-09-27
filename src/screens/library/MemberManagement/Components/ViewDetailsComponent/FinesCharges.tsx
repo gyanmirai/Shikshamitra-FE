@@ -24,7 +24,7 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
     <Box>
       <CustomizableTable
         tableId="fines-charges-table"
-        noDataText="No Fines or Charges Found"
+        noDataText="No Fines or Charges Data Found"
         isLoading={mockFinesChargesLoading}
         columns={[
           { id: 'bookTitle', label: 'Book Title', align: 'left' },

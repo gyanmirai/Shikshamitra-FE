@@ -23,7 +23,7 @@ const IssuedBooksTable = () => {
           { id: 'role', label: 'Role', align: 'left' },
           { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
           { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
-          { id: 'accessionNo', label: 'Accession No', align: 'left', minWidth: '150px' },
+          { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '150px' },
 
           {
             id: 'issuedOn',

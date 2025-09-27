@@ -213,7 +213,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
             fullWidth
             name="numberOfCopies"
             type="number"
-            label="Number of Copies *"
+            label="Number of Copies "
             value={formik.values.numberOfCopies || ''}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
