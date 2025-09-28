@@ -12,6 +12,6 @@ export const reservationInitialValues = (editData?: any) => ({
 
   bookCategory: editData?.bookCategory || '',
   bookTitle: editData?.bookTitle || '',
-  requestedDate: dayjs(editData?.reservedOn) || null,
-  dueDate: dayjs(editData?.dueDate) || null,
+  requestedDate: editData?.reservedOn ? dayjs(editData.reservedOn, 'DD-MM-YYYY') : null,
+  dueDate: editData?.dueDate ? dayjs(editData.dueDate, 'DD-MM-YYYY') : null,
 });

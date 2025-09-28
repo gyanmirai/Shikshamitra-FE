@@ -27,8 +27,8 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
         noDataText="No Issued Books Data Found"
         isLoading={mockIssuedLoading}
         columns={[
-          { id: 'bookId', label: 'Book Name', align: 'left' },
-          { id: 'bookTitle', label: 'Book Category', align: 'left' },
+          { id: 'bookTitle', label: 'Book Title', align: 'left' },
+          { id: 'bookId', label: 'Book Category', align: 'left' },
           { id: 'issueDate', label: 'Issued on', align: 'left' },
           { id: 'dueDate', label: 'Due on', align: 'left' },
           {

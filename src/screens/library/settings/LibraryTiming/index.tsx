@@ -20,6 +20,7 @@ const LibraryTimingCreation = () => {
   // State for managing timing data
   const [timingData, setTimingData] = useState<any[]>([]);
   const [originalTimingData, setOriginalTimingData] = useState<any[]>([]);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Dialog control states
   const resetDialog = useBoolean();
@@ -51,6 +52,37 @@ const LibraryTimingCreation = () => {
           : timing
       )
     );
+
+    // Validation for End Time when changed
+    if (field === 'endTime') {
+      setTimingData((prev) => {
+        const row = prev.find((timing) => timing.id === id);
+        if (row && row.status === 'On' && row.startTime && value) {
+          const start = dayjs(row.startTime, 'hh:mm A');
+          const end = dayjs(value);
+          if (!end.isAfter(start)) {
+            setErrors((prevErrors) => ({
+              ...prevErrors,
+              [`${id}_endTime`]: 'End Time must be after Start Time',
+            }));
+          } else {
+            setErrors((prevErrors) => ({
+              ...prevErrors,
+              [`${id}_endTime`]: '',
+            }));
+          }
+        } else {
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            [`${id}_endTime`]: '',
+          }));
+        }
+        return prev;
+      });
+    } else {
+      // Clear error for this field
+      setErrors((prev) => ({ ...prev, [`${id}_${field}`]: '' }));
+    }
   };
 
   // Handle status changes
@@ -61,17 +93,23 @@ const LibraryTimingCreation = () => {
           ? {
               ...timing,
               status: checked ? 'On' : 'Off',
-              // Clear times when status is off
               ...(checked ? {} : { startTime: '', endTime: '' }),
             }
           : timing
       )
     );
+    // Clear errors for this row
+    setErrors((prev) => ({
+      ...prev,
+      [`${id}_startTime`]: '',
+      [`${id}_endTime`]: '',
+    }));
   };
 
   // Handles resetting all timing settings
   const handleReset = () => {
     setTimingData(originalTimingData);
+    setErrors({});
     resetDialog.onFalse();
     shikshaMitraToast.success({
       message: 'Library timing settings have been reset successfully',
@@ -80,10 +118,28 @@ const LibraryTimingCreation = () => {
 
   // Handles saving timing settings
   const handleSave = () => {
+    // Simple validation: End Time must be after Start Time if both are set and status is 'On'
+    let hasError = false;
+    const newErrors: { [key: string]: string } = {};
+    timingData.forEach((row) => {
+      if (row.status === 'On' && row.startTime && row.endTime) {
+        const start = dayjs(row.startTime, 'hh:mm A');
+        const end = dayjs(row.endTime, 'hh:mm A');
+        if (!end.isAfter(start)) {
+          newErrors[`${row.id}_endTime`] = 'End Time must be after Start Time';
+          hasError = true;
+        }
+      }
+    });
+    setErrors(newErrors);
+
+    if (hasError) return;
+
     saveDialog.onFalse();
     shikshaMitraToast.success({
       message: 'Library timing settings have been saved successfully',
     });
+    setOriginalTimingData(timingData);
   };
 
   // Helper to check if there are any changes
@@ -150,7 +206,7 @@ const LibraryTimingCreation = () => {
             isSort: false,
             isFilter: false,
             render: (value, row) => (
-              <Grid container spacing={1}>
+              <Grid container spacing={1} sx={{ mb: 2 }}>
                 <Grid size={12}>
                   <TimePicker
                     label=""
@@ -162,6 +218,8 @@ const LibraryTimingCreation = () => {
                         size: 'small',
                         fullWidth: true,
                         placeholder: value || 'Select start time',
+                        error: Boolean(errors[`${row.id}_startTime`]),
+                        helperText: errors[`${row.id}_startTime`] || '',
                       },
                     }}
                   />
@@ -188,6 +246,8 @@ const LibraryTimingCreation = () => {
                         size: 'small',
                         fullWidth: true,
                         placeholder: value || 'Select end time',
+                        error: Boolean(errors[`${row.id}_endTime`]),
+                        helperText: errors[`${row.id}_endTime`] || '',
                       },
                     }}
                   />

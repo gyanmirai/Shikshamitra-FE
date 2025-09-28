@@ -11,7 +11,7 @@ const BookManagementTable: React.FC<IBookTableProps> = ({ data, onView, onEdit, 
       tableId="book-table"
       noDataText="No Books Data Found"
       columns={[
-        { id: 'title', label: 'Title', align: 'left', minWidth: '250px' },
+        { id: 'title', label: 'Title', align: 'left', minWidth: '250px', sticky: true },
         { id: 'category', label: 'Category', align: 'left' },
         { id: 'subject', label: 'Subject', align: 'left', minWidth: '150px' },
         { id: 'isbn', label: 'ISBN', align: 'left' },

@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import { Grid, TextField } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { DialogScrollContent } from 'src/components/customDialog';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { paymentMethodsConfig } from 'src/screens/finance/FeeCollection/Components/paymentConfigMethods';
 
@@ -44,7 +45,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => (
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
+            <NumericFormatCustom
               label="Amount"
               value={charge?.fineAmount ?? ''}
               fullWidth
@@ -126,7 +127,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => (
                 />
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
+                <NumericFormatCustom
                   fullWidth
                   label="Amount"
                   size="small"

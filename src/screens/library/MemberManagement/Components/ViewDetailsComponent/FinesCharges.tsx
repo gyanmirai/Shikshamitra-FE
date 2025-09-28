@@ -28,7 +28,19 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
         isLoading={mockFinesChargesLoading}
         columns={[
           { id: 'bookTitle', label: 'Book Title', align: 'left' },
-          { id: 'amount', label: 'Amount', align: 'left' },
+          {
+            id: 'amount',
+            label: 'Amount',
+            align: 'left',
+            filterType: 'number',
+            render(value) {
+              return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 2,
+              }).format(value);
+            },
+          },
           { id: 'dateIssued', label: 'Date', align: 'left' },
           {
             id: 'status',

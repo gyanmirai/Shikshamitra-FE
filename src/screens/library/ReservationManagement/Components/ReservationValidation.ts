@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
-export const reservationValidationSchema = (currentYear: any) =>
+export const reservationValidationSchema = (currentYear: any, editData: any) =>
   Yup.object().shape({
     role: Yup.string().required('Role is required'),
 
@@ -17,7 +17,7 @@ export const reservationValidationSchema = (currentYear: any) =>
     }),
 
     // Only validate member when role ≠ Student
-    member: Yup.string().required('Member is required'),
+    member: editData ? Yup.string() : Yup.string().required('Member is required'),
     bookCategory: Yup.string().required('Book Category is required'),
     bookTitle: Yup.string().required('Book Title is required'),
     requestedDate: Yup.mixed()

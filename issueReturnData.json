@@ -79,19 +79,19 @@
   ],
   "reservedBookData": [
     {
-      "memberId": "DDVS001",
+      "memberId": "M001",
       "memberName": "Dharmik Jinjala",
       "notificationSentOn": "01-08-2025",
       "status": 0
     },
     {
-      "memberId": "DDVS002",
+      "memberId": "M002",
       "memberName": "Prerna Atre",
       "notificationSentOn": "13-08-2025",
       "status": 1
     },
     {
-      "memberId": "DDVS003",
+      "memberId": "M003",
       "memberName": "Mayur Solanki",
       "notificationSentOn": "20-08-2025",
       "status": 1
@@ -144,19 +144,19 @@
   ],
   "reservationRequestData": [
     {
-      "memberId": "DDVS001",
+      "memberId": "M001",
       "memberName": "Dharmik Jinjala",
       "reservationDate": "01-08-2025",
       "dueDate": "10-09-2025"
     },
     {
-      "memberId": "DDVS002",
+      "memberId": "M002",
       "memberName": "Prerna Atre",
       "reservationDate": "13-08-2025",
       "dueDate": "23-09-2025"
     },
     {
-      "memberId": "DDVS003",
+      "memberId": "M003",
       "memberName": "Mayur Solanki",
       "reservationDate": "20-08-2025",
       "dueDate": "30-09-2025"
@@ -164,7 +164,7 @@
   ],
   "reservationData": [
     {
-      "memberId": "DDVS001",
+      "memberId": "M001",
       "memberName": "Dharmik Jinjala",
       "role": "Student",
       "classNo": "10th",
@@ -178,7 +178,7 @@
       "edition": "01"
     },
     {
-      "memberId": "DDVS002",
+      "memberId": "M002",
       "memberName": "Prerna Atre",
       "role": "Employee",
       "contactNo": "9123456780",
@@ -192,7 +192,7 @@
       "edition": "05"
     },
     {
-      "memberId": "DDVS003",
+      "memberId": "M003",
       "memberName": "Mayur Solanki",
       "role": "Student",
       "classNo": "12th",
@@ -206,7 +206,7 @@
       "edition": "August 2025"
     },
     {
-      "memberId": "DDVS004",
+      "memberId": "M004",
       "memberName": "Krishna Patel",
       "role": "Employee",
       "contactNo": "9876501234",
@@ -385,35 +385,40 @@
       "categoryName": "Fiction",
       "code": "FIC",
       "createdBy": "admin",
-      "createdDate": "29-08-2025"
+      "createdDate": "29-08-2025",
+      "description": "Books that contain stories created from the imagination, including novels and short stories."
     },
     {
       "id": "2",
       "categoryName": "Non-Fiction",
       "code": "NFIC",
       "createdBy": "admin",
-      "createdDate": "29-08-2025"
+      "createdDate": "29-08-2025",
+      "description": "Books based on factual information, including biographies, memoirs, and informational texts."
     },
     {
       "id": "3",
       "categoryName": "Science",
       "code": "SCI",
       "createdBy": "librarian",
-      "createdDate": "29-08-2025"
+      "createdDate": "29-08-2025",
+      "description": "Books that explore scientific concepts, discoveries, and the natural world."
     },
     {
       "id": "4",
       "categoryName": "Mathematics",
       "code": "MATH",
       "createdBy": "librarian",
-      "createdDate": "29-08-2025"
+      "createdDate": "29-08-2025",
+      "description": "Books covering mathematical theories, problems, and educational resources."
     },
     {
       "id": "5",
       "categoryName": "History",
       "code": "HIS",
       "createdBy": "admin",
-      "createdDate": "29-08-2025"
+      "createdDate": "29-08-2025",
+      "description": "Books that discuss historical events, figures, and periods from around the world."
     }
   ],
   "bookManagementData": [
@@ -554,7 +559,7 @@
   ],
   "libraryChargesData": [
     {
-      "memberId": "LIB1001",
+      "memberId": "M001",
       "role": "Student",
       "classNo": "10",
       "grNo": "GR12345",
@@ -573,7 +578,7 @@
       "paymentDetails": {}
     },
     {
-      "memberId": "LIB1002",
+      "memberId": "M002",
       "role": "Student",
       "classNo": "9",
       "grNo": "GR67890",
@@ -605,7 +610,7 @@
       }
     },
     {
-      "memberId": "LIB1003",
+      "memberId": "M003",
       "role": "Teacher",
       "classNo": null,
       "grNo": null,
@@ -632,7 +637,7 @@
       }
     },
     {
-      "memberId": "LIB1004",
+      "memberId": "M004",
       "role": "Student",
       "classNo": "12",
       "grNo": "GR11223",
@@ -660,7 +665,7 @@
       }
     },
     {
-      "memberId": "LIB1005",
+      "memberId": "M005",
       "role": "Student",
       "grNo": "GR33445",
       "classNo": "8",
@@ -687,7 +692,7 @@
       }
     },
     {
-      "memberId": "LIB1006",
+      "memberId": "M006",
       "role": "Employee",
       "grNo": null,
       "classNo": null,
@@ -717,7 +722,7 @@
       }
     },
     {
-      "memberId": "LIB1007",
+      "memberId": "M007",
       "role": "Student",
       "grNo": "GR55667",
       "classNo": "7",
@@ -801,6 +806,294 @@
       "createdBy": "Dharmik Jinjala",
       "createdDate": "10-05-2025",
       "description": "This type is used when the book has been lost."
+    }
+  ],
+  "memberManagementData": [
+    {
+      "id": "1",
+      "memberId": "M001",
+      "class": "10",
+      "division": "A",
+      "grNo": "G001",
+      "role": "Student",
+      "name": "Dharmik Jinjala",
+      "currentIssue": 4,
+      "overdueReturn": 1,
+      "memberStatus": "0"
+    },
+    {
+      "id": "2",
+      "memberId": "M002",
+      "class": "-",
+      "division": "-",
+      "grNo": "-",
+      "role": "Employee",
+      "name": "Prerna Atre",
+      "currentIssue": 1,
+      "overdueReturn": 0,
+      "memberStatus": "0"
+    },
+    {
+      "id": "3",
+      "memberId": "M003",
+      "role": "Student",
+      "class": "12",
+      "division": "C",
+      "grNo": "G003",
+      "name": "Parth Ghusar",
+      "currentIssue": 2,
+      "overdueReturn": 0,
+      "memberStatus": "1"
+    },
+    {
+      "id": "4",
+      "memberId": "M004",
+      "role": "Student",
+      "class": "11",
+      "division": "A",
+      "grNo": "G004",
+      "name": "Mayur Solanki",
+      "currentIssue": 0,
+      "overdueReturn": 2,
+      "memberStatus": "0"
+    },
+    {
+      "id": "5",
+      "memberId": "M005",
+      "class": "9",
+      "division": "D",
+      "grNo": "G005",
+      "role": "Student",
+      "name": "Raj Baku",
+      "currentIssue": 7,
+      "overdueReturn": 0,
+      "memberStatus": "1"
+    }
+  ],
+  "roleOptions": [
+    { "value": "Student", "label": "Student" },
+    { "value": "Teacher", "label": "Teacher" },
+    { "value": "Staff", "label": "Staff" },
+    { "value": "Admin", "label": "Admin" }
+  ],
+  "classOptions": [
+    { "value": "1", "label": "1" },
+    { "value": "2", "label": "2" },
+    { "value": "3", "label": "3" },
+    { "value": "4", "label": "4" },
+    { "value": "5", "label": "5" },
+    { "value": "6", "label": "6" },
+    { "value": "7", "label": "7" },
+    { "value": "8", "label": "8" },
+    { "value": "9", "label": "9" },
+    { "value": "10", "label": "10" },
+    { "value": "11", "label": "11" },
+    { "value": "12", "label": "12" }
+  ],
+  "divisionOptions": [
+    { "value": "A", "label": "A" },
+    { "value": "B", "label": "B" },
+    { "value": "C", "label": "C" },
+    { "value": "D", "label": "D" }
+  ],
+  "studentOptions": [
+    { "value": "Dharmik Jinjala", "label": "Dharmik Jinjala" },
+    { "value": "Prerna Atre", "label": "Prerna Atre" },
+    { "value": "Parth Ghusar", "label": "Parth Ghusar" },
+    { "value": "Mayur Solanki", "label": "Mayur Solanki" },
+    { "value": "Raj Baku", "label": "Raj Baku" }
+  ],
+  "statusOptions": [
+    { "value": "Active", "label": "Active" },
+    { "value": "Inactive", "label": "Inactive" },
+    { "value": "Suspended", "label": "Suspended" }
+  ],
+  "bookCategoryOptions": [
+    { "value": "Text Book", "label": "Text Book" },
+    { "value": "Reference Book", "label": "Reference Book" },
+    { "value": "Novel", "label": "Novel" },
+    { "value": "Magazine", "label": "Magazine" },
+    { "value": "Journal", "label": "Journal" }
+  ],
+  "bookTitleOptions": [
+    { "value": "Introduction to Physics", "label": "Introduction to Physics" },
+    { "value": "Advanced Mathematics", "label": "Advanced Mathematics" },
+    { "value": "Chemistry Fundamentals", "label": "Chemistry Fundamentals" },
+    { "value": "Biology Basics", "label": "Biology Basics" },
+    { "value": "History of India", "label": "History of India" }
+  ],
+  "selectStatusOptions": [
+    { "value": "Active", "label": "Active" },
+    { "value": "Inactive", "label": "Inactive" }
+  ],
+  "mockIssuedBooks": [
+    {
+      "id": "1",
+      "bookId": "Science",
+      "bookTitle": "Introduction to Physics",
+      "issueDate": "01-09-2025",
+      "dueDate": "15-09-2025",
+      "returnDate": "14-09-2025",
+      "status": "Returned"
+    },
+    {
+      "id": "2",
+      "bookId": "Maths",
+      "bookTitle": "Advanced Mathematics",
+      "issueDate": "05-09-2025",
+      "dueDate": "19-09-2025",
+      "returnDate": null,
+      "status": "Issued"
+    },
+    {
+      "id": "3",
+      "bookId": "Chemistry",
+      "bookTitle": "Chemistry Fundamentals",
+      "issueDate": "20-08-2025",
+      "dueDate": "03-09-2025",
+      "returnDate": null,
+      "status": "Overdue"
+    }
+  ],
+  "mockReservedBooks": [
+    {
+      "id": "1",
+      "bookId": "Bio",
+      "bookTitle": "Biology Basics",
+      "reservationDate": "10-09-2025",
+      "status": "Active"
+    },
+    {
+      "id": "2",
+      "bookId": "History",
+      "bookTitle": "History of India",
+      "reservationDate": "12-09-2025",
+      "status": "Cancelled"
+    }
+  ],
+  "mockFinesCharges": [
+    {
+      "id": "1",
+      "bookTitle": "Panchtantra",
+      "amount": 50,
+      "reason": "Late return of 'Chemistry Fundamentals'",
+      "dateIssued": "04-09-2025",
+      "status": "Paid"
+    },
+    {
+      "id": "2",
+      "bookTitle": "Akbar Birbal ",
+      "amount": 30,
+      "reason": "Damaged cover of 'Advanced Mathematics'",
+      "dateIssued": "15-09-2025",
+      "status": "Unpaid"
+    }
+  ],
+   "librarySettingsData": [
+    {
+      "id": "1",
+      "chargeType": "Late Return Fee",
+      "amount": 150,
+      "createdBy": "Dharmik Jinjala",
+      "createdDate": "01-05-2025",
+      "description": "A fee charged when a borrowed book is returned after its due date."
+    },
+    {
+      "id": "2",
+      "chargeType": "Book Damage Fee",
+      "amount": 200,
+      "createdBy": "Prerna Atre",
+      "createdDate": "04-05-2025",
+      "description": "A fee imposed for returning a book in damaged condition."
+    },
+    {
+      "id": "3",
+      "chargeType": "Lost Book Fee",
+      "amount": 300,
+      "createdBy": "Dharmik Jinjala",
+      "createdDate": "06-05-2025",
+      "description": "A fee charged when a borrowed book is lost and not returned."
+    },
+    {
+      "id": "4",
+      "chargeType": "Membership Renewal",
+      "amount": 50,
+      "createdBy": "Mayur Solanki",
+      "createdDate": "08-05-2025",
+      "description": "A fee for renewing library membership for continued access."
+    },
+    {
+      "id": "5",
+      "chargeType": "Reservation Cancel",
+      "amount": 150,
+      "createdBy": "Prerna Atre",
+      "createdDate": "10-05-2025",
+      "description": "A fee charged when a reserved book is cancelled by the member."
+    }
+  ],
+  "libraryTimingData": [
+    {
+      "id": "1",
+      "day": "Monday",
+      "startTime": "10:00 AM",
+      "endTime": "06:00 PM",
+      "status": "On"
+    },
+    {
+      "id": "2",
+      "day": "Tuesday",
+      "startTime": "10:00 AM",
+      "endTime": "06:00 PM",
+      "status": "On"
+    },
+    {
+      "id": "3",
+      "day": "Wednesday",
+      "startTime": "10:00 AM",
+      "endTime": "06:00 PM",
+      "status": "On"
+    },
+    {
+      "id": "4",
+      "day": "Thursday",
+      "startTime": "10:00 AM",
+      "endTime": "06:00 PM",
+      "status": "On"
+    },
+    {
+      "id": "5",
+      "day": "Friday",
+      "startTime": "10:00 AM",
+      "endTime": "06:00 PM",
+      "status": "On"
+    },
+    {
+      "id": "6",
+      "day": "Saturday",
+      "startTime": "",
+      "endTime": "",
+      "status": "Off"
+    },
+    {
+      "id": "7",
+      "day": "Sunday",
+      "startTime": "",
+      "endTime": "",
+      "status": "Off"
+    }
+  ],
+  "borrowingReturnRulesData": [
+    {
+      "id": "1",
+      "role": "Student",
+      "maxBooksPerMonth": "",
+      "reservationLimit": ""
+    },
+    {
+      "id": "2",
+      "role": "Employee",
+      "maxBooksPerMonth": "",
+      "reservationLimit": ""
     }
   ]
 }

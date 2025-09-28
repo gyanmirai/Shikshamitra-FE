@@ -1,7 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 
-import settingsData from '../../json/library/settingsData.json';
+import settingsData from '../../../issueReturnData.json';
 
 const isDev = process.env.NODE_ENV === 'development';
 
