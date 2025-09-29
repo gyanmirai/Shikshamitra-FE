@@ -67,9 +67,13 @@ const UpcomingEvents = (props: TabComponentType) => {
     <Box height="100%" display="flex" flexDirection="column">
       {open ? (
         <CustomBreadcrumbs
-          heading="Events"
+          heading="Event Form"
           description="Create or update school events with important details, schedules, and notifications. Share event information efficiently with students, teachers, and staff."
-          links={[{ name: 'Communication', href: '/communication/dashboard' }, { name: 'Events' }]}
+          links={[
+            { name: 'Communication', href: '/communication/dashboard' },
+            { name: 'Events' },
+            { name: 'Event Form' },
+          ]}
           sx={{ px: 1, mb: 2 }}
           isBack
           onBack={() => {

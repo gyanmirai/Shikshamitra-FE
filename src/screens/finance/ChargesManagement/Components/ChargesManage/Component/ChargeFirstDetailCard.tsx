@@ -37,36 +37,24 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
             <Grid size={{ xs: 12, md: 4 }}>
               <Box display="flex" flexDirection="column" gap={2}>
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Category
-                  </Typography>
-                  <Typography variant="body1" fontWeight={500}>
-                    {charge?.category}
-                  </Typography>
+                  <Typography color="text.secondary">Category</Typography>
+                  <Typography sx={{ fontWeight: 400 }}>{charge?.category}</Typography>
                 </Box>
 
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Amount
-                  </Typography>
-                  <Typography variant="body1" fontWeight={500}>
+                  <Typography color="text.secondary">Amount</Typography>
+                  <Typography sx={{ fontWeight: 400 }}>
                     {formatNumber(charge?.amount ?? 0, 'INR')}
                   </Typography>
                 </Box>
 
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Due Date
-                  </Typography>
-                  <Typography variant="body1" fontWeight={500}>
-                    {charge?.dueDate}
-                  </Typography>
+                  <Typography color="text.secondary">Due Date</Typography>
+                  <Typography sx={{ fontWeight: 400 }}>{charge?.dueDate}</Typography>
                 </Box>
 
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Priority
-                  </Typography>
+                  <Typography color="text.secondary">Priority</Typography>
                   <Label
                     color={
                       priority.color as
@@ -90,9 +78,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
               <Box display="flex" flexDirection="column" gap={3}>
                 {/* Purpose/Description Section */}
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Purpose/Description
-                  </Typography>
+                  <Typography color="text.secondary">Purpose/Description</Typography>
                   <Box
                     sx={{
                       border: 1,
@@ -103,7 +89,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
                       backgroundColor: 'grey.50',
                     }}
                   >
-                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                    <Typography color="text.secondary" sx={{ lineHeight: 1.6 }}>
                       {charge?.description ||
                         'Annual tuition fee applicable for Class 10 students in divisions A and B.'}
                     </Typography>
@@ -112,9 +98,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
 
                 {/* Additional Details Section */}
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Additional Details
-                  </Typography>
+                  <Typography color="text.secondary">Additional Details</Typography>
                   <Box
                     sx={{
                       border: 1,
@@ -125,7 +109,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
                       backgroundColor: 'grey.50',
                     }}
                   >
-                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                    <Typography color="text.secondary" sx={{ lineHeight: 1.6 }}>
                       {charge?.additionalNotes || 'Installments allowed in two parts.'}
                     </Typography>
                   </Box>

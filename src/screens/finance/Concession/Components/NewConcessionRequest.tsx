@@ -15,15 +15,17 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { useGetConcessionTypeQuery } from 'src/redux/finance/concessionType';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
+  Box,
   Grid,
   Chip,
   Button,
   Tooltip,
-  MenuItem,
   TextField,
   IconButton,
+  Typography,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
@@ -31,26 +33,8 @@ import {
 import { concessionValidation } from './ConcessionValidation';
 import { getInitialConcessionFormData } from './ConcessionInitialValues';
 
-import type { IConcession, IConcessionDocument, IConcessionFormProps } from '../type';
-
-// Extend validation
-
-// 🔹 Mapping concession type → required documents
-const concessionDocumentsMap: Record<string, IConcessionDocument[]> = {
-  Full: [
-    { id: 1, name: 'Adhar Card', acceptedFormat: 'jpeg, png', status: 'Pending' },
-    { id: 2, name: 'Income Certificate', acceptedFormat: 'PDF', status: 'Pending' },
-  ],
-  Partial: [
-    { id: 1, name: 'Adhar Card', acceptedFormat: 'jpeg, png', status: 'Pending' },
-    { id: 2, name: 'Father Pan Card', acceptedFormat: 'jpeg, png', status: 'Pending' },
-  ],
-  Scholarship: [
-    { id: 1, name: 'Adhar Card', acceptedFormat: 'jpeg, png', status: 'Pending' },
-    { id: 2, name: 'Income Certificate', acceptedFormat: 'PDF', status: 'Pending' },
-    { id: 3, name: 'Caste Certificate', acceptedFormat: 'jpeg, png, pdf', status: 'Pending' },
-  ],
-};
+import type { IConcession, IConcessionFormProps } from '../type';
+import type { IConcessionTypeForm } from '../../settings/ConcessionTypeSetting/type';
 
 const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   open,
@@ -64,7 +48,13 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const [boards, setBoards] = useState<any[]>([]);
   const [mediums, setMediums] = useState<any[]>([]);
   const [allDivision, setAllDivision] = useState<any[]>([]);
+  // Fetch concession type data
+  const { data: concessionTypes, isLoading: concessionTypesLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetConcessionTypeQuery,
+  });
 
+  console.log('concessionTypes====', concessionTypes);
   // queries
   const [getClassByMedium, { data: classes }] = useQueryAndMutation({
     type: 'mutation',
@@ -206,7 +196,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           </Grid>
 
           {/* Student */}
-          <Grid size={12}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.studentName && formik.errors.studentName)}>
               <Autocomplete
                 loading={studentLoading}
@@ -257,148 +247,196 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             <ShakingTextField
               error={!!(formik.touched.concessionType && formik.errors.concessionType)}
             >
-              <TextField
-                select
-                fullWidth
+              <CustomSelect
                 label="Concession Type *"
-                name="concessionType"
-                size="small"
+                options={concessionTypes || []}
+                labelKey="concessionName"
+                valueKey="concessionName"
                 value={formik.values.concessionType}
-                onChange={(e) => {
-                  const selected = e.target.value;
-                  formik.setFieldValue('concessionType', selected);
+                onChange={(val) => {
+                  formik.setFieldValue('concessionType', val);
                   formik.setFieldTouched('concessionType', false);
-                  formik.setFieldValue('documents', concessionDocumentsMap[selected] || []);
+                  const concession = concessionTypes.find(
+                    (item: IConcessionTypeForm) => item.concessionName === val
+                  );
+                  formik.setFieldValue('documents', concession.documents);
+                  formik.setFieldValue('applicableFeeHeads', concession.applicableFeeHeads);
+                  formik.setFieldValue('percentage', concession.percentage);
+                  formik.setFieldValue('amount', concession.amount);
                 }}
-                error={formik.touched.concessionType && Boolean(formik.errors.concessionType)}
-                helperText={formik.touched.concessionType && formik.errors.concessionType}
+                error={!!formik.errors.concessionType && formik.touched.concessionType}
+                helperText={
+                  (formik.touched.concessionType && formik.errors.concessionType) as string
+                }
                 sx={{ mb: 2 }}
-              >
-                <MenuItem value="Full">Full Concession</MenuItem>
-                <MenuItem value="Partial">Partial Concession</MenuItem>
-                <MenuItem value="Scholarship">Scholarship</MenuItem>
-              </TextField>
+              />
             </ShakingTextField>
           </Grid>
-        </Grid>
 
-        {formik.values.concessionType && (
-          <CustomizableTable
-            tableId="documents"
-            columns={[
-              { id: 'name', label: 'Name' },
-              { id: 'acceptedFormat', label: 'Accepted Format', align: 'left' },
-              {
-                id: 'status',
-                label: 'Status',
-                isSort: false,
-                align: 'left',
-                isFilter: false,
-                render: (value, row) => (
-                  <Tooltip title={row.status}>
-                    <Iconify
-                      icon={row.status === 'Uploaded' ? 'mdi:approve' : 'mage:file-cross-fill'}
-                      height={20}
-                      width={20}
-                      sx={{
-                        color: (theme) =>
-                          row.status === 'Uploaded' ? 'success.main' : theme.vars.palette.grey[500],
-                        cursor: 'pointer',
-                      }}
-                    />
-                  </Tooltip>
-                ),
-              },
-              {
-                id: 'upload',
-                label: 'Upload',
-                isFilter: false,
-                isSort: false,
-                align: 'left',
-                render: (value, row) => (
-                  <IconButton
-                    component="label"
-                    sx={{
-                      textAlign: 'left',
-                      marginLeft: '0px',
-                      padding: '0px',
-                      justifyContent: 'flex-start',
-                      display: 'flex',
-                    }}
-                  >
-                    <input
-                      type="file"
-                      hidden
-                      onChange={(e) => {
-                        const file = e.currentTarget.files?.[0];
-                        if (file) {
-                          formik.setFieldValue(
-                            'documents',
-                            formik.values.documents.map((d) =>
-                              d.id === row.id ? { ...d, file, status: 'Uploaded' } : d
-                            )
-                          );
-                        }
-                      }}
-                    />
-                    <Iconify icon="ci:file-upload" />
-                  </IconButton>
-                ),
-              },
-              {
-                id: 'view',
-                label: 'View',
-                isFilter: false,
-                align: 'left',
-                isSort: false,
-                render: (value, row) =>
-                  row.file && (
-                    <IconButton
-                      style={{
-                        textAlign: 'left',
-                        marginLeft: '0px',
-                        padding: '0px',
-                        justifyContent: 'flex-start',
-                        display: 'flex',
-                      }}
-                      onClick={() => window.open(URL.createObjectURL(row.file), '_blank')}
-                    >
-                      <Iconify icon="carbon:view-filled" />
-                    </IconButton>
-                  ),
-              },
-              {
-                id: 'download',
-                label: 'Download',
-                isFilter: false,
-                align: 'left',
-                isSort: false,
-                render: (value, row) =>
-                  row.file && (
-                    <IconButton
-                      style={{
-                        textAlign: 'left',
-                        marginLeft: '0px',
-                        padding: '0px',
-                        justifyContent: 'flex-start',
-                        display: 'flex',
-                      }}
-                      onClick={() => {
-                        const url = URL.createObjectURL(row.file);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = row.name;
-                        link.click();
-                      }}
-                    >
-                      <Iconify icon="material-symbols:download" width={20} height={20} />
-                    </IconButton>
-                  ),
-              },
-            ]}
-            data={formik.values.documents}
-          />
-        )}
+          {formik.values.concessionType && (
+            <>
+              <Grid size={{ xs: 12 }}>
+                <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
+                  <Grid container spacing={2}>
+                    {/* Applicable Fee Head */}
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Applicable Fee Head
+                      </Typography>
+                      <Typography variant="body1" fontWeight="400">
+                        {Array.isArray(formik.values.applicableFeeHeads)
+                          ? formik.values.applicableFeeHeads.join(', ')
+                          : formik.values.applicableFeeHeads || '-'}
+                      </Typography>
+                    </Grid>
+
+                    {/* Amount */}
+                    {formik.values.amount && (
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Amount
+                        </Typography>
+                        <Typography variant="body1" fontWeight="400">
+                          {formik.values.amount}
+                        </Typography>
+                      </Grid>
+                    )}
+
+                    {/* Percentage */}
+                    {formik.values.percentage && (
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Percentage
+                        </Typography>
+                        <Typography variant="body1" fontWeight="400">
+                          {formik.values.percentage}%
+                        </Typography>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Box>
+              </Grid>
+
+              <CustomizableTable
+                tableId="documents"
+                columns={[
+                  { id: 'documentName', label: 'Name' },
+                  { id: 'acceptedFormat', label: 'Accepted Format', align: 'left' },
+                  {
+                    id: 'status',
+                    label: 'Status',
+                    isSort: false,
+                    align: 'left',
+                    isFilter: false,
+                    render: (value, row) => (
+                      <Tooltip title={row.status}>
+                        <Iconify
+                          icon={row.status === 'Uploaded' ? 'mdi:approve' : 'mage:file-cross-fill'}
+                          height={20}
+                          width={20}
+                          sx={{
+                            color: (theme) =>
+                              row.status === 'Uploaded'
+                                ? 'success.main'
+                                : theme.vars.palette.grey[500],
+                            cursor: 'pointer',
+                          }}
+                        />
+                      </Tooltip>
+                    ),
+                  },
+                  {
+                    id: 'upload',
+                    label: 'Upload',
+                    isFilter: false,
+                    isSort: false,
+                    align: 'left',
+                    render: (value, row) => (
+                      <IconButton
+                        component="label"
+                        sx={{
+                          textAlign: 'left',
+                          marginLeft: '0px',
+                          padding: '0px',
+                          justifyContent: 'flex-start',
+                          display: 'flex',
+                        }}
+                      >
+                        <input
+                          type="file"
+                          hidden
+                          onChange={(e) => {
+                            const file = e.currentTarget.files?.[0];
+                            if (file) {
+                              formik.setFieldValue(
+                                'documents',
+                                formik.values.documents.map((d) =>
+                                  d.id === row.id ? { ...d, file, status: 'Uploaded' } : d
+                                )
+                              );
+                            }
+                          }}
+                        />
+                        <Iconify icon="ci:file-upload" />
+                      </IconButton>
+                    ),
+                  },
+                  {
+                    id: 'view',
+                    label: 'View',
+                    isFilter: false,
+                    align: 'left',
+                    isSort: false,
+                    render: (value, row) =>
+                      row.file && (
+                        <IconButton
+                          style={{
+                            textAlign: 'left',
+                            marginLeft: '0px',
+                            padding: '0px',
+                            justifyContent: 'flex-start',
+                            display: 'flex',
+                          }}
+                          onClick={() => window.open(URL.createObjectURL(row.file), '_blank')}
+                        >
+                          <Iconify icon="carbon:view-filled" />
+                        </IconButton>
+                      ),
+                  },
+                  {
+                    id: 'download',
+                    label: 'Download',
+                    isFilter: false,
+                    align: 'left',
+                    isSort: false,
+                    render: (value, row) =>
+                      row.file && (
+                        <IconButton
+                          style={{
+                            textAlign: 'left',
+                            marginLeft: '0px',
+                            padding: '0px',
+                            justifyContent: 'flex-start',
+                            display: 'flex',
+                          }}
+                          onClick={() => {
+                            const url = URL.createObjectURL(row.file);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = row.documentName;
+                            link.click();
+                          }}
+                        >
+                          <Iconify icon="material-symbols:download" width={20} height={20} />
+                        </IconButton>
+                      ),
+                  },
+                ]}
+                data={formik.values.documents}
+              />
+            </>
+          )}
+        </Grid>
       </DialogScrollContent>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>

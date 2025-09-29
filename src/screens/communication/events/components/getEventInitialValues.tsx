@@ -25,10 +25,24 @@ export const getEventInitialValues = (initialValues: IEventAnnouncement | null) 
   onlineLink: initialValues?.onlineLink || '',
   venue: initialValues?.venue || '',
 
+  // Recurring
   isRecurring: initialValues?.isRecurring || false,
   repeatFrequency: initialValues?.repeatFrequency || '',
   meetingDate: initialValues?.meetingDate ? dayjs(initialValues.meetingDate) : dayjs(),
   meetingTime: initialValues?.meetingTime ? dayjs(initialValues.meetingTime) : null,
   repeatUntil: initialValues?.repeatUntil ? dayjs(initialValues.repeatUntil) : null,
   day: initialValues?.day || '',
+
+  // Custom recurrence
+  customInterval: initialValues?.customInterval || '', // 'days' | 'weeks' | 'months'
+  customIntervalCount: initialValues?.customIntervalCount ?? 1,
+  customDays: initialValues?.customDays || [],
+
+  // Monthly-specific (Teams-like) options
+  monthlyOption: initialValues?.monthlyOption || 'onDay', // 'onDay' | 'onThe'
+  onDay:
+    initialValues?.onDay ??
+    (initialValues?.meetingDate ? dayjs(initialValues.meetingDate).date() : dayjs().date()),
+  onTheWeek: initialValues?.onTheWeek || 'First', // First/Second/Third/Fourth/Last
+  onTheDay: initialValues?.onTheDay || 'Monday',
 });

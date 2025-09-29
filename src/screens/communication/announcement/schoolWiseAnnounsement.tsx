@@ -15,13 +15,13 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetSchoolWiseAnnouncementsQuery } from 'src/redux/communication/announcement/schoolWiseAnnouncement';
 import {
   Box,
   Card,
   Button,
   // eslint-disable-next-line import/no-duplicates
 } from '@mui/material';
+import { useGetSchoolWiseAnnouncementsQuery } from 'src/redux/communication/announcement/schoolWiseAnnouncement';
 
 import AnnouncementForm from './schoolannouncementForm';
 import SchoolWiseAnnouncementTable from './components/schoolWiseAnnouncementTable';
@@ -46,7 +46,9 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
   // Controls the visibility of view announcement dialog
   const view_dialog = useBoolean();
   // Stores the ID of announcement to be deleted
-  const [deleteAnnouncement, setDeleteAnnouncement] = useState('');
+  const [deleteAnnouncement, setDeleteAnnouncement] = useState<ISchoolWiseAnnouncement | null>(
+    null
+  );
   // Controls the visibility of delete confirmation dialog
   const confirm_dialog = useBoolean();
   // Controls the visibility of publish modal
@@ -146,9 +148,9 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           handleSwitchChange={(row) => {
             setEditingAnnouncement(row);
           }}
-          onDelete={(id) => {
+          onDelete={(row) => {
             confirm_dialog.onTrue();
-            setDeleteAnnouncement(id);
+            setDeleteAnnouncement(row);
           }}
           onView={(row) => {
             view_dialog.onTrue();
@@ -164,13 +166,29 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
       <ConfirmDialog
         open={confirm_dialog.value}
         onClose={() => {
-          setDeleteAnnouncement('');
+          setDeleteAnnouncement(null);
           confirm_dialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete announcement{' '}
+            <strong>{deleteAnnouncement?.title}</strong>?
+          </>
+        }
         action={
-          <Button variant="contained" color="error" onClick={() => {}} size="small">
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              confirm_dialog.onFalse();
+              setDeleteAnnouncement(null);
+              shikshaMitraToast.success({
+                message: `Announcement ${deleteAnnouncement?.title} deleted successfully.`,
+              });
+            }}
+            size="small"
+          >
             Yes
           </Button>
         }
@@ -195,8 +213,9 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
               publish_modal.onFalse();
+              setPublishingAnnouncement(null);
               shikshaMitraToast.success({
-                message: `Announcement "${publishingAnnouncement?.title}" published successfully.`,
+                message: `Announcement : ${publishingAnnouncement?.title} published successfully.`,
               });
             }}
             size="small"

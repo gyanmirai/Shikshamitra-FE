@@ -1,11 +1,20 @@
 'use client';
 
+import type { LabelColor } from 'src/components/label';
+
+import dayjs from 'dayjs';
 import React, { useCallback } from 'react';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Avatar, MenuList, MenuItem } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Avatar, MenuList, MenuItem, Typography } from '@mui/material';
+import {
+  ConcessionStatusType,
+  ConcessionStatusOptions,
+  ConcessionStatusTypeColors,
+} from 'src/enums/concession-status-type';
 
 import type { IStudentInfo } from '../type';
 import type { IViewConcessionRequestProps } from '../../ConcessionAdmin/type';
@@ -74,10 +83,20 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
           minWidth: 120,
         },
         {
-          id: 'parentName',
-          label: 'Parent Name',
+          id: 'concession.concessionType',
+          label: 'Concession Type',
+          align: 'left',
+          minWidth: '180px',
+        },
+        {
+          id: 'requestDate',
+          label: 'Request Date',
           align: 'left',
           minWidth: 150,
+          filterType: 'date',
+          render: (value) => (
+            <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+          ),
         },
         {
           id: 'email',
@@ -91,10 +110,18 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
           minWidth: 150,
         },
         {
-          id: 'concessionType',
-          label: 'Concession Type',
+          id: 'status',
+          label: 'Status',
           align: 'left',
-          minWidth: '180px',
+          minWidth: 120,
+          sticky: true,
+          filterType: 'enum',
+          enumOptions: ConcessionStatusOptions,
+          render: (value) => {
+            if (value === undefined || value === null) return '-';
+            const color = ConcessionStatusTypeColors[value as ConcessionStatusType] as LabelColor;
+            return <Label color={color}>{ConcessionStatusType[value]}</Label>;
+          },
         },
         {
           id: 'actions',

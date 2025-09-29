@@ -145,7 +145,7 @@ export interface ISchoolWiseAnnouncementTableProps {
   data: ISchoolWiseAnnouncement[];
   onEdit: (row: ISchoolWiseAnnouncement) => void;
   handleSwitchChange: (row: ISchoolWiseAnnouncement) => void;
-  onDelete: (id: string) => void;
+  onDelete: (row: ISchoolWiseAnnouncement) => void;
   onView: (row: ISchoolWiseAnnouncement) => void;
   onPublish: (row: ISchoolWiseAnnouncement) => void;
 }
@@ -154,7 +154,7 @@ export interface IClassWiseAnnouncementTableProps {
   data: IClassWiseAnnouncement[];
   onEdit: (row: IClassWiseAnnouncement) => void;
   handleSwitchChange: (row: IClassWiseAnnouncement) => void;
-  onDelete: (id: string) => void;
+  onDelete: (row: IClassWiseAnnouncement) => void;
   onView: (row: IClassWiseAnnouncement) => void;
   onPublish: (row: IClassWiseAnnouncement) => void;
 }

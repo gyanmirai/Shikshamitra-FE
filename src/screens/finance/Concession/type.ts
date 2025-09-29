@@ -6,12 +6,17 @@ export interface IConcession {
   className: string;
   division: string;
   studentName: string;
+  concessionName?: string;
   concessionType: string;
   reason: string;
   feeHead: string;
   documentStatus?: number;
   documents: IConcessionDocument[];
   status?: number; // e.g., Pending / Approved / Rejected
+  amount?: number; // required if type = "fixed"
+  percentage?: number;
+  documentRequired?: boolean;
+  applicableFeeHeads?: string[];
 }
 
 export interface IStudentInfo {
@@ -23,6 +28,8 @@ export interface IStudentInfo {
   parentNaforme: string; // typo? maybe parentName?
   grNo: string;
   parentName: string;
+  applicableFeeHeads: string[];
+  documentRequired: boolean;
   email: string;
   avatarUrl?: string;
   boardMedium?: string;
@@ -30,7 +37,10 @@ export interface IStudentInfo {
   reason?: string;
   status?: number;
   totalConcession: number;
+  concession?: IConcession;
   concessions?: IConcession[]; // 👈 multiple concessions
+  amount?: number; // required if type = "fixed"
+  percentage?: number;
 }
 
 export interface IConcessionDocument {

@@ -7,9 +7,6 @@ export const schoolWiseValidationSchema = (currentYear: any) =>
       .required('Title is required')
       .min(3, 'Title must be at least 3 characters long'),
     type: Yup.string().required('Announcement Type is required'),
-    description: Yup.string()
-      .required('Description is required')
-      .min(10, 'Description must be at least 10 characters long'),
 
     status: Yup.string().required('Status is required'),
 
@@ -88,7 +85,6 @@ export const classWiseValidationSchema = (currentYear: any) =>
   Yup.object().shape({
     title: Yup.string().required('Title is required'),
     type: Yup.string().required('Announcement Type is required'),
-    description: Yup.string().required('Description is required'),
     organizations: Yup.array().min(1, 'At least one organization is required'),
     audience: Yup.array().min(1, 'At least one audience is required'),
     classes: Yup.array().min(1, 'At least one class must be selected'),

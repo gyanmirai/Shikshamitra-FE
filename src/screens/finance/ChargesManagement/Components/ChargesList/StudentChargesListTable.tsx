@@ -1,0 +1,169 @@
+import type { LabelColor } from 'src/components/label';
+
+import dayjs from 'dayjs';
+import React, { useCallback } from 'react';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { formatNumber } from 'src/utils/formate_number';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Grid, MenuItem, MenuList, Typography } from '@mui/material';
+import {
+  ChargesPaymentStatus,
+  ChargesPaymentStatusColors,
+  ChargesPaymentStatusOptions,
+} from 'src/enums/fee-charges-status';
+
+import type { IChargeData, IStudentChargeData } from '../ChargesManage/Component/type';
+
+const ViewStudentAllCharges = ({
+  data,
+  onDelete,
+}: {
+  data: IStudentChargeData;
+  onDelete: (charge: IChargeData) => void;
+}) => {
+  // row actions
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <MenuList>
+        <MenuItem
+          onClick={() => {
+            onDelete?.(row as IChargeData);
+            pop.onClose();
+          }}
+        >
+          <Iconify icon={GlobalIcons.cancel} />
+          Remove
+        </MenuItem>
+      </MenuList>
+    ),
+    [onDelete]
+  );
+
+  return (
+    <Scrollbar sx={{ height: '500px', p: 2 }}>
+      {/* Student Info */}
+      <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, mb: 2 }}>
+        <Typography variant="h6" mb={2} color="primary.main">
+          Student Information
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 3 }}>
+            <Typography color="text.secondary">Student Name</Typography>
+            <Typography sx={{ fontWeight: 300 }}>{data?.studentName || '-'}</Typography>
+          </Grid>
+
+          <Grid size={{ xs: 3 }}>
+            <Typography color="text.secondary">Roll No.</Typography>
+            <Typography sx={{ fontWeight: 300 }}>{data?.rollNo || '-'}</Typography>
+          </Grid>
+
+          <Grid size={{ xs: 3 }}>
+            <Typography color="text.secondary">GR No.</Typography>
+            <Typography sx={{ fontWeight: 300 }}>{data?.grNo || '-'}</Typography>
+          </Grid>
+
+          <Grid size={{ xs: 3 }}>
+            <Typography color="text.secondary">Class/Division</Typography>
+            <Typography
+              sx={{ fontWeight: 300 }}
+            >{`${data?.class || '-'} / ${data?.division || '-'}`}</Typography>
+          </Grid>
+        </Grid>
+      </Box>
+      <Typography variant="h6" ml={2} mb={1} color="primary.main">
+        Concession List
+      </Typography>
+      {/* Charges Table */}
+      <CustomizableTable
+        tableId="charges-table"
+        noDataText="No charges found"
+        columns={[
+          {
+            id: 'category',
+            label: 'Category',
+            align: 'left',
+            minWidth: 150,
+          },
+          {
+            id: 'description',
+            label: 'Description',
+            align: 'left',
+            minWidth: 220,
+            render: (value) => (
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                {value}
+              </Typography>
+            ),
+          },
+          {
+            id: 'amount',
+            label: 'Amount',
+            align: 'left',
+            minWidth: 120,
+            render(value, row) {
+              return <Typography fontSize="13px">{formatNumber(row.amount, 'INR')}</Typography>;
+            },
+          },
+          {
+            id: 'dueDate',
+            label: 'Due Date',
+            align: 'left',
+            filterType: 'date',
+            minWidth: 120,
+            render: (value) => (
+              <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+            ),
+          },
+          {
+            id: 'priority',
+            label: 'Priority',
+            align: 'left',
+            minWidth: 100,
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            align: 'left',
+            filterType: 'enum',
+            enumOptions: ChargesPaymentStatusOptions,
+            sticky: true,
+            render(value, row) {
+              const color = ChargesPaymentStatusColors[value as ChargesPaymentStatus] as LabelColor;
+              return (
+                <Label
+                  color={
+                    color as 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info'
+                  }
+                >
+                  {ChargesPaymentStatus[value as ChargesPaymentStatus]}
+                </Label>
+              );
+            },
+          },
+          {
+            id: 'actions',
+            label: 'Action',
+            align: 'left',
+            isSort: false,
+            isFilter: false,
+            sticky: true,
+            minWidth: 40,
+            render: (value, row) => (
+              <ThreeDotsActions
+                placement="right-center"
+                actions={(prop) => actions({ ...prop, row })}
+              />
+            ),
+          },
+        ]}
+        data={data?.charges || []}
+      />
+    </Scrollbar>
+  );
+};
+
+export default ViewStudentAllCharges;

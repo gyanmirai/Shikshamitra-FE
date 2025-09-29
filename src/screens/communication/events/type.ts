@@ -39,27 +39,39 @@ export interface IEventAnnouncement {
   organizations: string[]; // newly added
   classes: string[]; // newly added
   divisions: string[]; // newly added
-  startDate: Dayjs | string | null;
-  endDate: Dayjs | string | null;
+  startDate: string | null;
+  endDate: string | null;
   createdBy: string;
   duration: number;
-  createdOn: Dayjs | string | null; // fixed typo
+  createdOn: string | null; // fixed typo
   status: number;
   type: string;
   attachment: File | null;
   importance_level?: string;
   link: string;
   active?: number;
-  eventMode: 'offline' | 'online'; // fixed union type
-  onlineLink?: string; // for online events
-  venue?: string; // for offline events
+  eventMode: string; // was 'offline' | 'online'
+  onlineLink?: string;
+  venue?: string;
 
+  // recurrence
   isRecurring: boolean;
-  repeatFrequency?: string; // e.g., Daily, Weekly, Monthly
-  meetingDate: string | Dayjs | null;
-  meetingTime: string | Dayjs | null;
-  repeatUntil?: string | Dayjs | number;
-  day?: string; // e.g., Monday, Tuesday
+  repeatFrequency?: string; // Daily, Weekly, Monthly, Custom
+  meetingDate: string | null;
+  meetingTime: string | null;
+  repeatUntil?: string | number;
+  day?: string;
+
+  // custom recurrence fields
+  customInterval?: string; // days, weeks, months
+  customIntervalCount?: number;
+  customDays?: string[]; // for weekly
+
+  // monthly recurrence
+  monthlyOption?: string; // onDay, onThe
+  onDay?: number;
+  onTheWeek?: string; // First, Second, Third, Fourth, Last
+  onTheDay?: string; // Day, Weekday, Weekend, Monday...Sunday
 }
 
 /**

@@ -7,6 +7,8 @@ import React from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { DateTimePicker } from '@mui/x-date-pickers';
@@ -47,6 +49,8 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
   isEdit = false,
   onClose,
 }) => {
+  const theme = useTheme();
+
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Roles API
   const { data, isLoading } = useQueryAndMutation({
@@ -60,6 +64,8 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
       onClose(null, true);
     },
   });
+  console.log('formik---', formik.errors);
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
@@ -116,7 +122,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                 <Grid size={{ xs: 12, md: 6, sm: 3 }}>
                   <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                     <CustomSelect
-                      label="Select Audience *"
+                      label="Audience *"
                       options={audienceOptions}
                       multiple
                       value={formik.values.audience.map((aud) => aud.name)} // show only names in the UI
@@ -163,29 +169,26 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.description && formik.errors.description)}
-                  >
-                    {/* <Editor
-                      value={formik.values.description}
-                      onChange={(value) => {
-                        formik.setFieldValue('description', value);
-                      }}
-                      placeholder="Description *"
-                      sx={{
-                        border: `1px solid ${theme.vars.palette.grey[500]}`,
-                        borderRadius: 1,
-                        '&:hover': { borderColor: theme.vars.palette.text.primary },
-                        ...(!!formik.errors.description && {
+                  <Editor
+                    value={formik.values.description}
+                    onChange={(value) => {
+                      formik.setFieldValue('description', value);
+                    }}
+                    placeholder="Description"
+                    sx={{
+                      border: `1px solid ${theme.vars.palette.grey[500]}`,
+                      borderRadius: 1,
+                      '&:hover': { borderColor: theme.vars.palette.text.primary },
+                      ...(!!formik.touched.description &&
+                        !!formik.errors.description && {
                           borderColor: theme.palette.error.main,
                         }),
-                        '&:focus-within': {
-                          borderColor: theme.vars.palette.text.primary,
-                          borderWidth: 2,
-                        },
-                      }}
-                    /> */}
-                  </ShakingTextField>
+                      '&:focus-within': {
+                        borderColor: theme.vars.palette.text.primary,
+                        borderWidth: 2,
+                      },
+                    }}
+                  />
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>

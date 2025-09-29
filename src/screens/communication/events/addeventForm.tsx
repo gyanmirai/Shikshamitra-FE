@@ -20,6 +20,7 @@ import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/Inform
 import {
   Box,
   Grid,
+  Radio,
   Button,
   Switch,
   TextField,
@@ -296,6 +297,187 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
             </Grid>
           </>
         );
+
+      case 'Custom':
+        return (
+          <>
+            {/* Repeat every */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField
+                error={!!(formik.touched.customInterval && formik.errors.customInterval)}
+              >
+                <CustomSelect
+                  label="Repeat Every"
+                  options={[
+                    { value: 'days', label: 'Day(s)' },
+                    { value: 'weeks', label: 'Week(s)' },
+                    { value: 'months', label: 'Month(s)' },
+                  ]}
+                  value={formik.values.customInterval}
+                  onChange={(val) => formik.setFieldValue('customInterval', val)}
+                  formControlProps={{ fullWidth: true }}
+                  error={formik.touched.customInterval && Boolean(formik.errors.customInterval)}
+                  helperText={
+                    formik.touched.customInterval &&
+                    typeof formik.errors.customInterval === 'string'
+                      ? formik.errors.customInterval
+                      : undefined
+                  }
+                />
+              </ShakingTextField>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                label="Interval *"
+                value={formik.values.customIntervalCount || ''}
+                onChange={(e) => formik.setFieldValue('customIntervalCount', e.target.value)}
+                error={
+                  formik.touched.customIntervalCount && Boolean(formik.errors.customIntervalCount)
+                }
+                helperText={formik.touched.customIntervalCount && formik.errors.customIntervalCount}
+              />
+            </Grid>
+
+            {/* For weekly custom, show days */}
+            {formik.values.customInterval === 'weeks' && (
+              <Grid size={{ xs: 12 }}>
+                <CustomSelect
+                  label="Select Days"
+                  multiple
+                  options={[
+                    { value: 'Monday', label: 'Monday' },
+                    { value: 'Tuesday', label: 'Tuesday' },
+                    { value: 'Wednesday', label: 'Wednesday' },
+                    { value: 'Thursday', label: 'Thursday' },
+                    { value: 'Friday', label: 'Friday' },
+                    { value: 'Saturday', label: 'Saturday' },
+                    { value: 'Sunday', label: 'Sunday' },
+                  ]}
+                  value={formik.values.customDays || []}
+                  onChange={(val) => formik.setFieldValue('customDays', val)}
+                  formControlProps={{ fullWidth: true }}
+                />
+              </Grid>
+            )}
+
+            {/* For monthly custom, show "On day" OR "On the" */}
+            {formik.values.customInterval === 'months' && (
+              <>
+                {/* On Day Option */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <FormControlLabel
+                    value="onDay"
+                    control={<Radio />}
+                    label="On day"
+                    checked={formik.values.monthlyOption === 'onDay'}
+                    onChange={() => formik.setFieldValue('monthlyOption', 'onDay')}
+                  />
+                </Grid>
+                {formik.values.monthlyOption === 'onDay' && (
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                      size="small"
+                      name="onDay"
+                      type="number"
+                      label="On Day *"
+                      fullWidth
+                      value={formik.values.onDay ?? dayjs(formik.values.meetingDate).date()}
+                      onChange={(e) => formik.setFieldValue('onDay', e.target.value)}
+                    />
+                  </Grid>
+                )}
+
+                {/* On The Option */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <FormControlLabel
+                    value="onThe"
+                    control={<Radio />}
+                    label="On the"
+                    checked={formik.values.monthlyOption === 'onThe'}
+                    onChange={() => formik.setFieldValue('monthlyOption', 'onThe')}
+                  />
+                </Grid>
+                {formik.values.monthlyOption === 'onThe' && (
+                  <>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <CustomSelect
+                        options={[
+                          { value: 'First', label: 'First' },
+                          { value: 'Second', label: 'Second' },
+                          { value: 'Third', label: 'Third' },
+                          { value: 'Fourth', label: 'Fourth' },
+                          { value: 'Last', label: 'Last' },
+                        ]}
+                        label="On Week *"
+                        value={formik.values.onTheWeek || 'First'}
+                        onChange={(val) => formik.setFieldValue('onTheWeek', val)}
+                        formControlProps={{ fullWidth: true }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <CustomSelect
+                        options={[
+                          { value: 'Monday', label: 'Monday' },
+                          { value: 'Tuesday', label: 'Tuesday' },
+                          { value: 'Wednesday', label: 'Wednesday' },
+                          { value: 'Thursday', label: 'Thursday' },
+                          { value: 'Friday', label: 'Friday' },
+                          { value: 'Saturday', label: 'Saturday' },
+                          { value: 'Sunday', label: 'Sunday' },
+                        ]}
+                        label="On Day *"
+                        value={formik.values.onTheDay || 'Monday'}
+                        onChange={(val) => formik.setFieldValue('onTheDay', val)}
+                        formControlProps={{ fullWidth: true }}
+                      />
+                    </Grid>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* Meeting time */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TimePicker
+                label="Meeting Time *"
+                format="HH:mm"
+                value={formik.values.meetingTime}
+                onChange={(newValue) => formik.setFieldValue('meetingTime', newValue)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: formik.touched.meetingTime && Boolean(formik.errors.meetingTime),
+                    helperText: formik.touched.meetingTime && formik.errors.meetingTime,
+                  },
+                }}
+              />
+            </Grid>
+
+            {/* Repeat Until */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <DatePicker
+                label="Last Date *"
+                value={formik.values.repeatUntil}
+                format="DD/MM/YYYY"
+                onChange={(newValue) => formik.setFieldValue('repeatUntil', newValue)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: 'small',
+                    error: formik.touched.repeatUntil && Boolean(formik.errors.repeatUntil),
+                    helperText: formik.touched.repeatUntil && formik.errors.repeatUntil,
+                  },
+                }}
+              />
+            </Grid>
+          </>
+        );
+
       default:
         return null;
     }
@@ -503,6 +685,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                             { value: 'Daily', label: 'Daily' },
                             { value: 'Weekly', label: 'Weekly' },
                             { value: 'Monthly', label: 'Monthly' },
+                            { value: 'Custom', label: 'Custom' },
                           ]}
                           value={formik.values.repeatFrequency}
                           onChange={(val) => {

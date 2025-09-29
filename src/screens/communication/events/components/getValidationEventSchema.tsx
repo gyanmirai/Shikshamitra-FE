@@ -129,14 +129,58 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
       then: (schema) => schema,
       otherwise: (schema) => schema.nullable(),
     }),
+
     repeatFrequency: Yup.string().when(['type', 'isRecurring'], {
       is: (type: string, isRecurring: boolean) => type === 'meeting' && isRecurring === true,
       then: (schema) => schema.required('Repeat frequency is required'),
       otherwise: (schema) => schema.nullable(),
     }),
+
     repeatUntil: Yup.mixed().when(['type', 'isRecurring'], {
       is: (type: string, isRecurring: boolean) => type === 'meeting' && isRecurring === true,
       then: (schema) => schema.required('Repeat until date is required'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+
+    // 🔁 Custom recurrence validation
+    customInterval: Yup.string().when(['type', 'isRecurring', 'repeatFrequency'], {
+      is: (type: string, isRecurring: boolean, repeatFrequency: string) =>
+        type === 'meeting' && isRecurring && repeatFrequency === 'Custom',
+      then: (schema) =>
+        schema
+          .oneOf(['days', 'weeks', 'months'], 'Invalid interval type')
+          .required('Repeat Every is required'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+
+    customIntervalCount: Yup.number().when(['type', 'isRecurring', 'repeatFrequency'], {
+      is: (type: string, isRecurring: boolean, repeatFrequency: string) =>
+        type === 'meeting' && isRecurring && repeatFrequency === 'Custom',
+      then: (schema) =>
+        schema.required('Interval count is required').min(1, 'Interval must be at least 1'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+
+    customDays: Yup.array().when(['type', 'isRecurring', 'repeatFrequency', 'customInterval'], {
+      is: (type: string, isRecurring: boolean, repeatFrequency: string, customInterval: string) =>
+        type === 'meeting' &&
+        isRecurring &&
+        repeatFrequency === 'Custom' &&
+        customInterval === 'weeks',
+      then: (schema) =>
+        schema
+          .of(
+            Yup.string().oneOf([
+              'Monday',
+              'Tuesday',
+              'Wednesday',
+              'Thursday',
+              'Friday',
+              'Saturday',
+              'Sunday',
+            ])
+          )
+          .min(1, 'At least one day must be selected'),
       otherwise: (schema) => schema.nullable(),
     }),
   });

@@ -97,6 +97,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
         const html = _editor.getHTML();
         onChange?.(html);
       },
+      immediatelyRender: false,
       ...other,
     });
 
