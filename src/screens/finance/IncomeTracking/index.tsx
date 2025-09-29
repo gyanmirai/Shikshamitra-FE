@@ -58,11 +58,16 @@ const IncomeTracking = () => {
     }
   };
 
+  const handleViewDialogClose = () => {
+    setSelectedIncome(null);
+    viewIncomeDialog.onFalse();
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {addIncomeDialog.value ? (
         <CustomBreadcrumbs
-          heading="Income Tracking"
+          heading={selectedIncome ? 'Update Income Tracking ' : 'Add Income Tracking '}
           description={
             selectedIncome
               ? 'Update income record details such as source, date, amount, and category to maintain accurate income tracking.'
@@ -72,8 +77,15 @@ const IncomeTracking = () => {
           onBack={() => handleClose(null, false)}
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Setting', href: '/finance/setting' },
-            { name: 'Income Tracking', href: '/finance/income-tracking' },
+            {
+              name: 'Income Tracking',
+              href: '/finance/income-tracking',
+              onClick: () => {
+                addIncomeDialog.onFalse();
+                setSelectedIncome(null);
+              },
+            },
+            { name: selectedIncome ? 'Update Income Tracking ' : 'Add Income Tracking ' },
           ]}
           sx={{ px: 1, mb: 2 }}
         />
@@ -83,7 +95,6 @@ const IncomeTracking = () => {
           description="This screen displays all income categories with the option to view detailed entries under each category and add new income records."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Setting', href: '/finance/setting' },
             { name: 'Income Tracking', href: '/finance/income-tracking' },
           ]}
           action={
@@ -183,12 +194,13 @@ const IncomeTracking = () => {
           setSelectedIncome(null);
           viewIncomeDialog.onFalse();
         }}
-        maxWidth="sm"
+        maxWidth="md"
       >
         <ViewIncomeData
           viewIncomeDialog={viewIncomeDialog}
           incomeData={selectedIncome}
           incomeDetailedData={incomeDetailedData}
+          onClose={handleViewDialogClose}
         />
       </CustomDialog>
     </Box>

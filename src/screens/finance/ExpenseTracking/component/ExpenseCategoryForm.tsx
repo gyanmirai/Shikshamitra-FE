@@ -361,8 +361,6 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                     label="Date *"
                     value={dayjs(formik.values.date)}
                     onChange={(newValue) => formik.setFieldValue('date', newValue)}
-                    maxDate={dayjs()}
-                    minDate={dayjs()}
                     format="DD-MM-YYYY"
                     slotProps={{
                       textField: {

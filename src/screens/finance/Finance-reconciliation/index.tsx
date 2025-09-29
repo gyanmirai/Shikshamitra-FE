@@ -204,7 +204,7 @@ const FinanceReconciliation = () => {
         heading="Reconciliation"
         description="This section helps you compare recorded transactions with bank statements to ensure financial records match, quickly identify matched, unmatched, and discrepant transactions."
         links={[
-          { name: 'Finance', href: '/finance' },
+          { name: 'Finance', href: '/finance/dashboard/' },
           { name: 'Reconciliation', href: '/finance/reconciliation' },
         ]}
       />

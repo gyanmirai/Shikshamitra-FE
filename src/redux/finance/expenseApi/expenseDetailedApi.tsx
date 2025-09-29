@@ -14,6 +14,9 @@ export const expenseDetailsApi = createApi({
         if (url === '/detailedExpenseData') {
           return { data: expenseDetailsData.detailedExpenseData };
         }
+        if (url === '/expenseListData') {
+          return { data: expenseDetailsData.expenseListData };
+        }
         if (url === '/expenseOptions') {
           return {
             data: expenseDetailsData.expenseOptions,
@@ -40,6 +43,13 @@ export const expenseDetailsApi = createApi({
       }),
       providesTags: ['ExpenseDetails'],
     }),
+    getExpenseList: builder.query({
+      query: () => ({
+        url: '/expenseListData',
+        method: 'GET',
+      }),
+      providesTags: ['ExpenseDetails'],
+    }),
     getExpenseOptions: builder.query({
       query: () => ({
         url: '/expenseOptions',
@@ -60,5 +70,6 @@ export const expenseDetailsApi = createApi({
 export const {
   useGetExpenseDetailsQuery,
   useGetExpenseOptionsQuery,
+  useGetExpenseListQuery,
   useGetPaymentMethodsConfigQuery,
 } = expenseDetailsApi;

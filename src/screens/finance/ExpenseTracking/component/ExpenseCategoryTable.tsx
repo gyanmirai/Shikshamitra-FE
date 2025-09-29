@@ -57,11 +57,6 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         label: 'Expense Category',
         align: 'left',
         filterType: 'string',
-        render: (value, row) => (
-          <Typography variant="body2" fontWeight={500}>
-            {row.expenseCategory}
-          </Typography>
-        ),
       },
       {
         id: 'amount',

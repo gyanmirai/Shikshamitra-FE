@@ -66,7 +66,7 @@ const FinanceExpenseTracking = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {addExpenseDialog.value ? (
         <CustomBreadcrumbs
-          heading="Expense Tracking"
+          heading={selectedExpense ? 'Update Expense Tracking' : 'Add Expense Tracking'}
           description={
             selectedExpense
               ? 'Update expense record details such as category, date, amount, and payment method to maintain accurate expense tracking.'
@@ -76,8 +76,18 @@ const FinanceExpenseTracking = () => {
           onBack={() => handleClose(null, false)}
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Setting', href: '/finance/setting' },
-            { name: 'Expense Tracking', href: '/finance/expense-tracking' },
+            {
+              name: 'Expense Tracking',
+              href: '/finance/expenseTracking',
+              onClick: () => {
+                addExpenseDialog.onFalse();
+                setSelectedExpense(null);
+              },
+            },
+            {
+              name: selectedExpense ? 'Update Expense Tracking' : 'Add Expense Tracking',
+              href: '/finance/expense-tracking',
+            },
           ]}
           sx={{ px: 1, mb: 2 }}
         />
@@ -87,8 +97,7 @@ const FinanceExpenseTracking = () => {
           description="This screen displays all expense categories with the option to view detailed entries under each category and add new expense records."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Setting', href: '/finance/setting' },
-            { name: 'Expense Tracking', href: '/finance/expense-tracking' },
+            { name: 'Expense Tracking', href: '/finance/setting' },
           ]}
           action={
             <Button
@@ -198,14 +207,7 @@ const FinanceExpenseTracking = () => {
           </Box>
         }
         handleClose={handleViewDialogClose}
-        maxWidth="lg"
-        sx={{
-          '& .MuiDialog-paper': {
-            width: '90%',
-            maxWidth: '1000px',
-            minWidth: '800px',
-          },
-        }}
+        maxWidth="md"
       >
         <ViewExpenseData
           viewExpenseDialog={viewExpenseDialog}
