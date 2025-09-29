@@ -18,7 +18,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetRoleOptionsQuery } from 'src/redux/library/roleApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import { Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
 
 import { reservationInitialValues } from './ResevationInitialValues';
@@ -26,6 +26,8 @@ import { reservationValidationSchema } from './ReservationValidation';
 
 import type { IReservationFormProps } from './type';
 import type { IBookCategoryOption } from '../../IssuedBook/Components/type';
+
+const staticMemberOptions = [{ id: 'DDVS001', name: 'Dharmik Jinjala' }];
 
 const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -56,7 +58,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
 
   const formik = useFormik({
     initialValues: reservationInitialValues(editData),
-    validationSchema: reservationValidationSchema(currentYear),
+    validationSchema: reservationValidationSchema(currentYear, editData),
     onSubmit: (values) => {
       shikshaMitraToast.success({
         message: editData
@@ -216,39 +218,33 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
             <ShakingTextField error={!!(formik.touched.member && formik.errors.member)}>
               <Autocomplete
                 loading={isLoading}
-                disabled={!formik.values.role}
+                disabled={!formik.values.role || !!editData} // disable only while updating
                 noOptionsText="No Member Found"
                 fullWidth
                 value={
-                  (formik.values.role === 'Student'
-                    ? tableData.find((s: any) => s.id === formik.values.member)
-                    : [
-                        { id: '1', name: 'Prerna Atre' },
-                        { id: '2', name: 'Raj Baku' },
-                        { id: '3', name: 'Dharmik Jinjala' },
-                      ].find((s: any) => s.id === formik.values.member)) || null
+                  editData
+                    ? staticMemberOptions[0]
+                    : (formik.values.role === 'Student'
+                        ? tableData.find((s: any) => s.id === formik.values.member)
+                        : [
+                            { id: '1', name: 'Prerna Atre' },
+                            { id: '2', name: 'Raj Baku' },
+                            { id: '3', name: 'Dharmik Jinjala' },
+                          ].find((s: any) => s.id === formik.values.member)) || null
                 }
                 onChange={(e, value: any) => {
                   formik.setFieldValue('member', value?.id || '');
                 }}
-                renderTags={(tagValue, getTagProps) =>
-                  tagValue.map((option, index) => (
-                    <Chip
-                      label={option.name}
-                      variant="soft"
-                      size="small"
-                      {...getTagProps({ index })}
-                    />
-                  ))
-                }
                 options={
-                  formik.values.role === 'Student'
-                    ? tableData
-                    : [
-                        { id: '1', name: 'Prerna Atre' },
-                        { id: '2', name: 'Raj Baku' },
-                        { id: '3', name: 'Dharmik Jinjala' },
-                      ]
+                  editData
+                    ? staticMemberOptions
+                    : formik.values.role === 'Student'
+                      ? tableData
+                      : [
+                          { id: '1', name: 'Prerna Atre' },
+                          { id: '2', name: 'Raj Baku' },
+                          { id: '3', name: 'Dharmik Jinjala' },
+                        ]
                 }
                 getOptionLabel={(option: any) => option?.name || ''}
                 renderInput={(params) => (
@@ -258,7 +254,9 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                     label="Member *"
                     fullWidth
                     error={!!(formik.touched.member && formik.errors.member)}
-                    helperText={(formik.touched.member && formik.errors.member) as string}
+                    helperText={
+                      !editData ? ((formik.touched.member && formik.errors.member) as string) : ''
+                    }
                   />
                 )}
                 renderOption={(prop: any, option: any) => (
@@ -360,7 +358,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                 format="DD/MM/YYYY"
                 minDate={dayjs(currentYear?.startDate)}
                 maxDate={dayjs(currentYear?.endDate)}
-                value={formik.values.dueDate}
+                value={formik.values.dueDate || null}
                 onChange={(newValue) => {
                   formik.setFieldValue('dueDate', newValue);
                 }}

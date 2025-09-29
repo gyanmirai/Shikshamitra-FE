@@ -21,15 +21,19 @@ const MemberManagementTable: React.FC<IMemberTableProps> = ({
       tableId="member-table"
       noDataText="No Members Found"
       columns={[
+        { id: 'name', label: 'Name', align: 'left', sticky: true, minWidth: '150px' },
         { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
         { id: 'role', label: 'Role', align: 'left' },
-        { id: 'name', label: 'Name', align: 'left' },
+        { id: 'grNo', label: 'GR No', align: 'left', minWidth: '100px' },
+        { id: 'class', label: 'Class', align: 'left', minWidth: '100px' },
+        { id: 'division', label: 'Division', align: 'left', minWidth: '100px' },
         { id: 'currentIssue', label: 'Current Issue', align: 'left', minWidth: '130px' },
-        { id: 'overdueReturn', label: 'Overdue Return', align: 'left' },
+        { id: 'overdueReturn', label: 'Overdue Return', align: 'left', minWidth: '150px' },
         {
           id: 'memberStatus',
-          label: 'Member Status',
+          label: 'Status',
           align: 'left',
+          sticky: true,
           render(value, row) {
             const color = MemberStatusTypeColors[value as MemberStatusType];
             return <Label color={color as LabelColor}>{MemberStatusType[value]}</Label>;

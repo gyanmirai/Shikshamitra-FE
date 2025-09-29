@@ -25,7 +25,6 @@ import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi
 import { useGetReservationRequestDataQuery } from 'src/redux/reservationRequestApi/reservationRequestApi';
 import {
   Grid,
-  Chip,
   Alert,
   Button,
   TextField,
@@ -439,7 +438,11 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                 fullWidth
                 value={
                   (formik.values.role === 'Student'
-                    ? tableData.find((s: any) => s.id === formik.values.member)
+                    ? [
+                        { id: 'stu1', name: 'Dharmik Jinjala' },
+                        { id: 'stu2', name: 'Prerna Atre' },
+                        { id: 'stu3', name: 'Raj Baku' },
+                      ].find((s: any) => s.id === formik.values.member)
                     : [
                         { id: '1', name: 'Prerna Atre' },
                         { id: '2', name: 'Raj Baku' },
@@ -449,19 +452,13 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                 onChange={(e, value: any) => {
                   formik.setFieldValue('member', value?.id || '');
                 }}
-                renderTags={(tagValue, getTagProps) =>
-                  tagValue.map((option, index) => (
-                    <Chip
-                      label={option.name}
-                      variant="soft"
-                      size="small"
-                      {...getTagProps({ index })}
-                    />
-                  ))
-                }
                 options={
                   formik.values.role === 'Student'
-                    ? tableData
+                    ? [
+                        { id: 'stu1', name: 'Dharmik Jinjala' },
+                        { id: 'stu2', name: 'Prerna Atre' },
+                        { id: 'stu3', name: 'Raj Baku' },
+                      ]
                     : [
                         { id: '1', name: 'Prerna Atre' },
                         { id: '2', name: 'Raj Baku' },

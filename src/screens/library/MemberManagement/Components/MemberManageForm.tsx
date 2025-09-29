@@ -7,12 +7,12 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetRoleOptionsQuery } from 'src/redux/library/roleApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
@@ -31,9 +31,9 @@ const MemberForm: React.FC<IMemberFormProps> = ({ open, onClose }) => {
   const [division, setDivision] = useState<string>('');
 
   // Roles API
-  const { data, isLoading } = useQueryAndMutation({
+  const { data: roleData, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetRolesQuery,
+    currentQueryAndMutation: useGetRoleOptionsQuery,
   });
 
   // Students API
@@ -48,7 +48,7 @@ const MemberForm: React.FC<IMemberFormProps> = ({ open, onClose }) => {
     validationSchema: memberValidationSchema,
     validateOnChange: true,
     onSubmit: (values) => {
-      shikshaMitraToast.success({ message: `Member "${values.member}" added successfully` });
+      shikshaMitraToast.success({ message: `Member added successfully` });
       onClose(null, true);
     },
   });
@@ -103,9 +103,11 @@ const MemberForm: React.FC<IMemberFormProps> = ({ open, onClose }) => {
             <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>
               <Autocomplete
                 disabled={isLoading}
-                options={data?.items || []}
-                value={data?.items?.find((item: any) => item.name === formik.values.role) || null}
-                getOptionLabel={(option: any) => option?.name || ''}
+                options={roleData || []}
+                value={
+                  (roleData || []).find((item: any) => item.role === formik.values.role) || null
+                }
+                getOptionLabel={(option: any) => option?.role || ''}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -118,7 +120,7 @@ const MemberForm: React.FC<IMemberFormProps> = ({ open, onClose }) => {
                   />
                 )}
                 onChange={(e, value) => {
-                  formik.setFieldValue('role', value?.name || '');
+                  formik.setFieldValue('role', value?.role || '');
                 }}
               />
             </ShakingTextField>

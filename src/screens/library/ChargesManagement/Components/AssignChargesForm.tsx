@@ -44,7 +44,6 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
     type: 'query',
     currentQueryAndMutation: useGetRoleOptionsQuery,
   });
-  console.log('🚀 ~ AssignChargesForm ~ data:', roleData);
 
   const { data: chargeCategoryOptions } = useQueryAndMutation({
     type: 'query',
