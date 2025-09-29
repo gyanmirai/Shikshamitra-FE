@@ -290,7 +290,8 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                       },
                     }}
                   >
-                    Book Available - ({availableQuantity})
+                    {availableQuantity === 1 ? 'Book is available' : 'Books are available'} - (
+                    {availableQuantity})
                   </Alert>
                 ) : (
                   <Alert
@@ -325,7 +326,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                       },
                     }}
                   >
-                    Book Not Available
+                    Books Are Not Available
                   </Alert>
                 )}
               </Grid>
@@ -485,51 +486,55 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
             </ShakingTextField>
           </Grid>
 
-          {/* Issue Date */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>
-              <DatePicker
-                label="Issue Date *"
-                format="DD-MM-YYYY"
-                value={formik.values.issueDate}
-                onChange={(newValue) => formik.setFieldValue('issueDate', newValue)}
-                minDate={dayjs(currentYear?.startDate)}
-                maxDate={dayjs(currentYear?.endDate)}
-                sx={{ minWidth: 180, width: '100%' }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                    error: !!(formik.touched.issueDate && formik.errors.issueDate),
-                    helperText: (formik.touched.issueDate && formik.errors.issueDate) as string,
-                  },
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
+          {availableQuantity > 0 && (
+            <>
+              {/* Issue Date */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>
+                  <DatePicker
+                    label="Issue Date"
+                    format="DD-MM-YYYY"
+                    value={formik.values.issueDate}
+                    onChange={(newValue) => formik.setFieldValue('issueDate', newValue)}
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs(currentYear?.endDate)}
+                    sx={{ minWidth: 180, width: '100%' }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: !!(formik.touched.issueDate && formik.errors.issueDate),
+                        helperText: (formik.touched.issueDate && formik.errors.issueDate) as string,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-          {/* Due Date */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate)}>
-              <DatePicker
-                label="Due Date *"
-                format="DD-MM-YYYY"
-                value={formik.values.dueDate}
-                onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
-                minDate={dayjs(currentYear?.startDate)}
-                maxDate={dayjs(currentYear?.endDate)}
-                sx={{ minWidth: 180, width: '100%' }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                    error: !!(formik.touched.dueDate && formik.errors.dueDate),
-                    helperText: (formik.touched.dueDate && formik.errors.dueDate) as string,
-                  },
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
+              {/* Due Date */}
+              {/* <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate)}>
+                  <DatePicker
+                    label="Due Date *"
+                    format="DD-MM-YYYY"
+                    value={formik.values.dueDate}
+                    onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs(currentYear?.endDate)}
+                    sx={{ minWidth: 180, width: '100%' }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: !!(formik.touched.dueDate && formik.errors.dueDate),
+                        helperText: (formik.touched.dueDate && formik.errors.dueDate) as string,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid> */}
+            </>
+          )}
         </Grid>
       </DialogScrollContent>
 
