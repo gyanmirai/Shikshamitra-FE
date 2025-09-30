@@ -60,6 +60,29 @@
       "amount": 40000
     }
   ],
+  "expenseListData": [
+    {
+      "expenseName": "Math Textbooks",
+      "expenseDate": "10-08-2025",
+      "budgetSubCategory": "Textbooks Books",
+      "paymentMethod": "Cash",
+      "amount": 30000
+    },
+    {
+      "expenseName": "Art & Craft Supplies",
+      "expenseDate": "04-08-2025",
+      "budgetSubCategory": "Classroom Supplies",
+      "paymentMethod": "Bank Transfer",
+      "amount": 30000
+    },
+    {
+      "expenseName": "E Learning License",
+      "expenseDate": "01-08-2025",
+      "budgetSubCategory": "E-Learning Tools",
+      "paymentMethod": "UPI",
+      "amount": 40000
+    }
+  ],  
   "expenseOptions": {
     "categoryOptions": [
       {

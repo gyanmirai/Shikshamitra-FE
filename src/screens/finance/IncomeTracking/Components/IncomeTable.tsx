@@ -59,12 +59,6 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
         align: 'left',
       },
       {
-        id: 'budgetSubCategory',
-        label: 'Budget Sub Category',
-        align: 'left',
-        minWidth: '190px',
-      },
-      {
         id: 'incomeName',
         label: 'Income Name',
         align: 'left',
