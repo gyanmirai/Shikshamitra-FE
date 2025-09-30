@@ -55,4 +55,5 @@ export interface IBookCategoryOption {
   label: string;
   value: string;
   titles: ITitle[];
+  quantity: number;
 }

@@ -18,8 +18,13 @@ export const getIssueBookSchema = (currentYear: any) =>
       then: (schema) => schema.required('Division is required'),
       otherwise: (schema) => schema.nullable(),
     }),
+    isReservation: Yup.boolean(),
     member: Yup.string().required('Member is required'),
-    accessionNumber: Yup.string().required('Accession number is required'),
+    accessionNumber: Yup.string().when('isReservation', {
+      is: true,
+      then: (schema) => schema.required('Accession number is required'),
+      otherwise: (schema) => schema.nullable(),
+    }),
     // issueDate: Yup.mixed()
     //   .required('Issue date is required')
     //   .test(

@@ -27,10 +27,93 @@ import { assignLibraryChargeValidationSchema } from './AssignChargesValidationSc
 
 import type { IAssignChargesFormProps } from './type';
 
+// Static Data
+const staticRoles = [
+  { id: '1', role: 'Employee' },
+  { id: '2', role: 'Student' },
+];
+
+const staticChargeCategories = [
+  { id: 'Late Book Return', name: 'Late Book Return', amount: '', isFixed: false },
+  { id: 'Damaged Book', name: 'Damaged Book', amount: '', isFixed: false },
+  { id: 'Lost Book', name: 'Lost Book', amount: '', isFixed: false },
+  { id: 'Membership Renewal', name: 'Membership Renewal', amount: 100, isFixed: true },
+  { id: 'Reservation Fee', name: 'Reservation Fee', amount: 30, isFixed: true },
+];
+
+const staticBookTitles = [
+  { id: 'title1', label: 'Introduction to Physics', value: 'Introduction to Physics' },
+  { id: 'title2', label: 'Advanced Chemistry', value: 'Advanced Chemistry' },
+  { id: 'title3', label: 'Science Explorer', value: 'Science Explorer' },
+  { id: 'title4', label: 'Mathematics Grade 10', value: 'Mathematics Grade 10' },
+];
+
+const staticClasses = [
+  {
+    id: '10',
+    name: '10',
+    divisions: [
+      { id: 'A', name: 'A' },
+      { id: 'B', name: 'B' },
+    ],
+  },
+  {
+    id: '9',
+    name: ' 9',
+    divisions: [
+      { id: 'A', name: 'A' },
+      { id: 'B', name: 'B' },
+    ],
+  },
+  {
+    id: '12',
+    name: ' 12',
+    divisions: [
+      { id: 'A', name: 'A' },
+      { id: 'B', name: 'B' },
+      { id: 'D', name: 'D' },
+    ],
+  },
+  {
+    id: '7',
+    name: ' 7',
+    divisions: [
+      { id: 'A', name: 'A' },
+      { id: 'B', name: 'B' },
+    ],
+  },
+];
+
+const staticMembers = [
+  { id: 'M001', name: 'Dharmik Jinjala' },
+  { id: 'M002', name: 'Prerna Atre' },
+  { id: 'M003', name: 'Raj Baku' },
+];
+
+// Helper to fill missing fields from static data
+function fillEditData(editData: any) {
+  if (!editData) return null;
+  return {
+    role: editData.role || staticRoles[0].role,
+    class: editData.classNo || staticClasses[0].id,
+    division: editData.division || staticClasses[0].divisions[0].id,
+    member: editData.memberId || staticMembers[0].id,
+    bookTitle: editData.bookTitle || staticBookTitles[0].value,
+    chargeCategory: editData.chargeCategory || staticChargeCategories[0].id,
+    amount:
+      editData.fineAmount !== undefined
+        ? editData.fineAmount
+        : staticChargeCategories.find((cat) => cat.id === editData.chargeCategory)?.amount || '',
+    dueDate: editData.dueDate || '',
+    reason: editData.reason || '',
+    // Add other fields as needed
+  };
+}
+
 const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, editData }) => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
+  const { medium } = useSelector((state: RootState) => state.globalState);
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -50,19 +133,8 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
     currentQueryAndMutation: useGetLibraryChargeCategoryOptionsQuery,
   });
 
-  const bookTitleOptions = [
-    { id: 'title1', label: 'Introduction to Physics', value: 'Introduction to Physics' },
-    { id: 'title2', label: 'Advanced Chemistry', value: 'Advanced Chemistry' },
-    { id: 'title3', label: 'Introduction to Physics', value: 'Introduction to Physics' },
-    { id: 'title4', label: 'Science Explorer', value: 'Science Explorer' },
-    { id: 'title5', label: 'Mathematics Grade 10', value: 'Mathematics Grade 10' },
-  ];
-
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
   const formik = useFormik({
-    initialValues: assignLibraryChargeInitialValues(editData),
+    initialValues: assignLibraryChargeInitialValues(fillEditData(editData)),
     validationSchema: assignLibraryChargeValidationSchema(currentYear),
     onSubmit: (values) => {
       const bookTitle =
@@ -143,6 +215,24 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
     [StudentsData?.items]
   );
 
+  // Fallback for classes/divisions if API data is missing
+  const effectiveAllClass = allClass.length > 0 ? allClass : staticClasses;
+  const effectiveAllDivision =
+    effectiveAllClass.find((cls: any) => cls.id === formik.values.class)?.divisions ||
+    staticClasses[0].divisions;
+
+  // Fallback for members if API data is missing
+  const effectiveTableData =
+    formik.values.role === 'Student'
+      ? tableData.length > 0
+        ? tableData
+        : staticMembers
+      : [
+          { id: '1', name: 'Prerna Atre' },
+          { id: '2', name: 'Raj Baku' },
+          { id: '3', name: 'Dharmik Jinjala' },
+        ];
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
@@ -181,7 +271,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                 <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
                   <CustomSelect
                     label="Class *"
-                    options={allClass}
+                    options={effectiveAllClass}
                     value={formik.values.class}
                     onChange={(val) => {
                       formik.setFieldValue('class', val);
@@ -203,7 +293,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                 <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
                   <CustomSelect
                     label="Division *"
-                    options={allDivision}
+                    options={effectiveAllDivision}
                     disabled={!formik.values.class}
                     value={formik.values.division}
                     onChange={(val) => {
@@ -226,18 +316,9 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
             <ShakingTextField error={!!(formik.touched.member && formik.errors.member)}>
               <Autocomplete
                 loading={isLoading}
-                // disabled={!formik.values.division}
                 noOptionsText="No Member Found"
                 fullWidth
-                value={
-                  (formik.values.role === 'Student'
-                    ? tableData.find((s: any) => s.id === formik.values.member)
-                    : [
-                        { id: '1', name: 'Prerna Atre' },
-                        { id: '2', name: 'Raj Baku' },
-                        { id: '3', name: 'Dharmik Jinjala' },
-                      ].find((s: any) => s.id === formik.values.member)) || null
-                }
+                value={effectiveTableData.find((s: any) => s.id === formik.values.member) || null}
                 onChange={(e, value: any) => {
                   formik.setFieldValue('member', value?.id || '');
                 }}
@@ -251,15 +332,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                     />
                   ))
                 }
-                options={
-                  formik.values.role === 'Student'
-                    ? tableData
-                    : [
-                        { id: '1', name: 'Prerna Atre' },
-                        { id: '2', name: 'Raj Baku' },
-                        { id: '3', name: 'Dharmik Jinjala' },
-                      ]
-                }
+                options={effectiveTableData}
                 getOptionLabel={(option: any) => option?.name || ''}
                 renderInput={(params) => (
                   <TextField
@@ -285,7 +358,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
             <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
               <CustomSelect
                 label="Book Title *"
-                options={bookTitleOptions}
+                options={staticBookTitles}
                 value={formik.values.bookTitle}
                 onChange={(val) => formik.setFieldValue('bookTitle', val)}
                 labelKey="label"
@@ -304,12 +377,12 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
             >
               <CustomSelect
                 label="Charge Category *"
-                options={chargeCategoryOptions || []}
+                options={staticChargeCategories || []}
                 value={formik.values.chargeCategory}
                 onChange={(val) => {
                   formik.setFieldValue('chargeCategory', val);
                   // Find selected charge category and set its amount
-                  const selectedCategory = (chargeCategoryOptions || []).find(
+                  const selectedCategory = (staticChargeCategories || []).find(
                     (cat: any) => cat.id === val
                   );
                   if (selectedCategory && selectedCategory.amount !== undefined) {
@@ -337,12 +410,17 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                 name="amount"
                 value={formik.values.amount}
                 disabled={
-                  !!(chargeCategoryOptions || []).find(
+                  !!(staticChargeCategories || []).find(
                     (cat: any) => cat.id === formik.values.chargeCategory && cat.isFixed
                   )
                 }
                 error={!!(formik.touched.amount && formik.errors.amount)}
                 helperText={(formik.touched.amount && formik.errors.amount) as string}
+                onChange={(e: any) => {
+                  // Remove non-numeric characters and parse to number
+                  const rawValue = e.target.value.replace(/[^0-9.]/g, '');
+                  formik.setFieldValue('amount', rawValue ? Number(rawValue) : '');
+                }}
               />
             </ShakingTextField>
           </Grid>

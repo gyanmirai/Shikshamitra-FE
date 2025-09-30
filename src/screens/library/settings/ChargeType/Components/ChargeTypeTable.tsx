@@ -56,6 +56,8 @@ const ChargeTypeTable: React.FC<IChargeTypeTableProps> = ({
         align: 'left',
         filterType: 'number',
         render(value) {
+          // If value is falsy (null, undefined, 0, false), print '-'
+          if (!value) return '-';
           return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',

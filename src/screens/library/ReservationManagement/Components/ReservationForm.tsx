@@ -27,25 +27,79 @@ import { reservationValidationSchema } from './ReservationValidation';
 import type { IReservationFormProps } from './type';
 import type { IBookCategoryOption } from '../../IssuedBook/Components/type';
 
-const staticMemberOptions = [{ id: 'DDVS001', name: 'Dharmik Jinjala' }];
+// Static Data for Classes and Divisions
+const staticClasses = [
+  {
+    id: '10',
+    name: '10',
+    divisions: [
+      { id: 'A', name: 'A' },
+      { id: 'B', name: 'B' },
+    ],
+  },
+  {
+    id: '9',
+    name: '9',
+    divisions: [
+      { id: 'A', name: 'A' },
+      { id: 'B', name: 'B' },
+    ],
+  },
+  {
+    id: '12',
+    name: '12',
+    divisions: [
+      { id: 'A', name: 'A' },
+      { id: 'B', name: 'B' },
+      { id: 'D', name: 'D' },
+    ],
+  },
+  {
+    id: '7',
+    name: '7',
+    divisions: [
+      { id: 'A', name: 'A' },
+      { id: 'B', name: 'B' },
+    ],
+  },
+];
+
+// Static Data for Members
+const staticMemberOptions = [
+  { id: 'M001', name: 'Dharmik Jinjala' },
+  { id: 'M002', name: 'Prerna Atre' },
+  { id: 'M003', name: 'Raj Baku' },
+  { id: 'M004', name: 'Mayur Solanki' },
+  { id: 'M005', name: 'Krishna Patel' },
+];
+
+// Helper to fill missing fields from static data for edit
+function fillEditData(editData: any) {
+  return {
+    role: editData?.role || '',
+    class: editData?.class || staticClasses[0].id,
+    division: editData?.division || staticClasses[0].divisions[0].id,
+    member: editData?.memberId || staticMemberOptions[0].id,
+    bookTitle: editData?.bookTitle || '',
+    bookCategory: editData?.bookCategory || '',
+    requestedDate: editData?.reservedOn ? dayjs(editData.reservedOn, 'DD-MM-YYYY') : null,
+    dueDate: editData?.dueDate ? dayjs(editData.dueDate, 'DD-MM-YYYY') : null,
+    // add other fields as needed
+  };
+}
 
 const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
-  //   Fetch issued/returned books
   const { data: bookCategoryOptions } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBookCategoryOptionsQuery,
   });
 
-  // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
-  const [classes, setClasses] = useState<string>('');
-  // State to store all divisions for the selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
   const [division, setDivision] = useState<string>('');
 
   const { data: roleData, isLoading } = useQueryAndMutation({
@@ -53,12 +107,11 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
     currentQueryAndMutation: useGetRoleOptionsQuery,
   });
 
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
+  // Use editData for initial values if updating, otherwise use default initial values
   const formik = useFormik({
-    initialValues: reservationInitialValues(editData),
+    initialValues: editData ? fillEditData(editData) : reservationInitialValues(editData),
     validationSchema: reservationValidationSchema(currentYear, editData),
+    enableReinitialize: true,
     onSubmit: (values) => {
       shikshaMitraToast.success({
         message: editData
@@ -72,59 +125,49 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
   }, [medium?.educationMediumStages]);
-  // Update divisions when class changes
-  //   // Update divisions when class changes
+
   useEffect(() => {
-    if (!classes) return;
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+    setAllClass(allClasses.length > 0 ? allClasses : staticClasses);
+  }, [medium]);
 
-    const selectedClass = allClass.find((org: any) => org?.id === classes);
+  useEffect(() => {
+    const divisions =
+      allClass.find((org: any) => org?.id === formik.values.class)?.divisions ||
+      staticClasses[0].divisions;
 
-    if (selectedClass) {
-      setAllDivision(selectedClass.divisions || []);
-      // only set division if it's not already selected
-      if (!division && selectedClass.divisions?.length > 0) {
-        setDivision(selectedClass.divisions[0].id);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allClass, classes]); // removed setDivision
+    // Map static divisions to Division type
+    const mappedDivisions = divisions.map((div: any) => ({
+      ...div,
+      creationTime: div.creationTime || '',
+      creatorId: div.creatorId || '',
+      lastModificationTime: div.lastModificationTime || '',
+      lastModifierId: div.lastModifierId || '',
+      isDeleted: div.isDeleted || false,
+      id: div.id,
+      name: div.name,
+    }));
 
-  // Initialize query hook for fetching students
+    setAllDivision(mappedDivisions);
+    setDivision(mappedDivisions[0]?.id || '');
+  }, [allClass, formik.values.class]);
+
   const [getStudents, { data: StudentsData }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
 
-  // Update classes when organization changes
-  useEffect(() => {
-    // Flatten the list of standards from all stages
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
-  }, [medium]);
-
-  // Update divisions when class changes
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === formik.values.class)?.divisions || []);
-    setDivision(
-      allClass.find((org: any) => org?.id === formik.values.class)?.divisions?.[0]?.id || ''
-    );
-  }, [allClass, formik.values.class, setDivision]);
-
-  //   Fetch students when division, class and organization are all selected
   useEffect(() => {
     if (division && formik.values.class) {
       getStudents({
-        educationMediumStageId: allOrganization[1].id,
+        educationMediumStageId: allOrganization[1]?.id || allOrganization[0]?.id,
         standardId: formik.values.class,
         divisionId: division,
       });
     }
   }, [division, formik.values.class, getStudents, allOrganization]);
 
-  //   Transform student data to include full name
   const tableData = useMemo(
     () =>
       StudentsData?.items?.map((item: any) => ({
@@ -133,6 +176,16 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
       })) || [],
     [StudentsData?.items]
   );
+
+  // Use static data as fallback
+  const effectiveAllClass = allClass.length > 0 ? allClass : staticClasses;
+  const effectiveAllDivision = allDivision.length > 0 ? allDivision : staticClasses[0].divisions;
+  const effectiveMemberOptions =
+    formik.values.role === 'Student'
+      ? tableData.length > 0
+        ? tableData
+        : staticMemberOptions
+      : staticMemberOptions;
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -161,6 +214,9 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                 )}
                 onChange={(e, value) => {
                   formik.setFieldValue('role', value?.role || '');
+                  formik.setFieldValue('class', '');
+                  formik.setFieldValue('division', '');
+                  formik.setFieldValue('member', '');
                 }}
               />
             </ShakingTextField>
@@ -173,12 +229,12 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                 <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
                   <CustomSelect
                     label="Class *"
-                    options={allClass}
+                    options={effectiveAllClass}
                     value={formik.values.class}
                     onChange={(val) => {
                       formik.setFieldValue('class', val);
                       formik.setFieldValue('division', '');
-                      formik.setFieldValue('student', '');
+                      formik.setFieldValue('member', '');
                       formik.setFieldTouched('class', false);
                     }}
                     labelKey="name"
@@ -195,12 +251,12 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                 <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
                   <CustomSelect
                     label="Division *"
-                    options={allDivision}
+                    options={effectiveAllDivision}
                     disabled={!formik.values.class}
                     value={formik.values.division}
                     onChange={(val) => {
                       formik.setFieldValue('division', val);
-                      formik.setFieldValue('student', '');
+                      formik.setFieldValue('member', '');
                       formik.setFieldTouched('division', false);
                     }}
                     labelKey="name"
@@ -213,39 +269,22 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
               </Grid>
             </>
           )}
-          {/* Member Dropdown for Non-Students */}
+
+          {/* Member Dropdown */}
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.member && formik.errors.member)}>
               <Autocomplete
                 loading={isLoading}
-                disabled={!formik.values.role || !!editData} // disable only while updating
+                disabled={!formik.values.role}
                 noOptionsText="No Member Found"
                 fullWidth
                 value={
-                  editData
-                    ? staticMemberOptions[0]
-                    : (formik.values.role === 'Student'
-                        ? tableData.find((s: any) => s.id === formik.values.member)
-                        : [
-                            { id: '1', name: 'Prerna Atre' },
-                            { id: '2', name: 'Raj Baku' },
-                            { id: '3', name: 'Dharmik Jinjala' },
-                          ].find((s: any) => s.id === formik.values.member)) || null
+                  effectiveMemberOptions.find((s: any) => s.id === formik.values.member) || null
                 }
                 onChange={(e, value: any) => {
                   formik.setFieldValue('member', value?.id || '');
                 }}
-                options={
-                  editData
-                    ? staticMemberOptions
-                    : formik.values.role === 'Student'
-                      ? tableData
-                      : [
-                          { id: '1', name: 'Prerna Atre' },
-                          { id: '2', name: 'Raj Baku' },
-                          { id: '3', name: 'Dharmik Jinjala' },
-                        ]
-                }
+                options={effectiveMemberOptions}
                 getOptionLabel={(option: any) => option?.name || ''}
                 renderInput={(params) => (
                   <TextField
@@ -254,9 +293,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                     label="Member *"
                     fullWidth
                     error={!!(formik.touched.member && formik.errors.member)}
-                    helperText={
-                      !editData ? ((formik.touched.member && formik.errors.member) as string) : ''
-                    }
+                    helperText={(formik.touched.member && formik.errors.member) as string}
                   />
                 )}
                 renderOption={(prop: any, option: any) => (
@@ -322,14 +359,20 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
             </ShakingTextField>
           </Grid>
 
-          {/* Start Time DatePicker */}
+          {/* Requested Date */}
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
               error={!!(formik.touched.requestedDate && formik.errors.requestedDate) || false}
             >
               <DatePicker
                 label="Requested Date *"
-                value={formik.values.requestedDate}
+                value={
+                  formik.values.requestedDate && dayjs.isDayjs(formik.values.requestedDate)
+                    ? formik.values.requestedDate
+                    : formik.values.requestedDate
+                      ? dayjs(formik.values.requestedDate)
+                      : null
+                }
                 format="DD/MM/YYYY"
                 onChange={(newValue) => {
                   formik.setFieldValue('requestedDate', newValue);
@@ -350,7 +393,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
             </ShakingTextField>
           </Grid>
 
-          {/* Due Date DatePicker */}
+          {/* Due Date */}
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate) || false}>
               <DatePicker
@@ -358,7 +401,13 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                 format="DD/MM/YYYY"
                 minDate={dayjs(currentYear?.startDate)}
                 maxDate={dayjs(currentYear?.endDate)}
-                value={formik.values.dueDate || null}
+                value={
+                  formik.values.dueDate && dayjs.isDayjs(formik.values.dueDate)
+                    ? formik.values.dueDate
+                    : formik.values.dueDate
+                      ? dayjs(formik.values.dueDate)
+                      : null
+                }
                 onChange={(newValue) => {
                   formik.setFieldValue('dueDate', newValue);
                 }}

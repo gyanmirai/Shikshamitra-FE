@@ -205,6 +205,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                       label: item.label,
                       value: item.value,
                       categoryName: item.categoryName,
+                      quantity: item.quantity,
                     })) ?? []
                   }
                   getOptionLabel={(option) => option.label}
@@ -218,6 +219,9 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                     formik.setFieldTouched('bookTitle', false);
                     formik.setFieldValue('bookCategory', value?.categoryName || '');
                     formik.setFieldValue('edition', ''); // reset child
+                    if (value?.quantity > 0) {
+                      formik.setFieldValue('isReservation', false);
+                    }
                     setBookSelected(!!value);
                   }}
                   renderInput={(params) => (
@@ -303,25 +307,14 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                   <Alert
                     severity="error"
                     action={
-                      <>
-                        <Button
-                          variant="contained"
-                          color="error"
-                          size="small"
-                          onClick={() => setShowReservation(true)}
-                        >
-                          Make Reservation
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          size="small"
-                          onClick={() => setShowReservation(false)}
-                          sx={{ ml: 1 }}
-                        >
-                          Dismiss
-                        </Button>
-                      </>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        size="small"
+                        onClick={() => setShowReservation(true)}
+                      >
+                        Make Reservation
+                      </Button>
                     }
                     sx={{
                       display: 'flex',
@@ -361,55 +354,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
             </>
           )}
 
-          {formik.values.role === 'Student' && (
-            <>
-              {/* Class */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
-                  <CustomSelect
-                    label="Class *"
-                    options={allClass}
-                    value={formik.values.class}
-                    onChange={(val) => {
-                      formik.setFieldValue('class', val);
-                      formik.setFieldValue('division', '');
-                      formik.setFieldValue('student', '');
-                      formik.setFieldTouched('class', false);
-                    }}
-                    labelKey="name"
-                    valueKey="id"
-                    formControlProps={{ fullWidth: true }}
-                    error={!!(formik.touched.class && formik.errors.class)}
-                    helperText={(formik.touched.class && formik.errors.class) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {/* Division */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
-                  <CustomSelect
-                    label="Division *"
-                    options={allDivision}
-                    disabled={!formik.values.class}
-                    value={formik.values.division}
-                    onChange={(val) => {
-                      formik.setFieldValue('division', val);
-                      formik.setFieldValue('student', '');
-                      formik.setFieldTouched('division', false);
-                    }}
-                    labelKey="name"
-                    valueKey="id"
-                    formControlProps={{ fullWidth: true }}
-                    error={!!(formik.touched.division && formik.errors.division)}
-                    helperText={(formik.touched.division && formik.errors.division) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-            </>
-          )}
-
-          {availableQuantity > 0 && (
+          {availableQuantity > 0 && formik.values.edition && (
             <>
               {/* Accession Number Dropdown */}
               <Grid size={{ xs: 12, md: 6 }}>
@@ -480,89 +425,141 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
             </>
           )}
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>
-              <Autocomplete
-                disabled={isLoading}
-                options={roleData || []}
-                value={
-                  (roleData || []).find((item: any) => item.role === formik.values.role) || null
-                }
-                getOptionLabel={(option: any) => option?.role || ''}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Role *"
-                    size="small"
-                    fullWidth
-                    sx={{ width: '100%', minWidth: '200px' }}
-                    error={formik.touched.role && Boolean(formik.errors.role)}
-                    helperText={(formik.touched.role && formik.errors.role) as string}
+          {/* Show Role and Member fields only after Edition is selected */}
+          {formik.values.edition && (
+            <>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>
+                  <Autocomplete
+                    disabled={isLoading}
+                    options={roleData || []}
+                    value={
+                      (roleData || []).find((item: any) => item.role === formik.values.role) || null
+                    }
+                    getOptionLabel={(option: any) => option?.role || ''}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Role *"
+                        size="small"
+                        fullWidth
+                        sx={{ width: '100%', minWidth: '200px' }}
+                        error={formik.touched.role && Boolean(formik.errors.role)}
+                        helperText={(formik.touched.role && formik.errors.role) as string}
+                      />
+                    )}
+                    onChange={(e, value) => {
+                      formik.setFieldValue('role', value?.role || '');
+                    }}
                   />
-                )}
-                onChange={(e, value) => {
-                  formik.setFieldValue('role', value?.role || '');
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
+                </ShakingTextField>
+              </Grid>
 
-          {/* Member Dropdown for Non-Students */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.member && formik.errors.member)}>
-              <Autocomplete
-                loading={isLoading}
-                disabled={!formik.values.role}
-                noOptionsText="No Member Found"
-                fullWidth
-                value={
-                  (formik.values.role === 'Student'
-                    ? [
-                        { id: 'stu1', name: 'Dharmik Jinjala' },
-                        { id: 'stu2', name: 'Prerna Atre' },
-                        { id: 'stu3', name: 'Raj Baku' },
-                      ].find((s: any) => s.id === formik.values.member)
-                    : [
-                        { id: '1', name: 'Prerna Atre' },
-                        { id: '2', name: 'Raj Baku' },
-                        { id: '3', name: 'Dharmik Jinjala' },
-                      ].find((s: any) => s.id === formik.values.member)) || null
-                }
-                onChange={(e, value: any) => {
-                  formik.setFieldValue('member', value?.id || '');
-                }}
-                options={
-                  formik.values.role === 'Student'
-                    ? [
-                        { id: 'stu1', name: 'Dharmik Jinjala' },
-                        { id: 'stu2', name: 'Prerna Atre' },
-                        { id: 'stu3', name: 'Raj Baku' },
-                      ]
-                    : [
-                        { id: '1', name: 'Prerna Atre' },
-                        { id: '2', name: 'Raj Baku' },
-                        { id: '3', name: 'Dharmik Jinjala' },
-                      ]
-                }
-                getOptionLabel={(option: any) => option?.name || ''}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Member *"
+              {/* Member Dropdown for Non-Students */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.member && formik.errors.member)}>
+                  <Autocomplete
+                    loading={isLoading}
+                    disabled={!formik.values.role}
+                    noOptionsText="No Member Found"
                     fullWidth
-                    error={!!(formik.touched.member && formik.errors.member)}
-                    helperText={(formik.touched.member && formik.errors.member) as string}
+                    value={
+                      (formik.values.role === 'Student'
+                        ? [
+                            { id: 'stu1', name: 'Dharmik Jinjala' },
+                            { id: 'stu2', name: 'Prerna Atre' },
+                            { id: 'stu3', name: 'Raj Baku' },
+                          ].find((s: any) => s.id === formik.values.member)
+                        : [
+                            { id: '1', name: 'Prerna Atre' },
+                            { id: '2', name: 'Raj Baku' },
+                            { id: '3', name: 'Dharmik Jinjala' },
+                          ].find((s: any) => s.id === formik.values.member)) || null
+                    }
+                    onChange={(e, value: any) => {
+                      formik.setFieldValue('member', value?.id || '');
+                    }}
+                    options={
+                      formik.values.role === 'Student'
+                        ? [
+                            { id: 'stu1', name: 'Dharmik Jinjala' },
+                            { id: 'stu2', name: 'Prerna Atre' },
+                            { id: 'stu3', name: 'Raj Baku' },
+                          ]
+                        : [
+                            { id: '1', name: 'Prerna Atre' },
+                            { id: '2', name: 'Raj Baku' },
+                            { id: '3', name: 'Dharmik Jinjala' },
+                          ]
+                    }
+                    getOptionLabel={(option: any) => option?.name || ''}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        size="small"
+                        label="Member *"
+                        fullWidth
+                        error={!!(formik.touched.member && formik.errors.member)}
+                        helperText={(formik.touched.member && formik.errors.member) as string}
+                      />
+                    )}
+                    renderOption={(prop: any, option: any) => (
+                      <li {...prop} key={option.id}>
+                        {option.name}
+                      </li>
+                    )}
                   />
-                )}
-                renderOption={(prop: any, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.name}
-                  </li>
-                )}
-              />
-            </ShakingTextField>
-          </Grid>
+                </ShakingTextField>
+              </Grid>
+            </>
+          )}
+          {formik.values.role === 'Student' && (
+            <>
+              {/* Class */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
+                  <CustomSelect
+                    label="Class *"
+                    options={allClass}
+                    value={formik.values.class}
+                    onChange={(val) => {
+                      formik.setFieldValue('class', val);
+                      formik.setFieldValue('division', '');
+                      formik.setFieldValue('student', '');
+                      formik.setFieldTouched('class', false);
+                    }}
+                    labelKey="name"
+                    valueKey="id"
+                    formControlProps={{ fullWidth: true }}
+                    error={!!(formik.touched.class && formik.errors.class)}
+                    helperText={(formik.touched.class && formik.errors.class) as string}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              {/* Division */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
+                  <CustomSelect
+                    label="Division *"
+                    options={allDivision}
+                    disabled={!formik.values.class}
+                    value={formik.values.division}
+                    onChange={(val) => {
+                      formik.setFieldValue('division', val);
+                      formik.setFieldValue('student', '');
+                      formik.setFieldTouched('division', false);
+                    }}
+                    labelKey="name"
+                    valueKey="id"
+                    formControlProps={{ fullWidth: true }}
+                    error={!!(formik.touched.division && formik.errors.division)}
+                    helperText={(formik.touched.division && formik.errors.division) as string}
+                  />
+                </ShakingTextField>
+              </Grid>
+            </>
+          )}
         </Grid>
       </DialogScrollContent>
 
