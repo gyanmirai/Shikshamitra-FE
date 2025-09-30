@@ -257,7 +257,7 @@ const LibraryTimingCreation = () => {
           },
           {
             id: 'status',
-            label: 'Is On Day',
+            label: 'Open This Day',
             align: 'left',
             isSort: false,
             isFilter: false,

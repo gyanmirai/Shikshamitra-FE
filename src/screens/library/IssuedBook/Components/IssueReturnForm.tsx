@@ -207,6 +207,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
                 options={[
                   { id: 'good', value: 'Good', label: 'Good' },
                   { id: 'damaged', value: 'Damaged', label: 'Damaged' },
+                  { id: 'lost', value: 'Lost', label: 'Lost' },
                 ]}
                 value={formik.values.bookCondition}
                 onChange={(val) => formik.setFieldValue('bookCondition', val)}
@@ -218,7 +219,8 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Fine Amount */}
-          {formik.values.bookCondition === 'Damaged' && (
+          {(formik.values.bookCondition === 'Damaged' ||
+            formik.values.bookCondition === 'Lost') && (
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={!!(formik.touched.fineAmount && formik.errors.fineAmount)}>
                 <NumericFormatCustom

@@ -1390,7 +1390,7 @@ const libraryModule = {
           shortcutKeyName: 'Alt+L+1',
         },
         {
-          title: 'Book Management',
+          title: 'Book List',
           path: '/library/book-management',
           _action: 'book-management',
           shortcutKey: 'Alt+L+2',

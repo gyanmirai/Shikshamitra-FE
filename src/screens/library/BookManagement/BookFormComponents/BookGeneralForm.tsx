@@ -152,7 +152,9 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
               { value: 'Biography', label: 'Biography' },
             ]}
             value={formik.values.category}
-            onChange={(value) => formik.setFieldValue('category', value)}
+            onChange={(value) => {
+              formik.setFieldValue('category', value);
+            }}
             error={!!(formik.touched.category && formik.errors.category)}
             helperText={(formik.touched.category && formik.errors.category) as string}
             formControlProps={{ fullWidth: true }}
@@ -182,26 +184,24 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
       {/* Language */}
       <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField error={!!(formik.touched.language && formik.errors.language)}>
-          <CustomSelect
-            label="Language *"
+          <TextField
+            fullWidth
             name="language"
-            options={[
-              { value: 'English', label: 'English' },
-              { value: 'Hindi', label: 'Hindi' },
-              { value: 'Gujarati', label: 'Gujarati' },
-              { value: 'Bengali', label: 'Bengali' },
-              { value: 'Marathi', label: 'Marathi' },
-              { value: 'Tamil', label: 'Tamil' },
-              { value: 'Telugu', label: 'Telugu' },
-              { value: 'Kannada', label: 'Kannada' },
-              { value: 'Malayalam', label: 'Malayalam' },
-              { value: 'Urdu', label: 'Urdu' },
-            ]}
+            label="Language *"
             value={formik.values.language}
-            onChange={(value) => formik.setFieldValue('language', value)}
+            onChange={(e) => {
+              const value = e.target.value
+                .replace(/[^a-zA-Z\s]/g, '')
+                .split(' ')
+                .map((word) =>
+                  word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                )
+                .join(' ');
+              formik.setFieldValue('language', value);
+            }}
             error={!!(formik.touched.language && formik.errors.language)}
-            helperText={(formik.touched.language && formik.errors.language) as string}
-            formControlProps={{ fullWidth: true }}
+            helperText={formik.touched.language && formik.errors.language}
+            size="small"
           />
         </ShakingTextField>
       </Grid>
@@ -213,7 +213,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
             fullWidth
             name="numberOfCopies"
             type="number"
-            label="Number of Copies "
+            label="Number of Copies *"
             value={formik.values.numberOfCopies || ''}
             onChange={(e) => {
               const value = e.target.value.replace(/[^0-9]/g, '');
@@ -252,7 +252,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
           <NumericFormatCustom
             size="small"
             fullWidth
-            label="Price *"
+            label="Price Per Book *"
             name="price"
             value={formik.values.price}
             onChange={(e) => {
@@ -274,7 +274,9 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
         <CustomUpload
           multiple
           previewCount={6}
-          onChange={(files) => formik.setFieldValue(`documents`, files)}
+          onChange={(files) => {
+            formik.setFieldValue(`documents`, files);
+          }}
           value={formik.values.documents}
           label="Upload Book Cover, Front, Back Images."
           outputFormat="file"
