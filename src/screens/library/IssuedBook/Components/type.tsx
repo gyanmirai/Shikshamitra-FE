@@ -11,6 +11,8 @@ export interface ILibraryBookData {
   dueDate: string;
   returnDate: string;
   bookCondition: string;
+  isFixed: boolean;
+  accessionNumber: string;
   fineAmount: number;
   requestedDate: string;
   status: LibraryBookStatus;

@@ -64,6 +64,14 @@ const ChargeTypeTable: React.FC<IChargeTypeTableProps> = ({
         },
       },
       {
+        id: 'isFixed',
+        label: 'Fixed Amount',
+        align: 'left',
+        render(value) {
+          return value ? 'Yes' : 'No';
+        },
+      },
+      {
         id: 'description',
         label: 'Description',
         align: 'left',

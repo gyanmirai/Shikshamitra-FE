@@ -104,6 +104,13 @@
       "value": "Introduction to Physics",
       "categoryName": "Text Book",
       "quantity": 5,
+      "accessionNumberOptions": [
+        { "value": "ACC-0001", "label": "ACC-0001" },
+        { "value": "ACC-0002", "label": "ACC-0002" },
+        { "value": "ACC-0003", "label": "ACC-0003" },
+        { "value": "ACC-0004", "label": "ACC-0004" },
+        { "value": "ACC-0005", "label": "ACC-0005" }
+      ],
       "editions": [
         {
           "id": "ed1",
@@ -127,7 +134,6 @@
       "label": "Computer Networks",
       "value": "Computer Networks",
       "categoryName": "Reference Book",
-
       "editions": [
         {
           "id": "ed1",
@@ -142,6 +148,7 @@
       ]
     }
   ],
+
   "reservationRequestData": [
     {
       "memberId": "M001",
@@ -753,21 +760,31 @@
     {
       "id": "Late Book Return",
       "name": "Late Book Return",
-      "amount": 50
+      "isFixed": false,
+      "amount": ""
+    },
+    {
+      "id": "Damaged Book",
+      "name": "Damaged Book",
+      "isFixed": false,
+      "amount": ""
     },
     {
       "id": "Lost Book",
       "name": "Lost Book",
-      "amount": 300
+      "isFixed": false,
+      "amount": ""
     },
     {
       "id": "Membership Renewal",
       "name": "Membership Renewal",
+      "isFixed": true,
       "amount": 100
     },
     {
       "id": "Reservation Fee",
       "name": "Reservation Fee",
+      "isFixed": true,
       "amount": 30
     }
   ],
@@ -989,13 +1006,14 @@
       "status": "Unpaid"
     }
   ],
-   "librarySettingsData": [
+  "librarySettingsData": [
     {
       "id": "1",
       "chargeType": "Late Return Fee",
       "amount": 150,
       "createdBy": "Dharmik Jinjala",
       "createdDate": "01-05-2025",
+      "isFixed": false,
       "description": "A fee charged when a borrowed book is returned after its due date."
     },
     {
@@ -1004,6 +1022,7 @@
       "amount": 200,
       "createdBy": "Prerna Atre",
       "createdDate": "04-05-2025",
+      "isFixed": false,
       "description": "A fee imposed for returning a book in damaged condition."
     },
     {
@@ -1012,6 +1031,7 @@
       "amount": 300,
       "createdBy": "Dharmik Jinjala",
       "createdDate": "06-05-2025",
+      "isFixed": false,
       "description": "A fee charged when a borrowed book is lost and not returned."
     },
     {
@@ -1020,6 +1040,7 @@
       "amount": 50,
       "createdBy": "Mayur Solanki",
       "createdDate": "08-05-2025",
+      "isFixed": true,
       "description": "A fee for renewing library membership for continued access."
     },
     {
@@ -1028,6 +1049,7 @@
       "amount": 150,
       "createdBy": "Prerna Atre",
       "createdDate": "10-05-2025",
+      "isFixed": true,
       "description": "A fee charged when a reserved book is cancelled by the member."
     }
   ],

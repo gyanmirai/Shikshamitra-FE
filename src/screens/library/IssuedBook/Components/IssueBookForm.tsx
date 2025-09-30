@@ -165,6 +165,12 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
     },
   });
 
+  const selectedBooks = bookCategoryOptions?.find(
+    (item: IBookCategoryOption) => item.value === formik.values.bookTitle
+  );
+
+  const accessionNumberOptions = selectedBooks?.accessionNumberOptions || [];
+
   const selectedCategory = bookCategoryOptions?.find(
     (cat: IBookCategoryOption) => cat.value === formik.values.bookTitle
   );
@@ -355,33 +361,6 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
             </>
           )}
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>
-              <Autocomplete
-                disabled={isLoading}
-                options={roleData || []}
-                value={
-                  (roleData || []).find((item: any) => item.role === formik.values.role) || null
-                }
-                getOptionLabel={(option: any) => option?.role || ''}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Role *"
-                    size="small"
-                    fullWidth
-                    sx={{ width: '100%', minWidth: '200px' }}
-                    error={formik.touched.role && Boolean(formik.errors.role)}
-                    helperText={(formik.touched.role && formik.errors.role) as string}
-                  />
-                )}
-                onChange={(e, value) => {
-                  formik.setFieldValue('role', value?.role || '');
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-
           {formik.values.role === 'Student' && (
             <>
               {/* Class */}
@@ -429,6 +408,105 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
               </Grid>
             </>
           )}
+
+          {availableQuantity > 0 && (
+            <>
+              {/* Accession Number Dropdown */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField
+                  error={!!(formik.touched.accessionNumber && formik.errors.accessionNumber)}
+                >
+                  <CustomSelect
+                    label="Accession Number *"
+                    options={accessionNumberOptions}
+                    value={formik.values.accessionNumber}
+                    onChange={(val) => {
+                      formik.setFieldValue('accessionNumber', val);
+                      formik.setFieldTouched('accessionNumber', false);
+                    }}
+                    error={!!(formik.touched.accessionNumber && formik.errors.accessionNumber)}
+                    helperText={
+                      (formik.touched.accessionNumber && formik.errors.accessionNumber) as string
+                    }
+                    formControlProps={{ fullWidth: true }}
+                  />
+                </ShakingTextField>
+              </Grid>
+              {/* Issue Date */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>
+                  <DatePicker
+                    label="Issue Date"
+                    format="DD-MM-YYYY"
+                    value={formik.values.issueDate}
+                    onChange={(newValue) => formik.setFieldValue('issueDate', newValue)}
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs(currentYear?.endDate)}
+                    sx={{ minWidth: 180, width: '100%' }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: !!(formik.touched.issueDate && formik.errors.issueDate),
+                        helperText: (formik.touched.issueDate && formik.errors.issueDate) as string,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              {/* Due Date */}
+              {/* <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate)}>
+                  <DatePicker
+                    label="Due Date *"
+                    format="DD-MM-YYYY"
+                    value={formik.values.dueDate}
+                    onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs(currentYear?.endDate)}
+                    sx={{ minWidth: 180, width: '100%' }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: !!(formik.touched.dueDate && formik.errors.dueDate),
+                        helperText: (formik.touched.dueDate && formik.errors.dueDate) as string,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid> */}
+            </>
+          )}
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>
+              <Autocomplete
+                disabled={isLoading}
+                options={roleData || []}
+                value={
+                  (roleData || []).find((item: any) => item.role === formik.values.role) || null
+                }
+                getOptionLabel={(option: any) => option?.role || ''}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Role *"
+                    size="small"
+                    fullWidth
+                    sx={{ width: '100%', minWidth: '200px' }}
+                    error={formik.touched.role && Boolean(formik.errors.role)}
+                    helperText={(formik.touched.role && formik.errors.role) as string}
+                  />
+                )}
+                onChange={(e, value) => {
+                  formik.setFieldValue('role', value?.role || '');
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
+
           {/* Member Dropdown for Non-Students */}
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.member && formik.errors.member)}>
@@ -485,56 +563,6 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
               />
             </ShakingTextField>
           </Grid>
-
-          {availableQuantity > 0 && (
-            <>
-              {/* Issue Date */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>
-                  <DatePicker
-                    label="Issue Date"
-                    format="DD-MM-YYYY"
-                    value={formik.values.issueDate}
-                    onChange={(newValue) => formik.setFieldValue('issueDate', newValue)}
-                    minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs(currentYear?.endDate)}
-                    sx={{ minWidth: 180, width: '100%' }}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: !!(formik.touched.issueDate && formik.errors.issueDate),
-                        helperText: (formik.touched.issueDate && formik.errors.issueDate) as string,
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {/* Due Date */}
-              {/* <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate)}>
-                  <DatePicker
-                    label="Due Date *"
-                    format="DD-MM-YYYY"
-                    value={formik.values.dueDate}
-                    onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
-                    minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs(currentYear?.endDate)}
-                    sx={{ minWidth: 180, width: '100%' }}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: !!(formik.touched.dueDate && formik.errors.dueDate),
-                        helperText: (formik.touched.dueDate && formik.errors.dueDate) as string,
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid> */}
-            </>
-          )}
         </Grid>
       </DialogScrollContent>
 

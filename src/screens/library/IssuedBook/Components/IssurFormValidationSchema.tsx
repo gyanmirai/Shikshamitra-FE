@@ -19,6 +19,7 @@ export const getIssueBookSchema = (currentYear: any) =>
       otherwise: (schema) => schema.nullable(),
     }),
     member: Yup.string().required('Member is required'),
+    accessionNumber: Yup.string().required('Accession number is required'),
     // issueDate: Yup.mixed()
     //   .required('Issue date is required')
     //   .test(

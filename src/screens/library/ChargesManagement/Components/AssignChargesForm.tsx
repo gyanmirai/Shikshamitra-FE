@@ -336,7 +336,11 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                 label="Amount *"
                 name="amount"
                 value={formik.values.amount}
-                disabled
+                disabled={
+                  !!(chargeCategoryOptions || []).find(
+                    (cat: any) => cat.id === formik.values.chargeCategory && cat.isFixed
+                  )
+                }
                 error={!!(formik.touched.amount && formik.errors.amount)}
                 helperText={(formik.touched.amount && formik.errors.amount) as string}
               />

@@ -85,7 +85,7 @@ export const bookValidationSchema = [
             .nullable()
             .when('rfidEnabled', {
               is: true,
-              then: (schema) => schema.required('RFID ID is required if RFID is enabled'),
+              then: (schema) => schema.required('RFID is required '),
             }),
 
           // vendor present in UI — make it required (or change to .nullable() if optional)
