@@ -131,6 +131,24 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
               ),
             },
             {
+              id: 'organizations',
+              label: 'Organization',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(', ') : 'All'),
+            },
+            {
+              id: 'classes',
+              label: 'Class',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
+            },
+            {
+              id: 'divisions',
+              label: 'Division',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
+            },
+            {
               id: 'startDate',
               label: 'Start Date',
               filterType: 'date',
@@ -233,7 +251,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
                   showViewIcon
                   showThreeDots={false}
                   handleEditClick={() => onEdit(row as IClassWiseAnnouncement)}
-                  handleDeleteClick={() => onDelete(row.id)}
+                  handleDeleteClick={() => onDelete(row as IClassWiseAnnouncement)}
                   handleViewClick={() => onView(row as IClassWiseAnnouncement)}
                 />
               ),
@@ -263,6 +281,24 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
                   ))}
                 </Box>
               ),
+            },
+            {
+              id: 'organizations',
+              label: 'Organization',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(', ') : 'All'),
+            },
+            {
+              id: 'classes',
+              label: 'Class',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
+            },
+            {
+              id: 'divisions',
+              label: 'Division',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
             },
             {
               id: 'startDate',
@@ -298,7 +334,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
                   showViewIcon
                   showThreeDots={false}
                   handleEditClick={() => onEdit(row as IClassWiseAnnouncement)}
-                  handleDeleteClick={() => onDelete(row.id)}
+                  handleDeleteClick={() => onDelete(row as IClassWiseAnnouncement)}
                   handleViewClick={() => onView(row as IClassWiseAnnouncement)}
                 />
               ),
@@ -306,7 +342,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
           ]}
           data={tableData || []}
         />
-      ) : tabs.value === 1 || tabs.value === 2 ? (
+      ) : tabs.value === 1 ? (
         <CustomizableTable
           tableId="class-wise-announcement-table-readonly"
           columns={[
@@ -328,6 +364,24 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
                   ))}
                 </Box>
               ),
+            },
+            {
+              id: 'organizations',
+              label: 'Organization',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(', ') : 'All'),
+            },
+            {
+              id: 'classes',
+              label: 'Class',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
+            },
+            {
+              id: 'divisions',
+              label: 'Division',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
             },
             {
               id: 'startDate',
@@ -360,6 +414,87 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
                   placement="right-top"
                   showViewIcon
                   showThreeDots={false}
+                  handleViewClick={() => onView(row as IClassWiseAnnouncement)}
+                />
+              ),
+            },
+          ]}
+          data={tableData || []}
+        />
+      ) : tabs.value === 2 ? (
+        <CustomizableTable
+          tableId="class-wise-announcement-table-readonly"
+          columns={[
+            { id: 'title', label: 'Announcement', align: 'left', sticky: true },
+            { id: 'type', label: 'Type', align: 'left' },
+            {
+              id: 'audience',
+              label: 'Audience',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {row.audience?.map((aud: IAudience) => (
+                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SubjectColorIndicator color={aud.color} />
+                      <Typography variant="caption" fontSize="13px">
+                        {aud.name}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ),
+            },
+            {
+              id: 'organizations',
+              label: 'Organization',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(', ') : 'All'),
+            },
+            {
+              id: 'classes',
+              label: 'Class',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
+            },
+            {
+              id: 'divisions',
+              label: 'Division',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
+            },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left' },
+            { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
+            {
+              id: 'action',
+              label: 'Action',
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              render: (_, row) => (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showViewIcon
+                  showDeleteIcon
+                  showThreeDots={false}
+                  handleDeleteClick={() => onDelete(row as IClassWiseAnnouncement)}
                   handleViewClick={() => onView(row as IClassWiseAnnouncement)}
                 />
               ),

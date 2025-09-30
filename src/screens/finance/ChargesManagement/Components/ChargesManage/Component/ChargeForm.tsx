@@ -210,6 +210,22 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
               />
             </ShakingTextField>
           </Grid>
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(touched.description && errors.description) || false}>
+              <TextField
+                name="description"
+                label="Purpose/Description *"
+                multiline
+                minRows={3}
+                fullWidth
+                value={values.description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={!!(touched.description && errors.description)}
+                helperText={(touched.description && errors.description) as string}
+              />
+            </ShakingTextField>
+          </Grid>
 
           <Grid size={{ xs: 6 }}>
             <ShakingTextField error={!!(touched.class && errors.class) || false}>
@@ -369,6 +385,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 label="Due Date *"
                 name="dueDate"
                 format="DD/MM/YYYY"
+                minDate={dayjs().startOf('day')} // disables all past dates
+                maxDate={dayjs(currentYear?.endDate)}
                 value={dayjs(values.dueDate) || null}
                 onChange={(newValue) => setFieldValue('dueDate', newValue)}
                 slotProps={{
@@ -401,23 +419,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 error={!!(touched.priority && errors.priority) || false}
                 helperText={(touched.priority && errors.priority) || ''}
                 formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.description && errors.description) || false}>
-              <TextField
-                name="description"
-                label="Purpose/Description *"
-                multiline
-                minRows={3}
-                fullWidth
-                value={values.description}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={!!(touched.description && errors.description)}
-                helperText={(touched.description && errors.description) as string}
               />
             </ShakingTextField>
           </Grid>

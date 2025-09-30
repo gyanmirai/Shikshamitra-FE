@@ -63,7 +63,7 @@ const HolidayManagement = (props: TabComponentType) => {
     <Box height="100%" display="flex" flexDirection="column">
       {open ? (
         <CustomBreadcrumbs
-          heading="Holidays"
+          heading="Holiday Form"
           description="Create or update holidays with details such as holiday name, type, and date range."
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
@@ -90,7 +90,7 @@ const HolidayManagement = (props: TabComponentType) => {
               variant="contained"
               onClick={() => setOpen(true)}
             >
-              Add Holiday
+              Holiday
             </Button>
           }
         />

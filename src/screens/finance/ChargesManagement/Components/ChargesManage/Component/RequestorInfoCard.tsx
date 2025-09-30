@@ -15,53 +15,31 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => (
         {/* First Row - Basic Info */}
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                Name
-              </Typography>
-              <Typography variant="body1" fontWeight={400}>
-                {charge?.requestorName || 'Dharmik Jinjala'}
-              </Typography>
-            </Box>
+            <Typography color="text.secondary">Name</Typography>
+            <Typography sx={{ fontWeight: 400 }}>
+              {charge?.requestorName || 'Dharmik Jinjala'}
+            </Typography>
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                Affected Students
-              </Typography>
-              <Typography variant="body1" fontWeight={400}>
-                Class : {charge?.class}
-              </Typography>
-              <Typography variant="body1" fontWeight={400}>
-                Division : {charge?.divisions?.join(', ') || 'ALL'}
-              </Typography>
-              <Typography variant="body1" fontWeight={400}>
-                Total Students : {charge?.students || 80}
-              </Typography>
-            </Box>
+            <Typography color="text.secondary">Affected Students</Typography>
+            <Typography sx={{ fontWeight: 400 }}>Class : {charge?.class}</Typography>
+            <Typography sx={{ fontWeight: 400 }}>
+              Division : {charge?.divisions?.join(', ') || 'ALL'}
+            </Typography>
+            <Typography sx={{ fontWeight: 400 }}>
+              Total Students : {charge?.students || 80}
+            </Typography>
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                Department
-              </Typography>
-              <Typography variant="body1" fontWeight={400}>
-                {charge?.department || 'Science'}
-              </Typography>
-            </Box>
+            <Typography color="text.secondary">Department</Typography>
+            <Typography sx={{ fontWeight: 400 }}>{charge?.department || 'Science'}</Typography>
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                Requested On
-              </Typography>
-              <Typography variant="body1" fontWeight={400}>
-                {charge?.requestedOn || '20-08-2025'}
-              </Typography>
-            </Box>
+            <Typography color="text.secondary">Requested On</Typography>
+            <Typography sx={{ fontWeight: 400 }}>{charge?.requestedOn || '20-08-2025'}</Typography>
           </Grid>
         </Grid>
 

@@ -6,6 +6,8 @@ import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
+import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
@@ -23,6 +25,8 @@ import { audienceOptions } from '../../announcement/schoolannouncementForm';
 import type { IHoliday, IHolidayFormProps } from './type';
 
 const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEdit = false }) => {
+  const theme = useTheme();
+
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State to store list of all classes/standards
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -176,6 +180,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                       value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
                       onChange={(date) => formik.setFieldValue('startDate', date)}
                       format="DD/MM/YYYY"
+                      minDate={dayjs()} // 🔹 Prevent selecting past dates
                       slotProps={{
                         textField: {
                           fullWidth: true,
@@ -208,29 +213,33 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.description && formik.errors.description)}
-                  >
-                    <TextField
-                      label="Description / Message Body *"
-                      name="description"
-                      value={formik.values.description}
-                      onChange={formik.handleChange}
-                      multiline
-                      rows={4}
-                      fullWidth
-                      size="small"
-                      error={formik.touched.description && Boolean(formik.errors.description)}
-                      helperText={formik.touched.description && formik.errors.description}
-                    />
-                  </ShakingTextField>
+                  <Editor
+                    value={formik.values.description}
+                    onChange={(value) => {
+                      formik.setFieldValue('description', value);
+                    }}
+                    placeholder="Description"
+                    sx={{
+                      border: `1px solid ${theme.vars.palette.grey[500]}`,
+                      borderRadius: 1,
+                      '&:hover': { borderColor: theme.vars.palette.text.primary },
+                      ...(!!formik.touched.description &&
+                        !!formik.errors.description && {
+                          borderColor: theme.palette.error.main,
+                        }),
+                      '&:focus-within': {
+                        borderColor: theme.vars.palette.text.primary,
+                        borderWidth: 2,
+                      },
+                    }}
+                  />
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
                   <FileUploader
                     value={formik.values.attachment as any}
                     onChange={(val) => formik.setFieldValue('attachment', val)}
-                    primaryText="File Uploads (PDF, poster, circular...)"
+                    primaryText="File Uploads (PDF, Poster, Circular etc)"
                   />
                 </Grid>
               </SectionCard>

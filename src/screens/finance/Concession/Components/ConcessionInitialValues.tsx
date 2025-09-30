@@ -12,4 +12,7 @@ export const getInitialConcessionFormData = (
   concessionType: editData?.concessionType || '',
   reason: editData?.reason || '',
   documents: editData?.documents || [],
+  amount: editData?.amount ?? (editData?.concessionType === 'fixed' ? 0 : undefined),
+  percentage: editData?.percentage ?? (editData?.concessionType === 'percentage' ? 0 : undefined),
+  applicableFeeHeads: editData?.applicableFeeHeads || [],
 });

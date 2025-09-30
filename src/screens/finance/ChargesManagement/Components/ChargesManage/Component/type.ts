@@ -22,11 +22,48 @@ export interface IChargeData {
   board: string;
   medium: string;
   additionalNotes?: string;
-
   // Added missing properties for RequestorInfoCard
   requestorName?: string;
   department?: string;
   requestedOn?: string;
+}
+
+export interface ISingleCharge {
+  id: string;
+  category: string;
+  class: string;
+  division: string[];
+  amount: number;
+  priority: number;
+  dueDate: string; // ISO or formatted string (e.g. "2025-08-31")
+  status?: number; // number enum
+  description: string;
+  academicYear: string;
+  board: string;
+  medium: string;
+  additionalNotes?: string;
+  // Added missing properties for RequestorInfoCard
+  requestorName?: string;
+  department?: string;
+  requestedOn?: string;
+}
+
+export interface IStudentChargeData {
+  id: string;
+  studentName: string;
+  rollNo?: string;
+  grNo?: string;
+  class: string;
+  division: string;
+  contactNo?: string;
+  parentName?: string;
+  email?: string;
+  sibling?: string;
+  academicYear: string;
+  board: string;
+  medium: string;
+  // Each student can have multiple charges
+  charges: ISingleCharge[];
 }
 
 export interface IChargeFormProps {

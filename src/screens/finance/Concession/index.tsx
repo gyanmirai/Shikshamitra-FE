@@ -15,12 +15,11 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetConcessionsQuery } from 'src/redux/finance/ConcessionManagement/concessionApi';
+import { useGetConcessionRequestsQuery } from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 
 import ReasonApprovalForm from './Components/ConcessionRequestApprove';
 import StudentConcessionTable from './Components/StudentConcessionTable';
 import NewConcessionRequestForm from './Components/NewConcessionRequest';
-import ViewStudentAllConcession from './Components/ViewStudentAllConcession';
 import ViewConcessionRequest from '../ConcessionAdmin/ConcessionAdminViewForm';
 
 import type { IStudentInfo } from './type';
@@ -53,7 +52,7 @@ const Concession = () => {
 
   const { data: concessionData, isLoading: boardLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetConcessionsQuery,
+    currentQueryAndMutation: useGetConcessionRequestsQuery,
   });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -89,11 +88,12 @@ const Concession = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Concession"
+        heading="Concession Request"
         description="View and manage student concession requests."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Concession', href: '/finance/concession-type' },
+          { name: 'Concession', href: '/finance/concession/concessionRequest' },
+          { name: 'Concession Request' },
         ]}
         action={
           <Button
@@ -107,7 +107,7 @@ const Concession = () => {
         }
         sx={{ px: 1, mb: 2 }}
       />
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, ml: 1 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 1, ml: 1 }}>
         <CustomSelect
           label="Board"
           options={boards || []}
@@ -176,30 +176,6 @@ const Concession = () => {
       </CustomDialog>
 
       <CustomDialog
-        open={onViewAllConcession.value}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">{`${selectedConcession?.studentName}'s Concession History`}</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="View complete history of concession requests and their status for this student"
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        handleClose={() => {
-          setSelectedConcession(null);
-          onViewAllConcession.onFalse();
-        }}
-        maxWidth="md"
-      >
-        {selectedConcession && <ViewStudentAllConcession data={selectedConcession} />}
-      </CustomDialog>
-
-      <CustomDialog
         open={viewConcessionRequest.value}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
@@ -218,7 +194,7 @@ const Concession = () => {
           setSelectedConcession(null);
           viewConcessionRequest.onFalse();
         }}
-        maxWidth="sm"
+        maxWidth="md"
       >
         <ViewConcessionRequest
           viewConcessionRequest={viewConcessionRequest}

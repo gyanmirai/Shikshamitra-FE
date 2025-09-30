@@ -15,10 +15,14 @@ export const financeModuleApi = createApi({
         switch (url) {
           case '/chargesData':
             return { data: chargesData.chargesData };
+          case '/studentChargeData':
+            return { data: chargesData.studentChargeData };
           case '/feeRefundData':
             return { data: financeData.feeRefundData };
           case '/concessionData':
             return { data: concessionData.concessionData };
+          case '/concessionRequestData':
+            return { data: concessionData.concessionRequestData };
           default:
             return {
               error: {
@@ -28,6 +32,6 @@ export const financeModuleApi = createApi({
             };
         }
       },
-  tagTypes: ['Charges', 'FeeRefund', 'Concession'],
+  tagTypes: ['Charges', 'StudentCharges', 'FeeRefund', 'Concession', 'ConcessionRequest'],
   endpoints: () => ({}), // inject later
 });

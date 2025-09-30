@@ -10,7 +10,6 @@
       "parentName": "Mehul Patel",
       "email": "riya.patel@example.com",
       "avatarUrl": "https://randomuser.me/api/portraits/men/15.jpg",
-
       "boardMedium": "English",
       "concessionType": "Scholarship",
       "reason": "Merit-based",
@@ -37,18 +36,29 @@
           "file": null
         }
       ],
-      "concessions": [
+      "concessions": [  
         {
+          "concessionName": "Merit Scholarship",
           "concessionType": "Scholarship",
           "reason": "Merit-based",
           "documentStatus": 0,
-          "status": 1
+          "status": 0,
+              "requestDate": "2025-09-15T09:00:00.000Z",
+
+          "percentage": 50,
+          "applicableFeeHeads": ["Tuition Fee", "Library Fee"]
         },
         {
-          "concessionType": "Sibling Discount",
-          "reason": "Elder brother in same school",
-          "documentStatus": 1,
-          "status": 0
+          "concessionName": "Merit Scholarship",
+          "concessionType": "Scholarship",
+          "reason": "Merit-based",
+          "documentStatus": 0,
+              "requestDate": "2025-09-15T09:00:00.000Z",
+
+          "status": 0,
+          "percentage": 50,
+                    "applicableFeeHeads": ["Tuition Fee", "Library Fee"]
+
         }
       ]
     },
@@ -82,12 +92,30 @@
           "file": null
         }
       ],
-      "concessions": [
+         "concessions": [  
         {
-          "concessionType": "Financial Aid",
-          "reason": "Low Income Family",
+          "concessionName": "Merit Scholarship",
+          "concessionType": "Scholarship",
+          "reason": "Merit-based",
           "documentStatus": 0,
-          "status": 1
+          "status": 1,
+              "requestDate": "2025-09-15T09:00:00.000Z",
+
+          "percentage": 50,
+                    "applicableFeeHeads": ["Tuition Fee", "Library Fee"]
+
+        },
+        {
+          "concessionName": "Merit Scholarship",
+          "concessionType": "Scholarship",
+          "reason": "Merit-based",
+          "documentStatus": 0,
+          "status": 1,
+              "requestDate": "2025-09-15T09:00:00.000Z",
+
+          "percentage": 50,
+                    "applicableFeeHeads": ["Tuition Fee", "Library Fee"]
+
         }
       ]
     },
@@ -121,14 +149,97 @@
           "file": null
         }
       ],
-      "concessions": [
+      "concessions": [  
         {
-          "concessionType": "Sports Quota",
-          "reason": "State Level Player",
+          "concessionName": "Merit Scholarship",
+          "concessionType": "Scholarship",
+          "reason": "Merit-based",
           "documentStatus": 0,
-          "status": 0
+              "requestDate": "2025-09-15T09:00:00.000Z",
+
+          "status": 1,
+          "percentage": 50
+        },
+        {
+          "concessionName": "Merit Scholarship",
+          "concessionType": "Scholarship",
+          "reason": "Merit-based",
+          "documentStatus": 0,
+              "requestDate": "2025-09-15T09:00:00.000Z",
+
+          "status": 1,
+          "percentage": 50
         }
       ]
     }
-  ]
+  ],"concessionRequestData" : [
+  {
+    "studentName": "Riya Patel",
+    "rollNo": "12",
+    "sibling": "Rahul Patel",
+    "contactNo": "9876543210",
+    "classDivision": "10-A",
+    "requestDate": "2025-09-15T09:00:00.000Z",
+    "grNo": "GR1023",
+    "parentName": "Mehul Patel",
+    "email": "riya.patel@example.com",
+    "avatarUrl": "https://randomuser.me/api/portraits/men/15.jpg",
+    "boardMedium": "English",
+    "status": 1,
+    "concession": {
+      "concessionName": "Merit Scholarship",
+      "concessionType": "percentage",
+      "percentage": 50
+    },
+    "documents": [
+      { "name": "Income Certificate", "type": "PDF", "status": "Uploaded", "file": null },
+      { "name": "Academic Records", "type": "PDF", "status": "Pending", "file": null }
+    ]
+  },
+  {
+    "studentName": "Aarav Shah",
+    "rollNo": "8",
+    "contactNo": "9988776655",
+    "classDivision": "9-B",
+    "requestDate": "2025-09-15T09:00:00.000Z",
+    "grNo": "GR2045",
+    "parentName": "Kunal Shah",
+    "email": "aarav.shah@example.com",
+    "avatarUrl": "https://randomuser.me/api/portraits/men/14.jpg",
+    "boardMedium": "Gujarati",
+    "status": 1,
+    "concession": {
+      "concessionName": "Financial Aid",
+      "concessionType": "percentage",
+      "percentage": 30
+    },
+    "documents": [
+      { "name": "Income Certificate", "type": "PDF", "status": "Uploaded", "file": null },
+      { "name": "Bank Statement", "type": "PDF", "status": "Pending", "file": null }
+    ]
+  },
+  {
+    "studentName": "Simran Desai",
+    "rollNo": "5",
+    "sibling": "Priya Desai",
+    "contactNo": "9123456780",
+    "classDivision": "8-C",
+    "requestDate": "2025-09-15T09:00:00.000Z",
+    "grNo": "GR3056",
+    "parentName": "Anita Desai",
+    "email": "simran.desai@example.com",
+    "avatarUrl": "https://randomuser.me/api/portraits/men/13.jpg",
+    "boardMedium": "English",
+    "status": 3,
+    "concession": {
+      "concessionName": "Sports Quota",
+      "concessionType": "fixed",
+      "amount": 1500
+    },
+    "documents": [
+      { "name": "Sports Certificate", "type": "PDF", "status": "Uploaded", "file": null },
+      { "name": "Medical Certificate", "type": "PDF", "status": "Pending", "file": null }
+    ]
+  }
+]
 }

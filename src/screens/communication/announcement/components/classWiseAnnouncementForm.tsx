@@ -10,6 +10,8 @@ import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { DateTimePicker } from '@mui/x-date-pickers';
@@ -42,10 +44,12 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
   initialValues = null,
   isEdit = false,
 }: IClassWiseAnnouncementFormProps) => {
+  const theme = useTheme();
+
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Redux state for current board, medium and medium setter
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
+  console.log('initialValues---', initialValues);
   // State to store list of all organizations/branches
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
 
@@ -221,22 +225,26 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.description && formik.errors.description)}
-                  >
-                    <TextField
-                      fullWidth
-                      label="Description *"
-                      name="description"
-                      multiline
-                      value={formik.values.description}
-                      onChange={formik.handleChange}
-                      error={formik.touched.description && Boolean(formik.errors.description)}
-                      helperText={formik.touched.description && formik.errors.description}
-                      size="small"
-                      rows={4}
-                    />
-                  </ShakingTextField>
+                  <Editor
+                    value={formik.values.description}
+                    onChange={(value) => {
+                      formik.setFieldValue('description', value);
+                    }}
+                    placeholder="Description"
+                    sx={{
+                      border: `1px solid ${theme.vars.palette.grey[500]}`,
+                      borderRadius: 1,
+                      '&:hover': { borderColor: theme.vars.palette.text.primary },
+                      ...(!!formik.touched.description &&
+                        !!formik.errors.description && {
+                          borderColor: theme.palette.error.main,
+                        }),
+                      '&:focus-within': {
+                        borderColor: theme.vars.palette.text.primary,
+                        borderWidth: 2,
+                      },
+                    }}
+                  />
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
@@ -305,7 +313,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                         (formik.touched.organizations && formik.errors.organizations) as string
                       }
                       labelKey="name"
-                      valueKey="id"
+                      valueKey="name"
                       formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                       disabled={!medium}
                     />
@@ -363,7 +371,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                       error={formik.touched.classes && Boolean(formik.errors.classes)}
                       helperText={(formik.touched.classes && formik.errors.classes) as string}
                       labelKey="name"
-                      valueKey="id"
+                      valueKey="name"
                       formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                       disabled={!formik.values.organizations}
                     />
@@ -387,7 +395,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                             (formik.touched.divisions && formik.errors.divisions) as string
                           }
                           labelKey="name"
-                          valueKey="id"
+                          valueKey="name"
                           multiple={
                             !(formik.values.classes as string[]).includes('all') ||
                             formik.values.classes.length > 1
@@ -402,7 +410,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                 <Grid size={{ xs: 12, md: 6, sm: 3 }}>
                   <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                     <CustomSelect
-                      label="Select Audience *"
+                      label="Audience *"
                       options={audienceOptions}
                       multiple
                       value={formik.values.audience.map((aud) => aud.name)} // show only names in the UI
@@ -430,12 +438,12 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
               <SectionCard title="Delivery Channels">
                 <Grid size={{ xs: 12 }}>
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    {['inApp', 'email', 'sms', 'whatsapp'].map((type) => {
+                    {['In-App', 'Email', 'SMS', 'Whatsapp'].map((type) => {
                       const labels: Record<string, string> = {
-                        inApp: 'In-App',
-                        email: 'Email',
-                        sms: 'SMS',
-                        whatsapp: 'Whatsapp',
+                        'In-App': 'In-App',
+                        Email: 'Email',
+                        SMS: 'SMS',
+                        Whatsapp: 'Whatsapp',
                       };
 
                       return (

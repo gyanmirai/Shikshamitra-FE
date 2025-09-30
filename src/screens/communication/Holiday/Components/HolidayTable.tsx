@@ -95,74 +95,238 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({ data, onEdit, onDelete, on
       </Box>
 
       {/* Table */}
-      <CustomizableTable
-        tableId="holiday-table"
-        columns={[
-          { id: 'holidayName', label: 'Holiday Name', align: 'left' },
-          { id: 'holidayType', label: 'Type', align: 'left' },
-          { id: 'importanceLevel', label: 'Importance', align: 'left' },
-          {
-            id: 'audience',
-            label: 'Audience',
-            align: 'left',
-            render: (value) => <Box>{value.join(', ')}</Box>,
-          },
-          {
-            id: 'startDate',
-            label: 'Start Date',
-            filterType: 'date',
-            align: 'left',
-            render: (value) => (
-              <Typography fontSize="12px">{dayjs(value).format('DD MMM YYYY')}</Typography>
-            ),
-          },
-          {
-            id: 'endDate',
-            label: 'End Date',
-            filterType: 'date',
-            align: 'left',
-            render: (value) => (
-              <Typography fontSize="12px">{dayjs(value).format('DD MMM YYYY')}</Typography>
-            ),
-          },
-          { id: 'createdBy', label: 'Created By', align: 'left' },
-          { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
-          {
-            id: 'status',
-            label: 'Status',
-            align: 'left',
-            filterType: 'enum',
-            enumOptions: HolidayStatusOptions,
-            sticky: true,
-            render: (value) => (
-              <Label
-                variant="soft"
-                color={HolidayStatusColor[value as HolidayStatus] as LabelColor}
-              >
-                {HolidayStatus[value as HolidayStatus]}
-              </Label>
-            ),
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            isSort: false,
-            isFilter: false,
-            sticky: true,
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                showEditIcon
-                showDeleteIcon
-                showThreeDots={false}
-                handleEditClick={() => onEdit(row as IHoliday)}
-                handleDeleteClick={() => onDelete(row.id)}
-              />
-            ),
-          },
-        ]}
-        data={tableData || []}
-      />
+      {tabs.value === 'All' ? (
+        <CustomizableTable
+          tableId="holiday-table-all"
+          columns={[
+            { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
+            { id: 'holidayType', label: 'Type', align: 'left' },
+            { id: 'importanceLevel', label: 'Importance', align: 'left' },
+            {
+              id: 'audience',
+              label: 'Audience',
+              align: 'left',
+              render: (value) => <Box>{value.join(', ')}</Box>,
+            },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left' },
+            {
+              id: 'createdOn',
+              label: 'Created On',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              align: 'left',
+              filterType: 'enum',
+              enumOptions: HolidayStatusOptions,
+              sticky: true,
+              render: (value) => (
+                <Label
+                  variant="soft"
+                  color={HolidayStatusColor[value as HolidayStatus] as LabelColor}
+                >
+                  {HolidayStatus[value as HolidayStatus]}
+                </Label>
+              ),
+            },
+            {
+              id: 'action',
+              label: 'Action',
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              render: (_, row) => (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showThreeDots={false}
+                  handleEditClick={() => onEdit(row as IHoliday)}
+                  handleDeleteClick={() => onDelete(row.id)}
+                />
+              ),
+            },
+          ]}
+          data={tableData || []}
+        />
+      ) : tabs.value === HolidayStatus.Ongoing ? (
+        <CustomizableTable
+          tableId="holiday-table-ongoing"
+          columns={[
+            { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
+            { id: 'holidayType', label: 'Type', align: 'left' },
+            { id: 'importanceLevel', label: 'Importance', align: 'left' },
+            {
+              id: 'audience',
+              label: 'Audience',
+              align: 'left',
+              render: (value) => <Box>{value.join(', ')}</Box>,
+            },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left' },
+            {
+              id: 'createdOn',
+              label: 'Created On',
+              align: 'left',
+              filterType: 'date',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+          ]}
+          data={tableData || []}
+        />
+      ) : tabs.value === HolidayStatus.Upcoming ? (
+        <CustomizableTable
+          tableId="holiday-table-upcoming"
+          columns={[
+            { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
+            { id: 'holidayType', label: 'Type', align: 'left' },
+            { id: 'importanceLevel', label: 'Importance', align: 'left' },
+            { id: 'audience', label: 'Audience', align: 'left' },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left' },
+            {
+              id: 'createdOn',
+              label: 'Created On',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            {
+              id: 'action',
+              label: 'Action',
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              render: (_, row) => (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showEditIcon
+                  showDeleteIcon
+                  showThreeDots={false}
+                  handleEditClick={() => onEdit(row as IHoliday)}
+                  handleDeleteClick={() => onDelete(row.id)}
+                />
+              ),
+            },
+          ]}
+          data={tableData || []}
+        />
+      ) : tabs.value === HolidayStatus.Completed ? (
+        <CustomizableTable
+          tableId="holiday-table-completed"
+          columns={[
+            { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
+            { id: 'holidayType', label: 'Type', align: 'left' },
+            { id: 'importanceLevel', label: 'Importance', align: 'left' },
+            { id: 'audience', label: 'Audience', align: 'left' },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left' },
+            {
+              id: 'createdOn',
+              label: 'Created On',
+              align: 'left',
+              filterType: 'date',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            {
+              id: 'action',
+              label: 'Action',
+              sticky: true,
+              isSort: false,
+              isFilter: false,
+              render: (_, row) => (
+                <ThreeDotsActions
+                  placement="right-top"
+                  showThreeDots={false}
+                  showDeleteIcon
+                  handleDeleteClick={() => onDelete(row.id)}
+                />
+              ),
+            },
+          ]}
+          data={tableData || []}
+        />
+      ) : null}
     </Box>
   );
 };
