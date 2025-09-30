@@ -23,61 +23,83 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
         <Grid container spacing={2}>
           <Grid size={{ xs: 4 }}>
             <Typography color="text.secondary">Concession Name</Typography>
-            <Typography sx={{ fontWeight: 400 }}>{student?.concession?.concessionName}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {student?.concession?.concessionName}
+            </Typography>
           </Grid>
           <Grid size={{ xs: 4 }}>
             <Typography color="text.secondary">Concession Type</Typography>
-            <Typography sx={{ fontWeight: 400 }}>{student?.concession?.concessionType}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {student?.concession?.concessionType}
+            </Typography>
           </Grid>
           <Grid size={{ xs: 4 }}>
             <Typography color="text.secondary">Student Name </Typography>
-            <Typography sx={{ fontWeight: 400 }}>{student?.studentName}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {student?.studentName}
+            </Typography>
           </Grid>
 
           <Grid size={{ xs: 4 }}>
             <Typography color="text.secondary">Roll No. </Typography>
-            <Typography sx={{ fontWeight: 400 }}>{student?.rollNo}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {student?.rollNo}
+            </Typography>
           </Grid>
 
           <Grid size={{ xs: 4 }}>
             <Typography color="text.secondary">Contact No. </Typography>
-            <Typography sx={{ fontWeight: 400 }}>{student?.contactNo}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {student?.contactNo}
+            </Typography>
           </Grid>
 
           <Grid size={{ xs: 4 }}>
             <Typography color="text.secondary">Class/Division </Typography>
-            <Typography sx={{ fontWeight: 400 }}>{student?.classDivision}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {student?.classDivision}
+            </Typography>
           </Grid>
 
           <Grid size={{ xs: 4 }}>
             <Typography color="text.secondary">GR No. </Typography>
-            <Typography sx={{ fontWeight: 400 }}>{student?.grNo}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {student?.grNo}
+            </Typography>
           </Grid>
 
           <Grid size={{ xs: 4 }}>
             <Typography color="text.secondary">Parent Name </Typography>
-            <Typography sx={{ fontWeight: 400 }}>{student?.parentName}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {student?.parentName}
+            </Typography>
           </Grid>
 
           {student?.concession?.concessionType === 'percentage' &&
           student?.concession?.percentage !== undefined ? (
             <Grid size={{ xs: 4 }}>
               <Typography color="text.secondary">Percentage</Typography>
-              <Typography sx={{ fontWeight: 400 }}>{student.concession.percentage}%</Typography>
+              <Typography sx={{ fontWeight: 300 }} variant="body2">
+                {student.concession.percentage}%
+              </Typography>
             </Grid>
           ) : (
             <Grid size={{ xs: 4 }}>
               <Typography color="text.secondary">Amount</Typography>
-              <Typography sx={{ fontWeight: 400 }}>{student.concession?.amount}</Typography>
+              <Typography sx={{ fontWeight: 300 }} variant="body2">
+                {student.concession?.amount}
+              </Typography>
             </Grid>
           )}
           <Grid size={{ xs: 4 }}>
             <Typography color="text.secondary">Email </Typography>
-            <Typography sx={{ fontWeight: 400 }}>{student?.email}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {student?.email}
+            </Typography>
           </Grid>
           <Grid size={{ xs: 8 }}>
             <Typography color="text.secondary">Applicable Fee Heads </Typography>
-            <Typography sx={{ fontWeight: 400 }}>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
               {' '}
               {Array.isArray(student.applicableFeeHeads)
                 ? student.applicableFeeHeads.join(', ')

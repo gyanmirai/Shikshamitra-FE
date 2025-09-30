@@ -48,7 +48,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     currentMedium: medium,
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
-
+  console.log('currentMedium====', medium);
   // Memoize initial values to prevent re-creation on every render
   const initialValues = useMemo(() => {
     if (isEdit && editData) {
@@ -196,9 +196,9 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                 name="chargeCategory"
                 label="Charge Category *"
                 options={[
-                  { id: '1', name: 'Library Fine' },
-                  { id: '2', name: 'Transport Damage' },
-                  { id: '3', name: 'Hostel Maintenance' },
+                  { id: 'Library Fine', name: 'Library Fine' },
+                  { id: 'Transport Damage', name: 'Transport Damage' },
+                  { id: 'Hostel Maintenance', name: 'Hostel Maintenance' },
                 ]}
                 labelKey="name"
                 valueKey="id"

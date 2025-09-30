@@ -16,8 +16,9 @@ export const paymentMethodsConfig = {
       label: 'Bank Name',
       type: 'text',
       required: true,
-      pattern: '^[a-zA-Z0-9]+$',
-      patternMessage: 'Bank Name can include letters, numbers, spaces and . , & ( ) -',
+      pattern: '^(?=.*[a-zA-Z0-9])[a-zA-Z0-9 ]+$',
+
+      // patternMessage: 'Bank Name can include letters, numbers, spaces and . , & ( ) -',
     },
     { name: 'chequeDate', label: 'Cheque Date', type: 'date', required: true },
     {
@@ -25,8 +26,8 @@ export const paymentMethodsConfig = {
       label: 'Cheque Holder Name',
       type: 'text',
       required: true,
-      pattern: '^[a-zA-Z0-9]+$',
-      patternMessage: 'Cheque Holder Name can include letters, numbers, spaces and . , & ( ) -',
+      pattern: '^(?=.*[a-zA-Z0-9])[a-zA-Z0-9 ]+$',
+      // patternMessage: 'Cheque Holder Name can include letters, numbers, spaces and . , & ( ) -',
     },
   ],
 
@@ -53,16 +54,18 @@ export const paymentMethodsConfig = {
       label: 'Bank Name',
       type: 'text',
       required: true,
-      pattern: '^[a-zA-Z0-9]+$',
-      patternMessage: 'Bank Name can include letters, numbers, spaces and . , & ( ) -',
+      pattern: '^(?=.*[a-zA-Z0-9])[a-zA-Z0-9 ]+$',
+
+      // patternMessage: 'Bank Name can include letters, numbers, spaces and . , & ( ) -',
     },
     {
       name: 'branchName',
       label: 'Branch Name',
       type: 'text',
       required: true,
-      pattern: '^[a-zA-Z0-9]+$',
-      patternMessage: 'Branch Name can include letters, numbers, spaces and . , & ( ) -',
+      pattern: '^(?=.*[a-zA-Z0-9])[a-zA-Z0-9 ]+$',
+
+      // patternMessage: 'Branch Name can include letters, numbers, spaces and . , & ( ) -',
     },
     { name: 'issueDate', label: 'Issue Date', type: 'date', required: true },
     {
@@ -70,8 +73,9 @@ export const paymentMethodsConfig = {
       label: 'Payee Name',
       type: 'text',
       required: true,
-      pattern: '^[a-zA-Z0-9]+$',
-      patternMessage: 'Payee Name can include letters, numbers, spaces and . , & ( ) -',
+      pattern: '^(?=.*[a-zA-Z0-9])[a-zA-Z0-9 ]+$',
+
+      // patternMessage: 'Payee Name can include letters, numbers, spaces and . , & ( ) -',
     },
     { name: 'remarks', label: 'Remarks', type: 'multiline', required: false },
   ],
@@ -90,8 +94,9 @@ export const paymentMethodsConfig = {
       label: 'Account Holder Name',
       type: 'text',
       required: true,
-      pattern: '^[a-zA-Z0-9]+$',
-      patternMessage: 'Bank Name can include letters, numbers, spaces and . , & ( ) -',
+      pattern: '^(?=.*[a-zA-Z0-9])[a-zA-Z0-9 ]+$',
+
+      // patternMessage: 'Bank Name can include letters, numbers, spaces and . , & ( ) -',
     },
   ],
 
@@ -102,8 +107,9 @@ export const paymentMethodsConfig = {
       label: 'Card Holder Name',
       type: 'text',
       required: true,
-      pattern: '^[a-zA-Z0-9]+$',
-      patternMessage: 'Card Holder Name can include letters, numbers, spaces and . , & ( ) -',
+      pattern: '^(?=.*[a-zA-Z0-9])[a-zA-Z0-9 ]+$',
+
+      // patternMessage: 'Card Holder Name can include letters, numbers, spaces and . , & ( ) -',
     },
     {
       name: 'last4Digits',
@@ -154,8 +160,9 @@ export const paymentMethodsConfig = {
       label: 'Payment Gateway Name',
       type: 'text',
       required: true,
-      pattern: '^[a-zA-Z0-9]+$',
-      patternMessage: 'Payment Gateway Name can include letters, numbers, spaces and . , & ( ) -',
+      pattern: '^(?=.*[a-zA-Z0-9])[a-zA-Z0-9 ]+$',
+
+      // patternMessage: 'Payment Gateway Name can include letters, numbers, spaces and . , & ( ) -',
     },
     { name: 'remarks', label: 'Remarks', type: 'multiline', required: false },
   ],
@@ -167,8 +174,8 @@ export const paymentMethodsConfig = {
       label: 'Wallet Provider Name',
       type: 'text',
       required: true,
-      pattern: '^[a-zA-Z0-9]+$',
-      patternMessage: 'Wallet Provider Name can include letters, numbers, spaces and . , & ( ) -',
+      pattern: '^[a-zA-Z0-9 ]+$',
+      // patternMessage: 'Wallet Provider Name can include letters, numbers, spaces and . , & ( ) -',
     },
     {
       name: 'transactionId',

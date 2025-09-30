@@ -141,25 +141,27 @@
       "id": "1",
       "name": "January 2025",
       "dueDate": "30-01-2025",
-      "paid": 4000,
+      "paid": 10000,
       "total": 10000,
       "feeHeads": [
         { "name": "Tuition Fee", "paid": 4000, "total": 4000 },
-        { "name": "Library Fee", "paid": 0, "total": 3000 },
-        { "name": "Lab Fee", "paid": 0, "total": 3000 }
+        { "name": "Library Fee", "paid": 3000, "total": 3000 },
+        { "name": "Lab Fee", "paid": 3000, "total": 3000 }
       ],
       "charges": [
-        { "name": "Late Fee", "paid": 500, "dueDate": "30-01-2025", "total": 500 },
-        { "name": "Sports Fee", "paid": 0, "dueDate": "30-01-2025", "total": 2000 },
+        { "id": "1", "name": "Late Fee", "paid": 500, "dueDate": "30-01-2025", "total": 500 },
+        { "id": "2", "name": "Sports Fee", "paid": 2000, "dueDate": "30-01-2025", "total": 2000 },
         {
+          "id": "3",
           "name": "Technology Fee",
           "paid": 1000,
           "dueDate": "30-01-2025",
           "total": 1000
         },
         {
+          "id": "4",
           "name": "Development Fee",
-          "paid": 0,
+          "paid": 1500,
           "dueDate": "30-01-2025",
           "total": 1500
         }
@@ -169,24 +171,24 @@
       "id": "2",
       "name": "February 2025",
       "dueDate": "28-02-2025",
-      "paid": 0,
+      "paid": 10000,
       "total": 10000,
       "feeHeads": [
-        { "name": "Tuition Fee", "paid": 0, "total": 4000 },
-        { "name": "Library Fee", "paid": 0, "total": 3000 },
-        { "name": "Lab Fee", "paid": 0, "total": 3000 }
+        { "name": "Tuition Fee", "paid": 4000, "total": 4000 },
+        { "name": "Library Fee", "paid": 3000, "total": 3000 },
+        { "name": "Lab Fee", "paid": 3000, "total": 3000 }
       ]
     },
     {
       "id": "3",
       "name": "March 2025",
       "dueDate": "30-03-2025",
-      "paid": 0,
+      "paid": 10000,
       "total": 10000,
       "feeHeads": [
-        { "name": "Tuition Fee", "paid": 0, "total": 4000 },
-        { "name": "Library Fee", "paid": 0, "total": 3000 },
-        { "name": "Lab Fee", "paid": 0, "total": 3000 }
+        { "name": "Tuition Fee", "paid": 4000, "total": 4000 },
+        { "name": "Library Fee", "paid": 3000, "total": 3000 },
+        { "name": "Lab Fee", "paid": 3000, "total": 3000 }
       ]
     }
   ]

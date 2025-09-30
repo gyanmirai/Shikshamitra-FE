@@ -268,7 +268,6 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
               sx={{
                 maxHeight: 'calc(100vh - 300px)', // adjust offset according to your header/footer
                 minHeight: 'auto',
-                pr: 1,
               }}
             >
               <Typography variant="h6" color="primary.main" fontWeight={600} mb={2}>
@@ -466,34 +465,17 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                                     value={formik.values[method][field.name]}
                                     onChange={(e) => {
                                       const newValue = e.target.value;
+
                                       if (field.pattern) {
-                                        // Allow empty string for deletion
                                         if (newValue === '') {
                                           formik.setFieldValue(`${method}.${field.name}`, newValue);
                                           return;
                                         }
-                                        let typingRegex;
 
-                                        // Match patterns like ^[0-9]{6}$ or ^[a-zA-Z]{3,5}$
-                                        const match = field.pattern.match(
-                                          /^\^(\[.*\])\{(\d+)(?:,(\d+))?\}\$$/
-                                        );
-                                        if (match) {
-                                          const charClass = match[1]; // e.g., [0-9]
-                                          const minLength = parseInt(match[2], 10);
-                                          const maxLength = match[3]
-                                            ? parseInt(match[3], 10)
-                                            : minLength;
-                                          typingRegex = new RegExp(
-                                            `^${charClass}{0,${maxLength}}$`
-                                          );
-                                        } else {
-                                          // fallback: remove ^ and $ for typing-safe regex
-                                          const typingSafePattern = field.pattern
-                                            .replace(/^\^/, '')
-                                            .replace(/\$$/, '');
-                                          typingRegex = new RegExp(`^[${typingSafePattern}]*$`);
-                                        }
+                                        // Define allowed chars manually
+                                        const allowedChars = 'a-zA-Z0-9 ';
+                                        const typingRegex = new RegExp(`^[${allowedChars}]*$`);
+
                                         if (!typingRegex.test(newValue)) return; // block invalid chars
                                       }
                                       formik.setFieldValue(`${method}.${field.name}`, newValue);

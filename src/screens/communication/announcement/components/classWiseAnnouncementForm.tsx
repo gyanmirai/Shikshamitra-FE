@@ -17,6 +17,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -61,7 +62,18 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
   const formik = useFormik<IClassWiseAnnouncement>({
     initialValues: getClassInitialValues(initialValues),
     validationSchema: classWiseValidationSchema(currentYear),
-    onSubmit: (values) => {},
+    onSubmit: (values) => {
+      if (initialValues) {
+        shikshaMitraToast.success({
+          message: `Announcement : ${values.title} updated successfully!`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Announcement : ${values.title} added successfully!`,
+        });
+      }
+      onClose(null, true);
+    },
   });
 
   // Update organizations list when medium changes
@@ -313,7 +325,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                         (formik.touched.organizations && formik.errors.organizations) as string
                       }
                       labelKey="name"
-                      valueKey="name"
+                      valueKey="id"
                       formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                       disabled={!medium}
                     />
@@ -371,7 +383,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                       error={formik.touched.classes && Boolean(formik.errors.classes)}
                       helperText={(formik.touched.classes && formik.errors.classes) as string}
                       labelKey="name"
-                      valueKey="name"
+                      valueKey="id"
                       formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
                       disabled={!formik.values.organizations}
                     />
@@ -395,7 +407,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                             (formik.touched.divisions && formik.errors.divisions) as string
                           }
                           labelKey="name"
-                          valueKey="name"
+                          valueKey="id"
                           multiple={
                             !(formik.values.classes as string[]).includes('all') ||
                             formik.values.classes.length > 1
@@ -479,7 +491,14 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                   </Box>
                   {formik.touched.notification_preferences &&
                     formik.errors.notification_preferences && (
-                      <FormHelperText error sx={{ pl: -4, position: 'unset' }}>
+                      <FormHelperText
+                        error
+                        sx={{
+                          left: 0,
+                          fontSize: '10px !important',
+                          marginLeft: 0, // 🚀 removes default left space
+                        }}
+                      >
                         {String(formik.errors.notification_preferences)}
                       </FormHelperText>
                     )}
@@ -530,7 +549,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                     <DateTimePicker
                       label="End Date-Time *"
                       format="DD/MM/YYYY hh:mm"
-                      minDate={dayjs(currentYear?.startDate)}
+                      minDate={dayjs(formik.values.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
                       value={dayjs(formik.values.endDate)}
                       onChange={(newValue) => {

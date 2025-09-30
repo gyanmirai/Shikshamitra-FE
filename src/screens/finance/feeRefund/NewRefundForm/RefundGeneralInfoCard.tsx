@@ -92,7 +92,8 @@ const RefundGeneralInfoCard: React.FC<any> = ({ student, formik }) => {
                 value={formik.values.board || ''}
                 onChange={(value) => {
                   formik.setFieldValue('medium', '');
-                  formik.setFieldValue('class', '');
+                  formik.setFieldValue('className', '');
+                  formik.setFieldValue('division', '');
                   formik.setFieldValue('board', value);
                 }}
                 error={!!(formik.touched.board && formik.errors.board) || false}
@@ -109,6 +110,7 @@ const RefundGeneralInfoCard: React.FC<any> = ({ student, formik }) => {
                 label="Medium *"
                 options={mediums || []}
                 labelKey="name"
+                disabled={!formik.values.board}
                 valueKey="id"
                 value={formik.values.medium}
                 onChange={(val) => formik.setFieldValue('medium', val)}
@@ -127,6 +129,7 @@ const RefundGeneralInfoCard: React.FC<any> = ({ student, formik }) => {
                 options={classes || []}
                 labelKey="name"
                 valueKey="id"
+                disabled={!formik.values.medium}
                 value={formik.values.className}
                 onChange={(val) => formik.setFieldValue('className', val)}
                 error={!!(formik.touched.className && formik.errors.className)}
@@ -144,6 +147,7 @@ const RefundGeneralInfoCard: React.FC<any> = ({ student, formik }) => {
                 options={allDivision}
                 labelKey="name"
                 valueKey="id"
+                disabled={!formik.values.className}
                 value={formik.values.division}
                 onChange={(val) => formik.setFieldValue('division', val)}
                 error={!!(formik.touched.division && formik.errors.division)}
@@ -158,6 +162,7 @@ const RefundGeneralInfoCard: React.FC<any> = ({ student, formik }) => {
             <ShakingTextField error={!!(formik.touched.student && formik.errors.student) || false}>
               <Autocomplete
                 loading={isLoading}
+                disabled={!formik.values.division}
                 noOptionsText="No Student Found"
                 fullWidth
                 value={tableData.find((s: any) => s.name === formik.values.student) || null}

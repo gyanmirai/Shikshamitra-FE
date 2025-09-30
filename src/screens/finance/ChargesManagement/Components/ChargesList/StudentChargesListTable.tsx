@@ -1,10 +1,10 @@
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import React, { useCallback } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -16,7 +16,11 @@ import {
   ChargesPaymentStatusOptions,
 } from 'src/enums/fee-charges-status';
 
-import type { IChargeData, IStudentChargeData } from '../ChargesManage/Component/type';
+import type {
+  IChargeData,
+  ISingleCharge,
+  IStudentChargeData,
+} from '../ChargesManage/Component/type';
 
 const ViewStudentAllCharges = ({
   data,
@@ -43,6 +47,23 @@ const ViewStudentAllCharges = ({
     [onDelete]
   );
 
+  const tableData = useMemo(
+    () =>
+      (data?.charges || []).map((item: ISingleCharge) => ({
+        ...item,
+        category: item.category || '-', // fallback if missing
+        description: item.description || '-', // ensure description exists
+        amount:
+          item.amount !== undefined && item.amount !== null
+            ? parseFloat(String(item.amount).replace(/,/g, '')) // clean string to number
+            : 0,
+        dueDate: item.dueDate ? dayjs(item.dueDate).toISOString() : null, // ISO for datepicker/render
+        priority: item.priority ?? '-', // numeric/enum fallback
+        status: item.status ?? ChargesPaymentStatus.Pending, // default enum if missing
+      })),
+    [data]
+  );
+
   return (
     <Scrollbar sx={{ height: '500px', p: 2 }}>
       {/* Student Info */}
@@ -53,29 +74,36 @@ const ViewStudentAllCharges = ({
         <Grid container spacing={2}>
           <Grid size={{ xs: 3 }}>
             <Typography color="text.secondary">Student Name</Typography>
-            <Typography sx={{ fontWeight: 300 }}>{data?.studentName || '-'}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {data?.studentName || '-'}
+            </Typography>
           </Grid>
 
           <Grid size={{ xs: 3 }}>
             <Typography color="text.secondary">Roll No.</Typography>
-            <Typography sx={{ fontWeight: 300 }}>{data?.rollNo || '-'}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {data?.rollNo || '-'}
+            </Typography>
           </Grid>
 
           <Grid size={{ xs: 3 }}>
             <Typography color="text.secondary">GR No.</Typography>
-            <Typography sx={{ fontWeight: 300 }}>{data?.grNo || '-'}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {data?.grNo || '-'}
+            </Typography>
           </Grid>
 
           <Grid size={{ xs: 3 }}>
             <Typography color="text.secondary">Class/Division</Typography>
             <Typography
               sx={{ fontWeight: 300 }}
+              variant="body2"
             >{`${data?.class || '-'} / ${data?.division || '-'}`}</Typography>
           </Grid>
         </Grid>
       </Box>
-      <Typography variant="h6" ml={2} mb={1} color="primary.main">
-        Concession List
+      <Typography variant="h6" ml={1} mb={1} color="primary.main">
+        Charges List
       </Typography>
       {/* Charges Table */}
       <CustomizableTable
@@ -94,7 +122,7 @@ const ViewStudentAllCharges = ({
             align: 'left',
             minWidth: 220,
             render: (value) => (
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+              <Typography variant="caption" sx={{ fontSize: '13px' }}>
                 {value}
               </Typography>
             ),
@@ -105,7 +133,11 @@ const ViewStudentAllCharges = ({
             align: 'left',
             minWidth: 120,
             render(value, row) {
-              return <Typography fontSize="13px">{formatNumber(row.amount, 'INR')}</Typography>;
+              return (
+                <Typography variant="caption" fontSize="13px">
+                  {formatNumber(row.amount, 'INR')}
+                </Typography>
+              );
             },
           },
           {
@@ -115,7 +147,9 @@ const ViewStudentAllCharges = ({
             filterType: 'date',
             minWidth: 120,
             render: (value) => (
-              <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
+              <Typography variant="caption" fontSize="13px">
+                {dayjs(value).format('DD-MM-YYYY')}
+              </Typography>
             ),
           },
           {
@@ -160,7 +194,7 @@ const ViewStudentAllCharges = ({
             ),
           },
         ]}
-        data={data?.charges || []}
+        data={tableData || []}
       />
     </Scrollbar>
   );

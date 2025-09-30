@@ -62,8 +62,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
       </Typography>
       <Scrollbar
         sx={{
-          maxHeight: 'calc(100vh - 300px)', // adjust offset according to your header/footer
-          minHeight: 'auto',
+          height: '300px',
         }}
       >
         {terms?.map((term) => (

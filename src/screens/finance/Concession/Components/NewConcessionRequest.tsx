@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -297,7 +298,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           Amount
                         </Typography>
                         <Typography variant="body1" fontWeight="400">
-                          {formik.values.amount}
+                          {formatNumber(formik.values.amount, 'INR')}
                         </Typography>
                       </Grid>
                     )}

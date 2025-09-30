@@ -177,7 +177,10 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
             id: 'active',
             label: 'Active',
             sticky: true,
-            align: 'center',
+            isFilter: false,
+            minWidth: '50px',
+            isSort: false,
+            align: 'left',
             render(value, row) {
               const statusColor =
                 row.status === EventStatus.Active

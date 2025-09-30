@@ -13,6 +13,7 @@ import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
+import { shikshaMitraToast } from 'src/components/toast';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -51,7 +52,18 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
   const formik = useFormik({
     initialValues: getEventInitialValues(initialValues),
     validationSchema: eventAnnouncementValidationSchema(currentYear),
-    onSubmit: (values) => {},
+    onSubmit: (values) => {
+      if (initialValues) {
+        shikshaMitraToast.success({
+          message: `Event : ${values.title} updated successfully!`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Event : ${values.title} added successfully!`,
+        });
+      }
+      onClose(null, true);
+    },
   });
 
   // Update organizations list when medium changes
@@ -653,7 +665,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                         <DatePicker
                           label="End Date *"
                           format="DD/MM/YYYY"
-                          minDate={dayjs(currentYear?.startDate)}
+                          minDate={dayjs(formik.values.startDate)}
                           maxDate={dayjs(currentYear?.endDate)}
                           value={dayjs(formik.values.endDate)}
                           onChange={(newValue) => {

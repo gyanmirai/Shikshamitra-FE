@@ -188,7 +188,7 @@
     "status": 1,
     "concession": {
       "concessionName": "Merit Scholarship",
-      "concessionType": "percentage",
+      "concessionType": "Merit Scholarship",
       "percentage": 50
     },
     "documents": [
@@ -209,8 +209,8 @@
     "boardMedium": "Gujarati",
     "status": 1,
     "concession": {
-      "concessionName": "Financial Aid",
-      "concessionType": "percentage",
+      "concessionName": "Sibling Discount",
+      "concessionType": "Sibling Discount",
       "percentage": 30
     },
     "documents": [
@@ -233,7 +233,7 @@
     "status": 3,
     "concession": {
       "concessionName": "Sports Quota",
-      "concessionType": "fixed",
+      "concessionType": "Sports Quota",
       "amount": 1500
     },
     "documents": [

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Label } from 'src/components/label';
+import { useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
 
@@ -18,6 +19,8 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
     2: { label: 'Medium', color: 'primary' },
     3: { label: 'High', color: 'error' },
   };
+
+  const theme = useTheme();
 
   // Set default priority to 2 (Medium) if charge.priority doesn't exist
   const priority = charge?.priority
@@ -38,19 +41,24 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
               <Box display="flex" flexDirection="column" gap={2}>
                 <Box>
                   <Typography color="text.secondary">Category</Typography>
-                  <Typography sx={{ fontWeight: 400 }}>{charge?.category}</Typography>
+                  <Typography sx={{ fontWeight: 300 }} variant="body2">
+                    {charge?.category}
+                  </Typography>
                 </Box>
 
                 <Box>
                   <Typography color="text.secondary">Amount</Typography>
-                  <Typography sx={{ fontWeight: 400 }}>
+                  <Typography sx={{ fontWeight: 300 }} variant="body2">
+                    {' '}
                     {formatNumber(charge?.amount ?? 0, 'INR')}
                   </Typography>
                 </Box>
 
                 <Box>
                   <Typography color="text.secondary">Due Date</Typography>
-                  <Typography sx={{ fontWeight: 400 }}>{charge?.dueDate}</Typography>
+                  <Typography sx={{ fontWeight: 300 }} variant="body2">
+                    {charge?.dueDate}
+                  </Typography>
                 </Box>
 
                 <Box>
@@ -82,14 +90,18 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
                   <Box
                     sx={{
                       border: 1,
-                      borderColor: 'grey.300',
+                      borderColor: theme.palette.grey[300],
                       borderRadius: 1,
                       borderStyle: 'dashed',
                       p: 2,
-                      backgroundColor: 'grey.50',
+                      backgroundColor: theme.palette.grey[50],
                     }}
                   >
-                    <Typography color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                    <Typography
+                      sx={{ fontWeight: 300, lineHeight: 1.6 }}
+                      variant="body2"
+                      color="text.secondary"
+                    >
                       {charge?.description ||
                         'Annual tuition fee applicable for Class 10 students in divisions A and B.'}
                     </Typography>
@@ -102,14 +114,18 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
                   <Box
                     sx={{
                       border: 1,
-                      borderColor: 'grey.300',
+                      borderColor: theme.palette.grey[300],
                       borderRadius: 1,
                       borderStyle: 'dashed',
                       p: 2,
-                      backgroundColor: 'grey.50',
+                      backgroundColor: theme.palette.grey[50],
                     }}
                   >
-                    <Typography color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                    <Typography
+                      sx={{ fontWeight: 300, lineHeight: 1.6 }}
+                      variant="body2"
+                      color="text.secondary"
+                    >
                       {charge?.additionalNotes || 'Installments allowed in two parts.'}
                     </Typography>
                   </Box>

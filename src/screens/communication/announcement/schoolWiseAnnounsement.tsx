@@ -87,7 +87,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
     <Box height="100%" display="flex" flexDirection="column">
       {open ? (
         <CustomBreadcrumbs
-          heading="School Announcement Form"
+          heading="Add Announcement"
           description="Create or update school-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff."
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
@@ -100,7 +100,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
                 setEditingAnnouncement(null);
               },
             },
-            { name: 'School Announcement Form' },
+            { name: 'Add Announcement' },
           ]}
           sx={{ px: 1, mb: 2 }}
           isBack

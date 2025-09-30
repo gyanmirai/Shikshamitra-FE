@@ -14,6 +14,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
+import { shikshaMitraToast } from 'src/components/toast';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -61,6 +62,15 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
     initialValues: getSchoolWiseAnnouncementInitialValues(initialValues),
     validationSchema: schoolWiseValidationSchema(currentYear),
     onSubmit: (values) => {
+      if (initialValues) {
+        shikshaMitraToast.success({
+          message: `Announcement : ${values.title} updated successfully!`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Announcement : ${values.title} added successfully!`,
+        });
+      }
       onClose(null, true);
     },
   });
@@ -251,7 +261,14 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                   {/* Helper Text inside SectionCard */}
                   {formik.touched.notification_preferences &&
                     formik.errors.notification_preferences && (
-                      <FormHelperText error sx={{ mt: 1, position: 'unset' }}>
+                      <FormHelperText
+                        error
+                        sx={{
+                          left: 0,
+                          fontSize: '10px !important',
+                          marginLeft: 0, // 🚀 removes default left space
+                        }}
+                      >
                         {String(formik.errors.notification_preferences)}
                       </FormHelperText>
                     )}
@@ -281,7 +298,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                           formik.setFieldValue('duration', Math.max(0, durationInDays));
                         }
                       }}
-                      minDateTime={dayjs()} // <- disables past date and time
+                      minDate={dayjs()} // <- disables past date and time
                       maxDate={dayjs(currentYear?.endDate)}
                       sx={{ minWidth: 180, width: '100%' }}
                       slotProps={{
@@ -304,7 +321,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                     <DateTimePicker
                       label="End Date-Time *"
                       format="DD/MM/YYYY hh:mm"
-                      minDate={dayjs(currentYear?.startDate)}
+                      minDate={dayjs(formik.values.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
                       value={dayjs(formik.values.endDate)}
                       onChange={(newValue) => {
