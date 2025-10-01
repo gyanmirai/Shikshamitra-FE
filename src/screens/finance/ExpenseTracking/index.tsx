@@ -109,7 +109,7 @@ const FinanceExpenseTracking = () => {
               Expense
             </Button>
           }
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       )}
 
@@ -182,7 +182,7 @@ const FinanceExpenseTracking = () => {
               deleteExpenseDialog.onFalse();
               setSelectedExpense(null);
               shikshaMitraToast.success({
-                message: `Expense record deleted successfully`,
+                message: `Expense record : ${selectedExpense?.expenseName} deleted successfully`,
               });
             }}
           >

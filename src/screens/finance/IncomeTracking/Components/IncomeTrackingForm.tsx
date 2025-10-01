@@ -9,13 +9,14 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { useGetIncomeDetailsQuery } from 'src/redux/incomeApi/incomeDetailedApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { useGetPaymentMethodsConfigQuery } from 'src/redux/finance/expenseApi/expenseDetailedApi';
+import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeTrackingManagement/incomeTracking';
 
 import { getInitialIncomeData } from './IncomeInitialValues';
 import { getIncomeFormSchema } from './IncomeValidationSchema';
@@ -28,7 +29,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
   // Fetch income options from API
   const { data: incomeOptionsData } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetIncomeDetailsQuery,
+    currentQueryAndMutation: useGetIncomeCategoriesQuery,
   });
 
   // Fetch payment methods config from API
@@ -38,8 +39,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
   });
 
   // Extract options from API data with fallbacks
-  const categoryOptions = incomeOptionsData?.categoryOptions || [];
-  const subCategoryOptions = incomeOptionsData?.subCategoryOptions || [];
+  const categoryOptions = incomeOptionsData?.budgetOptions || [];
 
   // Use API data for payment methods config, fallback to local config
   const paymentMethodsConfigToUse = paymentMethodsConfigData || [];
@@ -56,7 +56,15 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
     initialValues: getInitialIncomeData(editData),
     validationSchema: getIncomeFormSchema(currentYear),
     onSubmit: (values) => {
-      console.log('Submitted Income:', values);
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `Income Tracking : ${values.incomeName} updated successfully!`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Income Tracking : ${values.incomeName} added successfully!`,
+        });
+      }
       onClose(null, true);
     },
   });
@@ -244,7 +252,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                 >
                   <CustomSelect
                     label="Income Category *"
-                    options={categoryOptions}
+                    options={incomeOptionsData || []}
                     value={formik.values.incomeCategory}
                     onChange={(val) => {
                       formik.setFieldValue('incomeCategory', val);
@@ -360,6 +368,8 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                     label="Date *"
                     value={dayjs(formik.values.date)}
                     onChange={(newValue) => formik.setFieldValue('date', newValue)}
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs()}
                     format="DD/MM/YYYY"
                     slotProps={{
                       textField: {
@@ -376,12 +386,12 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
               {/* Dynamic Payment Method Fields */}
               {paymentFields.length > 0 && (
                 <Grid size={12}>
-                  <Box sx={{ mt: 2, mb: 1 }}>
+                  <Box sx={{ mb: 1 }}>
                     {/* Payment Method Heading */}
                     <Typography
                       variant="h6"
                       sx={{
-                        mb: 2,
+                        mb: 1,
                         color: 'primary.main',
                         fontWeight: 600,
                         borderColor: 'primary.light',

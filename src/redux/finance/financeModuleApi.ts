@@ -4,6 +4,7 @@ import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 import chargesData from '../../../chargesData.json';
 import financeData from '../../../feeRefundData.json';
 import concessionData from '../../../concession.json';
+import incomeDetailsData from '../../../financeIncomeData.json'; // your mock JSON
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -13,6 +14,8 @@ export const financeModuleApi = createApi({
     ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
     : async ({ url }) => {
         switch (url) {
+          case '/incomeCategoryOptions':
+            return { data: incomeDetailsData.incomeCategoryOptions };
           case '/chargesData':
             return { data: chargesData.chargesData };
           case '/studentChargeData':
@@ -32,6 +35,13 @@ export const financeModuleApi = createApi({
             };
         }
       },
-  tagTypes: ['Charges', 'StudentCharges', 'FeeRefund', 'Concession', 'ConcessionRequest'],
+  tagTypes: [
+    'Charges',
+    'StudentCharges',
+    'FeeRefund',
+    'Concession',
+    'ConcessionRequest',
+    'IncomeCategories',
+  ],
   endpoints: () => ({}), // inject later
 });

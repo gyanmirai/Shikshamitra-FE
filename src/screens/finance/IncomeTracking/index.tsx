@@ -107,7 +107,7 @@ const IncomeTracking = () => {
               Income
             </Button>
           }
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       )}
 
@@ -165,7 +165,7 @@ const IncomeTracking = () => {
               deleteIncomeDialog.onFalse();
               setSelectedIncome(null);
               shikshaMitraToast.success({
-                message: `Income record ${selectedIncome?.incomeName} deleted successfully`,
+                message: `Income record : ${selectedIncome?.incomeName} deleted successfully`,
               });
               // handle delete action
             }}

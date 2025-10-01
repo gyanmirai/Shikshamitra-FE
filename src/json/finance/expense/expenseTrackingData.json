@@ -8,7 +8,7 @@
       "expenseName": "Monthly Salaries",
       "amount": 100000,
       "paymentMethod": "Bank Transfer",
-      "date": "2025-08-25",
+      "date": "2025-08-26T09:00:00.000Z",
       "notes": "Monthly salary payment for teaching staff"
     },
     {
@@ -19,7 +19,7 @@
       "expenseName": "Monthly Utilities",
       "amount": 50000,
       "paymentMethod": "Bank Transfer",
-      "date": "2025-08-20",
+      "date": "2025-08-26T09:00:00.000Z",
       "notes": "Electricity and water bills"
     },
     {
@@ -30,7 +30,7 @@
       "expenseName": "Educational Materials",
       "amount": 30000,
       "paymentMethod": "Cash",
-      "date": "2025-08-15",
+      "date": "2025-08-26T09:00:00.000Z",
       "notes": "Books and classroom supplies"
     }
   ],

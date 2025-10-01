@@ -36,48 +36,33 @@ const ViewExpenseData = ({
         <Card
           sx={{
             p: 2,
-            mb: 3,
+            mb: 2,
           }}
         >
           <Box sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+            <Typography variant="h6" mb={2} color="primary.main">
               Expense Information
             </Typography>
 
             <Grid container spacing={3}>
               <Grid size={{ xs: 12, md: 4 }}>
-                <Typography
-                  variant="body2"
-                  sx={{ color: 'text.secondary', fontSize: '0.875rem', mb: 0.5 }}
-                >
-                  Expense Category
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
-                  Learning Materials
+                <Typography color="text.secondary">Expense Category</Typography>
+                <Typography sx={{ fontWeight: 300 }} variant="body2">
+                  {expenseData?.expenseCategory || '-'}
                 </Typography>
               </Grid>
 
               <Grid size={{ xs: 12, md: 4 }}>
-                <Typography
-                  variant="body2"
-                  sx={{ color: 'text.secondary', fontSize: '0.875rem', mb: 0.5 }}
-                >
-                  Budget
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
-                  Academic Budget 2025
+                <Typography color="text.secondary">Budget</Typography>
+                <Typography sx={{ fontWeight: 300 }} variant="body2">
+                  {expenseData?.budget || '-'}
                 </Typography>
               </Grid>
 
               <Grid size={{ xs: 12, md: 4 }}>
-                <Typography
-                  variant="body2"
-                  sx={{ color: 'text.secondary', fontSize: '0.875rem', mb: 0.5 }}
-                >
-                  Total Expense Amount
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
-                  ₹ 1,00,000
+                <Typography color="text.secondary">Total Expense Amount</Typography>
+                <Typography sx={{ fontWeight: 300 }} variant="body2">
+                  ₹ {expenseDetailedData?.totalExpenseAmount?.toLocaleString() || '0'}
                 </Typography>
               </Grid>
             </Grid>
@@ -85,7 +70,7 @@ const ViewExpenseData = ({
         </Card>
 
         {/* Expense Lists Section */}
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+        <Typography variant="h6" mb={2} color="primary.main" ml={1}>
           Expense Lists
         </Typography>
 
@@ -99,6 +84,7 @@ const ViewExpenseData = ({
                 id: 'expenseName',
                 label: 'Expense Name',
                 align: 'left',
+                sticky: true,
               },
               {
                 id: 'expenseDate',

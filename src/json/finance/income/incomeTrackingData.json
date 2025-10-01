@@ -4,19 +4,19 @@
       "incomeSource": "Fees",
       "incomeAmount": "50000",
       "paymentMethod": "Online",
-      "date": "12-12-2024",
+      "date": "2025-09-11T09:00:00.000Z",
       "paymentStatus": "Paid",
       "action": "View",
       "incomeList": [
         {
           "incomeName": "Tuition Fees",
           "amount": 25000,
-          "date": "11-10-2024"
+          "date": "2025-12-15T09:00:00.000Z"
         },
         {
           "incomeName": "Tuition Fees",
           "amount": 25000,
-          "date": "12-10-2024"
+          "date": "2025-09-20T09:00:00.000Z"
         }
       ]
     },
@@ -25,19 +25,20 @@
       "incomeSource": "Donation",
       "incomeAmount": "500000",
       "paymentMethod": "Online",
-      "date": "10-10-2024",
+      "date": "2025-10-10T09:00:00.000Z",
       "paymentStatus": "Paid",
       "action": "View",
       "incomeList": [
         {
           "incomeName": "Sks Trust",
           "amount": 250000,
-          "date": "11-10-2024"
+          "date": "2025-10-11T09:00:00.000Z"
         },
         {
           "incomeName": "Gyan Mirai",
           "amount": 250000,
-          "date": "12-08-2024"
+          "date": "2025-10-12T09:00:00.000Z"
+
         }
       ]
     }
