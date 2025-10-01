@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Grid, Chip, Button, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, Typography, DialogActions } from '@mui/material';
 
 interface IBudgetApprovalProps {
   budget: any;
@@ -27,7 +28,7 @@ const BudgetApproval: React.FC<IBudgetApprovalProps> = ({ budget, onApprove, onR
           <Typography variant="h6">{budget?.budgetTitle}</Typography>
           <Typography color="text.secondary">{budget?.description}</Typography>
 
-          <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid container spacing={2} sx={{ mt: 2 }}>
             <Grid size={{ xs: 6 }}>
               <Typography color="text.secondary">Total Allocated</Typography>
               <Typography sx={{ fontWeight: 600, color: 'green' }}>
@@ -42,11 +43,34 @@ const BudgetApproval: React.FC<IBudgetApprovalProps> = ({ budget, onApprove, onR
             </Grid>
             <Grid size={{ xs: 6 }}>
               <Typography color="text.secondary">Status</Typography>
-              <Chip
-                label={statusMap[budget?.status]?.label || 'Unknown'}
-                color={statusMap[budget?.status]?.color || 'default'}
-                size="small"
-              />
+              <Label
+                variant="outlined"
+                color={statusMap[Number(budget?.status)]?.color || 'default'}
+                sx={{
+                  px: 1.5,
+                  py: 0.5,
+                  fontWeight: 500,
+                  fontSize: '0.875rem',
+                  borderRadius: 1,
+                  ...(statusMap[Number(budget?.status)]?.color === 'success' && {
+                    color: 'success.main',
+                    borderColor: 'success.main',
+                    bgcolor: 'success.lighter',
+                  }),
+                  ...(statusMap[Number(budget?.status)]?.color === 'warning' && {
+                    color: 'warning.main',
+                    borderColor: 'warning.main',
+                    bgcolor: 'warning.lighter',
+                  }),
+                  ...(statusMap[Number(budget?.status)]?.color === 'error' && {
+                    color: 'error.main',
+                    borderColor: 'error.main',
+                    bgcolor: 'error.lighter',
+                  }),
+                }}
+              >
+                {statusMap[Number(budget?.status)]?.label || 'Unknown'}
+              </Label>
             </Grid>
           </Grid>
         </Box>

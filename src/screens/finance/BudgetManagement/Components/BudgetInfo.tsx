@@ -98,7 +98,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
               value={formik.values.budgetTitle}
               onChange={(e) => {
                 const value = e.target.value
-                  .replace(/[^a-zA-Z\s]/g, '')
+                  .replace(/[^a-zA-Z0-9\s]/g, '')
                   .split(' ')
                   .map((word) =>
                     word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
@@ -142,9 +142,11 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
           >
             <ResponsiveMultiSelect
               label={
-                formik.values.budgetCategory === 'Income'
-                  ? 'Income Category *'
-                  : 'Expense Category *'
+                !formik.values.budgetCategory
+                  ? 'Income Category * / Expense Category *'
+                  : formik.values.budgetCategory === 'Income'
+                    ? 'Income Category *'
+                    : 'Expense Category *'
               }
               options={budgetSubCategoryOptions}
               value={formik.values.budgetSubCategories}
@@ -284,7 +286,16 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
               type="number"
               label="Spending Threshold Alerts (%) *"
               value={formik.values.spendingThreshold}
-              onChange={(e) => formik.setFieldValue('spendingThreshold', e.target.value)}
+              inputProps={{ min: 0, max: 100 }}
+              onChange={(e) => {
+                // Remove leading zeros
+                const value = e.target.value.replace(/^0+/, '');
+                // Convert to number if not empty
+                const numValue = value === '' ? '' : Number(value);
+                if (numValue === '' || numValue <= 100) {
+                  formik.setFieldValue('spendingThreshold', numValue);
+                }
+              }}
               error={formik.touched.spendingThreshold && Boolean(formik.errors.spendingThreshold)}
               helperText={formik.touched.spendingThreshold && formik.errors.spendingThreshold}
               size="small"
