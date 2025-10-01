@@ -1205,7 +1205,7 @@ const ColumnFilterMenu: React.FC<{
             <TextField
               fullWidth
               size="small"
-              value={formik.values.filterValue as string}
+              value={formik.values.filterValue ?? ''}
               onChange={(e) => {
                 // Remove special characters using regex
                 const sanitizedValue = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');

@@ -16,30 +16,36 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => (
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography color="text.secondary">Name</Typography>
-            <Typography sx={{ fontWeight: 400 }}>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
               {charge?.requestorName || 'Dharmik Jinjala'}
             </Typography>
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography color="text.secondary">Affected Students</Typography>
-            <Typography sx={{ fontWeight: 400 }}>Class : {charge?.class}</Typography>
-            <Typography sx={{ fontWeight: 400 }}>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              Class : {charge?.class}
+            </Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
               Division : {charge?.divisions?.join(', ') || 'ALL'}
             </Typography>
-            <Typography sx={{ fontWeight: 400 }}>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
               Total Students : {charge?.students || 80}
             </Typography>
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography color="text.secondary">Department</Typography>
-            <Typography sx={{ fontWeight: 400 }}>{charge?.department || 'Science'}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {charge?.department || 'Science'}
+            </Typography>
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
             <Typography color="text.secondary">Requested On</Typography>
-            <Typography sx={{ fontWeight: 400 }}>{charge?.requestedOn || '20-08-2025'}</Typography>
+            <Typography sx={{ fontWeight: 300 }} variant="body2">
+              {charge?.requestedOn || '20-08-2025'}
+            </Typography>
           </Grid>
         </Grid>
 

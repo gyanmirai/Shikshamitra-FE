@@ -99,7 +99,7 @@ const FeeRefund = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {addRefundRequest.value ? (
         <CustomBreadcrumbs
-          heading="Fee Refund Form"
+          heading="Add Refund Request"
           description="Form to record and request student fee refunds."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
@@ -110,7 +110,7 @@ const FeeRefund = () => {
                 addRefundRequest.onFalse();
               },
             },
-            { name: 'Fee Refund Form' },
+            { name: 'Add Refund Request' },
           ]}
           isBack={addRefundRequest.value}
           onBack={() => {
@@ -141,7 +141,7 @@ const FeeRefund = () => {
       )}
 
       {!addRefundRequest.value && (
-        <Box sx={{ display: 'flex', gap: 2, mb: 2, ml: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 1, ml: 1 }}>
           <CustomSelect
             label="Board"
             options={boards || []}

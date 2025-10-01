@@ -69,8 +69,6 @@ export const schoolWiseValidationSchema = (currentYear: any) =>
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
 
-    category: Yup.string().required('Category is required'),
-
     link: Yup.string().url('Enter a valid URL').optional(),
 
     notification_preferences: Yup.array()

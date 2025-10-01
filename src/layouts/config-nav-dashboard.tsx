@@ -1106,7 +1106,7 @@ const financeModule = {
           shortcutKeyName: 'Alt+F+3',
           children: [
             {
-              title: 'Charges Request',
+              title: 'Assign Charge',
               path: '/finance/charge-management/chargesRequest',
               _action: 'charges-request',
               shortcutKey: 'Alt+F+3',

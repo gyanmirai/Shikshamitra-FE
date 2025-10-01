@@ -6,9 +6,9 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { Box, Card, Divider, Checkbox, Collapse, Typography, IconButton } from '@mui/material';
 
-import ChargesList from '../../FeeCollection/Components/ChargesList';
+import ChargesList from './RefundChargesList';
 
-import type { ITerm, IFeeHead } from '../../FeeCollection/Components/type';
+import type { ITerm, IFeeHead, IFeeCharge } from '../../FeeCollection/Components/type';
 
 export interface ITermsToRefundProps {
   terms: ITerm[] | null;
@@ -42,54 +42,58 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
 
   const toggleExpand = (id: string) => setExpanded(expanded === id ? null : id);
 
-  const toggleTerm = (term: ITerm | IFeeHead) => {
-    if (selectedTerms.some((t) => t.id === term.id)) {
-      const newSelected: (ITerm | IFeeHead)[] = selectedTerms.filter((t) => t.id !== term.id);
-      onTermSelect(newSelected);
+  const toggleTerm = (term: ITerm) => {
+    const isSelected = selectedTerms.some((t) => t.id === term.id);
+
+    if (isSelected) {
+      // Deselect term and all children
+      onTermSelect(selectedTerms.filter((t) => t.id !== term.id));
+      onFeeHeadSelect(selectedFeeHeads.filter((k) => !k.startsWith(term.id)));
+      onChargeSelect(selectedCharges.filter((k) => !k.startsWith(term.id)));
     } else {
+      // Select term and all children
       onTermSelect([...selectedTerms, term]);
+
+      const allHeads = term.feeHeads.map((h) => `${term.id}-${h.name}`);
+      const allCharges = term?.charges?.map((c) => `${term.id}-${c.id}`) || [];
+
+      onFeeHeadSelect(Array.from(new Set([...selectedFeeHeads, ...allHeads])));
+      onChargeSelect(Array.from(new Set([...selectedCharges, ...allCharges])));
     }
+  };
 
-    // let updatedTerms = [...selectedTerms];
-    // let updatedHeads = [...selectedFeeHeads];
-    // let updatedCharges = [...selectedCharges];
+  // This handles a single charge toggle
+  const toggleCharge = (termId: string, charge: IFeeCharge) => {
+    const chargeId = `${termId}-${charge.id}`;
+    const isSelected = selectedCharges.includes(chargeId);
 
-    // if (updatedTerms.includes(id)) {
-    //   // remove term
-    //   updatedTerms = updatedTerms.filter((t) => t !== id);
-
-    //   // also deselect all its heads and charges
-    //   updatedHeads = updatedHeads.filter((key) => !key.startsWith(`${id}-`));
-    //   updatedCharges = updatedCharges.filter((key) => !key.startsWith(`${id}-`));
-    // } else {
-    //   // add term
-    //   updatedTerms.push(id);
-
-    //   // collect all heads
-    //   const termHeads = term.feeHeads.map((h) => `${id}-${h.name}`);
-    //   termHeads.forEach((key) => {
-    //     if (!updatedHeads.includes(key)) updatedHeads.push(key);
-    //   });
-
-    //   // collect all charges
-    //   const termCharges = term?.charges?.map((c) => `${id}-${c.id}`);
-    //   termCharges?.forEach((key) => {
-    //     if (!updatedCharges.includes(key)) updatedCharges.push(key);
-    //   });
-    // }
-
-    // // update all at once
-    // onTermSelect(updatedTerms);
-    // onFeeHeadSelect?.(updatedHeads);
-    // onChargeSelect?.(updatedCharges);
+    if (isSelected) {
+      // Deselect this one charge
+      onChargeSelect(selectedCharges.filter((c) => c !== chargeId));
+    } else {
+      // Select this one charge
+      onChargeSelect([...selectedCharges, chargeId]);
+    }
   };
 
   return (
-    <Card sx={{ p: 2, borderRadius: 2, boxShadow: 2, bgcolor: theme.palette.background.paper }}>
+    <Card
+      sx={{
+        p: 2,
+        borderRadius: 2,
+        height: '100%',
+        boxShadow: 2,
+        bgcolor: theme.palette.background.paper,
+      }}
+    >
       <Typography variant="h6" color="primary.main" fontWeight={600} mb={2}>
         Select Installment to Refund Fees
       </Typography>
-      <Scrollbar sx={{ maxHeight: 'calc(100vh - 300px)' }}>
+      <Scrollbar
+        sx={{
+          height: '400px',
+        }}
+      >
         {terms?.map((term) => (
           <Box key={term.id} sx={{ border: '1px solid #ddd', borderRadius: 2, mb: 1.5 }}>
             <Box display="flex" alignItems="center" justifyContent="space-between" p={1}>
@@ -101,9 +105,6 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
                 <Box>
                   <Typography variant="subtitle1" fontWeight={600}>
                     {term.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Due: {term.dueDate}
                   </Typography>
                 </Box>
               </Box>
@@ -127,6 +128,7 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
                 {term.feeHeads.map((head, indx) => {
                   const key = `${term.id}-${head.name}`;
                   const isSelected = selectedFeeHeads.includes(key);
+                  const termSelected = selectedTerms.some((t) => t.id === term.id);
 
                   const handleToggleHead = () => {
                     let updated = [...selectedFeeHeads];
@@ -151,8 +153,9 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
                     >
                       <Box display="flex" alignItems="center" gap={1}>
                         <Checkbox
-                          checked={selectedTerms?.some((t) => t.id === term.id) || false}
-                          onChange={() => toggleTerm({ ...head, id: `head${indx}` })}
+                          checked={isSelected || termSelected}
+                          disabled={termSelected}
+                          onChange={handleToggleHead}
                         />
                         <Typography>{head.name}</Typography>
                       </Box>
@@ -167,8 +170,10 @@ const TermsToRefund: React.FC<ITermsToRefundProps> = ({
 
                 <ChargesList
                   charges={term.charges}
-                  selectedCharges={selectedTerms}
-                  toggleSelect={toggleTerm}
+                  selectedCharges={selectedCharges}
+                  toggleSelect={(charge) => toggleCharge(term.id, charge)}
+                  termSelected={selectedTerms.some((t) => t.id === term.id)} // ✅ tells list whole term is selected
+                  termId={term.id}
                 />
               </Box>
             </Collapse>

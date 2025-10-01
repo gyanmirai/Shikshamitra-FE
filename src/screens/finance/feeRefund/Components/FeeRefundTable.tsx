@@ -120,8 +120,9 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
           render(value, row) {
             return (
               <ThreeDotsActions
-                disabled={row.status !== FeeRefundStatusType.Approved}
+                disabled={row.status === FeeRefundStatusType.Approved}
                 actions={(prop) => actions({ ...prop, row })}
+                showThreeDots={row.status === FeeRefundStatusType.Approved}
                 showViewIcon
                 handleViewClick={() => {
                   onView?.(row as IStudentFeeData);
