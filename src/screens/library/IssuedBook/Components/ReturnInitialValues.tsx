@@ -13,6 +13,7 @@ export const buildInitialBookReturnValues = (data?: any) => ({
   dueDate: data?.dueDate ?? dayjs().add(7, 'day'),
   quantity: data?.quantity ?? 1,
   bookCondition: data?.bookCondition ?? '',
+  isFixed: data?.isFixed ?? false,
   fineAmount: data?.fineAmount ?? 0,
   returnDate: data?.returnDate ?? null,
 });

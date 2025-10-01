@@ -18,19 +18,21 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetReservationBooksQuery } from 'src/redux/book-reservation-api/book-reservation-api';
 import {
+  ReservedBookStatus,
+  ReservedBookStatusColors,
+  ReservedBookStatusOptions,
+} from 'src/enums/reserved-book-status';
+import {
   Grid,
   Button,
+  Switch,
   MenuItem,
   MenuList,
   TextField,
   Typography,
   DialogActions,
+  FormControlLabel,
 } from '@mui/material';
-import {
-  ReservedBookStatus,
-  ReservedBookStatusColors,
-  ReservedBookStatusOptions,
-} from 'src/enums/reserved-book-status';
 
 import { buildInitialBookReturnValues } from './ReturnInitialValues';
 import { bookReturnValidationSchema } from './ReturnValidatioSchema';
@@ -198,7 +200,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           </Grid>
 
           {/* Book Condition */}
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12, md: 5 }}>
             <ShakingTextField
               error={!!(formik.touched.bookCondition && formik.errors.bookCondition)}
             >
@@ -221,20 +223,40 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
           {/* Fine Amount */}
           {(formik.values.bookCondition === 'Damaged' ||
             formik.values.bookCondition === 'Lost') && (
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!(formik.touched.fineAmount && formik.errors.fineAmount)}>
-                <NumericFormatCustom
-                  size="small"
-                  label="Fine Amount *"
-                  name="fineAmount"
-                  value={formik.values.fineAmount}
-                  onChange={formik.handleChange}
-                  fullWidth
-                  error={!!(formik.touched.fineAmount && formik.errors.fineAmount)}
-                  helperText={(formik.touched.fineAmount && formik.errors.fineAmount) as string}
-                />
-              </ShakingTextField>
-            </Grid>
+            <>
+              <Grid size={{ xs: 12, md: 3 }}>
+                <ShakingTextField>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formik.values.isFixed}
+                        onChange={() => {
+                          const newIsFixed = !formik.values.isFixed;
+                          formik.setFieldValue('isFixed', newIsFixed);
+                          formik.setFieldValue('fineAmount', newIsFixed ? 100 : '');
+                        }}
+                      />
+                    }
+                    label="Fixed Amount"
+                  />
+                </ShakingTextField>
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <ShakingTextField error={!!(formik.touched.fineAmount && formik.errors.fineAmount)}>
+                  <NumericFormatCustom
+                    disabled={formik.values.isFixed}
+                    size="small"
+                    label="Fine Amount *"
+                    name="fineAmount"
+                    value={formik.values.fineAmount}
+                    onChange={formik.handleChange}
+                    fullWidth
+                    error={!!(formik.touched.fineAmount && formik.errors.fineAmount)}
+                    helperText={(formik.touched.fineAmount && formik.errors.fineAmount) as string}
+                  />
+                </ShakingTextField>
+              </Grid>
+            </>
           )}
 
           {/* Reserved List */}

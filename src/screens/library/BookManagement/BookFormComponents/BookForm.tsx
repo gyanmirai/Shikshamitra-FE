@@ -78,6 +78,9 @@ const BookFormStepper = ({
         formik: any,
         setIsLoading: (val: boolean) => void
       ) => handleSave(isLastStep, value, formik, setIsLoading)}
+      onSave={(isLastStep, value, formik, setIsLoading) =>
+        handleSave(isLastStep, value, formik, setIsLoading, true)
+      }
       renderItem={({ formik, activeStep: step }) => {
         const StepComponent = stepComponents[step];
         return (

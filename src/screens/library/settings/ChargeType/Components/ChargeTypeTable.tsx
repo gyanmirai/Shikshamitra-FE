@@ -56,11 +56,21 @@ const ChargeTypeTable: React.FC<IChargeTypeTableProps> = ({
         align: 'left',
         filterType: 'number',
         render(value) {
+          // If value is falsy (null, undefined, 0, false), print '-'
+          if (!value) return '-';
           return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
             minimumFractionDigits: 2,
           }).format(value);
+        },
+      },
+      {
+        id: 'isFixed',
+        label: 'Fixed Amount',
+        align: 'left',
+        render(value) {
+          return value ? 'Yes' : 'No';
         },
       },
       {

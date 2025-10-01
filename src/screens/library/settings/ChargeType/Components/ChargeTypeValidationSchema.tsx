@@ -7,6 +7,11 @@ export const chargeTypeValidationSchema = Yup.object().shape({
     .transform((value, originalValue) => {
       if (typeof originalValue === 'string') {
         const cleaned = originalValue.replace(/[₹,\s]/g, '');
+        // If cleaned value is not a valid number, return undefined
+        // eslint-disable-next-line no-restricted-globals
+        if (!cleaned || isNaN(Number(cleaned))) {
+          return undefined;
+        }
         return Number(cleaned);
       }
       return value;

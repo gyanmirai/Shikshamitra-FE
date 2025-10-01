@@ -7,5 +7,7 @@ export const getInitialValues = (editData?: any) => ({
   division: editData?.division || '',
   member: editData?.student || '',
   issueDate: editData?.issueDate || null,
+  accessionNumber: editData?.accessionNumber || '',
   dueDate: editData?.dueDate || null,
+  isReservation: editData?.isReservation || false,
 });
