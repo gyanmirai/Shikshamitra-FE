@@ -66,36 +66,43 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
   };
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {showBreadCumb &&
         (open ? (
           <CustomBreadcrumbs
-            heading="Book Management Form"
+            heading={selectedBook ? 'Update Book' : 'Add Book'}
             description={
-              selectedBook?.title
+              selectedBook
                 ? 'Update existing book details such as title, author, category, and availability.'
                 : 'Add a new book by entering details like title, author, category, and availability.'
             }
+            isBack
+            onBack={() => handleClose(null, false)}
             links={[
               { name: 'Library', href: '/library/dashboard' },
               {
-                name: 'Book Management',
+                name: 'Book List',
                 href: '/library/book-management',
-                onClick: () => setOpen(false),
+                onClick: () => {
+                  setOpen(false);
+                  setSelectedBook(null);
+                },
               },
-              { name: 'Book Management Form' },
+              {
+                name: selectedBook ? 'Update Book' : 'Add Book',
+                href: '/library/book-management',
+              },
             ]}
-            sx={{ px: 1 }}
-            isBack
-            onBack={() => {
-              handleClose(null, false);
-            }}
+            sx={{ px: 1, mb: 2 }}
           />
         ) : (
           <CustomBreadcrumbs
-            heading="Book Management"
+            heading="Book List"
             description="Manage all books with details—title, author, category, and availability. Add, edit, or delete books as required."
-            links={[{ name: 'Library', href: '/library/dashboard' }, { name: 'Book Management' }]}
+            links={[
+              { name: 'Library', href: '/library/dashboard' },
+              { name: 'Book List', href: '/library/book-management' },
+            ]}
             sx={{ px: 1 }}
             action={
               <Button
