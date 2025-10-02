@@ -48,7 +48,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     currentMedium: medium,
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
-  console.log('currentMedium====', medium);
   // Memoize initial values to prevent re-creation on every render
   const initialValues = useMemo(() => {
     if (isEdit && editData) {

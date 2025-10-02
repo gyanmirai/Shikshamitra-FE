@@ -1,6 +1,6 @@
 import React from 'react';
-import NotificationHistoryScreen from 'src/screens/communication/notification-history';
+import NotificationHistory from 'src/screens/communication/NotificationHistory';
 
-const NotificationPage = () => <NotificationHistoryScreen />;
+const NotificationPage = () => <NotificationHistory />;
 
 export default NotificationPage;
