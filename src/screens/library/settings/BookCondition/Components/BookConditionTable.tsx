@@ -41,7 +41,7 @@ const ConditionTypeTable: React.FC<IConditionTypeTableProps> = ({
     columns={[
       {
         id: 'conditionType',
-        label: 'Condition Type',
+        label: 'Name',
         align: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">

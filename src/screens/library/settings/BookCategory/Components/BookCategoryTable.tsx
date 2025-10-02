@@ -42,7 +42,7 @@ const CategoryTable: React.FC<IBookCategoryTableProps> = ({
     columns={[
       {
         id: 'categoryName',
-        label: 'Category Name',
+        label: 'Name',
         align: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">
