@@ -54,6 +54,20 @@
     "amount": "40,000"
   }
 ],
+ "incomeCategoryOptions": [
+    {
+      "label": "Primary Education",
+      "value": "Primary Education"
+    },
+    {
+      "label": "Middle School",
+      "value": "Middle School"
+    },
+    {
+      "label": "Higher Secondary",
+      "value": "Higher Secondary"
+    }
+  ],
 "paymentMethodsConfig": {
     "Cash": [],
     "Cheque": [
