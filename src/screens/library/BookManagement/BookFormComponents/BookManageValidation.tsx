@@ -28,8 +28,6 @@ export const bookValidationSchema = [
       .required('Publisher is required')
       .max(100, 'Publisher name cannot exceed 100 characters'),
 
-    subject: yup.string().trim().required('Subject is required'),
-
     category: yup.string().trim().required('Category is required'),
 
     language: yup.string().trim().required('Language is required'),

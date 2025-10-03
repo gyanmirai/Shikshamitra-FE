@@ -26,16 +26,54 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
             value={formik.values.title}
             onChange={(e) => {
               const value = e.target.value
-                .replace(/[^a-zA-Z\s]/g, '')
+                .replace(/[^a-zA-Z0-9\s]/g, '')
                 .split(' ')
-                .map((word) =>
-                  word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                )
+                .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : ''))
                 .join(' ');
               formik.setFieldValue('title', value);
             }}
             error={!!(formik.touched.title && formik.errors.title)}
             helperText={formik.touched.title && formik.errors.title}
+            size="small"
+          />
+        </ShakingTextField>
+      </Grid>
+
+      {/* Number of Copies */}
+      <Grid size={{ xs: 12, md: 4 }}>
+        <ShakingTextField error={!!(formik.touched.numberOfCopies && formik.errors.numberOfCopies)}>
+          <TextField
+            fullWidth
+            name="numberOfCopies"
+            type="number"
+            label="Number of Copies *"
+            value={formik.values.numberOfCopies || ''}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '');
+              formik.setFieldValue('numberOfCopies', value);
+              formik.setFieldTouched('numberOfCopies', false);
+              const count = Number(value || 0);
+              if (count > 0) {
+                const updated = Array.from({ length: count }, (_, i) => ({
+                  copyNo: i + 1,
+                  accessionNo: `ACC-${String(i + 1).padStart(4, '0')}`,
+                  rfidEnabled: formik.values.copies?.[i]?.rfidEnabled || false,
+                  rfidId: formik.values.copies?.[i]?.rfidId || null,
+                  vendor: formik.values.copies?.[i]?.vendor || '',
+                }));
+                formik.setFieldValue('copies', updated);
+              } else {
+                formik.setFieldValue('copies', []);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
+            onWheel={(e) => (e.target as HTMLElement).blur()}
+            error={!!(formik.touched.numberOfCopies && formik.errors.numberOfCopies)}
+            helperText={formik.touched.numberOfCopies && formik.errors.numberOfCopies}
             size="small"
           />
         </ShakingTextField>
@@ -118,7 +156,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
           <TextField
             fullWidth
             name="subject"
-            label="Subject *"
+            label="Subject "
             value={formik.values.subject}
             onChange={(e) => {
               const value = e.target.value
@@ -201,46 +239,6 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
             }}
             error={!!(formik.touched.language && formik.errors.language)}
             helperText={formik.touched.language && formik.errors.language}
-            size="small"
-          />
-        </ShakingTextField>
-      </Grid>
-
-      {/* Number of Copies */}
-      <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField error={!!(formik.touched.numberOfCopies && formik.errors.numberOfCopies)}>
-          <TextField
-            fullWidth
-            name="numberOfCopies"
-            type="number"
-            label="Number of Copies *"
-            value={formik.values.numberOfCopies || ''}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, '');
-              formik.setFieldValue('numberOfCopies', value);
-              formik.setFieldTouched('numberOfCopies', false);
-              const count = Number(value || 0);
-              if (count > 0) {
-                const updated = Array.from({ length: count }, (_, i) => ({
-                  copyNo: i + 1,
-                  accessionNo: `ACC-${String(i + 1).padStart(4, '0')}`,
-                  rfidEnabled: formik.values.copies?.[i]?.rfidEnabled || false,
-                  rfidId: formik.values.copies?.[i]?.rfidId || null,
-                  vendor: formik.values.copies?.[i]?.vendor || '',
-                }));
-                formik.setFieldValue('copies', updated);
-              } else {
-                formik.setFieldValue('copies', []);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-                e.preventDefault();
-              }
-            }}
-            onWheel={(e) => (e.target as HTMLElement).blur()}
-            error={!!(formik.touched.numberOfCopies && formik.errors.numberOfCopies)}
-            helperText={formik.touched.numberOfCopies && formik.errors.numberOfCopies}
             size="small"
           />
         </ShakingTextField>
