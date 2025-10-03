@@ -9,6 +9,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
@@ -41,7 +42,6 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
 
   // Extract options from API data with fallbacks
   const categoryOptions = expenseOptionsData?.categoryOptions || [];
-  const subCategoryOptions = expenseOptionsData?.subCategoryOptions || [];
 
   // Use API data for payment methods config, fallback to local config
   const paymentMethodsConfigToUse = paymentMethodsConfigData || [];
@@ -59,7 +59,15 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
     validationSchema: getExpenseFormSchema(currentYear),
     enableReinitialize: true,
     onSubmit: (values) => {
-      console.log('Submitted Expense:', values);
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `Expense Tracking : ${values.expenseName} updated successfully!`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Expense Tracking : ${values.expenseName} added successfully!`,
+        });
+      }
       onClose(null, true);
     },
   });
@@ -252,10 +260,6 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                     onChange={(val) => {
                       formik.setFieldValue('expenseCategory', val);
                       formik.setFieldTouched('expenseCategory', false);
-                      const selectedCategory = categoryOptions.find(
-                        (cat: { value: string; budget?: string }) => cat.value === val
-                      );
-                      formik.setFieldValue('budget', selectedCategory?.budget || '');
                     }}
                     error={!!(formik.touched.expenseCategory && formik.errors.expenseCategory)}
                     helperText={
@@ -285,25 +289,6 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                   />
                 </ShakingTextField>
               </Grid>
-
-              {/* <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.budgetSubCategory && formik.errors.budgetSubCategory)}
-                >
-                  <CustomSelect
-                    label="Budget Sub Category *"
-                    options={subCategoryOptions}
-                    value={formik.values.budgetSubCategory}
-                    onChange={(val) => formik.setFieldValue('budgetSubCategory', val)}
-                    error={!!(formik.touched.budgetSubCategory && formik.errors.budgetSubCategory)}
-                    helperText={
-                      (formik.touched.budgetSubCategory &&
-                        formik.errors.budgetSubCategory) as string
-                    }
-                    formControlProps={{ fullWidth: true }}
-                  />
-                </ShakingTextField>
-              </Grid> */}
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
@@ -361,7 +346,9 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                     label="Date *"
                     value={dayjs(formik.values.date)}
                     onChange={(newValue) => formik.setFieldValue('date', newValue)}
-                    format="DD-MM-YYYY"
+                    format="DD/MM/YYYY"
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs()}
                     slotProps={{
                       textField: {
                         fullWidth: true,
@@ -401,12 +388,12 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
               {/* Dynamic Payment Method Fields */}
               {paymentFields.length > 0 && (
                 <Grid size={12}>
-                  <Box sx={{ mt: 2, mb: 1 }}>
+                  <Box sx={{ mb: 1 }}>
                     {/* Payment Method Heading */}
                     <Typography
                       variant="h6"
                       sx={{
-                        mb: 2,
+                        mb: 1,
                         color: 'primary.main',
                         fontWeight: 600,
                         borderColor: 'primary.light',

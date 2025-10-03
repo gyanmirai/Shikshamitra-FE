@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import dayjs from 'dayjs';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -56,16 +57,42 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         id: 'expenseCategory',
         label: 'Expense Category',
         align: 'left',
+        minWidth: '160px',
         filterType: 'string',
+        sticky: true,
+      },
+      {
+        id: 'budget',
+        label: 'Budget',
+        align: 'left',
       },
       {
         id: 'amount',
-        label: 'Expenses Amount',
+        label: 'Amount',
         align: 'left',
         filterType: 'number',
-        render: (value, row) => (
-          <Typography variant="body2">₹ {row.amount?.toLocaleString()}</Typography>
+        render: (value) => `₹ ${value?.toLocaleString()}`,
+      },
+      {
+        id: 'paymentMethod',
+        label: 'Payment Method',
+        align: 'left',
+        minWidth: '160px',
+      },
+      {
+        id: 'date',
+        label: 'Date',
+        align: 'left',
+        filterType: 'date',
+        render: (value) => (
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
         ),
+      },
+      {
+        id: 'notes',
+        label: 'Notes',
+        align: 'left',
+        minWidth: '150px',
       },
       {
         id: 'actions',
@@ -74,7 +101,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         isSort: false,
         isFilter: false,
         sticky: true,
-        minWidth: '70px',
+        minWidth: 50,
         render: (value, row) => (
           <ThreeDotsActions
             showThreeDots={false}

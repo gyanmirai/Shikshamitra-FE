@@ -353,6 +353,7 @@ const ReservationForm: React.FC<IReservationFormProps> = ({ open, onClose, editD
                 InputProps={{ readOnly: true }}
                 size="small"
                 fullWidth
+                disabled
                 error={!!(formik.touched.bookCategory && formik.errors.bookCategory)}
                 helperText={(formik.touched.bookCategory && formik.errors.bookCategory) as string}
               />

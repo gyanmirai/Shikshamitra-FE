@@ -27,6 +27,11 @@ export const getExpenseFormSchema = (currentYear: any) =>
         'max-date',
         (value) => `Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+      )
+      .test(
+        'no-future-date',
+        'Date cannot be in the future',
+        (value) => value && dayjs(value as any).isSameOrBefore(dayjs(), 'day')
       ),
     notes: Yup.string().max(500, 'Notes cannot exceed 500 characters'),
   });

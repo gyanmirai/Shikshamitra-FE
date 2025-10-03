@@ -277,7 +277,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                       formik.setFieldValue('class', val);
                       formik.setFieldValue('division', '');
                       formik.setFieldValue('student', '');
-                      formik.setFieldTouched('class', false);
+                      formik.setFieldTouched('class', true);
                     }}
                     labelKey="name"
                     valueKey="id"
@@ -299,7 +299,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                     onChange={(val) => {
                       formik.setFieldValue('division', val);
                       formik.setFieldValue('student', '');
-                      formik.setFieldTouched('division', false);
+                      formik.setFieldTouched('division', true);
                     }}
                     labelKey="name"
                     valueKey="id"

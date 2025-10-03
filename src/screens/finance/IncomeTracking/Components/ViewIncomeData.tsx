@@ -25,40 +25,34 @@ const ViewIncomeData = ({
       <Card
         sx={{
           p: 2,
-          mb: 3,
+          mb: 2,
         }}
       >
         <Box sx={{}}>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+          <Typography variant="h6" mb={2} color="primary.main">
             Income Information
           </Typography>
           <Grid container spacing={2}>
             {/* Income Category */}
             <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="subtitle2" color="text.secondary">
-                Income Category
-              </Typography>
-              <Typography variant="body1" fontWeight={500}>
+              <Typography color="text.secondary">Income Category</Typography>
+              <Typography sx={{ fontWeight: 300 }} variant="body2">
                 {incomeData?.incomeCategory || '-'}
               </Typography>
             </Grid>
 
             {/* Budget */}
             <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="subtitle2" color="text.secondary">
-                Budget
-              </Typography>
-              <Typography variant="body1" fontWeight={500}>
+              <Typography color="text.secondary">Budget</Typography>
+              <Typography sx={{ fontWeight: 300 }} variant="body2">
                 {incomeData?.budget || '-'}
               </Typography>
             </Grid>
 
             {/* Total Amount Received */}
             <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="subtitle2" color="text.secondary">
-                Total Amount Received
-              </Typography>
-              <Typography variant="body1" fontWeight={500}>
+              <Typography color="text.secondary">Total Amount Received</Typography>
+              <Typography sx={{ fontWeight: 300 }} variant="body2">
                 ₹ {incomeData?.amount || 0}
               </Typography>
             </Grid>
@@ -67,7 +61,7 @@ const ViewIncomeData = ({
       </Card>
 
       {/* Income Lists */}
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" mb={2} color="primary.main" ml={1}>
         Income Lists
       </Typography>
 
@@ -82,6 +76,7 @@ const ViewIncomeData = ({
             label: 'Income Name',
             align: 'left',
             minWidth: '200px',
+            sticky: true,
           },
           {
             id: 'receivedDate',

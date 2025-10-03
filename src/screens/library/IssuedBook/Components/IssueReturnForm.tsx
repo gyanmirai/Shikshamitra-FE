@@ -54,7 +54,7 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
     onSubmit: (values) => {
       if (editData) {
         shikshaMitraToast.success({
-          message: `${values.bookTitle} book return updated successfully`,
+          message: `${values.bookTitle} book return successfully`,
         });
       } else {
         shikshaMitraToast.success({
