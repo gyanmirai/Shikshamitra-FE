@@ -31,6 +31,10 @@ export const communicationApi = createApi({
             return { data: communicationData.importanceLevelData };
           case '/deliveryChannelTypeData':
             return { data: communicationData.deliveryChannelTypeData };
+          case '/notificationTemplateData':
+            return { data: communicationData.notificationTemplateData };
+          case '/notificationHistoryApi':
+            return { data: communicationData.notificationHistoryData };
           default:
             return {
               error: {
@@ -51,6 +55,8 @@ export const communicationApi = createApi({
     'HolidayTypeOptions',
     'ImportanceLevelOptions',
     'DeliveryChannelTypeOptions',
+    'NotificationTemplates',
+    'NotificationHistory',
   ],
   endpoints: () => ({}),
 });

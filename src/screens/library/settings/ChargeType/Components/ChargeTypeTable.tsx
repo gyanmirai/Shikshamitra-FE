@@ -42,7 +42,7 @@ const ChargeTypeTable: React.FC<IChargeTypeTableProps> = ({
     columns={[
       {
         id: 'chargeType',
-        label: ' Name',
+        label: 'Name',
         align: 'left',
         render: (value) => (
           <Typography variant="caption" fontSize="13px">

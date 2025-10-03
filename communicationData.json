@@ -618,6 +618,113 @@
     "description": "Display messages within the web or mobile app.",
     "color": "#9C27B0"
   }
+],
+"notificationTemplateData": [
+  {
+    "id": "TMP-001",
+    "templateName": "Exam Notification",
+    "hashtags": ["#Academic", "#Exam"],
+    "targetRole": "Student",
+    "subject": "Final Exam 2025",
+    "message": "Dear students, your final exams will begin on 15th March 2025. Please check the timetable on the school portal."
+  },
+  {
+    "id": "TMP-002",
+    "templateName": "Fee Reminder",
+    "hashtags": ["#Reminder", "#Finance"],
+    "targetRole": "Parent",
+    "subject": "Monthly Fee Reminder",
+    "message": "Dear Parents, kindly clear the pending school fees for your ward by 10th October 2025 to avoid late charges."
+  },
+  {
+    "id": "TMP-003",
+    "templateName": "Holiday Announcement",
+    "hashtags": ["#Holiday", "#Festival"],
+    "targetRole": "Teacher",
+    "subject": "Navratri Celebration",
+    "message": "School will remain closed on 12th October 2025 on account of Navratri. Wishing you a joyous celebration."
+  },
+  {
+    "id": "TMP-004",
+    "templateName": "Parent-Teacher Meeting",
+    "hashtags": ["#PTM", "#Communication"],
+    "targetRole": "Parent",
+    "subject": "PTM Notification",
+    "message": "Dear Parents, Parent-Teacher Meeting is scheduled for 20th October 2025 at 10:00 AM in the school auditorium."
+  },
+  {
+    "id": "TMP-005",
+    "templateName": "Sports Day Invite",
+    "hashtags": ["#Sports", "#Event"],
+    "targetRole": "Student",
+    "subject": "Annual Sports Day",
+    "message": "We are excited to invite you to our Annual Sports Day on 5th November 2025. Participation is mandatory for all students."
+  }
+],
+"notificationHistoryData" : [
+  {
+    "id": 1,
+    "dateTime": "2024-01-15T10:30:00Z",
+    "title": "Exam Schedule Released",
+    "category": "Academic",
+    "sentBy": "John Doe",
+    "recipients": 245,
+    "channels": ["Email", "SMS"],
+    "status": 1,
+    "totalRecipients": 245,
+    "delivered": 240,
+    "opened": 198,
+    "failed": 5,
+    "subject": "Important: Exam Schedule for Final Semester",
+    "body": "Dear students, the final semester exam schedule has been released. Please check your student portal for detailed timings and venues."
+  },
+  {
+    "id": 2,
+    "dateTime": "2024-02-05T09:00:00Z",
+    "title": "Library Due Reminder",
+    "category": "General",
+    "sentBy": "Admin Office",
+    "recipients": 120,
+    "channels": ["Email"],
+    "status": 0,
+    "totalRecipients": 120,
+    "delivered": 0,
+    "opened": 0,
+    "failed": 0,
+    "subject": "Reminder: Pending Library Books",
+    "body": "Please return or renew your library books before the due date to avoid penalties."
+  },
+  {
+    "id": 3,
+    "dateTime": "2024-03-12T14:15:00Z",
+    "title": "Sports Meet Invitation",
+    "category": "Events",
+    "sentBy": "Sports Committee",
+    "recipients": 300,
+    "channels": ["SMS"],
+    "status": 1,
+    "totalRecipients": 300,
+    "delivered": 290,
+    "opened": 150,
+    "failed": 10,
+    "subject": "Join Us: Annual Sports Meet",
+    "body": "We are excited to invite you to the Annual Sports Meet. Don’t miss the fun and competitions!"
+  },
+  {
+    "id": 4,
+    "dateTime": "2024-04-01T08:45:00Z",
+    "title": "System Maintenance",
+    "category": "Technical",
+    "sentBy": "IT Support",
+    "recipients": 500,
+    "channels": ["Email", "Push Notification"],
+    "status": 1,
+    "totalRecipients": 500,
+    "delivered": 450,
+    "opened": 0,
+    "failed": 50,
+    "subject": "Notice: Scheduled System Maintenance",
+    "body": "The student portal will be unavailable on April 2nd from 1:00 AM to 3:00 AM due to scheduled maintenance."
+  }
 ]
-
 }

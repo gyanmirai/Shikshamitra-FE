@@ -994,10 +994,26 @@ const communicationModule = {
         },
         {
           title: 'Notification',
-          path: '/communication/notification',
+          path: '',
           _action: 'notification',
           shortcutKey: 'Alt+C+N',
           shortcutKeyName: 'Alt+C+N',
+          children: [
+            {
+              title: 'Send Notification',
+              path: '/communication/notification/send-notification',
+              _action: 'send-notification',
+              shortcutKey: 'Alt+C+N+1',
+              shortcutKeyName: 'Alt+C+N+1',
+            },
+            {
+              title: 'Templates',
+              path: '/communication/notification/templates',
+              _action: 'templates',
+              shortcutKey: 'Alt+C+T',
+              shortcutKeyName: 'Alt+C+T',
+            },
+          ],
         },
         {
           title: 'Notification History',

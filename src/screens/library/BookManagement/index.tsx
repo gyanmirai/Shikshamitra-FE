@@ -93,7 +93,7 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
                 href: '/library/book-management',
               },
             ]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ px: 1 }}
           />
         ) : (
           <CustomBreadcrumbs
