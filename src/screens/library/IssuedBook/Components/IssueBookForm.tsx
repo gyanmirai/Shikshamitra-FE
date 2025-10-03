@@ -152,7 +152,11 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
     validationSchema: getIssueBookSchema(currentYear),
     // enableReinitialize: true,
     onSubmit: (values) => {
-      if (editData) {
+      if (values.isReservation) {
+        shikshaMitraToast.success({
+          message: `${values.bookTitle} book reservation successful`,
+        });
+      } else if (editData) {
         shikshaMitraToast.success({
           message: `${values.bookTitle} book issue updated successfully`,
         });
@@ -164,6 +168,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
       onClose(values, true);
     },
   });
+  console.log('🚀 ~ IssueBookForm ~ formik:', formik);
 
   const selectedBooks = bookCategoryOptions?.find(
     (item: IBookCategoryOption) => item.value === formik.values.bookTitle
@@ -311,7 +316,12 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                         variant="contained"
                         color="error"
                         size="small"
-                        onClick={() => setShowReservation(true)}
+                        onClick={() => {
+                          setShowReservation(true);
+                          formik.setFieldValue('isReservation', true);
+                          formik.setFieldTouched('accessionNumber', false); // Reset touched state
+                          formik.setFieldTouched('issueDate', false); // (optional) Reset issueDate touched state too
+                        }}
                       >
                         Make Reservation
                       </Button>
@@ -367,7 +377,7 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                     value={formik.values.accessionNumber}
                     onChange={(val) => {
                       formik.setFieldValue('accessionNumber', val);
-                      formik.setFieldTouched('accessionNumber', false);
+                      formik.setFieldTouched('accessionNumber', true);
                     }}
                     error={!!(formik.touched.accessionNumber && formik.errors.accessionNumber)}
                     helperText={
@@ -381,10 +391,13 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>
                   <DatePicker
-                    label="Issue Date"
+                    label="Issue Date *"
                     format="DD-MM-YYYY"
                     value={formik.values.issueDate}
-                    onChange={(newValue) => formik.setFieldValue('issueDate', newValue)}
+                    onChange={(newValue) => {
+                      formik.setFieldValue('issueDate', newValue);
+                      formik.setFieldTouched('issueDate', true);
+                    }}
                     minDate={dayjs(currentYear?.startDate)}
                     maxDate={dayjs(currentYear?.endDate)}
                     sx={{ minWidth: 180, width: '100%' }}
@@ -399,34 +412,11 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
                   />
                 </ShakingTextField>
               </Grid>
-
-              {/* Due Date */}
-              {/* <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate)}>
-                  <DatePicker
-                    label="Due Date *"
-                    format="DD-MM-YYYY"
-                    value={formik.values.dueDate}
-                    onChange={(newValue) => formik.setFieldValue('dueDate', newValue)}
-                    minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs(currentYear?.endDate)}
-                    sx={{ minWidth: 180, width: '100%' }}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: !!(formik.touched.dueDate && formik.errors.dueDate),
-                        helperText: (formik.touched.dueDate && formik.errors.dueDate) as string,
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid> */}
             </>
           )}
 
           {/* Show Role and Member fields only after Edition is selected */}
-          {formik.values.edition && (
+          {formik.values.edition && (availableQuantity > 0 || showReservation) && (
             <>
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>

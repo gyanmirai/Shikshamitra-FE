@@ -86,12 +86,7 @@ const LibraryChargesTable = ({
   const isBackClick = false;
   return (
     <Box>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ mt: '4px', mb: 2, ml: 3 }}
-      >
+      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ ml: 2, mt: 1 }}>
         <Tabs
           value={tabValue}
           onChange={(_, newValue) => setTabValue(newValue)}

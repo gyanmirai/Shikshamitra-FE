@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
 // ------------------ Schema ------------------
@@ -21,30 +22,57 @@ export const getIssueBookSchema = (currentYear: any) =>
     isReservation: Yup.boolean(),
     member: Yup.string().required('Member is required'),
     accessionNumber: Yup.string().when('isReservation', {
-      is: true,
+      is: false,
       then: (schema) => schema.required('Accession number is required'),
       otherwise: (schema) => schema.nullable(),
     }),
-    // issueDate: Yup.mixed()
-    //   .required('Issue date is required')
-    //   .test(
-    //     'is-valid-dayjs',
-    //     'Issue date must be a valid date',
-    //     (value) => value && dayjs(value as any).isValid()
-    //   )
-    //   .test(
-    //     'min-date',
-    //     (value) =>
-    //       `Issue date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-    //     (value) => value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
-    //   )
-    //   .test(
-    //     'max-date',
-    //     (value) =>
-    //       `Issue date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-    //     (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
-    //   ),
-
+    issueDate: Yup.mixed().when('isReservation', {
+      is: false,
+      then: (schema) =>
+        schema
+          .required('Issue date is required')
+          .test(
+            'is-valid-dayjs',
+            'Issue date must be a valid date',
+            (value) => value && dayjs(value as any).isValid()
+          )
+          .test(
+            'min-date',
+            (value) =>
+              `Issue date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+          )
+          .test(
+            'max-date',
+            (value) =>
+              `Issue date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+          ),
+      otherwise: (schema) =>
+        schema
+          .nullable()
+          .test(
+            'is-valid-dayjs',
+            'Issue date must be a valid date',
+            (value) => !value || dayjs(value as any).isValid()
+          )
+          .test(
+            'min-date',
+            (value) =>
+              `Issue date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              !value || dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+          )
+          .test(
+            'max-date',
+            (value) =>
+              `Issue date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+            (value) =>
+              !value || dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+          ),
+    }),
     // dueDate: Yup.mixed()
     //   .required('Due date is required')
     //   .test(

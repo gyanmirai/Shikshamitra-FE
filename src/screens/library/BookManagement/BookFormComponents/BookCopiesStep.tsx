@@ -1,8 +1,10 @@
 import type { FormikProps, FormikErrors } from 'formik';
 
 import { useState } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { Box, Switch, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -33,7 +35,22 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
               },
               {
                 id: 'accessionNo',
-                label: 'Accession No.',
+                label: '',
+                renderColumn(value) {
+                  return (
+                    <Box display="flex" alignItems="center" gap={1}>
+                      Accession No.
+                      <CustomTooltip
+                        arrow
+                        placement="right"
+                        sx={{ textAlign: 'justify' }}
+                        title="Enter the unique Accession Number for this copy. Only letters, numbers, and hyphens are allowed. Maximum 12 characters."
+                      >
+                        <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                      </CustomTooltip>
+                    </Box>
+                  );
+                },
                 minWidth: 170,
                 align: 'left',
                 render: (value, row) => (
@@ -126,8 +143,22 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
               },
               {
                 id: 'rfidId',
-                label: 'RFID',
-
+                label: '',
+                renderColumn(value) {
+                  return (
+                    <Box display="flex" alignItems="center" gap={1}>
+                      RFID
+                      <CustomTooltip
+                        arrow
+                        placement="right"
+                        sx={{ textAlign: 'justify' }}
+                        title="Enter the RFID for this copy if RFID is enabled. Only letters and numbers are allowed."
+                      >
+                        <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                      </CustomTooltip>
+                    </Box>
+                  );
+                },
                 align: 'left',
                 render: (_, row) => (
                   <Box mb={1}>

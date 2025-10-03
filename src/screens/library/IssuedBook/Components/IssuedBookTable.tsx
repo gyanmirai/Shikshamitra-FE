@@ -96,7 +96,7 @@ const BookIssueReturnTable = ({
                 </Box>
               }
               value={tab.value}
-              sx={{ fontSize: '12px' }}
+              sx={{ fontSize: '12px', ml: 2 }}
             />
           ))}
         </Tabs>
