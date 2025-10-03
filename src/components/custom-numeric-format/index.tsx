@@ -15,7 +15,7 @@ const NumericFormatCustom = ({
     onChange={onChange}
     isAllowed={(values) => {
       const { floatValue } = values;
-      return floatValue === undefined || floatValue <= 99999; // only allow up to 5 digits
+      return floatValue === undefined || floatValue <= 9999999; // only allow up to 5 digits
     }}
     // @ts-ignore
     customInput={TextField}

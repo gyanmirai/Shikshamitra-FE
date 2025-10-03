@@ -6,11 +6,12 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { formatNumber } from 'src/utils/formate_number';
 import { BudgetStatusType } from 'src/enums/budget-status';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Tab, Tabs, Button, MenuItem, MenuList } from '@mui/material';
+import { Box, Tab, Tabs, Button, MenuItem, MenuList, Typography } from '@mui/material';
 
 interface IBudgetTableProps {
   data: any[];
@@ -74,8 +75,6 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
     ],
     [budgetCounts]
   );
-
-  console.log('tabs vale-----', tabs.value);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
     tabs.onChange(event, newValue);
@@ -197,15 +196,31 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
           tableId="budget-table-pending"
           noDataText="Pending Budgets Not Found"
           columns={[
-            { id: 'budgetTitle', label: 'Budget Title', align: 'left' },
+            { id: 'budgetTitle', label: 'Budget Title', align: 'left', minWidth: '150px' },
             { id: 'budgetCategory', label: 'Type', align: 'left' },
-            { id: 'startDate', label: 'Start Date', align: 'left', filterType: 'date' },
-            { id: 'endDate', label: 'End Date', align: 'left', filterType: 'date' },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              align: 'left',
+              filterType: 'date',
+              minWidth: '120px',
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              align: 'left',
+              filterType: 'date',
+              minWidth: '120px',
+            },
             {
               id: 'totalBudgetAmount',
               label: 'Total Budget Amount',
               align: 'left',
               filterType: 'number',
+              minWidth: '200px',
+              render(value) {
+                return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+              },
             },
             { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
             { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
@@ -246,15 +261,31 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
           tableId="budget-table-active"
           noDataText="Active Budgets Not Found"
           columns={[
-            { id: 'budgetTitle', label: 'Budget Title', align: 'left' },
+            { id: 'budgetTitle', label: 'Budget Title', align: 'left', minWidth: '150px' },
             { id: 'budgetCategory', label: 'Type', align: 'left' },
-            { id: 'startDate', label: 'Start Date', align: 'left', filterType: 'date' },
-            { id: 'endDate', label: 'End Date', align: 'left', filterType: 'date' },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              align: 'left',
+              filterType: 'date',
+              minWidth: '120px',
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              align: 'left',
+              filterType: 'date',
+              minWidth: '120px',
+            },
             {
               id: 'totalBudgetAmount',
               label: 'Total Budget Amount',
               align: 'left',
               filterType: 'number',
+              minWidth: '200px',
+              render(value) {
+                return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+              },
             },
             { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
             { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
@@ -290,15 +321,31 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
           tableId="budget-table-inactive"
           noDataText="Inactive Budgets Not Found"
           columns={[
-            { id: 'budgetTitle', label: 'Budget Title', align: 'left' },
+            { id: 'budgetTitle', label: 'Budget Title', align: 'left', minWidth: '150px' },
             { id: 'budgetCategory', label: 'Type', align: 'left' },
-            { id: 'startDate', label: 'Start Date', align: 'left', filterType: 'date' },
-            { id: 'endDate', label: 'End Date', align: 'left', filterType: 'date' },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              align: 'left',
+              filterType: 'date',
+              minWidth: '120px',
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              align: 'left',
+              filterType: 'date',
+              minWidth: '120px',
+            },
             {
               id: 'totalBudgetAmount',
               label: 'Total Budget Amount',
               align: 'left',
               filterType: 'number',
+              minWidth: '200px',
+              render(value) {
+                return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+              },
             },
             { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
             { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
@@ -334,15 +381,31 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
           tableId="budget-table-archive"
           noDataText="Archived Budgets Not Found"
           columns={[
-            { id: 'budgetTitle', label: 'Budget Title', align: 'left' },
+            { id: 'budgetTitle', label: 'Budget Title', align: 'left', minWidth: '150px' },
             { id: 'budgetCategory', label: 'Type', align: 'left' },
-            { id: 'startDate', label: 'Start Date', align: 'left', filterType: 'date' },
-            { id: 'endDate', label: 'End Date', align: 'left', filterType: 'date' },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              align: 'left',
+              filterType: 'date',
+              minWidth: '120px',
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              align: 'left',
+              filterType: 'date',
+              minWidth: '120px',
+            },
             {
               id: 'totalBudgetAmount',
               label: 'Total Budget Amount',
               align: 'left',
               filterType: 'number',
+              minWidth: '200px',
+              render(value) {
+                return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
+              },
             },
             { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
             { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },

@@ -66,6 +66,7 @@ export const budgetValidationSchema = (currentYear: any) => [
 
   // Step 2 – Subcategories
   Yup.object().shape({
+    totalBudgetAmount: Yup.number().required('Total budget amount is required'),
     subCategories: Yup.array()
       .of(
         Yup.object().shape({
@@ -73,12 +74,36 @@ export const budgetValidationSchema = (currentYear: any) => [
           subCategory: Yup.string().required('Sub Category is required'),
           amount: Yup.number()
             .min(1, 'Amount must be greater than 0')
-            .required('Amount is required'),
+            .required('Amount is required')
+            .test('budget-limit', function (value) {
+              const { path, createError, from } = this;
+              const allValues = from && from.length > 0 ? from[from.length - 1]?.value : undefined;
+              const totalBudgetAmount = allValues?.totalBudgetAmount;
+              const subCategories = allValues?.subCategories;
+
+              if (!subCategories || !totalBudgetAmount) return true;
+
+              const totalAllocated = subCategories.reduce((sum: number, item: any) => {
+                const amount =
+                  typeof item.amount === 'string' ? parseFloat(item.amount) || 0 : item.amount || 0;
+                return sum + amount;
+              }, 0);
+
+              const remaining = Number(totalBudgetAmount) - totalAllocated;
+
+              if (remaining < 0) {
+                return createError({
+                  path,
+                  message: `Amount cannot exceed total budget amount`,
+                });
+              }
+
+              return true;
+            }),
         })
       )
       .min(1, 'At least one subcategory is required'),
   }),
-
   // Step 3 – Review (no validation)
   Yup.object().shape({}),
 ];

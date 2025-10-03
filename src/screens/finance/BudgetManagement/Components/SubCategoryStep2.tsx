@@ -19,6 +19,17 @@ const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
   const { values, setFieldValue, touched, setFieldTouched, errors } = formik;
   console.log('values[-----------', values);
 
+  // Calculate total allocated amount
+  const totalAllocated = values.subCategories.reduce((sum, item) => {
+    const amount =
+      typeof item.amount === 'string' ? parseFloat(item.amount) || 0 : item.amount || 0;
+    return sum + amount;
+  }, 0);
+
+  // Calculate remaining budget
+  const remainingBudget = Number(values.totalBudgetAmount) - totalAllocated;
+  const isOverBudget = remainingBudget < 0;
+
   const handleRemove = (index: number) => {
     const updated = [...values.subCategories];
     updated.splice(index, 1);

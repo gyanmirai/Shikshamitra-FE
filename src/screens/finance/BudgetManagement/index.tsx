@@ -98,7 +98,7 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
             }
             links={[
               { name: 'Finance', href: '/finance/dashboard' },
-              { name: 'Budget', href: '/finance/scheduleBudget' },
+              { name: 'Budget', href: '/finance/budgeting', onClick: () => setOpen(false) },
               { name: 'Budgeting' },
             ]}
             sx={{ px: 1 }}
@@ -111,11 +111,7 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
           <CustomBreadcrumbs
             heading="Budgeting"
             description="Manage all budgets with complete details—categories, allocations, and amounts. Add, edit, or delete budgets as required."
-            links={[
-              { name: 'Finance', href: '/finance/dashboard' },
-              { name: 'Budget', href: '/finance/budgetDashboard' },
-              { name: 'Budgeting' },
-            ]}
+            links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Budgeting' }]}
             sx={{ px: 1 }}
             action={
               <Button
@@ -304,7 +300,7 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedMode === 'Approve' ? 'Approve Concession' : 'Reject Concession'}
+              {selectedMode === 'Approve' ? 'Approve Budget' : 'Reject Budget'}
             </Typography>
             <CustomTooltip
               arrow

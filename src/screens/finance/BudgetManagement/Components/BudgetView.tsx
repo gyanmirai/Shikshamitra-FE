@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Card, Chip, Grid, Button, Typography, LinearProgress } from '@mui/material';
@@ -15,6 +16,13 @@ const BudgetDetailsCard: React.FC<{
   const spent = 30000;
   const remaining = allocated - spent;
   const utilization = (spent / allocated) * 100;
+
+  const statusMap: Record<number, string> = {
+    0: 'Active',
+    1: 'Inactive',
+  };
+
+  console.log('budget--', budget);
 
   return (
     <Box
@@ -38,16 +46,16 @@ const BudgetDetailsCard: React.FC<{
             <Typography variant="h6" gutterBottom color="primary.main">
               Basic Details
             </Typography>
-            <Chip
-              size="small"
-              label="Active"
+            <Label
               variant="outlined"
               sx={{
                 color: 'success.main',
                 borderColor: 'success.main',
                 bgcolor: 'success.lighter',
               }}
-            />
+            >
+              {statusMap[Number(budget?.status)] ?? 'Unknown'}
+            </Label>
           </Box>
           <Grid container spacing={2}>
             {/* Budget Title */}
