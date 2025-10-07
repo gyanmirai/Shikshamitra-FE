@@ -330,8 +330,11 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
                   <Checkbox
                     checked={row.isSelect || false}
                     onChange={(e) => {
-                      const updatedMembers = [...formik.values.members];
-                      updatedMembers[row.id].isSelect = e.target.checked;
+                      const updatedMembers = formik.values.members.map((member: any) =>
+                        member.id === row.id
+                          ? { ...member, isSelect: e.target.checked }
+                          : member
+                      );
                       formik.setFieldValue('members', updatedMembers);
                     }}
                   />
