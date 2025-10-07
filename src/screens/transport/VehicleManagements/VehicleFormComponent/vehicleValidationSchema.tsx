@@ -2,12 +2,11 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import * as yup from 'yup';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+
+dayjs.extend(isSameOrAfter);
 
 // Example: Replace with your actual academic/session year dates
-const currentYear = {
-  startDate: dayjs().startOf('year'),
-  endDate: dayjs().endOf('year'),
-};
 
 export const vehicleValidationSchema = [
   // Step 0: Basic Information

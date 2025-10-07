@@ -16,7 +16,7 @@ interface VehicleGeneralStepProps {
   formik: FormikProps<IVehiclePayload>;
 }
 
-const VehicleGeneralStep = ({ formik }: { formik: any }) => {
+const VehicleGeneralStep = ({ formik }: VehicleGeneralStepProps) => {
   const { data: vehicleTypeOptions } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetvehicleTypeOptionsQuery,
@@ -26,8 +26,6 @@ const VehicleGeneralStep = ({ formik }: { formik: any }) => {
     type: 'query',
     currentQueryAndMutation: useGetfuelTypeOptionsQuery,
   });
-
-  console.log('🚀 ~ VehicleGeneralStep ~ formik:', formik.values);
 
   return (
     <SectionCard title="Basic Information">
@@ -43,8 +41,6 @@ const VehicleGeneralStep = ({ formik }: { formik: any }) => {
               label="Registration No. *"
               value={formik.values.registrationNo}
               onChange={(e) => {
-                console.log('🚀 ~e----', e.target.value);
-
                 let value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
                 value = value.toUpperCase();
                 formik.setFieldValue('registrationNo', value);
@@ -125,7 +121,7 @@ const VehicleGeneralStep = ({ formik }: { formik: any }) => {
               label="Model *"
               value={formik.values.model}
               onChange={(e) => {
-                let value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                let value = e.target.value.replace(/[^a-zA-Z0-9\s-]/g, '');
                 // Capitalize first letter of each word
                 value = value.replace(/\b\w/g, (char) => char.toUpperCase());
                 formik.setFieldValue('model', value);
@@ -171,7 +167,7 @@ const VehicleGeneralStep = ({ formik }: { formik: any }) => {
               value={formik.values.seatingCapacity === 0 ? '' : formik.values.seatingCapacity}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^0-9]/g, '');
-                formik.setFieldValue('seatingCapacity', value ? Number(value) : '');
+                formik.setFieldValue('seatingCapacity', value ? Number(value) : 0);
               }}
               error={!!(formik.touched.seatingCapacity && formik.errors.seatingCapacity)}
               helperText={formik.touched.seatingCapacity && formik.errors.seatingCapacity}
@@ -210,10 +206,10 @@ const VehicleGeneralStep = ({ formik }: { formik: any }) => {
               fullWidth
               name="schoolAssignedNo"
               label="School Assigned No."
-              value={formik.values.schoolAssignedNo}
+              value={formik.values.schoolAssignedNo ?? ''}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^0-9]/g, '');
-                formik.setFieldValue('schoolAssignedNo', value ? Number(value) : '');
+                formik.setFieldValue('schoolAssignedNo', value);
               }}
               error={!!(formik.touched.schoolAssignedNo && formik.errors.schoolAssignedNo)}
               helperText={formik.touched.schoolAssignedNo && formik.errors.schoolAssignedNo}
@@ -266,9 +262,9 @@ const VehicleGeneralStep = ({ formik }: { formik: any }) => {
             control={
               <Checkbox
                 checked={formik.values.isAC === true}
-                onChange={() => {
-                  formik.setFieldValue('isAC', true);
-                  formik.setFieldValue('isNonAC', false);
+                onChange={(_, checked) => {
+                  formik.setFieldValue('isAC', checked);
+                  if (checked) formik.setFieldValue('isNonAC', false);
                 }}
                 name="isAC"
                 color="primary"
@@ -280,9 +276,9 @@ const VehicleGeneralStep = ({ formik }: { formik: any }) => {
             control={
               <Checkbox
                 checked={formik.values.isNonAC === true}
-                onChange={() => {
-                  formik.setFieldValue('isNonAC', true);
-                  formik.setFieldValue('isAC', false);
+                onChange={(_, checked) => {
+                  formik.setFieldValue('isNonAC', checked);
+                  if (checked) formik.setFieldValue('isAC', false);
                 }}
                 name="isNonAC"
                 color="primary"

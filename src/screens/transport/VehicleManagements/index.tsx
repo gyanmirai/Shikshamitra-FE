@@ -5,7 +5,6 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -18,7 +17,6 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
   const [open, setOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
   const dispatch = useDispatch();
-  const viewDialog = useBoolean();
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -88,10 +86,6 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
         </Card>
       ) : (
         <VehicleTableView
-          onView={(data) => {
-            viewDialog.onTrue();
-            setSelectedVehicle(data);
-          }}
           onEdit={(data) => {
             setSelectedVehicle(data);
             setOpen(true);

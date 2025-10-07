@@ -42,8 +42,6 @@ export const getInitialVehicleData = (editData?: IVehiclePayload): IVehiclePaylo
   roadTaxReceiptNo: editData?.roadTaxReceiptNo || '',
   roadTaxIssueDate: editData?.roadTaxIssueDate ? dayjs(editData.roadTaxIssueDate) : null,
 
-  denseTable: editData?.denseTable || false,
-
   maintenance: {
     serviceDate: editData?.maintenance?.serviceDate
       ? dayjs(editData.maintenance.serviceDate)

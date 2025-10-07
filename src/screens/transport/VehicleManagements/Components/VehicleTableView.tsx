@@ -1,7 +1,6 @@
 import type { LabelColor } from 'src/components/label';
 
 import { Box } from '@mui/system';
-import { useDispatch } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -20,13 +19,7 @@ import { VehicleStatusOptions, VehicleStatusTypeColors } from './type';
 
 import type { IVehicleData, VehicleStatusType } from './type';
 
-const VehicleTableView = ({
-  onEdit,
-  onView,
-}: {
-  onEdit: (row: IVehicleData) => void;
-  onView: (row: IVehicleData) => void;
-}) => {
+const VehicleTableView = ({ onEdit }: { onEdit: (row: IVehicleData) => void }) => {
   const { data } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetVehicleManagementDataQuery,
@@ -34,10 +27,9 @@ const VehicleTableView = ({
 
   const [isChanges, setIsChanges] = useState(false);
   const maintainDialog = useBoolean();
-  const [selectedVehicle, setSelectedVehicle] = useState<IVehicleData | null>(null);
+  const [, setSelectedVehicle] = useState<IVehicleData | null>(null);
   const [viewVehicle, setViewVehicle] = useState<IVehicleData | null>(null);
   const viewDialog = useBoolean();
-  const dispatch = useDispatch();
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -174,11 +166,7 @@ const VehicleTableView = ({
           </Box>
         }
       >
-        <AddMaintenanceForm
-          open={maintainDialog.value}
-          onClose={handleClose}
-          vehicleData={selectedVehicle}
-        />
+        <AddMaintenanceForm open={maintainDialog.value} onClose={handleClose} />
       </CustomDialog>
 
       <CustomDialog
@@ -202,7 +190,7 @@ const VehicleTableView = ({
           </Box>
         }
       >
-        {viewVehicle && <VehicleViewDetails vehicle={viewVehicle} />}
+        {viewVehicle && <VehicleViewDetails />}
       </CustomDialog>
     </>
   );

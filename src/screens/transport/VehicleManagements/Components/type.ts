@@ -30,7 +30,7 @@ export interface IVehicleData {
 }
 
 export interface IVehicleMaintenance {
-  serviceDate: Dayjs | string | null;
+  serviceDate: Dayjs | null;
   serviceNotes: string;
   serviceCost: string;
   serviceProvider: string;
@@ -82,6 +82,4 @@ export interface IVehiclePayload {
 
   roadTaxReceiptNo: string;
   roadTaxIssueDate: Dayjs | null;
-
-  denseTable?: boolean;
 }

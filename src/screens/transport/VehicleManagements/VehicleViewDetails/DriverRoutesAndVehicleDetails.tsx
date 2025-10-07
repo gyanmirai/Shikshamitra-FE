@@ -7,9 +7,7 @@ import {
   useGetinsuranceQuery,
 } from 'src/redux/transport/vehicle-management/vehicleDocumentDataApi';
 
-import type { IVehicleData } from '../Components/type';
-
-const DriverRoutesAndVehicleDetails = ({ vehicle }: { vehicle: IVehicleData }) => {
+const DriverRoutesAndVehicleDetails = () => {
   const { data: driver } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetdriverQuery,
@@ -88,26 +86,37 @@ const DriverRoutesAndVehicleDetails = ({ vehicle }: { vehicle: IVehicleData }) =
           Documents
         </Typography>
         <Grid container spacing={2}>
-          {documents?.map((doc: { key: string | number; label: string }) => (
-            <Grid
-              size={{ xs: 12 }}
-              key={doc.key}
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              sx={{ mb: 1 }}
-            >
-              <Typography>{doc.label}</Typography>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Iconify icon="material-symbols:visibility" />}
-                // onClick={() => handleViewDocument(doc.key)}
-              >
-                View
-              </Button>
-            </Grid>
-          ))}
+          <Grid container spacing={2}>
+            {documents && documents.length > 0 ? (
+              documents.map((doc: { key: string | number; label: string; url?: string }) => (
+                <Grid
+                  size={{ xs: 12 }}
+                  key={doc.key}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  sx={{ mb: 1 }}
+                >
+                  <Typography>{doc.label}</Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Iconify icon="material-symbols:visibility" />}
+                    onClick={() => window.open(doc.url, '_blank')}
+                    disabled={!doc.url}
+                  >
+                    View
+                  </Button>
+                </Grid>
+              ))
+            ) : (
+              <Grid size={{ xs: 12 }}>
+                <Typography color="text.secondary" textAlign="center">
+                  No documents available
+                </Typography>
+              </Grid>
+            )}
+          </Grid>{' '}
         </Grid>
       </Card>
     </Box>

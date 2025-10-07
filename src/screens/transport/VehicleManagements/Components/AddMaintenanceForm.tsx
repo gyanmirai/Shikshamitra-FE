@@ -17,7 +17,6 @@ import { maintenanceValidationSchema } from './MaintenanceValidationSchema';
 interface AddMaintenanceFormProps {
   open: boolean;
   onClose: (e: any, isSubmit: boolean) => void;
-  vehicleData?: any;
 }
 
 const initialValues = {
@@ -29,7 +28,7 @@ const initialValues = {
   documents: [],
 };
 
-const AddMaintenanceForm: React.FC<AddMaintenanceFormProps> = ({ open, onClose, vehicleData }) => {
+const AddMaintenanceForm: React.FC<AddMaintenanceFormProps> = ({ open, onClose }) => {
   const formik = useFormik({
     initialValues,
     validationSchema: maintenanceValidationSchema,

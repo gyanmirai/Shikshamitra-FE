@@ -1,7 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 
-import vehicleManagementData from '../../json/transport/trabsportModuleData.json';
+import vehicleManagementData from '../../json/transport/transportModuleData.json';
 
 const isDev = process.env.NODE_ENV === 'development';
 

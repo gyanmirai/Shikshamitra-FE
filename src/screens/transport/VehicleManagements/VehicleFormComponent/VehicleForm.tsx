@@ -26,8 +26,6 @@ const VehicleFormStepper = ({
 
   const initialValues = useMemo(() => getInitialVehicleData(editData), [editData]);
 
-  console.log('Current activeStep:', activeStep);
-
   const handleSave = useCallback(
     async (
       isLastStep: boolean,

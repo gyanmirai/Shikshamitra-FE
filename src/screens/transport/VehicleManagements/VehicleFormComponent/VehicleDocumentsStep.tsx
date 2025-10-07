@@ -34,7 +34,6 @@ const VehicleDocumentsStep = ({ formik }: VehicleDocumentsStepProps) => {
       noDataText={<>No document data available.</>}
       columns={[
         { id: 'name', label: 'Name', align: 'left' },
-        // { id: 'acceptedFormat', label: 'Accepted Format', align: 'left' },
         {
           id: 'status',
           label: 'Status',
@@ -51,7 +50,6 @@ const VehicleDocumentsStep = ({ formik }: VehicleDocumentsStepProps) => {
                   sx={{
                     color: (theme) =>
                       row.status === 'Uploaded' ? 'success.main' : theme.vars.palette.grey[500],
-                    cursor: 'pointer',
                   }}
                 />
               </Tooltip>
@@ -151,6 +149,7 @@ const VehicleDocumentsStep = ({ formik }: VehicleDocumentsStepProps) => {
                     link.href = url;
                     link.download = row.name;
                     link.click();
+                    URL.revokeObjectURL(url);
                   }
                 }}
               >
