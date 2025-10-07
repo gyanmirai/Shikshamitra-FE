@@ -21,8 +21,6 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
     type: 'query',
     currentQueryAndMutation: useGetImportanceLevelOptionsQuery,
   });
-  console.log('templateData-------', templateData);
-  console.log('importanceData-------', importanceData);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleEditorChange = useCallback(
     debounce((value, setFieldValue) => {
