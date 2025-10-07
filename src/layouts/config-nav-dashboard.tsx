@@ -1407,11 +1407,18 @@ const libraryModule = {
         },
         {
           title: 'Book List',
-          path: '/library/book-management',
-          _action: 'book-management',
+          path: '/library/book-list',
+          _action: 'book-list',
           shortcutKey: 'Alt+L+2',
           shortcutKeyName: 'Alt+L+2',
         },
+        // {
+        //   title: 'Book List',
+        //   path: '/library/book-management',
+        //   _action: 'book-management',
+        //   shortcutKey: 'Alt+L+2',
+        //   shortcutKeyName: 'Alt+L+2',
+        // },
         {
           title: 'Issue & Return Book',
           path: '/library/issued-books',

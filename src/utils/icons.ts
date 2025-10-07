@@ -49,6 +49,7 @@ export const GlobalIcons = {
   reject: 'fluent:text-change-reject-24-filled',
   lockIcon: 'mdi:lock-outline',
   archive: 'mdi:archive',
+  printer: 'mdi:printer',
 };
 
 export const GlobalIconColors = {
