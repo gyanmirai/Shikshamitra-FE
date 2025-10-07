@@ -146,17 +146,23 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
 
   // 2️⃣ Set Formik members AFTER render
   useEffect(() => {
-    if (tableData.length && !formik.values.members?.length) {
-      formik.setFieldValue(
-        'members',
-        tableData.map((item) => ({
-          ...item,
-          isSelect: false,
-        }))
-      );
+    if (!tableData.length) {
+      formik.setFieldValue('members', []);
+      return;
     }
+
+    formik.setFieldValue(
+      'members',
+      tableData.map((item: any) => {
+        const existing = formik.values.members?.find((member: any) => member.id === item.id);
+        return {
+          ...item,
+          isSelect: existing?.isSelect ?? false,
+        };
+      })
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableData, formik.values.members]);
+  }, [tableData]);
 
   // useEffect(() => {
   //   if (tableData && tableData.length && !formik.values.members?.length) {
