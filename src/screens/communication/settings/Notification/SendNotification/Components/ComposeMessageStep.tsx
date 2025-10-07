@@ -63,12 +63,16 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
                 />
               )}
               onChange={(e, value) => {
-                formik.setFieldValue('selectedTemplate.templateId', value?.id);
-                formik.setFieldValue('selectedTemplate.templateName', value?.templateName);
-                formik.setFieldValue('selectedTemplate.subject', value?.subject);
-              }}
-              onBlur={() => formik.setFieldTouched('selectedTemplate.templateId', true)}
-            />
+                <Autocomplete
+                  /* …other props… */
+                  onChange={(e, value) => {
+                    formik.setFieldValue('selectedTemplate.id',       value?.id       ?? '');
+                    formik.setFieldValue('selectedTemplate.templateName', value?.templateName ?? '');
+                    formik.setFieldValue('selectedTemplate.subject',     value?.subject    ?? '');
+                    formik.setFieldValue('selectedTemplate.message',     value?.message    ?? '');
+                  }}
+                  onBlur={() => formik.setFieldTouched('selectedTemplate.id', true)}
+                />
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
