@@ -58,7 +58,7 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
   useEffect(() => {
     if (formik.values.audience.classes?.length === 0) {
       setAllDivision([]);
-      formik.setFieldValue('divisions', []);
+      formik.setFieldValue('audience.divisions', []);
       return;
     }
 
@@ -72,7 +72,7 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
       const divisions = selectedClass?.divisions || [];
       setAllDivision(divisions);
       formik.setFieldValue(
-        'divisions',
+        'audience.divisions',
         divisions.map((d: any) => d.id)
       );
     } else {
@@ -88,7 +88,7 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
           standardId: '',
         },
       ]);
-      formik.setFieldValue('divisions', ['all']);
+      formik.setFieldValue('audience.divisions', ['all']);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allClass, formik.values.audience?.classes]);
