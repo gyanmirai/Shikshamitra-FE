@@ -1141,5 +1141,39 @@
       "maxBooksPerMonth": "",
       "reservationLimit": ""
     }
-  ]
+  ],
+  "sectionManagementData":[
+  {
+    "id": "1",
+    "sectionName": "Main Section",
+    "numberOfColumns": 10,
+    "createdBy": "admin",
+    "createdDate": "01-10-2025",
+    "description": "Primary section of the library with general collections."
+  },
+  {
+    "id": "2",
+    "sectionName": "Left Section",
+    "numberOfColumns": 8,
+    "createdBy": "librarian",
+    "createdDate": "01-10-2025",
+    "description": "Section located on the left side of the library."
+  },
+  {
+    "id": "3",
+    "sectionName": "Back Section",
+    "numberOfColumns": 5,
+    "createdBy": "admin", 
+    "createdDate": "01-10-2025",
+    "description": "Section located at the back of the library."
+  },
+  {
+    "id": "4",
+    "sectionName": "Front Section",
+    "numberOfColumns": 12,
+    "createdBy": "librarian",
+    "createdDate": "01-10-2025",
+    "description": "Section located at the entrance of the library."
+  }
+]
 }

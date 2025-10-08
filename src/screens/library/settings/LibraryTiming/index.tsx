@@ -152,8 +152,8 @@ const LibraryTimingCreation = () => {
         description="This screen defines the working schedule of the library by specifying opening and closing times for each day or marking certain days as closed."
         links={[
           { name: 'Library', href: '/library/dashboard' },
-          { name: 'Setting', href: '/library/setting' },
-          { name: 'Library Hours', href: '/library/settings/library-timing' },
+          { name: 'Setting', href: '/library/settings/book-category' },
+          { name: 'Library Timing' },
         ]}
         action={
           <Box display="flex" gap={2}>
@@ -234,7 +234,7 @@ const LibraryTimingCreation = () => {
             isSort: false,
             isFilter: false,
             render: (value, row) => (
-              <Grid container spacing={1}>
+              <Grid container spacing={1} sx={{ mb: 2 }}>
                 <Grid size={12}>
                   <TimePicker
                     label=""

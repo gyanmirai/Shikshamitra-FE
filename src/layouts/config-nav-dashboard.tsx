@@ -1534,6 +1534,13 @@ const libraryModule = {
               shortcutKey: 'Alt+L+S+4',
               shortcutKeyName: 'Alt+L+S+4',
             },
+            {
+              title: 'Section Management',
+              path: '/library/settings/sectionManagement',
+              _action: 'section-management',
+              shortcutKey: 'Alt+L+S+5',
+              shortcutKeyName: 'Alt+L+S+5',
+            },
           ],
         },
       ],
