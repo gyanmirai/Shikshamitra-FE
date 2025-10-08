@@ -62,12 +62,12 @@ const ChargeTypeCreation = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Charge Category"
-        description="This screen displays all the created charge types (such as late return fee, damage fee, etc.) and provides an option to add new charge category."
+        heading="Fines & Fees Categories"
+        description="This screen displays all the created charge types (such as late return fee, damage fee, etc.) and provides an option to add new Fines & Fees Categories."
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/setting' },
-          { name: 'Charge Category', href: '/library/settings/charge-type' },
+          { name: 'Fines & Fees Categories', href: '/library/settings/charge-type' },
         ]}
         action={
           <Button
@@ -76,7 +76,7 @@ const ChargeTypeCreation = () => {
             startIcon={<Add />}
             variant="contained"
           >
-            Charge Category
+            Fines & Fees Categories
           </Button>
         }
         sx={{ px: 1, mb: 2 }}

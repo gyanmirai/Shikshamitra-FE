@@ -1,7 +1,6 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -9,18 +8,12 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
-import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetRoleOptionsQuery } from 'src/redux/library/roleApi';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Chip, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
-import { useGetLibraryChargeCategoryOptionsQuery } from 'src/redux/library/charges-management/charge-category-api';
 
 import { assignLibraryChargeInitialValues } from './AssignChargeInitialValues';
 import { assignLibraryChargeValidationSchema } from './AssignChargesValidationSchema';
@@ -85,9 +78,71 @@ const staticClasses = [
 ];
 
 const staticMembers = [
-  { id: 'M001', name: 'Dharmik Jinjala' },
-  { id: 'M002', name: 'Prerna Atre' },
-  { id: 'M003', name: 'Raj Baku' },
+  {
+    id: 'M001',
+    name: 'Dharmik Jinjala',
+    role: 'Student',
+    class: '10',
+    division: 'A',
+    contactNumber: '+91-9876543210',
+    email: 'dharmik@example.com',
+  },
+  {
+    id: 'M002',
+    name: 'Prerna Atre',
+    role: 'Employee',
+    department: 'Library',
+    contactNumber: '+91-9876543211',
+    email: 'prerna@example.com',
+  },
+  {
+    id: 'M003',
+    name: 'Raj Baku',
+    role: 'Student',
+    class: '12',
+    division: 'B',
+    contactNumber: '+91-9876543212',
+    email: 'raj@example.com',
+  },
+];
+
+const staticBooks = [
+  {
+    bookNumber: 'BK001',
+    title: 'Introduction to Physics',
+    author: 'Dr. John Smith',
+    isbn: '978-0123456789',
+    category: 'Science',
+    publisher: 'Academic Press',
+    edition: '3rd Edition',
+  },
+  {
+    bookNumber: 'BK002',
+    title: 'Advanced Chemistry',
+    author: 'Prof. Sarah Johnson',
+    isbn: '978-0987654321',
+    category: 'Science',
+    publisher: 'Scientific Publications',
+    edition: '2nd Edition',
+  },
+  {
+    bookNumber: 'BK003',
+    title: 'Science Explorer',
+    author: 'Dr. Michael Brown',
+    isbn: '978-0456789123',
+    category: 'General Science',
+    publisher: 'Education Books',
+    edition: '1st Edition',
+  },
+  {
+    bookNumber: 'BK004',
+    title: 'Mathematics Grade 10',
+    author: 'Prof. Lisa Wilson',
+    isbn: '978-0321654987',
+    category: 'Mathematics',
+    publisher: 'Math Publishers',
+    edition: '4th Edition',
+  },
 ];
 
 // Helper to fill missing fields from static data
@@ -111,264 +166,179 @@ function fillEditData(editData: any) {
 }
 
 const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, editData }) => {
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { medium } = useSelector((state: RootState) => state.globalState);
-  // State to store all classes/standards for the selected organization
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
-  const [classes, setClasses] = useState<string>('');
-  // State to store all divisions for the selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
-  const [division, setDivision] = useState<string>('');
-
-  const { data: roleData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRoleOptionsQuery,
-  });
-
-  const { data: chargeCategoryOptions } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetLibraryChargeCategoryOptionsQuery,
-  });
 
   const formik = useFormik({
     initialValues: assignLibraryChargeInitialValues(fillEditData(editData)),
     validationSchema: assignLibraryChargeValidationSchema(currentYear),
     onSubmit: (values) => {
-      const bookTitle =
-        editData?.bookTitle ||
-        (values.bookTitle && typeof values.bookTitle === 'string' ? values.bookTitle : '') ||
-        '';
-      shikshaMitraToast.success({
-        message: editData
-          ? `Charges for "${bookTitle}" updated successfully`
-          : `Charges for "${bookTitle}" assigned successfully`,
-      });
+      // // const bookTitle = selectedBook?.title || values.bookTitle || '';
+      // shikshaMitraToast.success({
+      //   message: editData
+      //     ? `Charges for "${bookTitle}" updated successfully`
+      //     : `Charges for "${bookTitle}" assigned successfully`,
+      // });
       onClose(null, true);
     },
   });
-
-  useEffect(() => {
-    setAllOrganization(medium?.educationMediumStages || []);
-  }, [medium?.educationMediumStages]);
-  // Update divisions when class changes
-  //   // Update divisions when class changes
-  useEffect(() => {
-    if (!classes) return;
-
-    const selectedClass = allClass.find((org: any) => org?.id === classes);
-
-    if (selectedClass) {
-      setAllDivision(selectedClass.divisions || []);
-      // only set division if it's not already selected
-      if (!division && selectedClass.divisions?.length > 0) {
-        setDivision(selectedClass.divisions[0].id);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allClass, classes]); // removed setDivision
-
-  // Initialize query hook for fetching students
-  const [getStudents, { data: StudentsData }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetFilterStudentsQuery,
-  });
-
-  // Update classes when organization changes
-  useEffect(() => {
-    // Flatten the list of standards from all stages
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
-  }, [medium]);
-
-  // Update divisions when class changes
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === formik.values.class)?.divisions || []);
-    setDivision(
-      allClass.find((org: any) => org?.id === formik.values.class)?.divisions?.[0]?.id || ''
-    );
-  }, [allClass, formik.values.class, setDivision]);
-
-  //   Fetch students when division, class and organization are all selected
-  useEffect(() => {
-    if (division && formik.values.class) {
-      getStudents({
-        educationMediumStageId: allOrganization[1].id,
-        standardId: formik.values.class,
-        divisionId: division,
-      });
-    }
-  }, [division, formik.values.class, getStudents, allOrganization]);
-
-  //   Transform student data to include full name
-  const tableData = useMemo(
-    () =>
-      StudentsData?.items?.map((item: any) => ({
-        ...item,
-        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
-      })) || [],
-    [StudentsData?.items]
-  );
-
-  // Fallback for classes/divisions if API data is missing
-  const effectiveAllClass = allClass.length > 0 ? allClass : staticClasses;
-  const effectiveAllDivision =
-    effectiveAllClass.find((cls: any) => cls.id === formik.values.class)?.divisions ||
-    staticClasses[0].divisions;
-
-  // Fallback for members if API data is missing
-  const effectiveTableData =
-    formik.values.role === 'Student'
-      ? tableData.length > 0
-        ? tableData
-        : staticMembers
-      : [
-          { id: '1', name: 'Prerna Atre' },
-          { id: '2', name: 'Raj Baku' },
-          { id: '3', name: 'Dharmik Jinjala' },
-        ];
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
-          {/* Role */}
+          {/* Member ID */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.role && formik.errors.role)}>
-              <Autocomplete
-                disabled={isLoading}
-                options={roleData || []}
-                value={
-                  (roleData || []).find((item: any) => item.role === formik.values.role) || null
-                }
-                getOptionLabel={(option: any) => option?.role || ''}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Role *"
-                    size="small"
-                    fullWidth
-                    sx={{ width: '100%', minWidth: '200px' }}
-                    error={formik.touched.role && Boolean(formik.errors.role)}
-                    helperText={(formik.touched.role && formik.errors.role) as string}
-                  />
-                )}
-                onChange={(e, value) => {
-                  formik.setFieldValue('role', value?.role || '');
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-          {formik.values.role === 'Student' && (
-            <>
-              {/* Class */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.class && formik.errors.class)}>
-                  <CustomSelect
-                    label="Class *"
-                    options={effectiveAllClass}
-                    value={formik.values.class}
-                    onChange={(val) => {
-                      formik.setFieldValue('class', val);
-                      formik.setFieldValue('division', '');
-                      formik.setFieldValue('student', '');
-                      formik.setFieldTouched('class', true);
-                    }}
-                    labelKey="name"
-                    valueKey="id"
-                    formControlProps={{ fullWidth: true }}
-                    error={!!(formik.touched.class && formik.errors.class)}
-                    helperText={(formik.touched.class && formik.errors.class) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              {/* Division */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.division && formik.errors.division)}>
-                  <CustomSelect
-                    label="Division *"
-                    options={effectiveAllDivision}
-                    disabled={!formik.values.class}
-                    value={formik.values.division}
-                    onChange={(val) => {
-                      formik.setFieldValue('division', val);
-                      formik.setFieldValue('student', '');
-                      formik.setFieldTouched('division', true);
-                    }}
-                    labelKey="name"
-                    valueKey="id"
-                    formControlProps={{ fullWidth: true }}
-                    error={!!(formik.touched.division && formik.errors.division)}
-                    helperText={(formik.touched.division && formik.errors.division) as string}
-                  />
-                </ShakingTextField>
-              </Grid>
-            </>
-          )}
-          {/* Member Dropdown for Non-Students */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.member && formik.errors.member)}>
-              <Autocomplete
-                loading={isLoading}
-                noOptionsText="No Member Found"
+            <ShakingTextField error={!!(formik.touched.memberId && formik.errors.memberId)}>
+              <TextField
+                label="Member ID *"
+                size="small"
                 fullWidth
-                value={effectiveTableData.find((s: any) => s.id === formik.values.member) || null}
-                onChange={(e, value: any) => {
-                  formik.setFieldValue('member', value?.id || '');
-                }}
-                renderTags={(tagValue, getTagProps) =>
-                  tagValue.map((option, index) => (
-                    <Chip
-                      label={option.name}
-                      variant="soft"
-                      size="small"
-                      {...getTagProps({ index })}
-                    />
-                  ))
-                }
-                options={effectiveTableData}
-                getOptionLabel={(option: any) => option?.name || ''}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Member *"
-                    fullWidth
-                    error={!!(formik.touched.member && formik.errors.member)}
-                    helperText={(formik.touched.member && formik.errors.member) as string}
-                  />
-                )}
-                renderOption={(prop: any, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.name}
-                  </li>
-                )}
+                value={formik.values.memberId}
+                onChange={(e) => formik.setFieldValue('memberId', e.target.value)}
+                error={!!(formik.touched.memberId && formik.errors.memberId)}
+                helperText={(formik.touched.memberId && formik.errors.memberId) as string}
+                placeholder="Enter member ID (e.g., M001, M002, M003)"
               />
             </ShakingTextField>
           </Grid>
 
-          {/* Book Title */}
+          {/* Member Details Display */}
+          {(() => {
+            const selectedMember = staticMembers.find((m) => m.id === formik.values.memberId);
+
+            if (selectedMember) {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <div
+                    style={{
+                      padding: '16px',
+                      backgroundColor: '#f5f5f5',
+                      borderRadius: '8px',
+                      border: '1px solid #e0e0e0',
+                    }}
+                  >
+                    <div style={{ marginBottom: '8px', fontWeight: 'bold', fontSize: '16px' }}>
+                      Member Details
+                    </div>
+                    <div style={{ marginBottom: '4px' }}>
+                      <strong>Name:</strong> {selectedMember.name}
+                    </div>
+                    <div style={{ marginBottom: '4px' }}>
+                      <strong>Role:</strong> {selectedMember.role}
+                    </div>
+                    {selectedMember.role === 'Student' && (
+                      <>
+                        <div style={{ marginBottom: '4px' }}>
+                          <strong>Class:</strong> {selectedMember.class}
+                        </div>
+                        <div style={{ marginBottom: '4px' }}>
+                          <strong>Division:</strong> {selectedMember.division}
+                        </div>
+                      </>
+                    )}
+                    {selectedMember.department && (
+                      <div style={{ marginBottom: '4px' }}>
+                        <strong>Department:</strong> {selectedMember.department}
+                      </div>
+                    )}
+                    <div style={{ marginBottom: '4px' }}>
+                      <strong>Contact:</strong> {selectedMember.contactNumber}
+                    </div>
+                  </div>
+                </Grid>
+              );
+            }
+
+            if (formik.values.memberId !== '') {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <div
+                    style={{
+                      padding: '12px',
+                      backgroundColor: '#ffebee',
+                      borderRadius: '4px',
+                      border: '1px solid #f44336',
+                      color: '#d32f2f',
+                    }}
+                  >
+                    Member with ID &quot;{formik.values.memberId}&quot; not found. Available IDs:{' '}
+                    {staticMembers.map((m) => m.id).join(', ')}
+                  </div>
+                </Grid>
+              );
+            }
+
+            return null;
+          })()}
+
+          {/* Book Number */}
           <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}>
-              <CustomSelect
-                label="Book Title *"
-                options={staticBookTitles}
-                value={formik.values.bookTitle}
-                onChange={(val) => formik.setFieldValue('bookTitle', val)}
-                labelKey="label"
-                valueKey="value"
-                formControlProps={{ fullWidth: true }}
-                error={!!(formik.touched.bookTitle && formik.errors.bookTitle)}
-                helperText={(formik.touched.bookTitle && formik.errors.bookTitle) as string}
+            <ShakingTextField error={!!(formik.touched.bookNumber && formik.errors.bookNumber)}>
+              <TextField
+                label="Accession no *"
+                size="small"
+                fullWidth
+                value={formik.values.bookNumber}
+                onChange={(e) => formik.setFieldValue('bookNumber', e.target.value)}
+                error={!!(formik.touched.bookNumber && formik.errors.bookNumber)}
+                helperText={(formik.touched.bookNumber && formik.errors.bookNumber) as string}
+                placeholder="Enter Accession no (e.g., Acc001)"
               />
             </ShakingTextField>
           </Grid>
+
+          {/* Book Details Display */}
+          {formik.values.bookNumber === 'Acc001' ? (
+            <Grid size={{ xs: 12 }}>
+              <div
+                style={{
+                  padding: '16px',
+                  backgroundColor: '#f5f5f5',
+                  borderRadius: '8px',
+                  border: '1px solid #e0e0e0',
+                }}
+              >
+                <div style={{ marginBottom: '8px', fontWeight: 'bold', fontSize: '16px' }}>
+                  Book Details
+                </div>
+                <div style={{ marginBottom: '4px' }}>
+                  <strong>Title:</strong> Introduction to Physics
+                </div>
+                <div style={{ marginBottom: '4px' }}>
+                  <strong>Author:</strong> Dr. John Smith
+                </div>
+                <div style={{ marginBottom: '4px' }}>
+                  <strong>ISBN:</strong> 978-0123456789
+                </div>
+                <div style={{ marginBottom: '4px' }}>
+                  <strong>Category:</strong> Science
+                </div>
+                <div style={{ marginBottom: '4px' }}>
+                  <strong>Publisher:</strong> Academic Press
+                </div>
+                <div>
+                  <strong>Edition:</strong> 3rd Edition
+                </div>
+              </div>
+            </Grid>
+          ) : (
+            formik.values.bookNumber !== '' && (
+              <Grid size={{ xs: 12 }}>
+                <div
+                  style={{
+                    padding: '12px',
+                    backgroundColor: '#ffebee',
+                    borderRadius: '4px',
+                    border: '1px solid #f44336',
+                    color: '#d32f2f',
+                  }}
+                >
+                  Book with number &quot;{formik.values.bookNumber}&quot; not found. Available
+                  numbers: BK001, BK002, BK003, BK004
+                </div>
+              </Grid>
+            )
+          )}
 
           {/* Charge Category */}
           <Grid size={{ xs: 12, md: 6 }}>

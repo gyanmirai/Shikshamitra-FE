@@ -1,12 +1,8 @@
 import React from 'react';
-import { Box, Chip } from '@mui/material';
+import { Box } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetIssuedBooksQuery } from 'src/redux/memberManagement/memberManagementApi';
-import {
-  BookIssueStatusTypeColors,
-  BookIssueStatusTypeOptions,
-} from 'src/enums/library-status-types';
 
 import type { IMember } from '../type';
 
@@ -31,23 +27,23 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
           { id: 'bookId', label: 'Book Category', align: 'left' },
           { id: 'issueDate', label: 'Issued on', align: 'left' },
           { id: 'dueDate', label: 'Due on', align: 'left' },
-          {
-            id: 'status',
-            label: 'Status',
-            align: 'left',
-            render(value) {
-              // Find the status type based on the label from enum options
-              const statusType = BookIssueStatusTypeOptions.find(
-                (option) => option.label === value
-              )?.value;
+          // {
+          //   id: 'status',
+          //   label: 'Status',
+          //   align: 'left',
+          //   render(value) {
+          //     // Find the status type based on the label from enum options
+          //     const statusType = BookIssueStatusTypeOptions.find(
+          //       (option) => option.label === value
+          //     )?.value;
 
-              // Get corresponding color from enum colors mapping
-              const color =
-                statusType !== undefined ? BookIssueStatusTypeColors[statusType] : 'default';
+          //     // Get corresponding color from enum colors mapping
+          //     const color =
+          //       statusType !== undefined ? BookIssueStatusTypeColors[statusType] : 'default';
 
-              return <Chip label={value} color={color as any} size="small" variant="soft" />;
-            },
-          },
+          //     return <Label color={color as any}>{value}</Label>;
+          //   },
+          // },
         ]}
         data={mockIssuedBooks || []}
       />

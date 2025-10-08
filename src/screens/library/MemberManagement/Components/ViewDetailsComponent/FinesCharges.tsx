@@ -42,6 +42,9 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
             },
           },
           { id: 'dateIssued', label: 'Date', align: 'left' },
+          { id: 'chargeType', label: 'Charge Type', align: 'left' },
+          { id: 'reason', label: 'Reason', align: 'left' },
+
           {
             id: 'status',
             label: 'Status',

@@ -63,7 +63,7 @@ const IssueReturnBook = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Issue & Return Book"
+        heading="Issue & Return"
         description={
           addDialog.value
             ? 'Issue new books to members or update issued book details.'
@@ -71,7 +71,7 @@ const IssueReturnBook = () => {
         }
         links={[
           { name: 'Library', href: '/library/dashboard' },
-          { name: 'Issue & Return Book', href: '/library/issue-return-book' },
+          { name: 'Issue & Return', href: '/library/issue-return-book' },
         ]}
         action={
           <Button
