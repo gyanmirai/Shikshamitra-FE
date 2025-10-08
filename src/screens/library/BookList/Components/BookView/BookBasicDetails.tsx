@@ -1,11 +1,11 @@
 import type { IBook } from 'src/screens/library/BookManagement/Components/type';
 
 import React from 'react';
-import { Label } from 'src/components/label';
-import { Box, Card, Stack, Divider, Typography } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
+import { Box, Grid, Card, Stack, Paper, Typography } from '@mui/material';
 
 interface BookViewDetailProps {
-  book: IBook;
+  book: IBook | null;
 }
 
 const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
@@ -13,101 +13,134 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
     sx={{
       display: 'flex',
       gap: 3,
-      p: 2,
-      borderRadius: 2,
-      boxShadow: 'var(--shadows-8)',
+      borderRadius: 'none',
+      boxShadow: 'none',
       bgcolor: 'background.paper',
     }}
   >
-    {/* Left: Book Cover */}
     <Box
       component="img"
-      src={book.bookCoverImages?.[0] || '/placeholder-book.jpg'}
-      alt={book.title}
+      src={book?.bookCoverImages?.[0] || '/placeholder-book.jpg'}
+      alt={book?.title}
       sx={{
         width: 240,
-        height: 280,
+        height: 290,
         borderRadius: 2,
         objectFit: 'cover',
         flexShrink: 0,
       }}
     />
-
-    {/* Right: Book Info */}
-    <Stack spacing={1.2}>
+    <Box>
       <Typography variant="h6" color="primary.main">
-        {book.title}
+        {book?.title}
       </Typography>
+      <Grid container spacing={2} mt={1.5}>
+        {/* Author */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+            <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+              <Iconify icon="mdi:account" width={22} />
+              <Box>
+                <Typography variant="caption" color="text.secondary" textTransform="uppercase">
+                  Author
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {book?.author || '—'}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
 
-      <Stack direction="row" spacing={1}>
-        <Typography variant="body2" color="text.secondary">
-          Author :
-        </Typography>
-        <Typography sx={{ fontWeight: 300 }} variant="body2">
-          {book.author}
-        </Typography>
-      </Stack>
+        {/* Publisher */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+            <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+              <Iconify icon="mdi:office-building" width={22} color="#637381" />
+              <Box>
+                <Typography variant="caption" color="text.secondary" textTransform="uppercase">
+                  Publisher
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {book?.publisher || '—'}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
 
-      <Stack direction="row" spacing={1}>
-        <Typography variant="body2" color="text.secondary">
-          Publisher :
-        </Typography>
-        <Typography sx={{ fontWeight: 300 }} variant="body2">
-          {book.publisher}
-        </Typography>
-      </Stack>
+        {/* Subject */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+            <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+              <Iconify icon="mdi:book-open-variant" width={22} color="#637381" />
+              <Box>
+                <Typography variant="caption" color="text.secondary" textTransform="uppercase">
+                  Subject
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {book?.subject || '—'}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
 
-      <Stack direction="row" spacing={1}>
-        <Typography variant="body2" color="text.secondary">
-          Subject :
-        </Typography>
-        <Typography sx={{ fontWeight: 300 }} variant="body2">
-          {book.subject}
-        </Typography>
-      </Stack>
+        {/* ISBN */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+            <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+              <Iconify icon="mdi:barcode" width={22} color="#637381" />
+              <Box>
+                <Typography variant="caption" color="text.secondary" textTransform="uppercase">
+                  ISBN
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {book?.isbn || '—'}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
+
+        {/* Creation Date */}
+        {book?.createdOn && (
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+              <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+                <Iconify icon="mdi:calendar-month" width={22} color="#637381" />
+                <Box>
+                  <Typography variant="caption" color="text.secondary" textTransform="uppercase">
+                    Creation Date
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {new Date(book?.createdOn).toLocaleDateString()}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Paper>
+          </Grid>
+        )}
+      </Grid>
 
       {/* Description */}
-      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-        <Typography variant="body2" color="text.secondary">
-          Description:
-        </Typography>
-        <Typography sx={{ fontWeight: 300 }} variant="body2">
-          A comprehensive guide to advanced programming concepts and techniques. This book covers
-          modern programming paradigms.
-        </Typography>
-      </Stack>
-
-      <Stack direction="row" spacing={1}>
-        <Typography variant="body2" color="text.secondary">
-          ISBN :
-        </Typography>
-        <Typography sx={{ fontWeight: 300 }} variant="body2">
-          {book.isbn}
-        </Typography>
-      </Stack>
-
-      {/* Creation Date */}
-      {book.createdOn && (
-        <Stack direction="row" spacing={1}>
-          <Typography variant="body2" color="text.secondary">
-            Creation Date :
-          </Typography>
-          <Typography sx={{ fontWeight: 300 }} variant="body2">
-            {new Date(book.createdOn).toLocaleDateString()}
-          </Typography>
-        </Stack>
-      )}
-
-      {/* Book stats */}
-      <Divider />
-      <Stack direction="row" spacing={1.5}>
-        <Label color="default">Total Issued : {book.totalBook || 0}</Label>
-        <Divider orientation="vertical" flexItem />
-        <Label color="success">Available : {book.availableBook || 0}</Label>
-        <Divider orientation="vertical" flexItem />
-        <Label color="error">Overdue : {book.overDuedBook || 0}</Label>
-      </Stack>
-    </Stack>
+      <Box mt={3}>
+        <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+          <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+            <Iconify icon="mdi:file-document-outline" width={22} color="#637381" />
+            <Box>
+              <Typography variant="subtitle2" mb={0.5}>
+                Description
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent vitae eros eget
+                tellus tristique bibendum.
+              </Typography>
+            </Box>
+          </Stack>
+        </Paper>
+      </Box>
+    </Box>
   </Card>
 );
 

@@ -33,7 +33,7 @@ const staticRoles = [
   { id: '2', role: 'Student' },
 ];
 
-const staticChargeCategories = [
+export const staticChargeCategories = [
   { id: 'Late Book Return', name: 'Late Book Return', amount: '', isFixed: false },
   { id: 'Damaged Book', name: 'Damaged Book', amount: '', isFixed: false },
   { id: 'Lost Book', name: 'Lost Book', amount: '', isFixed: false },
