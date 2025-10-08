@@ -9,10 +9,11 @@ export interface IBookTableProps {
 
 export interface IBookCopy {
   id?: string;
-  bookId: string;
-  copyId: string;
-  memberId: string;
-  memberName: string;
+  bookId?: string;
+  copyId?: string;
+  copyNo: number;
+  memberId?: string;
+  memberName?: string;
   accessionNo: string;
   role: string;
   className?: string;
@@ -23,6 +24,8 @@ export interface IBookCopy {
   dueDate: string;
   returnDate?: string;
   status: LibraryBookStatus;
+  shelf?: string;
+  section?: string;
 }
 
 export interface IBook {
