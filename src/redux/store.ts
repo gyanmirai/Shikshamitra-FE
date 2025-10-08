@@ -20,6 +20,7 @@ import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
 import { feeTermsApi } from './feeCollection/feeTerms';
 import { PaymentTermApi } from './finance/paymentTerm';
+import { transportApi } from './transport/transportApi';
 import { librarySettingsApi } from './library/settingApi';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
@@ -180,6 +181,7 @@ const reducers = combineReducers({
   [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
   [communicationApi.reducerPath]: communicationApi.reducer,
   [roleOptionsApi.reducerPath]: roleOptionsApi.reducer,
+  [transportApi.reducerPath]: transportApi.reducer,
 });
 
 const store = configureStore({
@@ -276,6 +278,7 @@ const store = configureStore({
       // meetingDetailsApi.middleware,
       // holidayApi.middleware,
       roleOptionsApi.middleware,
+      transportApi.middleware,
     ]),
 });
 

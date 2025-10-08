@@ -1,0 +1,128 @@
+{
+  "vehicleManagementData": [
+    {
+      "id": "1",
+      "regNo": "GJ-05-AB-1234",
+      "vehicleType": "Bus",
+      "capacity": 50,
+      "route": "Route-A1",
+      "driver": "Dharmik Jinjala",
+      "insuranceExpiry": "15-12-2025",
+      "status": "Active",
+      "imageUrl": "https://cdn-icons-png.flaticon.com/512/296/296216.png"
+    },
+    {
+      "id": "2",
+      "regNo": "GJ-05-AB-1235",
+      "vehicleType": "Van",
+      "capacity": 55,
+      "route": "Route-A2",
+      "driver": "Prerna Atre",
+      "insuranceExpiry": "19-12-2025",
+      "status": "Maintenance",
+      "imageUrl": "https://cdn-icons-png.flaticon.com/512/296/296216.png"
+    },
+    {
+      "id": "3",
+      "regNo": "GJ-05-BB-1234",
+      "vehicleType": "Bus",
+      "capacity": 40,
+      "route": "Route-B1",
+      "driver": "Mayur Solanki",
+      "insuranceExpiry": "01-12-2025",
+      "status": "Inactive",
+      "imageUrl": "https://cdn-icons-png.flaticon.com/512/296/296216.png"
+    },
+    {
+      "id": "4",
+      "regNo": "GJ-05-CB-1234",
+      "vehicleType": "Van",
+      "capacity": 50,
+      "route": "Route-B2",
+      "driver": "Parth Ghusar",
+      "insuranceExpiry": "15-01-2026",
+      "status": "Active",
+      "imageUrl": "https://cdn-icons-png.flaticon.com/512/296/296216.png"
+    },
+    {
+      "id": "5",
+      "regNo": "GJ-05-AB-0000",
+      "vehicleType": "Bus",
+      "capacity": 45,
+      "route": "Route-B3",
+      "driver": "Raj Baku",
+      "insuranceExpiry": "19-01-2026",
+      "status": "Maintenance",
+      "imageUrl": "https://cdn-icons-png.flaticon.com/512/296/296216.png"
+    }
+  ],
+  "documentRows": [
+    {
+      "key": "registrationCertificate",
+      "name": "Registration Certificate",
+      "acceptedFormat": "PDF,JPG,PNG"
+    },
+    {
+      "key": "insuranceCertificate",
+      "name": "Insurance Certificate",
+      "acceptedFormat": "PDF,JPG,PNG"
+    },
+    {
+      "key": "fitnessCertificate",
+      "name": "Fitness Certificate",
+      "acceptedFormat": "PDF,JPG,PNG"
+    },
+    {
+      "key": "vehiclePhotos",
+      "name": "Vehicle Photos",
+      "acceptedFormat": "PDF,JPG,PNG"
+    }
+  ],
+  "vehicleTypeOptions": [
+    { "value": "Bus", "label": "Bus" },
+    { "value": "Van", "label": "Van" },
+    { "value": "Car", "label": "Car" },
+    { "value": "Auto", "label": "Auto" },
+    { "value": "Other", "label": "Other" }
+  ],
+  "fuelTypeOptions": [
+    { "value": "Diesel", "label": "Diesel" },
+    { "value": "Petrol", "label": "Petrol" },
+    { "value": "CNG", "label": "CNG" },
+    { "value": "Electric", "label": "Electric" }
+  ],
+  "insurance": {
+    "company": "HDFC ERGO General Insurance",
+    "policyNo": "POL123456789",
+    "coverage": 500000,
+    "expiry": "15-12-2025"
+  },
+  "driver": {
+    "name": "Dharmik Jinjala",
+    "licence": "DL20304596",
+    "phone": "+91 6355030866",
+    "avatar": "/static/driver/avatar.png",
+    "route": "Parvat Patiya",
+    "start": "Parvat Patiya",
+    "end": "Deep Darshan"
+  },
+  "documents": [
+    { "label": "Fitness Certificate", "key": "fitnessCertificate" },
+    { "label": "Permit Certificate", "key": "permitCertificate" },
+    { "label": "Registration Certificate", "key": "registrationCertificate" }
+  ],
+  "maintenanceHistoryData": [
+    { "date": "15-08-2025", "serviceType": "Oil Change", "cost": 3500, "nextDue": "15-09-2025" },
+    { "date": "15-07-2025", "serviceType": "Tire Replacement", "cost": 13500, "nextDue": "15-08-2025" },
+    { "date": "15-06-2025", "serviceType": "Brake Service", "cost": 4500, "nextDue": "15-07-2025" }
+  ],
+  "vehicleInformation": {
+    "registrationNo": "DL-1CA-1234",
+    "vehicleType": "Bus",
+    "model": "Tata Starbus LP",
+    "status": "Active",
+    "seatingCapacity": 45,
+    "yearOfManufacture": 2020,
+    "vehicleColor": "Yellow"
+  }
+}
