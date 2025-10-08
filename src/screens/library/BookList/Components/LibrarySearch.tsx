@@ -31,9 +31,17 @@ interface LibrarySearchProps {
   onView?: (book: IBook) => void;
   onEdit?: (book: IBook) => void;
   onDelete?: (book: IBook) => void;
+  onReserveBook?: (book: IBook) => void;
+  onViewAllReservationBook?: (book: IBook) => void;
 }
 
-const LibrarySearch: React.FC<LibrarySearchProps> = ({ onView, onEdit, onDelete }) => {
+const LibrarySearch: React.FC<LibrarySearchProps> = ({
+  onView,
+  onEdit,
+  onDelete,
+  onReserveBook,
+  onViewAllReservationBook,
+}) => {
   const [searchInput, setSearchInput] = useState(''); // typed text
   const [searchTerm, setSearchTerm] = useState(''); // term used for filtering
   const [visibleCount, setVisibleCount] = useState(10);
@@ -164,6 +172,8 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({ onView, onEdit, onDelete 
                       onView={onView}
                       onEdit={onEdit}
                       onDelete={onDelete}
+                      onReserveBook={onReserveBook}
+                      onViewAllReservationBook={onViewAllReservationBook}
                     />
                   </Scrollbar>
                 </AccordionDetails>

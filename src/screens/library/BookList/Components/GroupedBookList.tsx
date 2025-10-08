@@ -1,7 +1,8 @@
-import React from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { useCallback } from 'react';
+import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, MenuList, MenuItem, Typography } from '@mui/material';
 import { useLazyGetCopiesByBookIdQuery } from 'src/redux/library/bookList/copies-api';
 
 import type { IBook } from '../../BookManagement/Components/type';
@@ -11,11 +12,44 @@ interface Props {
   onView?: (book: IBook) => void;
   onEdit?: (book: IBook) => void;
   onDelete?: (book: IBook) => void;
+  onReserveBook?: (book: IBook) => void;
+  onViewAllReservationBook?: (book: IBook) => void;
 }
 
-const GroupedBookList: React.FC<Props> = ({ groupedBooks, onView, onEdit, onDelete }) => {
+const GroupedBookList: React.FC<Props> = ({
+  groupedBooks,
+  onView,
+  onEdit,
+  onDelete,
+  onReserveBook,
+  onViewAllReservationBook,
+}) => {
   const [fetchCopies] = useLazyGetCopiesByBookIdQuery();
-
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <MenuList>
+        <MenuItem
+          onClick={() => {
+            onReserveBook?.(row as IBook);
+            pop.onClose();
+          }}
+        >
+          <Iconify icon="mdi:book-arrow-right" sx={{ height: '16px', width: '16px' }} />
+          Reserve Book
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            onViewAllReservationBook?.(row as IBook);
+            pop.onClose();
+          }}
+        >
+          <Iconify icon="mdi:book-arrow-right" sx={{ height: '16px', width: '16px' }} />
+          View All Reservation Book
+        </MenuItem>
+      </MenuList>
+    ),
+    [onReserveBook, onViewAllReservationBook]
+  );
   return (
     <>
       {Object.keys(groupedBooks).map((letter) => (
@@ -55,6 +89,7 @@ const GroupedBookList: React.FC<Props> = ({ groupedBooks, onView, onEdit, onDele
                       placement="right-top"
                       showDeleteIcon
                       showEditIcon
+                      actions={(prop) => actions({ ...prop, row })}
                       showViewIcon
                       handleViewClick={async () => {
                         const book = row as IBook;
@@ -71,7 +106,6 @@ const GroupedBookList: React.FC<Props> = ({ groupedBooks, onView, onEdit, onDele
                         const copies = await fetchCopies(book.id).unwrap();
                         onEdit?.({ ...book, copies });
                       }}
-                      showThreeDots={false}
                     />
                   );
                 },

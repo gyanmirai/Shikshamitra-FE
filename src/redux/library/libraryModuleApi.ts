@@ -18,6 +18,8 @@ export const libraryModuleApi = createApi({
             return { data: libraryData.books };
           case '/copies':
             return { data: libraryData.copies };
+          case '/libraryMemberManagementData':
+            return { data: libraryData.libraryMemberManagementData };
           default:
             return {
               error: {
@@ -27,6 +29,6 @@ export const libraryModuleApi = createApi({
             };
         }
       },
-  tagTypes: ['Books', 'Copies'],
+  tagTypes: ['Books', 'Copies', 'Members'],
   endpoints: () => ({}), // inject later
 });

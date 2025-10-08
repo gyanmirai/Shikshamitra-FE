@@ -4,30 +4,45 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
-import { Box, Card, Button } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import LibrarySearch from './Components/LibrarySearch';
+import IssueBookModal from './Components/BookView/BookIssueForm';
 import BookViewDetail from './Components/BookView/BookViewDetail';
+import ReturnBookModal from './Components/BookView/BookReturnForm';
 import BookFormStepper from '../BookManagement/BookFormComponents/BookForm';
+import ReservationBookModal from './Components/BookView/BookReservationForm';
+import ChangeBookStatusForm from './Components/BookView/BookStatusChangeForm';
+import ViewReservedMembersTable from './Components/BookView/BookReservedLIst';
+
+import type { IBook, IBookPayload, IBookCopyWithBook } from '../BookManagement/Components/type';
 
 const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control book form visibility
   const [open, setOpen] = useState(false);
 
   // State to store currently selected book for editing
-  const [selectedBook, setSelectedBook] = useState<any | null>(null);
-  console.log('selectedBook----------', selectedBook);
+  const [selectedBook, setSelectedBook] = useState<IBook | null>(null);
+  const [selectedReservation, setSelectedReservation] = useState<any>(null);
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-
+  const [selectedCopy, setSelectedCopy] = useState<IBookCopyWithBook | null>(null);
   // Boolean hook to control delete confirmation dialog
   const deleteDialog = useBoolean();
+  const reservationDeleteDialog = useBoolean();
+
+  const reserveDialog = useBoolean();
+  const viewAllReservationDialog = useBoolean();
+
   // Redux dispatch hook for state management
   const dispatch = useDispatch();
 
@@ -41,6 +56,10 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
     deleteDialog.onFalse();
     setSelectedBook(null);
   };
+
+  const issueDialog = useBoolean();
+  const returnDialog = useBoolean();
+  const changeStatusDialog = useBoolean();
 
   /**
    * Handles closing the book form with confirmation if there are unsaved changes
@@ -132,11 +151,28 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
       {/* Main Content */}
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
-          <BookFormStepper onClose={handleClose} editData={selectedBook} />
+          <BookFormStepper onClose={handleClose} editData={selectedBook as IBookPayload | null} />
         </Card>
       ) : viewDialog.value ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
-          <BookViewDetail book={selectedBook} />
+          <BookViewDetail
+            book={selectedBook}
+            handleChangeStatus={(copy) => {
+              changeStatusDialog.onTrue();
+              setSelectedCopy(copy);
+              /* TODO: implement handleChangeStatus */
+            }}
+            handleIssueBook={(copy) => {
+              issueDialog.onTrue();
+              setSelectedCopy(copy);
+              /* TODO: implement handleIssueBook */
+            }}
+            handleReturnBook={(copy) => {
+              returnDialog.onTrue();
+              setSelectedCopy(copy);
+              /* TODO: implement handleReturnBook */
+            }}
+          />
         </Card>
       ) : (
         <LibrarySearch
@@ -152,9 +188,164 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
             setSelectedBook(data);
             setOpen(true);
           }}
+          onReserveBook={(data) => {
+            reserveDialog.onTrue();
+            setSelectedBook(data);
+          }}
+          onViewAllReservationBook={(data) => {
+            viewAllReservationDialog.onTrue();
+            setSelectedBook(data);
+          }}
         />
       )}
 
+      <CustomDialog
+        open={issueDialog.value}
+        handleClose={() => {
+          issueDialog.onFalse();
+          setSelectedCopy(null);
+        }}
+        maxWidth="md"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Issue Book</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Select a member and book to issue with issue date and due date."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <IssueBookModal
+          onClose={() => {
+            issueDialog.onFalse();
+            setSelectedCopy(null);
+          }}
+          editData={selectedCopy}
+        />
+      </CustomDialog>
+      <CustomDialog
+        open={reserveDialog.value}
+        handleClose={() => {
+          reserveDialog.onFalse();
+          setSelectedBook(null);
+        }}
+        maxWidth="md"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Reserve Book</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Select a member to reserve the book and set reservation details."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <ReservationBookModal
+          onClose={() => {
+            reserveDialog.onFalse();
+            setSelectedBook(null);
+          }}
+          editData={selectedBook}
+        />
+      </CustomDialog>
+
+      <CustomDialog
+        open={returnDialog.value}
+        handleClose={() => {
+          returnDialog.onFalse();
+          setSelectedCopy(null);
+        }}
+        maxWidth="md"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Return Book</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Select the issued book record to mark it as returned with return date and remarks if any."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <ReturnBookModal
+          onClose={() => {
+            returnDialog.onFalse();
+            setSelectedCopy(null);
+          }}
+          accessionNo={selectedCopy?.accessionNo}
+        />
+      </CustomDialog>
+
+      <CustomDialog
+        open={viewAllReservationDialog.value}
+        handleClose={() => {
+          viewAllReservationDialog.onFalse();
+          setSelectedBook(null);
+        }}
+        maxWidth="md"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">All Reservations</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View all reservations for the selected book."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <ViewReservedMembersTable
+          editData={selectedBook}
+          onDelete={(row) => {
+            reservationDeleteDialog.onTrue();
+            setSelectedReservation(row);
+          }}
+        />
+      </CustomDialog>
+
+      <CustomDialog
+        open={changeStatusDialog.value}
+        handleClose={() => {
+          changeStatusDialog.onFalse();
+          setSelectedCopy(null);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Change Book Status</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="You can update the status of the selected book, e.g., Removed, Lost, or Under Maintenance."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <ChangeBookStatusForm
+          editData={selectedCopy}
+          onClose={(e, isSubmit) => {
+            changeStatusDialog.onFalse(); // close dialog
+            setSelectedCopy(null);
+          }}
+        />
+      </CustomDialog>
       {/* Delete Confirmation */}
       <ConfirmDialog
         open={deleteDialog.value}
@@ -178,6 +369,43 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
               shikshaMitraToast.success({
                 message: `Book ${selectedBook?.title} deleted successfully`,
               });
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={reservationDeleteDialog.value}
+        onClose={() => {
+          reservationDeleteDialog.onFalse();
+          setTimeout(() => {
+            setSelectedReservation(null);
+          }, 200);
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete reservation for <strong>{selectedBook?.title}</strong>?
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              // TODO: Handle delete API call here
+              shikshaMitraToast.success({
+                message: (
+                  <>
+                    Reservation for <strong>{selectedBook?.title}</strong> deleted successfully
+                  </>
+                ),
+              });
+              reservationDeleteDialog.onFalse();
+              setSelectedReservation(null);
             }}
           >
             Yes
