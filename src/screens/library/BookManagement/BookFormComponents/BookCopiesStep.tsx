@@ -20,7 +20,6 @@ interface BookCopiesStepProps {
 
 const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
   const [copies, setCopies] = useState<IBookCopy[]>(formik.values.copies || []);
-  console.log('formik values===========', formik.values);
   useEffect(() => {
     const newCopies = Array.from({ length: formik.values.numberOfCopies }, (_, i) => ({
       copyNo: i + 1,
@@ -32,7 +31,7 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
       shelf: formik.values.copies?.[i]?.shelf || '',
     }));
 
-    setCopies(newCopies);
+    setCopies(newCopies as IBookCopy[]);
     formik.setFieldValue('copies', newCopies);
     formik.validateField('copies');
     // eslint-disable-next-line react-hooks/exhaustive-deps
