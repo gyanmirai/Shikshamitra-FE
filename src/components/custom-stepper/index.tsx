@@ -69,21 +69,24 @@ interface CustomStepperWithFormikProps {
   isDisabledLabel?: boolean;
 }
 
-const CustomStepLabel = styled(StepLabel)(({ theme, error, isDisabledLabel }: any) => ({
-  '&.Mui-disabled': { cursor: 'default !important' },
-  '& .MuiStepLabel-iconContainer': {
-    color: error ? theme.palette.error.main : theme.palette.primary.main,
-  },
-  '& .MuiStepLabel-label': {
-    color: error ? theme.palette.error.main : theme.vars.palette.text.primary,
-    fontWeight: error ? 'bold' : 'normal',
-  },
-  '& .MuiStepLabel-iconContainer.Mui-disabled': {
-    cursor: isDisabledLabel ? 'no-drop' : 'pointer !important',
-    transition: 'all 0.3s ease-in-out',
-    '& svg:hover': { opacity: isDisabledLabel ? 1 : 0.72 },
-  },
-}));
+const CustomStepLabel = styled(StepLabel)(({ theme, error, isdisabledlabel }: any) => {
+  isdisabledlabel = isdisabledlabel === 'true';
+  return {
+    '&.Mui-disabled': { cursor: 'default !important' },
+    '& .MuiStepLabel-iconContainer': {
+      color: error ? theme.palette.error.main : theme.palette.primary.main,
+    },
+    '& .MuiStepLabel-label': {
+      color: error ? theme.palette.error.main : theme.vars.palette.text.primary,
+      fontWeight: error ? 'bold' : 'normal',
+    },
+    '& .MuiStepLabel-iconContainer.Mui-disabled': {
+      cursor: isdisabledlabel ? 'no-drop' : 'pointer !important',
+      transition: 'all 0.3s ease-in-out',
+      '& svg:hover': { opacity: isdisabledlabel ? 1 : 0.72 },
+    },
+  };
+});
 
 const QontoConnector = styled(StepConnector)(({ theme }) => ({
   '&.Mui-disabled': { cursor: 'pointer !important' },
@@ -181,7 +184,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               error={errors[index]}
               sx={{ '& span': { fontSize: '12px', mt: '2px !important' } }}
               // @ts-ignore
-              isDisabledLabel={isDisabledLabel}
+              isdisabledlabel={`${isDisabledLabel}`}
               StepIconComponent={CustomStepIcon}
             >
               {label}
