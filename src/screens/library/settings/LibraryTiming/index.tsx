@@ -148,12 +148,12 @@ const LibraryTimingCreation = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Library Timing"
+        heading="Library Hours"
         description="This screen defines the working schedule of the library by specifying opening and closing times for each day or marking certain days as closed."
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/setting' },
-          { name: 'Library Timing', href: '/library/settings/library-timing' },
+          { name: 'Library Hours', href: '/library/settings/library-timing' },
         ]}
         action={
           <Box display="flex" gap={2}>

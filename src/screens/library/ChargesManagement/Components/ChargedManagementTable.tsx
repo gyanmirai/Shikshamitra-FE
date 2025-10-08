@@ -149,8 +149,11 @@ const LibraryChargesTable = ({
                 sticky: true,
               },
               { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '130px' },
+              { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '150px' },
+              { id: 'accessionNo', label: 'Accession No', align: 'left', minWidth: '130px' },
               { id: 'role', label: 'Role', align: 'left' },
               { id: 'chargeCategory', label: 'Charge Category', align: 'left', minWidth: '160px' },
+              { id: 'dueDate', label: 'Due Date', align: 'left', minWidth: '120px' },
               {
                 id: 'fineAmount',
                 label: 'Amount',

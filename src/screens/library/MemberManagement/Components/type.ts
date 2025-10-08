@@ -4,9 +4,16 @@ export interface IMember {
   id: string;
   role: string;
   name: string;
+  rollNo?: string;
+  grNo?: string;
+  class?: string;
+  division?: string;
+  student?: string;
+  avatar?: string;
   currentIssue: number;
   overdueReturn: number;
   memberStatus: 'Active' | 'Inactive';
+  contactNo?: string;
 }
 
 export interface IMemberTableProps {

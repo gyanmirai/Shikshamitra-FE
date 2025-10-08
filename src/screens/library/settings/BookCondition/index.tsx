@@ -63,12 +63,12 @@ const BookConditionCreation = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Book Condition Category"
+        heading="Book Condition"
         description="Manage conditions of books such as Low, Medium, High, Damage, Lost, etc. Use actions to edit or delete existing conditions. Click ‘Add Condition’ to create a new one."
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/setting' },
-          { name: 'Book Condition Category', href: '/library/book-condition' },
+          { name: 'Book Condition', href: '/library/book-condition' },
         ]}
         action={
           <Button
@@ -77,7 +77,7 @@ const BookConditionCreation = () => {
             startIcon={<Add />}
             variant="contained"
           >
-            Book Condition Category
+            Book Condition
           </Button>
         }
         sx={{ px: 1, mb: 2 }}

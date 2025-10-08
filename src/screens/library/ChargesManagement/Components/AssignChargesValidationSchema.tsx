@@ -3,6 +3,8 @@ import * as Yup from 'yup';
 
 export const assignLibraryChargeValidationSchema = (currentYear: any) =>
   Yup.object().shape({
+    memberId: Yup.string().required('Member ID is required'),
+
     role: Yup.string().required('Role is required'),
 
     // Student-specific validations
@@ -20,6 +22,7 @@ export const assignLibraryChargeValidationSchema = (currentYear: any) =>
     ),
 
     // Book details
+    bookNumber: Yup.string().required('Book Number is required'),
     bookTitle: Yup.string().required('Book Title is required'),
 
     // Charge details

@@ -3,12 +3,11 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { Add } from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -16,8 +15,6 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetMembersQuery } from 'src/redux/memberManagement/memberManagementApi';
 
 import MemberForm from './Components/MemberManageForm';
-import ChangeStatusForm from './Components/ChangeStatusForm';
-import MakeReservationForm from './Components/MakeReservationForm';
 import MemberManagementTable from './Components/MemberManagementTable';
 import MemberDetailedViewComponent from './Components/MemberDetailedViewComponent';
 
@@ -78,34 +75,18 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
     }
   };
 
-  /**
-   * Handle make reservation action
-   */
-  const handleMakeReservation = (member: any) => {
-    setSelectedMember(member);
-    makeReservationDialog.onTrue();
-  };
-
-  /**
-   * Handle change status action
-   */
-  const handleChangeStatus = (member: any) => {
-    setSelectedStatus(member);
-    changeStatusDialog.onTrue();
-  };
-
   return (
     <Box height="100%" display="flex" flexDirection="column">
       {showBreadCumb &&
         (open ? (
           <CustomBreadcrumbs
-            heading="Member Management"
+            heading="Library Members"
             description={
               selectedMember?.name
                 ? 'Update existing member details such as name, contact information, membership type, and status.'
                 : 'Add a new member by entering details like name, contact information, membership type, and status.'
             }
-            links={[{ name: 'Library', href: '/library/dashboard' }, { name: 'Member Management' }]}
+            links={[{ name: 'Library', href: '/library/dashboard' }, { name: 'Library Members' }]}
             sx={{ px: 1 }}
             isBack
             onBack={() => {
@@ -114,23 +95,10 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
           />
         ) : (
           <CustomBreadcrumbs
-            heading="Member Management"
+            heading="Library Members"
             description="This screen displays the list of all library members along with their details, and provides an option to add new members."
-            links={[{ name: 'Library', href: '/library/dashboard' }, { name: 'Member Management' }]}
+            links={[{ name: 'Library', href: '/library/dashboard' }, { name: 'Library Members' }]}
             sx={{ px: 1 }}
-            action={
-              <Button
-                startIcon={<Add />}
-                variant="contained"
-                size="small"
-                onClick={() => {
-                  setSelectedMember(null);
-                  addMemberDialog.onTrue();
-                }}
-              >
-                Member
-              </Button>
-            }
           />
         ))}
 
@@ -149,8 +117,6 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
           setSelectedMember(data);
           deleteDialog.onTrue();
         }}
-        onMakeReservation={handleMakeReservation}
-        onChangeStatus={handleChangeStatus}
       />
 
       {/* Add Member Dialog */}
@@ -175,57 +141,6 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
         }
       >
         <MemberForm open={addMemberDialog.value} onClose={handleClose} />
-      </CustomDialog>
-
-      <CustomDialog
-        handleClose={() => {
-          changeStatusDialog.onFalse();
-          setSelectedStatus(null);
-        }}
-        open={changeStatusDialog.value}
-        maxWidth="sm"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Change Status</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="This modal allows the librarian to update a member's status by selecting from the dropdown (Active / Inactive)."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <ChangeStatusForm open={changeStatusDialog.value} onClose={handleClose} />
-      </CustomDialog>
-
-      {/* Make Reservation Dialog */}
-      <CustomDialog
-        handleClose={() => {
-          makeReservationDialog.onFalse();
-          setSelectedMember(null);
-        }}
-        open={makeReservationDialog.value}
-        maxWidth="md"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Make Reservation</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              title="This modal allows the libraian to reserve a sepecific book for a selected student."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <MakeReservationForm
-          open={makeReservationDialog.value}
-          onClose={handleClose}
-          selectedMember={selectedMember}
-        />
       </CustomDialog>
 
       {/* View Details */}

@@ -81,7 +81,7 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
             links={[
               { name: 'Library', href: '/library/dashboard' },
               {
-                name: 'Book List',
+                name: 'All Books',
                 href: '/library/book-management',
                 onClick: () => {
                   setOpen(false);
@@ -97,11 +97,11 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
           />
         ) : (
           <CustomBreadcrumbs
-            heading="Book List"
+            heading="All Books"
             description="Manage all books with details—title, author, category, and availability. Add, edit, or delete books as required."
             links={[
               { name: 'Library', href: '/library/dashboard' },
-              { name: 'Book List', href: '/library/book-management' },
+              { name: 'All Books', href: '/library/book-management' },
             ]}
             sx={{ px: 1, mb: 2 }}
             action={

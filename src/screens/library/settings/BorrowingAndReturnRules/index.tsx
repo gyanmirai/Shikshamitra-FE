@@ -106,7 +106,7 @@ const BorrowingReturnRules = () => {
     formik.resetForm();
     resetDialog.onFalse();
     shikshaMitraToast.success({
-      message: 'Borrowing & Return Rules have been reset successfully',
+      message: 'Borrowing Rules have been reset successfully',
     });
   };
 
@@ -136,7 +136,7 @@ const BorrowingReturnRules = () => {
     try {
       saveDialog.onFalse();
       shikshaMitraToast.success({
-        message: 'Borrowing & Return Rules have been saved successfully',
+        message: 'Borrowing Rules have been saved successfully',
       });
     } catch (error) {
       shikshaMitraToast.error({
@@ -153,12 +153,12 @@ const BorrowingReturnRules = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Borrowing & Return Rules"
+        heading="Borrowing Rules"
         description="This screen sets the borrowing policies for different member roles, including maximum books allowed, reservation limits, and applicable late return fines."
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/setting' },
-          { name: 'Borrowing & Return Rules', href: '/library/settings/borrowing-return-rules' },
+          { name: 'Borrowing Rules', href: '/library/settings/borrowing-return-rules' },
         ]}
         action={
           <Box display="flex" gap={2}>

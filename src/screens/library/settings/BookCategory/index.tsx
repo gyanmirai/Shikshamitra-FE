@@ -62,12 +62,12 @@ const BookCategoryCreation = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Book Category"
+        heading="Book Categories"
         description="Manage categories of books such as Fiction, Non-fiction, Science, History, etc. Use actions to edit or delete existing categories. Click ‘Add Book Category’ to create a new one."
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/setting' },
-          { name: 'Book Category', href: '/library/book-category' },
+          { name: 'Book Categories', href: '/library/book-category' },
         ]}
         action={
           <Button
