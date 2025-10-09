@@ -33,11 +33,6 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
         boxShadow: 2,
         minWidth: 280,
         height: '100%',
-      sx={{
-        p: 2,
-        borderRadius: 3,
-        boxShadow: 2,
-        minWidth: 280,
         borderLeft: `3px solid ${
           LibraryBookStatusColors[copy.status] === 'default'
             ? theme.palette.grey[500]
@@ -49,10 +44,9 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
                   | 'error'
               ].main
         }`,
-      }}
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between', // ensures footer stays at bottom
+        justifyContent: 'space-between',
       }}
     >
       {/* Content section */}
