@@ -11,13 +11,14 @@ import { Tab, Card, Grid, Avatar, Typography } from '@mui/material';
 import IssuedBooks from './ViewDetailsComponent/IssuedBooks';
 import FinesCharges from './ViewDetailsComponent/FinesCharges';
 import ReservedBooks from './ViewDetailsComponent/ReservedBooks';
+import BorrowHistory from './ViewDetailsComponent/BorrowHistory';
 
 import type { IMember } from './type';
 
 const TABS = [
   {
-    value: 'issued-books',
-    label: 'Issued Books',
+    value: 'borrow-books',
+    label: 'Borrowed Books',
     icon: <Iconify icon="solar:book-bookmark-bold" />,
     component: ({ member }: { member: IMember | null }) => <IssuedBooks member={member} />,
   },
@@ -33,6 +34,12 @@ const TABS = [
     icon: <Iconify icon="solar:wallet-money-bold" />,
     component: ({ member }: { member: IMember | null }) => <FinesCharges member={member} />,
   },
+  {
+    value: 'borrow-history',
+    label: 'Borrow History',
+    icon: <Iconify icon="solar:book-2-bold" />, // Added icon for borrow history
+    component: ({ member }: { member: IMember | null }) => <BorrowHistory member={member} />,
+  },
 ];
 
 interface MemberDetailedViewComponentProps {
@@ -45,7 +52,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
   onClose,
 }) => {
   // Initialize tab state, defaulting to 'issued-books'
-  const tabs = useTabs('issued-books');
+  const tabs = useTabs('borrow-books');
   const theme = useTheme();
   // Find the currently selected tab's component to render
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
@@ -89,6 +96,14 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
                 </Typography>
                 <Typography variant="subtitle2" fontWeight="medium">
                   {member?.name || 'Dharmik Jinjala'}
+                </Typography>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Class
+                </Typography>
+                <Typography variant="subtitle2" fontWeight="medium">
+                  {member?.class || '10'}-{member?.division || 'A'}
                 </Typography>
               </Grid>
               <Grid size={{ xs: 12, sm: 2 }}>

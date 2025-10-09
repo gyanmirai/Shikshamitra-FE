@@ -25,6 +25,7 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
         columns={[
           { id: 'bookTitle', label: 'Book Title', align: 'left' },
           { id: 'bookId', label: 'Book Category', align: 'left' },
+          { id: 'accessionNo', label: 'Accession Number', align: 'left' },
           { id: 'issueDate', label: 'Issued on', align: 'left' },
           { id: 'dueDate', label: 'Due on', align: 'left' },
           // {

@@ -68,14 +68,14 @@ export const BookReservationStatusTypeColors = {
 
 // Fines & Charges Status Types
 export enum FinesChargesStatusType {
-  Unpaid,
+  Pending,
   Paid,
 }
 
 export const FinesChargesStatusTypeOptions = [
   {
-    label: 'Unpaid',
-    value: FinesChargesStatusType.Unpaid,
+    label: 'Pending',
+    value: FinesChargesStatusType.Pending,
   },
   {
     label: 'Paid',
@@ -84,7 +84,7 @@ export const FinesChargesStatusTypeOptions = [
 ];
 
 export const FinesChargesStatusTypeColors = {
-  [FinesChargesStatusType.Unpaid]: 'error',
+  [FinesChargesStatusType.Pending]: 'error',
   [FinesChargesStatusType.Paid]: 'success',
 };
 
