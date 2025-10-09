@@ -227,7 +227,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                 size="small"
                 value={searchMember}
                 onChange={(e) => setSearchMember(e.target.value)}
-                label="Seach Member Id"
+                label="Search Member Id"
                 sx={{ flex: 1 }}
                 disabled={!!selectedMember}
                 InputProps={{
