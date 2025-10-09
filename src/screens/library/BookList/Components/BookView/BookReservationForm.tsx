@@ -257,13 +257,9 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                                 }}
                               >
                                 <Iconify
-                                  icon={
-                                    row.status === 'waiting'
-                                      ? 'mingcute:notification-fill'
-                                      : 'solar:trash-bin-trash-bold'
-                                  }
+                                  icon='mingcute:notification-fill'
                                 />
-                                {row.status === 'waiting' ? 'Send Notification' : 'Remove'}
+                                Send Notification
                               </MenuItem>
                             </MenuList>
                           )}
