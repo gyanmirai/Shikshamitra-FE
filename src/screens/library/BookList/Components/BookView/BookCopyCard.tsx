@@ -33,7 +33,23 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
         boxShadow: 2,
         minWidth: 280,
         height: '100%',
-        borderLeft: `3px solid ${(theme.palette as any)[LibraryBookStatusColors[copy.status]].main}`,
+      sx={{
+        p: 2,
+        borderRadius: 3,
+        boxShadow: 2,
+        minWidth: 280,
+        borderLeft: `3px solid ${
+          LibraryBookStatusColors[copy.status] === 'default'
+            ? theme.palette.grey[500]
+            : theme.palette[
+                LibraryBookStatusColors[copy.status] as
+                  | 'success'
+                  | 'info'
+                  | 'warning'
+                  | 'error'
+              ].main
+        }`,
+      }}
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between', // ensures footer stays at bottom
