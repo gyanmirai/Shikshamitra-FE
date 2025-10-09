@@ -21,12 +21,6 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
     <Box
       component="img"
       src={book?.bookCoverImages?.[0] || '/placeholder-book.jpg'}
-      <CardMedia
-        component="img"
-        height="140"
-        image={book?.coverUrl || '/placeholder-book.jpg'}
-       alt={book?.title || 'Book cover'}
-      />
       sx={{
         width: 240,
         height: 290,
