@@ -113,10 +113,8 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
 
     setLoading(true);
     setTimeout(() => {
-      // 1️⃣ Find the matching copy using accession number
       const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
 
-      // 2️⃣ If copy exists, find the related book
       const foundBook = foundCopy
         ? {
             ...foundCopy,
@@ -124,12 +122,10 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
           }
         : null;
 
-      // 3️⃣ Handle found or not found cases
       if (foundBook) {
         setSelectedBook(foundBook);
         formik.setFieldValue('accessionNo', foundBook.accessionNo);
 
-        // 4️⃣ Find the member from the copy's memberId
         const foundMember = memberData?.find(
           (member: any) => member.memberId?.toLowerCase() === foundBook.memberId?.toLowerCase()
         );
