@@ -52,7 +52,7 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
         </Stack>
 
         {/* Body */}
-        {copy.status === LibraryBookStatus.Available ? (
+        {copy.status === LibraryBookStatus.Available || !copy.memberId ? (
           <Box textAlign="center" py={2}>
             <Iconify icon="noto:open-book" width={30} color="text.secondary" />
             <Typography color="text.secondary">Not issued</Typography>
