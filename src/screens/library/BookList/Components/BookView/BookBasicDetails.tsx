@@ -13,7 +13,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
     sx={{
       display: 'flex',
       gap: 3,
-      borderRadius: 'none',
+      borderRadius: 0,
       boxShadow: 'none',
       bgcolor: 'background.paper',
     }}
