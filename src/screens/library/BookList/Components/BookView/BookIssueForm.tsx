@@ -57,7 +57,6 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     type: 'query',
     currentQueryAndMutation: useGetAllMembersQuery,
   });
-  console.log('memberData----', memberData);
 
   const handleSearchBook = () => {
     const { accessionNumber } = formik.values;
