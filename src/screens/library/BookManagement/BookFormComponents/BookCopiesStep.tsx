@@ -382,15 +382,22 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
                 align: 'left',
                 minWidth: 100,
                 render: (_, row) => (
-                  <Barcode
-                    value={row.accessionNo}
-                    format="CODE128" // other options: EAN13, UPC, etc.
-                    width={1}
-                    height={20}
-                    displayValue
-                    background="#ffffff"
-                    lineColor="#000000"
-                  />
+                render: (_, row) =>
+                  row.accessionNo ? (
+                    <Barcode
+                      value={row.accessionNo}
+                      format="CODE128" // other options: EAN13, UPC, etc.
+                      width={1}
+                      height={20}
+                      displayValue
+                      background="#ffffff"
+                      lineColor="#000000"
+                    />
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      Accession number pending
+                    </Typography>
+                  ),
                 ),
               },
               {
