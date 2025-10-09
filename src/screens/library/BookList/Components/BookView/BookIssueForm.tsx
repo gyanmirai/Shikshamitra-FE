@@ -92,7 +92,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
         setSelectedMember(foundMember);
         formik.setFieldValue('memberId', foundMember.memberId);
         formik.setFieldValue('memberName', foundMember.name || '');
-        formik.setFieldValue('role', foundMember.type);
+        formik.setFieldValue('role', foundMember.role);
         formik.setFieldValue('class', foundMember.className || '');
         formik.setFieldValue('division', foundMember.division || '');
       } else {
