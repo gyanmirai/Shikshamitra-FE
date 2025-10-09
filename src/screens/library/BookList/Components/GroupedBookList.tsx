@@ -29,8 +29,10 @@ const GroupedBookList: React.FC<Props> = ({
     ({ popover: pop, row }: any) => (
       <MenuList>
         <MenuItem
-          onClick={() => {
-            onReserveBook?.(row as IBook);
+          onClick={async () => {
+            const book = row as IBook;
+            const copies = await fetchCopies(book.id).unwrap();
+            onReserveBook?.({ ...book, copies });
             pop.onClose();
           }}
         >
@@ -38,8 +40,10 @@ const GroupedBookList: React.FC<Props> = ({
           Reserve Book
         </MenuItem>
         <MenuItem
-          onClick={() => {
-            onViewAllReservationBook?.(row as IBook);
+          onClick={async () => {
+            const book = row as IBook;
+            const copies = await fetchCopies(book.id).unwrap();
+            onViewAllReservationBook?.({ ...book, copies });
             pop.onClose();
           }}
         >
