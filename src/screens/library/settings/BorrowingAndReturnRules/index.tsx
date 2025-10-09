@@ -158,7 +158,7 @@ const BorrowingReturnRules = () => {
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/settings/book-category' },
-          { name: 'Borrowing & Return Rules' },
+          { name: 'Borrowing Rules' },
         ]}
         action={
           <Box display="flex" gap={2}>

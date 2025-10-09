@@ -68,7 +68,7 @@ const BookConditionCreation = () => {
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/settings/book-category' },
-          { name: 'Book Condition Category' },
+          { name: 'Book Condition ' },
         ]}
         action={
           <Button

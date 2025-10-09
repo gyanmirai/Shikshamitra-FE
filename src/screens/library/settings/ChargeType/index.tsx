@@ -67,7 +67,7 @@ const ChargeTypeCreation = () => {
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/settings/book-category' },
-          { name: 'Charge Category' },
+          { name: 'Fines & Fees Categories' },
         ]}
         action={
           <Button

@@ -67,7 +67,7 @@ const BookCategoryCreation = () => {
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/settings/book-category' },
-          { name: 'Book Category' },
+          { name: 'Book Categories' },
         ]}
         action={
           <Button

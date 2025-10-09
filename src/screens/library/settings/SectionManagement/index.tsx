@@ -15,6 +15,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import ViewShelfData from './Components/ViewShelfForm';
 import SectionForm from './Components/SectionManagementForm';
 import SectionTable from './Components/SectionManagementTable';
 
@@ -22,25 +23,23 @@ import type { ISection } from './Components/type';
 
 const SectionManagementScreen = () => {
   // Dialog control states
-  const deleteSectionDialog = useBoolean(); // Controls delete confirmation dialog
-  const addSectionDialog = useBoolean(); // Controls add/edit section dialog
-  const [open, setOpen] = useState(false); // Controls table dialog state
+  const deleteSectionDialog = useBoolean();
+  const addSectionDialog = useBoolean();
+  const viewShelfDialog = useBoolean();
+  const [open, setOpen] = useState(false);
 
   // Global state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
-  // State to store currently selected section for edit/delete operations
+  // State to store currently selected section for edit/delete/view operations
   const [selectedSection, setSelectedSection] = useState<ISection | null>(null);
 
   const dispatch = useDispatch();
 
   /**
    * Handles closing of add/edit section dialog
-   * @param _e - Event object
-   * @param isSubmit - Boolean indicating if form was submitted
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    // Helper function to reset state after dialog closes
     const resetState = () => {
       setTimeout(() => {
         setSelectedSection(null);
@@ -48,18 +47,23 @@ const SectionManagementScreen = () => {
       }, 200);
     };
 
-    // If form was submitted or user confirms leaving with unsaved changes
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       addSectionDialog.onFalse();
       resetState();
-    }
-    // If no unsaved changes, simply close dialog
-    else if (!isChanges) {
+    } else if (!isChanges) {
       addSectionDialog.onFalse();
       setTimeout(() => {
         setSelectedSection(null);
       }, 200);
     }
+  };
+
+  /**
+   * Handles closing of view shelf dialog
+   */
+  const handleViewDialogClose = () => {
+    setSelectedSection(null);
+    viewShelfDialog.onFalse();
   };
 
   return (
@@ -94,6 +98,10 @@ const SectionManagementScreen = () => {
           setSelectedSection(data);
           addSectionDialog.onTrue();
         }}
+        onView={(data) => {
+          setSelectedSection(data);
+          viewShelfDialog.onTrue();
+        }}
         open={open}
         onAddSection={addSectionDialog}
         setOpenDialog={setOpen}
@@ -101,6 +109,7 @@ const SectionManagementScreen = () => {
         setEditData={setSelectedSection}
       />
 
+      {/* Add/Edit Section Dialog */}
       <CustomDialog
         open={addSectionDialog.value}
         maxWidth="md"
@@ -133,6 +142,32 @@ const SectionManagementScreen = () => {
         <SectionForm open={addSectionDialog} onClose={handleClose} editData={selectedSection} />
       </CustomDialog>
 
+      {/* View Shelves Dialog */}
+      <CustomDialog
+        open={viewShelfDialog.value}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">View Shelves</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="This modal displays all shelves under a particular section, allowing users to view detailed shelf information and manage book placement."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        handleClose={() => {
+          setSelectedSection(null);
+          viewShelfDialog.onFalse();
+        }}
+        maxWidth="md"
+      >
+        <ViewShelfData sectionData={selectedSection} />
+      </CustomDialog>
+
+      {/* Delete Section Dialog */}
       <ConfirmDialog
         open={deleteSectionDialog.value}
         onClose={() => {

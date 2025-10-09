@@ -153,7 +153,7 @@ const LibraryTimingCreation = () => {
         links={[
           { name: 'Library', href: '/library/dashboard' },
           { name: 'Setting', href: '/library/settings/book-category' },
-          { name: 'Library Timing' },
+          { name: 'Library Hours' },
         ]}
         action={
           <Box display="flex" gap={2}>

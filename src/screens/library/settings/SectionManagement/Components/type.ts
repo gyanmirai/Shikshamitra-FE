@@ -14,6 +14,7 @@ export interface ISectionTableProps {
   setEditData: (value: ISection | null) => void;
   onDelete: (data: ISection) => void;
   onEdit: (data: ISection) => void;
+  onView: (data: ISection) => void;
 }
 
 export interface ISectionFormProps {

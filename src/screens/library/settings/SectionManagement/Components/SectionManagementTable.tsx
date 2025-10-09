@@ -13,6 +13,7 @@ const SectionManagementTable: React.FC<ISectionTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
+  onView,
 }) => {
   const { data: sectionData, isLoading: sectionsLoading } = useQueryAndMutation({
     type: 'query',
@@ -60,7 +61,6 @@ const SectionManagementTable: React.FC<ISectionTableProps> = ({
           id: 'sectionName',
           label: 'Section Name',
           align: 'left',
-          minWidth: 180,
           render: (value) => (
             <Typography variant="caption" fontSize="13px">
               {value}
@@ -71,7 +71,6 @@ const SectionManagementTable: React.FC<ISectionTableProps> = ({
           id: 'numberOfColumns',
           label: 'No. of Shelf',
           align: 'left',
-          minWidth: 150,
           render: (value) => (
             <Typography variant="caption" fontSize="13px">
               {value}
@@ -93,11 +92,15 @@ const SectionManagementTable: React.FC<ISectionTableProps> = ({
                 placement="right-top"
                 showDeleteIcon
                 showEditIcon
+                showViewIcon
                 handleDeleteClick={() => {
                   onDelete(row as ISection);
                 }}
                 handleEditClick={() => {
                   onEdit(row as ISection);
+                }}
+                handleViewClick={() => {
+                  onView(row as ISection);
                 }}
               />
             );
