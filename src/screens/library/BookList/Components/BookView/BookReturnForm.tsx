@@ -309,9 +309,8 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                 </Grid>
               )}
             </>
-          ) : null}
-            </>
-          ) : null}
+             </>
+           ) : null}
 
           {selectedBook && (
             <>
