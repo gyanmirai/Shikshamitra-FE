@@ -126,7 +126,6 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
           }
         : null;
 
-      console.log('foundBook----', foundBook);
 
       // 3️⃣ Handle found or not found cases
       if (foundBook) {
