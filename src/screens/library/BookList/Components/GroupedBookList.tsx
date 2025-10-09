@@ -52,7 +52,7 @@ const GroupedBookList: React.FC<Props> = ({
         </MenuItem>
       </MenuList>
     ),
-    [onReserveBook, onViewAllReservationBook]
+    [fetchCopies, onReserveBook, onViewAllReservationBook]
   );
   return (
     <>
