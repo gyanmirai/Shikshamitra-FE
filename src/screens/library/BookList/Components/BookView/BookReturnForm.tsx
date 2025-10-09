@@ -115,8 +115,8 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
     setTimeout(() => {
       // 1️⃣ Find the matching copy using accession number
       const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
-      console.log('value-----', value);
-      console.log('foundCopy---', foundCopy);
+-      console.log('value-----', value);
+-      console.log('foundCopy---', foundCopy);
 
       // 2️⃣ If copy exists, find the related book
       const foundBook = foundCopy
