@@ -92,11 +92,9 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
             `Return date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
           (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
         ),
-      amount: Yup.string().when('chargeCategory', {
-        is: (val: string) => !!val,
-        then: (schema) => schema.required('Amount is required'),
-        otherwise: (schema) => schema.nullable(),
-      }),
+      amount: Yup.string().when('chargeCategory', (chargeCategory, schema) =>
+        chargeCategory ? schema.required('Amount is required') : schema.nullable()
+      ),
     }),
     onSubmit: (values) => {
       shikshaMitraToast.success({
