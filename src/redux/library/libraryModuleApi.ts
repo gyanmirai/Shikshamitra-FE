@@ -4,9 +4,6 @@ import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 import libraryData from '../../../libraryData.json';
 
 const isDev = process.env.NODE_ENV === 'development';
-console.log('libraryData:', libraryData.books);
-console.log('ENV:', process.env.NODE_ENV);
-console.log('isDev==library000', isDev);
 export const libraryModuleApi = createApi({
   reducerPath: 'libraryModuleApi',
   baseQuery: isDev
