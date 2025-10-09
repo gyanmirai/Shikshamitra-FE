@@ -64,7 +64,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
 
     setTimeout(() => {
       const foundBook = books.find((book: IBook) =>
-        book.copies?.some((copy) => copy.accessionNo === editData?.accessionNo)
+        book.copies?.some((copy) => copy.accessionNo === accessionNumber)
       );
 
       if (foundBook) {
