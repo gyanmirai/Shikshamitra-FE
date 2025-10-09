@@ -3,7 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { Add } from '@mui/icons-material';
+import { ArrowBack } from '@mui/icons-material';
 // import { useGetIssuedBooksQuery } from 'src/redux/library/issueReturnBook';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -18,9 +18,9 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetIssueReturnFormsQuery } from 'src/redux/issueRetunApi/issueReturnApi';
 
-import IssueBookForm from './Components/IssueBookForm';
-import ReturnBookForm from './Components/IssueReturnForm';
 import BookIssueReturnTable from './Components/IssuedBookTable';
+import IssueBookModal from '../BookList/Components/BookView/BookIssueForm';
+import ReturnBookModal from '../BookList/Components/BookView/BookReturnForm';
 
 import type { ILibraryBookData } from './Components/type';
 
@@ -30,7 +30,7 @@ const IssueReturnBook = () => {
   const [reservedRecordToDelete, setReservedRecordToDelete] = useState<any>(null);
 
   // Dialog states
-  const addDialog = useBoolean();
+  const issueDialog = useBoolean();
   const returnDialog = useBoolean();
   const deleteDialog = useBoolean();
 
@@ -49,12 +49,12 @@ const IssueReturnBook = () => {
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addDialog.onFalse();
+      issueDialog.onFalse();
       setSelectedRecord(null);
       returnDialog.onFalse();
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
-      addDialog.onFalse();
+      issueDialog.onFalse();
       returnDialog.onFalse();
       setSelectedRecord(null);
     }
@@ -65,7 +65,7 @@ const IssueReturnBook = () => {
       <CustomBreadcrumbs
         heading="Issue & Return"
         description={
-          addDialog.value
+          issueDialog.value
             ? 'Issue new books to members or update issued book details.'
             : 'Manage book issue and return records for all library members.'
         }
@@ -74,20 +74,32 @@ const IssueReturnBook = () => {
           { name: 'Issue & Return', href: '/library/issue-return-book' },
         ]}
         action={
-          <Button
-            onClick={() => addDialog.onTrue()}
-            size="small"
-            startIcon={<Add />}
-            variant="contained"
-          >
-            Issue Book
-          </Button>
+          <Box display="flex" gap={1}>
+            <Button
+              onClick={() => issueDialog.onTrue()}
+              size="small"
+              startIcon={<Iconify icon="cib:stackoverflow" />}
+              variant="contained"
+              color="success"
+            >
+              Issue Book
+            </Button>
+            <Button
+              onClick={() => returnDialog.onTrue()}
+              size="small"
+              startIcon={<ArrowBack />}
+              variant="contained"
+              color="warning"
+            >
+              Return Book
+            </Button>
+          </Box>
         }
         sx={{ px: 1, mb: 1 }}
       />
 
       {/* Dialog for Add/Edit */}
-      <CustomDialog
+      {/* <CustomDialog
         open={addDialog.value}
         handleClose={() => {
           addDialog.onFalse();
@@ -115,12 +127,40 @@ const IssueReturnBook = () => {
         }
       >
         <IssueBookForm open={addDialog} onClose={handleClose} editData={null} />
+      </CustomDialog> */}
+
+      <CustomDialog
+        open={issueDialog.value}
+        handleClose={() => {
+          issueDialog.onFalse();
+        }}
+        maxWidth="md"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Issue Book</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Select a member and book to issue with issue date and due date."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <IssueBookModal
+          onClose={() => {
+            issueDialog.onFalse();
+          }}
+          editData={null}
+        />
       </CustomDialog>
 
       {/* Table */}
       <BookIssueReturnTable
         data={issuedBooks}
-        addDialog={addDialog}
+        addDialog={issueDialog}
         onReturnBook={(data) => {
           returnDialog.onTrue();
           setSelectedRecord(data);
@@ -131,7 +171,7 @@ const IssueReturnBook = () => {
         open={returnDialog.value}
         handleClose={() => {
           returnDialog.onFalse();
-          setSelectedRecord(null);
+          // setSelectedCopy(null);
         }}
         maxWidth="md"
         title={
@@ -141,21 +181,18 @@ const IssueReturnBook = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Process book return by updating return date and condition. Confirm book return to make it available for other members."
+              title="Select the issued book record to mark it as returned with return date and remarks if any."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>
         }
       >
-        <ReturnBookForm
-          open={returnDialog}
-          onClose={handleClose}
-          editData={selectedRecord}
-          onDelete={(row) => {
-            setReservedRecordToDelete(row);
-            deleteDialog.onTrue();
+        <ReturnBookModal
+          onClose={() => {
+            returnDialog.onFalse();
           }}
+          accessionNo=""
         />
       </CustomDialog>
 

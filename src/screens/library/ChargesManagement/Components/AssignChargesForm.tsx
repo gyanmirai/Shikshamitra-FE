@@ -12,8 +12,18 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  Box,
+  Grid,
+  Card,
+  Button,
+  Avatar,
+  TextField,
+  Typography,
+  CardContent,
+  DialogActions,
+} from '@mui/material';
 
 import { assignLibraryChargeInitialValues } from './AssignChargeInitialValues';
 import { assignLibraryChargeValidationSchema } from './AssignChargesValidationSchema';
@@ -79,30 +89,108 @@ const staticClasses = [
 
 const staticMembers = [
   {
-    id: 'M001',
-    name: 'Dharmik Jinjala',
-    role: 'Student',
+    id: '1',
+    memberId: 'M001',
     class: '10',
     division: 'A',
-    contactNumber: '+91-9876543210',
-    email: 'dharmik@example.com',
-  },
-  {
-    id: 'M002',
-    name: 'Prerna Atre',
-    role: 'Employee',
-    department: 'Library',
-    contactNumber: '+91-9876543211',
-    email: 'prerna@example.com',
-  },
-  {
-    id: 'M003',
-    name: 'Raj Baku',
+    reservedBook: 'Introduction to Computer Science',
+    accessionNo: 'ACC01',
+    grNo: 'G001',
     role: 'Student',
+    name: 'Dharmik Jinjala',
+    email: 'dharmik.jinjala@school.edu',
+    contactNo: '+91-9876543210',
+    joinDate: '2023-06-15',
+    currentIssue: 4,
+    overdueReturn: 1,
+    memberStatus: '0',
+    requestedDate: '2025-09-15T10:30:00Z',
+    reserveDueDate: '2025-09-22T10:30:00Z',
+    rollNo: '1',
+    avatarUrl: 'https://randomuser.me/api/portraits/men/10.jpg',
+  },
+  {
+    id: '2',
+    memberId: 'M002',
+    class: '-',
+    division: '-',
+    reservedBook: 'Introduction to Computer Science',
+    accessionNo: 'ACC01',
+    grNo: '-',
+    role: 'Employee',
+    name: 'Prerna Atre',
+    email: 'prerna.atre@school.edu',
+    contactNo: '+91-9123456789',
+    joinDate: '2021-04-10',
+    currentIssue: 1,
+    overdueReturn: 0,
+    memberStatus: '0',
+    requestedDate: '2025-09-16T09:45:00Z',
+    reserveDueDate: '2025-09-23T09:45:00Z',
+    avatarUrl: 'https://randomuser.me/api/portraits/women/5.jpg',
+  },
+  {
+    id: '3',
+    memberId: 'M003',
     class: '12',
-    division: 'B',
-    contactNumber: '+91-9876543212',
-    email: 'raj@example.com',
+    division: 'C',
+    reservedBook: 'Introduction to Computer Science',
+    accessionNo: 'ACC01',
+    grNo: 'G003',
+    role: 'Student',
+    name: 'Parth Ghusar',
+    email: 'parth.ghusar@school.edu',
+    contactNo: '+91-9988776655',
+    joinDate: '2022-07-01',
+    currentIssue: 2,
+    overdueReturn: 0,
+    memberStatus: '1',
+    requestedDate: '2025-09-17T11:00:00Z',
+    reserveDueDate: '2025-09-24T11:00:00Z',
+    rollNo: '2',
+    avatarUrl: 'https://randomuser.me/api/portraits/men/12.jpg',
+  },
+  {
+    id: '4',
+    memberId: 'M004',
+    class: '11',
+    division: 'A',
+    reservedBook: 'Introduction to Computer Science',
+    accessionNo: 'ACC01',
+    grNo: 'G004',
+    role: 'Student',
+    name: 'Mayur Solanki',
+    email: 'mayur.solanki@school.edu',
+    contactNo: '+91-9876543211',
+    joinDate: '2023-03-20',
+    currentIssue: 0,
+    overdueReturn: 2,
+    memberStatus: '0',
+    requestedDate: '2025-09-18T13:15:00Z',
+    reserveDueDate: '2025-09-25T13:15:00Z',
+    rollNo: '3',
+    avatarUrl: 'https://randomuser.me/api/portraits/men/15.jpg',
+  },
+  {
+    id: '5',
+    memberId: 'M005',
+    class: '9',
+    division: 'D',
+    reservedBook: 'Introduction to Computer Science',
+    accessionNo: 'ACC01',
+    grNo: 'G005',
+    role: 'Student',
+    name: 'Raj Baku',
+    email: 'raj.baku@school.edu',
+    contactNo: '+91-9123456788',
+    joinDate: '2024-01-05',
+    currentIssue: 7,
+    overdueReturn: 0,
+    memberStatus: '1',
+    requestedDate: '2025-09-19T08:20:00Z',
+    reserveDueDate: '2025-09-26T08:20:00Z',
+    rollNo: '4',
+    avatarUrl: 'https://randomuser.me/api/portraits/men/25.jpg',
   },
 ];
 
@@ -204,47 +292,72 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
 
           {/* Member Details Display */}
           {(() => {
-            const selectedMember = staticMembers.find((m) => m.id === formik.values.memberId);
+            const selectedMember = staticMembers.find((m) => m.memberId === formik.values.memberId);
 
             if (selectedMember) {
               return (
                 <Grid size={{ xs: 12 }}>
-                  <div
-                    style={{
-                      padding: '16px',
-                      backgroundColor: '#f5f5f5',
-                      borderRadius: '8px',
-                      border: '1px solid #e0e0e0',
-                    }}
-                  >
-                    <div style={{ marginBottom: '8px', fontWeight: 'bold', fontSize: '16px' }}>
-                      Member Details
-                    </div>
-                    <div style={{ marginBottom: '4px' }}>
-                      <strong>Name:</strong> {selectedMember.name}
-                    </div>
-                    <div style={{ marginBottom: '4px' }}>
-                      <strong>Role:</strong> {selectedMember.role}
-                    </div>
-                    {selectedMember.role === 'Student' && (
-                      <>
-                        <div style={{ marginBottom: '4px' }}>
-                          <strong>Class:</strong> {selectedMember.class}
-                        </div>
-                        <div style={{ marginBottom: '4px' }}>
-                          <strong>Division:</strong> {selectedMember.division}
-                        </div>
-                      </>
-                    )}
-                    {selectedMember.department && (
-                      <div style={{ marginBottom: '4px' }}>
-                        <strong>Department:</strong> {selectedMember.department}
-                      </div>
-                    )}
-                    <div style={{ marginBottom: '4px' }}>
-                      <strong>Contact:</strong> {selectedMember.contactNumber}
-                    </div>
-                  </div>
+                  <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
+                    <CardContent sx={{ padding: '0 !important' }}>
+                      <Grid container spacing={2}>
+                        {/* Avatar on the left */}
+                        <Grid
+                          size={{ xs: 12, md: 2 }}
+                          sx={{ display: 'flex', alignItems: 'center' }}
+                        >
+                          <Avatar src={selectedMember.avatarUrl} sx={{ width: 80, height: 80 }} />
+                        </Grid>
+
+                        {/* Member details on the right */}
+                        <Grid size={{ xs: 12, md: 10 }}>
+                          <Grid container spacing={1}>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Member Name</Typography>
+                              <Typography>{selectedMember.name}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Member ID</Typography>
+                              <Typography>{selectedMember.id}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Email</Typography>
+                              <Typography>{selectedMember.email}</Typography>
+                            </Grid>
+                            {selectedMember.role === 'Student' && (
+                              <>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>Roll No</Typography>
+                                  <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>GR No</Typography>
+                                  <Typography>{selectedMember.grNo || 'N/A'}</Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>Class/Division</Typography>
+                                  <Typography>
+                                    {selectedMember.class}-{selectedMember.division}
+                                  </Typography>
+                                </Grid>
+                              </>
+                            )}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Phone</Typography>
+                              <Typography>{selectedMember.contactNo}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Member Type</Typography>
+                              <Typography>{selectedMember.role}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Join Date</Typography>
+                              <Typography>{selectedMember.joinDate || 'N/A'}</Typography>
+                            </Grid>
+                          </Grid>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
                 </Grid>
               );
             }
@@ -290,36 +403,53 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
           {/* Book Details Display */}
           {formik.values.bookNumber === 'Acc001' ? (
             <Grid size={{ xs: 12 }}>
-              <div
-                style={{
-                  padding: '16px',
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px',
-                  border: '1px solid #e0e0e0',
-                }}
-              >
-                <div style={{ marginBottom: '8px', fontWeight: 'bold', fontSize: '16px' }}>
-                  Book Details
-                </div>
-                <div style={{ marginBottom: '4px' }}>
-                  <strong>Title:</strong> Introduction to Physics
-                </div>
-                <div style={{ marginBottom: '4px' }}>
-                  <strong>Author:</strong> Dr. John Smith
-                </div>
-                <div style={{ marginBottom: '4px' }}>
-                  <strong>ISBN:</strong> 978-0123456789
-                </div>
-                <div style={{ marginBottom: '4px' }}>
-                  <strong>Category:</strong> Science
-                </div>
-                <div style={{ marginBottom: '4px' }}>
-                  <strong>Publisher:</strong> Academic Press
-                </div>
-                <div>
-                  <strong>Edition:</strong> 3rd Edition
-                </div>
-              </div>
+              <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
+                <CardContent sx={{ p: '0 !important' }}>
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <Box
+                        component="img"
+                        src="/placeholder-book.jpg"
+                        alt="Introduction to Physics"
+                        sx={{
+                          width: 240,
+                          height: 160,
+                          borderRadius: 2,
+                          flexShrink: 0,
+                        }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 8 }}>
+                      <Grid container spacing={1}>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Typography fontWeight={600}>Book Title</Typography>
+                          <Typography>Introduction to Physics</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Typography fontWeight={600}>Accession No.</Typography>
+                          <Typography>Acc001</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Typography fontWeight={600}>Author</Typography>
+                          <Typography>Dr. John Smith</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Typography fontWeight={600}>ISBN</Typography>
+                          <Typography>978-0123456789</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Typography fontWeight={600}>Publisher</Typography>
+                          <Typography>Academic Press</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Typography fontWeight={600}>Edition</Typography>
+                          <Typography>3rd Edition</Typography>
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
             </Grid>
           ) : (
             formik.values.bookNumber !== '' && (

@@ -18,6 +18,7 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
@@ -51,10 +52,10 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
   const [searchBook, setSearchBook] = useState(accessionNo || '');
   const [selectedBook, setSelectedBook] = useState<IBookCopyWithBook | null>(null);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
-
+  const [reservationList, setReservationList] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const { data: memberData } = useQueryAndMutation({
+  const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllMembersQuery,
   });
@@ -71,6 +72,8 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
       chargeCategory: '',
       amount: '',
       returnDate: dayjs(),
+      fineDueDate: null,
+      remarks: '',
     },
     validationSchema: Yup.object({
       returnDate: Yup.mixed()
@@ -92,9 +95,42 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
             `Return date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
           (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
         ),
-      amount: Yup.string().when('chargeCategory', (chargeCategory, schema) =>
-        chargeCategory ? schema.required('Amount is required') : schema.nullable()
-      ),
+      fineDueDate: Yup.mixed().when('chargeCategory', {
+        is: (val: string) => !!val && val !== 'none',
+        then: (schema) =>
+          schema
+            .required('Fine due date is required')
+            .test(
+              'is-valid-dayjs',
+              'Fine due date must be a valid date',
+              (value) => value && dayjs(value as any).isValid()
+            )
+            .test(
+              'min-date',
+              (value) =>
+                `Fine due date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+              (value) =>
+                value && dayjs(value as any).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+            )
+            .test(
+              'max-date',
+              (value) =>
+                `Fine due date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+              (value) =>
+                value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+            ),
+        otherwise: (schema) => schema.nullable(),
+      }),
+      amount: Yup.string().when('chargeCategory', {
+        is: (val: string) => !!val && val !== 'none',
+        then: (schema) => schema.required('Amount is required'),
+        otherwise: (schema) => schema.nullable(),
+      }),
+      remarks: Yup.string().when('chargeCategory', {
+        is: (val: string) => !!val && val !== 'none',
+        then: (schema) => schema.required('Remarks is required'),
+        otherwise: (schema) => schema.nullable(),
+      }),
     }),
     onSubmit: (values) => {
       shikshaMitraToast.success({
@@ -125,7 +161,10 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
       if (foundBook) {
         setSelectedBook(foundBook);
         formik.setFieldValue('accessionNo', foundBook.accessionNo);
-
+        const reservedList = memberData?.filter((member: any) =>
+          selectedBook?.book.reservationMemberIds?.includes(member.memberId)
+        );
+        setReservationList(reservedList);
         const foundMember = memberData?.find(
           (member: any) => member.memberId?.toLowerCase() === foundBook.memberId?.toLowerCase()
         );
@@ -133,12 +172,11 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
       } else {
         setSelectedBook(null);
         setSelectedMember(null);
+        setReservationList([]);
         shikshaMitraToast.error({
           message: 'No book found for this accession number.',
         });
       }
-
-      // 5️⃣ Stop loading after search completes
       setLoading(false);
     }, 400);
   };
@@ -146,6 +184,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
   const handleClearBook = () => {
     setSearchBook('');
     setSelectedBook(null);
+    setReservationList([]);
     formik.setFieldValue('accessionNo', '');
   };
 
@@ -169,10 +208,10 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                   onChange={(e) => setSearchBook(e.target.value)}
                   label="Search by Accession No."
                   sx={{ flex: 1 }}
-                  disabled={!!selectedBook}
+                  disabled={!!accessionNo}
                   InputProps={{
                     endAdornment: searchBook && (
-                      <IconButton size="small" onClick={handleClearBook} disabled={!!selectedBook}>
+                      <IconButton size="small" onClick={handleClearBook} disabled={!!accessionNo}>
                         <ClearIcon />
                       </IconButton>
                     ),
@@ -183,8 +222,9 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                   color="primary"
                   startIcon={<SearchIcon />}
                   onClick={handleSearchBook}
-                  disabled={!!selectedBook}
-                  sx={{ px: 3 }}
+                  disabled={!!accessionNo}
+                  sx={{ mt: 0.3 }}
+                  size="small"
                 >
                   Search
                 </Button>
@@ -211,14 +251,14 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                           alt={selectedBook.book.title}
                           sx={{
                             width: 220,
-                            height: 200,
+                            height: 160,
                             borderRadius: 2,
                             objectFit: 'cover',
                           }}
                         />
                       </Grid>
                       <Grid size={{ xs: 12, md: 8 }}>
-                        <Grid container spacing={2}>
+                        <Grid container spacing={1}>
                           <Grid size={{ xs: 12, md: 6 }}>
                             <Typography fontWeight={600}>Title</Typography>
                             <Typography>{selectedBook.book.title}</Typography>
@@ -231,6 +271,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                             <Typography fontWeight={600}>Author</Typography>
                             <Typography>{selectedBook.book.author}</Typography>
                           </Grid>
+
                           <Grid size={{ xs: 12, md: 6 }}>
                             <Typography fontWeight={600}>Borrowed By</Typography>
                             <Typography>{selectedBook.memberName || 'N/A'}</Typography>
@@ -259,16 +300,16 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                     >
                       <Grid container spacing={2}>
                         {/* Avatar on the left */}
-                        <Grid size={{ xs: 12, md: 2 }}>
-                          <Avatar
-                            src={selectedMember.avatarUrl}
-                            sx={{ width: 80, height: 80, mt: 2 }}
-                          />
+                        <Grid
+                          size={{ xs: 12, md: 2 }}
+                          sx={{ display: 'flex', alignItems: 'center' }}
+                        >
+                          <Avatar src={selectedMember.avatarUrl} sx={{ width: 80, height: 80 }} />
                         </Grid>
 
                         {/* Member details on the right */}
                         <Grid size={{ xs: 12, md: 10 }}>
-                          <Grid container spacing={2}>
+                          <Grid container spacing={1}>
                             <Grid size={{ xs: 12, md: 4 }}>
                               <Typography fontWeight={600}>Member Name</Typography>
                               <Typography>{selectedMember.name}</Typography>
@@ -281,6 +322,24 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                               <Typography fontWeight={600}>Email</Typography>
                               <Typography>{selectedMember.email}</Typography>
                             </Grid>
+                            {selectedMember.role === 'Student' && (
+                              <>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>Roll No</Typography>
+                                  <Typography>{selectedMember.rollNo}</Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>GR No</Typography>
+                                  <Typography>{selectedMember.grNo}</Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>Class/Division</Typography>
+                                  <Typography>
+                                    {selectedMember.class}-{selectedMember.division}
+                                  </Typography>
+                                </Grid>
+                              </>
+                            )}
                             <Grid size={{ xs: 12, md: 4 }}>
                               <Typography fontWeight={600}>Phone</Typography>
                               <Typography>{selectedMember.contactNo}</Typography>
@@ -335,53 +394,161 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
               </Grid>
 
               {/* Amount */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
-                  <NumericFormatCustom
-                    size="small"
-                    fullWidth
-                    label={`Amount${formik.values.chargeCategory ? ' *' : ''}`}
-                    name="amount"
-                    value={formik.values.amount}
-                    disabled={
-                      !!(staticChargeCategories || []).find(
-                        (cat: any) => cat.id === formik.values.chargeCategory && cat.isFixed
-                      )
-                    }
-                    error={!!(formik.touched.amount && formik.errors.amount)}
-                    helperText={(formik.touched.amount && formik.errors.amount) as string}
-                    onChange={(e: any) => {
-                      // Remove non-numeric characters and parse to number
-                      const rawValue = e.target.value.replace(/[^0-9.]/g, '');
-                      formik.setFieldValue('amount', rawValue ? Number(rawValue) : '');
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.returnDate && formik.errors.returnDate)}>
-                  <DatePicker
-                    label="Return Date *"
-                    format="DD-MM-YYYY"
-                    value={formik.values.returnDate}
-                    onChange={(newValue) => {
-                      formik.setFieldValue('returnDate', newValue);
-                    }}
-                    minDate={dayjs(selectedBook.issueDate || currentYear?.startDate)}
-                    maxDate={dayjs(currentYear?.endDate)}
-                    sx={{ width: '100%' }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: !!(formik.touched.returnDate && formik.errors.returnDate),
-                        helperText: (formik.touched.returnDate &&
-                          formik.errors.returnDate) as string,
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid>
+              {formik.values.chargeCategory && formik.values.chargeCategory !== 'none' && (
+                <>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
+                      <NumericFormatCustom
+                        size="small"
+                        fullWidth
+                        label="Amount *"
+                        name="amount"
+                        value={formik.values.amount}
+                        disabled={
+                          !!(staticChargeCategories || []).find(
+                            (cat: any) => cat.id === formik.values.chargeCategory && cat.isFixed
+                          )
+                        }
+                        error={!!(formik.touched.amount && formik.errors.amount)}
+                        helperText={(formik.touched.amount && formik.errors.amount) as string}
+                        onChange={(e: any) => {
+                          // Remove non-numeric characters and parse to number
+                          const rawValue = e.target.value.replace(/[^0-9.]/g, '');
+                          formik.setFieldValue('amount', rawValue ? Number(rawValue) : '');
+                        }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <ShakingTextField
+                      error={!!(formik.touched.fineDueDate && formik.errors.fineDueDate)}
+                    >
+                      <DatePicker
+                        label="Fine Due Date *"
+                        format="DD-MM-YYYY"
+                        value={formik.values.fineDueDate}
+                        onChange={(newValue) => {
+                          formik.setFieldValue('fineDueDate', newValue);
+                        }}
+                        minDate={dayjs(formik.values.returnDate || currentYear?.startDate)}
+                        maxDate={dayjs(currentYear?.endDate)}
+                        sx={{ width: '100%' }}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            fullWidth: true,
+                            error: !!(formik.touched.fineDueDate && formik.errors.fineDueDate),
+                            helperText: (formik.touched.fineDueDate &&
+                              formik.errors.fineDueDate) as string,
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <ShakingTextField
+                      error={!!(formik.touched.returnDate && formik.errors.returnDate)}
+                    >
+                      <DatePicker
+                        label="Return Date *"
+                        format="DD-MM-YYYY"
+                        value={formik.values.returnDate}
+                        onChange={(newValue) => {
+                          formik.setFieldValue('returnDate', newValue);
+                        }}
+                        minDate={dayjs(selectedBook.issueDate || currentYear?.startDate)}
+                        maxDate={dayjs(currentYear?.endDate)}
+                        sx={{ width: '100%' }}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            fullWidth: true,
+                            error: !!(formik.touched.returnDate && formik.errors.returnDate),
+                            helperText: (formik.touched.returnDate &&
+                              formik.errors.returnDate) as string,
+                          },
+                        }}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <ShakingTextField error={!!(formik.touched.remarks && formik.errors.remarks)}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={4}
+                        label="Remarks *"
+                        name="remarks"
+                        value={formik.values.remarks}
+                        onChange={formik.handleChange}
+                        error={!!(formik.touched.remarks && formik.errors.remarks)}
+                        helperText={(formik.touched.remarks && formik.errors.remarks) as string}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                  <Grid size={12}>
+                    {reservationList?.length ? (
+                      <>
+                        <Typography variant="subtitle1">Reserved List</Typography>
+                        <CustomizableTable
+                          tableId="reserved-members-table"
+                          noDataText="No Reserved Members Found"
+                          isLoading={memberLoading}
+                          columns={[
+                            { id: 'memberId', label: 'Member ID', align: 'left', sticky: true },
+                            { id: 'name', label: 'Member Name', align: 'left' },
+                            { id: 'role', label: 'Role', align: 'left' },
+                            { id: 'class', label: 'Class', align: 'left' },
+                            { id: 'division', label: 'Division', align: 'left' },
+                            { id: 'rollNo', label: 'Roll No', align: 'left' },
+                            { id: 'grNo', label: 'GR No', align: 'left' },
+                            {
+                              id: 'accessionNo',
+                              label: 'Accession No',
+                              align: 'left',
+                            },
+                            {
+                              id: 'reservedBook',
+                              label: 'Reserved Book',
+                              align: 'left',
+                              render: (value) => (
+                                <Typography variant="caption" fontSize="13px">
+                                  {typeof value === 'object' ? value?.title || '-' : value || '-'}
+                                </Typography>
+                              ),
+                            },
+                            {
+                              id: 'requestedDate',
+                              label: 'Requested Date',
+                              align: 'left',
+                              filterType: 'date',
+                              render: (value) => (
+                                <Typography variant="caption" fontSize="13px">
+                                  {dayjs(value).format('DD-MM-YYYY')}
+                                </Typography>
+                              ),
+                            },
+                            {
+                              id: 'reserveDueDate',
+                              label: 'Reserve Due Date',
+                              align: 'left',
+                              filterType: 'date',
+                              render: (value) => (
+                                <Typography variant="caption" fontSize="13px">
+                                  {dayjs(value).format('DD-MM-YYYY')}
+                                </Typography>
+                              ),
+                            },
+                          ]}
+                          data={reservationList || []}
+                        />
+                      </>
+                    ) : (
+                      <Typography>No reservations yet</Typography>
+                    )}
+                  </Grid>
+                </>
+              )}
             </>
           )}
         </Grid>
@@ -401,7 +568,6 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
           startIcon={<Iconify icon={GlobalIcons.submit} width={16} height={16} />}
-          disabled={!selectedBook}
         >
           Submit
         </Button>

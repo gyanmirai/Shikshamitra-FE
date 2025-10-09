@@ -9,22 +9,27 @@ export const libraryModuleApi = createApi({
   baseQuery: isDev
     ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
     : async ({ url }) => {
-        switch (url) {
-          case '/books':
-            console.log('libraryData.books:', libraryData.books);
-            return { data: libraryData.books };
-          case '/copies':
-            return { data: libraryData.copies };
-          case '/libraryMemberManagementData':
-            return { data: libraryData.libraryMemberManagementData };
-          default:
-            return {
-              error: {
-                status: 404,
-                data: 'No mock data found for this route',
-              },
-            };
+        if (url === '/books') {
+          return { data: libraryData.books };
         }
+        if (url === '/copies') {
+          return { data: libraryData.copies };
+          // } else if (url === '/copies/[]') {
+          //   return { data: libraryData.copies };
+        }
+        if (url === '/libraryMemberManagementData') {
+          return { data: libraryData.libraryMemberManagementData };
+        }
+        if (url.includes('bookId')) {
+          const id = url.split('=')[1];
+          return { data: libraryData.copies.filter((item) => item.bookId === id) };
+        }
+        return {
+          error: {
+            status: 404,
+            data: 'No mock data found for this route',
+          },
+        };
       },
   tagTypes: ['Books', 'Copies', 'Members'],
   endpoints: () => ({}), // inject later

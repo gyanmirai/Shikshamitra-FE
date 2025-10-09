@@ -23,6 +23,7 @@ import BookFormStepper from '../BookManagement/BookFormComponents/BookForm';
 import ReservationBookModal from './Components/BookView/BookReservationForm';
 import ChangeBookStatusForm from './Components/BookView/BookStatusChangeForm';
 import ViewReservedMembersTable from './Components/BookView/BookReservedLIst';
+import ViewBookCopyHistoryTable from './Components/BookView/ViewBookCopyHistory';
 
 import type { IBook, IBookPayload, IBookCopyWithBook } from '../BookManagement/Components/type';
 
@@ -42,7 +43,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
 
   const reserveDialog = useBoolean();
   const viewAllReservationDialog = useBoolean();
-
+  const bookHistoryDialog = useBoolean();
   // Redux dispatch hook for state management
   const dispatch = useDispatch();
 
@@ -66,10 +67,26 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
    */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      changeStatusDialog.onFalse();
+      returnDialog.onFalse();
+      issueDialog.onFalse();
+      viewDialog.onFalse();
+      viewAllReservationDialog.onFalse();
+      reserveDialog.onFalse();
+      setSelectedReservation(null);
+      setSelectedCopy(null);
       setOpen(false);
       dispatch(setIsChanges(false));
       setSelectedBook(null);
     } else if (!isChanges) {
+      changeStatusDialog.onFalse();
+      returnDialog.onFalse();
+      issueDialog.onFalse();
+      viewDialog.onFalse();
+      viewAllReservationDialog.onFalse();
+      reserveDialog.onFalse();
+      setSelectedReservation(null);
+      setSelectedCopy(null);
       setOpen(false);
       setSelectedBook(null);
     }
@@ -172,6 +189,10 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
               setSelectedCopy(copy);
               /* TODO: implement handleReturnBook */
             }}
+            handleBookHistory={(copy) => {
+              bookHistoryDialog.onTrue();
+              setSelectedCopy(copy);
+            }}
           />
         </Card>
       ) : (
@@ -189,8 +210,9 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
             setOpen(true);
           }}
           onReserveBook={(data) => {
-            reserveDialog.onTrue();
             setSelectedBook(data);
+            console.log('reserve data', data);
+            reserveDialog.onTrue();
           }}
           onViewAllReservationBook={(data) => {
             viewAllReservationDialog.onTrue();
@@ -297,7 +319,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         maxWidth="md"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">All Reservations</Typography>
+            <Typography variant="h5">All Reservations for {selectedBook?.title}</Typography>
             <CustomTooltip
               arrow
               placement="right"
@@ -412,6 +434,38 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
           </Button>
         }
       />
+
+      <CustomDialog
+        open={bookHistoryDialog.value}
+        handleClose={() => {
+          bookHistoryDialog.onFalse();
+          setSelectedBook(null);
+        }}
+        maxWidth="md"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedCopy?.book?.title}-{selectedCopy?.accessionNo} History
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View all reservations for the selected book."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <ViewBookCopyHistoryTable
+          editData={selectedBook}
+          onDelete={(row) => {
+            bookHistoryDialog.onTrue();
+            setSelectedReservation(row);
+          }}
+        />
+      </CustomDialog>
     </Box>
   );
 };

@@ -8,7 +8,6 @@ import { Iconify } from 'src/components/iconify';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import { shikshaMitraToast } from 'src/components/toast';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -22,8 +21,6 @@ import {
   Stack,
   Button,
   Avatar,
-  MenuItem,
-  MenuList,
   TextField,
   Typography,
   IconButton,
@@ -44,11 +41,13 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [loadingMember, setLoadingMember] = useState(false);
   const { currentYear } = useSelector((state: any) => state.globalState);
-
-  const { data: memberData } = useQueryAndMutation({
+  console.log('editData===', editData);
+  const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetAllMembersQuery,
+    currentQueryAndMutation: useGetAllMembersQuery, // ✅ just pass the hook reference
   });
+
+  console.log('memberData---in reservation--------', memberData);
 
   const formik = useFormik({
     initialValues: {
@@ -90,8 +89,8 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
     formik.setFieldValue('memberId', '');
   };
 
-  const reservedList = editData?.reservationMemberIds?.map((memberId: string) =>
-    memberData?.find((m: any) => m.memberId === memberId)
+  const reservedList = memberData?.filter((member: any) =>
+    editData?.reservationMemberIds.includes(member.memberId)
   );
 
   return (
@@ -122,6 +121,8 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                 color="primary"
                 startIcon={<SearchIcon />}
                 onClick={handleMemberSearch}
+                size="small"
+                sx={{ mt: 0.3 }}
               >
                 Search
               </Button>
@@ -137,14 +138,66 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
           ) : selectedMember ? (
             <Grid size={{ xs: 12 }}>
               <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
-                <CardContent sx={{ p: 1 }}>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar src={selectedMember.avatarUrl} sx={{ width: 60, height: 60 }} />
-                    <Box>
-                      <Typography>{selectedMember.name}</Typography>
-                      <Typography variant="caption">{selectedMember.memberId}</Typography>
-                    </Box>
-                  </Stack>
+                <CardContent
+                  sx={{
+                    padding: '0 !important',
+                  }}
+                >
+                  <Grid container spacing={2}>
+                    {/* Avatar on the left */}
+                    <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Avatar src={selectedMember.avatarUrl} sx={{ width: 80, height: 80 }} />
+                    </Grid>
+
+                    {/* Member details on the right */}
+                    <Grid size={{ xs: 12, md: 10 }}>
+                      <Grid container spacing={1}>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                          <Typography fontWeight={600}>Member Name</Typography>
+                          <Typography>{selectedMember.name}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                          <Typography fontWeight={600}>Member ID</Typography>
+                          <Typography>{selectedMember.memberId}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                          <Typography fontWeight={600}>Email</Typography>
+                          <Typography>{selectedMember.email}</Typography>
+                        </Grid>
+                        {selectedMember.role === 'Student' && (
+                          <>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Roll No</Typography>
+                              <Typography>{selectedMember.rollNo}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>GR No</Typography>
+                              <Typography>{selectedMember.grNo}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Class/Division</Typography>
+                              <Typography>
+                                {selectedMember.class}-{selectedMember.division}
+                              </Typography>
+                            </Grid>
+                          </>
+                        )}
+                        <Grid size={{ xs: 12, md: 4 }}>
+                          <Typography fontWeight={600}>Phone</Typography>
+                          <Typography>{selectedMember.contactNo}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                          <Typography fontWeight={600}>Member Type</Typography>
+                          <Typography>{selectedMember.role}</Typography>
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 4 }}>
+                          <Typography fontWeight={600}>Join Date</Typography>
+                          <Typography>{selectedMember.joinDate}</Typography>
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                  </Grid>
                 </CardContent>
               </Card>
             </Grid>
@@ -217,9 +270,30 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                 <CustomizableTable
                   tableId="reserved-members-table"
                   noDataText="No Reserved Members Found"
+                  isLoading={memberLoading}
                   columns={[
-                    { id: 'memberId', label: 'Member ID', align: 'left' },
+                    { id: 'memberId', label: 'Member ID', align: 'left', sticky: true },
                     { id: 'name', label: 'Member Name', align: 'left' },
+                    { id: 'role', label: 'Role', align: 'left' },
+                    { id: 'class', label: 'Class', align: 'left' },
+                    { id: 'division', label: 'Division', align: 'left' },
+                    { id: 'rollNo', label: 'Roll No', align: 'left' },
+                    { id: 'grNo', label: 'GR No', align: 'left' },
+                    {
+                      id: 'accessionNo',
+                      label: 'Accession No',
+                      align: 'left',
+                    },
+                    {
+                      id: 'reservedBook',
+                      label: 'Reserved Book',
+                      align: 'left',
+                      render: (value) => (
+                        <Typography variant="caption" fontSize="13px">
+                          {typeof value === 'object' ? value?.title || '-' : value || '-'}
+                        </Typography>
+                      ),
+                    },
                     {
                       id: 'requestedDate',
                       label: 'Requested Date',
@@ -240,30 +314,6 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                         <Typography variant="caption" fontSize="13px">
                           {dayjs(value).format('DD-MM-YYYY')}
                         </Typography>
-                      ),
-                    },
-                    {
-                      id: 'action',
-                      label: 'Action',
-                      align: 'left',
-                      render: (row: any) => (
-                        <ThreeDotsActions
-                          placement="right-top"
-                          actions={({ popover: pop }) => (
-                            <MenuList>
-                              <MenuItem
-                                onClick={() => {
-                                  shikshaMitraToast.info({ message: 'Action clicked' });
-                                }}
-                              >
-                                <Iconify
-                                  icon='mingcute:notification-fill'
-                                />
-                                Send Notification
-                              </MenuItem>
-                            </MenuList>
-                          )}
-                        />
                       ),
                     },
                   ]}

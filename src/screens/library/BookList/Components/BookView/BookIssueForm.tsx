@@ -1,5 +1,8 @@
 import type { RootState } from 'src/redux/store';
-import type { IBook, IBookCopyWithBook } from 'src/screens/library/BookManagement/Components/type';
+import type {
+  IBookCopy,
+  IBookCopyWithBook,
+} from 'src/screens/library/BookManagement/Components/type';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
@@ -15,6 +18,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
+import { useGetAllCopiesQuery } from 'src/redux/library/bookList/copies-api';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
@@ -44,12 +48,12 @@ export interface IssueBookFormProps {
 
 const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => {
   const [searchBook, setSearchBook] = useState(editData?.accessionNo || '');
-  const [searchMember, setSearchMember] = useState('');
-  const [selectedBook, setSelectedBook] = useState<IBook | null>(editData?.book || null);
+  const [searchMember, setSearchMember] = useState(editData?.memberId || '');
+  const [selectedBook, setSelectedBook] = useState<IBookCopyWithBook | null>(editData);
   const [selectedMember, setSelectedMember] = useState<any | null>(editData?.memberId || null);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [books, setBooks] = useState(libraryDummyData.books);
-
+  console.log('editData====', editData);
   const [loading, setLoading] = useState(false);
   const [loadingMember, setLoadingMember] = useState(false);
 
@@ -57,21 +61,35 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     type: 'query',
     currentQueryAndMutation: useGetAllMembersQuery,
   });
+  const { data: copies } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllCopiesQuery,
+  });
 
   const handleSearchBook = () => {
-    const { accessionNumber } = formik.values;
+    const accessionNumber = formik.values.accessionNumber || searchBook;
+    console.log('accessionNumber----', searchBook);
     if (!accessionNumber) return;
 
     setTimeout(() => {
-      const foundBook = books.find((book: IBook) =>
-        book.copies?.some((copy) => copy.accessionNo === accessionNumber)
-      );
+      const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === accessionNumber);
+
+      const foundBook = foundCopy
+        ? {
+            ...foundCopy,
+            book: books?.find((b) => b.id === foundCopy.bookId),
+          }
+        : null;
 
       if (foundBook) {
         setSelectedBook(foundBook);
+        formik.setFieldValue('accessionNo', foundBook.accessionNo);
       } else {
         setSelectedBook(null);
-        shikshaMitraToast.error({ message: 'No book found for this accession number.' });
+
+        shikshaMitraToast.error({
+          message: 'No book found for this accession number.',
+        });
       }
       setLoading(false);
     }, 400);
@@ -136,13 +154,13 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                 variant="outlined"
                 size="small"
                 value={searchBook}
-                disabled={!!selectedBook}
+                disabled={!!editData}
                 label="Scan Barcode or Search by Accession No."
                 onChange={(e) => setSearchBook(e.target.value)}
                 sx={{ flex: 1 }}
                 InputProps={{
                   endAdornment: searchBook && (
-                    <IconButton size="small" onClick={handleClearBook} disabled={!!selectedBook}>
+                    <IconButton size="small" onClick={handleClearBook} disabled={!!editData}>
                       <ClearIcon />
                     </IconButton>
                   ),
@@ -151,12 +169,13 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
               <Button
                 variant="contained"
                 color="primary"
-                disabled={!!selectedBook}
+                disabled={!!editData}
                 startIcon={<SearchIcon />}
                 onClick={() => {
                   handleSearchBook();
                 }}
-                sx={{ px: 3 }}
+                size="small"
+                sx={{ mt: 0.3 }}
               >
                 Search
               </Button>
@@ -176,42 +195,41 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                   <Grid size={{ xs: 12, md: 4 }}>
                     <Box
                       component="img"
-                      src={selectedBook.bookCoverImages?.[0] || '/placeholder-book.jpg'}
-                      alt={selectedBook.title}
+                      src={selectedBook.book.bookCoverImages?.[0] || '/placeholder-book.jpg'}
+                      alt={selectedBook.book.title}
                       sx={{
                         width: 240,
-                        height: 210,
+                        height: 160,
                         borderRadius: 2,
-                        objectFit: 'cover',
                         flexShrink: 0,
                       }}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 8 }}>
-                    <Grid container spacing={2}>
+                    <Grid container spacing={1}>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <Typography fontWeight={600}>Book Title</Typography>
-                        <Typography>{selectedBook.title}</Typography>
+                        <Typography>{selectedBook.book.title}</Typography>
                       </Grid>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <Typography fontWeight={600}>Accession No.</Typography>
-                        <Typography>{editData?.accessionNo}</Typography>
+                        <Typography>{selectedBook?.accessionNo}</Typography>
                       </Grid>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <Typography fontWeight={600}>Author</Typography>
-                        <Typography>{selectedBook.author}</Typography>
+                        <Typography>{selectedBook.book.author}</Typography>
                       </Grid>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <Typography fontWeight={600}>ISBN</Typography>
-                        <Typography>{selectedBook.isbn}</Typography>
+                        <Typography>{selectedBook.book.isbn}</Typography>
                       </Grid>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <Typography fontWeight={600}>Publisher</Typography>
-                        <Typography>{selectedBook.publisher}</Typography>
+                        <Typography>{selectedBook.book.publisher}</Typography>
                       </Grid>
                       <Grid size={{ xs: 12, md: 6 }}>
                         <Typography fontWeight={600}>Year</Typography>
-                        <Typography>{dayjs(selectedBook.createdOn).format('YYYY')}</Typography>
+                        <Typography>{dayjs(selectedBook.book.createdOn).format('YYYY')}</Typography>
                       </Grid>
                     </Grid>
                   </Grid>
@@ -229,14 +247,9 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                 onChange={(e) => setSearchMember(e.target.value)}
                 label="Search Member Id"
                 sx={{ flex: 1 }}
-                disabled={!!selectedMember}
                 InputProps={{
                   endAdornment: searchMember && (
-                    <IconButton
-                      size="small"
-                      onClick={handleClearMember}
-                      disabled={!!selectedMember}
-                    >
+                    <IconButton size="small" onClick={handleClearMember}>
                       <ClearIcon />
                     </IconButton>
                   ),
@@ -246,9 +259,9 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                 variant="contained"
                 color="primary"
                 startIcon={<SearchIcon />}
-                disabled={!!selectedMember}
                 onClick={handleMemberSearch}
-                sx={{ px: 3 }}
+                sx={{ mt: 0.3 }}
+                size="small"
               >
                 Search
               </Button>
@@ -271,16 +284,13 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                 >
                   <Grid container spacing={2}>
                     {/* Avatar on the left */}
-                    <Grid size={{ xs: 12, md: 2 }}>
-                      <Avatar
-                        src={selectedMember.avatarUrl}
-                        sx={{ width: 80, height: 80, mt: 2 }}
-                      />
+                    <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Avatar src={selectedMember.avatarUrl} sx={{ width: 80, height: 80 }} />
                     </Grid>
 
                     {/* Member details on the right */}
                     <Grid size={{ xs: 12, md: 10 }}>
-                      <Grid container spacing={2}>
+                      <Grid container spacing={1}>
                         <Grid size={{ xs: 12, md: 4 }}>
                           <Typography fontWeight={600}>Member Name</Typography>
                           <Typography>{selectedMember.name}</Typography>
@@ -293,6 +303,24 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                           <Typography fontWeight={600}>Email</Typography>
                           <Typography>{selectedMember.email}</Typography>
                         </Grid>
+                        {selectedMember.role === 'Student' && (
+                          <>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Roll No</Typography>
+                              <Typography>{selectedMember.rollNo}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>GR No</Typography>
+                              <Typography>{selectedMember.grNo}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Class/Division</Typography>
+                              <Typography>
+                                {selectedMember.class}-{selectedMember.division}
+                              </Typography>
+                            </Grid>
+                          </>
+                        )}
                         <Grid size={{ xs: 12, md: 4 }}>
                           <Typography fontWeight={600}>Phone</Typography>
                           <Typography>{selectedMember.contactNo}</Typography>

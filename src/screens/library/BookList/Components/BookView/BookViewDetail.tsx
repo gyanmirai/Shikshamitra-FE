@@ -12,6 +12,7 @@ interface BookViewDetailProps {
   handleChangeStatus: (copy: IBookCopyWithBook) => void;
   handleIssueBook: (copy: IBookCopyWithBook) => void;
   handleReturnBook: (copy: IBookCopyWithBook) => void;
+  handleBookHistory: (copy: IBookCopyWithBook) => void;
 }
 
 const BookViewDetail: React.FC<BookViewDetailProps> = ({
@@ -19,6 +20,7 @@ const BookViewDetail: React.FC<BookViewDetailProps> = ({
   handleChangeStatus,
   handleIssueBook,
   handleReturnBook,
+  handleBookHistory,
 }) => (
   <Box display="flex" flexDirection="column" sx={{ height: '100%' }}>
     <Scrollbar sx={{ p: 2, height: '100%' }}>
@@ -35,6 +37,7 @@ const BookViewDetail: React.FC<BookViewDetailProps> = ({
               onChangeStatus={() => handleChangeStatus({ ...copy, book })}
               onIssueBook={() => handleIssueBook({ ...copy, book })}
               onReturnBook={() => handleReturnBook({ ...copy, book })}
+              onBookHistory={() => handleBookHistory({ ...copy, book })}
             />
           </Grid>
         ))}

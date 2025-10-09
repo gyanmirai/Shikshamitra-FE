@@ -1448,7 +1448,7 @@ const libraryModule = {
           shortcutKeyName: 'Alt+L+3',
         },
         {
-          title: 'Fines & Fees',
+          title: 'Charges',
           path: '/library/charges-management',
           _action: 'charges-management',
           shortcutKey: 'Alt+L+2',
@@ -1514,7 +1514,7 @@ const libraryModule = {
               shortcutKeyName: 'Alt+L+S+1',
             },
             {
-              title: 'Fines & Fees Categories',
+              title: 'Charges Categories',
               path: '/library/settings/charge-type',
               _action: 'general-setting',
               shortcutKey: 'Alt+L+S+2',

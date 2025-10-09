@@ -8,7 +8,7 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { ArrowBack, Autorenew } from '@mui/icons-material';
 import { Label, type LabelColor } from 'src/components/label';
-import { Box, Card, Stack, Button, Typography } from '@mui/material';
+import { Box, Card, Stack, Button, Tooltip, IconButton, Typography } from '@mui/material';
 import { LibraryBookStatus, LibraryBookStatusColors } from 'src/enums/library-book-status';
 
 interface IBookCopyCardProps {
@@ -16,6 +16,7 @@ interface IBookCopyCardProps {
   onChangeStatus?: (copy: IBookCopyWithBook) => void;
   onIssueBook?: (copy: IBookCopyWithBook) => void;
   onReturnBook?: (copy: IBookCopyWithBook) => void;
+  onBookHistory?: (copy: IBookCopyWithBook) => void;
 }
 
 const BookCopyCard: React.FC<IBookCopyCardProps> = ({
@@ -23,6 +24,7 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
   onChangeStatus,
   onIssueBook,
   onReturnBook,
+  onBookHistory,
 }) => {
   const theme = useTheme();
   return (
@@ -37,11 +39,7 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
           LibraryBookStatusColors[copy.status] === 'default'
             ? theme.palette.grey[500]
             : theme.palette[
-                LibraryBookStatusColors[copy.status] as
-                  | 'success'
-                  | 'info'
-                  | 'warning'
-                  | 'error'
+                LibraryBookStatusColors[copy.status] as 'success' | 'info' | 'warning' | 'error'
               ].main
         }`,
         display: 'flex',
@@ -114,6 +112,15 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
             Return book
           </Button>
         )}
+        <IconButton
+          size="small"
+          color="primary"
+          onClick={() => onBookHistory?.(copy as IBookCopyWithBook)}
+        >
+          <Tooltip title="History">
+            <Iconify icon="mdi:autorenew" width={20} height={20} />
+          </Tooltip>
+        </IconButton>
       </Stack>
     </Card>
   );

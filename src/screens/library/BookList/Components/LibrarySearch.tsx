@@ -119,7 +119,7 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
           size="small"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          label="Search by title, author, ISBN.."
+          label="Search by Title, Author, ISBN.."
           sx={{ flex: 1 }}
           InputProps={{
             endAdornment: searchInput && (
@@ -134,7 +134,8 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
           color="primary"
           startIcon={<SearchIcon />}
           onClick={handleSearch}
-          sx={{ px: 3 }}
+          size="small"
+          sx={{ mt: 0.3 }}
         >
           Search
         </Button>
