@@ -24,10 +24,9 @@ const ReservedBooks: React.FC<ReservedBooksProps> = ({ member }) => {
         isLoading={memberLoading}
         columns={[
           { id: 'bookTitle', label: 'Book Title', align: 'left' },
-          { id: 'reservationDate', label: 'Reserved on', align: 'left' },
-          { id: 'isbn', label: 'ISBN', align: 'left' },
-          { id: 'author', label: 'Author', align: 'left' },
           { id: 'bookCategory', label: 'Book Category', align: 'left' },
+          { id: 'reservationDate', label: 'Reserved on', align: 'left' },
+          { id: 'author', label: 'Author', align: 'left' },
         ]}
         data={mockReservedBooks || []}
       />

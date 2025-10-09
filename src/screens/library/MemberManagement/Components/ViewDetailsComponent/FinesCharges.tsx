@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Chip } from '@mui/material';
+import { Box } from '@mui/material';
+import { Label } from 'src/components/label';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFinesChargesQuery } from 'src/redux/memberManagement/memberManagementApi';
@@ -27,7 +28,9 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
         noDataText="No Fines or Charges Data Found"
         isLoading={mockFinesChargesLoading}
         columns={[
-          { id: 'bookTitle', label: 'Book Title', align: 'left' },
+          { id: 'bookTitle', sticky: true, minWidth: '150px', label: 'Book Title', align: 'left' },
+          { id: 'bookCategory', minWidth: '150px', label: 'Book Category', align: 'left' },
+          { id: 'accessionNo', minWidth: '180px', label: 'Accession Number', align: 'left' },
           {
             id: 'amount',
             label: 'Amount',
@@ -42,13 +45,14 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
             },
           },
           { id: 'dateIssued', label: 'Date', align: 'left' },
-          { id: 'chargeType', label: 'Charge Type', align: 'left' },
-          { id: 'reason', label: 'Reason', align: 'left' },
+          { id: 'chargeType', minWidth: '180px', label: 'Charge Type', align: 'left' },
+          { id: 'reason', minWidth: '300px', label: 'Reason', align: 'left' },
 
           {
             id: 'status',
             label: 'Status',
             align: 'left',
+            sticky: true,
             render(value) {
               // Find the status type based on the label from enum options
               const statusType = FinesChargesStatusTypeOptions.find(
@@ -59,7 +63,7 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
               const color =
                 statusType !== undefined ? FinesChargesStatusTypeColors[statusType] : 'default';
 
-              return <Chip label={value} color={color as any} size="small" variant="soft" />;
+              return <Label color={color as any}>{value}</Label>;
             },
           },
         ]}
