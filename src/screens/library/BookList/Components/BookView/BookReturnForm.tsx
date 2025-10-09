@@ -259,55 +259,59 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
-                  <CardContent
-                    sx={{
-                      padding: '0 !important',
-                    }}
-                  >
-                    <Grid container spacing={2}>
-                      {/* Avatar on the left */}
-                      <Grid size={{ xs: 12, md: 2 }}>
-                        <Avatar
-                          src={selectedMember.avatarUrl}
-                          sx={{ width: 80, height: 80, mt: 2 }}
-                        />
-                      </Grid>
+              {selectedMember && (
+                <Grid size={{ xs: 12 }}>
+                  <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
+                    <CardContent
+                      sx={{
+                        padding: '0 !important',
+                      }}
+                    >
+                      <Grid container spacing={2}>
+                        {/* Avatar on the left */}
+                        <Grid size={{ xs: 12, md: 2 }}>
+                          <Avatar
+                            src={selectedMember.avatarUrl}
+                            sx={{ width: 80, height: 80, mt: 2 }}
+                          />
+                        </Grid>
 
-                      {/* Member details on the right */}
-                      <Grid size={{ xs: 12, md: 10 }}>
-                        <Grid container spacing={2}>
-                          <Grid size={{ xs: 12, md: 4 }}>
-                            <Typography fontWeight={600}>Member Name</Typography>
-                            <Typography>{selectedMember.name}</Typography>
-                          </Grid>
-                          <Grid size={{ xs: 12, md: 4 }}>
-                            <Typography fontWeight={600}>Member ID</Typography>
-                            <Typography>{selectedMember.memberId}</Typography>
-                          </Grid>
-                          <Grid size={{ xs: 12, md: 4 }}>
-                            <Typography fontWeight={600}>Email</Typography>
-                            <Typography>{selectedMember.email}</Typography>
-                          </Grid>
-                          <Grid size={{ xs: 12, md: 4 }}>
-                            <Typography fontWeight={600}>Phone</Typography>
-                            <Typography>{selectedMember.contactNo}</Typography>
-                          </Grid>
-                          <Grid size={{ xs: 12, md: 4 }}>
-                            <Typography fontWeight={600}>Member Type</Typography>
-                            <Typography>{selectedMember.role}</Typography>
-                          </Grid>
-                          <Grid size={{ xs: 12, md: 4 }}>
-                            <Typography fontWeight={600}>Join Date</Typography>
-                            <Typography>{selectedMember.joinDate}</Typography>
+                        {/* Member details on the right */}
+                        <Grid size={{ xs: 12, md: 10 }}>
+                          <Grid container spacing={2}>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Member Name</Typography>
+                              <Typography>{selectedMember.name}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Member ID</Typography>
+                              <Typography>{selectedMember.memberId}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Email</Typography>
+                              <Typography>{selectedMember.email}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Phone</Typography>
+                              <Typography>{selectedMember.contactNo}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Member Type</Typography>
+                              <Typography>{selectedMember.role}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Join Date</Typography>
+                              <Typography>{selectedMember.joinDate}</Typography>
+                            </Grid>
                           </Grid>
                         </Grid>
                       </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
-              </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              )}
+            </>
+          ) : null}
             </>
           ) : null}
 
