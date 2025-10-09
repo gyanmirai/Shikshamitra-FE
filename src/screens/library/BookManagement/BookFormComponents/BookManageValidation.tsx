@@ -16,22 +16,6 @@ export const bookValidationSchema = [
       .required('ISBN is required')
       .matches(/^\d{10}(\d{3})?$/, 'ISBN must be 10 or 13 digits'),
 
-    author: yup
-      .string()
-      .trim()
-      .required('Author is required')
-      .max(100, 'Author name cannot exceed 100 characters'),
-
-    publisher: yup
-      .string()
-      .trim()
-      .required('Publisher is required')
-      .max(100, 'Publisher name cannot exceed 100 characters'),
-
-    category: yup.string().trim().required('Category is required'),
-
-    language: yup.string().trim().required('Language is required'),
-
     numberOfCopies: yup
       .number()
       .required('Number of copies is required')
@@ -71,23 +55,21 @@ export const bookValidationSchema = [
             .min(1, 'Copy number must be at least 1'),
 
           // according to your earlier schema; 12 digits required
-          //   accessionNo: yup
-          //     .string()
-          //     .required('Accession number is required')
-          //     .matches(/^\d{12}$/, 'Accession number must be 12 digits'),
+          accessionNo: yup.string().required('Accession number is required'),
+          // rfidEnabled: yup.boolean().required(),
 
-          rfidEnabled: yup.boolean().required(),
-
-          rfidId: yup
-            .string()
-            .nullable()
-            .when('rfidEnabled', {
-              is: true,
-              then: (schema) => schema.required('RFID is required '),
-            }),
+          // rfidId: yup
+          //   .string()
+          //   .nullable()
+          //   .when('rfidEnabled', {
+          //     is: true,
+          //     then: (schema) => schema.required('RFID is required '),
+          //   }),
 
           // vendor present in UI — make it required (or change to .nullable() if optional)
           vendor: yup.string(),
+          section: yup.string().required('Section is required'),
+          shelf: yup.string().required('Shelf is required'),
         })
       )
       .required('At least one copy is required')

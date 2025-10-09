@@ -962,6 +962,7 @@
       "id": "1",
       "bookId": "Science",
       "bookTitle": "Introduction to Physics",
+      "accessionNo": "ACC-0001",
       "issueDate": "01-09-2025",
       "dueDate": "15-09-2025",
       "returnDate": "14-09-2025",
@@ -971,6 +972,7 @@
       "id": "2",
       "bookId": "Maths",
       "bookTitle": "Advanced Mathematics",
+      "accessionNo": "ACC-0002",
       "issueDate": "05-09-2025",
       "dueDate": "19-09-2025",
       "returnDate": null,
@@ -980,6 +982,7 @@
       "id": "3",
       "bookId": "Chemistry",
       "bookTitle": "Chemistry Fundamentals",
+      "accessionNo": "ACC-0003",
       "issueDate": "20-08-2025",
       "dueDate": "03-09-2025",
       "returnDate": null,
@@ -1014,6 +1017,8 @@
     {
       "id": "1",
       "bookTitle": "Panchtantra",
+      "bookCategory": "Fiction",
+      "accessionNo": "ACC-0101",
       "amount": 50,
       "reason": "Late return of 'Chemistry Fundamentals'",
       "chargeType": "Late Book Return",
@@ -1023,11 +1028,13 @@
     {
       "id": "2",
       "bookTitle": "Akbar Birbal ",
+      "bookCategory": "Fiction",
+      "accessionNo": "ACC-0102",
       "amount": 30,
       "reason": "Damaged cover of 'Advanced Mathematics'",
       "chargeType": "Damaged Book",
       "dateIssued": "15-09-2025",
-      "status": "Unpaid"
+      "status": "Pending"
     }
   ],
   "librarySettingsData": [

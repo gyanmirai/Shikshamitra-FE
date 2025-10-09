@@ -16,7 +16,7 @@ const BookFormStepper = ({
   editData,
 }: {
   onClose: (e: any, isSubmit: boolean) => void;
-  editData?: IBookPayload;
+  editData?: IBookPayload | null;
 }) => {
   const [activeStep, setActiveStep] = useState(0);
 

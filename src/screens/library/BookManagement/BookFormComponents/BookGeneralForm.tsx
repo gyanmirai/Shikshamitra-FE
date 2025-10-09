@@ -39,46 +39,6 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
         </ShakingTextField>
       </Grid>
 
-      {/* Number of Copies */}
-      <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField error={!!(formik.touched.numberOfCopies && formik.errors.numberOfCopies)}>
-          <TextField
-            fullWidth
-            name="numberOfCopies"
-            type="number"
-            label="Number of Copies *"
-            value={formik.values.numberOfCopies || ''}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^0-9]/g, '');
-              formik.setFieldValue('numberOfCopies', value);
-              formik.setFieldTouched('numberOfCopies', false);
-              const count = Number(value || 0);
-              if (count > 0) {
-                const updated = Array.from({ length: count }, (_, i) => ({
-                  copyNo: i + 1,
-                  accessionNo: `ACC-${String(i + 1).padStart(4, '0')}`,
-                  rfidEnabled: formik.values.copies?.[i]?.rfidEnabled || false,
-                  rfidId: formik.values.copies?.[i]?.rfidId || null,
-                  vendor: formik.values.copies?.[i]?.vendor || '',
-                }));
-                formik.setFieldValue('copies', updated);
-              } else {
-                formik.setFieldValue('copies', []);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-                e.preventDefault();
-              }
-            }}
-            onWheel={(e) => (e.target as HTMLElement).blur()}
-            error={!!(formik.touched.numberOfCopies && formik.errors.numberOfCopies)}
-            helperText={formik.touched.numberOfCopies && formik.errors.numberOfCopies}
-            size="small"
-          />
-        </ShakingTextField>
-      </Grid>
-
       {/* ISBN */}
       <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField error={!!(formik.touched.isbn && formik.errors.isbn)}>
@@ -106,7 +66,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
           <TextField
             fullWidth
             name="author"
-            label="Author *"
+            label="Author"
             value={formik.values.author}
             onChange={(e) => {
               const value = e.target.value
@@ -131,7 +91,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
           <TextField
             fullWidth
             name="publisher"
-            label="Publisher *"
+            label="Publisher"
             value={formik.values.publisher}
             onChange={(e) => {
               const value = e.target.value
@@ -156,7 +116,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
           <TextField
             fullWidth
             name="subject"
-            label="Subject "
+            label="Subject"
             value={formik.values.subject}
             onChange={(e) => {
               const value = e.target.value
@@ -179,7 +139,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
       <Grid size={{ xs: 12, md: 4 }}>
         <ShakingTextField error={!!(formik.touched.category && formik.errors.category)}>
           <CustomSelect
-            label="Category *"
+            label="Category"
             name="category"
             options={[
               { value: 'Fiction', label: 'Fiction' },
@@ -225,7 +185,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
           <TextField
             fullWidth
             name="language"
-            label="Language *"
+            label="Language"
             value={formik.values.language}
             onChange={(e) => {
               const value = e.target.value
@@ -239,6 +199,45 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
             }}
             error={!!(formik.touched.language && formik.errors.language)}
             helperText={formik.touched.language && formik.errors.language}
+            size="small"
+          />
+        </ShakingTextField>
+      </Grid>
+
+      {/* Number of Copies */}
+      <Grid size={{ xs: 12, md: 4 }}>
+        <ShakingTextField error={!!(formik.touched.numberOfCopies && formik.errors.numberOfCopies)}>
+          <TextField
+            fullWidth
+            name="numberOfCopies"
+            type="number"
+            label="Number of Copies *"
+            value={formik.values.numberOfCopies || ''}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '');
+              formik.setFieldValue('numberOfCopies', value);
+              formik.setFieldTouched('numberOfCopies', false);
+              const count = Number(value || 0);
+              if (count > 0) {
+                const updated = Array.from({ length: count }, (_, i) => ({
+                  copyNo: i + 1,
+                  accessionNo: '',
+                  section: formik.values.copies?.[i]?.section || '',
+                  shelf: formik.values.copies?.[i]?.shelf || '',
+                }));
+                formik.setFieldValue('copies', updated);
+              } else {
+                formik.setFieldValue('copies', []);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
+            onWheel={(e) => (e.target as HTMLElement).blur()}
+            error={!!(formik.touched.numberOfCopies && formik.errors.numberOfCopies)}
+            helperText={formik.touched.numberOfCopies && formik.errors.numberOfCopies}
             size="small"
           />
         </ShakingTextField>
@@ -263,6 +262,32 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => (
             thousandSeparator=","
             decimalScale={2}
             fixedDecimalScale
+          />
+        </ShakingTextField>
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 4 }}>
+        <ShakingTextField error={!!(formik.touched.numberOfPages && formik.errors.numberOfPages)}>
+          <TextField
+            fullWidth
+            name="numberOfPages"
+            type="number"
+            label="Number of Pages"
+            value={formik.values.numberOfPages || ''}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '');
+              formik.setFieldValue('numberOfPages', value);
+              formik.setFieldTouched('numberOfPages', false);
+            }}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
+            onWheel={(e) => (e.target as HTMLElement).blur()}
+            error={!!(formik.touched.numberOfPages && formik.errors.numberOfPages)}
+            helperText={formik.touched.numberOfPages && formik.errors.numberOfPages}
+            size="small"
           />
         </ShakingTextField>
       </Grid>

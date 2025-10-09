@@ -35,6 +35,7 @@ import { incomeCategoryApi } from './finance/incomeCategory';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { feeRefundsTermsApi } from './finance/feeRefundTerms';
 import { financeModuleApi } from './finance/financeModuleApi';
+import { libraryModuleApi } from './library/libraryModuleApi';
 import { ExpenseCategoryApi } from './finance/expenseCategory';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
@@ -182,6 +183,7 @@ const reducers = combineReducers({
   [communicationApi.reducerPath]: communicationApi.reducer,
   [roleOptionsApi.reducerPath]: roleOptionsApi.reducer,
   [transportApi.reducerPath]: transportApi.reducer,
+  [libraryModuleApi.reducerPath]: libraryModuleApi.reducer,
 });
 
 const store = configureStore({
@@ -279,6 +281,7 @@ const store = configureStore({
       // holidayApi.middleware,
       roleOptionsApi.middleware,
       transportApi.middleware,
+      libraryModuleApi.middleware,
     ]),
 });
 
