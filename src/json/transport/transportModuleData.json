@@ -113,7 +113,12 @@
   ],
   "maintenanceHistoryData": [
     { "date": "15-08-2025", "serviceType": "Oil Change", "cost": 3500, "nextDue": "15-09-2025" },
-    { "date": "15-07-2025", "serviceType": "Tire Replacement", "cost": 13500, "nextDue": "15-08-2025" },
+    {
+      "date": "15-07-2025",
+      "serviceType": "Tire Replacement",
+      "cost": 13500,
+      "nextDue": "15-08-2025"
+    },
     { "date": "15-06-2025", "serviceType": "Brake Service", "cost": 4500, "nextDue": "15-07-2025" }
   ],
   "vehicleInformation": {
@@ -124,5 +129,172 @@
     "seatingCapacity": 45,
     "yearOfManufacture": 2020,
     "vehicleColor": "Yellow"
-  }
+  },
+
+  "vehicleTypes": [
+    {
+      "id": "1",
+      "typeName": "Bus",
+      "description": "A large-capacity vehicle used for transporting a bigger group of students or passengers. Suitable for long routes and commonly used as a school bus.",
+      "createdBy": "Dharmik Jinjala",
+      "createdOn": "10-09-2025"
+    },
+    {
+      "id": "2",
+      "typeName": "Van",
+      "description": "A medium-sized vehicle for transporting small groups of students.",
+      "createdBy": "Dharmik Jinjala",
+      "createdOn": "09-09-2025"
+    },
+    {
+      "id": "3",
+      "typeName": "Magic",
+      "description": "A light commercial vehicle suitable for short routes and smaller groups.",
+      "createdBy": "Prerna Atre",
+      "createdOn": "06-09-2025"
+    },
+    {
+      "id": "4",
+      "typeName": "Auto Rickshaw",
+      "description": "A three-wheeled vehicle for short distance transportation.",
+      "createdBy": "Mayur Solanki",
+      "createdOn": "02-09-2025"
+    },
+    {
+      "id": "5",
+      "typeName": "Taxi Car",
+      "description": "A four-wheeler vehicle for smaller groups with more comfort.",
+      "createdBy": "Raj Baku",
+      "createdOn": "02-09-2025"
+    }
+  ],
+  "vehicleDocuments": [
+    {
+      "id": "1",
+      "documentName": "RC Book",
+      "documentSize": 2,
+      "acceptedFormat": "PDF, JPEG",
+      "description": "Registration Certificate book issued by the RTO containing vehicle registration details.",
+      "createdBy": "Dharmik Jinjala",
+      "createdOn": "10-09-2025"
+    },
+    {
+      "id": "2",
+      "documentName": "Insurance",
+      "documentSize": 3,
+      "acceptedFormat": "PDF, PNG",
+      "description": "Vehicle insurance document providing coverage against accidents and damages.",
+      "createdBy": "Dharmik Jinjala",
+      "createdOn": "09-09-2025"
+    },
+    {
+      "id": "3",
+      "documentName": "PUC Certificate",
+      "documentSize": 1,
+      "acceptedFormat": "PDF, JPEG",
+      "description": "Pollution Under Control certificate that verifies the vehicle meets emission standards.",
+      "createdBy": "Prerna Atre",
+      "createdOn": "06-09-2025"
+    },
+    {
+      "id": "4",
+      "documentName": "Fitness Certificate",
+      "documentSize": 4,
+      "acceptedFormat": "PDF, DOCX",
+      "description": "Document certifying the vehicle is fit for road usage according to safety standards.",
+      "createdBy": "Mayur Solanki",
+      "createdOn": "02-09-2025"
+    },
+    {
+      "id": "5",
+      "documentName": "Permit",
+      "documentSize": 1,
+      "acceptedFormat": "PDF, DOCX",
+      "description": "Authorization document allowing the vehicle to operate commercially in specific areas.",
+      "createdBy": "Raj Baku",
+      "createdOn": "02-09-2025"
+    }
+  ],
+  "serviceTypes": [
+    {
+      "id": "1",
+      "typeName": "Oil Change",
+      "description": "Regular maintenance service to replace engine oil and filter.",
+      "createdBy": "Dharmik Jinjala",
+      "createdOn": "10-09-2025"
+    },
+    {
+      "id": "2",
+      "typeName": "Tire Replacement",
+      "description": "Service to replace worn-out tires with new ones.",
+      "createdBy": "Dharmik Jinjala",
+      "createdOn": "09-09-2025"
+    },
+    {
+      "id": "3",
+      "typeName": "Head Light",
+      "description": "Repair or replacement of vehicle headlights.",
+      "createdBy": "Prerna Atre",
+      "createdOn": "06-09-2025"
+    },
+    {
+      "id": "4",
+      "typeName": "Alignment",
+      "description": "Adjustment of vehicle suspension components to ensure proper alignment.",
+      "createdBy": "Mayur Solanki",
+      "createdOn": "02-09-2025"
+    }
+  ],
+  "licenceTypes": [
+    {
+      "id": "1",
+      "typeName": "Light Motor Vehicle",
+      "description": "License for driving cars and light motor vehicles.",
+      "createdBy": "Dharmik Jinjala",
+      "createdOn": "10-09-2025"
+    },
+    {
+      "id": "2",
+      "typeName": "Heavy Motor Vehicle",
+      "description": "License for driving trucks, buses and heavy commercial vehicles.",
+      "createdBy": "Dharmik Jinjala",
+      "createdOn": "09-09-2025"
+    },
+    {
+      "id": "3",
+      "typeName": "Transport Vehicle License",
+      "description": "License for driving public transport vehicles.",
+      "createdBy": "Prerna Atre",
+      "createdOn": "06-09-2025"
+    },
+    {
+      "id": "4",
+      "typeName": "Two-Wheeler with Gear",
+      "description": "License for driving motorcycles with gear.",
+      "createdBy": "Mayur Solanki",
+      "createdOn": "02-09-2025"
+    }
+  ],
+  "fuelTypes": [
+    {
+      "id": "1",
+      "typeName": "Diesel",
+      "description": "All diesel vehicles are added in diesel type."
+    },
+    {
+      "id": "2",
+      "typeName": "Petrol",
+      "description": "All petrol vehicles are added in petrol type."
+    },
+    {
+      "id": "3",
+      "typeName": "CNG",
+      "description": "All CNG vehicles are added in CNG type."
+    },
+    {
+      "id": "4",
+      "typeName": "EV",
+      "description": "All EV vehicles are added in EV type."
+    }
+  ]
 }
