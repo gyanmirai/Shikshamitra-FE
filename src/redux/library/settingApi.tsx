@@ -20,6 +20,9 @@ export const librarySettingsApi = createApi({
         if (url === '/borrowingReturnRulesData') {
           return { data: settingsData.borrowingReturnRulesData };
         }
+        if (url === '/sectionManagementData') {
+          return { data: settingsData.sectionManagementData };
+        }
         return {
           error: {
             status: 404,
@@ -50,6 +53,13 @@ export const librarySettingsApi = createApi({
       }),
       providesTags: ['LibrarySettings'],
     }),
+    getSectionManagement: builder.query({
+      query: () => ({
+        url: '/sectionManagementData',
+        method: 'GET',
+      }),
+      providesTags: ['LibrarySettings'],
+    }),
   }),
 });
 
@@ -57,4 +67,5 @@ export const {
   useGetLibrarySettingsQuery,
   useGetLibraryTimingQuery,
   useGetBorrowingReturnRulesQuery,
+  useGetSectionManagementQuery,
 } = librarySettingsApi;

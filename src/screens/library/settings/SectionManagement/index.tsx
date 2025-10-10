@@ -1,0 +1,204 @@
+'use client';
+
+import type { RootState } from 'src/redux/store';
+
+import React, { useState } from 'react';
+import { Add } from '@mui/icons-material';
+import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+
+import ViewShelfData from './Components/ViewShelfForm';
+import SectionForm from './Components/SectionManagementForm';
+import SectionTable from './Components/SectionManagementTable';
+
+import type { ISection } from './Components/type';
+
+const SectionManagementScreen = () => {
+  // Dialog control states
+  const deleteSectionDialog = useBoolean();
+  const addSectionDialog = useBoolean();
+  const viewShelfDialog = useBoolean();
+  const [open, setOpen] = useState(false);
+
+  // Global state for tracking unsaved changes
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  // State to store currently selected section for edit/delete/view operations
+  const [selectedSection, setSelectedSection] = useState<ISection | null>(null);
+
+  const dispatch = useDispatch();
+
+  /**
+   * Handles closing of add/edit section dialog
+   */
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        setSelectedSection(null);
+        dispatch(setIsChanges(false));
+      }, 200);
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      addSectionDialog.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      addSectionDialog.onFalse();
+      setTimeout(() => {
+        setSelectedSection(null);
+      }, 200);
+    }
+  };
+
+  /**
+   * Handles closing of view shelf dialog
+   */
+  const handleViewDialogClose = () => {
+    setSelectedSection(null);
+    viewShelfDialog.onFalse();
+  };
+
+  return (
+    <Box height="100%" display="flex" flexDirection="column">
+      <CustomBreadcrumbs
+        heading="Section Management"
+        description="This screen displays all created transport routes with options to create new ones. It helps in organizing and managing student transportation efficiently across different locations."
+        links={[
+          { name: 'Library', href: '/library' },
+          { name: 'Setting', href: '/library/settings/book-category' },
+          { name: 'Section Management' },
+        ]}
+        action={
+          <Button
+            onClick={() => addSectionDialog.onTrue()}
+            size="small"
+            startIcon={<Add />}
+            variant="contained"
+          >
+            Section
+          </Button>
+        }
+        sx={{ px: 1, mb: 1 }}
+      />
+
+      <SectionTable
+        onDelete={(data) => {
+          setSelectedSection(data);
+          deleteSectionDialog.onTrue();
+        }}
+        onEdit={(data) => {
+          setSelectedSection(data);
+          addSectionDialog.onTrue();
+        }}
+        onView={(data) => {
+          setSelectedSection(data);
+          viewShelfDialog.onTrue();
+        }}
+        open={open}
+        onAddSection={addSectionDialog}
+        setOpenDialog={setOpen}
+        editData={selectedSection}
+        setEditData={setSelectedSection}
+      />
+
+      {/* Add/Edit Section Dialog */}
+      <CustomDialog
+        open={addSectionDialog.value}
+        maxWidth="md"
+        handleClose={() => {
+          addSectionDialog.onFalse();
+          setTimeout(() => {
+            setSelectedSection(null);
+          }, 200);
+        }}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedSection ? 'Update Section' : 'Add Section'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                selectedSection
+                  ? 'Update existing section by entering its name and number of columns.'
+                  : 'Create a new section by entering its name and number of columns.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <SectionForm open={addSectionDialog} onClose={handleClose} editData={selectedSection} />
+      </CustomDialog>
+
+      {/* View Shelves Dialog */}
+      <CustomDialog
+        open={viewShelfDialog.value}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">View Shelves</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="This modal displays all shelves under a particular section, allowing users to view detailed shelf information and manage book placement."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        handleClose={() => {
+          setSelectedSection(null);
+          viewShelfDialog.onFalse();
+        }}
+        maxWidth="md"
+      >
+        <ViewShelfData sectionData={selectedSection} />
+      </CustomDialog>
+
+      {/* Delete Section Dialog */}
+      <ConfirmDialog
+        open={deleteSectionDialog.value}
+        onClose={() => {
+          setSelectedSection(null);
+          deleteSectionDialog.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete section <strong>{selectedSection?.sectionName}</strong>?
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              deleteSectionDialog.onFalse();
+              setSelectedSection(null);
+              shikshaMitraToast.success({
+                message: `Section: ${selectedSection?.sectionName} deleted successfully`,
+              });
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
+    </Box>
+  );
+};
+
+export default SectionManagementScreen;

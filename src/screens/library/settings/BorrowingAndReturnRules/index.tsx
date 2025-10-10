@@ -157,8 +157,8 @@ const BorrowingReturnRules = () => {
         description="This screen sets the borrowing policies for different member roles, including maximum books allowed, reservation limits, and applicable late return fines."
         links={[
           { name: 'Library', href: '/library/dashboard' },
-          { name: 'Setting', href: '/library/setting' },
-          { name: 'Borrowing Rules', href: '/library/settings/borrowing-return-rules' },
+          { name: 'Setting', href: '/library/settings/book-category' },
+          { name: 'Borrowing Rules' },
         ]}
         action={
           <Box display="flex" gap={2}>
