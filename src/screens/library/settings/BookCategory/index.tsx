@@ -66,8 +66,8 @@ const BookCategoryCreation = () => {
         description="Manage categories of books such as Fiction, Non-fiction, Science, History, etc. Use actions to edit or delete existing categories. Click ‘Add Book Category’ to create a new one."
         links={[
           { name: 'Library', href: '/library/dashboard' },
-          { name: 'Setting', href: '/library/setting' },
-          { name: 'Book Categories', href: '/library/book-category' },
+          { name: 'Setting', href: '/library/settings/book-category' },
+          { name: 'Book Categories' },
         ]}
         action={
           <Button

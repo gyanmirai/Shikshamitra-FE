@@ -67,8 +67,8 @@ const BookConditionCreation = () => {
         description="Manage conditions of books such as Low, Medium, High, Damage, Lost, etc. Use actions to edit or delete existing conditions. Click ‘Add Condition’ to create a new one."
         links={[
           { name: 'Library', href: '/library/dashboard' },
-          { name: 'Setting', href: '/library/setting' },
-          { name: 'Book Condition', href: '/library/book-condition' },
+          { name: 'Setting', href: '/library/settings/book-category' },
+          { name: 'Book Condition ' },
         ]}
         action={
           <Button
