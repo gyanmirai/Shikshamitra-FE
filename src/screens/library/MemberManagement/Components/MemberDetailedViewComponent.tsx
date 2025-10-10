@@ -30,7 +30,7 @@ const TABS = [
   },
   {
     value: 'fines-charges',
-    label: 'Fines & Fees',
+    label: 'Charges',
     icon: <Iconify icon="solar:wallet-money-bold" />,
     component: ({ member }: { member: IMember | null }) => <FinesCharges member={member} />,
   },

@@ -249,6 +249,8 @@
     "memberId": "M001",
     "class": "10",
     "division": "A",
+    "reservedBook" : "Introduction to Computer Science",
+    "accessionNo" : "ACC01",
     "grNo": "G001",
     "role": "Student",
     "name": "Dharmik Jinjala",
@@ -259,13 +261,16 @@
     "overdueReturn": 1,
     "memberStatus": "0",
     "requestedDate": "2025-09-15T10:30:00Z",
-    "reserveDueDate": "2025-09-22T10:30:00Z"
+    "reserveDueDate": "2025-09-22T10:30:00Z",
+    "rollNo": "1"
   },
   {
     "id": "2",
     "memberId": "M002",
     "class": "-",
     "division": "-",
+        "reservedBook" : "Introduction to Computer Science",
+    "accessionNo" : "ACC01",
     "grNo": "-",
     "role": "Employee",
     "name": "Prerna Atre",
@@ -286,6 +291,8 @@
     "division": "C",
     "grNo": "G003",
     "name": "Parth Ghusar",
+        "reservedBook" : "Introduction to Computer Science",
+    "accessionNo" : "ACC01",
     "email": "parth.ghusar@school.edu",
     "contactNo": "+91-9988776655",
     "joinDate": "2022-07-01",
@@ -293,12 +300,15 @@
     "overdueReturn": 0,
     "memberStatus": "1",
     "requestedDate": "2025-09-17T11:00:00Z",
-    "reserveDueDate": "2025-09-24T11:00:00Z"
+    "reserveDueDate": "2025-09-24T11:00:00Z",
+    "rollNo": "2"
   },
   {
     "id": "4",
     "memberId": "M004",
     "role": "Student",
+        "reservedBook" : "Introduction to Computer Science",
+    "accessionNo" : "ACC01",
     "class": "11",
     "division": "A",
     "grNo": "G004",
@@ -310,7 +320,8 @@
     "overdueReturn": 2,
     "memberStatus": "0",
     "requestedDate": "2025-09-18T13:15:00Z",
-    "reserveDueDate": "2025-09-25T13:15:00Z"
+    "reserveDueDate": "2025-09-25T13:15:00Z",
+    "rollNo": "3"
   },
   {
     "id": "5",
@@ -318,6 +329,8 @@
     "class": "9",
     "division": "D",
     "grNo": "G005",
+    "reservedBook" : "Introduction to Computer Science",
+    "accessionNo" : "ACC01",
     "role": "Student",
     "name": "Raj Baku",
     "email": "raj.baku@school.edu",
@@ -327,7 +340,8 @@
     "overdueReturn": 0,
     "memberStatus": "1",
     "requestedDate": "2025-09-19T08:20:00Z",
-    "reserveDueDate": "2025-09-26T08:20:00Z"
+    "reserveDueDate": "2025-09-26T08:20:00Z",
+    "rollNo": "4"
   }
 ]
 }

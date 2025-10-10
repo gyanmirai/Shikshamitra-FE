@@ -13,4 +13,4 @@ export const membersApi = libraryModuleApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useGetAllMembersQuery } = membersApi;
+export const { useGetAllMembersQuery, useLazyGetAllMembersQuery } = membersApi;

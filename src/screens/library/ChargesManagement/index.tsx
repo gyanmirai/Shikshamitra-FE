@@ -63,7 +63,7 @@ const LibraryChargesManagement = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
-        heading="Fines & Fees"
+        heading="Charges"
         description={
           addDialog.value
             ? 'Add new charge or update existing charge details.'
@@ -71,7 +71,7 @@ const LibraryChargesManagement = () => {
         }
         links={[
           { name: 'Library', href: '/library/dashboard' },
-          { name: 'Fines & Fees', href: '/library/charges' },
+          { name: 'Charges', href: '/library/charges' },
         ]}
         action={
           <Button
@@ -93,7 +93,7 @@ const LibraryChargesManagement = () => {
           addDialog.onFalse();
           setSelectedRecord(null);
         }}
-        maxWidth="sm"
+        maxWidth="md"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">

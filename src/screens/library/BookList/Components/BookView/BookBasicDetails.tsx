@@ -23,7 +23,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
       src={book?.bookCoverImages?.[0] || '/placeholder-book.jpg'}
       sx={{
         width: 240,
-        height: 290,
+        height: 320,
         borderRadius: 2,
         objectFit: 'cover',
         flexShrink: 0,
@@ -123,7 +123,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
       </Grid>
 
       {/* Description */}
-      <Box mt={3}>
+      <Box mt={2}>
         <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
           <Stack direction="row" spacing={3} alignItems="center" ml={2}>
             <Iconify icon="mdi:file-document-outline" width={22} color="#637381" />

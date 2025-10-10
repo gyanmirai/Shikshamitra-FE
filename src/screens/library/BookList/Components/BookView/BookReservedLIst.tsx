@@ -2,11 +2,9 @@ import type { IBook } from 'src/screens/library/BookManagement/Components/type';
 
 import React from 'react';
 import dayjs from 'dayjs';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { Box, Grid, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Grid, MenuList, MenuItem, Typography } from '@mui/material';
 import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
 
 interface ViewReservedMembersTableProps {
@@ -19,14 +17,14 @@ const ViewReservedMembersTable: React.FC<ViewReservedMembersTableProps> = ({
   onDelete,
 }) => {
   // Fetch all members
-  const { data: memberData } = useQueryAndMutation({
+  const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllMembersQuery,
   });
 
   // Match reserved member IDs with member details
-  const reservedList = editData?.reservationMemberIds?.map((memberId: string) =>
-    memberData?.find((m: any) => m.memberId === memberId)
+  const reservedList = memberData?.filter((member: any) =>
+    editData?.reservationMemberIds?.includes(member.memberId)
   );
 
   return (
@@ -37,9 +35,30 @@ const ViewReservedMembersTable: React.FC<ViewReservedMembersTableProps> = ({
             <CustomizableTable
               tableId="reserved-members-table"
               noDataText="No Reserved Members Found"
+              isLoading={memberLoading}
               columns={[
-                { id: 'memberId', label: 'Member ID', align: 'left' },
+                { id: 'memberId', label: 'Member ID', align: 'left', sticky: true },
                 { id: 'name', label: 'Member Name', align: 'left' },
+                { id: 'role', label: 'Role', align: 'left' },
+                { id: 'class', label: 'Class', align: 'left' },
+                { id: 'division', label: 'Division', align: 'left' },
+                { id: 'rollNo', label: 'Roll No', align: 'left' },
+                { id: 'grNo', label: 'GR No', align: 'left' },
+                {
+                  id: 'accessionNo',
+                  label: 'Accession No',
+                  align: 'left',
+                },
+                {
+                  id: 'reservedBook',
+                  label: 'Reserved Book',
+                  align: 'left',
+                  render: (value) => (
+                    <Typography variant="caption" fontSize="13px">
+                      {typeof value === 'object' ? value?.title || '-' : value || '-'}
+                    </Typography>
+                  ),
+                },
                 {
                   id: 'requestedDate',
                   label: 'Requested Date',
@@ -60,38 +79,6 @@ const ViewReservedMembersTable: React.FC<ViewReservedMembersTableProps> = ({
                     <Typography variant="caption" fontSize="13px">
                       {dayjs(value).format('DD-MM-YYYY')}
                     </Typography>
-                  ),
-                },
-                {
-                  id: 'action',
-                  label: 'Action',
-                  align: 'left',
-                  isSort: false,
-                  isFilter: false,
-                  sticky: true,
-                  render: (row: any) => (
-                    <ThreeDotsActions
-                      placement="right-top"
-                      actions={() => (
-                        <MenuList>
-                          <MenuItem>
-                            <Iconify icon="mingcute:notification-fill" />
-                            Send Notification
-                          </MenuItem>
-                          <MenuItem
-                            onClick={() => {
-                              onDelete?.(row as IBook);
-                            }}
-                          >
-                            <Iconify
-                              icon="solar:trash-bin-trash-bold"
-                              sx={{ color: 'error.main' }}
-                            />
-                            Remove
-                          </MenuItem>
-                        </MenuList>
-                      )}
-                    />
                   ),
                 },
               ]}

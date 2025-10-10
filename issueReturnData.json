@@ -36,7 +36,7 @@
       "bookCondition": "",
       "fineAmount": "",
       "requestedDate": "15-08-2025",
-      "status": 1
+      "status": 3
     },
     {
       "memberId": "M003",
@@ -55,7 +55,7 @@
       "bookCondition": "",
       "fineAmount": "",
       "requestedDate": "18-08-2025",
-      "status": 2
+      "status": 3
     },
     {
       "memberId": "M004",
@@ -74,7 +74,7 @@
       "bookCondition": "",
       "fineAmount": "",
       "requestedDate": "10-08-2025",
-      "status": 2
+      "status": 1
     }
   ],
   "reservedBookData": [
