@@ -54,6 +54,14 @@ const UpiTable = () => {
             filterType: 'string',
           },
           {
+            id: 'medium',
+            label: 'Medium',
+            minWidth: '100px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'string',
+          },
+          {
             id: 'division',
             label: 'Division',
             minWidth: '100px',
@@ -149,32 +157,39 @@ const UpiTable = () => {
                   placement="right-top"
                   actions={({ popover }: any) => (
                     <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          setIsClearCheck(false);
-                          setSelectedEntry({ ...row, type: 'approve' });
-                          isDialog.onTrue();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:check-decagram" sx={{ color: 'success.main', mr: 1 }} />
-                        <Typography fontWeight={500} color="success.main">
-                          Approve
-                        </Typography>
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          setIsClearCheck(true);
-                          setSelectedEntry({ ...row, type: 'reject' });
-                          isDialog.onTrue();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:close-circle" sx={{ color: 'error.main', mr: 1 }} />
-                        <Typography fontWeight={500} color="error.main">
-                          Reject
-                        </Typography>
-                      </MenuItem>
+                      {row.status !== PaymentMethodsStatusType.Approved && (
+                        <MenuItem
+                          onClick={() => {
+                            setIsClearCheck(false);
+                            setSelectedEntry({ ...row, type: 'approve' });
+                            isDialog.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify
+                            icon="mdi:check-decagram"
+                            sx={{ color: 'success.main', mr: 1 }}
+                          />
+                          <Typography fontWeight={500} color="success.main">
+                            Approve
+                          </Typography>
+                        </MenuItem>
+                      )}
+                      {row.status !== PaymentMethodsStatusType.Rejected && (
+                        <MenuItem
+                          onClick={() => {
+                            setIsClearCheck(true);
+                            setSelectedEntry({ ...row, type: 'reject' });
+                            isDialog.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify icon="mdi:close-circle" sx={{ color: 'error.main', mr: 1 }} />
+                          <Typography fontWeight={500} color="error.main">
+                            Reject
+                          </Typography>
+                        </MenuItem>
+                      )}
                     </MenuList>
                   )}
                 />

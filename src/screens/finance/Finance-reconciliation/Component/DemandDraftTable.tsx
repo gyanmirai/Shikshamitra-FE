@@ -5,8 +5,8 @@ import { Box } from '@mui/system';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { GlobalIcons } from 'src/utils/icons';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
@@ -54,6 +54,14 @@ const DemandDraftTable = () => {
             id: 'class',
             label: 'Class',
             minWidth: '80px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'string',
+          },
+          {
+            id: 'medium',
+            label: 'Medium',
+            minWidth: '100px',
             align: 'left',
             isFilter: true,
             filterType: 'string',
@@ -112,7 +120,7 @@ const DemandDraftTable = () => {
           {
             id: 'receivedDDDate',
             label: 'DD Date',
-            minWidth: '200px',
+            minWidth: '100px',
             align: 'left',
             isFilter: true,
             filterType: 'date',
@@ -154,32 +162,39 @@ const DemandDraftTable = () => {
                   placement="right-top"
                   actions={({ popover }: any) => (
                     <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          setIsClearCheck(false);
-                          setSelectedEntry({ ...row, type: 'approve' });
-                          isDialog.onTrue();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:check-decagram" sx={{ color: 'success.main', mr: 1 }} />
-                        <Typography fontWeight={500} color="success.main">
-                          Approve
-                        </Typography>
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          setIsClearCheck(true);
-                          setSelectedEntry({ ...row, type: 'reject' });
-                          isDialog.onTrue();
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="mdi:close-circle" sx={{ color: 'error.main', mr: 1 }} />
-                        <Typography fontWeight={500} color="error.main">
-                          Reject
-                        </Typography>
-                      </MenuItem>
+                      {row.status !== PaymentMethodsStatusType.Approved && (
+                        <MenuItem
+                          onClick={() => {
+                            setIsClearCheck(false);
+                            setSelectedEntry({ ...row, type: 'approve' });
+                            isDialog.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify
+                            icon="mdi:check-decagram"
+                            sx={{ color: 'success.main', mr: 1 }}
+                          />
+                          <Typography fontWeight={500} color="success.main">
+                            Approve
+                          </Typography>
+                        </MenuItem>
+                      )}
+                      {row.status !== PaymentMethodsStatusType.Rejected && (
+                        <MenuItem
+                          onClick={() => {
+                            setIsClearCheck(true);
+                            setSelectedEntry({ ...row, type: 'reject' });
+                            isDialog.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify icon="mdi:close-circle" sx={{ color: 'error.main', mr: 1 }} />
+                          <Typography fontWeight={500} color="error.main">
+                            Reject
+                          </Typography>
+                        </MenuItem>
+                      )}
                     </MenuList>
                   )}
                 />

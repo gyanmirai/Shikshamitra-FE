@@ -51,6 +51,14 @@ const BankStatements = () => {
               filterType: 'string',
             },
             {
+              id: 'medium',
+              label: 'Medium',
+              minWidth: '100px',
+              align: 'left',
+              isFilter: true,
+              filterType: 'string',
+            },
+            {
               id: 'division',
               label: 'Division',
               minWidth: '100px',
