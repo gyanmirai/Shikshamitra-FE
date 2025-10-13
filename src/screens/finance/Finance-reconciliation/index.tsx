@@ -242,7 +242,7 @@ const FinanceReconciliation = () => {
               },
             }}
             onChange={(newDate) => setDate(newDate)}
-            sx={{ maxWidth: '220px', width: '100%' }}
+            sx={{ maxWidth: '240px', width: '100%' }}
           />
           <Tabs
             value={params.tab}

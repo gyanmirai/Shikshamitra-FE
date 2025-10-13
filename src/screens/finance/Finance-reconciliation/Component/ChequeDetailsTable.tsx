@@ -49,6 +49,14 @@ const ChequeDetailsForm = () => {
               sticky: true,
             },
             {
+              id: 'medium',
+              label: 'Medium',
+              minWidth: '100px',
+              align: 'left',
+              isFilter: true,
+              filterType: 'string',
+            },
+            {
               id: 'class',
               label: 'Class',
               minWidth: '80px',
@@ -86,7 +94,7 @@ const ChequeDetailsForm = () => {
               minWidth: '120px',
               align: 'left',
               isFilter: true,
-              filterType: 'string',
+              filterType: 'number',
             },
             {
               id: 'bankName',
@@ -153,35 +161,39 @@ const ChequeDetailsForm = () => {
                     placement="right-top"
                     actions={({ popover }: any) => (
                       <MenuList>
-                        <MenuItem
-                          onClick={() => {
-                            setIsClearCheck(false);
-                            setSelectedEntry({ ...row, type: 'approve' });
-                            isDialog.onTrue();
-                            popover.onClose();
-                          }}
-                        >
-                          <Iconify
-                            icon="mdi:check-decagram"
-                            sx={{ color: 'success.main', mr: 1 }}
-                          />
-                          <Typography fontWeight={500} color="success.main">
-                            Approve
-                          </Typography>
-                        </MenuItem>
-                        <MenuItem
-                          onClick={() => {
-                            setIsClearCheck(true);
-                            setSelectedEntry({ ...row, type: 'reject' });
-                            isDialog.onTrue();
-                            popover.onClose();
-                          }}
-                        >
-                          <Iconify icon="mdi:close-circle" sx={{ color: 'error.main', mr: 1 }} />
-                          <Typography fontWeight={500} color="error.main">
-                            Reject
-                          </Typography>
-                        </MenuItem>
+                        {row.status !== PaymentMethodsStatusType.Approved && (
+                          <MenuItem
+                            onClick={() => {
+                              setIsClearCheck(false);
+                              setSelectedEntry({ ...row, type: 'approve' });
+                              isDialog.onTrue();
+                              popover.onClose();
+                            }}
+                          >
+                            <Iconify
+                              icon="mdi:check-decagram"
+                              sx={{ color: 'success.main', mr: 1 }}
+                            />
+                            <Typography fontWeight={500} color="success.main">
+                              Approve
+                            </Typography>
+                          </MenuItem>
+                        )}
+                        {row.status !== PaymentMethodsStatusType.Rejected && (
+                          <MenuItem
+                            onClick={() => {
+                              setIsClearCheck(true);
+                              setSelectedEntry({ ...row, type: 'reject' });
+                              isDialog.onTrue();
+                              popover.onClose();
+                            }}
+                          >
+                            <Iconify icon="mdi:close-circle" sx={{ color: 'error.main', mr: 1 }} />
+                            <Typography fontWeight={500} color="error.main">
+                              Reject
+                            </Typography>
+                          </MenuItem>
+                        )}
                       </MenuList>
                     )}
                   />
