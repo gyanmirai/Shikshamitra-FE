@@ -296,5 +296,165 @@
       "typeName": "EV",
       "description": "All EV vehicles are added in EV type."
     }
+  ],
+  "routeHistoryData": [
+    {
+      "id": "1",
+      "routeName": "Parvat Patiya",
+      "locationPoint": "Parvat Patiya",
+      "driver": "Dharmik Jinjala",
+      "stops": 7,
+      "status": "Current",
+      "startDate": "15-01-2024",
+      "endDate": null
+    },
+    {
+      "id": "2",
+      "routeName": "Dindoli",
+      "locationPoint": "Dindoli Chowkdi",
+      "driver": "Prerna Atre",
+      "stops": 6,
+      "status": "Completed",
+      "startDate": "20-08-2023",
+      "endDate": "14-01-2024"
+    },
+    {
+      "id": "3",
+      "routeName": "Kamrej",
+      "locationPoint": "Kamrej Char Rasta",
+      "driver": "Mayur Solanki",
+      "stops": 3,
+      "status": "Completed",
+      "startDate": "10-06-2023",
+      "endDate": "19-08-2023"
+    },
+    {
+      "id": "4",
+      "routeName": "Vesu",
+      "locationPoint": "Vesu Circle",
+      "driver": "Raj Patel",
+      "stops": 5,
+      "status": "Completed",
+      "startDate": "15-03-2023",
+      "endDate": "09-06-2023"
+    },
+    {
+      "id": "5",
+      "routeName": "Adajan",
+      "locationPoint": "Adajan Patiya",
+      "driver": "Kiran Shah",
+      "stops": 8,
+      "status": "Completed",
+      "startDate": "10-01-2023",
+      "endDate": "14-03-2023"
+    }
+  ],
+  "driverHistoryData": [
+    {
+      "id": "1",
+      "driverName": "Dharmik Jinjala",
+      "licenseNo": "GJ05-2019-0012345",
+      "experience": "5 Years",
+      "route": "Parvat Patiya",
+      "status": "Active",
+      "assignedDate": "15-01-2024",
+      "phoneNumber": "+91 9876543210"
+    },
+    {
+      "id": "2",
+      "driverName": "Prerna Atre",
+      "licenseNo": "GJ05-2018-0067890",
+      "experience": "6 Years",
+      "route": "Dindoli",
+      "status": "Inactive",
+      "assignedDate": "20-08-2023",
+      "phoneNumber": "+91 9876543211"
+    },
+    {
+      "id": "3",
+      "driverName": "Mayur Solanki",
+      "licenseNo": "GJ05-2020-0098765",
+      "experience": "4 Years",
+      "route": "Kamrej",
+      "status": "Active",
+      "assignedDate": "10-06-2023",
+      "phoneNumber": "+91 9876543212"
+    },
+    {
+      "id": "4",
+      "driverName": "Raj Patel",
+      "licenseNo": "GJ05-2017-0054321",
+      "experience": "7 Years",
+      "route": "Vesu",
+      "status": "Inactive",
+      "assignedDate": "15-03-2023",
+      "phoneNumber": "+91 9876543213"
+    },
+    {
+      "id": "5",
+      "driverName": "Kiran Shah",
+      "licenseNo": "GJ05-2019-0076543",
+      "experience": "5 Years",
+      "route": "Adajan",
+      "status": "Active",
+      "assignedDate": "10-01-2023",
+      "phoneNumber": "+91 9876543214"
+    }
+  ],
+  "maintenanceData": [
+    {
+      "id": "1",
+      "date": "05-10-2024",
+      "serviceType": "Engine Oil Change",
+      "cost": 2500,
+      "nextDue": "05-01-2025",
+      "serviceProvider": "Tata Motors Service Center",
+      "description": "Regular engine oil and filter replacement"
+    },
+    {
+      "id": "2",
+      "date": "15-09-2024",
+      "serviceType": "Brake Pad Replacement",
+      "cost": 4500,
+      "nextDue": "15-03-2025",
+      "serviceProvider": "AutoCare Garage",
+      "description": "Front and rear brake pad replacement with disc cleaning"
+    },
+    {
+      "id": "3",
+      "date": "20-08-2024",
+      "serviceType": "Tire Rotation",
+      "cost": 800,
+      "nextDue": "20-12-2024",
+      "serviceProvider": "Tire Zone",
+      "description": "All four tires rotated and balanced"
+    },
+    {
+      "id": "4",
+      "date": "10-07-2024",
+      "serviceType": "AC Service",
+      "cost": 3200,
+      "nextDue": "10-01-2025",
+      "serviceProvider": "Cool Air Services",
+      "description": "AC gas refill and compressor maintenance"
+    },
+    {
+      "id": "5",
+      "date": "25-06-2024",
+      "serviceType": "Battery Replacement",
+      "cost": 6500,
+      "nextDue": "25-06-2026",
+      "serviceProvider": "Power Battery Shop",
+      "description": "12V battery replacement with 2-year warranty"
+    },
+    {
+      "id": "6",
+      "date": "18-05-2024",
+      "serviceType": "Transmission Service",
+      "cost": 8500,
+      "nextDue": "18-11-2024",
+      "serviceProvider": "Tata Motors Service Center",
+      "description": "Transmission fluid change and gear box inspection"
+    }
   ]
 }

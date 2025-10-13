@@ -5,17 +5,23 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
+import VehicleViewDetails from './VehicleViewDetails';
 import VehicleTableView from './Components/VehicleTableView';
 import VehicleFormStepper from './VehicleFormComponent/VehicleForm';
+
+import type { IVehicleData } from './Components/type';
 
 const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [open, setOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
+  const [viewVehicle, setViewVehicle] = useState<IVehicleData | null>(null);
+  const viewDialog = useBoolean();
   const dispatch = useDispatch();
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -27,6 +33,11 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
       setOpen(false);
       setSelectedVehicle(null);
     }
+  };
+
+  const handleViewClose = () => {
+    viewDialog.onFalse();
+    setViewVehicle(null);
   };
 
   return (
@@ -59,6 +70,26 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
             ]}
             sx={{ px: 1, mb: 2 }}
           />
+        ) : viewDialog.value ? (
+          <CustomBreadcrumbs
+            heading="Vehicle Details"
+            description="This modal displays the complete details of a selected vehicle, including its specifications, documents, and status. It helps in quickly reviewing and managing vehicle information."
+            isBack
+            onBack={handleViewClose}
+            links={[
+              { name: 'Transport', href: '/transport/dashboard' },
+              {
+                name: 'Vehicle Management',
+                href: '/transport/vehicle-management',
+                onClick: handleViewClose,
+              },
+              {
+                name: 'Vehicle Details',
+                href: '/transport/vehicle-management',
+              },
+            ]}
+            sx={{ px: 1, mb: 2 }}
+          />
         ) : (
           <CustomBreadcrumbs
             heading="Vehicle Management"
@@ -80,15 +111,24 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
             }
           />
         ))}
+
       {open ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
           <VehicleFormStepper onClose={handleClose} editData={selectedVehicle} />
+        </Card>
+      ) : viewDialog.value ? (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <VehicleViewDetails />
         </Card>
       ) : (
         <VehicleTableView
           onEdit={(data) => {
             setSelectedVehicle(data);
             setOpen(true);
+          }}
+          onView={(data) => {
+            viewDialog.onTrue();
+            setViewVehicle(data);
           }}
         />
       )}

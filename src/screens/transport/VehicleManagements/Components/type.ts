@@ -83,3 +83,42 @@ export interface IVehiclePayload {
   roadTaxReceiptNo: string;
   roadTaxIssueDate: Dayjs | null;
 }
+
+// History interfaces
+export interface IMaintenanceHistoryRow {
+  id: string;
+  date: string;
+  serviceType: string;
+  cost: number;
+  nextDue: string;
+  serviceProvider?: string;
+  description?: string;
+}
+
+export interface IRouteHistoryRow {
+  id: string;
+  routeName: string;
+  locationPoint: string;
+  driver: string;
+  stops: number;
+  status: 'Current' | 'Completed';
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface IDriverHistoryRow {
+  id: string;
+  driverName: string;
+  licenseNo: string;
+  experience: string;
+  route: string;
+  status: 'Active' | 'Inactive';
+  assignedDate?: string;
+  phoneNumber?: string;
+}
+
+// Vehicle View Details Props
+export interface VehicleViewDetailsProps {
+  vehicleData: IVehicleData | null;
+  onClose: () => void;
+}
