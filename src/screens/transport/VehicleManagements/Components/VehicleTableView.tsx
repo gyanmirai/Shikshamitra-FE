@@ -14,12 +14,16 @@ import { Avatar, MenuItem, MenuList, Typography } from '@mui/material';
 import { useGetVehicleManagementDataQuery } from 'src/redux/transport/vehicle-management/vehicle-management-api';
 
 import AddMaintenanceForm from './AddMaintenanceForm';
-import VehicleViewDetails from '../VehicleViewDetails';
 import { VehicleStatusOptions, VehicleStatusTypeColors } from './type';
 
 import type { IVehicleData, VehicleStatusType } from './type';
 
-const VehicleTableView = ({ onEdit }: { onEdit: (row: IVehicleData) => void }) => {
+interface VehicleTableViewProps {
+  onEdit: (row: IVehicleData) => void;
+  onView: (row: IVehicleData) => void;
+}
+
+const VehicleTableView = ({ onEdit, onView }: VehicleTableViewProps) => {
   const { data } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetVehicleManagementDataQuery,
@@ -28,8 +32,6 @@ const VehicleTableView = ({ onEdit }: { onEdit: (row: IVehicleData) => void }) =
   const [isChanges, setIsChanges] = useState(false);
   const maintainDialog = useBoolean();
   const [, setSelectedVehicle] = useState<IVehicleData | null>(null);
-  const [viewVehicle, setViewVehicle] = useState<IVehicleData | null>(null);
-  const viewDialog = useBoolean();
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -134,8 +136,7 @@ const VehicleTableView = ({ onEdit }: { onEdit: (row: IVehicleData) => void }) =
                   }}
                   showViewIcon
                   handleViewClick={() => {
-                    setViewVehicle(row as IVehicleData);
-                    viewDialog.onTrue();
+                    onView(row as IVehicleData);
                   }}
                 />
               );
@@ -167,30 +168,6 @@ const VehicleTableView = ({ onEdit }: { onEdit: (row: IVehicleData) => void }) =
         }
       >
         <AddMaintenanceForm open={maintainDialog.value} onClose={handleClose} />
-      </CustomDialog>
-
-      <CustomDialog
-        open={viewDialog.value}
-        handleClose={() => {
-          viewDialog.onFalse();
-          setViewVehicle(null);
-        }}
-        maxWidth="lg"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Vehicle Details</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="This modal displays the complete details of a selected vehicle, including its specifications, documents, and status. It helps in quickly reviewing and managing vehicle information."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        {viewVehicle && <VehicleViewDetails />}
       </CustomDialog>
     </>
   );
