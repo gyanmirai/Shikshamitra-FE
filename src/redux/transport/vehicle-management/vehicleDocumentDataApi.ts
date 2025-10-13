@@ -79,6 +79,13 @@ export const vehicleDocumentDataApi = transportApi.injectEndpoints({
       }),
       providesTags: ['MaintenanceData'],
     }),
+    getdocumentDetailsData: builder.query({
+      query: () => ({
+        url: '/documentDetailsData',
+        method: 'GET',
+      }),
+      providesTags: ['documentDetailsData'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -95,4 +102,5 @@ export const {
   useGetrouteHistoryDataQuery,
   useGetdriverHistoryDataQuery,
   useGetmaintenanceDataQuery,
+  useGetdocumentDetailsDataQuery,
 } = vehicleDocumentDataApi;
