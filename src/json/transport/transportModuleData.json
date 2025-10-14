@@ -462,6 +462,110 @@
       "description": "Transmission fluid change and gear box inspection"
     }
   ],
+  "driverConductorData": [
+    {
+      "id": "1",
+      "employeeId": "EMP001",
+      "avatarUrl": "https://randomuser.me/api/portraits/men/11.jpg",
+      "role": "Driver",
+      "name": "Dharmik Jinjala",
+      "licenceExpiry": "15-12-2025",
+      "experience": "6 years",
+      "phoneNo": "+91 6355030866",
+      "assignedRoute": "Route A-Kamrej",
+      "status": "Active",
+      "licenceNo": "DL123456789",
+      "joiningDate": "15-01-2025",
+      "email": "dharmikjinjala2468@gmail.com",
+      "address": "C-203 Drashti Residency Devadgaon",
+      "createdBy": "Admin",
+      "createdOn": "15-01-2025"
+    },
+    {
+      "id": "2",
+      "employeeId": "EMP002",
+      "role": "Conductor",
+      "avatarUrl": "https://randomuser.me/api/portraits/men/12.jpg",
+
+      "name": "Prerna Atre",
+      "licenceExpiry": "25-12-2025",
+      "experience": "6 years",
+      "phoneNo": "+91 8855030866",
+      "assignedRoute": "",
+      "status": "On Leave",
+      "licenceNo": "DL987654321",
+      "joiningDate": "20-02-2024",
+      "email": "prerna.atre@email.com",
+      "address": "B-105 Sunrise Apartments",
+      "createdBy": "Admin",
+      "createdOn": "20-02-2024"
+    },
+    {
+      "id": "3",
+      "employeeId": "EMP003",
+      "role": "Driver",
+      "avatarUrl": "https://randomuser.me/api/portraits/men/13.jpg",
+
+      "name": "Parth Ghusar",
+      "licenceExpiry": "01-12-2025",
+      "experience": "1 years",
+      "phoneNo": "+91 9255030866",
+      "assignedRoute": "Route C-Adajan",
+      "status": "Active",
+      "licenceNo": "DL456789123",
+      "joiningDate": "10-03-2024",
+      "email": "parth.ghusar@email.com",
+      "address": "A-301 Green Valley Society",
+      "createdBy": "Admin",
+      "createdOn": "10-03-2024"
+    },
+    {
+      "id": "4",
+      "employeeId": "EMP004",
+      "role": "Conductor",
+      "avatarUrl": "https://randomuser.me/api/portraits/men/14.jpg",
+
+      "name": "Mayur Solanki",
+      "licenceExpiry": "15-01-2026",
+      "experience": "3 years",
+      "phoneNo": "+91 7255030866",
+      "assignedRoute": "Route E-Dindoli",
+      "status": "Active",
+      "licenceNo": "DL789123456",
+      "joiningDate": "05-04-2023",
+      "email": "mayur.solanki@email.com",
+      "address": "D-202 Royal Heights",
+      "createdBy": "Admin",
+      "createdOn": "05-04-2023"
+    },
+    {
+      "id": "5",
+      "employeeId": "EMP005",
+      "role": "Driver",
+      "avatarUrl": "https://randomuser.me/api/portraits/men/15.jpg",
+
+      "name": "Raj Baku",
+      "licenceExpiry": "15-12-2025",
+      "experience": "6 months",
+      "phoneNo": "+91 6344030866",
+      "assignedRoute": "Route D-Pal",
+      "status": "Active",
+      "licenceNo": "DL321654987",
+      "joiningDate": "15-06-2024",
+      "email": "raj.baku@email.com",
+      "address": "E-101 Silver Oak Complex",
+      "createdBy": "Admin",
+      "createdOn": "15-06-2024"
+    }
+  ],
+
+  "availableRoutes": [
+    { "value": "Route A-Kamrej", "label": "Route A-Kamrej" },
+    { "value": "Route B-Kamrej", "label": "Route B-Kamrej" },
+    { "value": "Route C-Adajan", "label": "Route C-Adajan" },
+    { "value": "Route D-Pal", "label": "Route D-Pal" },
+    { "value": "Route E-Dindoli", "label": "Route E-Dindoli" }
+  ]
    "documentDetailsData": [
   {
     "id": "1",
