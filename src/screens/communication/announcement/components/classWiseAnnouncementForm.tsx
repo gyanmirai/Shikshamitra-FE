@@ -20,6 +20,7 @@ import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
@@ -28,6 +29,7 @@ import {
   Checkbox,
   TextField,
   Typography,
+  Autocomplete,
   DialogActions,
   FormHelperText,
   FormControlLabel,
@@ -211,27 +213,57 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                   </ShakingTextField>
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 4, sm: 3 }}>
+                <Grid size={{ xs: 12, md: 6, sm: 3 }}>
                   <ShakingTextField
                     error={!!(formik.touched.importance_level && formik.errors.importance_level)}
                   >
-                    <CustomSelect
-                      label="Importance Level"
+                    <Autocomplete
+                      fullWidth
                       options={[
-                        { value: 'urgent', label: 'Urgent' },
-                        { value: 'critical', label: 'Critical' },
+                        { levelName: 'urgent', description: 'Urgent', color: '#FF5252' },
+                        { levelName: 'critical', description: 'Critical', color: '#D32F2F' },
                       ]}
-                      value={formik.values.importance_level as string}
-                      onChange={(val) => formik.setFieldValue('importance_level', val as string)}
-                      formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
-                      error={
-                        formik.touched.importance_level && Boolean(formik.errors.importance_level)
+                      value={
+                        [
+                          { levelName: 'urgent', description: 'Urgent', color: '#FF5252' },
+                          { levelName: 'critical', description: 'Critical', color: '#D32F2F' },
+                        ].find(
+                          (opt) => opt.levelName === formik?.values?.importance_level?.levelName
+                        ) || null
                       }
-                      helperText={
-                        formik.touched.importance_level && formik.errors.importance_level
-                          ? formik.errors.importance_level
-                          : undefined
+                      onChange={(_, newValue) =>
+                        formik.setFieldValue(
+                          'importance_level',
+                          newValue || { levelName: '', description: '', color: '' }
+                        )
                       }
+                      getOptionLabel={(option) => option.description}
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <SubjectColorIndicator color={option.color} />
+                            <Typography variant="caption" fontSize="13px">
+                              {option.description}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Importance Level"
+                          size="small"
+                          error={
+                            formik.touched.importance_level &&
+                            Boolean(formik.errors.importance_level)
+                          }
+                          helperText={
+                            formik.touched.importance_level && formik.errors.importance_level
+                              ? formik.errors.importance_level
+                              : undefined
+                          }
+                        />
+                      )}
                     />
                   </ShakingTextField>
                 </Grid>

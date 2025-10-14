@@ -68,7 +68,7 @@ export interface IBookPayload {
   language: string;
   price: number | null;
   numberOfCopies: number;
-  bookCoverImages: string[]; // URLs or file references
+  bookCoverImages: string; // URLs or file references
   copies: IBookCopy[];
   documents?: File[];
   damagedBook?: number;

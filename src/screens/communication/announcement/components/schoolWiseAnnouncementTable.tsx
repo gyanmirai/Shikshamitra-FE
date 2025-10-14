@@ -25,6 +25,7 @@ import type {
 } from '../type';
 
 const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
+  setOpen,
   data,
   onEdit,
   handleSwitchChange,
@@ -113,6 +114,27 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
       {tabs.value === 'All' ? (
         <CustomizableTable
           tableId="school-wise-announcement-table"
+          noDataText={
+            <>
+              No school announcement data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Announcement
+              </Box>
+            </>
+          }
           columns={[
             { id: 'title', label: 'Announcement', align: 'left', sticky: true },
             {
@@ -142,6 +164,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               label: 'Start Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 120,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
               ),
@@ -151,16 +174,33 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               label: 'End Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 120,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
               ),
             },
-            { id: 'createdBy', label: 'Created By', align: 'left' },
+            {
+              id: 'importance_level',
+              label: 'Importance Level',
+              align: 'left',
+              minWidth: 160,
+              render: (value, row) => (
+                <Box key={value.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <SubjectColorIndicator color={value.color} />
+                  <Typography variant="caption" fontSize="13px">
+                    {value.levelName}
+                  </Typography>
+                </Box>
+              ),
+            },
+            { id: 'duration', label: 'Duration' },
+            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
               id: 'createdOn',
               label: 'Created On',
               filterType: 'date',
               align: 'left',
+              minWidth: 120,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
               ),
@@ -251,6 +291,27 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
       ) : tabs.value === 0 ? (
         <CustomizableTable
           tableId="school-wise-announcement-table-draft"
+          noDataText={
+            <>
+              No school announcement data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Announcement
+              </Box>
+            </>
+          }
           columns={[
             { id: 'title', label: 'Announcement', align: 'left', sticky: true },
             { id: 'type', label: 'Type', align: 'left' },
@@ -316,6 +377,27 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
       ) : tabs.value === 1 ? (
         <CustomizableTable
           tableId="school-wise-announcement-table-readonly"
+          noDataText={
+            <>
+              No school announcement data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Announcement
+              </Box>
+            </>
+          }
           columns={[
             { id: 'title', label: 'Announcement', align: 'left', sticky: true },
             { id: 'type', label: 'Type', align: 'left' },
@@ -377,6 +459,27 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
       ) : tabs.value === 2 ? (
         <CustomizableTable
           tableId="school-wise-announcement-table-readonly"
+          noDataText={
+            <>
+              No school announcement data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Announcement
+              </Box>
+            </>
+          }
           columns={[
             { id: 'title', label: 'Announcement', align: 'left', sticky: true },
             { id: 'type', label: 'Type', align: 'left' },

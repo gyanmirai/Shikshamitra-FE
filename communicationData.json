@@ -16,7 +16,11 @@
     "status": 0,
     "type": "administrative",
     "attachment": null,
-    "importance_level": "critical",
+    "importance_level": {
+      "levelName": "critical",
+      "description": "High-priority announcement with significant importance for all audiences.",
+      "color": "#D32F2F"
+    },
     "link": "https://schoolportal.com/announcements/sports-day",
     "active": 0,
     "notification_preferences": ["Email", "SMS", "In-App"],
@@ -24,7 +28,7 @@
     "viewedBy": 120
   },
   {
-    "id": "ANN-002", 
+    "id": "ANN-002",
     "title": "Class 10 Parent-Teacher Meeting",
     "description": "Parent-Teacher Meeting for Class 10 students will be held on 20th September at 10 AM in the school auditorium.",
     "audience": [
@@ -39,7 +43,11 @@
     "status": 1,
     "type": "extracurriculam",
     "attachment": null,
-    "importance_level": "urgent",
+    "importance_level": {
+      "levelName": "urgent",
+      "description": "Requires immediate attention; action should be taken as soon as possible.",
+      "color": "#FF5252"
+    },
     "link": "https://schoolportal.com/announcements/ptm-class10",
     "active": 1,
     "notification_preferences": ["In-App", "Email"],
@@ -62,7 +70,11 @@
     "status": 2,
     "type": "academic",
     "attachment": null,
-    "importance_level": "critical",
+    "importance_level": {
+      "levelName": "critical",
+      "description": "High-priority announcement with significant importance for all audiences.",
+      "color": "#D32F2F"
+    },
     "link": "https://schoolportal.com/announcements/holiday-gandhi-jayanti",
     "active": 1,
     "notification_preferences": ["In-App"],
@@ -70,87 +82,98 @@
     "viewedBy": 200
   }
 ],
- "classWiseAnnouncementData": [
-    {
-      "id": "ANN-101",
-      "title": "Parent-Teacher Meeting",
-      "description": "A parent-teacher meeting will be held to discuss student progress.",
-      "audience": [
-        { "value": "Students", "name": "Students", "color": "#1890ff" },
-        { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
-        { "value": "Parents", "name": "Parents", "color": "#faad14" }
-      ],
-      "organizations": ["Primary"],
-      "classes": ["1"],
-      "divisions": ["A"],
-      "startDate": "2025-09-15T10:00:00Z",
-      "endDate": "2025-09-15T12:00:00Z",
-      "createdBy": "Jinjala Dharmik Ramesh",
-      "createdOn": "2025-09-10T09:00:00Z",
-      "status": 0,
-      "type": "academic",
-      "attachment": null,
-      "importance_level": "critical",
-      "link": "https://schoolportal.com/announcements/ANN-101",
-      "active": 0,
-      "notification_preferences": ["Email", "SMS"],
-      "isAllowAcknoledgement": true,
-      "viewedBy": 120
+"classWiseAnnouncementData": [
+  {
+    "id": "ANN-101",
+    "title": "Parent-Teacher Meeting",
+    "description": "A parent-teacher meeting will be held to discuss student progress.",
+    "audience": [
+      { "value": "Students", "name": "Students", "color": "#1890ff" },
+      { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
+      { "value": "Parents", "name": "Parents", "color": "#faad14" }
+    ],
+    "organizations": ["Primary"],
+    "classes": ["1"],
+    "divisions": ["A"],
+    "startDate": "2025-09-15T10:00:00Z",
+    "endDate": "2025-09-15T12:00:00Z",
+    "createdBy": "Jinjala Dharmik Ramesh",
+    "createdOn": "2025-09-10T09:00:00Z",
+    "status": 0,
+    "type": "academic",
+    "attachment": null,
+    "importance_level": {
+      "levelName": "critical",
+      "description": "High-priority announcement with significant importance for all audiences.",
+      "color": "#D32F2F"
     },
-    {
-      "id": "ANN-102",
-      "title": "Annual Sports Day",
-      "description": "Annual sports day will be organized for all students.",
-      "audience": [
-        { "value": "Students", "name": "Students", "color": "#1890ff" },
-        { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
-        { "value": "Parents", "name": "Parents", "color": "#faad14" }
-      ],
-         "organizations": ["Primary"],
-      "classes": ["1"],
-      "divisions": ["A"],
-      "startDate": "2025-10-01T09:00:00Z",
-      "endDate": "2025-10-01T17:00:00Z",
-      "createdBy": "Jinjala Dharmik Ramesh",
-      "createdOn": "2025-09-12T08:30:00Z",
-            "status": 1,
-
-      "type": "administrative",
-      "attachment": null,
-      "importance_level": "urgent",
-      "link": "https://schoolportal.com/announcements/ANN-102",
-      "active": 1,
-      "notification_preferences": ["PushNotification"],
-      "isAllowAcknoledgement": false,
-      "viewedBy": 300
+    "link": "https://schoolportal.com/announcements/ANN-101",
+    "active": 0,
+    "notification_preferences": ["Email", "SMS"],
+    "isAllowAcknoledgement": true,
+    "viewedBy": 120
+  },
+  {
+    "id": "ANN-102",
+    "title": "Annual Sports Day",
+    "description": "Annual sports day will be organized for all students.",
+    "audience": [
+      { "value": "Students", "name": "Students", "color": "#1890ff" },
+      { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
+      { "value": "Parents", "name": "Parents", "color": "#faad14" }
+    ],
+    "organizations": ["Primary"],
+    "classes": ["1"],
+    "divisions": ["A"],
+    "startDate": "2025-10-01T09:00:00Z",
+    "endDate": "2025-10-01T17:00:00Z",
+    "createdBy": "Jinjala Dharmik Ramesh",
+    "createdOn": "2025-09-12T08:30:00Z",
+    "status": 1,
+    "type": "administrative",
+    "attachment": null,
+    "importance_level": {
+      "levelName": "urgent",
+      "description": "Requires immediate attention; action should be taken as soon as possible.",
+      "color": "#FF5252"
     },
-    {
-      "id": "ANN-103",
-      "title": "Exam Timetable Published",
-      "description": "Mid-term examination timetable has been published on the portal.",
-      "audience": [
-        { "value": "Students", "name": "Students", "color": "#1890ff" },
-        { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
-        { "value": "Parents", "name": "Parents", "color": "#faad14" }
-      ],
-          "organizations": ["Primary"],
-      "classes": ["1"],
-      "divisions": ["A"],
-      "startDate": "2025-09-20T00:00:00Z",
-      "endDate": "2025-09-30T23:59:00Z",
-      "createdBy": "Jinjala Dharmik Ramesh",
-      "createdOn": "2025-09-09T14:00:00Z",
-           "status": 2,
-      "type": "extracurriculam",
-      "attachment": null,
-      "importance_level": "critical",
-      "link": "https://schoolportal.com/announcements/ANN-103",
-      "active": 1,
-      "notification_preferences": ["Email", "SMS", "PushNotification"],
-      "isAllowAcknoledgement": true,
-      "viewedBy": 500
-    }
-  ],
+    "link": "https://schoolportal.com/announcements/ANN-102",
+    "active": 1,
+    "notification_preferences": ["PushNotification"],
+    "isAllowAcknoledgement": false,
+    "viewedBy": 300
+  },
+  {
+    "id": "ANN-103",
+    "title": "Exam Timetable Published",
+    "description": "Mid-term examination timetable has been published on the portal.",
+    "audience": [
+      { "value": "Students", "name": "Students", "color": "#1890ff" },
+      { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
+      { "value": "Parents", "name": "Parents", "color": "#faad14" }
+    ],
+    "organizations": ["Primary"],
+    "classes": ["1"],
+    "divisions": ["A"],
+    "startDate": "2025-09-20T00:00:00Z",
+    "endDate": "2025-09-30T23:59:00Z",
+    "createdBy": "Jinjala Dharmik Ramesh",
+    "createdOn": "2025-09-09T14:00:00Z",
+    "status": 2,
+    "type": "extracurriculam",
+    "attachment": null,
+    "importance_level": {
+      "levelName": "critical",
+      "description": "High-priority announcement with significant importance for all audiences.",
+      "color": "#D32F2F"
+    },
+    "link": "https://schoolportal.com/announcements/ANN-103",
+    "active": 1,
+    "notification_preferences": ["Email", "SMS", "PushNotification"],
+    "isAllowAcknoledgement": true,
+    "viewedBy": 500
+  }
+],
  "eventData": [
     {
       "id": "1",

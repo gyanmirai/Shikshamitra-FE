@@ -62,6 +62,13 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         sticky: true,
       },
       {
+        id: 'expenseName',
+        label: 'Expense Title',
+        align: 'left',
+        minWidth: '160px',
+        filterType: 'string',
+      },
+      {
         id: 'budget',
         label: 'Budget',
         align: 'left',

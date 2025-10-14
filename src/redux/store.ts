@@ -32,6 +32,7 @@ import { ConcessionTypeApi } from './finance/concessionType';
 import { ChargeCategoryApi } from './finance/chargeCategory';
 import { expenseApi } from './finance/expenseApi/expenseApi';
 import { incomeCategoryApi } from './finance/incomeCategory';
+import { openLibraryApi } from './library/LibraryDataSearch';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { feeRefundsTermsApi } from './finance/feeRefundTerms';
 import { financeModuleApi } from './finance/financeModuleApi';
@@ -184,6 +185,7 @@ const reducers = combineReducers({
   [roleOptionsApi.reducerPath]: roleOptionsApi.reducer,
   [transportApi.reducerPath]: transportApi.reducer,
   [libraryModuleApi.reducerPath]: libraryModuleApi.reducer,
+  [openLibraryApi.reducerPath]: openLibraryApi.reducer,
 });
 
 const store = configureStore({
@@ -282,6 +284,7 @@ const store = configureStore({
       roleOptionsApi.middleware,
       transportApi.middleware,
       libraryModuleApi.middleware,
+      openLibraryApi.middleware,
     ]),
 });
 

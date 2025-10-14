@@ -1,34 +1,44 @@
 {
-    "incomeData" : [
+"incomeData": [
   {
-    "incomeCategory": "Tuition Fee",
-    "budget": "School Budget 2025",
-    "budgetSubCategory": "Primary Section",
-    "incomeName": "Annual Tuition",
-    "amount": 15000,
-    "paymentMethod": "Cash",
-    "date": "2025-08-22",
-    "notes": "Payment received for the first semester"
-  },
-  {
-    "incomeCategory": "Donation",
-    "budget": "School Fund",
-    "budgetSubCategory": "Library",
-    "incomeName": "Book Donation",
-    "amount": 5000,
+    "incomeCategory": "Sale of Assets",
+    "budget": "Infrastructure Budget 2025",
+    "budgetSubCategory": "Old Equipment Disposal",
+    "incomeName": "Sale of Old Computers",
+    "amount": 25000,
     "paymentMethod": "Bank Transfer",
-    "date": "2025-07-15",
-    "notes": "Donation received for new books"
+    "date": "2025-03-10",
+    "notes": "Revenue generated from selling outdated computer systems"
   },
   {
-    "incomeCategory": "Transport Fee",
-    "budget": "Transport Budget 2025",
-    "budgetSubCategory": "Bus Services",
-    "incomeName": "Bus Pass Fee",
-    "amount": 2000,
-    "paymentMethod": "Online Payment",
-    "date": "2025-08-01",
-    "notes": "Quarterly bus pass fee for students"
+    "incomeCategory": "Sale of Scrap",
+    "budget": "Maintenance Budget 2025",
+    "budgetSubCategory": "Recycling Department",
+    "incomeName": "Metal Scrap Sale",
+    "amount": 7000,
+    "paymentMethod": "Cash",
+    "date": "2025-04-15",
+    "notes": "Income from selling old metal and paper scrap"
+  },
+  {
+    "incomeCategory": "Government Grants & Aids",
+    "budget": "School Budget 2025",
+    "budgetSubCategory": "Infrastructure Development",
+    "incomeName": "Smart Classroom Grant",
+    "amount": 120000,
+    "paymentMethod": "Bank Transfer",
+    "date": "2025-06-01",
+    "notes": "Grant received from state government for classroom digitization"
+  },
+  {
+    "incomeCategory": "Donations & Contributions",
+    "budget": "General Fund",
+    "budgetSubCategory": "Library & Learning Resources",
+    "incomeName": "Alumni Donation",
+    "amount": 45000,
+    "paymentMethod": "Cheque",
+    "date": "2025-07-20",
+    "notes": "Alumni contribution for new library resources"
   }
 ],
 "detailedIncomeData"  : [
@@ -56,16 +66,20 @@
 ],
  "incomeCategoryOptions": [
     {
-      "label": "Primary Education",
-      "value": "Primary Education"
+      "label": "Sale of Assets",
+      "value": "Sale of Assets"
     },
     {
-      "label": "Middle School",
-      "value": "Middle School"
+      "label": "Sale of Scrap",
+      "value": "Sale of Scrap"
     },
     {
-      "label": "Higher Secondary",
-      "value": "Higher Secondary"
+      "label": "Government Grants & Aids",
+      "value": "Government Grants & Aids"
+    },
+    {
+      "label": "Donations & Contributions",
+      "value": "Donations & Contributions"
     }
   ],
 "paymentMethodsConfig": {
@@ -80,18 +94,6 @@
       { "name": "transactionId", "label": "Transaction ID / UTR Number *", "type": "text", "required": true },
       { "name": "transferDate", "label": "Transfer Date *", "type": "date", "required": true },
       { "name": "accountHolderName", "label": "Account Holder Name *", "type": "text", "required": true }
-    ],
-    "UPI": [
-      { "name": "upiId", "label": "UPI ID *", "type": "text", "required": true },
-      { "name": "transactionId", "label": "Transaction ID *", "type": "text", "required": true },
-      { "name": "transactionDate", "label": "Transaction Date *", "type": "date", "required": true },
-      { "name": "payeeName", "label": "Payee Name *", "type": "text", "required": true }
-    ],
-    "Credit Card": [
-      { "name": "cardNumber", "label": "Card Number (Last 4 digits) *", "type": "text", "required": true },
-      { "name": "cardHolderName", "label": "Card Holder Name *", "type": "text", "required": true },
-      { "name": "transactionDate", "label": "Transaction Date *", "type": "date", "required": true },
-      { "name": "authorizationCode", "label": "Authorization Code *", "type": "text", "required": true }
     ]
   }
 }

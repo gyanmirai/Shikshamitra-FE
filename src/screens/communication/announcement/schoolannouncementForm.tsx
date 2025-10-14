@@ -19,6 +19,7 @@ import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
@@ -27,6 +28,7 @@ import {
   Checkbox,
   TextField,
   Typography,
+  Autocomplete,
   DialogActions,
   FormHelperText,
   FormControlLabel,
@@ -133,16 +135,55 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                   <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                     <CustomSelect
                       label="Audience *"
-                      options={audienceOptions}
+                      options={[{ value: 'All', name: 'All' }, ...audienceOptions]} // include "All" option
                       multiple
-                      value={formik.values.audience.map((aud) => aud.name)} // show only names in the UI
+                      value={formik.values.audience.map((aud) => aud.name)}
                       onChange={(val) => {
-                        const selectedObjects = audienceOptions.filter((opt) =>
-                          (val as string[]).includes(opt.name)
+                        const value = val as string[];
+
+                        const allAudienceIds = audienceOptions.map((aud) => aud.name); // all names except 'All'
+                        const isAllClicked = value.includes('All');
+                        const wasAllPreviouslySelected = formik.values.audience.some(
+                          (aud: any) => aud.name === 'All'
                         );
-                        formik.setFieldValue('audience', selectedObjects);
+
+                        if (isAllClicked && !wasAllPreviouslySelected) {
+                          // "All" was just clicked - select all audience
+                          formik.setFieldValue('audience', [{ name: 'All' }, ...audienceOptions]);
+                        } else if (!isAllClicked && wasAllPreviouslySelected) {
+                          // "All" was just unchecked - deselect all
+                          formik.setFieldValue('audience', []);
+                        } else if (isAllClicked && wasAllPreviouslySelected) {
+                          // Individual item was selected/deselected while "All" was already selected
+                          const selectedWithoutAll = value.filter((name) => name !== 'All');
+
+                          if (selectedWithoutAll.length === allAudienceIds.length) {
+                            // All individual items are selected, keep "All" selected
+                            formik.setFieldValue('audience', [{ name: 'All' }, ...audienceOptions]);
+                          } else {
+                            // Not all individual items are selected, remove "All"
+                            const selectedObjects = audienceOptions.filter((opt) =>
+                              selectedWithoutAll.includes(opt.name)
+                            );
+                            formik.setFieldValue('audience', selectedObjects);
+                          }
+                        } else {
+                          // "All" is not selected, handle individual selections
+                          const selectedWithoutAll = value.filter((name) => name !== 'All');
+                          if (selectedWithoutAll.length === allAudienceIds.length) {
+                            // All individual items selected, add "All"
+                            formik.setFieldValue('audience', [{ name: 'All' }, ...audienceOptions]);
+                          } else {
+                            const selectedObjects = audienceOptions.filter((opt) =>
+                              selectedWithoutAll.includes(opt.name)
+                            );
+                            formik.setFieldValue('audience', selectedObjects);
+                          }
+                        }
                       }}
+                      onBlur={() => formik.setFieldTouched('audience', true)}
                       labelKey="name"
+                      valueKey="value"
                       formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
                       error={formik.touched.audience && Boolean(formik.errors.audience)}
                       helperText={
@@ -157,23 +198,53 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                   <ShakingTextField
                     error={!!(formik.touched.importance_level && formik.errors.importance_level)}
                   >
-                    <CustomSelect
-                      label="Importance Level"
+                    <Autocomplete
+                      fullWidth
                       options={[
-                        { value: 'urgent', label: 'Urgent' },
-                        { value: 'critical', label: 'Critical' },
+                        { levelName: 'urgent', description: 'Urgent', color: '#FF5252' },
+                        { levelName: 'critical', description: 'Critical', color: '#D32F2F' },
                       ]}
-                      value={formik.values.importance_level as string}
-                      onChange={(val) => formik.setFieldValue('importance_level', val as string)}
-                      formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
-                      error={
-                        formik.touched.importance_level && Boolean(formik.errors.importance_level)
+                      value={
+                        [
+                          { levelName: 'urgent', description: 'Urgent', color: '#FF5252' },
+                          { levelName: 'critical', description: 'Critical', color: '#D32F2F' },
+                        ].find(
+                          (opt) => opt.levelName === formik?.values?.importance_level?.levelName
+                        ) || null
                       }
-                      helperText={
-                        formik.touched.importance_level && formik.errors.importance_level
-                          ? formik.errors.importance_level
-                          : undefined
+                      onChange={(_, newValue) =>
+                        formik.setFieldValue(
+                          'importance_level',
+                          newValue || { levelName: '', description: '', color: '' }
+                        )
                       }
+                      getOptionLabel={(option) => option.description}
+                      renderOption={(props, option) => (
+                        <Box component="li" {...props}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <SubjectColorIndicator color={option.color} />
+                            <Typography variant="caption" fontSize="13px">
+                              {option.description}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Importance Level"
+                          size="small"
+                          error={
+                            formik.touched.importance_level &&
+                            Boolean(formik.errors.importance_level)
+                          }
+                          helperText={
+                            formik.touched.importance_level && formik.errors.importance_level
+                              ? formik.errors.importance_level
+                              : undefined
+                          }
+                        />
+                      )}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -286,7 +357,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                     <DateTimePicker
                       label="Start Date-Time *"
                       format="DD/MM/YYYY hh:mm"
-                      value={dayjs(formik.values.startDate)}
+                      value={formik.values.startDate}
                       onChange={(newValue) => {
                         formik.setFieldValue('startDate', newValue);
 
@@ -298,7 +369,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                           formik.setFieldValue('duration', Math.max(0, durationInDays));
                         }
                       }}
-                      minDate={dayjs()} // <- disables past date and time
+                      minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
                       sx={{ minWidth: 180, width: '100%' }}
                       slotProps={{
@@ -321,9 +392,9 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                     <DateTimePicker
                       label="End Date-Time *"
                       format="DD/MM/YYYY hh:mm"
-                      minDate={dayjs(formik.values.startDate)}
+                      minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
-                      value={dayjs(formik.values.endDate)}
+                      value={formik.values.endDate}
                       onChange={(newValue) => {
                         formik.setFieldValue('endDate', newValue);
                         formik.setFieldTouched('endDate', false);

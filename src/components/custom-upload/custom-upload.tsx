@@ -16,7 +16,7 @@ import {
 
 import { Iconify } from '../iconify';
 
-interface FileWithPreview extends File {
+export interface FileWithPreview extends File {
   preview?: string;
   url?: string;
   base64?: string;
@@ -49,7 +49,9 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
   outputFormat = 'file',
   secondaryText = '',
 }) => {
-  const [files, setFiles] = useState<(FileWithPreview | string)[]>(value);
+  const [files, setFiles] = useState<(FileWithPreview | string)[]>(
+    Array.isArray(value) ? value : value ? [value] : []
+  );
   const [previewDialog, setPreviewDialog] = useState<{
     open: boolean;
     file?: FileWithPreview | string;
@@ -82,7 +84,11 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
         acceptedFiles.map((file) => convertFileToFormat(file, outputFormat))
       );
 
-      const updatedFiles = multiple ? [...files, ...newFiles] : newFiles.slice(0, 1);
+      const updatedFiles = multiple
+        ? [...files, ...newFiles]
+        : newFiles.length
+          ? [newFiles[0]]
+          : [];
 
       setFiles(updatedFiles);
       onChange?.(updatedFiles);
@@ -90,7 +96,11 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
     [files, multiple, onChange, outputFormat]
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, multiple });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    multiple,
+    maxFiles: multiple ? undefined : 1,
+  });
 
   const handleDelete = (file: FileWithPreview | string) => {
     const updatedFiles = files.filter((f) => f !== file);
@@ -105,8 +115,19 @@ const CustomUpload: React.FC<CustomUploadProps> = ({
 
   const getFilePreview = (file: FileWithPreview | string) => {
     if (typeof file === 'string') {
-      return file.startsWith('data:') ? file : file; // Base64 or URL
+      // keep existing logic intact — just add HTTPS safety layer
+      let safeUrl = file;
+
+      // auto-convert http:// to https:// (OpenLibrary etc.)
+      if (safeUrl.startsWith('http://')) {
+        safeUrl = safeUrl.replace('http://', 'https://');
+      }
+
+      // existing check (base64 or URL)
+      return safeUrl.startsWith('data:') ? safeUrl : safeUrl;
     }
+
+    // unchanged fallback for File objects
     return file.preview || '';
   };
 
