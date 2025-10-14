@@ -13,8 +13,8 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { useGetPaymentMethodsConfigQuery } from 'src/redux/finance/expenseApi/expenseDetailedApi';
 import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeTrackingManagement/incomeTracking';
 
@@ -300,7 +300,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                     value={formik.values.incomeName}
                     onChange={(e) => {
                       const value = e.target.value
-                        .replace(/[^a-zA-Z\s]/g, '')
+                        .replace(/[^a-zA-Z0-9\s]/g, '')
                         .split(' ')
                         .map((word) =>
                           word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
@@ -343,15 +343,11 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                   error={!!(formik.touched.paymentMethod && formik.errors.paymentMethod)}
                 >
                   <CustomSelect
-                    label="Payment Method *"
+                    label="Payment Via *"
                     options={paymentMethodOptions}
                     value={formik.values.paymentMethod}
                     onChange={(val) => {
                       formik.setFieldValue('paymentMethod', val);
-                      // Clear payment details when method changes
-                      formik.setFieldValue('paymentDetails', {});
-                      // Clear touched state for paymentDetails
-                      formik.setFieldTouched('paymentDetails', false);
                     }}
                     error={!!(formik.touched.paymentMethod && formik.errors.paymentMethod)}
                     helperText={
@@ -366,10 +362,10 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                 <ShakingTextField error={!!(formik.touched.date && formik.errors.date)}>
                   <DatePicker
                     label="Date *"
-                    value={dayjs(formik.values.date)}
+                    value={formik.values.date}
                     onChange={(newValue) => formik.setFieldValue('date', newValue)}
                     minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs()}
+                    maxDate={dayjs(currentYear?.endDate)}
                     format="DD/MM/YYYY"
                     slotProps={{
                       textField: {
@@ -384,10 +380,9 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
               </Grid>
 
               {/* Dynamic Payment Method Fields */}
-              {paymentFields.length > 0 && (
+              {/* {paymentFields.length > 0 && (
                 <Grid size={12}>
                   <Box sx={{ mb: 1 }}>
-                    {/* Payment Method Heading */}
                     <Typography
                       variant="h6"
                       sx={{
@@ -407,7 +402,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                     </Grid>
                   </Box>
                 </Grid>
-              )}
+              )} */}
 
               <Grid size={12}>
                 <ShakingTextField>

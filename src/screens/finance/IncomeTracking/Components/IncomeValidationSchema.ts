@@ -12,7 +12,7 @@ export const getIncomeFormSchema = (currentYear: any) =>
       .required('Amount is required')
       .typeError('Amount must be a number')
       .positive('Amount must be greater than zero'),
-    paymentMethod: Yup.string().required('Payment method is required'),
+    paymentMethod: Yup.string().required('Payment Via is required'),
     date: Yup.mixed()
       .required('Date is required')
       .test(

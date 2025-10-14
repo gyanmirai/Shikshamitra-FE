@@ -140,6 +140,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         </Card>
       ) : (
         <SchoolWiseAnnouncementTable
+          setOpen={setOpen}
           data={announcementData}
           onEdit={(row) => {
             setOpen(true);
@@ -172,8 +173,8 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete announcement{' '}
-            <strong>{deleteAnnouncement?.title}</strong>?
+            Are you sure you want to delete <strong>{deleteAnnouncement?.title}</strong>{' '}
+            announcement?
           </>
         }
         action={

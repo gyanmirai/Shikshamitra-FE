@@ -17,7 +17,11 @@ export const getSchoolWiseAnnouncementInitialValues = (
   duration: initialValues?.duration ?? 0,
   type: initialValues?.type || '',
   attachment: initialValues?.attachment || (null as unknown as File),
-  importance_level: initialValues?.importance_level || '',
+  importance_level: initialValues?.importance_level || {
+    levelName: '',
+    description: '',
+    color: '',
+  },
   link: initialValues?.link || '',
   active: initialValues?.active ?? 1,
   notification_preferences: initialValues?.notification_preferences || [],

@@ -9,7 +9,7 @@ export interface IExpenseFormValues {
   expenseName: string;
   amount: number | null;
   paymentMethod: string;
-  date: string | Dayjs | null; // formatted as YYYY-MM-DD
+  date: Dayjs | null; // formatted as YYYY-MM-DD
   notes: string;
 }
 
