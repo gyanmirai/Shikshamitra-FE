@@ -1,5 +1,7 @@
 import type { Dayjs } from 'dayjs';
 
+import type { IImportanceLevel } from '../settings/ImportanceLevel/type';
+
 export interface IAudience {
   value: string;
   name: string;
@@ -11,15 +13,15 @@ export interface ISchoolWiseAnnouncement {
   title: string;
   description: string;
   audience: IAudience[];
-  startDate: Dayjs | string | null;
-  endDate: Dayjs | string | null;
+  startDate: Dayjs | null;
+  endDate: Dayjs | null;
   createdBy: string;
   cratedOn: Dayjs | string | null;
   status: number;
   type: string;
   duration: number;
   attachment: File;
-  importance_level?: string;
+  importance_level?: IImportanceLevel;
   link: string;
   active?: number;
   notification_preferences: string[];
@@ -94,7 +96,7 @@ export interface IClassWiseAnnouncement {
   type: string;
   duration: number;
   attachment: File | null;
-  importance_level?: string;
+  importance_level?: IImportanceLevel;
   link: string;
   active?: number;
   notification_preferences: string[];
@@ -142,6 +144,7 @@ export interface IClassWiseAnnouncementFormikValues {
 }
 
 export interface ISchoolWiseAnnouncementTableProps {
+  setOpen: (value: boolean) => void;
   data: ISchoolWiseAnnouncement[];
   onEdit: (row: ISchoolWiseAnnouncement) => void;
   handleSwitchChange: (row: ISchoolWiseAnnouncement) => void;

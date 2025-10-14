@@ -153,6 +153,8 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
               label: 'Start Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 120,
+
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
               ),
@@ -162,16 +164,35 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
               label: 'End Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 120,
+
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
               ),
             },
-            { id: 'createdBy', label: 'Created By', align: 'left' },
+            {
+              id: 'importance_level',
+              label: 'Importance Level',
+              align: 'left',
+              minWidth: 160,
+              render: (value, row) => (
+                <Box key={value.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <SubjectColorIndicator color={value.color} />
+                  <Typography variant="caption" fontSize="13px">
+                    {value.levelName}
+                  </Typography>
+                </Box>
+              ),
+            },
+            { id: 'duration', label: 'Duration' },
+            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
               id: 'createdOn',
               label: 'Created On',
               filterType: 'date',
               align: 'left',
+              minWidth: 120,
+
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
               ),

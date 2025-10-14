@@ -102,7 +102,7 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
                 Importance Level
               </Typography>
               <Typography variant="body1" fontWeight="400">
-                {announcement.importance_level || 'Normal'}
+                {announcement.importance_level?.levelName || 'Normal'}
               </Typography>
             </Box>
           </Box>

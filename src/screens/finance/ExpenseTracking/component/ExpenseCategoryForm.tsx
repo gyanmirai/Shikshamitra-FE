@@ -1,9 +1,9 @@
 import type { RootState } from 'src/redux/store';
 
-import dayjs from 'dayjs';
 import React from 'react';
-import { useFormik } from 'formik';
+import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
+import { getIn, useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -14,7 +14,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Grid, Button, MenuItem, TextField, DialogActions } from '@mui/material';
 import {
   useGetExpenseOptionsQuery,
   useGetPaymentMethodsConfigQuery,
@@ -22,8 +22,10 @@ import {
 
 import { getInitialExpenseData } from './ExpenseInitialValues';
 import { getExpenseFormSchema } from './ExpenseValidationSchema';
+import { paymentMethodsConfig } from '../../FeeCollection/Components/paymentConfigMethods';
 
 import type { IExpenseFormProps } from './type';
+import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 
 const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -78,170 +80,6 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
   const paymentFields =
     paymentMethodsConfigToUse[selectedPaymentMethod as keyof typeof paymentMethodsConfigToUse] ||
     [];
-
-  const renderDynamicField = (field: any) => {
-    const fieldName = `paymentDetails.${field.name}`;
-    const fieldValue = formik.values.paymentDetails?.[field.name] || '';
-
-    // Properly access nested errors for paymentDetails
-    const isTouched =
-      formik.touched.paymentDetails &&
-      typeof formik.touched.paymentDetails === 'object' &&
-      (formik.touched.paymentDetails as Record<string, boolean>)[field.name];
-
-    const fieldError =
-      isTouched &&
-      (formik.errors.paymentDetails as Record<string, string | undefined>)?.[field.name];
-
-    switch (field.type) {
-      case 'date':
-        return (
-          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
-            <ShakingTextField error={!!fieldError}>
-              <DatePicker
-                label={field.label}
-                value={fieldValue ? dayjs(fieldValue) : null}
-                onChange={(newValue) => {
-                  formik.setFieldValue(fieldName, newValue ? newValue.toISOString() : '');
-                  // Trigger validation for this field
-                  formik.setFieldTouched(fieldName, true);
-                }}
-                format="DD/MM/YYYY"
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                    error: !!fieldError,
-                    helperText: fieldError as string,
-                  },
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-        );
-
-      case 'select':
-        return (
-          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
-            <ShakingTextField error={!!fieldError}>
-              <CustomSelect
-                label={field.label}
-                options={
-                  field.options?.map((option: string) => ({ value: option, label: option })) || []
-                }
-                value={fieldValue}
-                onChange={(val) => formik.setFieldValue(fieldName, val)}
-                error={!!fieldError}
-                helperText={fieldError as string}
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
-        );
-
-      case 'multiline':
-        return (
-          <Grid size={12} key={field.name}>
-            <ShakingTextField error={!!fieldError}>
-              <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                label={field.label}
-                name={fieldName}
-                value={fieldValue}
-                onChange={(e) => formik.setFieldValue(fieldName, e.target.value)}
-                error={!!fieldError}
-                helperText={fieldError as string}
-              />
-            </ShakingTextField>
-          </Grid>
-        );
-
-      case 'amount':
-        return (
-          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
-            <ShakingTextField error={!!fieldError}>
-              <NumericFormatCustom
-                size="small"
-                fullWidth
-                label={field.label}
-                name={fieldName}
-                value={fieldValue || ''}
-                onChange={(e) => {
-                  let val = e.target.value;
-                  val = val.replace(/[₹,\s]/g, '');
-                  formik.setFieldValue(fieldName, Number(val));
-                }}
-                error={!!fieldError}
-                helperText={fieldError as string}
-                sx={{
-                  width: '100%',
-                  padding: '0',
-                  borderRadius: 1,
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-        );
-
-      default:
-        return (
-          <Grid size={{ xs: 12, md: 6 }} key={field.name}>
-            <ShakingTextField error={!!fieldError}>
-              <TextField
-                fullWidth
-                size="small"
-                label={field.label}
-                name={fieldName}
-                value={fieldValue}
-                onChange={(e) => {
-                  let { value } = e.target;
-
-                  // Handle specific field transformations
-                  if (
-                    field.name === 'chequeNumber' ||
-                    field.name === 'transactionId' ||
-                    field.name === 'authorizationCode'
-                  ) {
-                    value = value.toUpperCase();
-                  } else if (field.name === 'upiId') {
-                    // UPI ID validation: allow alphanumeric, @, ., -
-                    value = value.toLowerCase().replace(/[^a-z0-9@.-]/g, '');
-                  } else if (field.name === 'cardNumber') {
-                    // Only allow last 4 digits
-                    value = value.replace(/\D/g, '').slice(-4);
-                  } else if (
-                    field.name === 'payeeName' ||
-                    field.name === 'accountHolderName' ||
-                    field.name === 'bankName' ||
-                    field.name === 'cardHolderName'
-                  ) {
-                    value = value
-                      .replace(/[^a-zA-Z\s]/g, '')
-                      .split(' ')
-                      .map((word) =>
-                        word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                      )
-                      .join(' ');
-                  }
-
-                  formik.setFieldValue(fieldName, value);
-                }}
-                onBlur={() => formik.setFieldTouched(fieldName, true)}
-                error={!!fieldError}
-                helperText={fieldError as string}
-                inputProps={{
-                  ...(field.pattern ? { pattern: field.pattern } : {}),
-                  ...(field.name === 'cardNumber' ? { maxLength: 4 } : {}),
-                  ...(field.name === 'upiId' ? { placeholder: 'example@upi' } : {}),
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-        );
-    }
-  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -344,11 +182,11 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                 <ShakingTextField error={!!(formik.touched.date && formik.errors.date)}>
                   <DatePicker
                     label="Date *"
-                    value={dayjs(formik.values.date)}
+                    value={formik.values.date}
                     onChange={(newValue) => formik.setFieldValue('date', newValue)}
                     format="DD/MM/YYYY"
                     minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs()}
+                    maxDate={dayjs(currentYear?.endDate)}
                     slotProps={{
                       textField: {
                         fullWidth: true,
@@ -367,7 +205,10 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                 >
                   <CustomSelect
                     label="Payment Method *"
-                    options={paymentMethodOptions}
+                    options={Object.keys(paymentMethodsConfig).map((method) => ({
+                      value: method,
+                      label: method.charAt(0).toUpperCase() + method.slice(1),
+                    }))}
                     value={formik.values.paymentMethod}
                     onChange={(val) => {
                       formik.setFieldValue('paymentMethod', val);
@@ -385,31 +226,119 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                 </ShakingTextField>
               </Grid>
 
-              {/* Dynamic Payment Method Fields */}
-              {paymentFields.length > 0 && (
-                <Grid size={12}>
-                  <Box sx={{ mb: 1 }}>
-                    {/* Payment Method Heading */}
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        mb: 1,
-                        color: 'primary.main',
-                        fontWeight: 600,
-                        borderColor: 'primary.light',
-                        pb: 1,
-                        display: 'inline-block',
-                      }}
-                    >
-                      {selectedPaymentMethod} Details
-                    </Typography>
+              {formik.values.paymentMethod &&
+                paymentMethodsConfig[
+                  formik.values.paymentMethod as keyof typeof paymentMethodsConfig
+                ]?.map((field: IPaymentFieldConfig) => {
+                  const fieldPath = `paymentDetails.${field.name}`;
+                  const value = getIn(formik.values, fieldPath);
+                  const error = getIn(formik.errors, fieldPath);
+                  const touched = getIn(formik.touched, fieldPath);
 
-                    <Grid container spacing={3}>
-                      {paymentFields.map((field: any) => renderDynamicField(field))}
+                  return (
+                    <Grid size={6} key={`${formik.values.paymentMethod}-${field.name}`}>
+                      <ShakingTextField error={Boolean(touched && error)}>
+                        {field.type === 'date' ? (
+                          <DatePicker
+                            label={`${field.label}`}
+                            format="DD/MM/YYYY"
+                            value={value}
+                            onChange={(date) => formik.setFieldValue(fieldPath, date)}
+                            disablePast
+                            // onBlur={() => formik.setFieldTouched(fieldPath, true)}
+                            sx={{ width: '100%' }}
+                            slotProps={{
+                              textField: {
+                                size: 'small',
+                                fullWidth: true,
+                                error: Boolean(touched && error),
+                                helperText: touched && typeof error === 'string' ? error : '',
+                              },
+                            }}
+                          />
+                        ) : field.type === 'select' ? (
+                          <TextField
+                            select
+                            fullWidth
+                            label={field.label}
+                            name={fieldPath}
+                            value={value || ''}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            size="small"
+                            error={Boolean(touched && error)}
+                            helperText={touched && typeof error === 'string' ? error : ''}
+                          >
+                            {field.options?.map((opt) => (
+                              <MenuItem key={opt} value={opt}>
+                                {opt}
+                              </MenuItem>
+                            ))}
+                          </TextField>
+                        ) : field.type === 'multiline' ? (
+                          <TextField
+                            fullWidth
+                            multiline
+                            minRows={2}
+                            size="small"
+                            label={field.label}
+                            name={fieldPath}
+                            value={value || ''}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={Boolean(touched && error)}
+                            helperText={touched && typeof error === 'string' ? error : ''}
+                          />
+                        ) : field.type === 'amount' ? (
+                          <NumericFormatCustom
+                            fullWidth
+                            size="small"
+                            label={field.label}
+                            name={fieldPath}
+                            value={value || ''}
+                            onChange={formik.handleChange}
+                            onBlur={() => formik.setFieldTouched(fieldPath, true)} // ✅ needed for custom inputs
+                            error={Boolean(touched && error)}
+                            helperText={touched && typeof error === 'string' ? error : ''}
+                          />
+                        ) : (
+                          <TextField
+                            fullWidth
+                            type={field.type}
+                            size="small"
+                            label={field.label}
+                            name={fieldPath}
+                            value={value || ''}
+                            onChange={(e) => {
+                              const newValue = e.target.value;
+
+                              if (field.pattern) {
+                                if (newValue === '') {
+                                  formik.setFieldValue(fieldPath, newValue);
+                                  return;
+                                }
+
+                                // Define allowed chars manually
+                                const allowedChars = 'a-zA-Z0-9 ';
+                                const typingRegex = new RegExp(`^[${allowedChars}]*$`);
+
+                                if (!typingRegex.test(newValue)) return; // block invalid chars
+                              }
+
+                              formik.setFieldValue(fieldPath, newValue);
+                            }}
+                            onBlur={formik.handleBlur}
+                            error={Boolean(touched && error)}
+                            helperText={touched && typeof error === 'string' ? error : ''}
+                            inputProps={
+                              field.type === 'number' ? { min: field.min, max: field.max } : {}
+                            }
+                          />
+                        )}
+                      </ShakingTextField>
                     </Grid>
-                  </Box>
-                </Grid>
-              )}
+                  );
+                })}
 
               <Grid size={12}>
                 <ShakingTextField>

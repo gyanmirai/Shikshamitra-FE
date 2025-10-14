@@ -122,12 +122,17 @@
     { "date": "15-06-2025", "serviceType": "Brake Service", "cost": 4500, "nextDue": "15-07-2025" }
   ],
   "vehicleInformation": {
-    "registrationNo": "DL-1CA-1234",
+    "registrationNo": "GJ-05-AD-2711",
     "vehicleType": "Bus",
+    "driverName": "Raj Baku",
+    "route": "Parvat Patiya",
     "model": "Tata Starbus LP",
     "status": "Active",
     "seatingCapacity": 45,
+    "features": ["AC", "GPS", "First Aid Kit"],
+    "fuelType": "Diesel",
     "yearOfManufacture": 2020,
+    "schoolAssignedNumber": "01",
     "vehicleColor": "Yellow"
   },
 
@@ -561,4 +566,72 @@
     { "value": "Route D-Pal", "label": "Route D-Pal" },
     { "value": "Route E-Dindoli", "label": "Route E-Dindoli" }
   ]
+   "documentDetailsData": [
+  {
+    "id": "1",
+    "key": "registrationCertificate",
+    "name": "Registration Certificate",
+    "documentType": "RC Book",
+    "issueDate": "15-03-2020",
+    "expiryDate": "14-03-2030",
+    "status": "Uploaded",
+    "documentUrl": "/documents/rc-certificate.pdf",
+    "issuingAuthority": "RTO Surat",
+    "documentNumber": "GJ05AD271100001",
+    "acceptedFormat": "PDF,JPG,PNG"
+  },
+  {
+    "id": "2",
+    "key": "insuranceCertificate",
+    "name": "Insurance Certificate",
+    "documentType": "Insurance Policy",
+    "issueDate": "10-12-2024",
+    "expiryDate": "09-12-2025",
+    "status": "Uploaded",
+    "documentUrl": "/documents/insurance-certificate.pdf",
+    "issuingAuthority": "HDFC ERGO General Insurance",
+    "documentNumber": "POL123456789",
+    "acceptedFormat": "PDF,JPG,PNG"
+  },
+  {
+    "id": "3",
+    "key": "fitnessCertificate",
+    "name": "Fitness Certificate",
+    "documentType": "Fitness Document",
+    "issueDate": "20-06-2024",
+    "expiryDate": "19-06-2025",
+    "status": "Pending",
+    "documentUrl": "/documents/fitness-certificate.pdf",
+    "issuingAuthority": "RTO Surat",
+    "documentNumber": "FIT202400567",
+    "acceptedFormat": "PDF,JPG,PNG"
+  },
+  {
+    "id": "4",
+    "key": "pucCertificate",
+    "name": "Pollution Under Control",
+    "documentType": "PUC Certificate",
+    "issueDate": "05-10-2024",
+    "expiryDate": "04-04-2025",
+    "status": "Uploaded",
+    "documentUrl": "/documents/puc-certificate.pdf",
+    "issuingAuthority": "Authorized PUC Center",
+    "documentNumber": "PUC202410001",
+    "acceptedFormat": "PDF,JPG,PNG"
+  },
+  {
+    "id": "5",
+    "key": "roadTaxReceipt",
+    "name": "Road Tax Receipt",
+    "documentType": "Tax Document",
+    "issueDate": "01-04-2024",
+    "expiryDate": "31-03-2025",
+    "status": "Uploaded",
+    "documentUrl": "/documents/road-tax-receipt.pdf",
+    "issuingAuthority": "RTO Surat",
+    "documentNumber": "TAX202400789",
+    "acceptedFormat": "PDF,JPG,PNG"
+  }
+
+]
 }

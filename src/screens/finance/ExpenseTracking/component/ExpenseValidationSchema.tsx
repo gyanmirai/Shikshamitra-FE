@@ -3,14 +3,14 @@ import * as Yup from 'yup';
 
 export const getExpenseFormSchema = (currentYear: any) =>
   Yup.object().shape({
-    expenseCategory: Yup.string().required('Expense category is required'),
+    expenseCategory: Yup.string().required('Expense Category is required'),
     budget: Yup.string().required('Budget is required'),
-    expenseName: Yup.string().required('Expense name is required'),
+    expenseName: Yup.string().required('Expense Name is required'),
     amount: Yup.number()
       .required('Amount is required')
       .typeError('Amount must be a number')
       .positive('Amount must be greater than zero'),
-    paymentMethod: Yup.string().required('Payment method is required'),
+    paymentMethod: Yup.string().required('Payment Method is required'),
     date: Yup.mixed()
       .required('Date is required')
       .test(
