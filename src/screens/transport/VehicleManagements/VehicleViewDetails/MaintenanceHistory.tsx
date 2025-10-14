@@ -1,8 +1,8 @@
 import { Box } from '@mui/system';
-import { Tab, Card } from '@mui/material';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Tab, Card, Tooltip } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -11,6 +11,7 @@ import {
   useGetmaintenanceDataQuery,
   useGetrouteHistoryDataQuery,
   useGetdriverHistoryDataQuery,
+  useGetdocumentDetailsDataQuery,
 } from 'src/redux/transport/vehicle-management/vehicleDocumentDataApi';
 
 // Tab Components
@@ -116,6 +117,49 @@ const DriverHistory = () => {
     />
   );
 };
+const DocumentDetailsTable = () => {
+  const { data: documentRows, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetdocumentDetailsDataQuery,
+  });
+
+  return (
+    <CustomizableTable
+      tableId="vehicle-documents"
+      noDataText={<>No document data available.</>}
+      isFilter={false}
+      isLoading={isLoading}
+      columns={[
+        { id: 'name', label: 'Name', align: 'left', isFilter: false },
+        {
+          id: 'status',
+          label: 'Status',
+          minWidth: '80px',
+          isSort: false,
+          align: 'left',
+          isFilter: false,
+          render(value, row) {
+            return (
+              <Tooltip title={row.status}>
+                <Iconify
+                  icon={row.status === 'Uploaded' ? 'mdi:approve' : 'mage:file-cross-fill'}
+                  height={20}
+                  width={20}
+                  sx={{
+                    color: (theme) =>
+                      row.status === 'Uploaded' ? 'success.main' : theme.vars.palette.grey[500],
+                  }}
+                />
+              </Tooltip>
+            );
+          },
+        },
+      ]}
+      data={documentRows || []}
+    />
+  );
+};
+
 const MaintenanceHistoryTable = () => {
   const { data: maintenanceHistoryData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -159,8 +203,15 @@ const MaintenanceHistoryTable = () => {
     />
   );
 };
+
 // Tab Configuration
 const TABS = [
+  {
+    value: 'documentDetails',
+    label: 'Document Details',
+    icon: <Iconify icon="mdi:file-document-outline" />,
+    component: DocumentDetailsTable,
+  },
   {
     value: 'route',
     label: 'Route History',
@@ -175,14 +226,14 @@ const TABS = [
   },
   {
     value: 'maintenance',
-    label: 'Maintenance History',
+    label: 'Maintenance Records',
     icon: <Iconify icon="mdi:wrench" />,
     component: MaintenanceHistoryTable,
   },
 ];
 
 const MaintenanceHistory = () => {
-  const tabs = useTabs('route');
+  const tabs = useTabs('documentDetails');
 
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
 

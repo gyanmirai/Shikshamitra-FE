@@ -45,6 +45,8 @@ export const transportApi = createApi({
             return { data: vehicleManagementData.driverHistoryData };
           case '/maintenanceData':
             return { data: vehicleManagementData.maintenanceData };
+          case '/documentDetailsData':
+            return { data: vehicleManagementData.documentDetailsData };
           default:
             return {
               error: {
@@ -62,6 +64,7 @@ export const transportApi = createApi({
     'Insurance',
     'Driver',
     'Documents',
+    'documentDetailsData',
     'VehicleDocuments',
     'VehicleTypes',
     'ServiceTypes',
