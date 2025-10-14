@@ -1581,6 +1581,13 @@ const transportModule = {
           shortcutKeyName: 'Alt+T+3',
         },
         {
+          title: 'Stop Management',
+          path: '/transport/stopManagement',
+          _action: 'stop-management',
+          shortcutKey: 'Alt+T+4',
+          shortcutKeyName: 'Alt+T+4',
+        },
+        {
           title: ' Transport Staff Management',
           path: '/transport/driverManagement',
           _action: 'driver-management',
