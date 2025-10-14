@@ -21,6 +21,7 @@ import {
 import type { IAudience, IClassWiseAnnouncement, IClassWiseAnnouncementTableProps } from '../type';
 
 const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = ({
+  setOpen,
   data,
   onEdit,
   handleSwitchChange,
@@ -110,6 +111,27 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
       {tabs.value === 'All' ? (
         <CustomizableTable
           tableId="class-wise-announcement-table"
+          noDataText={
+            <>
+              No class announcement data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Announcement
+              </Box>
+            </>
+          }
           columns={[
             { id: 'title', label: 'Announcement', align: 'left', sticky: true },
             { id: 'type', label: 'Type', align: 'left' },
@@ -138,19 +160,19 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             },
             {
               id: 'classes',
-              label: 'Class',
+              label: 'Classes',
               align: 'left',
               render: (val) => (val?.length ? val.join(',') : 'All'),
             },
             {
               id: 'divisions',
-              label: 'Division',
+              label: 'Divisions',
               align: 'left',
               render: (val) => (val?.length ? val.join(',') : 'All'),
             },
             {
               id: 'startDate',
-              label: 'Start Date',
+              label: 'Start Date/Time',
               filterType: 'date',
               align: 'left',
               minWidth: 120,
@@ -161,7 +183,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             },
             {
               id: 'endDate',
-              label: 'End Date',
+              label: 'End Date/Time',
               filterType: 'date',
               align: 'left',
               minWidth: 120,
@@ -199,7 +221,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             },
             {
               id: 'active',
-              label: 'Active',
+              label: 'Publish',
               align: 'left',
               minWidth: 40,
               isFilter: false,
@@ -214,7 +236,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
                     : theme.palette.text.secondary;
 
                 return (
-                  <CustomTooltip title={value === 0 ? 'Published' : 'Draft'} arrow placement="left">
+                  <CustomTooltip title={value === 0 ? 'Draft' : 'Published'} arrow placement="left">
                     <span>
                       <IconButton
                         onClick={() =>
@@ -260,7 +282,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               isFilter: false,
               sticky: true,
@@ -283,6 +305,27 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
       ) : tabs.value === 0 ? (
         <CustomizableTable
           tableId="class-wise-announcement-table-draft"
+          noDataText={
+            <>
+              No class announcement data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Announcement
+              </Box>
+            </>
+          }
           columns={[
             { id: 'title', label: 'Announcement', align: 'left', sticky: true },
             { id: 'type', label: 'Type', align: 'left' },
@@ -311,19 +354,19 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             },
             {
               id: 'classes',
-              label: 'Class',
+              label: 'Classes',
               align: 'left',
               render: (val) => (val?.length ? val.join(',') : 'All'),
             },
             {
               id: 'divisions',
-              label: 'Division',
+              label: 'Divisions',
               align: 'left',
               render: (val) => (val?.length ? val.join(',') : 'All'),
             },
             {
               id: 'startDate',
-              label: 'Start Date',
+              label: 'Start Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -332,7 +375,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             },
             {
               id: 'endDate',
-              label: 'End Date',
+              label: 'End Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -343,7 +386,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               isFilter: false,
               sticky: true,
@@ -366,6 +409,27 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
       ) : tabs.value === 1 ? (
         <CustomizableTable
           tableId="class-wise-announcement-table-readonly"
+          noDataText={
+            <>
+              No class announcement data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Announcement
+              </Box>
+            </>
+          }
           columns={[
             { id: 'title', label: 'Announcement', align: 'left', sticky: true },
             { id: 'type', label: 'Type', align: 'left' },
@@ -394,19 +458,19 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             },
             {
               id: 'classes',
-              label: 'Class',
+              label: 'Classes',
               align: 'left',
               render: (val) => (val?.length ? val.join(',') : 'All'),
             },
             {
               id: 'divisions',
-              label: 'Division',
+              label: 'Divisions',
               align: 'left',
               render: (val) => (val?.length ? val.join(',') : 'All'),
             },
             {
               id: 'startDate',
-              label: 'Start Date',
+              label: 'Start Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -415,7 +479,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             },
             {
               id: 'endDate',
-              label: 'End Date',
+              label: 'End Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -426,7 +490,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               isFilter: false,
               sticky: true,
@@ -445,6 +509,27 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
       ) : tabs.value === 2 ? (
         <CustomizableTable
           tableId="class-wise-announcement-table-readonly"
+          noDataText={
+            <>
+              No class announcement data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Announcement
+              </Box>
+            </>
+          }
           columns={[
             { id: 'title', label: 'Announcement', align: 'left', sticky: true },
             { id: 'type', label: 'Type', align: 'left' },
@@ -473,19 +558,19 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             },
             {
               id: 'classes',
-              label: 'Class',
+              label: 'Classes',
               align: 'left',
               render: (val) => (val?.length ? val.join(',') : 'All'),
             },
             {
               id: 'divisions',
-              label: 'Division',
+              label: 'Divisions',
               align: 'left',
               render: (val) => (val?.length ? val.join(',') : 'All'),
             },
             {
               id: 'startDate',
-              label: 'Start Date',
+              label: 'Start Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -494,7 +579,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             },
             {
               id: 'endDate',
-              label: 'End Date',
+              label: 'End Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -505,7 +590,7 @@ const ClassWiseAnnouncementTable: React.FC<IClassWiseAnnouncementTableProps> = (
             { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               isFilter: false,
               sticky: true,

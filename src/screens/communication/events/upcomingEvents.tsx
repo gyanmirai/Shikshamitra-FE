@@ -7,11 +7,12 @@ import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -67,12 +68,16 @@ const UpcomingEvents = (props: TabComponentType) => {
     <Box height="100%" display="flex" flexDirection="column">
       {open ? (
         <CustomBreadcrumbs
-          heading="Add Event"
-          description="Create or update school events with important details, schedules, and notifications. Share event information efficiently with students, teachers, and staff."
+          heading={editingEvent ? 'Update Event' : 'Add Event'}
+          description={
+            editingEvent
+              ? 'Update school events with revised details, schedules, and notifications. Ensure accurate information is shared with students, teachers, and staff.'
+              : 'Create new school events with important details, schedules, and notifications. Share event information efficiently with students, teachers, and staff.'
+          }
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Events' },
-            { name: 'Add Event' },
+            { name: editingEvent ? 'Update Event' : 'Add Event' },
           ]}
           sx={{ px: 1, mb: 2 }}
           isBack
@@ -85,7 +90,7 @@ const UpcomingEvents = (props: TabComponentType) => {
           heading="Events"
           description="View and manage all school events, including event details, schedules, and status. Add new events, update existing ones, or remove them as needed."
           links={[{ name: 'Communication', href: '/communication/dashboard' }, { name: 'Events' }]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
           action={
             <Button
               size="small"
@@ -108,6 +113,7 @@ const UpcomingEvents = (props: TabComponentType) => {
         </Card>
       ) : (
         <EventAnnouncementTable
+          setOpen={setOpen}
           data={eventTableData}
           onEdit={(row) => {
             setOpen(true);
@@ -136,7 +142,8 @@ const UpcomingEvents = (props: TabComponentType) => {
         }}
         content={
           <>
-            Are you sure you want to delete <strong>{editingEvent?.title}</strong>?
+            Are you sure you want to delete <strong>&apos;{editingEvent?.title}&apos;</strong>{' '}
+            Event?
           </>
         }
         title="Delete"
@@ -148,15 +155,17 @@ const UpcomingEvents = (props: TabComponentType) => {
       />
 
       <ConfirmDialog
+        icon="success"
         open={publish_modal.value}
         onClose={() => {
           publish_modal.onFalse();
           setEditingEvent(null);
         }}
-        title="Publish"
+        title="Active"
         content={
           <>
-            Are you sure you want to publish event <strong>{editingEvent?.title}</strong>?
+            Are you sure you want to active <strong>&apos;{editingEvent?.title}&apos;</strong>{' '}
+            Event?
           </>
         }
         action={
@@ -171,13 +180,25 @@ const UpcomingEvents = (props: TabComponentType) => {
             }}
             size="small"
           >
-            Publish
+            Active
           </Button>
         }
       />
 
       <CustomDialog
-        title={`${editingEvent?.title}`}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">{editingEvent?.title}</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View detailed information about this school-wide event, including schedule, venue, and target audience."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={view_dialog.value}
         handleClose={() => {
           setEditingEvent(null);

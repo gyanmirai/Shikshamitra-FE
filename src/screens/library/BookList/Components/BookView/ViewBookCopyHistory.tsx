@@ -1,4 +1,4 @@
-import type { IBook } from 'src/screens/library/BookManagement/Components/type';
+import type { IBook, IBookCopyWithBook } from 'src/screens/library/BookManagement/Components/type';
 
 import React from 'react';
 import dayjs from 'dayjs';
@@ -8,7 +8,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
 
 interface ViewBookCopyHistoryTableProps {
-  editData: IBook | null; // book data containing reservationMemberIds
+  editData: IBookCopyWithBook | null; // book data containing reservationMemberIds
   onDelete: (book: IBook) => void;
 }
 

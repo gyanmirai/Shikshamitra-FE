@@ -22,6 +22,7 @@ export interface IHoliday {
 }
 
 export interface IHolidayTableProps {
+  setOpen: (value: boolean) => void;
   data: IHoliday[];
   onEdit: (holiday: IHoliday) => void;
   onDelete: (id: string) => void;

@@ -18,6 +18,7 @@ import type { IEventAnnouncement } from '../type';
 import type { IAudience } from '../../announcement/type';
 
 interface IEventAnnouncementTableProps {
+  setOpen: (value: boolean) => void;
   data: IEventAnnouncement[];
   onEdit: (row: IEventAnnouncement) => void;
   onDelete: (row: IEventAnnouncement) => void;
@@ -26,6 +27,7 @@ interface IEventAnnouncementTableProps {
 }
 
 const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
+  setOpen,
   data,
   onEdit,
   onDelete,
@@ -105,6 +107,27 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
       {/* Table */}
       <CustomizableTable
         tableId="event-announcement-table"
+        noDataText={
+          <>
+            No event data found
+            <Box
+              onClick={() => {
+                setOpen(true);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Event
+            </Box>
+          </>
+        }
         data={tableData || []}
         columns={[
           { id: 'title', label: 'Title', align: 'left', sticky: true },
@@ -128,13 +151,13 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
           },
           {
             id: 'classes',
-            label: 'Class',
+            label: 'Classes',
             align: 'left',
             render: (val) => (val?.length ? val.join(',') : 'All'),
           },
           {
             id: 'divisions',
-            label: 'Div',
+            label: 'Divisions',
             align: 'left',
             render: (val) => (val?.length ? val.join(',') : 'All'),
           },

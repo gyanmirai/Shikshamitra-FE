@@ -12,7 +12,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Grid, Checkbox, TextField, Autocomplete } from '@mui/material';
+import { Grid, Checkbox, TextField, Typography, Autocomplete, FormHelperText } from '@mui/material';
 
 import type { INotificationSendSchema } from './type';
 
@@ -32,7 +32,7 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
   });
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-
+  console.log('formik erroes=====', formik.errors);
   // Update class list when medium/organization changes
   useEffect(() => {
     const allClasses =
@@ -92,8 +92,6 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allClass, formik.values.audience?.classes]);
-  console.log('AudienceStep-----------', formik.values);
-  console.log('AudienceStep errors-----------', formik.errors);
 
   useEffect(() => {
     const classes = formik.values.audience?.classes || [];
@@ -125,18 +123,18 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
       tableData2 = [
         {
           id: '0',
-          name: 'John Doe',
-          division: 'A',
-          grNo: 'GR123',
-          rollNo: '1',
+          name: 'Prerna Bhanudas Atre',
+          division: '',
+          grNo: '',
+          rollNo: '',
           contactNo: '1234567890',
         },
         {
           id: '1',
-          name: 'Jane Smith',
-          division: 'B',
-          grNo: 'GR124',
-          rollNo: '2',
+          name: 'Dharmik Harishbhai Ahir',
+          division: '',
+          grNo: '',
+          rollNo: '',
           contactNo: '0987654321',
         },
       ];
@@ -144,7 +142,6 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
     return tableData2;
   }, [StudentsData?.items, formik.values.audience?.role]);
 
-  // 2️⃣ Set Formik members AFTER render
   useEffect(() => {
     if (!tableData.length) {
       formik.setFieldValue('members', []);
@@ -296,59 +293,105 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
         </>
       )}
       {formik.values.audience?.role && (
-        <Grid size={{ xs: 12 }}>
-          <CustomizableTable
-            tableId="student-table"
-            isLoading={isLoading}
-            noDataText="No student data found"
-            columns={[
-              {
-                id: 'checkBox',
-                align: 'left',
-                minWidth: '60px',
-                isSort: false,
-                isFilter: false,
-                label: '',
-                renderColumn: () => (
-                  <Checkbox
-                    checked={
-                      formik.values.members?.length > 0 &&
-                      formik.values.members.every((m: any) => m.isSelect)
-                    }
-                    onChange={(e) =>
-                      formik.setFieldValue(
-                        'members',
-                        formik.values.members.map((m: any) => ({
-                          ...m,
-                          isSelect: e.target.checked,
-                        }))
-                      )
-                    }
-                  />
-                ),
-                render: (value, row) => (
-                  <Checkbox
-                    checked={row.isSelect || false}
-                    onChange={(e) => {
-                      const updatedMembers = formik.values.members.map((member: any) =>
-                        member.id === row.id
-                          ? { ...member, isSelect: e.target.checked }
-                          : member
-                      );
-                      formik.setFieldValue('members', updatedMembers);
-                    }}
-                  />
-                ),
-              },
-              { id: 'name', label: 'Name', align: 'left', minWidth: '150px' },
-              { id: 'division', label: 'Division', align: 'left', minWidth: '100px' },
-              { id: 'grNo', label: 'GR No.', align: 'left', minWidth: '100px' },
-              { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: '100px' },
-              { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '150px' },
-            ]}
-            data={formik.values.members || []}
-          />
-        </Grid>
+        <>
+          <Grid size={{ xs: 12 }}>
+            {formik.errors.members && (
+              <FormHelperText error>
+                {typeof formik.errors.members === 'string' ? formik.errors.members : ''}
+              </FormHelperText>
+            )}
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <CustomizableTable
+              tableId="student-table"
+              isLoading={isLoading}
+              noDataText="No student data found"
+              columns={[
+                {
+                  id: 'checkBox',
+                  align: 'left',
+                  minWidth: '60px',
+                  isSort: false,
+                  isFilter: false,
+                  label: '',
+                  renderColumn: () => (
+                    <Checkbox
+                      checked={
+                        formik.values.members?.length > 0 &&
+                        formik.values.members.every((m: any) => m.isSelect)
+                      }
+                      onChange={(e) =>
+                        formik.setFieldValue(
+                          'members',
+                          formik.values.members.map((m: any) => ({
+                            ...m,
+                            isSelect: e.target.checked,
+                          }))
+                        )
+                      }
+                    />
+                  ),
+                  render: (value, row) => (
+                    <Checkbox
+                      checked={row.isSelect || false}
+                      onChange={(e) => {
+                        const updatedMembers = formik.values.members.map((member: any) =>
+                          member.id === row.id ? { ...member, isSelect: e.target.checked } : member
+                        );
+                        formik.setFieldValue('members', updatedMembers);
+                      }}
+                    />
+                  ),
+                },
+                { id: 'name', label: 'Name', align: 'left', minWidth: '150px' },
+                {
+                  id: 'division',
+                  label: 'Division',
+                  align: 'left',
+                  minWidth: '100px',
+                  render: (value, row) =>
+                    value ? (
+                      <Typography variant="caption" sx={{ fontSize: '13px' }}>
+                        {value}
+                      </Typography>
+                    ) : (
+                      '-'
+                    ),
+                },
+                {
+                  id: 'grNo',
+                  label: 'GR No.',
+                  align: 'left',
+                  minWidth: '100px',
+                  render: (value, row) =>
+                    value ? (
+                      <Typography variant="caption" sx={{ fontSize: '13px' }}>
+                        {value}
+                      </Typography>
+                    ) : (
+                      '-'
+                    ),
+                },
+                {
+                  id: 'rollNo',
+                  label: 'Roll No.',
+                  align: 'left',
+                  minWidth: '100px',
+                  render: (value, row) =>
+                    value ? (
+                      <Typography variant="caption" sx={{ fontSize: '13px' }}>
+                        {value}
+                      </Typography>
+                    ) : (
+                      '-'
+                    ),
+                },
+                { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '150px' },
+              ]}
+              data={formik.values.members || []}
+            />
+          </Grid>
+        </>
       )}
     </Grid>
     // </SectionCard>

@@ -7,11 +7,12 @@ import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -75,8 +76,12 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {open ? (
         <CustomBreadcrumbs
-          heading="Add Announcement"
-          description="Create or update class-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff."
+          heading={editingAnnouncement ? 'Update Announcement' : 'Add Announcement'}
+          description={
+            editingAnnouncement
+              ? 'Update the selected class-wide announcement with revised messages, event details, or notifications. Ensure accurate and timely information for students, teachers, and staff.'
+              : 'Create a new class-wide announcement with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff.'
+          }
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Announcements' },
@@ -88,7 +93,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
                 setEditingAnnouncement(null);
               },
             },
-            { name: 'Add Announcement' },
+            { name: editingAnnouncement ? 'Update Announcement' : 'Add Announcement' },
           ]}
           sx={{ px: 1, mb: 2 }}
           isBack
@@ -129,6 +134,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
         </Card>
       ) : (
         <ClassWiseAnnouncementTable
+          setOpen={setOpen}
           data={announcementData}
           onEdit={(announcement) => {
             setOpen(true);
@@ -162,8 +168,8 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete announcement{' '}
-            <strong>{deleteAnnouncement?.title}</strong>?
+            Are you sure you want to delete <strong>&apos;{deleteAnnouncement?.title}&apos;</strong>{' '}
+            announcement?
           </>
         }
         action={
@@ -185,6 +191,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
       />
 
       <ConfirmDialog
+        icon="success"
         open={publish_modal.value}
         onClose={() => {
           publish_modal.onFalse();
@@ -193,8 +200,8 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
         title="Publish"
         content={
           <>
-            Are you sure you want to publish announcement{' '}
-            <strong>{publishingAnnouncement?.title}</strong>?
+            Are you sure you want to publish{' '}
+            <strong>&apos;{publishingAnnouncement?.title}&apos;</strong> announcement?
           </>
         }
         action={
@@ -216,7 +223,19 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
       />
 
       <CustomDialog
-        title={`${viewAnnouncement?.title}`}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">{viewAnnouncement?.title}</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View detailed information about this class-wise announcement, including message content, target audience, and publication status."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={view_dialog.value}
         handleClose={() => {
           setViewAnnouncement(null);

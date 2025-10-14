@@ -68,9 +68,6 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       changeStatusDialog.onFalse();
-      returnDialog.onFalse();
-      issueDialog.onFalse();
-      viewDialog.onFalse();
       viewAllReservationDialog.onFalse();
       reserveDialog.onFalse();
       setSelectedReservation(null);
@@ -79,16 +76,26 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
       dispatch(setIsChanges(false));
       setSelectedBook(null);
     } else if (!isChanges) {
-      changeStatusDialog.onFalse();
-      returnDialog.onFalse();
-      issueDialog.onFalse();
-      viewDialog.onFalse();
       viewAllReservationDialog.onFalse();
       reserveDialog.onFalse();
       setSelectedReservation(null);
       setSelectedCopy(null);
       setOpen(false);
       setSelectedBook(null);
+    }
+  };
+
+  const handleCloseReturn = (_e: any, isSubmit?: boolean) => {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      returnDialog.onFalse();
+      issueDialog.onFalse();
+      bookHistoryDialog.onFalse();
+      setSelectedCopy(null);
+    } else if (!isChanges) {
+      returnDialog.onFalse();
+      issueDialog.onFalse();
+      bookHistoryDialog.onFalse();
+      setSelectedCopy(null);
     }
   };
 
@@ -242,13 +249,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
           </Box>
         }
       >
-        <IssueBookModal
-          onClose={() => {
-            issueDialog.onFalse();
-            setSelectedCopy(null);
-          }}
-          editData={selectedCopy}
-        />
+        <IssueBookModal onClose={handleCloseReturn} editData={selectedCopy} />
       </CustomDialog>
       <CustomDialog
         open={reserveDialog.value}
@@ -271,13 +272,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
           </Box>
         }
       >
-        <ReservationBookModal
-          onClose={() => {
-            reserveDialog.onFalse();
-            setSelectedBook(null);
-          }}
-          editData={selectedBook}
-        />
+        <ReservationBookModal onClose={handleClose} editData={selectedBook} />
       </CustomDialog>
 
       <CustomDialog
@@ -301,13 +296,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
           </Box>
         }
       >
-        <ReturnBookModal
-          onClose={() => {
-            returnDialog.onFalse();
-            setSelectedCopy(null);
-          }}
-          accessionNo={selectedCopy?.accessionNo}
-        />
+        <ReturnBookModal onClose={handleCloseReturn} accessionNo={selectedCopy?.accessionNo} />
       </CustomDialog>
 
       <CustomDialog
@@ -439,7 +428,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         open={bookHistoryDialog.value}
         handleClose={() => {
           bookHistoryDialog.onFalse();
-          setSelectedBook(null);
+          setSelectedCopy(null);
         }}
         maxWidth="md"
         title={
@@ -459,7 +448,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         }
       >
         <ViewBookCopyHistoryTable
-          editData={selectedBook}
+          editData={selectedCopy}
           onDelete={(row) => {
             bookHistoryDialog.onTrue();
             setSelectedReservation(row);

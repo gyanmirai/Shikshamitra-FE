@@ -832,7 +832,18 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                         value={formik.values.venue}
                         error={formik.touched.venue && Boolean(formik.errors.venue)}
                         helperText={formik.touched.venue && formik.errors.venue}
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          const value = e.target.value
+                            // Remove everything except letters and spaces
+                            .replace(/[^a-zA-Z0-9\s]/g, '')
+                            // Capitalize each word
+                            .split(' ')
+                            .map((word) =>
+                              word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                            )
+                            .join(' ');
+                          formik.setFieldValue('venue', value);
+                        }}
                       />
                     </ShakingTextField>
                   </Grid>

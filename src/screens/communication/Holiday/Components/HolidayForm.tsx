@@ -128,7 +128,18 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                       label="Holiday Name *"
                       name="holidayName"
                       value={formik.values.holidayName}
-                      onChange={formik.handleChange}
+                      onChange={(e) => {
+                        const value = e.target.value
+                          // Remove everything except letters and spaces
+                          .replace(/[^a-zA-Z0-9\s]/g, '')
+                          // Capitalize each word
+                          .split(' ')
+                          .map((word) =>
+                            word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                          )
+                          .join(' ');
+                        formik.setFieldValue('holidayName', value);
+                      }}
                       error={formik.touched.holidayName && Boolean(formik.errors.holidayName)}
                       helperText={formik.touched.holidayName && formik.errors.holidayName}
                       fullWidth
@@ -190,7 +201,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                       value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
                       onChange={(date) => formik.setFieldValue('startDate', date)}
                       format="DD/MM/YYYY"
-                      minDate={dayjs()} // <- disables past date and time
+                      minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
                       slotProps={{
                         textField: {
@@ -210,7 +221,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                       label="End Date *"
                       value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
                       format="DD/MM/YYYY"
-                      minDate={dayjs(formik.values.startDate)}
+                      minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
                       onChange={(date) => formik.setFieldValue('endDate', date)}
                       slotProps={{
