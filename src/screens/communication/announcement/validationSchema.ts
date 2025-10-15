@@ -136,7 +136,6 @@ export const classWiseValidationSchema = (currentYear: any) =>
           `End Date-Time must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
-    importance_level: Yup.string().required('Importance level is required'),
     link: Yup.string().url('Must be a valid URL').nullable(),
     notification_preferences: Yup.array()
       .of(Yup.string())

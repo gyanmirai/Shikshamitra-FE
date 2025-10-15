@@ -47,7 +47,6 @@ export interface IEventAnnouncement {
   status: number;
   type: string;
   attachment: File | null;
-  importance_level?: string;
   link: string;
   active?: number;
   eventMode: string; // was 'offline' | 'online'
@@ -83,7 +82,6 @@ export interface IEventAnnouncement {
 export interface IAddEventProps {
   initialValues?: IEventAnnouncement | null;
   onClose: (e: any, isSubmit: boolean) => void;
-
   isEdit?: boolean;
 }
 

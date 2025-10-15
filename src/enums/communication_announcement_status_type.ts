@@ -1,17 +1,17 @@
 export enum AnnouncementStatus {
-  Draft,
+  Upcoming,
   Published,
   Completed,
 }
 
 export const AnnouncementStatusColor: Record<AnnouncementStatus, string> = {
-  [AnnouncementStatus.Draft]: 'warning',
+  [AnnouncementStatus.Upcoming]: 'warning',
   [AnnouncementStatus.Published]: 'success',
   [AnnouncementStatus.Completed]: 'info',
 };
 
 export const AnnouncementStatusOptions = [
-  { label: 'Draft', value: AnnouncementStatus.Draft },
+  { label: 'Upcoming', value: AnnouncementStatus.Upcoming },
   { label: 'Published', value: AnnouncementStatus.Published },
   { label: 'Completed', value: AnnouncementStatus.Completed },
 ];

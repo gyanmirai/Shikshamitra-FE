@@ -14,7 +14,7 @@
     "createdOn": "2025-09-10T08:30:00.000Z",
     "status": 0,
     "type": "administrative",
-    "attachment": null,
+    "attachment": { "type": "File", "url": "c:\\Users\\lenovot14g3\\shikshamitra\\Shikshamitra-FE\\files\\sports-day-notice.pdf" },
     "importance_level": {
       "levelName": "critical",
       "description": "High-priority announcement with significant importance for all audiences.",
@@ -86,8 +86,8 @@
     "description": "A parent-teacher meeting will be held to discuss student progress.",
     "audience": [
       { "value": "Students", "name": "Students", "color": "#1890ff" },
-      { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
-      { "value": "Parents", "name": "Parents", "color": "#faad14" }
+      { "value": "Teachers", "name": "Teachers", "color": "#52c41a" }
+    
     ],
     "organizations": ["Primary"],
     "classes": ["1"],
@@ -115,7 +115,6 @@
     "title": "Annual Sports Day",
     "description": "Annual sports day will be organized for all students.",
     "audience": [
-      { "value": "Students", "name": "Students", "color": "#1890ff" },
       { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
       { "value": "Parents", "name": "Parents", "color": "#faad14" }
     ],
@@ -145,7 +144,7 @@
     "title": "Exam Timetable Published",
     "description": "Mid-term examination timetable has been published on the portal.",
     "audience": [
-      { "value": "Students", "name": "Students", "color": "#1890ff" },
+      
       { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
       { "value": "Parents", "name": "Parents", "color": "#faad14" }
     ],
@@ -177,11 +176,7 @@
       "title": "Annual Sports Day",
       "description": "A fun-filled sports event for all classes with various competitions.",
       "audience": [
-        {
-          "value": "Students",
-          "name": "Students",
-          "color": "#1890ff"
-        },
+     
         {
           "value": "Teachers",
           "name": "Teachers",
@@ -218,11 +213,7 @@
       "title": "Online Coding Workshop",
       "description": "A workshop on competitive programming conducted by industry experts.",
       "audience": [
-        {
-          "value": "Students",
-          "name": "Students",
-          "color": "#1890ff"
-        },
+       
         {
           "value": "Teachers",
           "name": "Teachers",
@@ -271,11 +262,6 @@
           "value": "Teachers",
           "name": "Teachers",
           "color": "#52c41a"
-        },
-        {
-          "value": "Parents",
-          "name": "Parents",
-          "color": "#faad14"
         }
       ],
       "organizations": ["Academic Committee"],

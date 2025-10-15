@@ -37,15 +37,15 @@ const NotificationFormStepper = () => {
       try {
         if (activeStep === 0) {
           shikshaMitraToast.success({
-            message: `Audience selected successfully.`,
+            message: `Audience selected successfully`,
           });
         } else if (activeStep === 1) {
           shikshaMitraToast.success({
-            message: `Channels chosen successfully.`,
+            message: `Channels chosen successfully`,
           });
         } else if (activeStep === 2) {
           shikshaMitraToast.success({
-            message: `Notification message composed successfully.`,
+            message: `Notification message composed successfully`,
           });
         }
 

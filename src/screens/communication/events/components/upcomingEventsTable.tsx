@@ -20,7 +20,7 @@ const UpcomingEventsTable: React.FC<IUpcomingEventsTableProps> = ({
       {
         id: 'eventStartDate',
         label: 'Start Date',
-        minWidth: '180px',
+        minWidth: 120,
         align: 'left',
         render: (value) => (
           <Typography fontSize="12px" gutterBottom>

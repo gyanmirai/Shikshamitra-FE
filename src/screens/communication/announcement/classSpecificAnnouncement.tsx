@@ -32,17 +32,20 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
   // Modal state for publish announcement dialog
   const publish_modal = useBoolean();
   // State to store the announcement being published
-  const [publishingAnnouncement, setPublishingAnnouncement] = useState<any | null>(null);
+  const [publishingAnnouncement, setPublishingAnnouncement] =
+    useState<IClassWiseAnnouncement | null>(null);
   // State to store the ID of announcement to be deleted
   const [deleteAnnouncement, setDeleteAnnouncement] = useState<IClassWiseAnnouncement | null>(null);
   // State to store the announcement being edited
-  const [editingAnnouncement, setEditingAnnouncement] = useState<any | null>(null);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<IClassWiseAnnouncement | null>(
+    null
+  );
   // Modal state for confirmation dialog
   const confirm_dialog = useBoolean();
 
   const [open, setOpen] = useState(false);
   // State to store the announcement being viewed
-  const [viewAnnouncement, setViewAnnouncement] = useState<any | null>(null);
+  const [viewAnnouncement, setViewAnnouncement] = useState<IClassWiseAnnouncement | null>(null);
   // Modal state for view announcement dialog
   const view_dialog = useBoolean();
   const { data: announcementData } = useQueryAndMutation({

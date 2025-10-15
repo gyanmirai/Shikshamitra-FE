@@ -38,7 +38,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
   const announcementCounts = useMemo(
     () => ({
       all: data?.length || 0,
-      draft: data?.filter((i) => i.status === AnnouncementStatus.Draft)?.length || 0,
+      draft: data?.filter((i) => i.status === AnnouncementStatus.Upcoming)?.length || 0,
       published: data?.filter((i) => i.status === AnnouncementStatus.Published)?.length || 0,
       completed: data?.filter((i) => i.status === AnnouncementStatus.Completed)?.length || 0,
     }),
@@ -56,8 +56,8 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
         color: 'default',
       },
       {
-        label: 'Draft',
-        value: AnnouncementStatus.Draft,
+        label: 'Upcoming',
+        value: AnnouncementStatus.Upcoming,
         count: announcementCounts.draft,
         color: 'warning',
       },
@@ -164,7 +164,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               label: 'Start Date/Time',
               filterType: 'date',
               align: 'left',
-              minWidth: 120,
+              minWidth: 150,
               render: (value) => (
                 <Typography variant="caption" fontSize="13px">
                   {dayjs(value).format('DD-MM-YYYY hh:mm')}
@@ -176,7 +176,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               label: 'End Date/Time',
               filterType: 'date',
               align: 'left',
-              minWidth: 120,
+              minWidth: 140,
               render: (value) => (
                 <Typography variant="caption" fontSize="13px">
                   {dayjs(value).format('DD-MM-YYYY hh:mm')}
@@ -226,11 +226,15 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
                     : theme.palette.text.secondary;
 
                 return (
-                  <CustomTooltip title={value === 0 ? 'Draft' : 'Published'} arrow placement="left">
+                  <CustomTooltip
+                    title={value === 0 ? 'Upcoming' : 'Published'}
+                    arrow
+                    placement="left"
+                  >
                     <span>
                       <IconButton
                         onClick={() =>
-                          value === AnnouncementStatus.Draft &&
+                          value === AnnouncementStatus.Upcoming &&
                           onPublish(row as ISchoolWiseAnnouncement)
                         }
                         sx={{
@@ -377,7 +381,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
                     <span>
                       <IconButton
                         onClick={() =>
-                          value === AnnouncementStatus.Draft &&
+                          value === AnnouncementStatus.Upcoming &&
                           onPublish(row as ISchoolWiseAnnouncement)
                         }
                         sx={{
