@@ -689,5 +689,158 @@
       "assignedStudents": 3,
       "status": "Active"
     }
-  ]
+  ],
+  "routeAssignedStudentData": [
+    {
+      "grNo": "GR001",
+      "name": "Dharmik Jinjala",
+      "class": "10",
+      "division": "A",
+      "stop": "Punjan Plaza",
+      "pickupTime": "9:12 AM",
+      "contactNo": "+91 6355030866",
+      "status": "Active"
+    },
+    {
+      "grNo": "GR002",
+      "name": "Prerna Atre",
+      "class": "07",
+      "division": "C",
+      "stop": "Reshma Circle",
+      "pickupTime": "9:06 AM",
+      "contactNo": "+91 9955030866",
+      "status": "Active"
+    },
+    {
+      "grNo": "GR003",
+      "name": "Mayur Solanki",
+      "class": "12",
+      "division": "D",
+      "stop": "Mahendra Park",
+      "pickupTime": "9:00 AM",
+      "contactNo": "+91 8899030866",
+      "status": "Inactive"
+    }
+  ],
+  "routeStopsData":[
+  { 
+    "id": 1, 
+    "name": "Parvat Patiya", 
+    "time": "9:00 AM", 
+    "students": 10
+  },
+  { 
+    "id": 2, 
+    "name": "Reshma Circle", 
+    "time": "9:10 AM", 
+    "students": 10
+  },
+  { 
+    "id": 3, 
+    "name": "Maharana Pratap Circle", 
+    "time": "9:20 AM", 
+    "students": 25
+  },
+  { 
+    "id": 4, 
+    "name": "Deep Darshan School", 
+    "time": "9:30 AM", 
+    "students": 0
+  }
+],
+"vehicleHistoryData": [
+    {
+      "driverName": "Rajesh Verma",
+      "role": "Driver",
+      "contactNo": "+91 6355030866",
+      "vehicleNo": "GJ-05-AB-1234",
+      "assignedFrom": "15-01-2024",
+      "assignedTo": "Present",
+      "totalTrips": 143,
+      "status": "Active",
+      "avatar": "/assets/avatars/driver-1.jpg"
+    },
+    {
+      "driverName": "Amit Sharma",
+      "role": "Conductor",
+      "contactNo": "+91 9955030866",
+      "vehicleNo": "GJ-05-CD-5678",
+      "assignedFrom": "10-10-2023",
+      "assignedTo": "14-01-2024",
+      "totalTrips": 94,
+      "status": "Replaced",
+      "avatar": "/assets/avatars/conductor-1.jpg"
+    },
+    {
+      "driverName": "Suresh Verma",
+      "role": "Driver",
+      "contactNo": "+91 7255030866",
+      "vehicleNo": "GJ-05-EF-9012",
+      "assignedFrom": "01-06-2023",
+      "assignedTo": "09-10-2023",
+      "totalTrips": 32,
+      "status": "Replaced",
+      "avatar": "/assets/avatars/driver-2.jpg"
+    }
+  ],
+"driverConductorHistoryData":[{
+      "busNo": "GJ-05-AB-1234",
+      "driverName": "Rajesh Kumar",
+      "assignedDate": "15-01-2024",
+      "unassignedDate": "-",
+      "totalStudents": 35,
+      "status": "Active",
+      "busImage": "/assets/vehicles/bus-1.png"
+    },
+    {
+      "busNo": "GJ-05-AD-0127",
+      "driverName": "Amit Sharma",
+      "assignedDate": "10-09-2023",
+      "unassignedDate": "14-01-2024",
+      "totalStudents": 42,
+      "status": "Replaced",
+      "busImage": "/assets/vehicles/bus-2.png"
+    },
+    {
+      "busNo": "GJ-05-DA-0101",
+      "driverName": "Suresh Verma",
+      "assignedDate": "01-06-2023",
+      "unassignedDate": "09-09-2023",
+      "totalStudents": 38,
+      "status": "Replaced",
+      "busImage": "/assets/vehicles/bus-3.png"
+    }],
+   "availableVehiclesData": [
+  {
+    "id": "DL1CA-5678",
+    "value": "DL1CA-5678",
+    "label": "DL1CA-5678 - Ashok Leyland Viking (Bus, 50 seats)",
+    "registrationNo": "DL1CA-5678",
+    "makeModel": "Ashok Leyland Viking",
+    "type": "Bus",
+    "seatingCapacity": 50,
+    "status": "Active"
+  },
+  {
+    "id": "DL1CA-3456",
+    "value": "DL1CA-3456",
+    "label": "DL1CA-3456 - Ashok Leyland Viking (Bus, 50 seats)",
+    "registrationNo": "DL1CA-3456",
+    "makeModel": "Ashok Leyland Viking",
+    "type": "Bus",
+    "seatingCapacity": 50,
+    "status": "Maintenance"
+  },
+  {
+    "id": "DL1CA-7890",
+    "value": "DL1CA-7890",
+    "label": "DL1CA-7890 - Tata Starbus (Bus, 45 seats)",
+    "registrationNo": "DL1CA-7890",
+    "makeModel": "Tata Starbus",
+    "type": "Bus",
+    "seatingCapacity": 45,
+    "status": "Active"
+  }
+]
+
 }

@@ -53,6 +53,16 @@ export const transportApi = createApi({
             return { data: vehicleManagementData.documentDetailsData };
           case '/stopManagementData':
             return { data: vehicleManagementData.stopManagementData };
+          case '/routeAssignedStudentData':
+            return { data: vehicleManagementData.routeAssignedStudentData };
+          case '/routeStopsData':
+            return { data: vehicleManagementData.routeStopsData };
+          case '/vehicleHistoryData':
+            return { data: vehicleManagementData.vehicleHistoryData };
+          case '/driverConductorHistoryData':
+            return { data: vehicleManagementData.driverConductorHistoryData };
+          case '/availableVehiclesData':
+            return { data: vehicleManagementData.availableVehiclesData };
           default:
             return {
               error: {
@@ -83,6 +93,11 @@ export const transportApi = createApi({
     'MaintenanceData',
     'AvailableRoutes',
     'StopManagement',
+    'RouteAssignedStudentData',
+    'RouteStopsData',
+    'VehicleHistory',
+    'DriverConductorHistory',
+    'AvailableVehicles',
   ],
   endpoints: () => ({}),
 });

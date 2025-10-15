@@ -42,7 +42,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
   const [selectedStop, setSelectedStop] = useState<IStopData | null>(null);
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+    if (isSubmit || (setIsChanges && window.confirm('Are you sure you want to leave this page?'))) {
       changeStatusDialog.onFalse();
       viewDetailsDialog.onFalse();
       setSelectedStop(null);
