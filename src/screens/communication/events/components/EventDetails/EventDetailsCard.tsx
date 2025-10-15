@@ -11,7 +11,6 @@ import {
   AccessTime,
   LocationOn,
   EventRepeat,
-  PriorityHigh,
   CalendarMonth,
   Link as LinkIcon,
   Event as EventIcon,
@@ -75,16 +74,6 @@ const EventDetailsCard = ({ event }: { event: IEventAnnouncement | null }) => {
         {/* Category */}
         <Grid size={{ xs: 12, md: 4 }}>
           <InfoItem icon={<Category />} label="Category" value={event?.type || '—'} />
-        </Grid>
-
-        {/* Importance */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <InfoItem
-            icon={<PriorityHigh />}
-            label="Importance"
-            value={event?.importance_level || 'Normal'}
-            color="error.main"
-          />
         </Grid>
 
         {/* Start Date */}
