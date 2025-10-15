@@ -53,8 +53,12 @@ const TemplatesManagement = (props: TabComponentType) => {
     <Box height="100%" display="flex" flexDirection="column">
       {open ? (
         <CustomBreadcrumbs
-          heading="Add Template"
-          description="Create or update message templates to be used in announcements, events, or reminders."
+          heading={editingTemplate ? 'Update Template' : 'Add Template'}
+          description={
+            editingTemplate
+              ? 'Update the existing message template for announcements, events, or reminders.'
+              : 'Create a new message template to be used in announcements, events, or reminders.'
+          }
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
             {
@@ -64,7 +68,7 @@ const TemplatesManagement = (props: TabComponentType) => {
                 setEditingTemplate(null);
               },
             },
-            { name: 'Add Template' },
+            { name: editingTemplate ? 'Update Template' : 'Add Template' },
           ]}
           sx={{ px: 1, mb: 2 }}
           isBack

@@ -19,6 +19,7 @@ export interface ISchoolWiseAnnouncement {
   cratedOn: Dayjs | string | null;
   status: number;
   type: string;
+  durationUnit?: string;
   duration: number;
   attachment: File;
   importance_level?: IImportanceLevel;

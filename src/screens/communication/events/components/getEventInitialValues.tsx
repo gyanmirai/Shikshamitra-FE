@@ -18,7 +18,6 @@ export const getEventInitialValues = (initialValues: IEventAnnouncement | null) 
   status: initialValues?.status || 0,
   type: initialValues?.type || '',
   attachment: initialValues?.attachment || null,
-  importance_level: initialValues?.importance_level || '',
   link: initialValues?.link || '',
   active: initialValues?.active ?? 1,
   eventMode: initialValues?.eventMode || 'offline',

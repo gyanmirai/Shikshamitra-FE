@@ -60,7 +60,6 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
       id: initialValues?.id || '',
       holidayName: initialValues?.holidayName || '',
       holidayType: initialValues?.holidayType || '',
-      importanceLevel: initialValues?.importanceLevel || 'Normal',
       startDate: initialValues?.startDate || null,
       classes: initialValues?.classes || [],
       endDate: initialValues?.endDate || null,
@@ -120,7 +119,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
             {/* Basic Info */}
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Basic Information">
-                <Grid size={{ xs: 12, md: 4 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField
                     error={!!(formik.touched.holidayName && formik.errors.holidayName)}
                   >
@@ -137,7 +136,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                   </ShakingTextField>
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 4 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField
                     error={!!(formik.touched.holidayType && formik.errors.holidayType)}
                   >
@@ -153,30 +152,6 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                       error={formik.touched.holidayType && Boolean(formik.errors.holidayType)}
                       helperText={
                         (formik.touched.holidayType && formik.errors.holidayType) as string
-                      }
-                      formControlProps={{ fullWidth: true }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.importanceLevel && formik.errors.importanceLevel)}
-                  >
-                    <CustomSelect
-                      label="Importance Level"
-                      value={formik.values.importanceLevel}
-                      onChange={(val) => formik.setFieldValue('importanceLevel', val)}
-                      options={[
-                        { value: 'Normal', label: 'Normal' },
-                        { value: 'High', label: 'High' },
-                        { value: 'Low', label: 'Low' },
-                      ]}
-                      error={
-                        formik.touched.importanceLevel && Boolean(formik.errors.importanceLevel)
-                      }
-                      helperText={
-                        (formik.touched.importanceLevel && formik.errors.importanceLevel) as string
                       }
                       formControlProps={{ fullWidth: true }}
                     />

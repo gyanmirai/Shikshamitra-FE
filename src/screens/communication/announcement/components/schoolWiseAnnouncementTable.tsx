@@ -38,7 +38,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
   const announcementCounts = useMemo(
     () => ({
       all: data?.length || 0,
-      draft: data?.filter((i) => i.status === AnnouncementStatus.Draft)?.length || 0,
+      draft: data?.filter((i) => i.status === AnnouncementStatus.Upcoming)?.length || 0,
       published: data?.filter((i) => i.status === AnnouncementStatus.Published)?.length || 0,
       completed: data?.filter((i) => i.status === AnnouncementStatus.Completed)?.length || 0,
     }),
@@ -56,8 +56,8 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
         color: 'default',
       },
       {
-        label: 'Draft',
-        value: AnnouncementStatus.Draft,
+        label: 'Upcoming',
+        value: AnnouncementStatus.Upcoming,
         count: announcementCounts.draft,
         color: 'warning',
       },
@@ -164,7 +164,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               label: 'Start Date',
               filterType: 'date',
               align: 'left',
-              minWidth: 120,
+              minWidth: 150,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
               ),
@@ -174,7 +174,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               label: 'End Date',
               filterType: 'date',
               align: 'left',
-              minWidth: 120,
+              minWidth: 140,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
               ),
@@ -222,11 +222,15 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
                     : theme.palette.text.secondary;
 
                 return (
-                  <CustomTooltip title={value === 0 ? 'Published' : 'Draft'} arrow placement="left">
+                  <CustomTooltip
+                    title={value === 0 ? 'Upcoming' : 'Published'}
+                    arrow
+                    placement="left"
+                  >
                     <span>
                       <IconButton
                         onClick={() =>
-                          value === AnnouncementStatus.Draft &&
+                          value === AnnouncementStatus.Upcoming &&
                           onPublish(row as ISchoolWiseAnnouncement)
                         }
                         sx={{
@@ -352,6 +356,51 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             },
             { id: 'createdBy', label: 'Created By', align: 'left' },
             { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
+            {
+              id: 'active',
+              label: 'Publish',
+              align: 'left',
+              minWidth: 50,
+              isFilter: false,
+              sticky: true,
+              isSort: false,
+              filterType: 'enum',
+              enumOptions: AnnouncementStatusOptions,
+              render(value, row) {
+                const statusColor =
+                  value === AnnouncementStatus.Published
+                    ? theme.palette.success.main
+                    : theme.palette.text.secondary;
+
+                return (
+                  <CustomTooltip title={value === 0 ? 'Draft' : 'Published'} arrow placement="left">
+                    <span>
+                      <IconButton
+                        onClick={() =>
+                          value === AnnouncementStatus.Upcoming &&
+                          onPublish(row as ISchoolWiseAnnouncement)
+                        }
+                        sx={{
+                          p: 0.6,
+                          borderRadius: '50%',
+                          backgroundColor: 'rgba(0,0,0,0.06)',
+                          '&:hover': {
+                            transform: 'scale(1.1)',
+                            backgroundColor: 'rgba(0,0,0,0.08)',
+                          },
+                        }}
+                        disabled={value === AnnouncementStatus.Published}
+                      >
+                        <Iconify
+                          icon={GlobalIcons.tick}
+                          sx={{ width: 20, height: 20, color: statusColor }}
+                        />
+                      </IconButton>
+                    </span>
+                  </CustomTooltip>
+                );
+              },
+            },
             {
               id: 'action',
               label: 'Action',

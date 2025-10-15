@@ -15,9 +15,7 @@ import { DateTimePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -55,11 +53,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
   const theme = useTheme();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  // Roles API
-  const { data, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRolesQuery,
-  });
+
   const formik = useFormik({
     initialValues: getSchoolWiseAnnouncementInitialValues(initialValues),
     validationSchema: schoolWiseValidationSchema(currentYear),
@@ -76,7 +70,6 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
       onClose(null, true);
     },
   });
-  console.log('formik---', formik.errors);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -201,11 +194,13 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                     <Autocomplete
                       fullWidth
                       options={[
+                        { levelName: 'normal', description: 'Normal', color: '#1976d2' },
                         { levelName: 'urgent', description: 'Urgent', color: '#FF5252' },
                         { levelName: 'critical', description: 'Critical', color: '#D32F2F' },
                       ]}
                       value={
                         [
+                          { levelName: 'normal', description: 'Normal', color: '#1976d2' },
                           { levelName: 'urgent', description: 'Urgent', color: '#FF5252' },
                           { levelName: 'critical', description: 'Critical', color: '#D32F2F' },
                         ].find(
@@ -288,7 +283,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Delivery Channels">
                 <Grid size={{ xs: 12 }}>
-                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
                     {['In-App', 'Email', 'SMS', 'Whatsapp'].map((type) => {
                       const labels: Record<string, string> = {
                         'In-App': 'In-App',
@@ -328,21 +323,22 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                       );
                     })}
                   </Box>
-
-                  {/* Helper Text inside SectionCard */}
                   {formik.touched.notification_preferences &&
                     formik.errors.notification_preferences && (
                       <FormHelperText
                         error
                         sx={{
-                          left: 0,
                           fontSize: '10px !important',
-                          marginLeft: 0, // 🚀 removes default left space
+                          marginBottom: 0,
+                          position: 'none',
+                          marginLeft: ' 0px !important',
+                          bottom: 0,
                         }}
                       >
                         {String(formik.errors.notification_preferences)}
                       </FormHelperText>
                     )}
+                  {/* Helper Text inside SectionCard */}
                 </Grid>
               </SectionCard>
             </Grid>
@@ -360,13 +356,23 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                       value={formik.values.startDate}
                       onChange={(newValue) => {
                         formik.setFieldValue('startDate', newValue);
+                        formik.setFieldTouched('startDate', false);
 
-                        // Calculate duration in days between start and end date
-                        if (newValue && formik.values.startDate) {
-                          const start = dayjs(formik.values.startDate);
-                          const end = dayjs(newValue);
-                          const durationInDays = end.diff(start, 'day');
-                          formik.setFieldValue('duration', Math.max(0, durationInDays));
+                        // Recalculate duration if endDate already selected
+                        if (newValue && formik.values.endDate) {
+                          const start = dayjs(newValue);
+                          const end = dayjs(formik.values.endDate);
+
+                          const diffInHours = end.diff(start, 'hour');
+                          const diffInDays = end.diff(start, 'day');
+
+                          if (diffInHours >= 24) {
+                            formik.setFieldValue('durationUnit', 'days');
+                            formik.setFieldValue('duration', Math.max(0, diffInDays));
+                          } else {
+                            formik.setFieldValue('durationUnit', 'hours');
+                            formik.setFieldValue('duration', Math.max(0, diffInHours));
+                          }
                         }
                       }}
                       minDate={dayjs(currentYear?.startDate)}
@@ -398,12 +404,22 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                       onChange={(newValue) => {
                         formik.setFieldValue('endDate', newValue);
                         formik.setFieldTouched('endDate', false);
-                        // Calculate duration in days between start and end date
+
+                        // Recalculate duration if startDate already selected
                         if (newValue && formik.values.startDate) {
                           const start = dayjs(formik.values.startDate);
                           const end = dayjs(newValue);
-                          const durationInDays = end.diff(start, 'day');
-                          formik.setFieldValue('duration', Math.max(0, durationInDays));
+
+                          const diffInHours = end.diff(start, 'hour');
+                          const diffInDays = end.diff(start, 'day');
+
+                          if (diffInHours >= 24) {
+                            formik.setFieldValue('durationUnit', 'days');
+                            formik.setFieldValue('duration', Math.max(0, diffInDays));
+                          } else {
+                            formik.setFieldValue('durationUnit', 'hours');
+                            formik.setFieldValue('duration', Math.max(0, diffInHours));
+                          }
                         }
                       }}
                       sx={{ minWidth: 180, width: '100%' }}
@@ -421,7 +437,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     fullWidth
-                    label="Duration (in days) *"
+                    label={`Duration (in ${formik.values.durationUnit === 'days' ? 'days' : 'hours'}) *`}
                     name="duration"
                     type="number"
                     value={formik.values.duration}

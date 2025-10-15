@@ -2,7 +2,6 @@
 
 import { debounce } from 'lodash';
 import { useFormik } from 'formik';
-import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
@@ -48,11 +47,11 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
     onSubmit: (values) => {
       if (editData) {
         shikshaMitraToast.success({
-          message: `Template : ${values.templateName} has been successfully updated.`,
+          message: `Template : ${values.templateName} has been successfully updated`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `Template : ${values.templateName} has been successfully created.`,
+          message: `Template : ${values.templateName} has been successfully created`,
         });
       }
       onClose(null, true);
@@ -66,6 +65,24 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
     }, 300),
     []
   );
+
+  const handleKeyDown = (e: any) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const trimmed = tag.trim();
+      if (trimmed && !formik.values.hashtags.includes(trimmed)) {
+        formik.setFieldValue('hashtags', [...formik.values.hashtags, trimmed]);
+        setTag('');
+      }
+    }
+  };
+
+  const handleDelete = (deleteTag: any) => {
+    formik.setFieldValue(
+      'hashtags',
+      formik.values.hashtags.filter((t) => t !== deleteTag)
+    );
+  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -175,55 +192,54 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
 
                     {/* Tags */}
                     <Grid size={{ xs: 12 }}>
-                      <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                        Tags
-                      </Typography>
-
                       {/* Render Chips */}
 
                       {/* Input with Add Button */}
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <TextField
-                          fullWidth
-                          label="Tag"
-                          name="tag"
-                          size="small"
-                          value={tag || ''}
-                          onChange={(e) => setTag(e.target.value)}
-                        />
-                        <Button
-                          variant="contained"
-                          color="success"
-                          size="small"
-                          startIcon={<Add />}
-                          onClick={() => {
-                            if (tag.trim()) {
-                              formik.setFieldValue('hashtags', [
-                                ...formik.values.hashtags,
-                                tag.trim(),
-                              ]);
-                              setTag(''); // clear input
-                            }
-                          }}
-                        >
-                          Add
-                        </Button>
-                      </Box>
-                    </Grid>
-                    <Grid size={{ xs: 12 }}>
-                      {formik.values.hashtags.map((value: string, index) => (
-                        <Chip
-                          key={index}
-                          label={value}
-                          onDelete={() => {
-                            const newTags = formik.values.hashtags.filter((_, i) => i !== index);
-                            formik.setFieldValue('hashtags', newTags);
-                          }}
-                          size="small"
-                          variant="soft"
-                          sx={{ mr: 0.5, mt: 0.5 }}
-                        />
-                      ))}
+
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Tags"
+                        placeholder="Type a tag and press Enter"
+                        value={tag}
+                        onChange={(e) => setTag(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        InputProps={{
+                          startAdornment: (
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: 0.5,
+                                alignItems: 'center',
+                                maxWidth: '100%',
+                              }}
+                            >
+                              {formik.values.hashtags.map((t, index) => (
+                                <Chip
+                                  key={index}
+                                  label={t}
+                                  onDelete={() => handleDelete(t)}
+                                  size="small"
+                                />
+                              ))}
+                            </Box>
+                          ),
+                        }}
+                        sx={{
+                          '& .MuiInputBase-root': {
+                            flexWrap: 'wrap',
+                            alignItems: 'flex-start',
+                            minHeight: 'auto',
+                            pt: '10px',
+                          },
+                          '& .MuiInputBase-input': {
+                            flexGrow: 1,
+                            minWidth: '80px',
+                            mb: '4px',
+                          },
+                        }}
+                      />
                     </Grid>
                   </SectionCard>
                 </Grid>

@@ -32,7 +32,6 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
   });
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-
   // Update class list when medium/organization changes
   useEffect(() => {
     const allClasses =
@@ -331,9 +330,7 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
                     checked={row.isSelect || false}
                     onChange={(e) => {
                       const updatedMembers = formik.values.members.map((member: any) =>
-                        member.id === row.id
-                          ? { ...member, isSelect: e.target.checked }
-                          : member
+                        member.id === row.id ? { ...member, isSelect: e.target.checked } : member
                       );
                       formik.setFieldValue('members', updatedMembers);
                     }}

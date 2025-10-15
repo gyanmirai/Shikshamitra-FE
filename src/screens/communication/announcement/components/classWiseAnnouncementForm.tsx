@@ -213,18 +213,20 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                   </ShakingTextField>
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 6, sm: 3 }}>
+                <Grid size={{ xs: 12, md: 4, sm: 3 }}>
                   <ShakingTextField
                     error={!!(formik.touched.importance_level && formik.errors.importance_level)}
                   >
                     <Autocomplete
                       fullWidth
                       options={[
+                        { levelName: 'normal', description: 'Normal', color: '#1976d2' },
                         { levelName: 'urgent', description: 'Urgent', color: '#FF5252' },
                         { levelName: 'critical', description: 'Critical', color: '#D32F2F' },
                       ]}
                       value={
                         [
+                          { levelName: 'normal', description: 'Normal', color: '#1976d2' },
                           { levelName: 'urgent', description: 'Urgent', color: '#FF5252' },
                           { levelName: 'critical', description: 'Critical', color: '#D32F2F' },
                         ].find(
@@ -422,9 +424,9 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                   </ShakingTextField>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  {!(formik.values.classes as string[]).includes('all') &&
-                    formik.values.classes.length > 0 && (
+                {!(formik.values.classes as string[]).includes('all') &&
+                  formik.values.classes.length > 0 && (
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                       <ShakingTextField
                         error={!!(formik.touched.divisions && formik.errors.divisions)}
                       >
@@ -448,10 +450,10 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                           disabled={formik.values.classes.length === 0}
                         />
                       </ShakingTextField>
-                    )}
-                </Grid>
+                    </Grid>
+                  )}
 
-                <Grid size={{ xs: 12, md: 6, sm: 3 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                     <CustomSelect
                       label="Audience *"
@@ -481,7 +483,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
             <Grid size={{ xs: 12 }} mb={2}>
               <SectionCard title="Delivery Channels">
                 <Grid size={{ xs: 12 }}>
-                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
                     {['In-App', 'Email', 'SMS', 'Whatsapp'].map((type) => {
                       const labels: Record<string, string> = {
                         'In-App': 'In-App',
@@ -526,14 +528,17 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                       <FormHelperText
                         error
                         sx={{
-                          left: 0,
                           fontSize: '10px !important',
-                          marginLeft: 0, // 🚀 removes default left space
+                          marginBottom: 0,
+                          position: 'none',
+                          marginLeft: ' 0px !important',
+                          bottom: 0,
                         }}
                       >
                         {String(formik.errors.notification_preferences)}
                       </FormHelperText>
                     )}
+                  {/* Helper Text inside SectionCard */}
                 </Grid>
               </SectionCard>
             </Grid>
@@ -550,12 +555,23 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                       value={dayjs(formik.values.startDate)}
                       onChange={(newValue) => {
                         formik.setFieldValue('startDate', newValue);
-                        // Calculate duration in days between start and end date
-                        if (newValue && formik.values.startDate) {
-                          const start = dayjs(formik.values.startDate);
-                          const end = dayjs(newValue);
-                          const durationInDays = end.diff(start, 'day');
-                          formik.setFieldValue('duration', Math.max(0, durationInDays));
+                        formik.setFieldTouched('startDate', false);
+
+                        // Recalculate duration if endDate already selected
+                        if (newValue && formik.values.endDate) {
+                          const start = dayjs(newValue);
+                          const end = dayjs(formik.values.endDate);
+
+                          const diffInHours = end.diff(start, 'hour');
+                          const diffInDays = end.diff(start, 'day');
+
+                          if (diffInHours >= 24) {
+                            formik.setFieldValue('durationUnit', 'days');
+                            formik.setFieldValue('duration', Math.max(0, diffInDays));
+                          } else {
+                            formik.setFieldValue('durationUnit', 'hours');
+                            formik.setFieldValue('duration', Math.max(0, diffInHours));
+                          }
                         }
                       }}
                       minDateTime={dayjs()} // <- disables past date and time
@@ -587,12 +603,22 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                       onChange={(newValue) => {
                         formik.setFieldValue('endDate', newValue);
                         formik.setFieldTouched('endDate', false);
-                        // Calculate duration in days between start and end date
+
+                        // Recalculate duration if startDate already selected
                         if (newValue && formik.values.startDate) {
                           const start = dayjs(formik.values.startDate);
                           const end = dayjs(newValue);
-                          const durationInDays = end.diff(start, 'day');
-                          formik.setFieldValue('duration', Math.max(0, durationInDays));
+
+                          const diffInHours = end.diff(start, 'hour');
+                          const diffInDays = end.diff(start, 'day');
+
+                          if (diffInHours >= 24) {
+                            formik.setFieldValue('durationUnit', 'days');
+                            formik.setFieldValue('duration', Math.max(0, diffInDays));
+                          } else {
+                            formik.setFieldValue('durationUnit', 'hours');
+                            formik.setFieldValue('duration', Math.max(0, diffInHours));
+                          }
                         }
                       }}
                       sx={{ minWidth: 180, width: '100%' }}
