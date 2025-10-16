@@ -2,17 +2,17 @@
 export enum EventStatus {
   Active,
   Upcoming,
-  Archive,
+  Completed,
 }
 
 export const EventStatusColor = {
   [EventStatus.Active]: 'success',
-  [EventStatus.Upcoming]: 'info',
-  [EventStatus.Archive]: 'warning',
+  [EventStatus.Upcoming]: 'warning',
+  [EventStatus.Completed]: 'info',
 };
 
 export const EventStatusOptions = [
   { label: 'Active', value: EventStatus.Active },
   { label: 'Upcoming', value: EventStatus.Upcoming },
-  { label: 'Archive', value: EventStatus.Archive },
+  { label: 'Completed', value: EventStatus.Completed },
 ];

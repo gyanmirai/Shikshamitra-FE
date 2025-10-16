@@ -18,12 +18,10 @@ export default function SchoolWiseAnnouncementDetailCard({
         <Typography variant="body2" color="text.secondary" mb={0.5}>
           Description
         </Typography>
-        <Typography variant="body1" mb={2}>
-          {announcement?.description}
-        </Typography>
+        <Typography variant="body1">{announcement?.description}</Typography>
         {/* Attachment */}
       </Card>
-      {announcement?.link && (
+      {announcement?.attachment && (
         <Stack
           direction="row"
           alignItems="center"
@@ -38,13 +36,16 @@ export default function SchoolWiseAnnouncementDetailCard({
         >
           <Stack direction="row" spacing={1} alignItems="center">
             <AttachFile fontSize="small" color="action" />
-            <Typography variant="body2">Attachment: {announcement.link}</Typography>
+            <Typography variant="body2">Attachment: {announcement.attachment.name}</Typography>
           </Stack>
           <Button
             size="small"
             variant="outlined"
             startIcon={<Visibility />}
-            onClick={() => window.open(announcement.link, '_blank')}
+            onClick={() => {
+              const url = URL.createObjectURL(announcement.attachment);
+              window.open(url, '_blank');
+            }}
           >
             View
           </Button>

@@ -3,12 +3,7 @@
 import dayjs from 'dayjs';
 import React from 'react';
 import { alpha } from '@mui/material/styles';
-import { Label } from 'src/components/label';
 import { Box, Card, Chip, Grid, Typography } from '@mui/material';
-import {
-  AnnouncementStatus,
-  AnnouncementStatusColor,
-} from 'src/enums/communication_announcement_status_type';
 import {
   Star,
   Groups,
@@ -31,8 +26,8 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
   const renderIconBox = (icon: React.ReactNode, color: string) => (
     <Box
       sx={{
-        width: 36,
-        height: 36,
+        width: 32,
+        height: 32,
         borderRadius: '50%',
         bgcolor: (theme) => alpha(theme.palette.success.main, 0.15),
         display: 'flex',
@@ -48,16 +43,7 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
   );
 
   return (
-    <Card sx={{ p: 3, borderRadius: 2, boxShadow: 4, mb: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', gap: 1 }}>
-        <Label
-          variant="soft"
-          color={AnnouncementStatusColor[announcement?.status as AnnouncementStatus] as any}
-        >
-          {AnnouncementStatus[announcement?.status as AnnouncementStatus]}
-        </Label>
-      </Box>
-
+    <Card sx={{ p: 2, borderRadius: 2, boxShadow: 4, mb: 2 }}>
       {/* Details */}
       <Grid container spacing={2}>
         {/* Title */}

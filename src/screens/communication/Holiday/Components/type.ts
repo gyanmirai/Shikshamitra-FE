@@ -6,7 +6,6 @@ export interface IHoliday {
   id: string;
   holidayName: string; // Holiday Name (e.g., Independence Day 2025)
   holidayType: string; // Type (e.g., National Holiday, Festival, School Holiday)
-  importanceLevel: 'Normal' | 'High' | 'Low'; // Importance Level
   startDate: Dayjs | string | null; // Start Date
   endDate: Dayjs | string | null; // End Date
   description: string; // Description / Message Body

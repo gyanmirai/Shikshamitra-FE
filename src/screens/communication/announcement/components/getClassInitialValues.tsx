@@ -19,9 +19,9 @@ export const getClassInitialValues = (initialValues: IClassWiseAnnouncement | nu
   type: initialValues?.type || '',
   attachment: initialValues?.attachment || null,
   importance_level: initialValues?.importance_level || {
-    levelName: '',
+    levelName: 'normal',
     description: '',
-    color: '',
+    color: '#1976d2',
   },
   link: initialValues?.link || '',
   active: initialValues?.active || 1,

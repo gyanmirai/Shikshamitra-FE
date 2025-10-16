@@ -27,47 +27,51 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
       .required('Divisions are required'),
 
     startDate: Yup.mixed()
-      .required('Start Date is required')
+      .required('Start Date-Time is required')
       .test(
         'is-valid-dayjs',
-        'Start Date must be a valid date',
+        'Start Date-Time must be a valid date',
         (value) => value && dayjs(value as Dayjs).isValid()
       )
       .test(
         'min-date',
         (value) =>
-          `Start Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+          `Start Date-Time must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day')
       )
       .test(
         'max-date',
         (value) =>
-          `Start Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+          `Start Date-Time must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
 
     endDate: Yup.mixed()
-      .required('End Date is required')
+      .required('End Date-Time is required')
       .test(
         'is-valid-dayjs',
-        'End Date must be a valid date',
+        'End Date-Time must be a valid date',
         (value) => value && dayjs(value as Dayjs).isValid()
       )
-      .test('is-after-start-date', 'End Date cannot be before Start Date', function (value) {
-        const { startDate } = this.parent;
-        if (!value || !startDate) return true;
-        return dayjs(value as Dayjs).isSameOrAfter(dayjs(startDate), 'day');
-      })
+      .test(
+        'is-after-start-date',
+        'End Date-Time cannot be before Start Date-Time',
+        function (value) {
+          const { startDate } = this.parent;
+          if (!value || !startDate) return true;
+          return dayjs(value as Dayjs).isSameOrAfter(dayjs(startDate), 'day');
+        }
+      )
       .test(
         'min-date',
         (value) =>
-          `End Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+          `End Date-Time must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day')
       )
       .test(
         'max-date',
         (value) =>
-          `End Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+          `End Date-Time must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
 
