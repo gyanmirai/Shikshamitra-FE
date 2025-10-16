@@ -52,6 +52,7 @@ export interface IEventAnnouncement {
   eventMode: string; // was 'offline' | 'online'
   onlineLink?: string;
   venue?: string;
+  recurrenceSummary: string;
 
   // recurrence
   isRecurring: boolean;

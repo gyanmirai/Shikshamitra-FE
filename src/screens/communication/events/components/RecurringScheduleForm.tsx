@@ -4,11 +4,11 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -26,6 +26,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { getRecurrenceSummary } from './getReccuringMessage';
+
 interface RecurringScheduleFormProps {
   initialValues: any;
   onSubmit: (values: any) => void;
@@ -34,7 +36,6 @@ interface RecurringScheduleFormProps {
 
 const getValidationSchema = (currentYear: any) =>
   Yup.object({
-    type: Yup.string().required(),
     isRecurring: Yup.boolean(),
 
     repeatFrequency: Yup.string().required('Repeat frequency is required'),
@@ -50,8 +51,9 @@ const getValidationSchema = (currentYear: any) =>
       otherwise: (schema) => schema.nullable(),
     }),
 
-    meetingTime: Yup.mixed().when('repeatFrequency', {
-      is: (val: string) => ['Daily', 'Weekly', 'Custom', 'Monthly'].includes(val),
+    meetingTime: Yup.mixed().when(['repeatFrequency'], {
+      is: (repeatFrequency: string) =>
+        ['Daily', 'Weekly', 'Monthly', 'Custom'].includes(repeatFrequency),
       then: (schema) => schema.required('Meeting time is required'),
       otherwise: (schema) => schema.nullable(),
     }),
@@ -100,8 +102,10 @@ const getValidationSchema = (currentYear: any) =>
       ),
 
     // ✅ Weekly specific: at least one day required
-    customDays: Yup.array().when('repeatFrequency', {
-      is: (val: string) => val === 'Weekly',
+    customDays: Yup.array().when(['repeatFrequency', 'customInterval'], {
+      is: (repeatFrequency: string, customInterval: string) =>
+        repeatFrequency === 'Weekly' ||
+        (repeatFrequency === 'Custom' && customInterval === 'weeks'),
       then: (schema) =>
         schema
           .of(
@@ -140,28 +144,6 @@ const getValidationSchema = (currentYear: any) =>
       otherwise: (schema) => schema.nullable(),
     }),
 
-    // ✅ For "Custom" weekly → must select days
-    customDaysForCustom: Yup.array().when(['repeatFrequency', 'customInterval'], {
-      is: (repeatFrequency: string, customInterval: string) =>
-        repeatFrequency === 'Custom' && customInterval === 'weeks',
-      then: (schema) =>
-        schema
-          .of(
-            Yup.string().oneOf([
-              'Monday',
-              'Tuesday',
-              'Wednesday',
-              'Thursday',
-              'Friday',
-              'Saturday',
-              'Sunday',
-            ])
-          )
-          .min(1, 'At least one day must be selected')
-          .required('At least one day must be selected'),
-      otherwise: (schema) => schema.nullable(),
-    }),
-
     monthlyOption: Yup.string().when(['repeatFrequency', 'customInterval'], {
       is: (repeatFrequency: string, customInterval: string) =>
         repeatFrequency === 'Custom' && customInterval === 'months',
@@ -171,9 +153,11 @@ const getValidationSchema = (currentYear: any) =>
     onDay: Yup.number()
       .nullable()
       .transform((value, originalValue) => (originalValue === '' ? null : value))
-      .when(['repeatFrequency', 'monthlyOption'], {
-        is: (repeatFrequency: string, monthlyOption: string) =>
-          repeatFrequency === 'Monthly' && monthlyOption === 'onDay',
+      .when(['repeatFrequency', 'customInterval', 'monthlyOption'], {
+        is: (repeatFrequency: string, customInterval: string, monthlyOption: string) =>
+          (repeatFrequency === 'Monthly' ||
+            (repeatFrequency === 'Custom' && customInterval === 'months')) &&
+          monthlyOption === 'onDay',
         then: (schema) =>
           schema
             .required('Day of month is required')
@@ -213,7 +197,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
 
   const formik = useFormik({
     initialValues: {
-      repeatFrequency: initialValues?.repeatFrequency || 'Daily',
+      repeatFrequency: initialValues?.repeatFrequency || '',
       meetingDate: initialValues?.meetingDate || dayjs(),
       meetingTime: initialValues?.meetingTime || null,
       startDate: initialValues?.startDate || null,
@@ -221,22 +205,24 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
       customInterval: initialValues?.customInterval || '',
       customIntervalCount: initialValues?.customIntervalCount ?? 1,
       customDays: initialValues?.customDays || [],
-      monthlyOption: initialValues?.monthlyOption || 'onDay',
+      monthlyOption: initialValues?.monthlyOption || '',
       day: initialValues?.day || '',
       onDay:
         initialValues?.onDay ??
         (initialValues?.meetingDate ? dayjs(initialValues.meetingDate).date() : dayjs().date()),
-      onTheWeek: initialValues?.onTheWeek || 'First',
-      onTheDay: initialValues?.onTheDay || 'Monday',
+      onTheWeek: initialValues?.onTheWeek || '',
+      onTheDay: initialValues?.onTheDay || '',
     },
     validationSchema: getValidationSchema(currentYear),
     onSubmit: (values) => onSubmit(values),
   });
 
+  const recurrenceMessage = useMemo(() => getRecurrenceSummary(formik.values), [formik.values]);
+
   useEffect(() => {
     formik.resetForm();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.repeatFrequency, formik.values.customInterval]);
+  }, [formik.values.repeatFrequency]);
 
   const renderRecurringFields = () => {
     switch (formik.values.repeatFrequency) {
@@ -372,7 +358,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                       error
                       sx={{
                         fontSize: '10px !important',
-                        marginBottom: 8,
+                        marginBottom: 15,
                         marginLeft: ' 10px !important',
                         bottom: 0,
                       }}
@@ -514,7 +500,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                   ]}
                   disabled={formik.values.monthlyOption !== 'onThe'}
                   label="On Week *"
-                  value={formik.values.onTheWeek || 'First'}
+                  value={formik.values.onTheWeek}
                   onChange={(val) => formik.setFieldValue('onTheWeek', val)}
                   formControlProps={{ fullWidth: true }}
                 />
@@ -536,7 +522,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                   ]}
                   disabled={formik.values.monthlyOption !== 'onThe'}
                   label="On Day *"
-                  value={formik.values.onTheDay || 'Monday'}
+                  value={formik.values.onTheDay}
                   onChange={(val) => formik.setFieldValue('onTheDay', val)}
                   formControlProps={{ fullWidth: true }}
                 />
@@ -601,6 +587,8 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                       { value: 'weeks', label: 'Week(s)' },
                       { value: 'months', label: 'Month(s)' },
                     ]}
+                    valueKey="value"
+                    labelKey="label"
                     value={formik.values.customInterval}
                     onChange={(val) => formik.setFieldValue('customInterval', val)}
                     formControlProps={{ fullWidth: true }}
@@ -696,7 +684,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                         error
                         sx={{
                           fontSize: '10px !important',
-                          marginBottom: 8,
+                          marginBottom: 23,
                           marginLeft: ' 10px !important',
                           bottom: 0,
                         }}
@@ -852,7 +840,23 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <DialogScrollContent sx={{ p: 2 }}>{renderRecurringFields()}</DialogScrollContent>
+      <DialogScrollContent sx={{ p: 2 }}>
+        {renderRecurringFields()}
+
+        {recurrenceMessage && (
+          <Box
+            sx={{
+              borderRadius: 1,
+              textAlign: 'center',
+              fontSize: 13,
+              fontWeight: 500,
+              mt: 5,
+            }}
+          >
+            {recurrenceMessage}
+          </Box>
+        )}
+      </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}

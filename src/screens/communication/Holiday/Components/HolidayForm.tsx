@@ -3,7 +3,6 @@ import type { Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
@@ -33,27 +32,6 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // Redux state for current board, medium and medium setter
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  // State to store list of all organizations/branches
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
-  // Update organizations list when medium changes
-  useEffect(() => {
-    const orgs = cloneDeep(medium?.educationMediumStages || []);
-
-    // Add "All" if not present
-    if (!orgs.some((org: Organization) => org.id === 'all')) {
-      orgs.unshift({
-        id: 'all',
-        name: 'All',
-        creationTime: '',
-        creatorId: '',
-        lastModificationTime: '',
-        lastModifierId: '',
-        educationMediumId: '',
-        standards: [],
-      });
-    }
-    setAllOrganization(orgs);
-  }, [medium?.educationMediumStages]);
 
   const formik = useFormik<IHoliday>({
     initialValues: {
@@ -65,7 +43,6 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
       endDate: initialValues?.endDate || null,
       description: initialValues?.description || '',
       attachment: initialValues?.attachment || null,
-      organizations: initialValues?.organizations || [],
       audience: initialValues?.audience || [],
       createdBy: initialValues?.createdBy || '',
       createdOn: initialValues?.createdOn || dayjs(),
@@ -87,29 +64,17 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
   });
   // Update classes list when organization selection changes
   useEffect(() => {
-    if (formik.values.organizations.length === 0) {
-      setAllClass([]);
-      if (!isEdit) formik.setFieldValue('classes', []); // only reset on create
-      return;
-    }
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
-    const mergedStandards = formik.values.organizations.includes('all')
-      ? allOrganization
-          .filter((org: any) => org.id !== 'all')
-          .flatMap((org: any) => org.standards || [])
-      : formik.values.organizations
-          .map(
-            (orgId: string) =>
-              allOrganization.find((org: any) => org?.id === orgId)?.standards || []
-          )
-          .flat();
-
-    const withAll = [{ id: 'all', name: 'All', divisions: [] }, ...mergedStandards];
+    const withAll = allClasses.length
+      ? [{ id: 'all', name: 'All', divisions: [] }, ...allClasses]
+      : [];
     setAllClass(withAll);
 
     if (!isEdit) formik.setFieldValue('classes', []); // only reset on create
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allOrganization, formik.values.organizations]);
+  }, []);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -248,63 +213,6 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Audience Selection">
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.organizations && formik.errors.organizations)}
-                  >
-                    <CustomSelect
-                      options={allOrganization}
-                      label="Organization *"
-                      multiple
-                      value={formik.values.organizations}
-                      onChange={(val) => {
-                        const value = val as string[];
-
-                        const allOrgIds = allOrganization.map((org: any) => org.id);
-                        const isAllClicked = value.includes('all');
-                        const wasAllPreviouslySelected = (
-                          formik.values.organizations as string[]
-                        ).includes('all');
-
-                        let selectedOrganizations: string[] = [];
-
-                        if (isAllClicked && !wasAllPreviouslySelected) {
-                          selectedOrganizations = [
-                            'all',
-                            ...allOrgIds.filter((id) => id !== 'all'),
-                          ];
-                        } else if (!isAllClicked && wasAllPreviouslySelected) {
-                          selectedOrganizations = [];
-                        } else if (isAllClicked && wasAllPreviouslySelected) {
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          if (selectedWithoutAll.length === allOrgIds.length) {
-                            selectedOrganizations = ['all', ...allOrgIds];
-                          } else {
-                            selectedOrganizations = selectedWithoutAll;
-                          }
-                        } else {
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          if (selectedWithoutAll.length === allOrgIds.length) {
-                            selectedOrganizations = ['all', ...allOrgIds];
-                          } else {
-                            selectedOrganizations = selectedWithoutAll;
-                          }
-                        }
-                        formik.setFieldValue('organizations', selectedOrganizations);
-                      }}
-                      onBlur={() => formik.setFieldTouched('organizations', true)}
-                      error={formik.touched.organizations && Boolean(formik.errors.organizations)}
-                      helperText={
-                        (formik.touched.organizations && formik.errors.organizations) as string
-                      }
-                      labelKey="name"
-                      valueKey="id"
-                      formControlProps={{ fullWidth: true }}
-                      disabled={!medium}
-                    />
-                  </ShakingTextField>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.classes && formik.errors.classes)}>
                     <CustomSelect
                       options={allClass}
@@ -357,7 +265,6 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                       labelKey="name"
                       valueKey="id"
                       formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                      disabled={!formik.values.organizations}
                     />
                   </ShakingTextField>
                 </Grid>

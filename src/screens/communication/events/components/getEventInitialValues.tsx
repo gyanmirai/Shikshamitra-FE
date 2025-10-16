@@ -23,6 +23,7 @@ export const getEventInitialValues = (initialValues: IEventAnnouncement | null) 
   eventMode: initialValues?.eventMode || 'offline',
   onlineLink: initialValues?.onlineLink || '',
   venue: initialValues?.venue || '',
+  recurrenceSummary: initialValues?.recurrenceSummary || '',
 
   // Recurring
   isRecurring: initialValues?.isRecurring || false,

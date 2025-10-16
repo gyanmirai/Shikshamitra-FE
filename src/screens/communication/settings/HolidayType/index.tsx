@@ -80,7 +80,7 @@ const HolidayTypeCreation = () => {
             Holiday Type
           </Button>
         }
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
       />
 
       <HolidayTypeTable

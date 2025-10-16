@@ -7,7 +7,6 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -25,25 +24,22 @@ import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/Inform
 import {
   Box,
   Grid,
-  Radio,
   Button,
   Switch,
   TextField,
-  Typography,
   DialogActions,
   FormHelperText,
   FormControlLabel,
 } from '@mui/material';
 
 import RecurringScheduleForm from './components/RecurringScheduleForm';
+import { getRecurrenceSummary } from './components/getReccuringMessage';
 import { getEventInitialValues } from './components/getEventInitialValues';
 import { eventAnnouncementValidationSchema } from './components/getValidationEventSchema';
 
 import type { IAddEventProps } from './type';
 
 const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isEdit = false }) => {
-  const theme = useTheme();
-
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Redux state for current board, medium and medium setter
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -171,413 +167,27 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allOrganization, formik.values.organizations]);
 
-  const renderRecurringFields = () => {
-    switch (formik.values.repeatFrequency) {
-      case 'Daily':
-        return (
-          <Grid container spacing={2} p={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!(formik.touched.meetingTime && formik.errors.meetingTime)}>
-                <TimePicker
-                  label="Meeting Time *"
-                  format="HH:mm"
-                  name="meetingTime"
-                  value={formik.values.meetingTime}
-                  onChange={(newValue) => formik.setFieldValue('meetingTime', newValue)}
-                  views={['hours', 'minutes']}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      error: formik.touched.meetingTime && Boolean(formik.errors.meetingTime),
-                      helperText: formik.touched.meetingTime && formik.errors.meetingTime,
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!(formik.touched.repeatUntil && formik.errors.repeatUntil)}>
-                <DatePicker
-                  label="Last Date *"
-                  name="repeatUntil"
-                  format="DD/MM/YYYY"
-                  value={formik.values.repeatUntil}
-                  onChange={(newValue) => formik.setFieldValue('repeatUntil', newValue)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      error: formik.touched.repeatUntil && Boolean(formik.errors.repeatUntil),
-                      helperText: formik.touched.repeatUntil && formik.errors.repeatUntil,
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-          </Grid>
-        );
-
-      case 'Weekly':
-        return (
-          <Grid container spacing={2} p={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!(formik.touched.day && formik.errors.day)}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    p: 1.5,
-                    borderRadius: 2,
-                  }}
-                >
-                  {[
-                    { short: 'S', value: 'Sunday' },
-                    { short: 'M', value: 'Monday' },
-                    { short: 'T', value: 'Tuesday' },
-                    { short: 'W', value: 'Wednesday' },
-                    { short: 'T', value: 'Thursday' },
-                    { short: 'F', value: 'Friday' },
-                    { short: 'S', value: 'Saturday' },
-                  ].map((day, idx) => {
-                    const isSelected = formik.values.customDays?.includes(day.value);
-                    return (
-                      <Box
-                        key={idx}
-                        onClick={() => {
-                          const newValue = isSelected
-                            ? formik.values.customDays.filter((d) => d !== day.value)
-                            : [...(formik.values.customDays || []), day.value];
-                          formik.setFieldValue('customDays', newValue);
-                        }}
-                        sx={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          bgcolor: isSelected ? theme.palette.primary.main : 'transparent',
-                          color: isSelected ? '#fff' : 'black',
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <Typography variant="body2" fontWeight={500}>
-                          {day.short}
-                        </Typography>
-                      </Box>
-                    );
-                  })}
-                </Box>
-              </ShakingTextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!(formik.touched.meetingTime && formik.errors.meetingTime)}>
-                <TimePicker
-                  label="Meeting Time *"
-                  format="HH:mm"
-                  name="meetingTime"
-                  value={formik.values.meetingTime}
-                  onChange={(newValue) => formik.setFieldValue('meetingTime', newValue)}
-                  views={['hours', 'minutes']}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      error: formik.touched.meetingTime && Boolean(formik.errors.meetingTime),
-                      helperText: formik.touched.meetingTime && formik.errors.meetingTime,
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!(formik.touched.repeatUntil && formik.errors.repeatUntil)}>
-                <DatePicker
-                  label="Last Date *"
-                  name="repeatUntil"
-                  value={formik.values.repeatUntil}
-                  onChange={(newValue) => formik.setFieldValue('repeatUntil', newValue)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      error: formik.touched.repeatUntil && Boolean(formik.errors.repeatUntil),
-                      helperText: formik.touched.repeatUntil && formik.errors.repeatUntil,
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-          </Grid>
-        );
-
-      case 'Monthly':
-        return (
-          <Grid container spacing={2} p={2}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!(formik.touched.meetingDate && formik.errors.meetingDate)}>
-                <DatePicker
-                  label="Meeting Date *"
-                  name="meetingDate"
-                  format="DD/MM/YYYY"
-                  value={formik.values.meetingDate}
-                  onChange={(newValue) => formik.setFieldValue('meetingDate', newValue)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      error: formik.touched.meetingDate && Boolean(formik.errors.meetingDate),
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!(formik.touched.repeatUntil && formik.errors.repeatUntil)}>
-                <DatePicker
-                  label="Last Date *"
-                  name="repeatUntil"
-                  value={formik.values.repeatUntil}
-                  onChange={(newValue) => formik.setFieldValue('repeatUntil', newValue)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      error: formik.touched.repeatUntil && Boolean(formik.errors.repeatUntil),
-                      helperText: formik.touched.repeatUntil && formik.errors.repeatUntil,
-                    },
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-          </Grid>
-        );
-
-      case 'Custom':
-        return (
-          <>
-            {/* Repeat every */}
-            <Grid container spacing={2} p={2}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.customInterval && formik.errors.customInterval)}
-                >
-                  <CustomSelect
-                    label="Repeat Every"
-                    options={[
-                      { value: 'days', label: 'Day(s)' },
-                      { value: 'weeks', label: 'Week(s)' },
-                      { value: 'months', label: 'Month(s)' },
-                    ]}
-                    value={formik.values.customInterval}
-                    onChange={(val) => formik.setFieldValue('customInterval', val)}
-                    formControlProps={{ fullWidth: true }}
-                    error={formik.touched.customInterval && Boolean(formik.errors.customInterval)}
-                    helperText={
-                      formik.touched.customInterval &&
-                      typeof formik.errors.customInterval === 'string'
-                        ? formik.errors.customInterval
-                        : undefined
-                    }
-                  />
-                </ShakingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Interval *"
-                  value={formik.values.customIntervalCount || ''}
-                  onChange={(e) => formik.setFieldValue('customIntervalCount', e.target.value)}
-                  error={
-                    formik.touched.customIntervalCount && Boolean(formik.errors.customIntervalCount)
-                  }
-                  helperText={
-                    formik.touched.customIntervalCount && formik.errors.customIntervalCount
-                  }
-                />
-              </Grid>
-
-              {/* For weekly custom, show days */}
-              {formik.values.customInterval === 'weeks' && (
-                <Grid size={{ xs: 12 }}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      p: 1.5,
-                      borderRadius: 2,
-                    }}
-                  >
-                    {[
-                      { short: 'S', value: 'Sunday' },
-                      { short: 'M', value: 'Monday' },
-                      { short: 'T', value: 'Tuesday' },
-                      { short: 'W', value: 'Wednesday' },
-                      { short: 'T', value: 'Thursday' },
-                      { short: 'F', value: 'Friday' },
-                      { short: 'S', value: 'Saturday' },
-                    ].map((day, idx) => {
-                      const isSelected = formik.values.customDays?.includes(day.value);
-                      return (
-                        <Box
-                          key={idx}
-                          onClick={() => {
-                            const newValue = isSelected
-                              ? formik.values.customDays.filter((d) => d !== day.value)
-                              : [...(formik.values.customDays || []), day.value];
-                            formik.setFieldValue('customDays', newValue);
-                          }}
-                          sx={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            bgcolor: isSelected ? theme.palette.primary.main : 'transparent',
-                            color: isSelected ? '#fff' : 'black',
-                            transition: 'all 0.2s ease',
-                          }}
-                        >
-                          <Typography variant="body2" fontWeight={500}>
-                            {day.short}
-                          </Typography>
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                </Grid>
-              )}
-
-              {/* For monthly custom, show "On day" OR "On the" */}
-              {formik.values.customInterval === 'months' && (
-                <>
-                  {/* On Day Option */}
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <FormControlLabel
-                      value="onDay"
-                      control={<Radio />}
-                      label="On day"
-                      checked={formik.values.monthlyOption === 'onDay'}
-                      onChange={() => formik.setFieldValue('monthlyOption', 'onDay')}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 8 }}>
-                    <TextField
-                      size="small"
-                      name="onDay"
-                      type="number"
-                      label="On Day *"
-                      fullWidth
-                      disabled={formik.values.monthlyOption !== 'onDay'}
-                      value={formik.values.onDay ?? dayjs(formik.values.meetingDate).date()}
-                      onChange={(e) => formik.setFieldValue('onDay', e.target.value)}
-                    />
-                  </Grid>
-
-                  {/* On The Option */}
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <FormControlLabel
-                      value="onThe"
-                      control={<Radio />}
-                      label="On the"
-                      checked={formik.values.monthlyOption === 'onThe'}
-                      onChange={() => formik.setFieldValue('monthlyOption', 'onThe')}
-                    />
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <CustomSelect
-                      options={[
-                        { value: 'First', label: 'First' },
-                        { value: 'Second', label: 'Second' },
-                        { value: 'Third', label: 'Third' },
-                        { value: 'Fourth', label: 'Fourth' },
-                        { value: 'Last', label: 'Last' },
-                      ]}
-                      disabled={formik.values.monthlyOption !== 'onThe'}
-                      label="On Week *"
-                      value={formik.values.onTheWeek || 'First'}
-                      onChange={(val) => formik.setFieldValue('onTheWeek', val)}
-                      formControlProps={{ fullWidth: true }}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <CustomSelect
-                      options={[
-                        { value: 'Monday', label: 'Monday' },
-                        { value: 'Tuesday', label: 'Tuesday' },
-                        { value: 'Wednesday', label: 'Wednesday' },
-                        { value: 'Thursday', label: 'Thursday' },
-                        { value: 'Friday', label: 'Friday' },
-                        { value: 'Saturday', label: 'Saturday' },
-                        { value: 'Sunday', label: 'Sunday' },
-                      ]}
-                      disabled={formik.values.monthlyOption !== 'onThe'}
-                      label="On Day *"
-                      value={formik.values.onTheDay || 'Monday'}
-                      onChange={(val) => formik.setFieldValue('onTheDay', val)}
-                      formControlProps={{ fullWidth: true }}
-                    />
-                  </Grid>
-                </>
-              )}
-
-              {/* Meeting time */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TimePicker
-                  label="Meeting Time *"
-                  format="HH:mm"
-                  value={formik.values.meetingTime}
-                  onChange={(newValue) => formik.setFieldValue('meetingTime', newValue)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      error: formik.touched.meetingTime && Boolean(formik.errors.meetingTime),
-                      helperText: formik.touched.meetingTime && formik.errors.meetingTime,
-                    },
-                  }}
-                />
-              </Grid>
-
-              {/* Repeat Until */}
-              <Grid size={{ xs: 12, md: 6 }}>
-                <DatePicker
-                  label="Last Date *"
-                  value={formik.values.repeatUntil}
-                  format="DD/MM/YYYY"
-                  onChange={(newValue) => formik.setFieldValue('repeatUntil', newValue)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      size: 'small',
-                      error: formik.touched.repeatUntil && Boolean(formik.errors.repeatUntil),
-                      helperText: formik.touched.repeatUntil && formik.errors.repeatUntil,
-                    },
-                  }}
-                />
-              </Grid>
-            </Grid>
-          </>
-        );
-
-      default:
-        return null;
-    }
-  };
+  useEffect(() => {
+    const summary = getRecurrenceSummary(formik.values);
+    formik.setFieldValue('recurrenceSummary', summary || '', false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    formik.values.isRecurring,
+    formik.values.repeatFrequency,
+    formik.values.customInterval,
+    formik.values.customIntervalCount,
+    formik.values.customDays,
+    formik.values.monthlyOption,
+    formik.values.onDay,
+    formik.values.onTheWeek,
+    formik.values.onTheDay,
+    formik.values.repeatUntil,
+    formik.values.startDate,
+    formik.values.endDate,
+    formik.values.meetingDate,
+    formik.values.meetingTime,
+    formik.values.type,
+  ]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -894,6 +504,21 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                       </ShakingTextField>
                     </Grid>
                   </>
+                )}
+
+                {formik.values.recurrenceSummary && (
+                  <Grid size={{ xs: 12 }}>
+                    <Box
+                      sx={{
+                        borderRadius: 1,
+                        textAlign: 'center',
+                        fontSize: 13,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {formik.values.recurrenceSummary}
+                    </Box>
+                  </Grid>
                 )}
               </SectionCard>
             </Grid>

@@ -12,7 +12,6 @@ export interface IHoliday {
   attachment?: File | null; // File Uploads (circular, poster, pdf, etc.)
 
   // Audience selection
-  organizations: string[]; // Organization(s) (e.g., All, specific org IDs)
   audience: IAudience[];
   classes: string[];
   createdBy: string;

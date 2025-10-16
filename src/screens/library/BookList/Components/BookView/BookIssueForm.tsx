@@ -11,8 +11,6 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
-import ClearIcon from '@mui/icons-material/Clear';
-import SearchIcon from '@mui/icons-material/Search';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -29,7 +27,6 @@ import {
   Avatar,
   TextField,
   Typography,
-  IconButton,
   CardContent,
   DialogActions,
   CircularProgress,
@@ -47,13 +44,11 @@ export interface IssueBookFormProps {
 }
 
 const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => {
-  const [searchBook, setSearchBook] = useState(editData?.accessionNo || '');
-  const [searchMember, setSearchMember] = useState(editData?.memberId || '');
   const [selectedBook, setSelectedBook] = useState<IBookCopyWithBook | null>(editData);
   const [selectedMember, setSelectedMember] = useState<any | null>(editData?.memberId || null);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [books, setBooks] = useState(libraryDummyData.books);
-  console.log('editData====', editData);
+  console.log('selectedBook====', editData);
   const [loading, setLoading] = useState(false);
   const [loadingMember, setLoadingMember] = useState(false);
 
@@ -66,14 +61,17 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     currentQueryAndMutation: useGetAllCopiesQuery,
   });
 
-  const handleSearchBook = () => {
-    const accessionNumber = formik.values.accessionNumber || searchBook;
-    console.log('accessionNumber----', searchBook);
-    if (!accessionNumber) return;
+  const handleSearchBook = (value: string) => {
+    formik.setFieldValue('accessionNumber', value);
+    if (!value) {
+      setSelectedBook(null);
+      return;
+    }
+
+    setLoading(true);
 
     setTimeout(() => {
-      const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === accessionNumber);
-
+      const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
       const foundBook = foundCopy
         ? {
             ...foundCopy,
@@ -86,51 +84,43 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
         formik.setFieldValue('accessionNo', foundBook.accessionNo);
       } else {
         setSelectedBook(null);
-
-        shikshaMitraToast.error({
-          message: 'No book found for this accession number.',
-        });
       }
       setLoading(false);
     }, 400);
   };
 
-  const handleMemberSearch = () => {
-    const searchValue = searchMember.trim().toLowerCase();
-    if (!searchValue) return;
+  const handleMemberSearch = (value: string) => {
+    formik.setFieldValue('memberId', value);
+
+    if (!value) {
+      setSelectedMember(null);
+      return;
+    }
+
     setLoadingMember(true);
+
     setTimeout(() => {
+      const searchValue = value.toLowerCase().trim();
+
       const foundMember = memberData.find(
         (member: any) =>
           member.memberId?.toLowerCase() === searchValue ||
-          member.name?.toLowerCase().includes(searchValue) ||
-          member.rollNo?.toLowerCase() === searchValue
+          member.rollNo?.toLowerCase() === searchValue ||
+          member.name?.toLowerCase() === searchValue
       );
+
       if (foundMember) {
         setSelectedMember(foundMember);
-        formik.setFieldValue('memberId', foundMember.memberId);
         formik.setFieldValue('memberName', foundMember.name || '');
         formik.setFieldValue('role', foundMember.role);
         formik.setFieldValue('class', foundMember.className || '');
         formik.setFieldValue('division', foundMember.division || '');
       } else {
         setSelectedMember(null);
-        shikshaMitraToast.error({ message: 'No member found.' });
       }
+
       setLoadingMember(false);
     }, 400);
-  };
-
-  const handleClearBook = () => {
-    setSearchBook('');
-    setSelectedBook(null);
-    formik.setFieldValue('bookTitle', '');
-  };
-
-  const handleClearMember = () => {
-    setSearchMember('');
-    setSelectedMember(null);
-    formik.setFieldValue('member', '');
   };
 
   const formik = useFormik({
@@ -144,202 +134,273 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     },
   });
 
+  console.log('formik=====', formik.values.accessionNumber);
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }}>
-            <Stack direction="row" spacing={2}>
-              <TextField
-                variant="outlined"
-                size="small"
-                value={searchBook}
-                disabled={!!editData}
-                label="Scan Barcode or Search by Accession No."
-                onChange={(e) => setSearchBook(e.target.value)}
-                sx={{ flex: 1 }}
-                InputProps={{
-                  endAdornment: searchBook && (
-                    <IconButton size="small" onClick={handleClearBook} disabled={!!editData}>
-                      <ClearIcon />
-                    </IconButton>
-                  ),
-                }}
-              />
-              <Button
-                variant="contained"
-                color="primary"
-                disabled={!!editData}
-                startIcon={<SearchIcon />}
-                onClick={() => {
-                  handleSearchBook();
-                }}
-                size="small"
-                sx={{ mt: 0.3 }}
+          {!editData && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField
+                error={!!(formik.touched.accessionNumber && formik.errors.accessionNumber)}
               >
-                Search
-              </Button>
-            </Stack>
-          </Grid>
-
-          {loading ? (
-            <Grid size={{ xs: 12 }}>
-              <Box display="flex" justifyContent="center" alignItems="center">
-                <CircularProgress size={20} />
-              </Box>
+                <TextField
+                  label="Scan Barcode or Search by Accession No."
+                  size="small"
+                  fullWidth
+                  value={formik.values.accessionNumber}
+                  onChange={(e) => handleSearchBook(e.target.value)}
+                  disabled={!!editData}
+                  error={!!(formik.touched.accessionNumber && formik.errors.accessionNumber)}
+                  helperText={
+                    (formik.touched.accessionNumber && formik.errors.accessionNumber) as string
+                  }
+                  placeholder="Enter accession number (e.g., A001, A002, A003)"
+                />
+              </ShakingTextField>
             </Grid>
-          ) : selectedBook ? (
-            <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
-              <CardContent sx={{ p: '0 !important' }}>
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <Box
-                      component="img"
-                      src={selectedBook.book.bookCoverImages?.[0] || '/placeholder-book.jpg'}
-                      alt={selectedBook.book.title}
-                      sx={{
-                        width: 240,
-                        height: 160,
-                        borderRadius: 2,
-                        flexShrink: 0,
-                      }}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 8 }}>
-                    <Grid container spacing={1}>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography fontWeight={600}>Book Title</Typography>
-                        <Typography>{selectedBook.book.title}</Typography>
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography fontWeight={600}>Accession No.</Typography>
-                        <Typography>{selectedBook?.accessionNo}</Typography>
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography fontWeight={600}>Author</Typography>
-                        <Typography>{selectedBook.book.author}</Typography>
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography fontWeight={600}>ISBN</Typography>
-                        <Typography>{selectedBook.book.isbn}</Typography>
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography fontWeight={600}>Publisher</Typography>
-                        <Typography>{selectedBook.book.publisher}</Typography>
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography fontWeight={600}>Year</Typography>
-                        <Typography>{dayjs(selectedBook.book.createdOn).format('YYYY')}</Typography>
-                      </Grid>
-                    </Grid>
-                  </Grid>
+          )}
+
+          {/* Book Details Display */}
+          {(() => {
+            if (loading) {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <Box display="flex" justifyContent="center" alignItems="center">
+                    <CircularProgress size={20} />
+                  </Box>
                 </Grid>
-              </CardContent>
-            </Card>
-          ) : null}
+              );
+            }
+
+            if (selectedBook) {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
+                    {' '}
+                    <CardContent sx={{ p: '0 !important' }}>
+                      {' '}
+                      <Grid container spacing={2}>
+                        {' '}
+                        <Grid size={{ xs: 12, md: 3 }}>
+                          {' '}
+                          <Box
+                            component="img"
+                            src={selectedBook?.book.bookCoverImages?.[0] || '/placeholder-book.jpg'}
+                            alt={selectedBook?.book.title}
+                            sx={{ width: 240, height: 240, borderRadius: 2, flexShrink: 0 }}
+                          />{' '}
+                        </Grid>{' '}
+                        <Grid size={{ xs: 12, md: 9 }}>
+                          {' '}
+                          <Grid container spacing={1}>
+                            {' '}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              {' '}
+                              <Typography fontWeight={600}>Book Title</Typography>{' '}
+                              <Typography>{selectedBook?.book.title}</Typography>{' '}
+                            </Grid>{' '}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              {' '}
+                              <Typography fontWeight={600}>Accession No.</Typography>{' '}
+                              <Typography>{selectedBook?.accessionNo}</Typography>{' '}
+                            </Grid>{' '}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              {' '}
+                              <Typography fontWeight={600}>Author</Typography>{' '}
+                              <Typography>{selectedBook?.book.author}</Typography>{' '}
+                            </Grid>{' '}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              {' '}
+                              <Typography fontWeight={600}>ISBN</Typography>{' '}
+                              <Typography>{selectedBook?.book.isbn}</Typography>{' '}
+                            </Grid>{' '}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              {' '}
+                              <Typography fontWeight={600}>Publisher</Typography>{' '}
+                              <Typography>{selectedBook?.book.publisher}</Typography>{' '}
+                            </Grid>{' '}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              {' '}
+                              <Typography fontWeight={600}>Added On</Typography>{' '}
+                              <Typography>
+                                {' '}
+                                {dayjs(selectedBook?.book.createdOn).format('YYYY')}{' '}
+                              </Typography>{' '}
+                            </Grid>{' '}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              {' '}
+                              <Typography fontWeight={600}>Language</Typography>{' '}
+                              <Typography>{selectedBook?.book.language || 'N/A'}</Typography>{' '}
+                            </Grid>{' '}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              {' '}
+                              <Typography fontWeight={600}>Edition</Typography>{' '}
+                              <Typography>{selectedBook?.book.edition || 'N/A'}</Typography>{' '}
+                            </Grid>{' '}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              {' '}
+                              <Typography fontWeight={600}>Category</Typography>{' '}
+                              <Typography>{selectedBook?.book.category || 'N/A'}</Typography>{' '}
+                            </Grid>{' '}
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              {' '}
+                              <Typography fontWeight={600}>No. of Pages</Typography>{' '}
+                              <Typography>
+                                {selectedBook?.book.numberOfPages || 'N/A'}
+                              </Typography>{' '}
+                            </Grid>{' '}
+                          </Grid>{' '}
+                        </Grid>{' '}
+                      </Grid>{' '}
+                    </CardContent>{' '}
+                  </Card>
+                </Grid>
+              );
+            }
+
+            if (formik.values.accessionNumber !== '') {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <div
+                    style={{
+                      padding: '12px',
+                      backgroundColor: '#ffebee',
+                      borderRadius: '4px',
+                      border: '1px solid #f44336',
+                      color: '#d32f2f',
+                    }}
+                  >
+                    Accession number &quot;{formik.values.accessionNumber}&quot; not found.
+                    <br />
+                    Available numbers:{' '}
+                    {copies?.map((c: IBookCopy) => c.accessionNo).join(', ') ||
+                      'No copies available'}
+                  </div>
+                </Grid>
+              );
+            }
+            return null;
+          })()}
 
           <Grid size={{ xs: 12 }}>
             <Stack direction="row" spacing={2}>
               <TextField
                 variant="outlined"
                 size="small"
-                value={searchMember}
-                onChange={(e) => setSearchMember(e.target.value)}
+                value={formik.values.memberId}
+                onChange={(e) => handleMemberSearch(e.target.value)}
                 label="Search Member Id"
                 sx={{ flex: 1 }}
-                InputProps={{
-                  endAdornment: searchMember && (
-                    <IconButton size="small" onClick={handleClearMember}>
-                      <ClearIcon />
-                    </IconButton>
-                  ),
-                }}
               />
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<SearchIcon />}
-                onClick={handleMemberSearch}
-                sx={{ mt: 0.3 }}
-                size="small"
-              >
-                Search
-              </Button>
             </Stack>
           </Grid>
 
-          {loadingMember ? (
-            <Grid size={{ xs: 12 }}>
-              <Box display="flex" justifyContent="center" alignItems="center">
-                <CircularProgress size={20} />
-              </Box>
-            </Grid>
-          ) : selectedMember ? (
-            <Grid size={{ xs: 12 }}>
-              <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
-                <CardContent
-                  sx={{
-                    padding: '0 !important',
-                  }}
-                >
-                  <Grid container spacing={2}>
-                    {/* Avatar on the left */}
-                    <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Avatar src={selectedMember.avatarUrl} sx={{ width: 80, height: 80 }} />
-                    </Grid>
+          {(() => {
+            if (loadingMember) {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <Box display="flex" justifyContent="center" alignItems="center">
+                    <CircularProgress size={20} />
+                  </Box>
+                </Grid>
+              );
+            }
 
-                    {/* Member details on the right */}
-                    <Grid size={{ xs: 12, md: 10 }}>
-                      <Grid container spacing={1}>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                          <Typography fontWeight={600}>Member Name</Typography>
-                          <Typography>{selectedMember.name}</Typography>
+            if (selectedMember) {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
+                    <CardContent sx={{ padding: '0 !important' }}>
+                      <Grid container spacing={2}>
+                        {/* Avatar */}
+                        <Grid
+                          size={{ xs: 12, md: 2 }}
+                          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          <Avatar src={selectedMember.avatarUrl} sx={{ width: 80, height: 80 }} />
                         </Grid>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                          <Typography fontWeight={600}>Member ID</Typography>
-                          <Typography>{selectedMember.memberId}</Typography>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                          <Typography fontWeight={600}>Email</Typography>
-                          <Typography>{selectedMember.email}</Typography>
-                        </Grid>
-                        {selectedMember.role === 'Student' && (
-                          <>
+
+                        {/* Details */}
+                        <Grid size={{ xs: 12, md: 10 }}>
+                          <Grid container spacing={1}>
                             <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Roll No</Typography>
-                              <Typography>{selectedMember.rollNo}</Typography>
+                              <Typography fontWeight={600}>Member Name</Typography>
+                              <Typography>{selectedMember.name}</Typography>
                             </Grid>
                             <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>GR No</Typography>
-                              <Typography>{selectedMember.grNo}</Typography>
+                              <Typography fontWeight={600}>Member ID</Typography>
+                              <Typography>{selectedMember.memberId}</Typography>
                             </Grid>
                             <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Class/Division</Typography>
-                              <Typography>
-                                {selectedMember.class}-{selectedMember.division}
-                              </Typography>
+                              <Typography fontWeight={600}>Email</Typography>
+                              <Typography>{selectedMember.email || 'N/A'}</Typography>
                             </Grid>
-                          </>
-                        )}
-                        <Grid size={{ xs: 12, md: 4 }}>
-                          <Typography fontWeight={600}>Phone</Typography>
-                          <Typography>{selectedMember.contactNo}</Typography>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                          <Typography fontWeight={600}>Member Type</Typography>
-                          <Typography>{selectedMember.role}</Typography>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                          <Typography fontWeight={600}>Join Date</Typography>
-                          <Typography>{selectedMember.joinDate}</Typography>
+
+                            {selectedMember.role === 'Student' && (
+                              <>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>Roll No</Typography>
+                                  <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>GR No</Typography>
+                                  <Typography>{selectedMember.grNo || 'N/A'}</Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>Class/Division</Typography>
+                                  <Typography>
+                                    {selectedMember.class || 'N/A'} -{' '}
+                                    {selectedMember.division || 'N/A'}
+                                  </Typography>
+                                </Grid>
+                              </>
+                            )}
+
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Phone</Typography>
+                              <Typography>{selectedMember.contactNo || 'N/A'}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Member Type</Typography>
+                              <Typography>{selectedMember.role}</Typography>
+                            </Grid>
+                            <Grid size={{ xs: 12, md: 4 }}>
+                              <Typography fontWeight={600}>Join Date</Typography>
+                              <Typography>{selectedMember.joinDate || 'N/A'}</Typography>
+                            </Grid>
+                          </Grid>
                         </Grid>
                       </Grid>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
-          ) : null}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              );
+            }
+
+            if (formik.values.memberId !== '') {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <div
+                    style={{
+                      padding: '12px',
+                      backgroundColor: '#ffebee',
+                      borderRadius: '4px',
+                      border: '1px solid #f44336',
+                      color: '#d32f2f',
+                    }}
+                  >
+                    Member with ID or name &quot;{formik.values.memberId}&quot; not found.
+                    <br />
+                    Available IDs:{' '}
+                    {memberData.map((m: any) => m.memberId).join(', ') || 'No members available'}
+                  </div>
+                </Grid>
+              );
+            }
+            return null;
+          })()}
 
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>
@@ -349,7 +410,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                 value={formik.values.issueDate}
                 onChange={(newValue) => {
                   formik.setFieldValue('issueDate', newValue);
-                  formik.setFieldTouched('issueDate', true);
+                  formik.setFieldTouched('issueDate', false);
                 }}
                 minDate={dayjs(currentYear?.startDate)}
                 maxDate={dayjs(currentYear?.endDate)}
@@ -374,7 +435,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                 value={formik.values.dueDate}
                 onChange={(newValue) => {
                   formik.setFieldValue('dueDate', newValue);
-                  formik.setFieldTouched('dueDate', true);
+                  formik.setFieldTouched('dueDate', false);
                 }}
                 minDate={dayjs(formik.values.issueDate || currentYear?.startDate)} // ensures due date is after issue date
                 maxDate={dayjs(currentYear?.endDate)}

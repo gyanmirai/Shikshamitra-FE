@@ -6,7 +6,6 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
@@ -35,7 +34,6 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { audienceOptions } from '../schoolannouncementForm';
 import { getClassInitialValues } from './getClassInitialValues';
 import { classWiseValidationSchema } from '../validationSchema';
 
@@ -50,11 +48,13 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
   const theme = useTheme();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  // Redux state for current board, medium and medium setter
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  console.log('initialValues---', initialValues);
-  // State to store list of all organizations/branches
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  const {
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
 
   // State to store list of all classes/standards
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -77,27 +77,6 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
       onClose(null, true);
     },
   });
-
-  // Update organizations list when medium changes
-  useEffect(() => {
-    const orgs = cloneDeep(medium?.educationMediumStages || []);
-
-    // Add "All" if not present
-    if (!orgs.some((org: Organization) => org.id === 'all')) {
-      orgs.unshift({
-        id: 'all',
-        name: 'All',
-        creationTime: '',
-        creatorId: '',
-        lastModificationTime: '',
-        lastModifierId: '',
-        educationMediumId: '',
-        standards: [],
-      });
-    }
-
-    setAllOrganization(orgs);
-  }, [medium?.educationMediumStages]);
 
   // Update divisions list when class selection changes
   useEffect(() => {
@@ -136,29 +115,17 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
 
   // Update classes list when organization selection changes
   useEffect(() => {
-    if (formik.values.organizations.length === 0) {
-      setAllClass([]);
-      if (!isEdit) formik.setFieldValue('classes', []); // only reset on create
-      return;
-    }
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
-    const mergedStandards = formik.values.organizations.includes('all')
-      ? allOrganization
-          .filter((org: any) => org.id !== 'all')
-          .flatMap((org: any) => org.standards || [])
-      : formik.values.organizations
-          .map(
-            (orgId: string) =>
-              allOrganization.find((org: any) => org?.id === orgId)?.standards || []
-          )
-          .flat();
-
-    const withAll = [{ id: 'all', name: 'All', divisions: [] }, ...mergedStandards];
+    const withAll = allClasses.length
+      ? [{ id: 'all', name: 'All', divisions: [] }, ...allClasses]
+      : [];
     setAllClass(withAll);
 
     if (!isEdit) formik.setFieldValue('classes', []); // only reset on create
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allOrganization, formik.values.organizations]);
+  }, []);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -308,65 +275,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
 
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Audience Selction">
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.organizations && formik.errors.organizations)}
-                  >
-                    <CustomSelect
-                      options={allOrganization}
-                      label="Organization *"
-                      multiple
-                      value={formik.values.organizations}
-                      onChange={(val) => {
-                        const value = val as string[];
-
-                        const allOrgIds = allOrganization.map((org: any) => org.id);
-                        const isAllClicked = value.includes('all');
-                        const wasAllPreviouslySelected = (
-                          formik.values.organizations as string[]
-                        ).includes('all');
-
-                        let selectedOrganizations: string[] = [];
-
-                        if (isAllClicked && !wasAllPreviouslySelected) {
-                          selectedOrganizations = [
-                            'all',
-                            ...allOrgIds.filter((id) => id !== 'all'),
-                          ];
-                        } else if (!isAllClicked && wasAllPreviouslySelected) {
-                          selectedOrganizations = [];
-                        } else if (isAllClicked && wasAllPreviouslySelected) {
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          if (selectedWithoutAll.length === allOrgIds.length) {
-                            selectedOrganizations = ['all', ...allOrgIds];
-                          } else {
-                            selectedOrganizations = selectedWithoutAll;
-                          }
-                        } else {
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-                          if (selectedWithoutAll.length === allOrgIds.length) {
-                            selectedOrganizations = ['all', ...allOrgIds];
-                          } else {
-                            selectedOrganizations = selectedWithoutAll;
-                          }
-                        }
-
-                        formik.setFieldValue('organizations', selectedOrganizations);
-                      }}
-                      onBlur={() => formik.setFieldTouched('organizations', true)}
-                      error={formik.touched.organizations && Boolean(formik.errors.organizations)}
-                      helperText={
-                        (formik.touched.organizations && formik.errors.organizations) as string
-                      }
-                      labelKey="name"
-                      valueKey="id"
-                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                      disabled={!medium}
-                    />
-                  </ShakingTextField>
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.classes && formik.errors.classes)}>
                     <CustomSelect
                       options={allClass}
@@ -426,7 +335,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
 
                 {!(formik.values.classes as string[]).includes('all') &&
                   formik.values.classes.length > 0 && (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 6 }}>
                       <ShakingTextField
                         error={!!(formik.touched.divisions && formik.errors.divisions)}
                       >
@@ -452,31 +361,6 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
                       </ShakingTextField>
                     </Grid>
                   )}
-
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
-                    <CustomSelect
-                      label="Audience *"
-                      options={audienceOptions}
-                      multiple
-                      value={formik.values.audience.map((aud) => aud.name)} // show only names in the UI
-                      onChange={(val) => {
-                        const selectedObjects = audienceOptions.filter((opt) =>
-                          (val as string[]).includes(opt.name)
-                        );
-                        formik.setFieldValue('audience', selectedObjects);
-                      }}
-                      labelKey="name"
-                      formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
-                      error={formik.touched.audience && Boolean(formik.errors.audience)}
-                      helperText={
-                        Array.isArray(formik.errors.audience)
-                          ? formik.errors.audience.join(', ')
-                          : (formik.touched.audience && formik.errors.audience) || undefined
-                      }
-                    />
-                  </ShakingTextField>
-                </Grid>
               </SectionCard>
             </Grid>
 

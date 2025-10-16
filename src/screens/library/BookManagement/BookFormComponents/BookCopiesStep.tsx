@@ -53,7 +53,7 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
             inputProps={{ 'aria-label': 'controlled' }}
           />
           <Typography sx={{ mr: 2 }} variant="body2">
-            Do you Want to Auto-Generate Accession No?
+            Do you Want to Auto-Generate Accession No.?
           </Typography>
         </Box>
         <Box sx={{ display: 'flex' }}>
@@ -94,7 +94,11 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
                         sx={{ textAlign: 'justify' }}
                         title="Enter the unique Accession Number for this copy. Only letters, numbers, and hyphens are allowed. Maximum 12 characters."
                       >
-                        <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+                        <Iconify
+                          icon="lucide:info"
+                          sx={{ cursor: 'pointer', width: 15, height: 15 }}
+                          color="info.main"
+                        />
                       </CustomTooltip>
                     </Box>
                   );
@@ -294,7 +298,7 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
                           updated[row.copyNo - 1].section = val as string;
                           setCopies(updated);
                           formik.setFieldValue('copies', updated);
-                          formik.setFieldTouched(`copies.${row.copyNo - 1}.section`, true);
+                          formik.setFieldTouched(`copies.${row.copyNo - 1}.section`, false);
                         }}
                         helperText={
                           (formik?.touched?.copies?.[row.copyNo - 1]?.section &&
@@ -352,7 +356,7 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
                           updated[row.copyNo - 1].shelf = val as string;
                           setCopies(updated);
                           formik.setFieldValue('copies', updated);
-                          formik.setFieldTouched(`copies.${row.copyNo - 1}.shelf`, true);
+                          formik.setFieldTouched(`copies.${row.copyNo - 1}.shelf`, false);
                         }}
                         helperText={
                           (formik?.touched?.copies?.[row.copyNo - 1]?.shelf &&
@@ -380,6 +384,8 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
                 id: 'barcode',
                 label: 'Barcode',
                 align: 'left',
+                isFilter: false,
+                isSort: false,
                 minWidth: 100,
                 render: (_, row) =>
                   row.accessionNo ? (
@@ -401,6 +407,8 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
               {
                 id: '',
                 label: 'Print',
+                isFilter: false,
+                isSort: false,
                 render: (_, row) => (
                   <IconButton onClick={() => {}}>
                     <Iconify icon={GlobalIcons.printer} />

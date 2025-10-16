@@ -78,7 +78,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Basic Information">
-                <Grid size={{ xs: 12, md: 6, sm: 3 }}>
+                <Grid size={{ xs: 12, md: 4, sm: 3 }}>
                   <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
                     <TextField
                       fullWidth
@@ -104,27 +104,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                   </ShakingTextField>
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 6, sm: 3 }}>
-                  <ShakingTextField error={!!(formik.touched.type && formik.errors.type)}>
-                    <CustomSelect
-                      label="Announcement Type *"
-                      options={[
-                        { value: 'academic', label: 'Academic' },
-                        { value: 'administrative', label: 'Administrative' },
-                        { value: 'extracurriculam', label: 'Extracurriculam' },
-                      ]}
-                      value={formik.values.type}
-                      onChange={(val) => formik.setFieldValue('type', val)}
-                      formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
-                      error={formik.touched.type && Boolean(formik.errors.type)}
-                      helperText={
-                        formik.touched.type && formik.errors.type ? formik.errors.type : undefined
-                      }
-                    />
-                  </ShakingTextField>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 6, sm: 3 }}>
+                <Grid size={{ xs: 12, md: 4, sm: 3 }}>
                   <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                     <CustomSelect
                       label="Audience *"
@@ -187,7 +167,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                     />
                   </ShakingTextField>
                 </Grid>
-                <Grid size={{ xs: 12, md: 6, sm: 3 }}>
+                <Grid size={{ xs: 12, md: 4, sm: 3 }}>
                   <ShakingTextField
                     error={!!(formik.touched.importance_level && formik.errors.importance_level)}
                   >
