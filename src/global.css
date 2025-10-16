@@ -41,6 +41,7 @@
 *************************************** */
 /* scrollbar */
 @import './components/scrollbar/styles.css';
+@import 'leaflet/dist/leaflet.css';
 
 /** **************************************
 * Baseline

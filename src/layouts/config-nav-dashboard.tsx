@@ -1568,7 +1568,7 @@ const transportModule = {
         },
         {
           title: 'Route Management',
-          path: '/transport/routes-schedules',
+          path: '/transport/routeManagement',
           _action: 'routes-schedules',
           shortcutKey: 'Alt+T+2',
           shortcutKeyName: 'Alt+T+2',
@@ -1579,6 +1579,13 @@ const transportModule = {
           _action: 'vehicle-management',
           shortcutKey: 'Alt+T+3',
           shortcutKeyName: 'Alt+T+3',
+        },
+        {
+          title: 'Stop Management',
+          path: '/transport/stopManagement',
+          _action: 'stop-management',
+          shortcutKey: 'Alt+T+4',
+          shortcutKeyName: 'Alt+T+4',
         },
         {
           title: ' Transport Staff Management',
