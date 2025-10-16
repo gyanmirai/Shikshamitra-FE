@@ -911,13 +911,13 @@ const communicationModule = {
           shortcutKey: 'Alt+C+1',
           shortcutKeyName: 'Alt+C+1',
         },
-        {
-          title: 'Conversation',
-          path: '/communication/messages',
-          _action: 'conversation',
-          shortcutKey: 'Alt+C+M',
-          shortcutKeyName: 'Alt+C+M',
-        },
+        // {
+        //   title: 'Conversation',
+        //   path: '/communication/messages',
+        //   _action: 'conversation',
+        //   shortcutKey: 'Alt+C+M',
+        //   shortcutKeyName: 'Alt+C+M',
+        // },
         {
           title: 'Announcements',
           path: '/communication/announcement',

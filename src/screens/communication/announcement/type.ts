@@ -154,6 +154,7 @@ export interface ISchoolWiseAnnouncementTableProps {
 }
 
 export interface IClassWiseAnnouncementTableProps {
+  setOpen: (value: boolean) => void;
   data: IClassWiseAnnouncement[];
   onEdit: (row: IClassWiseAnnouncement) => void;
   handleSwitchChange: (row: IClassWiseAnnouncement) => void;

@@ -141,7 +141,7 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
         </Button>
       </Stack>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={2}>
         {Object.keys(groupedBooks)
           .sort()
           .map((letter) => (
@@ -150,7 +150,7 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
                 sx={{
                   borderRadius: 3,
                   overflow: 'hidden',
-                  boxShadow: 'var(--shadows-8)',
+                  boxShadow: 'var(--shadows-5)',
                   '&:before': { display: 'none' },
                 }}
               >

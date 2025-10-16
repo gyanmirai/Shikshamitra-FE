@@ -47,7 +47,7 @@ const Events = () => {
           { name: 'Events' },
           { name: currentActiveComponent?.label },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
       />
       <Card
         sx={{
@@ -65,7 +65,7 @@ const Events = () => {
           ))}
         </CustomTabs>
       </Card>
-      <Box px={1} pt={2}>
+      <Box px={1} pt={1}>
         {currentActiveComponent?.component && (
           <currentActiveComponent.component
             searchParams={searchParams}

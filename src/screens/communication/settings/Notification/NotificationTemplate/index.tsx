@@ -57,6 +57,7 @@ const TemplatesManagement = (props: TabComponentType) => {
           description="Create or update message templates to be used in announcements, events, or reminders."
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
+            { name: 'Notifications', href: '/communication/notification/send-notification' },
             {
               name: 'Templates',
               onClick(e) {

@@ -4,8 +4,9 @@ import { debounce } from 'lodash';
 import React, { useCallback } from 'react';
 import { Editor } from 'src/components/editor';
 import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Grid, Card, TextField, Typography, Autocomplete } from '@mui/material';
+import { Box, Grid, TextField, Typography, Autocomplete } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetImportanceLevelOptionsQuery } from 'src/redux/communication/setting/importanceLevel';
 import { useGetNotificationTemplatesQuery } from 'src/redux/communication/notification/notificationTemplateApi';
@@ -31,7 +32,7 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
 
   return (
     <Grid container spacing={2}>
-      <Grid size={{ xs: 8 }} sx={{ height: '100%' }}>
+      <Grid size={{ xs: 6 }} sx={{ height: '100%' }}>
         <SectionCard title="Compose Message">
           <Grid size={{ xs: 12, md: 6 }}>
             <Autocomplete
@@ -47,7 +48,7 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Template *"
+                  label="Template"
                   size="small"
                   fullWidth
                   error={
@@ -61,10 +62,10 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
                 />
               )}
               onChange={(e, value) => {
-                formik.setFieldValue('selectedTemplate.id',      value?.id       ?? '');
+                formik.setFieldValue('selectedTemplate.id', value?.id ?? '');
                 formik.setFieldValue('selectedTemplate.templateName', value?.templateName ?? '');
-                formik.setFieldValue('selectedTemplate.subject',  value?.subject  ?? '');
-                formik.setFieldValue('selectedTemplate.message',  value?.message  ?? '');
+                formik.setFieldValue('selectedTemplate.subject', value?.subject ?? '');
+                formik.setFieldValue('selectedTemplate.message', value?.message ?? '');
               }}
               onBlur={() => formik.setFieldTouched('selectedTemplate.id', true)}
             />
@@ -94,137 +95,81 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <TextField
-              label="Subject *"
-              size="small"
-              fullWidth
-              value={formik.values.selectedTemplate?.subject}
-              disabled
+            <ShakingTextField
               error={
-                formik.touched.selectedTemplate?.subject &&
-                Boolean(formik.errors.selectedTemplate?.subject)
+                !!(
+                  formik.touched.selectedTemplate?.subject &&
+                  formik.errors.selectedTemplate?.subject
+                )
               }
-              helperText={
-                formik.touched.selectedTemplate?.subject && formik.errors.selectedTemplate?.subject
-              }
-            />
+            >
+              <TextField
+                label="Subject *"
+                size="small"
+                fullWidth
+                value={formik.values.selectedTemplate?.subject}
+                disabled={!!formik.values.selectedTemplate?.templateName}
+                onChange={(e) => {
+                  formik.setFieldValue('selectedTemplate.subject', e.target.value);
+                }}
+                error={
+                  formik.touched.selectedTemplate?.subject &&
+                  Boolean(formik.errors.selectedTemplate?.subject)
+                }
+                helperText={
+                  formik.touched.selectedTemplate?.subject &&
+                  formik.errors.selectedTemplate?.subject
+                }
+              />
+            </ShakingTextField>
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <Editor
-              value={formik.values.selectedTemplate?.message}
-              onChange={(value) => handleEditorChange(value, formik.setFieldValue)}
-              placeholder="Message"
+            <ShakingTextField
               error={
                 !!(
                   formik.touched.selectedTemplate?.message &&
                   formik.errors.selectedTemplate?.message
                 )
               }
-              editable={!formik.values.selectedTemplate?.templateName}
-              helperText={
-                (formik.touched.selectedTemplate?.message &&
-                  formik.errors.selectedTemplate?.message) ||
-                ''
-              }
-            />
+            >
+              <Editor
+                value={formik.values.selectedTemplate?.id}
+                onChange={(value) => handleEditorChange(value, formik.setFieldValue)}
+                placeholder="Message"
+                error={
+                  !!(
+                    formik.touched.selectedTemplate?.message &&
+                    formik.errors.selectedTemplate?.message
+                  )
+                }
+                editable={!formik.values.selectedTemplate?.templateName}
+                helperText={
+                  (formik.touched.selectedTemplate?.message &&
+                    formik.errors.selectedTemplate?.message) ||
+                  ''
+                }
+              />
+            </ShakingTextField>
           </Grid>
         </SectionCard>
       </Grid>
 
-      <Grid size={{ xs: 4 }} sx={{ height: '100%' }}>
-        <SectionCard title="Quick State">
-          <Grid size={{ xs: 12 }}>
-            <Card
-              sx={{
-                borderColor: 'success.main',
-                bgcolor: 'success.lighter',
-                borderRadius: 3,
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                height: 100,
-              }}
-            >
-              <Typography variant="h6" color="text.secondary" fontWeight={600}>
-                Recipients Selected
-              </Typography>
-              <Typography variant="h6" color="success.main" fontWeight={700}>
-                {formik.values.members?.filter((m) => m.isSelect).length}
-              </Typography>
-            </Card>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Card
-              sx={{
-                borderColor: 'warning.main',
-                bgcolor: 'warning.lighter',
-                borderRadius: 3,
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                height: 100,
-              }}
-            >
-              <Typography variant="h6" color="text.secondary" fontWeight={600}>
-                Channels Active
-              </Typography>
-              <Typography variant="h6" color="warning.main" fontWeight={700}>
-                {formik.values.channels.length}
-              </Typography>
-            </Card>
-          </Grid>
-        </SectionCard>
-      </Grid>
-      <Grid size={{ xs: 12 }}>
+      <Grid size={{ xs: 6 }} sx={{ height: '100%' }}>
         <SectionCard title="Preview">
           <Grid size={{ xs: 12 }}>
-            <Box display="flex" alignItems="center">
-              <Typography color="text.secondary">Channels :</Typography>
-              <Typography sx={{ fontWeight: 300 }} variant="body2">
-                {' '}
-                {formik.values.channels.join(', ')}
-              </Typography>
-            </Box>
+            <Typography
+              variant="body1"
+              color="text.primary"
+              sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+            >
+              {formik.values.selectedTemplate?.subject || 'Subject'}
+            </Typography>
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <TextField
-              label="Subject *"
-              size="small"
-              fullWidth
-              value={formik.values.selectedTemplate?.subject}
-              disabled
-              error={
-                formik.touched.selectedTemplate?.subject &&
-                Boolean(formik.errors.selectedTemplate?.subject)
-              }
-              helperText={
-                formik.touched.selectedTemplate?.subject && formik.errors.selectedTemplate?.subject
-              }
-            />
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Editor
-              value={formik.values.selectedTemplate?.message}
-              onChange={(value) => handleEditorChange(value, formik.setFieldValue)}
-              placeholder="Message"
-              error={
-                !!(
-                  formik.touched.selectedTemplate?.message &&
-                  formik.errors.selectedTemplate?.message
-                )
-              }
-              editable={false}
-              helperText={
-                (formik.touched.selectedTemplate?.message &&
-                  formik.errors.selectedTemplate?.message) ||
-                ''
-              }
+            <Box
+              component="p"
+              sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+              dangerouslySetInnerHTML={{ __html: formik.values.selectedTemplate?.message }}
             />
           </Grid>
         </SectionCard>

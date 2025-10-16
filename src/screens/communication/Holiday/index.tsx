@@ -63,12 +63,12 @@ const HolidayManagement = (props: TabComponentType) => {
     <Box height="100%" display="flex" flexDirection="column">
       {open ? (
         <CustomBreadcrumbs
-          heading="Add Holiday"
-          description="Create or update holidays with details such as holiday name, type, and date range."
+          heading={editingHoliday ? 'Update Holiday' : 'Add Holiday'}
+          description={`${editingHoliday ? 'Update' : 'Create'} holidays with details such as holiday name, type, and date range.`}
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Holidays' },
-            { name: 'Add Holiday' },
+            { name: editingHoliday ? 'Update Holiday' : 'Add Holiday' },
           ]}
           sx={{ px: 1, mb: 2 }}
           isBack
@@ -106,6 +106,7 @@ const HolidayManagement = (props: TabComponentType) => {
         </Card>
       ) : (
         <HolidayTable
+          setOpen={setOpen}
           data={holidayData}
           onEdit={(row) => {
             setOpen(true);
@@ -129,7 +130,12 @@ const HolidayManagement = (props: TabComponentType) => {
           confirm_dialog.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete this holiday?"
+        content={
+          <>
+            Are you sure you want to delete{' '}
+            <strong>&apos;{editingHoliday?.holidayName}&apos;</strong> Holiday?
+          </>
+        }
         action={
           <Button variant="contained" color="error" onClick={() => {}} size="small">
             Yes
@@ -146,8 +152,8 @@ const HolidayManagement = (props: TabComponentType) => {
         title="Publish"
         content={
           <>
-            Are you sure you want to publish holiday{' '}
-            <strong>{publishingHoliday?.holidayName}</strong>?
+            Are you sure you want to publish{' '}
+            <strong>&apos;{publishingHoliday?.holidayName}&apos;</strong> Holiday?
           </>
         }
         action={

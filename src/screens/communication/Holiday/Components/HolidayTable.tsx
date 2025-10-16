@@ -17,7 +17,13 @@ import {
 
 import type { IHoliday, IHolidayTableProps } from './type';
 
-const HolidayTable: React.FC<IHolidayTableProps> = ({ data, onEdit, onDelete, onPublish }) => {
+const HolidayTable: React.FC<IHolidayTableProps> = ({
+  setOpen,
+  data,
+  onEdit,
+  onDelete,
+  onPublish,
+}) => {
   // counts for tabs
   const holidayCounts = useMemo(
     () => ({
@@ -98,6 +104,27 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({ data, onEdit, onDelete, on
       {tabs.value === 'All' ? (
         <CustomizableTable
           tableId="holiday-table-all"
+          noDataText={
+            <>
+              No holiday data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Holiday
+              </Box>
+            </>
+          }
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
             { id: 'holidayType', label: 'Type', align: 'left' },
@@ -154,7 +181,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({ data, onEdit, onDelete, on
             },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               isFilter: false,
               sticky: true,
@@ -175,6 +202,27 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({ data, onEdit, onDelete, on
       ) : tabs.value === HolidayStatus.Ongoing ? (
         <CustomizableTable
           tableId="holiday-table-ongoing"
+          noDataText={
+            <>
+              No holiday data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Holiday
+              </Box>
+            </>
+          }
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
             { id: 'holidayType', label: 'Type', align: 'left' },
@@ -219,6 +267,27 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({ data, onEdit, onDelete, on
       ) : tabs.value === HolidayStatus.Upcoming ? (
         <CustomizableTable
           tableId="holiday-table-upcoming"
+          noDataText={
+            <>
+              No holiday data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Holiday
+              </Box>
+            </>
+          }
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
             { id: 'holidayType', label: 'Type', align: 'left' },
@@ -254,7 +323,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({ data, onEdit, onDelete, on
             },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               isFilter: false,
               sticky: true,
@@ -275,6 +344,27 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({ data, onEdit, onDelete, on
       ) : tabs.value === HolidayStatus.Completed ? (
         <CustomizableTable
           tableId="holiday-table-completed"
+          noDataText={
+            <>
+              No holiday data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Holiday
+              </Box>
+            </>
+          }
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
             { id: 'holidayType', label: 'Type', align: 'left' },
@@ -310,7 +400,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({ data, onEdit, onDelete, on
             },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               sticky: true,
               isSort: false,
               isFilter: false,

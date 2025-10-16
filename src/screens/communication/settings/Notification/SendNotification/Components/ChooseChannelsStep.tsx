@@ -1,8 +1,8 @@
 import type { FormikProps } from 'formik';
 
 import React from 'react';
-import { Grid, Button } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Grid, Checkbox, FormHelperText, FormControlLabel } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetDeliveryChannelTypeOptionsQuery } from 'src/redux/communication/setting/deliveryChannelApi';
 
@@ -32,26 +32,31 @@ const ChooseChannelsStep = ({ formik }: { formik: FormikProps<INotificationSendS
         {deliveryChannelData?.map((channel: IDeliveryChannel) => {
           const isSelected = formik.values.channels?.includes(channel.deliveryChannel);
           return (
-            <Grid size={{ sm: 4 }} key={channel.deliveryChannel}>
-              <Button
-                variant={isSelected ? 'contained' : 'outlined'}
-                onClick={() => handleToggle(channel.deliveryChannel)}
-                sx={{
-                  backgroundColor: isSelected ? 'primary.main' : 'transparent',
-                  borderColor: isSelected ? 'primary.main' : channel.color,
-                  color: isSelected ? '#fff' : channel.color,
-                  textTransform: 'none',
-                  '&:hover': {
-                    backgroundColor: isSelected ? 'primary.main' : 'rgba(0,0,0,0.05)',
-                  },
-                  width: 300,
-                }}
-              >
-                {channel.deliveryChannel}
-              </Button>
+            <Grid size={{ sm: 3 }} key={channel.deliveryChannel}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={isSelected}
+                    onChange={() => handleToggle(channel.deliveryChannel)}
+                  />
+                }
+                label={channel.deliveryChannel}
+              />
             </Grid>
           );
         })}
+        {formik.errors.channels && (
+          <FormHelperText
+            error
+            sx={{
+              left: 0,
+              fontSize: '10px !important',
+              marginLeft: 0, // 🚀 removes default left space
+            }}
+          >
+            {formik.errors.channels}
+          </FormHelperText>
+        )}
       </Grid>
     </SectionCard>
   );

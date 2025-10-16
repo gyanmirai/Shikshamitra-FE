@@ -5,7 +5,6 @@
     "title": "School Sports Day Announcement",
     "description": "Annual Sports Day will be held on 25th September. All students are required to wear their house uniforms.",
     "audience": [
-      { "value": "Students", "name": "Students", "color": "#1890ff" },
       { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
       { "value": "Parents", "name": "Parents", "color": "#faad14" }
     ],
@@ -32,7 +31,6 @@
     "title": "Class 10 Parent-Teacher Meeting",
     "description": "Parent-Teacher Meeting for Class 10 students will be held on 20th September at 10 AM in the school auditorium.",
     "audience": [
-      { "value": "Students", "name": "Students", "color": "#1890ff" },
       { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
       { "value": "Parents", "name": "Parents", "color": "#faad14" }
     ],
@@ -59,7 +57,6 @@
     "title": "Holiday Notice - Gandhi Jayanti",
     "description": "School will remain closed on 2nd October in observance of Gandhi Jayanti.",
     "audience": [
-      { "value": "Students", "name": "Students", "color": "#1890ff" },
       { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
       { "value": "Parents", "name": "Parents", "color": "#faad14" }
     ],

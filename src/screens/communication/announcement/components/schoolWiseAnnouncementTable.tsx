@@ -161,22 +161,26 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             },
             {
               id: 'startDate',
-              label: 'Start Date',
+              label: 'Start Date/Time',
               filterType: 'date',
               align: 'left',
               minWidth: 120,
               render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+                <Typography variant="caption" fontSize="13px">
+                  {dayjs(value).format('DD-MM-YYYY hh:mm')}
+                </Typography>
               ),
             },
             {
               id: 'endDate',
-              label: 'End Date',
+              label: 'End Date/Time',
               filterType: 'date',
               align: 'left',
               minWidth: 120,
               render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+                <Typography variant="caption" fontSize="13px">
+                  {dayjs(value).format('DD-MM-YYYY hh:mm')}
+                </Typography>
               ),
             },
             {
@@ -207,9 +211,9 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             },
             {
               id: 'active',
-              label: 'Active',
+              label: 'Publish',
               align: 'left',
-              minWidth: 40,
+              minWidth: 50,
               isFilter: false,
               sticky: true,
               isSort: false,
@@ -222,7 +226,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
                     : theme.palette.text.secondary;
 
                 return (
-                  <CustomTooltip title={value === 0 ? 'Published' : 'Draft'} arrow placement="left">
+                  <CustomTooltip title={value === 0 ? 'Draft' : 'Published'} arrow placement="left">
                     <span>
                       <IconButton
                         onClick={() =>
@@ -268,7 +272,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               isFilter: false,
               sticky: true,
@@ -334,7 +338,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             },
             {
               id: 'startDate',
-              label: 'Start Date',
+              label: 'Start Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -343,7 +347,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             },
             {
               id: 'endDate',
-              label: 'End Date',
+              label: 'End Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -353,8 +357,53 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             { id: 'createdBy', label: 'Created By', align: 'left' },
             { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
             {
+              id: 'active',
+              label: 'Publish',
+              align: 'left',
+              minWidth: 50,
+              isFilter: false,
+              sticky: true,
+              isSort: false,
+              filterType: 'enum',
+              enumOptions: AnnouncementStatusOptions,
+              render(value, row) {
+                const statusColor =
+                  value === AnnouncementStatus.Published
+                    ? theme.palette.success.main
+                    : theme.palette.text.secondary;
+
+                return (
+                  <CustomTooltip title={value === 0 ? 'Draft' : 'Published'} arrow placement="left">
+                    <span>
+                      <IconButton
+                        onClick={() =>
+                          value === AnnouncementStatus.Draft &&
+                          onPublish(row as ISchoolWiseAnnouncement)
+                        }
+                        sx={{
+                          p: 0.6,
+                          borderRadius: '50%',
+                          backgroundColor: 'rgba(0,0,0,0.06)',
+                          '&:hover': {
+                            transform: 'scale(1.1)',
+                            backgroundColor: 'rgba(0,0,0,0.08)',
+                          },
+                        }}
+                        disabled={value === AnnouncementStatus.Published}
+                      >
+                        <Iconify
+                          icon={GlobalIcons.tick}
+                          sx={{ width: 20, height: 20, color: statusColor }}
+                        />
+                      </IconButton>
+                    </span>
+                  </CustomTooltip>
+                );
+              },
+            },
+            {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               isFilter: false,
               sticky: true,
@@ -420,7 +469,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             },
             {
               id: 'startDate',
-              label: 'Start Date',
+              label: 'Start Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -429,7 +478,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             },
             {
               id: 'endDate',
-              label: 'End Date',
+              label: 'End Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -440,7 +489,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               isFilter: false,
               sticky: true,
@@ -448,8 +497,10 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
                 <ThreeDotsActions
                   placement="right-top"
                   showViewIcon
+                  showDeleteIcon
                   showThreeDots={false}
                   handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
+                  handleDeleteClick={() => onDelete(row as ISchoolWiseAnnouncement)}
                 />
               ),
             },
@@ -502,7 +553,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             },
             {
               id: 'startDate',
-              label: 'Start Date',
+              label: 'Start Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -511,7 +562,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             },
             {
               id: 'endDate',
-              label: 'End Date',
+              label: 'End Date/Time',
               filterType: 'date',
               align: 'left',
               render: (value) => (
@@ -522,7 +573,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
             {
               id: 'action',
-              label: 'Action',
+              label: 'Actions',
               isSort: false,
               isFilter: false,
               sticky: true,

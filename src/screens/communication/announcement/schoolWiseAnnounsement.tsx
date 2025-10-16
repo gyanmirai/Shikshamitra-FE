@@ -11,17 +11,19 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetSchoolWiseAnnouncementsQuery } from 'src/redux/communication/announcement/schoolWiseAnnouncement';
 import {
   Box,
   Card,
   Button,
+  Typography,
   // eslint-disable-next-line import/no-duplicates
 } from '@mui/material';
-import { useGetSchoolWiseAnnouncementsQuery } from 'src/redux/communication/announcement/schoolWiseAnnouncement';
 
 import AnnouncementForm from './schoolannouncementForm';
 import SchoolWiseAnnouncementTable from './components/schoolWiseAnnouncementTable';
@@ -87,8 +89,12 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
     <Box height="100%" display="flex" flexDirection="column">
       {open ? (
         <CustomBreadcrumbs
-          heading="Add Announcement"
-          description="Create or update school-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff."
+          heading={editingAnnouncement ? 'Update Announcement' : 'Add Announcement'}
+          description={
+            editingAnnouncement
+              ? 'Update this school-wide announcement with revised messages, event details, or notifications. Efficiently share updated information with students, teachers, and staff.'
+              : 'Create or update school-wide announcements with important messages, event details, or notifications. Share information efficiently with students, teachers, and staff.'
+          }
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Announcements' },
@@ -100,7 +106,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
                 setEditingAnnouncement(null);
               },
             },
-            { name: 'Add Announcement' },
+            { name: editingAnnouncement ? 'Update Announcement' : 'Add Announcement' },
           ]}
           sx={{ px: 1, mb: 2 }}
           isBack
@@ -173,8 +179,8 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <strong>{deleteAnnouncement?.title}</strong>{' '}
-            announcement?
+            Are you sure you want to delete the{' '}
+            <strong>&apos;{deleteAnnouncement?.title}&apos;</strong> announcement?
           </>
         }
         action={
@@ -185,7 +191,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
               confirm_dialog.onFalse();
               setDeleteAnnouncement(null);
               shikshaMitraToast.success({
-                message: `Announcement ${deleteAnnouncement?.title} deleted successfully.`,
+                message: `Announcement : ${deleteAnnouncement?.title} deleted successfully.`,
               });
             }}
             size="small"
@@ -196,6 +202,7 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
       />
 
       <ConfirmDialog
+        icon="success"
         open={publish_modal.value}
         onClose={() => {
           publish_modal.onFalse();
@@ -204,8 +211,8 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         title="Publish"
         content={
           <>
-            Are you sure you want to publish announcement{' '}
-            <strong>{publishingAnnouncement?.title}</strong>?
+            Are you sure you want to publish{' '}
+            <strong>&apos;{publishingAnnouncement?.title}&apos; </strong>announcement?
           </>
         }
         action={
@@ -227,7 +234,19 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
       />
 
       <CustomDialog
-        title={`${viewAnnouncement?.title}`}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">{viewAnnouncement?.title}</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="View detailed information about this school-wide announcement, including message content, target audience, and publication status."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
         open={view_dialog.value}
         handleClose={() => {
           setViewAnnouncement(null);

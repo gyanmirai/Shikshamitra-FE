@@ -23,7 +23,7 @@ const NotificationTemplateTable: React.FC<ITemplateTableProps> = ({
       tableId="template-data-table"
       noDataText={
         <>
-          No Templates Found{' '}
+          No template data found.
           <Typography
             component="span"
             color="primary.main"
