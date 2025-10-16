@@ -44,10 +44,6 @@ const RouteFormStepper = ({
           shikshaMitraToast.success({
             message: `Stops for route "${values.routeName}" saved successfully.`,
           });
-        } else if (activeStep === 2) {
-          shikshaMitraToast.success({
-            message: `Vehicle assigned to route "${values.routeName}" successfully.`,
-          });
         }
 
         if (!isLastStep) {

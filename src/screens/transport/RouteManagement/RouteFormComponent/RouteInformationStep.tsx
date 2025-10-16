@@ -4,7 +4,12 @@ import { Grid, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  useGetLocationOptionsQuery,
+  useGetRouteMatcherOptionsQuery,
+} from 'src/redux/transport/vehicle-management/route-management-api';
 
 import type { IRoutePayload } from '../Components/type';
 
@@ -13,22 +18,15 @@ interface RouteInformationStepProps {
 }
 
 const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
-  // Mock data - replace with actual API calls
-  const routeTypeOptions = [
-    { value: 'pickup', label: 'Pickup' },
-    { value: 'drop', label: 'Drop' },
-    { value: 'both', label: 'Both' },
-  ];
+  const { data: routeTypeOptions = [] } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRouteMatcherOptionsQuery,
+  });
 
-  const locationOptions = [
-    { value: 'deep-darshan', label: 'Deep Darshan' },
-    { value: 'parvat-patiya', label: 'Parvat Patiya' },
-    { value: 'kamrej', label: 'Kamrej' },
-    { value: 'kapodara', label: 'Kapodara' },
-    { value: 'simadi', label: 'Simadi' },
-    { value: 'adajan', label: 'Adajan' },
-    { value: 'godadara', label: 'Godadara' },
-  ];
+  const { data: locationOptions = [] } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetLocationOptionsQuery,
+  });
 
   return (
     <SectionCard title="General Information">

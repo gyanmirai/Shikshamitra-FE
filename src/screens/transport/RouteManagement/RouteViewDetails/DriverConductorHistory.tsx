@@ -15,11 +15,10 @@ import {
 
 // Tab Components
 const VehicleHistory = () => {
-  const { data: mockVehicleHistory, isLoading } = useQueryAndMutation({
+  const { data: mockDriverConductorHistory, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetVehicleHistoryQuery,
   });
-  console.log('🚀 ~ VehicleHistory ~ mockDriverConductorHistory:', mockVehicleHistory);
 
   return (
     <CustomizableTable
@@ -29,17 +28,16 @@ const VehicleHistory = () => {
       isLoading={isLoading}
       columns={[
         {
-          id: 'busNo',
-          label: 'Bus No.',
+          id: 'driverName',
+          label: 'Driver Name',
           align: 'left',
           minWidth: '150px',
           sticky: true,
         },
         {
-          id: 'driverName',
-          label: 'Driver Name',
+          id: 'busNo',
+          label: 'Bus No.',
           align: 'left',
-          minWidth: '150px',
         },
         {
           id: 'assignedDate',
@@ -70,13 +68,13 @@ const VehicleHistory = () => {
           ),
         },
       ]}
-      data={mockVehicleHistory || []}
+      data={mockDriverConductorHistory || []}
     />
   );
 };
 
 const DriverConductorHistoryTable = () => {
-  const { data: mockDriverConductorHistory, isLoading } = useQueryAndMutation({
+  const { data: mockVehicleHistory, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetDriverConductorHistoryQuery,
   });
@@ -142,7 +140,7 @@ const DriverConductorHistoryTable = () => {
           ),
         },
       ]}
-      data={mockDriverConductorHistory || []}
+      data={mockVehicleHistory || []}
     />
   );
 };

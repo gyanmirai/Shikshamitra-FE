@@ -10,28 +10,29 @@ import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetRouteManagementDataQuery } from 'src/redux/transport/vehicle-management/route-management-api';
 
 import ChangeStopStatusForm from './ChangeStopStatusForm';
 
 import type { IRoutesData, IStopStatusChange } from './type';
 
 interface IRouteTableProps {
-  data: any[];
   setOpenDialog?: (value: boolean) => void;
   setEditData?: (value: any) => void;
   onViewDetail?: (data: any) => void;
 }
 
-const RouteTable: React.FC<IRouteTableProps> = ({
-  data,
-  setOpenDialog,
-  setEditData,
-  onViewDetail,
-}) => {
+const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, onViewDetail }) => {
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  const { data: routeDta, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRouteManagementDataQuery,
+  });
 
   const changeStatusDialog = useBoolean();
   const [selectedRoute, setSelectedRoute] = useState<IRoutesData | null>(null);
@@ -90,7 +91,8 @@ const RouteTable: React.FC<IRouteTableProps> = ({
       <Box sx={{ mt: 2 }}>
         <CustomizableTable
           tableId="route-management-table"
-          noDataText="Routes Not Found"
+          noDataText=" Not Routes Data Found"
+          isLoading={isLoading}
           columns={[
             {
               id: 'routeName',
@@ -186,7 +188,7 @@ const RouteTable: React.FC<IRouteTableProps> = ({
               },
             },
           ]}
-          data={data || []}
+          data={routeDta || []}
         />
       </Box>
 

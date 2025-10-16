@@ -3,8 +3,14 @@ import type { FormikProps } from 'formik';
 import React from 'react';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Grid, Chip, TextField, Typography, Autocomplete } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  useGetSelectableDriversQuery,
+  useGetAssignableVehiclesQuery,
+  useGetSelectableConductorsQuery,
+} from 'src/redux/transport/vehicle-management/route-management-api';
 
 import type { IRoutePayload, IVehicleAssignmentPayload } from '../Components/type';
 
@@ -13,53 +19,31 @@ interface VehicleAssignmentStepProps {
 }
 
 const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
-  // Mock data for available vehicles
-  const availableVehicles = [
-    {
-      value: 'gj-05-ad-0127',
-      label: 'GJ-05-AD-0127 (02) Capacity: 50',
-      vehicleNo: 'GJ-05-AD-0127',
-      capacity: 50,
-      vehicleId: 'vehicle-1',
-    },
-    {
-      value: 'gj-05-hd-1234',
-      label: 'GJ-05-HD-1234 (06) Capacity: 55',
-      vehicleNo: 'GJ-05-HD-1234',
-      capacity: 55,
-      vehicleId: 'vehicle-2',
-    },
-    {
-      value: 'gj-05-cd-5678',
-      label: 'GJ-05-CD-5678 (03) Capacity: 45',
-      vehicleNo: 'GJ-05-CD-5678',
-      capacity: 45,
-      vehicleId: 'vehicle-3',
-    },
-  ];
+  // Fetch available vehicles, drivers, and conductors at the top level of the component
+  const { data: availableVehicles = [] } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignableVehiclesQuery,
+  });
 
-  // Mock data for drivers
-  const availableDrivers = [
-    { value: 'driver-1', label: 'Dharmik Jinjala', avatar: '/assets/avatars/driver1.jpg' },
-    { value: 'driver-2', label: 'Mayur Solanki', avatar: '/assets/avatars/driver2.jpg' },
-    { value: 'driver-3', label: 'Raj Patel', avatar: '/assets/avatars/driver3.jpg' },
-  ];
+  const { data: availableDrivers = [] } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSelectableDriversQuery,
+  });
 
-  // Mock data for conductors
-  const availableConductors = [
-    { value: 'conductor-1', label: 'Prerna Atre', avatar: '/assets/avatars/conductor1.jpg' },
-    { value: 'conductor-2', label: 'Raj Baku', avatar: '/assets/avatars/conductor2.jpg' },
-    { value: 'conductor-3', label: 'Neha Shah', avatar: '/assets/avatars/conductor3.jpg' },
-  ];
+  const { data: availableConductors = [] } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSelectableConductorsQuery,
+  });
 
-  // Handle adding selected vehicles to the route
   const handleVehiclesSelect = (selectedVehicles: string[]) => {
     const newVehicleAssignments: IVehicleAssignmentPayload[] = selectedVehicles.map(
       (vehicleValue, index) => {
         const existingAssignment = formik.values.vehicleAssignments.find(
           (assignment) => assignment.vehicleId === vehicleValue
         );
-        const vehicleData = availableVehicles.find((vehicle) => vehicle.value === vehicleValue);
+        const vehicleData = availableVehicles?.find(
+          (vehicle: any) => vehicle.value === vehicleValue
+        );
 
         return (
           existingAssignment || {
@@ -128,7 +112,7 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
 
   return (
     <SectionCard title="Vehicle Assignments">
-      <Grid container spacing={2}>
+      <Grid container spacing={2} size={{ xs: 12 }}>
         {/* Select Vehicles */}
         <Grid size={{ xs: 12 }} sx={{ mb: 3 }}>
           <ShakingTextField
@@ -136,9 +120,10 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
           >
             <Autocomplete
               multiple
-              options={availableVehicles.map((vehicle) => vehicle.value)}
+              fullWidth
+              options={availableVehicles?.map((vehicle: any) => vehicle.value)}
               getOptionLabel={(option) =>
-                availableVehicles.find((vehicle) => vehicle.value === option)?.label || option
+                availableVehicles?.find((vehicle: any) => vehicle.value === option)?.label || option
               }
               value={selectedVehicleValues}
               onChange={(event, newValue) => {
@@ -147,7 +132,8 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
               renderTags={(value, getTagProps) =>
                 value.map((option, index) => {
                   const vehicleLabel =
-                    availableVehicles.find((vehicle) => vehicle.value === option)?.label || option;
+                    availableVehicles?.find((vehicle: any) => vehicle.value === option)?.label ||
+                    option;
                   return (
                     <Chip
                       variant="outlined"
@@ -219,11 +205,12 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
                     <CustomSelect
                       label="Driver *"
                       name={`vehicleAssignments.${index}.driverId`}
+                      fullWidth
                       options={availableDrivers}
                       value={assignment.driverId}
                       onChange={(value) => {
                         const selectedDriver = availableDrivers.find(
-                          (driver) => driver.value === value
+                          (driver: any) => driver.value === value
                         );
                         formik.setFieldValue(`vehicleAssignments.${index}.driverId`, value);
                         formik.setFieldValue(
@@ -243,7 +230,7 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
                       formControlProps={{ fullWidth: true }}
                       size="small"
                       renderValue={(selected) => {
-                        const driver = availableDrivers.find((d) => d.value === selected);
+                        const driver = availableDrivers.find((d: any) => d.value === selected);
                         return driver ? (
                           <Box display="flex" alignItems="center" gap={1}>
                             {driver.label}
@@ -271,7 +258,7 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
                       value={assignment.conductorId}
                       onChange={(value) => {
                         const selectedConductor = availableConductors.find(
-                          (conductor) => conductor.value === value
+                          (conductor: any) => conductor.value === value
                         );
                         formik.setFieldValue(`vehicleAssignments.${index}.conductorId`, value);
                         formik.setFieldValue(
@@ -294,7 +281,9 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
                       formControlProps={{ fullWidth: true }}
                       size="small"
                       renderValue={(selected) => {
-                        const conductor = availableConductors.find((c) => c.value === selected);
+                        const conductor = availableConductors.find(
+                          (c: any) => c.value === selected
+                        );
                         return conductor ? (
                           <Box display="flex" alignItems="center" gap={1}>
                             {conductor.label}

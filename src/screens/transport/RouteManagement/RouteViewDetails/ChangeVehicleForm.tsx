@@ -21,8 +21,7 @@ import {
 } from '@mui/material';
 
 interface ChangeVehicleFormProps {
-  onClose: () => void;
-  onSubmit: (vehicleId: string) => void;
+  onClose: (e: any, isSubmit: boolean) => void;
 }
 
 // Mock current vehicle data
@@ -33,7 +32,7 @@ const currentVehicle = {
   seatingCapacity: 45,
 };
 
-const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose, onSubmit }) => {
+const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
   const { data: availableVehicles } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAvailableVehiclesQuery,
@@ -52,9 +51,8 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose, onSubmit
         shikshaMitraToast.success({
           message: `Vehicle changed to ${selectedVehicleData?.registrationNo} successfully!`,
         });
-        onSubmit(selectedVehicle);
       }
-      onClose();
+      onClose(null, true);
     },
   });
 
@@ -73,10 +71,6 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose, onSubmit
       vehicle.type.toLowerCase().includes(query)
     );
   });
-
-  const handleSubmit = () => {
-    formik.handleSubmit();
-  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -250,14 +244,14 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose, onSubmit
       >
         <Button
           variant="outlined"
-          onClick={onClose}
+          onClick={() => onClose(null, false)}
           startIcon={<Iconify icon="material-symbols:close" />}
         >
           Cancel
         </Button>
         <Button
           variant="contained"
-          onClick={handleSubmit}
+          onClick={(e: any) => formik.handleSubmit(e)}
           disabled={!selectedVehicle}
           startIcon={<Iconify icon="material-symbols:check" />}
         >

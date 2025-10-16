@@ -57,12 +57,24 @@ export const transportApi = createApi({
             return { data: vehicleManagementData.routeAssignedStudentData };
           case '/routeStopsData':
             return { data: vehicleManagementData.routeStopsData };
+          case '/availableVehiclesData':
+            return { data: vehicleManagementData.availableVehiclesData };
           case '/vehicleHistoryData':
             return { data: vehicleManagementData.vehicleHistoryData };
           case '/driverConductorHistoryData':
             return { data: vehicleManagementData.driverConductorHistoryData };
-          case '/availableVehiclesData':
-            return { data: vehicleManagementData.availableVehiclesData };
+          case '/assignableVehiclesData':
+            return { data: vehicleManagementData.assignableVehiclesData };
+          case '/selectableDriversData':
+            return { data: vehicleManagementData.selectableDriversData };
+          case '/selectableConductorsData':
+            return { data: vehicleManagementData.selectableConductorsData };
+          case '/routeTypeOptions':
+            return { data: vehicleManagementData.routeTypeOptions };
+          case '/locationOptions':
+            return { data: vehicleManagementData.locationOptions };
+          case '/routeManagementData':
+            return { data: vehicleManagementData.routeManagementData };
           default:
             return {
               error: {
@@ -95,9 +107,15 @@ export const transportApi = createApi({
     'StopManagement',
     'RouteAssignedStudentData',
     'RouteStopsData',
-    'VehicleHistory',
-    'DriverConductorHistory',
+    'VehicleHistoryData',
+    'DriverConductorHistoryData',
     'AvailableVehicles',
+    'AssignableVehicles',
+    'SelectableDrivers',
+    'SelectableConductors',
+    'RouteTypeOptions',
+    'LocationOptions',
+    'RouteManagementData',
   ],
   endpoints: () => ({}),
 });

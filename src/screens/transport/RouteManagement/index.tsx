@@ -33,65 +33,6 @@ const RouteManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) 
   // Boolean hook to control detail view dialog
   const viewDialog = useBoolean();
 
-  // Mock data based on the screenshot
-  const routeData = [
-    {
-      id: 'RT001',
-      routeName: 'Route A-1',
-      startPoint: 'School Gate',
-      endPoint: 'Kamrej',
-      distance: '10 KM',
-      stops: '08',
-      capacity: 50,
-      students: 50,
-      status: 'Active',
-    },
-    {
-      id: 'RT002',
-      routeName: 'Route A-2',
-      startPoint: 'School Gate',
-      endPoint: 'Kapodara',
-      distance: '10.5 KM',
-      stops: '06',
-      capacity: 55,
-      students: 50,
-      status: 'Inactive',
-    },
-    {
-      id: 'RT003',
-      routeName: 'Route A-3',
-      startPoint: 'School Gate',
-      endPoint: 'Simadi',
-      distance: '11 KM',
-      stops: '12',
-      capacity: 40,
-      students: 40,
-      status: 'Inactive',
-    },
-    {
-      id: 'RT004',
-      routeName: 'Route A-4',
-      startPoint: 'School Gate',
-      endPoint: 'Adajan',
-      distance: '12 KM',
-      stops: '03',
-      capacity: 40,
-      students: 38,
-      status: 'Active',
-    },
-    {
-      id: 'RT005',
-      routeName: 'Route A-5',
-      startPoint: 'School Gate',
-      endPoint: 'Godadara',
-      distance: '10 KM',
-      stops: '07',
-      capacity: 45,
-      students: 43,
-      status: 'Active',
-    },
-  ];
-
   /**
    * Handles closing the route form with confirmation if there are unsaved changes
    */
@@ -198,7 +139,6 @@ const RouteManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) 
         <RouteTable
           setOpenDialog={setOpen}
           setEditData={setSelectedRoute}
-          data={routeData}
           onViewDetail={(data) => {
             viewDialog.onTrue();
             setViewRoute(data);

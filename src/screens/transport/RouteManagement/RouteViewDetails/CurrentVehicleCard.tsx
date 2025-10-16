@@ -40,12 +40,6 @@ const CurrentVehicleCard = () => {
     }
   };
 
-  const handleVehicleChange = (vehicleId: string) => {
-    // Handle vehicle change logic here
-    console.log('Changing vehicle to:', vehicleId);
-    handleClose(null, true);
-  };
-
   return (
     <>
       <Card sx={{ p: 3, borderRadius: 2, boxShadow: 4 }}>
@@ -141,10 +135,7 @@ const CurrentVehicleCard = () => {
           </Box>
         }
       >
-        <ChangeVehicleForm
-          onClose={() => handleClose(null, false)}
-          onSubmit={handleVehicleChange}
-        />
+        <ChangeVehicleForm onClose={handleClose} />
       </CustomDialog>
 
       {/* View Students Dialog */}

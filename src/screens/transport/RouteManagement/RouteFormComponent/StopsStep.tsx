@@ -52,7 +52,7 @@ const StopsStep = ({ formik }: StopsStepProps) => {
 
   return (
     <SectionCard title="Stops Assignment">
-      <Grid container spacing={2}>
+      <Grid container spacing={2} size={{ xs: 12 }}>
         {/* Select Stops */}
         <Grid size={{ xs: 12 }} sx={{ mb: 3 }}>
           <ShakingTextField error={!!(formik.touched.stops && formik.errors.stops)}>
@@ -240,7 +240,7 @@ const StopsStep = ({ formik }: StopsStepProps) => {
                   >
                     <TextField
                       fullWidth
-                      label="Distance From Previous Stop"
+                      label="Distance From Previous Stop (km) *"
                       value={stop.distanceFromPrevious}
                       onChange={(e) => {
                         const value = e.target.value.replace(/[^0-9.\s]/g, '');

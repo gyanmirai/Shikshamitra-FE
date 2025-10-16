@@ -721,34 +721,68 @@
       "status": "Inactive"
     }
   ],
-  "routeStopsData":[
-  { 
-    "id": 1, 
-    "name": "Parvat Patiya", 
-    "time": "9:00 AM", 
-    "students": 10
-  },
-  { 
-    "id": 2, 
-    "name": "Reshma Circle", 
-    "time": "9:10 AM", 
-    "students": 10
-  },
-  { 
-    "id": 3, 
-    "name": "Maharana Pratap Circle", 
-    "time": "9:20 AM", 
-    "students": 25
-  },
-  { 
-    "id": 4, 
-    "name": "Deep Darshan School", 
-    "time": "9:30 AM", 
-    "students": 0
-  }
-],
-"vehicleHistoryData": [
+  "routeStopsData": [
     {
+      "id": 1,
+      "name": "Parvat Patiya",
+      "time": "9:00 AM",
+      "students": 10
+    },
+    {
+      "id": 2,
+      "name": "Reshma Circle",
+      "time": "9:10 AM",
+      "students": 10
+    },
+    {
+      "id": 3,
+      "name": "Maharana Pratap Circle",
+      "time": "9:20 AM",
+      "students": 25
+    },
+    {
+      "id": 4,
+      "name": "Deep Darshan School",
+      "time": "9:30 AM",
+      "students": 0
+    }
+  ],
+
+  "vehicleHistoryData": [
+    {
+      "id": "1",
+      "busNo": "GJ-05-AB-1234",
+      "driverName": "Rajesh Kumar",
+      "assignedDate": "15-01-2024",
+      "unassignedDate": null,
+      "totalStudents": 35,
+      "status": "Active",
+      "busImage": "/assets/vehicles/bus-1.png"
+    },
+    {
+      "id": "2",
+      "busNo": "GJ-05-AD-0127",
+      "driverName": "Amit Sharma",
+      "assignedDate": "10-09-2023",
+      "unassignedDate": "14-01-2024",
+      "totalStudents": 42,
+      "status": "Replaced",
+      "busImage": "/assets/vehicles/bus-2.png"
+    },
+    {
+      "id": "3",
+      "busNo": "GJ-05-DA-0101",
+      "driverName": "Suresh Verma",
+      "assignedDate": "01-06-2023",
+      "unassignedDate": "09-09-2023",
+      "totalStudents": 38,
+      "status": "Replaced",
+      "busImage": "/assets/vehicles/bus-3.png"
+    }
+  ],
+  "driverConductorHistoryData": [
+    {
+      "id": "1",
       "driverName": "Rajesh Verma",
       "role": "Driver",
       "contactNo": "+91 6355030866",
@@ -760,6 +794,7 @@
       "avatar": "/assets/avatars/driver-1.jpg"
     },
     {
+      "id": "2",
       "driverName": "Amit Sharma",
       "role": "Conductor",
       "contactNo": "+91 9955030866",
@@ -771,6 +806,7 @@
       "avatar": "/assets/avatars/conductor-1.jpg"
     },
     {
+      "id": "3",
       "driverName": "Suresh Verma",
       "role": "Driver",
       "contactNo": "+91 7255030866",
@@ -782,64 +818,276 @@
       "avatar": "/assets/avatars/driver-2.jpg"
     }
   ],
-"driverConductorHistoryData":[{
-      "busNo": "GJ-05-AB-1234",
-      "driverName": "Rajesh Kumar",
-      "assignedDate": "15-01-2024",
-      "unassignedDate": "-",
-      "totalStudents": 35,
-      "status": "Active",
-      "busImage": "/assets/vehicles/bus-1.png"
-    },
-    {
-      "busNo": "GJ-05-AD-0127",
-      "driverName": "Amit Sharma",
-      "assignedDate": "10-09-2023",
-      "unassignedDate": "14-01-2024",
-      "totalStudents": 42,
-      "status": "Replaced",
-      "busImage": "/assets/vehicles/bus-2.png"
-    },
-    {
-      "busNo": "GJ-05-DA-0101",
-      "driverName": "Suresh Verma",
-      "assignedDate": "01-06-2023",
-      "unassignedDate": "09-09-2023",
-      "totalStudents": 38,
-      "status": "Replaced",
-      "busImage": "/assets/vehicles/bus-3.png"
-    }],
-   "availableVehiclesData": [
-  {
-    "id": "DL1CA-5678",
-    "value": "DL1CA-5678",
-    "label": "DL1CA-5678 - Ashok Leyland Viking (Bus, 50 seats)",
-    "registrationNo": "DL1CA-5678",
-    "makeModel": "Ashok Leyland Viking",
-    "type": "Bus",
-    "seatingCapacity": 50,
-    "status": "Active"
-  },
-  {
-    "id": "DL1CA-3456",
-    "value": "DL1CA-3456",
-    "label": "DL1CA-3456 - Ashok Leyland Viking (Bus, 50 seats)",
-    "registrationNo": "DL1CA-3456",
-    "makeModel": "Ashok Leyland Viking",
-    "type": "Bus",
-    "seatingCapacity": 50,
-    "status": "Maintenance"
-  },
-  {
-    "id": "DL1CA-7890",
-    "value": "DL1CA-7890",
-    "label": "DL1CA-7890 - Tata Starbus (Bus, 45 seats)",
-    "registrationNo": "DL1CA-7890",
-    "makeModel": "Tata Starbus",
-    "type": "Bus",
-    "seatingCapacity": 45,
-    "status": "Active"
-  }
-]
 
+  "availableVehiclesData": [
+    {
+      "id": "DL1CA-5678",
+      "value": "DL1CA-5678",
+      "label": "DL1CA-5678 - Ashok Leyland Viking (Bus, 50 seats)",
+      "registrationNo": "DL1CA-5678",
+      "makeModel": "Ashok Leyland Viking",
+      "type": "Bus",
+      "seatingCapacity": 50,
+      "status": "Active"
+    },
+    {
+      "id": "DL1CA-3456",
+      "value": "DL1CA-3456",
+      "label": "DL1CA-3456 - Ashok Leyland Viking (Bus, 50 seats)",
+      "registrationNo": "DL1CA-3456",
+      "makeModel": "Ashok Leyland Viking",
+      "type": "Bus",
+      "seatingCapacity": 50,
+      "status": "Maintenance"
+    },
+    {
+      "id": "DL1CA-7890",
+      "value": "DL1CA-7890",
+      "label": "DL1CA-7890 - Tata Starbus (Bus, 45 seats)",
+      "registrationNo": "DL1CA-7890",
+      "makeModel": "Tata Starbus",
+      "type": "Bus",
+      "seatingCapacity": 45,
+      "status": "Active"
+    }
+  ],
+   "assignableVehiclesData": [
+    {
+      "id": "vehicle-1",
+      "value": "gj-05-ad-0127",
+      "label": "GJ-05-AD-0127 (02) Capacity: 50",
+      "vehicleNo": "GJ-05-AD-0127",
+      "capacity": 50,
+      "vehicleId": "vehicle-1",
+      "schoolNumber": "02",
+      "status": "Available"
+    },
+    {
+      "id": "vehicle-2",
+      "value": "gj-05-hd-1234",
+      "label": "GJ-05-HD-1234 (06) Capacity: 55",
+      "vehicleNo": "GJ-05-HD-1234",
+      "capacity": 55,
+      "vehicleId": "vehicle-2",
+      "schoolNumber": "06",
+      "status": "Available"
+    },
+    {
+      "id": "vehicle-3",
+      "value": "gj-05-cd-5678",
+      "label": "GJ-05-CD-5678 (03) Capacity: 45",
+      "vehicleNo": "GJ-05-CD-5678",
+      "capacity": 45,
+      "vehicleId": "vehicle-3",
+      "schoolNumber": "03",
+      "status": "Available"
+    }
+  ],
+  "selectableDriversData": [
+    {
+      "id": "driver-1",
+      "value": "driver-1",
+      "label": "Dharmik Jinjala",
+      "name": "Dharmik Jinjala",
+      "avatar": "/assets/avatars/driver1.jpg",
+      "licenseNo": "GJ05-2019-0012345",
+      "phoneNo": "+91 6355030866",
+      "status": "Available"
+    },
+    {
+      "id": "driver-2",
+      "value": "driver-2",
+      "label": "Mayur Solanki",
+      "name": "Mayur Solanki",
+      "avatar": "/assets/avatars/driver2.jpg",
+      "licenseNo": "GJ05-2020-0098765",
+      "phoneNo": "+91 7255030866",
+      "status": "Available"
+    },
+    {
+      "id": "driver-3",
+      "value": "driver-3",
+      "label": "Raj Patel",
+      "name": "Raj Patel",
+      "avatar": "/assets/avatars/driver3.jpg",
+      "licenseNo": "GJ05-2017-0054321",
+      "phoneNo": "+91 9876543213",
+      "status": "Available"
+    }
+  ],
+  "selectableConductorsData": [
+    {
+      "id": "conductor-1",
+      "value": "conductor-1",
+      "label": "Prerna Atre",
+      "name": "Prerna Atre",
+      "avatar": "/assets/avatars/conductor1.jpg",
+      "licenseNo": "GJ05-2018-0067890",
+      "phoneNo": "+91 8855030866",
+      "status": "Available"
+    },
+    {
+      "id": "conductor-2",
+      "value": "conductor-2",
+      "label": "Raj Baku",
+      "name": "Raj Baku",
+      "avatar": "/assets/avatars/conductor2.jpg",
+      "licenseNo": "GJ05-2019-0076543",
+      "phoneNo": "+91 6344030866",
+      "status": "Available"
+    },
+    {
+      "id": "conductor-3",
+      "value": "conductor-3",
+      "label": "Neha Shah",
+      "name": "Neha Shah",
+      "avatar": "/assets/avatars/conductor3.jpg",
+      "licenseNo": "GJ05-2021-0034567",
+      "phoneNo": "+91 9876543215",
+      "status": "Available"
+    }
+  ],
+  "routeTypeOptions": [
+    {
+      "id": "1",
+      "value": "pickup",
+      "label": "Pickup"
+    },
+    {
+      "id": "2", 
+      "value": "drop",
+      "label": "Drop"
+    },
+    {
+      "id": "3",
+      "value": "both",
+      "label": "Both"
+    }
+  ],
+  "locationOptions": [
+    {
+      "id": "1",
+      "value": "deep-darshan",
+      "label": "Deep Darshan"
+    },
+    {
+      "id": "2",
+      "value": "parvat-patiya", 
+      "label": "Parvat Patiya"
+    },
+    {
+      "id": "3",
+      "value": "kamrej",
+      "label": "Kamrej"
+    },
+    {
+      "id": "4",
+      "value": "kapodara",
+      "label": "Kapodara"
+    },
+    {
+      "id": "5",
+      "value": "simadi",
+      "label": "Simadi"
+    },
+    {
+      "id": "6",
+      "value": "adajan",
+      "label": "Adajan"
+    },
+    {
+      "id": "7",
+      "value": "godadara",
+      "label": "Godadara"
+    }
+  ],
+  "currentAvailableStopsData": [
+    {
+      "id": "1",
+      "value": "maharana-pratap-circle",
+      "label": "Maharana Pratap Circle"
+    },
+    {
+      "id": "2",
+      "value": "kangaroo-circle",
+      "label": "Kangaroo Circle"
+    },
+    {
+      "id": "3",
+      "value": "deep-darshan-school",
+      "label": "Deep Darshan School"
+    },
+    {
+      "id": "4",
+      "value": "parvat-patiya-main",
+      "label": "Parvat Patiya Main"
+    },
+    {
+      "id": "5",
+      "value": "kamrej-junction",
+      "label": "Kamrej Junction"
+    },
+    {
+      "id": "6",
+      "value": "kapodara-square",
+      "label": "Kapodara Square"
+    }
+  ],
+  "routeManagementData": [
+    {
+      "id": "RT001",
+      "routeName": "Route A-1",
+      "startPoint": "School Gate",
+      "endPoint": "Kamrej",
+      "distance": "10 KM",
+      "stops": "08",
+      "capacity": 50,
+      "students": 50,
+      "status": "Active"
+    },
+    {
+      "id": "RT002",
+      "routeName": "Route A-2",
+      "startPoint": "School Gate",
+      "endPoint": "Kapodara",
+      "distance": "10.5 KM",
+      "stops": "06",
+      "capacity": 55,
+      "students": 50,
+      "status": "Inactive"
+    },
+    {
+      "id": "RT003",
+      "routeName": "Route A-3",
+      "startPoint": "School Gate",
+      "endPoint": "Simadi",
+      "distance": "11 KM",
+      "stops": "12",
+      "capacity": 40,
+      "students": 40,
+      "status": "Inactive"
+    },
+    {
+      "id": "RT004",
+      "routeName": "Route A-4",
+      "startPoint": "School Gate",
+      "endPoint": "Adajan",
+      "distance": "12 KM",
+      "stops": "03",
+      "capacity": 40,
+      "students": 38,
+      "status": "Active"
+    },
+    {
+      "id": "RT005",
+      "routeName": "Route A-5",
+      "startPoint": "School Gate",
+      "endPoint": "Godadara",
+      "distance": "10 KM",
+      "stops": "07",
+      "capacity": 45,
+      "students": 43,
+      "status": "Active"
+    }
+  ]
 }
