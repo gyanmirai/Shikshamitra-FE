@@ -11,9 +11,7 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import ClearIcon from '@mui/icons-material/Clear';
 import React, { useState, useEffect } from 'react';
-import SearchIcon from '@mui/icons-material/Search';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -29,12 +27,10 @@ import {
   Box,
   Grid,
   Card,
-  Stack,
   Button,
   Avatar,
   TextField,
   Typography,
-  IconButton,
   CardContent,
   DialogActions,
   CircularProgress,
@@ -49,7 +45,6 @@ interface ReturnBookFormProps {
 
 const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [searchBook, setSearchBook] = useState(accessionNo || '');
   const [selectedBook, setSelectedBook] = useState<IBookCopyWithBook | null>(null);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [reservationList, setReservationList] = useState([]);
@@ -140,14 +135,16 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
     },
   });
 
-  const handleSearchBook = () => {
-    const value = (searchBook || formik.values.accessionNo).trim();
+  const handleSearchBookForReturn = (value: string) => {
+    formik.setFieldValue('accessionNo', value);
     if (!value) {
-      shikshaMitraToast.error({ message: 'Please enter accession number to search.' });
+      setSelectedBook(null);
+      setSelectedMember(null);
       return;
     }
 
     setLoading(true);
+
     setTimeout(() => {
       const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
 
@@ -157,40 +154,39 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
             book: books?.find((b) => b.id === foundCopy.bookId),
           }
         : null;
-
       if (foundBook) {
-        setSelectedBook(foundBook);
-        formik.setFieldValue('accessionNo', foundBook.accessionNo);
-        const reservedList = memberData?.filter((member: any) =>
-          selectedBook?.book.reservationMemberIds?.includes(member.memberId)
-        );
-        setReservationList(reservedList);
-        const foundMember = memberData?.find(
-          (member: any) => member.memberId?.toLowerCase() === foundBook.memberId?.toLowerCase()
-        );
-        setSelectedMember(foundMember || null);
+        if (foundBook.status !== 1) {
+          console.log('wrong----', foundBook);
+
+          // only proceed if book is currently issued
+          shikshaMitraToast.error({
+            message: `Book "${foundBook.book.title}" is not currently issued.`,
+          });
+          setSelectedBook(null);
+          setSelectedMember(null);
+        } else {
+          console.log('right----', foundBook);
+
+          setSelectedBook(foundBook);
+          formik.setFieldValue('accessionNo', foundBook.accessionNo);
+
+          const foundMember = memberData?.find(
+            (member: any) => member.memberId?.toLowerCase() === foundBook.memberId?.toLowerCase()
+          );
+          setSelectedMember(foundMember || null);
+        }
       } else {
         setSelectedBook(null);
         setSelectedMember(null);
-        setReservationList([]);
-        shikshaMitraToast.error({
-          message: 'No book found for this accession number.',
-        });
       }
+
       setLoading(false);
     }, 400);
   };
 
-  const handleClearBook = () => {
-    setSearchBook('');
-    setSelectedBook(null);
-    setReservationList([]);
-    formik.setFieldValue('accessionNo', '');
-  };
-
   // Auto search when accession number is passed as prop
   useEffect(() => {
-    if (accessionNo) handleSearchBook();
+    if (accessionNo) handleSearchBookForReturn(accessionNo);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessionNo]);
 
@@ -199,115 +195,125 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
       <DialogScrollContent>
         <Grid container spacing={3}>
           {!accessionNo && (
-            <Grid size={{ xs: 12 }}>
-              <Stack direction="row" spacing={2}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.accessionNo && formik.errors.accessionNo)}>
                 <TextField
-                  variant="outlined"
+                  label="Scan Barcode or Search by Accession No."
                   size="small"
-                  value={searchBook}
-                  onChange={(e) => setSearchBook(e.target.value)}
-                  label="Search by Accession No."
-                  sx={{ flex: 1 }}
+                  fullWidth
+                  value={formik.values.accessionNo}
+                  onChange={(e) => handleSearchBookForReturn(e.target.value)}
                   disabled={!!accessionNo}
-                  InputProps={{
-                    endAdornment: searchBook && (
-                      <IconButton size="small" onClick={handleClearBook} disabled={!!accessionNo}>
-                        <ClearIcon />
-                      </IconButton>
-                    ),
-                  }}
+                  error={!!(formik.touched.accessionNo && formik.errors.accessionNo)}
+                  helperText={(formik.touched.accessionNo && formik.errors.accessionNo) as string}
+                  placeholder="Enter accession number (e.g., A001, A002, A003)"
                 />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<SearchIcon />}
-                  onClick={handleSearchBook}
-                  disabled={!!accessionNo}
-                  sx={{ mt: 0.3 }}
-                  size="small"
-                >
-                  Search
-                </Button>
-              </Stack>
+              </ShakingTextField>
             </Grid>
           )}
 
           {loading ? (
-            <Grid size={{ xs: 12 }}>
-              <Box display="flex" justifyContent="center" alignItems="center">
-                <CircularProgress size={20} />
-              </Box>
-            </Grid>
+            <CircularProgress size={20} />
           ) : selectedBook ? (
             <>
+              {/* Book details */}
               <Grid size={{ xs: 12 }}>
                 <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
+                  {' '}
                   <CardContent sx={{ p: '0 !important' }}>
+                    {' '}
                     <Grid container spacing={2}>
-                      <Grid size={{ xs: 12, md: 4 }}>
+                      {' '}
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        {' '}
                         <Box
                           component="img"
-                          src={selectedBook.book.bookCoverImages?.[0] || '/placeholder-book.jpg'}
-                          alt={selectedBook.book.title}
-                          sx={{
-                            width: 220,
-                            height: 160,
-                            borderRadius: 2,
-                            objectFit: 'cover',
-                          }}
-                        />
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 8 }}>
+                          src={selectedBook?.book.bookCoverImages?.[0] || '/placeholder-book.jpg'}
+                          alt={selectedBook?.book.title}
+                          sx={{ width: 240, height: 240, borderRadius: 2, flexShrink: 0 }}
+                        />{' '}
+                      </Grid>{' '}
+                      <Grid size={{ xs: 12, md: 9 }}>
+                        {' '}
                         <Grid container spacing={1}>
-                          <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography fontWeight={600}>Title</Typography>
-                            <Typography>{selectedBook.book.title}</Typography>
-                          </Grid>
-                          <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography fontWeight={600}>Accession No.</Typography>
-                            <Typography>{selectedBook.accessionNo}</Typography>
-                          </Grid>
-                          <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography fontWeight={600}>Author</Typography>
-                            <Typography>{selectedBook.book.author}</Typography>
-                          </Grid>
-
-                          <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography fontWeight={600}>Borrowed By</Typography>
-                            <Typography>{selectedBook.memberName || 'N/A'}</Typography>
-                          </Grid>
-                          <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography fontWeight={600}>Issue Date</Typography>
-                            <Typography>{selectedBook.issueDate || 'N/A'}</Typography>
-                          </Grid>
-                          <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography fontWeight={600}>Due Date</Typography>
-                            <Typography>{selectedBook.dueDate || 'N/A'}</Typography>
-                          </Grid>
-                        </Grid>
-                      </Grid>
-                    </Grid>
-                  </CardContent>
+                          {' '}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            {' '}
+                            <Typography fontWeight={600}>Book Title</Typography>{' '}
+                            <Typography>{selectedBook?.book.title}</Typography>{' '}
+                          </Grid>{' '}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            {' '}
+                            <Typography fontWeight={600}>Accession No.</Typography>{' '}
+                            <Typography>{selectedBook?.accessionNo}</Typography>{' '}
+                          </Grid>{' '}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            {' '}
+                            <Typography fontWeight={600}>Author</Typography>{' '}
+                            <Typography>{selectedBook?.book.author}</Typography>{' '}
+                          </Grid>{' '}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            {' '}
+                            <Typography fontWeight={600}>ISBN</Typography>{' '}
+                            <Typography>{selectedBook?.book.isbn}</Typography>{' '}
+                          </Grid>{' '}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            {' '}
+                            <Typography fontWeight={600}>Publisher</Typography>{' '}
+                            <Typography>{selectedBook?.book.publisher}</Typography>{' '}
+                          </Grid>{' '}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            {' '}
+                            <Typography fontWeight={600}>Added On</Typography>{' '}
+                            <Typography>
+                              {' '}
+                              {dayjs(selectedBook?.book.createdOn).format('YYYY')}{' '}
+                            </Typography>{' '}
+                          </Grid>{' '}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            {' '}
+                            <Typography fontWeight={600}>Language</Typography>{' '}
+                            <Typography>{selectedBook?.book.language || 'N/A'}</Typography>{' '}
+                          </Grid>{' '}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            {' '}
+                            <Typography fontWeight={600}>Edition</Typography>{' '}
+                            <Typography>{selectedBook?.book.edition || 'N/A'}</Typography>{' '}
+                          </Grid>{' '}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            {' '}
+                            <Typography fontWeight={600}>Category</Typography>{' '}
+                            <Typography>{selectedBook?.book.category || 'N/A'}</Typography>{' '}
+                          </Grid>{' '}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            {' '}
+                            <Typography fontWeight={600}>No. of Pages</Typography>{' '}
+                            <Typography>
+                              {selectedBook?.book.numberOfPages || 'N/A'}
+                            </Typography>{' '}
+                          </Grid>{' '}
+                        </Grid>{' '}
+                      </Grid>{' '}
+                    </Grid>{' '}
+                  </CardContent>{' '}
                 </Card>
               </Grid>
+
+              {/* Member details */}
               {selectedMember && (
                 <Grid size={{ xs: 12 }}>
                   <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
-                    <CardContent
-                      sx={{
-                        padding: '0 !important',
-                      }}
-                    >
+                    <CardContent sx={{ padding: '0 !important' }}>
                       <Grid container spacing={2}>
-                        {/* Avatar on the left */}
+                        {/* Avatar */}
                         <Grid
                           size={{ xs: 12, md: 2 }}
-                          sx={{ display: 'flex', alignItems: 'center' }}
+                          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
                           <Avatar src={selectedMember.avatarUrl} sx={{ width: 80, height: 80 }} />
                         </Grid>
 
-                        {/* Member details on the right */}
+                        {/* Details */}
                         <Grid size={{ xs: 12, md: 10 }}>
                           <Grid container spacing={1}>
                             <Grid size={{ xs: 12, md: 4 }}>
@@ -320,29 +326,32 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                             </Grid>
                             <Grid size={{ xs: 12, md: 4 }}>
                               <Typography fontWeight={600}>Email</Typography>
-                              <Typography>{selectedMember.email}</Typography>
+                              <Typography>{selectedMember.email || 'N/A'}</Typography>
                             </Grid>
+
                             {selectedMember.role === 'Student' && (
                               <>
                                 <Grid size={{ xs: 12, md: 4 }}>
                                   <Typography fontWeight={600}>Roll No</Typography>
-                                  <Typography>{selectedMember.rollNo}</Typography>
+                                  <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 4 }}>
                                   <Typography fontWeight={600}>GR No</Typography>
-                                  <Typography>{selectedMember.grNo}</Typography>
+                                  <Typography>{selectedMember.grNo || 'N/A'}</Typography>
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 4 }}>
                                   <Typography fontWeight={600}>Class/Division</Typography>
                                   <Typography>
-                                    {selectedMember.class}-{selectedMember.division}
+                                    {selectedMember.class || 'N/A'} -{' '}
+                                    {selectedMember.division || 'N/A'}
                                   </Typography>
                                 </Grid>
                               </>
                             )}
+
                             <Grid size={{ xs: 12, md: 4 }}>
                               <Typography fontWeight={600}>Phone</Typography>
-                              <Typography>{selectedMember.contactNo}</Typography>
+                              <Typography>{selectedMember.contactNo || 'N/A'}</Typography>
                             </Grid>
                             <Grid size={{ xs: 12, md: 4 }}>
                               <Typography fontWeight={600}>Member Type</Typography>
@@ -350,7 +359,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                             </Grid>
                             <Grid size={{ xs: 12, md: 4 }}>
                               <Typography fontWeight={600}>Join Date</Typography>
-                              <Typography>{selectedMember.joinDate}</Typography>
+                              <Typography>{selectedMember.joinDate || 'N/A'}</Typography>
                             </Grid>
                           </Grid>
                         </Grid>
@@ -360,11 +369,16 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                 </Grid>
               )}
             </>
+          ) : formik.values.accessionNo !== '' ? (
+            <Typography color="error">
+              Book with accession number &quot;{formik.values.accessionNo}&quot; not found or not
+              issued.
+            </Typography>
           ) : null}
 
           {selectedBook && (
             <>
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField
                   error={!!(formik.touched.chargeCategory && formik.errors.chargeCategory)}
                 >

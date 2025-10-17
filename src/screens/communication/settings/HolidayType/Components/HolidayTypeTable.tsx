@@ -18,7 +18,7 @@ const HolidayTypeTable: React.FC<IHolidayTypeTableProps> = ({
     tableId="holiday-type-data-table"
     noDataText={
       <>
-        Holiday Data Not Found{' '}
+        No holiday type data found.{' '}
         <Typography
           component="span"
           color="primary.main"

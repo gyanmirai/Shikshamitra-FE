@@ -36,11 +36,11 @@ const BookFormStepper = ({
       try {
         if (activeStep === 0) {
           shikshaMitraToast.success({
-            message: `Book "${values.title}" by ${values.author} general information saved successfully.`,
+            message: `Book "${values.title}" by ${values.author} general information saved successfully`,
           });
         } else if (activeStep === 1) {
           shikshaMitraToast.success({
-            message: `Copies for "${values.title}" saved successfully.`,
+            message: `Copies for "${values.title}" saved successfully`,
           });
         }
 
@@ -54,7 +54,7 @@ const BookFormStepper = ({
       } catch (error) {
         console.log(error);
         shikshaMitraToast.error({
-          message: 'Something went wrong. Please try again.',
+          message: 'Something went wrong. Please try again',
         });
       } finally {
         setIsLoading(false);
@@ -69,7 +69,6 @@ const BookFormStepper = ({
       initialValues={getInitialBookData(editData)}
       steps={steps}
       activeStep={activeStep}
-      validateOnChange
       handleBack={() => setActiveStep(activeStep - 1)}
       validationSchema={bookValidationSchema[activeStep as keyof typeof bookValidationSchema]}
       handleNext={(

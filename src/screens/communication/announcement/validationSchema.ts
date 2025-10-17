@@ -83,7 +83,6 @@ export const classWiseValidationSchema = (currentYear: any) =>
   Yup.object().shape({
     title: Yup.string().required('Title is required'),
     type: Yup.string().required('Announcement Type is required'),
-    organizations: Yup.array().min(1, 'At least one organization is required'),
     audience: Yup.array().min(1, 'At least one audience is required'),
     classes: Yup.array().min(1, 'At least one class must be selected'),
     divisions: Yup.array().min(1, 'At least one division must be selected'),

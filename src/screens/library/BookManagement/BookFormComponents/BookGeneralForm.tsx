@@ -34,8 +34,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
   const { data, isFetching } = useSearchBooksQuery(inputValue, { skip: !inputValue });
-  console.log('==datadata-----', data);
-  console.log('formil values---', formik.values);
+
   const [allClass, setAllClass] = useState<Standards[]>([]);
 
   useEffect(() => {
@@ -55,6 +54,13 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
     setAllClass(withAll);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [medium]);
+
+  useEffect(() => {
+    if (formik.values.title) {
+      setFieldsEnabled(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <SectionCard title="General Information">
@@ -80,6 +86,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                   .join(' ');
                 setInputValue(cleanValue);
                 formik.setFieldValue('title', cleanValue);
+                formik.setFieldTouched('title', false);
                 if (cleanValue === '') {
                   formik.setValues(getInitialBookData());
                   setFieldsEnabled(false);
@@ -95,6 +102,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                   // User typed manually — just update the field, no fetch
                   selectedTitle = newValue.trim();
                   formik.setFieldValue('title', selectedTitle);
+                  formik.setFieldTouched('title', false);
                   setFieldsEnabled(true);
                   return;
                 }
@@ -107,6 +115,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                 ) {
                   selectedTitle = (newValue as { title: string }).title;
                   formik.setFieldValue('title', selectedTitle);
+                  formik.setFieldTouched('title', false);
 
                   const url = `https://openlibrary.org${(newValue as { value: string }).value}/${(newValue as { title: string }).title}`;
 
@@ -134,17 +143,20 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                       setBookFound(false);
                       setFieldsEnabled(true);
                       formik.setFieldValue('title', selectedTitle);
+                      formik.setFieldTouched('title', false);
                     }
                   } catch (error) {
                     console.error('Error fetching book details:', error);
                     setBookFound(false);
                     setFieldsEnabled(true);
                     formik.setFieldValue('title', selectedTitle);
+                    formik.setFieldTouched('title', false);
                   } finally {
                     setLoadingBookDetails(false);
                   }
                 }
               }}
+              sx={{ minWidth: 340 }}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -164,6 +176,8 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                       </>
                     ),
                   }}
+                  error={!!(formik.touched.title && formik.errors.title)}
+                  helperText={formik.touched.title && formik.errors.title}
                 />
               )}
             />
@@ -184,6 +198,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                   const value = e.target.value.replace(/[^0-9-]/g, '');
                   if (value.length <= 13) {
                     formik.setFieldValue('isbn', value);
+                    formik.setFieldTouched('isbn', false);
                   }
                 }}
                 error={!!(formik.touched.isbn && formik.errors.isbn)}
@@ -414,6 +429,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                 onChange={(e) => {
                   const val = e.target.value.replace(/[₹ ,\s]/g, '');
                   formik.setFieldValue('price', val ? Number(val) : '');
+                  formik.setFieldTouched('price', false);
                 }}
                 error={!!(formik.touched.price && formik.errors.price)}
                 helperText={(formik.touched.price && formik.errors.price) as string}
@@ -431,7 +447,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
             <ShakingTextField error={!!(formik.touched.classes && formik.errors.classes)}>
               <CustomSelect
                 options={allClass}
-                label="Class *"
+                label="Applicable Classes *"
                 multiple
                 value={formik.values.classes || []}
                 onChange={(val) => {

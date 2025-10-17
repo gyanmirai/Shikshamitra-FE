@@ -18,7 +18,7 @@ const EventTypeTable: React.FC<IEventTypeTableProps> = ({
     tableId="event-type-data-table"
     noDataText={
       <>
-        Event Data Not Found{' '}
+        No event type data found.{' '}
         <Typography
           component="span"
           color="primary.main"

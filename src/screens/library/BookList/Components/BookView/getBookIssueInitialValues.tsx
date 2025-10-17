@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import { LibraryBookStatus } from 'src/enums/library-book-status';
 
 export const getInitialValues = (editData: IBookCopyWithBook | null) => ({
+  bookId: editData?.bookId || '',
   role: editData?.role || '',
   className: editData?.className || '',
   division: editData?.division || '',

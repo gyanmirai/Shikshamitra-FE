@@ -55,7 +55,6 @@ export const holidayValidationSchema = (currentYear: any) =>
           `End Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
-    organizations: Yup.array().min(1, 'Select at least one organization'),
     classes: Yup.array().min(1, 'At least one class must be selected'),
 
     audience: Yup.array().min(1, 'Select at least one audience group'),

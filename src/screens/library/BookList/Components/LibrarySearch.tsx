@@ -1,5 +1,3 @@
-import ClearIcon from '@mui/icons-material/Clear';
-import SearchIcon from '@mui/icons-material/Search';
 import { Scrollbar } from 'src/components/scrollbar';
 import { GridExpandMoreIcon } from '@mui/x-data-grid';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
@@ -7,11 +5,9 @@ import {
   Box,
   Grid,
   Stack,
-  Button,
   Divider,
   TextField,
   Accordion,
-  IconButton,
   Typography,
   CircularProgress,
   AccordionSummary,
@@ -19,6 +15,7 @@ import {
 } from '@mui/material';
 
 import GroupedBookList from './GroupedBookList';
+import BasicBookTable from './BookView/BasicBookTable';
 import libraryDummyData from '../../../../../libraryData.json';
 
 import type { IBook } from '../../BookManagement/Components/type';
@@ -43,7 +40,7 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
   onViewAllReservationBook,
 }) => {
   const [searchInput, setSearchInput] = useState(''); // typed text
-  const [searchTerm, setSearchTerm] = useState(''); // term used for filtering
+  // const [searchTerm, setSearchTerm] = useState(''); // term used for filtering
   const [visibleCount, setVisibleCount] = useState(10);
   const loaderRef = useRef<HTMLDivElement | null>(null);
   // const {
@@ -58,15 +55,15 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
   const [books, setBooks] = useState(libraryDummyData.books);
   // console.log({ books, isLoading, error });
   const filteredBooks = useMemo(() => {
-    if (!searchTerm) return books;
-    const term = searchTerm.toLowerCase();
+    if (!searchInput) return books;
+    const term = searchInput.toLowerCase();
     return books.filter(
       (book) =>
         book.title.toLowerCase().includes(term) ||
         book.author.toLowerCase().includes(term) ||
         book.isbn.includes(term)
     );
-  }, [books, searchTerm]);
+  }, [books, searchInput]);
 
   const visibleBooks = useMemo(
     () => filteredBooks.slice(0, visibleCount),
@@ -100,16 +97,10 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
     return () => observer.disconnect();
   }, [handleObserver]);
 
-  const handleSearch = () => {
-    setVisibleCount(20); // reset pagination
-    setSearchTerm(searchInput.trim());
-  };
-
-  const handleClear = () => {
-    setSearchInput('');
-    setSearchTerm('');
-    setVisibleCount(20);
-  };
+  // const handleSearch = () => {
+  //   setVisibleCount(20); // reset pagination
+  //   setSearchTerm(searchInput.trim());
+  // };
 
   return (
     <Box sx={{ height: '100%', pb: 5 }}>
@@ -121,66 +112,62 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
           onChange={(e) => setSearchInput(e.target.value)}
           label="Search by Title, Author, ISBN.."
           sx={{ flex: 1 }}
-          InputProps={{
-            endAdornment: searchInput && (
-              <IconButton size="small" onClick={handleClear}>
-                <ClearIcon />
-              </IconButton>
-            ),
-          }}
         />
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<SearchIcon />}
-          onClick={handleSearch}
-          size="small"
-          sx={{ mt: 0.3 }}
-        >
-          Search
-        </Button>
       </Stack>
 
       <Grid container spacing={2}>
-        {Object.keys(groupedBooks)
-          .sort()
-          .map((letter) => (
-            <Grid size={{ xs: 12 }} key={letter}>
-              <Accordion
-                sx={{
-                  borderRadius: 3,
-                  overflow: 'hidden',
-                  boxShadow: 'var(--shadows-5)',
-                  '&:before': { display: 'none' },
-                }}
-              >
-                <AccordionSummary
-                  expandIcon={<GridExpandMoreIcon />}
-                  sx={{
-                    bgcolor: 'background.paper',
-                    borderBottom: '1px solid #eee',
-                    '& .MuiTypography-root': { fontWeight: 600 },
-                  }}
-                >
-                  <Typography variant="h6">{letter}</Typography>
-                </AccordionSummary>
+        {!searchInput ? (
+          <>
+            {Object.keys(groupedBooks)
+              .sort()
+              .map((letter) => (
+                <Grid size={{ xs: 12 }} key={letter}>
+                  <Accordion
+                    sx={{
+                      borderRadius: 3,
+                      overflow: 'hidden',
+                      boxShadow: 'var(--shadows-5)',
+                      '&:before': { display: 'none' },
+                    }}
+                  >
+                    <AccordionSummary
+                      expandIcon={<GridExpandMoreIcon />}
+                      sx={{
+                        bgcolor: 'background.paper',
+                        borderBottom: '1px solid #eee',
+                        '& .MuiTypography-root': { fontWeight: 600 },
+                      }}
+                    >
+                      <Typography variant="h6">{letter}</Typography>
+                    </AccordionSummary>
 
-                <AccordionDetails sx={{ p: 0, pb: 2 }}>
-                  <Divider />
-                  <Scrollbar sx={{ height: 300, p: 2 }}>
-                    <GroupedBookList
-                      groupedBooks={{ [letter]: groupedBooks[letter] }}
-                      onView={onView}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onReserveBook={onReserveBook}
-                      onViewAllReservationBook={onViewAllReservationBook}
-                    />
-                  </Scrollbar>
-                </AccordionDetails>
-              </Accordion>
-            </Grid>
-          ))}
+                    <AccordionDetails sx={{ p: 0, pb: 2 }}>
+                      <Divider />
+                      <Scrollbar sx={{ height: 300, p: 2 }}>
+                        <GroupedBookList
+                          groupedBooks={{ [letter]: groupedBooks[letter] }}
+                          onView={onView}
+                          onEdit={onEdit}
+                          onDelete={onDelete}
+                          onReserveBook={onReserveBook}
+                          onViewAllReservationBook={onViewAllReservationBook}
+                        />
+                      </Scrollbar>
+                    </AccordionDetails>
+                  </Accordion>
+                </Grid>
+              ))}
+          </>
+        ) : (
+          <BasicBookTable
+            books={visibleBooks}
+            onView={onView}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onReserveBook={onReserveBook}
+            onViewAllReservationBook={onViewAllReservationBook}
+          />
+        )}
       </Grid>
 
       {visibleCount < filteredBooks.length && (

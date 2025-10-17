@@ -34,7 +34,7 @@ export const bookValidationSchema = [
       }),
 
     // optional: file uploads or cover images
-    bookCoverImages: yup.array().of(yup.string().url('Must be a valid URL')).nullable(),
+    bookCoverImages: yup.array().nullable(),
     documents: yup.array().nullable(),
 
     // We don't deeply validate copies here (copies validated in Step 1),

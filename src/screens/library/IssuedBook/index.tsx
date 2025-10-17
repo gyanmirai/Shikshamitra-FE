@@ -149,12 +149,7 @@ const IssueReturnBook = () => {
           </Box>
         }
       >
-        <IssueBookModal
-          onClose={() => {
-            issueDialog.onFalse();
-          }}
-          editData={null}
-        />
+        <IssueBookModal onClose={handleClose} editData={null} />
       </CustomDialog>
 
       {/* Table */}
@@ -188,12 +183,7 @@ const IssueReturnBook = () => {
           </Box>
         }
       >
-        <ReturnBookModal
-          onClose={() => {
-            returnDialog.onFalse();
-          }}
-          accessionNo=""
-        />
+        <ReturnBookModal onClose={handleClose} accessionNo="" />
       </CustomDialog>
 
       {/* Delete Confirmation for Reserved Record */}

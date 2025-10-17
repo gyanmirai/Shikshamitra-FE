@@ -18,7 +18,7 @@ const DeliveryChannelTable: React.FC<IDeliveryChannelTableProps> = ({
     tableId="delivery-channel-data-table"
     noDataText={
       <>
-        Delivery Channel Data Not Found{' '}
+        No delivery channel type data found.{' '}
         <Typography
           component="span"
           color="primary.main"

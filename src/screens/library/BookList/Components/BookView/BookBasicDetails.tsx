@@ -35,7 +35,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
       </Typography>
       <Grid container spacing={2} mt={1.5}>
         {/* Author */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
             <Stack direction="row" spacing={3} alignItems="center" ml={2}>
               <Iconify icon="mdi:account" width={22} />
@@ -52,7 +52,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
         </Grid>
 
         {/* Publisher */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
             <Stack direction="row" spacing={3} alignItems="center" ml={2}>
               <Iconify icon="mdi:office-building" width={22} color="#637381" />
@@ -69,7 +69,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
         </Grid>
 
         {/* Subject */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
             <Stack direction="row" spacing={3} alignItems="center" ml={2}>
               <Iconify icon="mdi:book-open-variant" width={22} color="#637381" />
@@ -86,7 +86,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
         </Grid>
 
         {/* ISBN */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
             <Stack direction="row" spacing={3} alignItems="center" ml={2}>
               <Iconify icon="mdi:barcode" width={22} color="#637381" />
@@ -104,13 +104,13 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
 
         {/* Creation Date */}
         {book?.createdOn && (
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
               <Stack direction="row" spacing={3} alignItems="center" ml={2}>
                 <Iconify icon="mdi:calendar-month" width={22} color="#637381" />
                 <Box>
                   <Typography variant="caption" color="text.secondary" textTransform="uppercase">
-                    Creation Date
+                    Added On
                   </Typography>
                   <Typography variant="body1" fontWeight={600}>
                     {new Date(book?.createdOn).toLocaleDateString()}
@@ -120,6 +120,74 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
             </Paper>
           </Grid>
         )}
+
+        {/* Language */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+            <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+              <Iconify icon="mdi:translate" width={22} color="#637381" />
+              <Box>
+                <Typography variant="caption" color="text.secondary" textTransform="uppercase">
+                  Language
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {book?.language || '—'}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
+
+        {/* Edition */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+            <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+              <Iconify icon="mdi:book-edit-outline" width={22} color="#637381" />
+              <Box>
+                <Typography variant="caption" color="text.secondary" textTransform="uppercase">
+                  Edition
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {book?.edition || '—'}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
+
+        {/* Category */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+            <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+              <Iconify icon="mdi:tag-multiple" width={22} color="#637381" />
+              <Box>
+                <Typography variant="caption" color="text.secondary" textTransform="uppercase">
+                  Category
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {book?.category || '—'}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
+
+        {/* No. of Pages */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+            <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+              <Iconify icon="mdi:file-document-multiple-outline" width={22} color="#637381" />
+              <Box>
+                <Typography variant="caption" color="text.secondary" textTransform="uppercase">
+                  No. of Pages
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {book?.numberOfPages || '—'}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
       </Grid>
 
       {/* Description */}

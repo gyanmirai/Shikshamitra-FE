@@ -29,7 +29,7 @@ const BookViewDetail: React.FC<BookViewDetailProps> = ({
         Book Copies
       </Typography>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={2} sx={{ pb: 2 }}>
         {book?.copies?.map((copy) => (
           <Grid size={{ xs: 12, md: 4, sm: 2 }} key={copy.accessionNo}>
             <BookCopyCard

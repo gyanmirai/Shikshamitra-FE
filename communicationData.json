@@ -188,6 +188,7 @@
           "color": "#faad14"
         }
       ],
+      "recurrenceSummary": "Every Wednesday until 17 Dec 2025",
       "organizations": ["Sports Committee"],
       "classes": ["10", "11", "12"],
       "divisions": ["A", "B", "C"],
@@ -225,6 +226,8 @@
           "color": "#faad14"
         }
       ],
+            "recurrenceSummary": "Every Wednesday until 17 Dec 2025",
+
       "organizations": ["Computer Science Club"],
       "classes": ["9", "10", "11", "12"],
       "divisions": ["A", "B"],
@@ -264,6 +267,8 @@
           "color": "#52c41a"
         }
       ],
+            "recurrenceSummary": "Every Wednesday until 17 Dec 2025",
+
       "organizations": ["Academic Committee"],
       "classes": ["1", "2", "3", "4"],
       "divisions": ["A"],

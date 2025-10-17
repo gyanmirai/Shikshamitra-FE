@@ -2,7 +2,6 @@ import type { FormikProps } from 'formik';
 
 import { debounce } from 'lodash';
 import React, { useCallback } from 'react';
-import { Editor } from 'src/components/editor';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -10,6 +9,8 @@ import { Box, Grid, TextField, Typography, Autocomplete } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetImportanceLevelOptionsQuery } from 'src/redux/communication/setting/importanceLevel';
 import { useGetNotificationTemplatesQuery } from 'src/redux/communication/notification/notificationTemplateApi';
+
+import EditorWithPlaceholder from './PlaceHolderEditor';
 
 import type { INotificationSendSchema } from './type';
 
@@ -124,32 +125,45 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
             </ShakingTextField>
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <ShakingTextField
+            <EditorWithPlaceholder
+              value={formik.values.selectedTemplate?.message || ''}
+              onChange={(value) => handleEditorChange(value, formik.setFieldValue)}
+              placeholder="Message"
               error={
                 !!(
                   formik.touched.selectedTemplate?.message &&
                   formik.errors.selectedTemplate?.message
                 )
               }
-            >
-              <Editor
-                value={formik.values.selectedTemplate?.id}
-                onChange={(value) => handleEditorChange(value, formik.setFieldValue)}
-                placeholder="Message"
-                error={
-                  !!(
-                    formik.touched.selectedTemplate?.message &&
-                    formik.errors.selectedTemplate?.message
-                  )
-                }
-                editable={!formik.values.selectedTemplate?.templateName}
-                helperText={
-                  (formik.touched.selectedTemplate?.message &&
-                    formik.errors.selectedTemplate?.message) ||
-                  ''
-                }
-              />
-            </ShakingTextField>
+              editable={!formik.values.selectedTemplate?.templateName}
+              helperText={
+                (formik.touched.selectedTemplate?.message &&
+                  formik.errors.selectedTemplate?.message) ||
+                ''
+              }
+              placeholderOptions={[
+                { value: '[Student Name]', label: 'Student Name' },
+                { value: '[Parent Name]', label: 'Parent Name' },
+              ]}
+            />
+
+            {/* <Editor
+              value={formik.values.selectedTemplate?.message}
+              onChange={(value) => handleEditorChange(value, formik.setFieldValue)}
+              placeholder="Message"
+              error={
+                !!(
+                  formik.touched.selectedTemplate?.message &&
+                  formik.errors.selectedTemplate?.message
+                )
+              }
+              editable={!formik.values.selectedTemplate?.templateName}
+              helperText={
+                (formik.touched.selectedTemplate?.message &&
+                  formik.errors.selectedTemplate?.message) ||
+                ''
+              }
+            /> */}
           </Grid>
         </SectionCard>
       </Grid>
