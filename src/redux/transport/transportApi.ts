@@ -75,6 +75,16 @@ export const transportApi = createApi({
             return { data: vehicleManagementData.locationOptions };
           case '/routeManagementData':
             return { data: vehicleManagementData.routeManagementData };
+          case '/stopBasedFeeData':
+            return { data: vehicleManagementData.stopBasedFeeData };
+          case '/distanceCalculationOptions':
+            return { data: vehicleManagementData.distanceCalculationOptions };
+          case '/frequencyOptions':
+            return { data: vehicleManagementData.frequencyOptions };
+          case '/zoneBasedFeeData':
+            return { data: vehicleManagementData.zoneBasedFeeData };
+          case '/availableStopsOptions':
+            return { data: vehicleManagementData.availableStopsOptions };
           default:
             return {
               error: {
@@ -116,6 +126,11 @@ export const transportApi = createApi({
     'RouteTypeOptions',
     'LocationOptions',
     'RouteManagementData',
+    'StopBasedFeeData',
+    'DistanceCalculationOptions',
+    'FrequencyOptions',
+    'ZoneBasedFeeData',
+    'AvailableStopsOptions',
   ],
   endpoints: () => ({}),
 });

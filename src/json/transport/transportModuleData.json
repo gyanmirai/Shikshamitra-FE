@@ -679,72 +679,74 @@
     { "value": "Route D-Pal", "label": "Route D-Pal" },
     { "value": "Route E-Dindoli", "label": "Route E-Dindoli" }
   ],
-   "documentDetailsData": [
-  {
-    "id": "1",
-    "key": "registrationCertificate",
-    "name": "Registration Certificate",
-    "documentType": "RC Book",
-    "issueDate": "15-03-2020",
-    "expiryDate": "14-03-2030",
-    "status": "Uploaded",
-    "documentUrl": "/documents/rc-certificate.pdf",
-    "issuingAuthority": "RTO Surat",
-    "documentNumber": "GJ05AD271100001",
-    "acceptedFormat": "PDF,JPG,PNG"
-  },
-  {
-    "id": "2",
-    "key": "insuranceCertificate",
-    "name": "Insurance Certificate",
-    "documentType": "Insurance Policy",
-    "issueDate": "10-12-2024",
-    "expiryDate": "09-12-2025",
-    "status": "Uploaded",
-    "documentUrl": "/documents/insurance-certificate.pdf",
-    "issuingAuthority": "HDFC ERGO General Insurance",
-    "documentNumber": "POL123456789",
-    "acceptedFormat": "PDF,JPG,PNG"
-  },
-  {
-    "id": "3",
-    "key": "fitnessCertificate",
-    "name": "Fitness Certificate",
-    "documentType": "Fitness Document",
-    "issueDate": "20-06-2024",
-    "expiryDate": "19-06-2025",
-    "status": "Pending",
-    "documentUrl": "/documents/fitness-certificate.pdf",
-    "issuingAuthority": "RTO Surat",
-    "documentNumber": "FIT202400567",
-    "acceptedFormat": "PDF,JPG,PNG"
-  },
-  {
-    "id": "4",
-    "key": "pucCertificate",
-    "name": "Pollution Under Control",
-    "documentType": "PUC Certificate",
-    "issueDate": "05-10-2024",
-    "expiryDate": "04-04-2025",
-    "status": "Uploaded",
-    "documentUrl": "/documents/puc-certificate.pdf",
-    "issuingAuthority": "Authorized PUC Center",
-    "documentNumber": "PUC202410001",
-    "acceptedFormat": "PDF,JPG,PNG"
-  },
-  {
-    "id": "5",
-    "key": "roadTaxReceipt",
-    "name": "Road Tax Receipt",
-    "documentType": "Tax Document",
-    "issueDate": "01-04-2024",
-    "expiryDate": "31-03-2025",
-    "status": "Uploaded",
-    "documentUrl": "/documents/road-tax-receipt.pdf",
-    "issuingAuthority": "RTO Surat",
-    "documentNumber": "TAX202400789",
-    "acceptedFormat": "PDF,JPG,PNG"
-  }],
+  "documentDetailsData": [
+    {
+      "id": "1",
+      "key": "registrationCertificate",
+      "name": "Registration Certificate",
+      "documentType": "RC Book",
+      "issueDate": "15-03-2020",
+      "expiryDate": "14-03-2030",
+      "status": "Uploaded",
+      "documentUrl": "/documents/rc-certificate.pdf",
+      "issuingAuthority": "RTO Surat",
+      "documentNumber": "GJ05AD271100001",
+      "acceptedFormat": "PDF,JPG,PNG"
+    },
+    {
+      "id": "2",
+      "key": "insuranceCertificate",
+      "name": "Insurance Certificate",
+      "documentType": "Insurance Policy",
+      "issueDate": "10-12-2024",
+      "expiryDate": "09-12-2025",
+      "status": "Uploaded",
+      "documentUrl": "/documents/insurance-certificate.pdf",
+      "issuingAuthority": "HDFC ERGO General Insurance",
+      "documentNumber": "POL123456789",
+      "acceptedFormat": "PDF,JPG,PNG"
+    },
+    {
+      "id": "3",
+      "key": "fitnessCertificate",
+      "name": "Fitness Certificate",
+      "documentType": "Fitness Document",
+      "issueDate": "20-06-2024",
+      "expiryDate": "19-06-2025",
+      "status": "Pending",
+      "documentUrl": "/documents/fitness-certificate.pdf",
+      "issuingAuthority": "RTO Surat",
+      "documentNumber": "FIT202400567",
+      "acceptedFormat": "PDF,JPG,PNG"
+    },
+    {
+      "id": "4",
+      "key": "pucCertificate",
+      "name": "Pollution Under Control",
+      "documentType": "PUC Certificate",
+      "issueDate": "05-10-2024",
+      "expiryDate": "04-04-2025",
+      "status": "Uploaded",
+      "documentUrl": "/documents/puc-certificate.pdf",
+      "issuingAuthority": "Authorized PUC Center",
+      "documentNumber": "PUC202410001",
+      "acceptedFormat": "PDF,JPG,PNG"
+    },
+    {
+      "id": "5",
+      "key": "roadTaxReceipt",
+      "name": "Road Tax Receipt",
+      "documentType": "Tax Document",
+      "issueDate": "01-04-2024",
+      "expiryDate": "31-03-2025",
+      "status": "Uploaded",
+      "documentUrl": "/documents/road-tax-receipt.pdf",
+      "issuingAuthority": "RTO Surat",
+      "documentNumber": "TAX202400789",
+      "acceptedFormat": "PDF,JPG,PNG"
+    }
+  ],
+
   "vehicleHistoryData": [
     {
       "id": "1",
@@ -848,7 +850,7 @@
       "status": "Active"
     }
   ],
-   "assignableVehiclesData": [
+  "assignableVehiclesData": [
     {
       "id": "vehicle-1",
       "value": "gj-05-ad-0127",
@@ -951,7 +953,7 @@
       "label": "Pickup"
     },
     {
-      "id": "2", 
+      "id": "2",
       "value": "drop",
       "label": "Drop"
     },
@@ -969,7 +971,7 @@
     },
     {
       "id": "2",
-      "value": "parvat-patiya", 
+      "value": "parvat-patiya",
       "label": "Parvat Patiya"
     },
     {
@@ -1086,5 +1088,96 @@
       "students": 43,
       "status": "Active"
     }
+  ],
+  "stopBasedFeeData": [
+    {
+      "id": "1",
+      "stopName": "Mahendra Park",
+      "kilometers": "5 KM",
+      "landmark": "Parvat Patiya",
+      "assignedStudents": 40,
+      "feeAmount": 120,
+      "frequency": "Monthly"
+    },
+    {
+      "id": "2",
+      "stopName": "Kamrej Char Rasta",
+      "kilometers": "2 KM",
+      "landmark": "Kamrej",
+      "assignedStudents": 15,
+      "feeAmount": 140,
+      "frequency": "Yearly"
+    },
+    {
+      "id": "3",
+      "stopName": "D-mart",
+      "kilometers": "3 KM",
+      "landmark": "Sarthana",
+      "assignedStudents": 25,
+      "feeAmount": 180,
+      "frequency": "Monthly"
+    },
+    {
+      "id": "4",
+      "stopName": "Devadhgam",
+      "kilometers": "1.5 KM",
+      "landmark": "Godadara",
+      "assignedStudents": 11,
+      "feeAmount": 280,
+      "frequency": "Yearly"
+    }
+  ],
+  "distanceCalculationOptions": [
+    { "value": "Pickup-Drop", "label": "Pickup-Drop" },
+    { "value": "One-Way", "label": "One-Way" },
+    { "value": "Round-Trip", "label": "Round-Trip" }
+  ],
+  "frequencyOptions": [
+    { "value": "Daily", "label": "Daily" },
+    { "value": "Monthly", "label": "Monthly" },
+    { "value": "Quarterly", "label": "Quarterly" },
+    { "value": "Yearly", "label": "Yearly" }
+  ],
+  "zoneBasedFeeData": [
+    {
+      "id": "1",
+      "zoneName": "Zone A",
+      "feeAmount": 120,
+      "assignedStops": 4,
+      "color": "#10b981",
+      "stops": ["Mahendra Park", "Kamrej Char Rasta", "D-mart", "Devadhgam"]
+    },
+    {
+      "id": "2",
+      "zoneName": "Zone B",
+      "feeAmount": 200,
+      "assignedStops": 6,
+      "color": "#06b6d4",
+      "stops": ["Parvat Patiya", "Reshma Circle", "Maharana Pratap Circle", "Kangaroo Circle", "VIP Circle", "Ring Road"]
+    },
+    {
+      "id": "3",
+      "zoneName": "Zone C",
+      "feeAmount": 350,
+      "assignedStops": 5,
+      "color": "#1e40af",
+      "stops": ["Varachha Road", "City Light", "Adajan", "Dindoli", "Simadi"]
+    },
+    {
+      "id": "4",
+      "zoneName": "Zone D",
+      "feeAmount": 167,
+      "assignedStops": 7,
+      "color": "#f59e0b",
+      "stops": ["Godadara", "Kapodara", "Sarthana", "Kamrej", "Deep Darshan", "Punjan Plaza", "Aashpas Mandir"]
+    }
+  ],
+   "availableStopsOptions": [
+    { "value": "Maharana Pratap Circle", "label": "Maharana Pratap Circle" },
+    { "value": "Kangaroo Circle", "label": "Kangaroo Circle" },
+    { "value": "VIP Circle", "label": "VIP Circle" },
+    { "value": "Ring Road", "label": "Ring Road" },
+    { "value": "Varachha Road", "label": "Varachha Road" },
+    { "value": "City Light", "label": "City Light" }
   ]
 }

@@ -48,7 +48,7 @@ const StopsStep = ({ formik }: StopsStepProps) => {
   };
 
   // Get selected stop values for the autocomplete
-  const selectedStopValues = formik.values.stops.map((stop) => stop.id);
+  const selectedStopValues = formik?.values?.stops?.map((stop) => stop.id);
 
   return (
     <SectionCard title="Stops Assignment">

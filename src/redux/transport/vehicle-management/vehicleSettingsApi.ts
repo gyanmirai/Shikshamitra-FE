@@ -37,6 +37,41 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
       }),
       providesTags: ['FuelTypeOptions'],
     }),
+    getStopBasedFeeData: builder.query({
+      query: () => ({
+        url: '/stopBasedFeeData',
+        method: 'GET',
+      }),
+      providesTags: ['StopBasedFeeData'],
+    }),
+    getDistanceCalculationOptions: builder.query({
+      query: () => ({
+        url: '/distanceCalculationOptions',
+        method: 'GET',
+      }),
+      providesTags: ['DistanceCalculationOptions'],
+    }),
+    getFrequencyOptions: builder.query({
+      query: () => ({
+        url: '/frequencyOptions',
+        method: 'GET',
+      }),
+      providesTags: ['FrequencyOptions'],
+    }),
+    getZoneBasedFeeData: builder.query({
+      query: () => ({
+        url: '/zoneBasedFeeData',
+        method: 'GET',
+      }),
+      providesTags: ['ZoneBasedFeeData'],
+    }),
+    getAvailableStopsOptions: builder.query({
+      query: () => ({
+        url: '/availableStopsOptions',
+        method: 'GET',
+      }),
+      providesTags: ['AvailableStopsOptions'],
+    }),
   }),
 });
 
@@ -46,4 +81,9 @@ export const {
   useGetServiceTypesQuery,
   useGetLicenceTypesQuery,
   useGetFuelTypesQuery,
+  useGetStopBasedFeeDataQuery,
+  useGetDistanceCalculationOptionsQuery,
+  useGetFrequencyOptionsQuery,
+  useGetZoneBasedFeeDataQuery,
+  useGetAvailableStopsOptionsQuery,
 } = vehicleSettingsApi;

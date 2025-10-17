@@ -1662,6 +1662,13 @@ const transportModule = {
               shortcutKey: 'Alt+T+S+5',
               shortcutKeyName: 'Alt+T+S+5',
             },
+            {
+              title: 'Fee Configuration',
+              path: '/transport/settings/feeConfiguration',
+              _action: 'fee-configuration',
+              shortcutKey: 'Alt+T+S+6',
+              shortcutKeyName: 'Alt+T+S+6',
+            },
           ],
         },
       ],
