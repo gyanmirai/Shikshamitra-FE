@@ -9,7 +9,7 @@ const MemberManagementTable: React.FC<IMemberTableProps> = ({ data, onView }) =>
   <Box>
     <CustomizableTable
       tableId="member-table"
-      noDataText="No Members Found"
+      noDataText="No Members Data Found"
       columns={[
         {
           id: 'name',
@@ -28,7 +28,8 @@ const MemberManagementTable: React.FC<IMemberTableProps> = ({ data, onView }) =>
         },
         { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
         { id: 'role', label: 'Role', align: 'left' },
-        { id: 'grNo', label: 'GR No', align: 'left', minWidth: '100px' },
+        { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
+        { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 90 },
         { id: 'class', label: 'Class', align: 'left', minWidth: '100px' },
         { id: 'division', label: 'Division', align: 'left', minWidth: '100px' },
         { id: 'currentIssue', label: 'Current Issue', align: 'left', minWidth: '130px' },

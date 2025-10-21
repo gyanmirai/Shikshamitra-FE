@@ -124,6 +124,7 @@ const BookIssueReturnTable = ({
           { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '150px' },
           { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
           { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
+          { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
           { id: 'grNo', label: 'GR No.', align: 'left', minWidth: '120px' },
           { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '120px' },
           { id: 'bookCategory', label: 'Book Category', align: 'left', minWidth: '140px' },

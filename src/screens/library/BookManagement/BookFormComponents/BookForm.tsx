@@ -40,7 +40,7 @@ const BookFormStepper = ({
           });
         } else if (activeStep === 1) {
           shikshaMitraToast.success({
-            message: `Copies for "${values.title}" saved successfully`,
+            message: `Book "${values.title}" added successfully`,
           });
         }
 

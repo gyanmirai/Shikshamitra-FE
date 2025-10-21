@@ -4,6 +4,7 @@ import * as Yup from 'yup';
 // ------------------ Schema ------------------
 export const getIssueBookSchema = (currentYear: any) =>
   Yup.object().shape({
+    accessionNumber: Yup.string().required('Accession No. is required'),
     issueDate: Yup.mixed()
       .required('Issue date is required')
       .test(
@@ -48,4 +49,5 @@ export const getIssueBookSchema = (currentYear: any) =>
           `Due date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
+    memberId: Yup.string().required('Member Id is required'),
   });

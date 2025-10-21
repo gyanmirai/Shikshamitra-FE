@@ -22,7 +22,6 @@ import {
   Box,
   Grid,
   Card,
-  Stack,
   Button,
   Avatar,
   TextField,
@@ -48,7 +47,6 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
   const [selectedMember, setSelectedMember] = useState<any | null>(editData?.memberId || null);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [books, setBooks] = useState(libraryDummyData.books);
-  console.log('selectedBook====', editData);
   const [loading, setLoading] = useState(false);
   const [loadingMember, setLoadingMember] = useState(false);
 
@@ -141,12 +139,12 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
       <DialogScrollContent>
         <Grid container spacing={3}>
           {!editData && (
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField
                 error={!!(formik.touched.accessionNumber && formik.errors.accessionNumber)}
               >
                 <TextField
-                  label="Scan Barcode or Search by Accession No."
+                  label="Search by Accession No."
                   size="small"
                   fullWidth
                   value={formik.values.accessionNumber}
@@ -156,7 +154,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                   helperText={
                     (formik.touched.accessionNumber && formik.errors.accessionNumber) as string
                   }
-                  placeholder="Enter accession number (e.g., A001, A002, A003)"
+                  placeholder="Enter accession number (e.g., ACC-0001, ACC-0002, ACC-0003)"
                 />
               </ShakingTextField>
             </Grid>
@@ -199,56 +197,60 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                             <Grid size={{ xs: 12, md: 4 }}>
                               {' '}
                               <Typography fontWeight={600}>Book Title</Typography>{' '}
-                              <Typography>{selectedBook?.book.title}</Typography>{' '}
+                              <Typography>
+                                {selectedBook?.book.title ? selectedBook?.book.title : '-'}
+                              </Typography>{' '}
                             </Grid>{' '}
                             <Grid size={{ xs: 12, md: 4 }}>
                               {' '}
                               <Typography fontWeight={600}>Accession No.</Typography>{' '}
-                              <Typography>{selectedBook?.accessionNo}</Typography>{' '}
+                              <Typography>{selectedBook?.accessionNo || '-'}</Typography>{' '}
                             </Grid>{' '}
                             <Grid size={{ xs: 12, md: 4 }}>
                               {' '}
                               <Typography fontWeight={600}>Author</Typography>{' '}
-                              <Typography>{selectedBook?.book.author}</Typography>{' '}
+                              <Typography>{selectedBook?.book.author || '-'}</Typography>{' '}
                             </Grid>{' '}
                             <Grid size={{ xs: 12, md: 4 }}>
                               {' '}
                               <Typography fontWeight={600}>ISBN</Typography>{' '}
-                              <Typography>{selectedBook?.book.isbn}</Typography>{' '}
+                              <Typography>{selectedBook?.book.isbn || '-'}</Typography>{' '}
                             </Grid>{' '}
                             <Grid size={{ xs: 12, md: 4 }}>
                               {' '}
                               <Typography fontWeight={600}>Publisher</Typography>{' '}
-                              <Typography>{selectedBook?.book.publisher}</Typography>{' '}
+                              <Typography>{selectedBook?.book.publisher || '-'}</Typography>{' '}
                             </Grid>{' '}
                             <Grid size={{ xs: 12, md: 4 }}>
                               {' '}
                               <Typography fontWeight={600}>Added On</Typography>{' '}
                               <Typography>
                                 {' '}
-                                {dayjs(selectedBook?.book.createdOn).format('YYYY')}{' '}
+                                {selectedBook?.book.createdOn
+                                  ? dayjs(selectedBook.book.createdOn).format('YYYY')
+                                  : '-'}{' '}
                               </Typography>{' '}
                             </Grid>{' '}
                             <Grid size={{ xs: 12, md: 4 }}>
                               {' '}
                               <Typography fontWeight={600}>Language</Typography>{' '}
-                              <Typography>{selectedBook?.book.language || 'N/A'}</Typography>{' '}
+                              <Typography>{selectedBook?.book.language || '-'}</Typography>{' '}
                             </Grid>{' '}
                             <Grid size={{ xs: 12, md: 4 }}>
                               {' '}
                               <Typography fontWeight={600}>Edition</Typography>{' '}
-                              <Typography>{selectedBook?.book.edition || 'N/A'}</Typography>{' '}
+                              <Typography>{selectedBook?.book.edition || '-'}</Typography>{' '}
                             </Grid>{' '}
                             <Grid size={{ xs: 12, md: 4 }}>
                               {' '}
                               <Typography fontWeight={600}>Category</Typography>{' '}
-                              <Typography>{selectedBook?.book.category || 'N/A'}</Typography>{' '}
+                              <Typography>{selectedBook?.book.category || '-'}</Typography>{' '}
                             </Grid>{' '}
                             <Grid size={{ xs: 12, md: 4 }}>
                               {' '}
                               <Typography fontWeight={600}>No. of Pages</Typography>{' '}
                               <Typography>
-                                {selectedBook?.book.numberOfPages || 'N/A'}
+                                {selectedBook?.book.numberOfPages || '-'}
                               </Typography>{' '}
                             </Grid>{' '}
                           </Grid>{' '}
@@ -273,10 +275,6 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                     }}
                   >
                     Accession number &quot;{formik.values.accessionNumber}&quot; not found.
-                    <br />
-                    Available numbers:{' '}
-                    {copies?.map((c: IBookCopy) => c.accessionNo).join(', ') ||
-                      'No copies available'}
                   </div>
                 </Grid>
               );
@@ -285,16 +283,19 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
           })()}
 
           <Grid size={{ xs: 12 }}>
-            <Stack direction="row" spacing={2}>
+            <ShakingTextField error={!!(formik.touched.memberId && formik.errors.memberId)}>
               <TextField
                 variant="outlined"
                 size="small"
                 value={formik.values.memberId}
                 onChange={(e) => handleMemberSearch(e.target.value)}
                 label="Search Member Id"
-                sx={{ flex: 1 }}
+                placeholder="Search By Member Id"
+                fullWidth
+                error={!!(formik.touched.memberId && formik.errors.memberId)}
+                helperText={(formik.touched.memberId && formik.errors.memberId) as string}
               />
-            </Stack>
+            </ShakingTextField>
           </Grid>
 
           {(() => {
@@ -341,19 +342,19 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                             {selectedMember.role === 'Student' && (
                               <>
                                 <Grid size={{ xs: 12, md: 4 }}>
-                                  <Typography fontWeight={600}>Roll No</Typography>
-                                  <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                  <Typography fontWeight={600}>GR No</Typography>
-                                  <Typography>{selectedMember.grNo || 'N/A'}</Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
                                   <Typography fontWeight={600}>Class/Division</Typography>
                                   <Typography>
                                     {selectedMember.class || 'N/A'} -{' '}
                                     {selectedMember.division || 'N/A'}
                                   </Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>Roll No.</Typography>
+                                  <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>GR No.</Typography>
+                                  <Typography>{selectedMember.grNo || 'N/A'}</Typography>
                                 </Grid>
                               </>
                             )}
@@ -363,7 +364,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                               <Typography>{selectedMember.contactNo || 'N/A'}</Typography>
                             </Grid>
                             <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Member Type</Typography>
+                              <Typography fontWeight={600}>Role</Typography>
                               <Typography>{selectedMember.role}</Typography>
                             </Grid>
                             <Grid size={{ xs: 12, md: 4 }}>
@@ -392,9 +393,6 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                     }}
                   >
                     Member with ID or name &quot;{formik.values.memberId}&quot; not found.
-                    <br />
-                    Available IDs:{' '}
-                    {memberData.map((m: any) => m.memberId).join(', ') || 'No members available'}
                   </div>
                 </Grid>
               );
@@ -402,55 +400,58 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
             return null;
           })()}
 
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>
-              <DatePicker
-                label="Issue Date *"
-                format="DD-MM-YYYY"
-                value={formik.values.issueDate}
-                onChange={(newValue) => {
-                  formik.setFieldValue('issueDate', newValue);
-                  formik.setFieldTouched('issueDate', false);
-                }}
-                minDate={dayjs(currentYear?.startDate)}
-                maxDate={dayjs(currentYear?.endDate)}
-                sx={{ minWidth: 180, width: '100%' }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                    error: !!(formik.touched.issueDate && formik.errors.issueDate),
-                    helperText: (formik.touched.issueDate && formik.errors.issueDate) as string,
-                  },
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate)}>
-              <DatePicker
-                label="Due Date *"
-                format="DD-MM-YYYY"
-                value={formik.values.dueDate}
-                onChange={(newValue) => {
-                  formik.setFieldValue('dueDate', newValue);
-                  formik.setFieldTouched('dueDate', false);
-                }}
-                minDate={dayjs(formik.values.issueDate || currentYear?.startDate)} // ensures due date is after issue date
-                maxDate={dayjs(currentYear?.endDate)}
-                sx={{ minWidth: 180, width: '100%' }}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: 'small',
-                    error: !!(formik.touched.dueDate && formik.errors.dueDate),
-                    helperText: (formik.touched.dueDate && formik.errors.dueDate) as string,
-                  },
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
+          {selectedBook && selectedMember && (
+            <>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.issueDate && formik.errors.issueDate)}>
+                  <DatePicker
+                    label="Issue Date *"
+                    format="DD-MM-YYYY"
+                    value={formik.values.issueDate}
+                    onChange={(newValue) => {
+                      formik.setFieldValue('issueDate', newValue);
+                      formik.setFieldTouched('issueDate', false);
+                    }}
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs(currentYear?.endDate)}
+                    sx={{ minWidth: 180, width: '100%' }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: !!(formik.touched.issueDate && formik.errors.issueDate),
+                        helperText: (formik.touched.issueDate && formik.errors.issueDate) as string,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.dueDate && formik.errors.dueDate)}>
+                  <DatePicker
+                    label="Due Date *"
+                    format="DD-MM-YYYY"
+                    value={formik.values.dueDate}
+                    onChange={(newValue) => {
+                      formik.setFieldValue('dueDate', newValue);
+                      formik.setFieldTouched('dueDate', false);
+                    }}
+                    minDate={dayjs(formik.values.issueDate || currentYear?.startDate)} // ensures due date is after issue date
+                    maxDate={dayjs(currentYear?.endDate)}
+                    sx={{ minWidth: 180, width: '100%' }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: !!(formik.touched.dueDate && formik.errors.dueDate),
+                        helperText: (formik.touched.dueDate && formik.errors.dueDate) as string,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
+            </>
+          )}
         </Grid>
       </DialogScrollContent>
 
@@ -464,14 +465,14 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
           Cancel
         </Button>
         <Button
-          startIcon={<Iconify icon={GlobalIcons.submit} width={16} height={16} />}
+          startIcon={<Iconify icon="cib:stackoverflow" width={16} height={16} />}
           onClick={(e: any) => {
             formik.handleSubmit(e);
           }}
           size="small"
           variant="contained"
         >
-          Submit
+          Issue
         </Button>
       </DialogActions>
     </BackPopUpChecked>

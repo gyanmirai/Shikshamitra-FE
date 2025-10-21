@@ -82,8 +82,12 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
             <Avatar
               src="/assets/images/avatar/avatar-1.jpg"
               alt={member?.name || 'Member'}
-              variant="rounded"
-              sx={{ mt: 2, width: { xs: 60, sm: 80 }, height: { xs: 60, sm: 80 } }}
+              sx={{
+                mt: 2,
+                width: { xs: 60, sm: 80 },
+                height: { xs: 60, sm: 80 },
+                borderRadius: '50%',
+              }}
             />
           </Grid>
 
@@ -100,7 +104,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
               </Grid>
               <Grid size={{ xs: 12, sm: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Class
+                  Class/Division
                 </Typography>
                 <Typography variant="subtitle2" fontWeight="medium">
                   {member?.class || '10'}-{member?.division || 'A'}
@@ -108,7 +112,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
               </Grid>
               <Grid size={{ xs: 12, sm: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Roll No
+                  Roll No.
                 </Typography>
                 <Typography variant="subtitle2" fontWeight="medium">
                   {member?.rollNo || '10'}
@@ -116,7 +120,7 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
               </Grid>
               <Grid size={{ xs: 12, sm: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Gr No
+                  Gr No.
                 </Typography>
                 <Typography variant="subtitle2" fontWeight="medium">
                   {member?.grNo || 'GR43'}

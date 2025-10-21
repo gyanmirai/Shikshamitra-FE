@@ -14,8 +14,8 @@ export const bookValidationSchema = [
       .string()
       .trim()
       .required('ISBN is required')
-      .matches(/^\d{10}(\d{3})?$/, 'ISBN must be 10 or 13 digits'),
-
+      .max(18, 'ISBN cannot exceed 18 characters')
+      .matches(/^[\d-]+$/, 'ISBN can only contain digits and hyphens'),
     numberOfCopies: yup
       .number()
       .required('Number of copies is required')

@@ -32,16 +32,41 @@ const ViewBookCopyHistoryTable: React.FC<ViewBookCopyHistoryTableProps> = ({
               noDataText="No Reserved Members Found"
               isLoading={memberLoading}
               columns={[
-                { id: 'memberId', label: 'Member ID', align: 'left', sticky: true },
-                { id: 'name', label: 'Member Name', align: 'left' },
+                { id: 'memberId', label: 'Member ID', align: 'left', sticky: true, minWidth: 120 },
+                { id: 'name', label: 'Member Name', align: 'left', minWidth: 140 },
                 { id: 'role', label: 'Role', align: 'left' },
                 { id: 'class', label: 'Class', align: 'left' },
                 { id: 'division', label: 'Division', align: 'left' },
-                { id: 'rollNo', label: 'Roll No', align: 'left' },
-                { id: 'grNo', label: 'GR No', align: 'left' },
+                { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
+                { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 80 },
+                {
+                  id: 'issuedDate',
+                  label: 'Issued Date',
+                  align: 'left',
+                  minWidth: 120,
+                  filterType: 'date',
+                  render: (value) => (
+                    <Typography variant="caption" fontSize="13px">
+                      {dayjs(value).format('DD-MM-YYYY')}
+                    </Typography>
+                  ),
+                },
+                {
+                  id: 'returnDate',
+                  label: 'Return Date',
+                  align: 'left',
+                  minWidth: 120,
+                  filterType: 'date',
+                  render: (value) => (
+                    <Typography variant="caption" fontSize="13px">
+                      {dayjs(value).format('DD-MM-YYYY')}
+                    </Typography>
+                  ),
+                },
                 {
                   id: 'requestedDate',
                   label: 'Requested Date',
+                  minWidth: 150,
                   align: 'left',
                   filterType: 'date',
                   render: (value) => (
@@ -54,6 +79,7 @@ const ViewBookCopyHistoryTable: React.FC<ViewBookCopyHistoryTableProps> = ({
                   id: 'reserveDueDate',
                   label: 'Reserve Due Date',
                   align: 'left',
+                  minWidth: 160,
                   filterType: 'date',
                   render: (value) => (
                     <Typography variant="caption" fontSize="13px">

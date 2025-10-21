@@ -273,7 +273,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         maxWidth="md"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Reserve Book</Typography>
+            <Typography variant="h5">Reserve Book {selectedBook?.title}</Typography>
             <CustomTooltip
               arrow
               placement="right"

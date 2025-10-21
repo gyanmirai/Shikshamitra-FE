@@ -76,6 +76,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                 value: book.key,
                 title: book.title,
               }))}
+              disableClearable={!formik.values.title}
               fullWidth
               value={formik.values.title}
               onInputChange={(event, newInputValue, reason) => {
@@ -196,7 +197,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                 value={formik.values.isbn}
                 onChange={(e) => {
                   const value = e.target.value.replace(/[^0-9-]/g, '');
-                  if (value.length <= 13) {
+                  if (value.length <= 18) {
                     formik.setFieldValue('isbn', value);
                     formik.setFieldTouched('isbn', false);
                   }
@@ -447,7 +448,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
             <ShakingTextField error={!!(formik.touched.classes && formik.errors.classes)}>
               <CustomSelect
                 options={allClass}
-                label="Applicable Classes *"
+                label="Applicable Classes"
                 multiple
                 value={formik.values.classes || []}
                 onChange={(val) => {
