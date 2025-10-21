@@ -30,9 +30,10 @@ interface IAddZoneFormProps {
     color?: string;
     stops?: string[];
   } | null;
+  onSubmit: (values: any) => void;
 }
 
-const AddZoneForm: React.FC<IAddZoneFormProps> = ({ open, onClose, editData }) => {
+const AddZoneForm: React.FC<IAddZoneFormProps> = ({ open, onClose, editData, onSubmit }) => {
   const { data: stopOptions } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAvailableStopsOptionsQuery,
@@ -66,6 +67,7 @@ const AddZoneForm: React.FC<IAddZoneFormProps> = ({ open, onClose, editData }) =
           message: `Zone: ${values.zoneName} has been successfully added`,
         });
       }
+      onSubmit(values);
       onClose(null, true);
     },
   });
@@ -73,7 +75,7 @@ const AddZoneForm: React.FC<IAddZoneFormProps> = ({ open, onClose, editData }) =
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent dividers>
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.zoneName && formik.errors.zoneName)}>
               <TextField
@@ -150,13 +152,19 @@ const AddZoneForm: React.FC<IAddZoneFormProps> = ({ open, onClose, editData }) =
       </DialogScrollContent>
 
       <DialogActions sx={{ p: 2 }}>
-        <Button variant="outlined" onClick={(e) => onClose(e, false)} startIcon={<Close />}>
+        <Button
+          variant="outlined"
+          onClick={(e) => onClose(e, false)}
+          startIcon={<Close />}
+          size="small"
+        >
           Cancel
         </Button>
         <Button
           variant="contained"
           onClick={() => formik.handleSubmit()}
           startIcon={<Iconify icon="mdi:content-save" />}
+          size="small"
         >
           Submit
         </Button>

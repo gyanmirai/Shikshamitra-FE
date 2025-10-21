@@ -250,11 +250,12 @@
       "students": 0
     }
   ],
-  "vehicleTypes": [
+"vehicleTypes": [
     {
       "id": "1",
       "typeName": "Bus",
       "description": "A large-capacity vehicle used for transporting a bigger group of students or passengers. Suitable for long routes and commonly used as a school bus.",
+      "vehicleRange": [20, 60],
       "createdBy": "Dharmik Jinjala",
       "createdOn": "10-09-2025"
     },
@@ -262,6 +263,7 @@
       "id": "2",
       "typeName": "Van",
       "description": "A medium-sized vehicle for transporting small groups of students.",
+      "vehicleRange": [20, 60],
       "createdBy": "Dharmik Jinjala",
       "createdOn": "09-09-2025"
     },
@@ -269,6 +271,7 @@
       "id": "3",
       "typeName": "Magic",
       "description": "A light commercial vehicle suitable for short routes and smaller groups.",
+      "vehicleRange": [20, 60],
       "createdBy": "Prerna Atre",
       "createdOn": "06-09-2025"
     },
@@ -276,6 +279,7 @@
       "id": "4",
       "typeName": "Auto Rickshaw",
       "description": "A three-wheeled vehicle for short distance transportation.",
+      "vehicleRange": [20, 60],
       "createdBy": "Mayur Solanki",
       "createdOn": "02-09-2025"
     },
@@ -283,6 +287,7 @@
       "id": "5",
       "typeName": "Taxi Car",
       "description": "A four-wheeler vehicle for smaller groups with more comfort.",
+      "vehicleRange": [20, 60],
       "createdBy": "Raj Baku",
       "createdOn": "02-09-2025"
     }
@@ -291,45 +296,53 @@
     {
       "id": "1",
       "documentName": "RC Book",
-      "documentSize": 2,
+      "documentSize": 5,
       "acceptedFormat": "PDF, JPEG",
       "description": "Registration Certificate book issued by the RTO containing vehicle registration details.",
+      "required" : true,
       "createdBy": "Dharmik Jinjala",
       "createdOn": "10-09-2025"
     },
     {
       "id": "2",
       "documentName": "Insurance",
-      "documentSize": 3,
+      "documentSize": 5,
       "acceptedFormat": "PDF, PNG",
       "description": "Vehicle insurance document providing coverage against accidents and damages.",
+            "required" : true,
+
       "createdBy": "Dharmik Jinjala",
       "createdOn": "09-09-2025"
     },
     {
       "id": "3",
       "documentName": "PUC Certificate",
-      "documentSize": 1,
+      "documentSize": 5,
       "acceptedFormat": "PDF, JPEG",
       "description": "Pollution Under Control certificate that verifies the vehicle meets emission standards.",
+            "required" : true,
+
       "createdBy": "Prerna Atre",
       "createdOn": "06-09-2025"
     },
     {
       "id": "4",
       "documentName": "Fitness Certificate",
-      "documentSize": 4,
+      "documentSize": 5,
       "acceptedFormat": "PDF, DOCX",
       "description": "Document certifying the vehicle is fit for road usage according to safety standards.",
+            "required" : false,
       "createdBy": "Mayur Solanki",
       "createdOn": "02-09-2025"
     },
     {
       "id": "5",
       "documentName": "Permit",
-      "documentSize": 1,
+      "documentSize": 5,
       "acceptedFormat": "PDF, DOCX",
       "description": "Authorization document allowing the vehicle to operate commercially in specific areas.",
+            "required" : true,
+
       "createdBy": "Raj Baku",
       "createdOn": "02-09-2025"
     }
@@ -362,6 +375,33 @@
       "description": "Adjustment of vehicle suspension components to ensure proper alignment.",
       "createdBy": "Mayur Solanki",
       "createdOn": "02-09-2025"
+    }
+  ],
+  "zoneAreas": [
+    {
+      "id": "1",
+      "zoneName": "North Zone",
+      "description": "Covers the northern region including Sector 1 to Sector 5."
+    },
+    {
+      "id": "2",
+      "zoneName": "South Zone",
+      "description": "Includes the southern residential and industrial areas."
+    },
+    {
+      "id": "3",
+      "zoneName": "East Zone",
+      "description": "Responsible for the eastern suburbs and nearby rural zones."
+    },
+    {
+      "id": "4",
+      "zoneName": "West Zone",
+      "description": "Covers the western commercial and educational districts."
+    },
+    {
+      "id": "5",
+      "zoneName": "Central Zone",
+      "description": "Main administrative and business hub of the region."
     }
   ],
   "licenceTypes": [

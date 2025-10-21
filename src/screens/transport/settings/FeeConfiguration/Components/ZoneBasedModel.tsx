@@ -27,11 +27,16 @@ interface IZoneData {
   color?: string;
 }
 
-const ZoneBasedModel = () => {
+interface ZoneBasedModelProps {
+  formik: any;
+}
+
+const ZoneBasedModel: React.FC<ZoneBasedModelProps> = ({ formik }) => {
   const addZone = useBoolean();
   const deleteZone = useBoolean();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
   const [editData, setEditData] = useState<IZoneData | null>(null);
   const [selectedZone, setSelectedZone] = useState<IZoneData | null>(null);
 
@@ -39,6 +44,15 @@ const ZoneBasedModel = () => {
     type: 'query',
     currentQueryAndMutation: useGetZoneBasedFeeDataQuery,
   });
+
+  // Sync API data to Formik on initial load
+  // useEffect(() => {
+  //   if (zoneBasedFeeData && Array.isArray(zoneBasedFeeData)) {
+  //     formik.setFieldValue('zones', zoneBasedFeeData);
+  //   }
+  // }, [zoneBasedFeeData]);
+
+  // ---------------------- Handlers ----------------------
 
   const handleEdit = (row: IZoneData) => {
     setEditData(row);
@@ -48,6 +62,18 @@ const ZoneBasedModel = () => {
   const handleDelete = (row: IZoneData) => {
     setSelectedZone(row);
     deleteZone.onTrue();
+  };
+
+  const handleDeleteConfirm = () => {
+    const updatedZones = (formik.values.zones || []).filter(
+      (z: IZoneData) => z.zoneName !== selectedZone?.zoneName
+    );
+    formik.setFieldValue('zones', updatedZones);
+    deleteZone.onFalse();
+    setSelectedZone(null);
+    shikshaMitraToast.success({
+      message: `Zone: ${selectedZone?.zoneName} deleted successfully`,
+    });
   };
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -61,9 +87,30 @@ const ZoneBasedModel = () => {
     }
   };
 
+  const handleZoneSubmit = (newZone: IZoneData) => {
+    const existingZones = formik.values.zones || [];
+
+    if (editData) {
+      // Update existing zone
+      const updatedZones = existingZones.map((z: IZoneData) =>
+        z.zoneName === editData.zoneName ? newZone : z
+      );
+      formik.setFieldValue('zones', updatedZones);
+    } else {
+      // Add new zone
+      formik.setFieldValue('zones', [...existingZones, newZone]);
+    }
+
+    addZone.onFalse();
+    setEditData(null);
+    dispatch(setIsChanges(false));
+  };
+
+  // ---------------------- Render ----------------------
+
   return (
     <>
-      <Box p={3}>
+      <Box p={2}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6" color="primary">
             Configure Zone-Based Model
@@ -77,7 +124,7 @@ const ZoneBasedModel = () => {
               addZone.onTrue();
             }}
           >
-            Add New Zone
+            Zone
           </Button>
         </Box>
 
@@ -155,10 +202,11 @@ const ZoneBasedModel = () => {
               ),
             },
           ]}
-          data={zoneBasedFeeData || []}
+          data={formik.values.zones || []}
         />
       </Box>
 
+      {/* Add/Edit Zone Modal */}
       <CustomDialog
         open={addZone.value}
         handleClose={() => handleClose(null, false)}
@@ -176,9 +224,15 @@ const ZoneBasedModel = () => {
           </Box>
         }
       >
-        <AddZoneForm open={addZone} onClose={handleClose} editData={editData} />
+        <AddZoneForm
+          open={addZone}
+          onClose={handleClose}
+          editData={editData}
+          onSubmit={handleZoneSubmit}
+        />
       </CustomDialog>
 
+      {/* Delete Confirmation */}
       <ConfirmDialog
         open={deleteZone.value}
         onClose={() => {
@@ -192,19 +246,7 @@ const ZoneBasedModel = () => {
           </>
         }
         action={
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={() => {
-              deleteZone.onFalse();
-              setSelectedZone(null);
-              shikshaMitraToast.success({
-                message: `Zone: ${selectedZone?.zoneName} deleted successfully`,
-              });
-              // handle delete API call here
-            }}
-          >
+          <Button variant="contained" color="error" size="small" onClick={handleDeleteConfirm}>
             Yes
           </Button>
         }

@@ -158,7 +158,7 @@ const VehicleTypeSettingScreen = () => {
               deleteVehicleTypeDialog.onFalse();
               setSelectedVehicleType(null);
               shikshaMitraToast.success({
-                message: `Vehicle Type: ${vehicleTypeName} deleted successfully`,
+                message: `Vehicle Type : ${vehicleTypeName} deleted successfully`,
               });
             }}
           >

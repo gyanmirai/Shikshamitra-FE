@@ -2,7 +2,7 @@ import * as Yup from 'yup';
 
 export const vehicleDocumentValidationSchema = Yup.object().shape({
   documentName: Yup.string()
-    .required('Name is required')
+    .required('Document Name is required')
     .test('min-length', 'Name is Too short', (value) =>
       value ? value.replace(/\s/g, '').length >= 2 : false
     )
@@ -10,9 +10,11 @@ export const vehicleDocumentValidationSchema = Yup.object().shape({
       value ? value.replace(/\s/g, '').length <= 50 : true
     ),
   documentSize: Yup.string()
-    .required('Size is required')
+    .required('Document Size is required')
     .test('valid-number', 'Must be a valid number', (value) =>
       value ? /^\d+$/.test(value) : false
     ),
-  acceptedFormat: Yup.string().required('Accepted Format is required'),
+  acceptedFormat: Yup.array()
+    .min(1, 'At least one accepted format must be selected')
+    .required('Accepted Format is required'),
 });

@@ -72,6 +72,13 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
       }),
       providesTags: ['AvailableStopsOptions'],
     }),
+    getZoneAreaOptions: builder.query({
+      query: () => ({
+        url: '/zoneAreas',
+        method: 'GET',
+      }),
+      providesTags: ['ZoneAreaOptions'],
+    }),
   }),
 });
 
@@ -86,4 +93,5 @@ export const {
   useGetFrequencyOptionsQuery,
   useGetZoneBasedFeeDataQuery,
   useGetAvailableStopsOptionsQuery,
+  useGetZoneAreaOptionsQuery,
 } = vehicleSettingsApi;

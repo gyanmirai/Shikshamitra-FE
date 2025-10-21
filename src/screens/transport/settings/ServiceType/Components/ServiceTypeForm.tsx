@@ -22,11 +22,11 @@ const ServiceTypeForm: React.FC<IServiceTypeFormProps> = ({ open, onClose, editD
     onSubmit: (values) => {
       if (editData) {
         shikshaMitraToast.success({
-          message: `${values.typeName} Service Type updated successfully`,
+          message: `Service Type : ${values.typeName} updated successfully`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `${values.typeName} Service Type added successfully`,
+          message: `Service Type : ${values.typeName} added successfully`,
         });
       }
       onClose(null, true);
@@ -36,8 +36,8 @@ const ServiceTypeForm: React.FC<IServiceTypeFormProps> = ({ open, onClose, editD
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2}>
-          {/* Service Type Name */}
+        <Grid container spacing={3}>
+          {/* Servicing Type Name */}
           <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={!!(formik.touched.typeName && formik.errors.typeName) || false}
@@ -105,7 +105,7 @@ const ServiceTypeForm: React.FC<IServiceTypeFormProps> = ({ open, onClose, editD
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
-          {editData ? 'Update' : 'Save'}
+          {editData ? 'Update' : 'Submit'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>

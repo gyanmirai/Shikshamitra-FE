@@ -2,7 +2,6 @@ import type { RootState } from 'src/redux/store';
 
 import React from 'react';
 import dayjs from 'dayjs';
-import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { Close } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -12,7 +11,11 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Grid, Alert, Typography, IconButton } from '@mui/material';
 
-const FlatRateConfiguration = () => {
+interface FlatRateConfigurationProps {
+  formik: any;
+}
+
+const FlatRateConfiguration: React.FC<FlatRateConfigurationProps> = ({ formik }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [showAlert, setShowAlert] = React.useState(true);
 
@@ -23,24 +26,14 @@ const FlatRateConfiguration = () => {
     { value: 'Yearly', label: 'Yearly' },
   ];
 
-  const formik = useFormik({
-    initialValues: {
-      feeAmount: 1500,
-      feeFrequency: 'Monthly',
-      effectiveFrom: dayjs('2025-10-15'),
-    },
-    onSubmit: (values) => {
-      console.log(values);
-    },
-  });
-
   return (
-    <Box p={3}>
-      <Typography variant="h6" color="primary" gutterBottom>
+    <Box p={2}>
+      <Typography variant="h6" color="primary">
         Configure Flat Rate Model
       </Typography>
 
-      <Grid container spacing={2} mt={1}>
+      <Grid container spacing={3} mt={2}>
+        {/* Fee Amount */}
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.feeAmount && formik.errors.feeAmount)}>
             <NumericFormatCustom
@@ -52,7 +45,7 @@ const FlatRateConfiguration = () => {
               onChange={(e) => {
                 let val = e.target.value;
                 val = val.replace(/[₹,\s]/g, '');
-                formik.setFieldValue('feeAmount', Number(val));
+                formik.setFieldValue('feeAmount', val);
               }}
               error={!!(formik.touched.feeAmount && formik.errors.feeAmount)}
               helperText={formik.touched.feeAmount && formik.errors.feeAmount}
@@ -65,6 +58,7 @@ const FlatRateConfiguration = () => {
           </ShakingTextField>
         </Grid>
 
+        {/* Fee Frequency */}
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.feeFrequency && formik.errors.feeFrequency)}>
             <CustomSelect
@@ -81,11 +75,12 @@ const FlatRateConfiguration = () => {
           </ShakingTextField>
         </Grid>
 
+        {/* Effective From */}
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.effectiveFrom && formik.errors.effectiveFrom)}>
             <DatePicker
               label="Effective From *"
-              value={formik.values.effectiveFrom}
+              value={formik.values.effectiveFrom || dayjs()}
               onChange={(newValue) => formik.setFieldValue('effectiveFrom', newValue)}
               minDate={dayjs(currentYear?.startDate)}
               maxDate={dayjs(currentYear?.endDate)}
@@ -106,6 +101,7 @@ const FlatRateConfiguration = () => {
         </Grid>
       </Grid>
 
+      {/* Info Alert */}
       {showAlert && (
         <Alert
           severity="success"
@@ -117,8 +113,8 @@ const FlatRateConfiguration = () => {
             </IconButton>
           }
         >
-          All students will be charged <strong>₹{formik.values.feeAmount}</strong> per{' '}
-          <strong>{formik.values.feeFrequency.toLowerCase()}</strong>.
+          All students will be charged <strong>₹{formik.values.feeAmount || 0}</strong> per{' '}
+          <strong>{formik.values.feeFrequency?.toLowerCase() || 'month'}</strong>.
         </Alert>
       )}
     </Box>

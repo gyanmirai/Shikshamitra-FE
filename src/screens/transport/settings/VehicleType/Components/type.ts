@@ -2,6 +2,7 @@ export interface IVehicleType {
   id: string;
   typeName: string;
   description?: string;
+  vehicleRange: [number, number];
 }
 
 export interface IVehicleTypeTableProps {

@@ -181,7 +181,7 @@ const MaintenanceHistoryTable = () => {
         },
         {
           id: 'serviceType',
-          label: 'Service Type',
+          label: 'Servicing Type',
           align: 'left',
           minWidth: '180px',
         },

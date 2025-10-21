@@ -68,6 +68,17 @@ const VehicleTypeTable: React.FC<IVehicleTypeTableProps> = ({
           ),
         },
         {
+          id: 'vehicleRange',
+          label: 'Approx Sitting Range',
+          align: 'left',
+          minWidth: 200,
+          render: (value) => (
+            <Typography variant="caption" fontSize="13px">
+              {value ? `${value[0]} - ${value[1]}` : 'N/A'}
+            </Typography>
+          ),
+        },
+        {
           id: 'description',
           label: 'Description',
           align: 'left',

@@ -25,7 +25,7 @@ const VehicleDocumentTable: React.FC<IVehicleDocumentTableProps> = ({
       isLoading={vehicleDocumentsLoading}
       noDataText={
         <>
-          Vehicle Document Data Not Found{' '}
+          Required Vehicle Document Data Not Found{' '}
           <Box
             onClick={() => {
               onAddVehicleDocument.onTrue();
@@ -41,7 +41,7 @@ const VehicleDocumentTable: React.FC<IVehicleDocumentTableProps> = ({
               },
             }}
           >
-            Add Vehicle Document
+            Add Required Vehicle Document
           </Box>
         </>
       }
@@ -63,7 +63,7 @@ const VehicleDocumentTable: React.FC<IVehicleDocumentTableProps> = ({
           align: 'left',
           render: (value) => (
             <Typography variant="caption" fontSize="13px">
-              {value ? `${value}` : '-'}
+              {value ? `${value} MB` : '-'}
             </Typography>
           ),
         },
@@ -74,6 +74,17 @@ const VehicleDocumentTable: React.FC<IVehicleDocumentTableProps> = ({
           render: (value) => (
             <Typography variant="caption" fontSize="13px">
               {value || '-'}
+            </Typography>
+          ),
+        },
+        {
+          id: 'required',
+          label: 'Required/Optional',
+          align: 'left',
+          minWidth: 180,
+          render: (value, row) => (
+            <Typography variant="caption" fontSize="13px">
+              {value === true ? 'Required' : 'Optional'}
             </Typography>
           ),
         },

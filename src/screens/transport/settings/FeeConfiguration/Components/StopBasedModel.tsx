@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetStopBasedFeeDataQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 import {
   Box,
   Select,
@@ -10,105 +8,90 @@ import {
   Typography,
   InputLabel,
   FormControl,
+  InputAdornment,
 } from '@mui/material';
 
-const StopBasedModel = () => {
-  const { data: stopBasedFeeData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStopBasedFeeDataQuery,
-  });
-  const [tableData, setTableData] = useState<any[]>([]);
-
+const StopBasedModel = ({ formik }: { formik: any }) => {
   const frequencyOptions = ['Daily', 'Monthly', 'Quarterly', 'Yearly'];
 
-  // Update tableData when stopBasedFeeData is loaded
-  useEffect(() => {
-    if (stopBasedFeeData) {
-      setTableData([...stopBasedFeeData]);
+  const handleFeeAmountChange = (value: string, rowId: string) => {
+    const index = formik.values.stops.findIndex((item: any) => item.id === rowId);
+    if (index !== -1) {
+      const numericValue = Number(value.replace(/[^\d]/g, ''));
+      formik.setFieldValue(`stops.${index}.feeAmount`, numericValue);
     }
-  }, [stopBasedFeeData]);
-
-  const handleFeeAmountChange = (value: string, index: number) => {
-    const updatedData = [...tableData];
-    updatedData[index].feeAmount = Number(value.replace(/[₹,\s]/g, ''));
-    setTableData(updatedData);
   };
 
-  const handleFrequencyChange = (value: string, index: number) => {
-    const updatedData = [...tableData];
-    updatedData[index].frequency = value;
-    setTableData(updatedData);
+  const handleFrequencyChange = (value: string, rowId: string) => {
+    const index = formik.values.stops.findIndex((item: any) => item.id === rowId);
+    if (index !== -1) {
+      formik.setFieldValue(`stops.${index}.frequency`, value);
+    }
   };
 
   return (
-    <Box p={3}>
+    <Box p={2}>
       <Typography variant="h6" color="primary" gutterBottom>
         Configure Stop-Based Model
       </Typography>
 
-      <Box mt={3}>
+      <Box mt={2}>
         <CustomizableTable
           tableId="stopBasedFeeTable"
           noDataText="No Stop Data Found"
-          isLoading={isLoading}
           columns={[
-            {
-              id: 'stopName',
-              label: 'Stop Name',
-            },
-            {
-              id: 'kilometers',
-              label: 'Kilometers',
-            },
-            {
-              id: 'landmark',
-              label: 'Landmark',
-            },
-            {
-              id: 'assignedStudents',
-              label: 'Assigned Students',
-            },
+            { id: 'stopName', label: 'Stop Name' },
+            { id: 'kilometers', label: 'Kilometers' },
+            { id: 'landmark', label: 'Landmark' },
+            { id: 'assignedStudents', label: 'Assigned Students' },
             {
               id: 'feeAmount',
               label: 'Fee Amount',
               isSort: false,
               isFilter: false,
-              render: (value, row: any) => (
-                <TextField
-                  value={`₹ ${row.feeAmount}`}
-                  onChange={(e) => handleFeeAmountChange(e.target.value, tableData.indexOf(row))}
-                  size="small"
-                  label="Amount (₹) *"
-                  sx={{
-                    maxWidth: '150px',
-                  }}
-                />
-              ),
+              render: (value, row) => {
+                const index = formik.values.stops.findIndex((item: any) => item.id === row.id);
+                return (
+                  <TextField
+                    value={formik.values.stops?.[index]?.feeAmount || ''}
+                    onChange={(e) => handleFeeAmountChange(e.target.value, row.id)}
+                    size="small"
+                    label="Amount"
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                    }}
+                    sx={{ maxWidth: '150px' }}
+                  />
+                );
+              },
             },
             {
               id: 'frequency',
               label: 'Frequency',
               isSort: false,
               isFilter: false,
-              render: (value, row: any) => (
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                  <InputLabel>Frequency *</InputLabel>
-                  <Select
-                    value={row.frequency}
-                    label="Frequency *"
-                    onChange={(e) => handleFrequencyChange(e.target.value, tableData.indexOf(row))}
-                  >
-                    {frequencyOptions.map((option) => (
-                      <MenuItem key={option} value={option}>
-                        {option}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              ),
+              render: (value, row) => {
+                const index = formik.values.stops.findIndex((item: any) => item.id === row.id);
+                return (
+                  <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <InputLabel>Frequency *</InputLabel>
+                    <Select
+                      value={formik.values.stops?.[index]?.frequency || ''}
+                      label="Frequency *"
+                      onChange={(e) => handleFrequencyChange(e.target.value, row.id)}
+                    >
+                      {frequencyOptions.map((option) => (
+                        <MenuItem key={option} value={option}>
+                          {option}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                );
+              },
             },
           ]}
-          data={tableData}
+          data={formik.values.stops || []}
         />
       </Box>
     </Box>

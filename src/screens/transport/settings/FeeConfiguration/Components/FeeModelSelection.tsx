@@ -1,3 +1,5 @@
+import type { FormikProps } from 'formik';
+
 import React from 'react';
 import { Close } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
@@ -12,20 +14,23 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { getInitialValuesByModel } from './getInitialValuesByModel';
+
 interface FeeModelSelectionProps {
-  selectedModel: string;
-  onModelChange: (value: string) => void;
+  formik: FormikProps<any>;
+  setSelectedModel: (value: string) => void;
 }
 
-const FeeModelSelection: React.FC<FeeModelSelectionProps> = ({ selectedModel, onModelChange }) => {
+const FeeModelSelection: React.FC<FeeModelSelectionProps> = ({ formik, setSelectedModel }) => {
   const [showAlert, setShowAlert] = React.useState(true);
+  const selectedModel = formik.values.model;
 
   const models = [
-    {
-      value: 'flat-rate',
-      label: 'Flat Rate Model',
-      tooltip: 'A fixed fee is charged to all students regardless of distance or location.',
-    },
+    // {
+    //   value: 'flat-rate',
+    //   label: 'Flat Rate Model',
+    //   tooltip: 'A fixed fee is charged to all students regardless of distance or location.',
+    // },
     {
       value: 'distance-based',
       label: 'Distance-Based Model',
@@ -36,25 +41,38 @@ const FeeModelSelection: React.FC<FeeModelSelectionProps> = ({ selectedModel, on
       label: 'Stop-Based Model',
       tooltip: 'Fee varies depending on the number of stops or specific pickup points.',
     },
-    {
-      value: 'zone-based',
-      label: 'Zone-Based Model',
-      tooltip: 'Fee is determined by geographical zones or areas divided around the school.',
-    },
+    // {
+    //   value: 'zone-based',
+    //   label: 'Zone-Based Model',
+    //   tooltip: 'Fee is determined by geographical zones or areas divided around the school.',
+    // },
   ];
 
+  const handleModelSelect = (newModel: string) => {
+    // eslint-disable-next-line no-useless-return
+    if (newModel === formik.values.model) return;
+
+    const newValues = getInitialValuesByModel(newModel, formik.values);
+    formik.setValues({
+      ...formik.values,
+      ...newValues,
+      model: newModel,
+    });
+    setSelectedModel(newModel);
+  };
+
   return (
-    <Box p={3}>
+    <Box p={2}>
       <Typography variant="h6" color="primary" gutterBottom>
         Select Transport Fee Model
       </Typography>
 
       <RadioGroup value={selectedModel}>
-        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} mt={2}>
+        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} mt={1}>
           {models.map((model) => (
             <Box
               key={model.value}
-              onClick={() => onModelChange(model.value)}
+              onClick={() => handleModelSelect(model.value)}
               sx={{
                 border: '1px solid',
                 borderColor: selectedModel === model.value ? 'primary.main' : 'divider',
@@ -64,9 +82,7 @@ const FeeModelSelection: React.FC<FeeModelSelectionProps> = ({ selectedModel, on
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 cursor: 'pointer',
-                '&:hover': {
-                  backgroundColor: 'action.hover',
-                },
+                '&:hover': { backgroundColor: 'action.hover' },
               }}
             >
               <FormControlLabel
@@ -95,7 +111,7 @@ const FeeModelSelection: React.FC<FeeModelSelectionProps> = ({ selectedModel, on
 
       {showAlert && (
         <Alert
-          severity="warning"
+          severity="info"
           icon={<Iconify icon="lucide:info" />}
           sx={{ mt: 2 }}
           action={
@@ -105,8 +121,8 @@ const FeeModelSelection: React.FC<FeeModelSelectionProps> = ({ selectedModel, on
           }
         >
           <Typography variant="body2" fontWeight={600}>
-            Important: Once you confirm this transport fee model, you won&apos;t be able to change
-            it later. Please review carefully before proceeding.
+            <strong>Important </strong> : Once you confirm this transport fee model, you won&apos;t
+            be able to change it later. Please review carefully before proceeding.
           </Typography>
         </Alert>
       )}

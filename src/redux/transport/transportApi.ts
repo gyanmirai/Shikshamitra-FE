@@ -85,6 +85,8 @@ export const transportApi = createApi({
             return { data: vehicleManagementData.zoneBasedFeeData };
           case '/availableStopsOptions':
             return { data: vehicleManagementData.availableStopsOptions };
+          case '/zoneAreas':
+            return { data: vehicleManagementData.zoneAreas };
           default:
             return {
               error: {
@@ -131,6 +133,7 @@ export const transportApi = createApi({
     'FrequencyOptions',
     'ZoneBasedFeeData',
     'AvailableStopsOptions',
+    'ZoneAreaOptions',
   ],
   endpoints: () => ({}),
 });
