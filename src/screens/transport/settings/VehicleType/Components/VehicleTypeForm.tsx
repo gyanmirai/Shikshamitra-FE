@@ -4,11 +4,12 @@ import React from 'react';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { sliderClasses } from '@mui/material/Slider';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Grid, Button, Slider, TextField, Typography, DialogActions } from '@mui/material';
 
 import { vehicleTypeValidationSchema } from './VehicleTypeValidation';
 import { getVehicleTypeInitialValues } from './VehicleTypeInitialValues';
@@ -22,11 +23,11 @@ const VehicleTypeForm: React.FC<IVehicleTypeFormProps> = ({ open, onClose, editD
     onSubmit: (values) => {
       if (editData) {
         shikshaMitraToast.success({
-          message: `${values.typeName} Vehicle Type updated successfully`,
+          message: `Vehicle Type : ${values.typeName} updated successfully`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `${values.typeName} Vehicle Type added successfully`,
+          message: `Vehicle Type : ${values.typeName} added successfully`,
         });
       }
       onClose(null, true);
@@ -67,6 +68,32 @@ const VehicleTypeForm: React.FC<IVehicleTypeFormProps> = ({ open, onClose, editD
                 helperText={formik.touched.typeName && formik.errors.typeName}
               />
             </ShakingTextField>
+          </Grid>{' '}
+          <Grid size={{ xs: 12 }}>
+            <Typography variant="subtitle1">Approx Sitting Range</Typography>
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <Slider
+              value={formik.values.vehicleRange}
+              onChange={(event, newValue) => {
+                formik.setFieldValue('vehicleRange', newValue);
+              }}
+              valueLabelDisplay="auto"
+              getAriaValueText={(value) => `${value}`}
+              min={0}
+              max={100}
+              step={1}
+              sx={{
+                color: '#00a86b', // custom green bar color
+                [`& .${sliderClasses.mark}[data-index="3"]`]: { display: 'none' },
+                [`& .${sliderClasses.valueLabel}`]: {
+                  backgroundColor: '#1e1e1e',
+                  color: '#fff',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                },
+              }}
+            />
           </Grid>
           <Grid size={{ xs: 12 }}>
             <TextField

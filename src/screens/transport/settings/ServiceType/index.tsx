@@ -65,12 +65,12 @@ const ServiceTypeSettingScreen = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Service Type"
+        heading="Servicing Type"
         description="This screen displays a list of all created service types used for vehicle maintenance and operations (e.g., oil change, tire replacement, general servicing). It helps standardize service categories across the transport module. Admins can view existing service types, manage them, and add new ones when required."
         links={[
           { name: 'Transport', href: '/transport/dashboard' },
           { name: 'Settings', href: '/transport/settings/vehicleType' },
-          { name: 'Service Type', href: '/transport/setting/service-type' },
+          { name: 'Servicing Type', href: '/transport/setting/service-type' },
         ]}
         action={
           <Button

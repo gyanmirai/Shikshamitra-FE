@@ -133,6 +133,27 @@ const StopInformation: React.FC<StopInformationProps> = ({ editData, formik, onF
               />
             </ShakingTextField>
           </Grid>
+
+          {/* Approx Km from School */}
+          <Grid size={12} mb={1}>
+            <ShakingTextField
+              error={!!(formik.touched.approxKmFromSchoo && formik.errors.approxKmFromSchoo)}
+            >
+              <TextField
+                fullWidth
+                size="small"
+                label="Approx Km from School"
+                name="approxKmFromSchoo"
+                value={formik.values.approxKmFromSchoo}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={!!(formik.touched.approxKmFromSchoo && formik.errors.approxKmFromSchoo)}
+                helperText={
+                  (formik.touched.approxKmFromSchoo && formik.errors.approxKmFromSchoo) as string
+                }
+              />
+            </ShakingTextField>
+          </Grid>
         </Grid>
       </CardContent>
     </Card>

@@ -121,6 +121,17 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             ),
           },
           {
+            id: 'approxKmFromSchool',
+            label: 'Distance to School',
+            align: 'left',
+            minWidth: 170,
+            render: (value) => (
+              <Typography variant="caption" fontSize="13px">
+                {value}
+              </Typography>
+            ),
+          },
+          {
             id: 'status',
             label: 'Status',
             align: 'left',

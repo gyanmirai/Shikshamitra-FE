@@ -20,7 +20,6 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import { holidayValidationSchema } from './getHolidayValidationSchema';
-import { audienceOptions } from '../../announcement/schoolannouncementForm';
 
 import type { IHoliday, IHolidayFormProps } from './type';
 
@@ -43,7 +42,6 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
       endDate: initialValues?.endDate || null,
       description: initialValues?.description || '',
       attachment: initialValues?.attachment || null,
-      audience: initialValues?.audience || [],
       createdBy: initialValues?.createdBy || '',
       createdOn: initialValues?.createdOn || dayjs(),
       status: initialValues?.status || 1, // Draft by default
@@ -265,31 +263,6 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
                       labelKey="name"
                       valueKey="id"
                       formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 6, sm: 3 }}>
-                  <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
-                    <CustomSelect
-                      label="Select Audience *"
-                      options={audienceOptions}
-                      multiple
-                      value={formik.values.audience.map((aud) => aud.name)} // show only names in the UI
-                      onChange={(val) => {
-                        const selectedObjects = audienceOptions.filter((opt) =>
-                          (val as string[]).includes(opt.name)
-                        );
-                        formik.setFieldValue('audience', selectedObjects);
-                      }}
-                      labelKey="name"
-                      formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
-                      error={formik.touched.audience && Boolean(formik.errors.audience)}
-                      helperText={
-                        Array.isArray(formik.errors.audience)
-                          ? formik.errors.audience.join(', ')
-                          : (formik.touched.audience && formik.errors.audience) || undefined
-                      }
                     />
                   </ShakingTextField>
                 </Grid>

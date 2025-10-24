@@ -25,7 +25,7 @@ const ServiceTypeTable: React.FC<IServiceTypeTableProps> = ({
       isLoading={serviceTypesLoading}
       noDataText={
         <>
-          Service Type Data Not Found{' '}
+          Servicing Type Data Not Found{' '}
           <Box
             onClick={() => {
               onAddServiceType.onTrue();
@@ -41,7 +41,7 @@ const ServiceTypeTable: React.FC<IServiceTypeTableProps> = ({
               },
             }}
           >
-            Add Service Type
+            Add Servicing Type
           </Box>
         </>
       }

@@ -25,6 +25,7 @@ export interface IStopData {
   status: StopStatusType;
   createdDate?: string;
   updatedDate?: string;
+  approxKmFromSchool?: number | null;
 }
 
 export interface IStopInformation {
@@ -49,6 +50,7 @@ export interface IStopPayload {
     latitude?: number;
     longitude?: number;
   };
+  approxKmFromSchool?: number | null;
 }
 
 export interface IStopStatusChange {

@@ -4,19 +4,28 @@ import React from 'react';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { DocumentTypeArray } from 'src/enums/documnet-type';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
+import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  Chip,
+  Grid,
+  Button,
+  Switch,
+  Checkbox,
+  TextField,
+  Autocomplete,
+  DialogActions,
+  FormControlLabel,
+} from '@mui/material';
 
 import { vehicleDocumentValidationSchema } from './VehicleDocumentValidation';
 import { getVehicleDocumentInitialValues } from './VehicleDocumentInitialValues';
 
 import type { IVehicleDocumentFormProps } from './type';
-
-const acceptedFormats = ['Jpeg', 'PNG'];
 
 const VehicleDocumentForm: React.FC<IVehicleDocumentFormProps> = ({ open, onClose, editData }) => {
   const formik = useFormik({
@@ -25,11 +34,11 @@ const VehicleDocumentForm: React.FC<IVehicleDocumentFormProps> = ({ open, onClos
     onSubmit: (values) => {
       if (editData) {
         shikshaMitraToast.success({
-          message: `${values.documentName} Vehicle Document updated successfully`,
+          message: `Vehicle Document : ${values.documentName} updated successfully`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `${values.documentName} Vehicle Document added successfully`,
+          message: `Vehicle Document : ${values.documentName} added successfully`,
         });
       }
       onClose(null, true);
@@ -39,7 +48,7 @@ const VehicleDocumentForm: React.FC<IVehicleDocumentFormProps> = ({ open, onClos
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {/* Document Name */}
           <Grid size={{ xs: 12 }}>
             <ShakingTextField
@@ -79,6 +88,7 @@ const VehicleDocumentForm: React.FC<IVehicleDocumentFormProps> = ({ open, onClos
             >
               <TextField
                 fullWidth
+                disabled
                 label="Document Size (mb) *"
                 name="documentSize"
                 size="small"
@@ -96,21 +106,80 @@ const VehicleDocumentForm: React.FC<IVehicleDocumentFormProps> = ({ open, onClos
           {/* Accepted Format */}
           <Grid size={{ xs: 12 }}>
             <ShakingTextField
-              error={!!(formik.touched.acceptedFormat && formik.errors.acceptedFormat) || false}
+              error={formik.touched.acceptedFormat && Boolean(formik.errors.acceptedFormat)}
             >
-              <CustomSelect
-                label="Accepted Format *"
-                name="acceptedFormat"
-                options={acceptedFormats.map((format) => ({ value: format, label: format }))}
-                formControlProps={{ fullWidth: true, size: 'small' }}
-                value={formik.values.acceptedFormat}
-                onChange={(value) => formik.setFieldValue('acceptedFormat', value)}
-                error={formik.touched.acceptedFormat && Boolean(formik.errors.acceptedFormat)}
-                helperText={
-                  formik.touched.acceptedFormat ? formik.errors.acceptedFormat : undefined
+              <Autocomplete
+                multiple
+                options={DocumentTypeArray}
+                disableCloseOnSelect
+                getOptionLabel={(option) => option.label}
+                value={
+                  // Convert Formik's array of values (numbers/strings) into full option objects
+                  DocumentTypeArray.filter((opt) =>
+                    formik.values.acceptedFormat?.includes(opt.value)
+                  )
                 }
+                onChange={(_, newValue) => {
+                  // Store only the value fields in Formik
+                  formik.setFieldValue(
+                    'acceptedFormat',
+                    newValue.map((option) => option.value)
+                  );
+                }}
+                isOptionEqualToValue={(option, value) => option.value === value.value}
+                renderOption={(props, option, { selected }) => {
+                  const { key, ...rest } = props;
+                  return (
+                    <li key={key} {...rest}>
+                      <Checkbox
+                        icon={<CheckBoxOutlineBlank />}
+                        checkedIcon={<CheckBox />}
+                        style={{ marginRight: 8 }}
+                        checked={selected}
+                      />
+                      {option.label}
+                    </li>
+                  );
+                }}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      label={option.label}
+                      {...getTagProps({ index })}
+                      key={option.value}
+                      variant="soft"
+                      size="small"
+                    />
+                  ))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Accepted Format *"
+                    size="small"
+                    error={Boolean(formik.touched.acceptedFormat && formik.errors.acceptedFormat)}
+                    helperText={
+                      (formik.touched.acceptedFormat && formik.errors.acceptedFormat) as string
+                    }
+                  />
+                )}
               />
             </ShakingTextField>
+          </Grid>
+
+          {/* Required Toggle */}
+          <Grid size={{ xs: 12 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formik.values.required}
+                  onChange={(e) => formik.setFieldValue('required', e.target.checked)}
+                  color="primary"
+                  size="small"
+                />
+              }
+              label={formik.values.required ? 'Required' : 'Optional'}
+            />
           </Grid>
         </Grid>
       </DialogScrollContent>

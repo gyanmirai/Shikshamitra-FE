@@ -56,6 +56,4 @@ export const holidayValidationSchema = (currentYear: any) =>
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
     classes: Yup.array().min(1, 'At least one class must be selected'),
-
-    audience: Yup.array().min(1, 'Select at least one audience group'),
   });

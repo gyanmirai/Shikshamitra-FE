@@ -67,12 +67,12 @@ const VehicleDocumentSettingScreen = () => {
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
-        heading="Vehicle Document"
+        heading="Required Vehicle Document"
         description="Admins can view, manage, and maintain the list of required vehicle documents. It provides the option to add new document types for compliance and regulatory purposes."
         links={[
           { name: 'Transport', href: '/transport/dashboard' },
           { name: 'Settings', href: '/transport/settings/vehicleType' },
-          { name: 'Vehicle Document' },
+          { name: 'Required Vehicle Document' },
         ]}
         action={
           <Button

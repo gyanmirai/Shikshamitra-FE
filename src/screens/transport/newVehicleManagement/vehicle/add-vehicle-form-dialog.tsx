@@ -376,7 +376,7 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
                     }}
                   >
                     <Iconify icon="eva:cloud-upload-fill" width={40} />
-                    <Typography variant="body2">Upload Vehicle Document</Typography>
+                    <Typography variant="body2">Upload Required Vehicle Document</Typography>
                   </Box>
                 }
                 sx={{

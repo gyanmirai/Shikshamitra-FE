@@ -13,6 +13,7 @@ export const getStopManagementInitialValues = (editData?: IStopData | null): ISt
     latitude: undefined,
     longitude: undefined,
   },
+  approxKmFromSchool: editData?.approxKmFromSchool || null,
 });
 
 export const getStopStatusChangeInitialValues = (stopData?: IStopData | null) => ({

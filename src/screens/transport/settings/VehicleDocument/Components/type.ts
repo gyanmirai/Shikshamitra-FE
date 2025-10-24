@@ -2,10 +2,11 @@ export interface IVehicleDocument {
   id: string;
   documentName: string;
   documentSize?: number;
-  acceptedFormat?: string;
+  acceptedFormat: number[];
   description?: string;
   createdBy?: string;
   createdOn?: string;
+  required: boolean;
 }
 
 export interface IVehicleDocumentTableProps {
