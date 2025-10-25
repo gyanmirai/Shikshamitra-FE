@@ -1,6 +1,7 @@
 import type { IBook } from 'src/screens/library/BookManagement/Components/type';
 
 import React, { useCallback } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { MenuList, MenuItem, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -36,7 +37,7 @@ const BasicBookTable: React.FC<Props> = ({
             pop.onClose();
           }}
         >
-          <Iconify icon="mdi:book-arrow-right" sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon="game-icons:archive-register" sx={{ height: '16px', width: '16px' }} />
           Reserve Book
         </MenuItem>
         <MenuItem
@@ -47,7 +48,7 @@ const BasicBookTable: React.FC<Props> = ({
             pop.onClose();
           }}
         >
-          <Iconify icon="mdi:book-arrow-right" sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
           View All Reservation Book
         </MenuItem>
       </MenuList>
@@ -65,6 +66,7 @@ const BasicBookTable: React.FC<Props> = ({
           id: 'totalBook',
           label: 'Total Copies',
           align: 'left',
+          minWidth: 130,
           filterType: 'number',
           render: (value, row) => (
             <Typography variant="caption" fontSize="13px" color="text.primary">
@@ -73,8 +75,14 @@ const BasicBookTable: React.FC<Props> = ({
           ),
         },
         { id: 'author', label: 'Author', align: 'left' },
-        { id: 'isbn', label: 'ISBN', align: 'left' },
-        { id: 'reservedBook', label: 'Reserved Copies', align: 'left', filterType: 'number' },
+        { id: 'isbn', label: 'ISBN', align: 'left', minWidth: 130 },
+        {
+          id: 'reservedBook',
+          label: 'Reserved Copies',
+          align: 'left',
+          filterType: 'number',
+          minWidth: 160,
+        },
         { id: 'publisher', label: 'Publisher', align: 'left' },
         {
           id: 'action',

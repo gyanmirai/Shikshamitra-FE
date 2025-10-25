@@ -99,7 +99,7 @@ const staticMembers = [
     role: 'Student',
     name: 'Dharmik Jinjala',
     email: 'dharmik.jinjala@school.edu',
-    contactNo: '+91-9876543210',
+    contactNo: '9876543210',
     joinDate: '2023-06-15',
     currentIssue: 4,
     overdueReturn: 1,
@@ -120,7 +120,7 @@ const staticMembers = [
     role: 'Employee',
     name: 'Prerna Atre',
     email: 'prerna.atre@school.edu',
-    contactNo: '+91-9123456789',
+    contactNo: '9123456789',
     joinDate: '2021-04-10',
     currentIssue: 1,
     overdueReturn: 0,
@@ -140,7 +140,7 @@ const staticMembers = [
     role: 'Student',
     name: 'Parth Ghusar',
     email: 'parth.ghusar@school.edu',
-    contactNo: '+91-9988776655',
+    contactNo: '9988776655',
     joinDate: '2022-07-01',
     currentIssue: 2,
     overdueReturn: 0,
@@ -161,7 +161,7 @@ const staticMembers = [
     role: 'Student',
     name: 'Mayur Solanki',
     email: 'mayur.solanki@school.edu',
-    contactNo: '+91-9876543211',
+    contactNo: '9876543211',
     joinDate: '2023-03-20',
     currentIssue: 0,
     overdueReturn: 2,
@@ -182,7 +182,7 @@ const staticMembers = [
     role: 'Student',
     name: 'Raj Baku',
     email: 'raj.baku@school.edu',
-    contactNo: '+91-9123456788',
+    contactNo: '9123456788',
     joinDate: '2024-01-05',
     currentIssue: 7,
     overdueReturn: 0,
@@ -326,18 +326,18 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                             {selectedMember.role === 'Student' && (
                               <>
                                 <Grid size={{ xs: 12, md: 4 }}>
-                                  <Typography fontWeight={600}>Roll No</Typography>
-                                  <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                  <Typography fontWeight={600}>GR No</Typography>
-                                  <Typography>{selectedMember.grNo || 'N/A'}</Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
                                   <Typography fontWeight={600}>Class/Division</Typography>
                                   <Typography>
                                     {selectedMember.class}-{selectedMember.division}
                                   </Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>Roll No.</Typography>
+                                  <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>GR No.</Typography>
+                                  <Typography>{selectedMember.grNo || 'N/A'}</Typography>
                                 </Grid>
                               </>
                             )}

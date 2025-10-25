@@ -44,15 +44,35 @@ export default function LibraryChargeInfo({ charge }: { charge: ILibraryChargeDa
         </Grid>
 
         {/* Class / Division */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Typography variant="body2" color="text.secondary">
-            Class / Division
-          </Typography>
-          <Typography variant="body1" fontWeight={600}>
-            {charge?.classNo}
-            {charge?.division ? `-${charge?.division}` : ''}
-          </Typography>
-        </Grid>
+        {charge?.role === 'Student' && (
+          <>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                Class / Division
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                {charge?.classNo}
+                {charge?.division ? `-${charge?.division}` : ''}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                Roll No.
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                {charge?.rollNo}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                GR No
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                {charge?.grNo}
+              </Typography>
+            </Grid>
+          </>
+        )}
       </Grid>
     </Box>
   );

@@ -1,3 +1,5 @@
+import type { LabelColor } from 'src/components/label';
+
 import React from 'react';
 import { Box } from '@mui/material';
 import { Label } from 'src/components/label';
@@ -5,6 +7,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFinesChargesQuery } from 'src/redux/memberManagement/memberManagementApi';
 import {
+  FinesChargesStatusType,
   FinesChargesStatusTypeColors,
   FinesChargesStatusTypeOptions,
 } from 'src/enums/library-status-types';
@@ -30,7 +33,7 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
         columns={[
           { id: 'bookTitle', sticky: true, minWidth: '150px', label: 'Book Title', align: 'left' },
           { id: 'bookCategory', minWidth: '150px', label: 'Book Category', align: 'left' },
-          { id: 'accessionNo', minWidth: '180px', label: 'Accession Number', align: 'left' },
+          { id: 'accessionNo', minWidth: '180px', label: 'Accession No.', align: 'left' },
           {
             id: 'amount',
             label: 'Amount',
@@ -47,23 +50,18 @@ const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
           { id: 'dateIssued', label: 'Date', align: 'left' },
           { id: 'chargeType', minWidth: '180px', label: 'Charge Type', align: 'left' },
           { id: 'reason', minWidth: '300px', label: 'Reason', align: 'left' },
-
           {
             id: 'status',
             label: 'Status',
             align: 'left',
             sticky: true,
+            filterType: 'enum',
+            enumOptions: FinesChargesStatusTypeOptions,
             render(value) {
-              // Find the status type based on the label from enum options
-              const statusType = FinesChargesStatusTypeOptions.find(
-                (option) => option.label === value
-              )?.value;
-
               // Get corresponding color from enum colors mapping
               const color =
-                statusType !== undefined ? FinesChargesStatusTypeColors[statusType] : 'default';
-
-              return <Label color={color as any}>{value}</Label>;
+                FinesChargesStatusTypeColors[value as FinesChargesStatusType] || 'default';
+              return <Label color={color as LabelColor}>{FinesChargesStatusType[value]}</Label>;
             },
           },
         ]}

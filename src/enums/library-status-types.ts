@@ -84,7 +84,7 @@ export const FinesChargesStatusTypeOptions = [
 ];
 
 export const FinesChargesStatusTypeColors = {
-  [FinesChargesStatusType.Pending]: 'error',
+  [FinesChargesStatusType.Pending]: 'warning',
   [FinesChargesStatusType.Paid]: 'success',
 };
 

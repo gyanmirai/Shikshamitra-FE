@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -36,7 +37,7 @@ const GroupedBookList: React.FC<Props> = ({
             pop.onClose();
           }}
         >
-          <Iconify icon="mdi:book-arrow-right" sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon="game-icons:archive-register" sx={{ height: '16px', width: '16px' }} />
           Reserve Book
         </MenuItem>
         <MenuItem
@@ -47,7 +48,7 @@ const GroupedBookList: React.FC<Props> = ({
             pop.onClose();
           }}
         >
-          <Iconify icon="mdi:book-arrow-right" sx={{ height: '16px', width: '16px' }} />
+          <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
           View All Reservation Book
         </MenuItem>
       </MenuList>
@@ -68,6 +69,7 @@ const GroupedBookList: React.FC<Props> = ({
                 id: 'totalBook',
                 label: 'Total Copies',
                 align: 'left',
+                minWidth: 130,
                 filterType: 'number',
                 render: (value, row) => (
                   <Typography variant="caption" fontSize="13px" color="text.primary">
@@ -76,8 +78,14 @@ const GroupedBookList: React.FC<Props> = ({
                 ),
               },
               { id: 'author', label: 'Author', align: 'left' },
-              { id: 'isbn', label: 'ISBN', align: 'left' },
-              { id: 'reservedBook', label: 'Reserved Copies', align: 'left', filterType: 'number' },
+              { id: 'isbn', label: 'ISBN', align: 'left', minWidth: 130 },
+              {
+                id: 'reservedBook',
+                label: 'Reserved Copies',
+                align: 'left',
+                filterType: 'number',
+                minWidth: 160,
+              },
               { id: 'publisher', label: 'Publisher', align: 'left' },
               {
                 id: 'action',

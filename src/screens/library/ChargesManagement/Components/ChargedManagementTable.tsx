@@ -94,6 +94,7 @@ const LibraryChargesTable = ({
           sx={{
             '& .MuiTabs-flexContainer': { gap: 2 },
             minWidth: 200,
+            mb: 1,
           }}
         >
           {TABS.map((tab) => (
@@ -139,7 +140,7 @@ const LibraryChargesTable = ({
         <Scrollbar sx={{ p: 1 }}>
           <CustomizableTable
             tableId="library-charges-table"
-            noDataText="No Charge Records Found"
+            noDataText="No Charges Data Found"
             columns={[
               {
                 id: 'memberName',
@@ -150,7 +151,7 @@ const LibraryChargesTable = ({
               },
               { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '130px' },
               { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '150px' },
-              { id: 'accessionNo', label: 'Accession No', align: 'left', minWidth: '130px' },
+              { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '140px' },
               { id: 'role', label: 'Role', align: 'left' },
               { id: 'chargeCategory', label: 'Charge Category', align: 'left', minWidth: '160px' },
               { id: 'dueDate', label: 'Due Date', align: 'left', minWidth: '120px' },
@@ -167,10 +168,11 @@ const LibraryChargesTable = ({
                   }).format(value);
                 },
               },
-              { id: 'grNo', label: 'GR No', align: 'left', minWidth: '120px' },
+              { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
+              { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 90 },
               { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
               { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
-              { id: 'contactNo', label: 'Contact No', align: 'left', minWidth: '130px' },
+              { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '130px' },
               { id: 'reason', label: 'Reason', align: 'left' },
               {
                 id: 'actions',

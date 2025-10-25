@@ -845,6 +845,7 @@
       "memberId": "M001",
       "class": "10",
       "division": "A",
+      "rollNo" : 1,
       "grNo": "G001",
       "role": "Student",
       "name": "Dharmik Jinjala",
@@ -870,6 +871,7 @@
       "role": "Student",
       "class": "12",
       "division": "C",
+       "rollNo" : 2,
       "grNo": "G003",
       "name": "Parth Ghusar",
       "currentIssue": 2,
@@ -882,6 +884,7 @@
       "role": "Student",
       "class": "11",
       "division": "A",
+       "rollNo" : 3,
       "grNo": "G004",
       "name": "Mayur Solanki",
       "currentIssue": 0,
@@ -893,6 +896,7 @@
       "memberId": "M005",
       "class": "9",
       "division": "D",
+       "rollNo" : 4,
       "grNo": "G005",
       "role": "Student",
       "name": "Raj Baku",
@@ -1023,7 +1027,7 @@
       "reason": "Late return of 'Chemistry Fundamentals'",
       "chargeType": "Late Book Return",
       "dateIssued": "04-09-2025",
-      "status": "Paid"
+      "status": 0
     },
     {
       "id": "2",
@@ -1034,7 +1038,7 @@
       "reason": "Damaged cover of 'Advanced Mathematics'",
       "chargeType": "Damaged Book",
       "dateIssued": "15-09-2025",
-      "status": "Pending"
+      "status": 1
     }
   ],
   "librarySettingsData": [

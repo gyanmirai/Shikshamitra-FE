@@ -5,8 +5,6 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import ClearIcon from '@mui/icons-material/Clear';
-import SearchIcon from '@mui/icons-material/Search';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -18,12 +16,10 @@ import {
   Box,
   Grid,
   Card,
-  Stack,
   Button,
   Avatar,
   TextField,
   Typography,
-  IconButton,
   CardContent,
   DialogActions,
   CircularProgress,
@@ -41,18 +37,15 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [loadingMember, setLoadingMember] = useState(false);
   const { currentYear } = useSelector((state: any) => state.globalState);
-  console.log('editData===', editData);
   const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllMembersQuery, // ✅ just pass the hook reference
   });
 
-  console.log('memberData---in reservation--------', memberData);
-
   const formik = useFormik({
     initialValues: {
       memberId: '',
-      requestedDate: null,
+      requestedDate: dayjs(),
       reserveDueDate: null,
     },
     validationSchema: getReserveBookSchema(currentYear),
@@ -62,31 +55,27 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
     },
   });
 
-  const handleMemberSearch = () => {
-    const searchValue = searchMember.trim().toLowerCase();
-    if (!searchValue) return;
+  const handleMemberSearch = (value: string) => {
+    const trimmedValue = value.trim();
+    formik.setFieldValue('memberId', trimmedValue); // update Formik for UI
+
+    if (!trimmedValue) return;
+
     setLoadingMember(true);
     setTimeout(() => {
       const foundMember = memberData.find(
-        (member: any) =>
-          member.memberId?.toLowerCase() === searchValue ||
-          member.name?.toLowerCase().includes(searchValue)
+        (member: any) => member.memberId === trimmedValue // use trimmedValue here!
       );
+
       if (foundMember) {
         setSelectedMember(foundMember);
         formik.setFieldValue('memberId', foundMember.memberId);
       } else {
         setSelectedMember(null);
-        shikshaMitraToast.error({ message: 'No member found.' });
       }
+
       setLoadingMember(false);
     }, 400);
-  };
-
-  const handleClearMember = () => {
-    setSearchMember('');
-    setSelectedMember(null);
-    formik.setFieldValue('memberId', '');
   };
 
   const reservedList = memberData?.filter((member: any) =>
@@ -99,36 +88,16 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
         <Grid container spacing={3}>
           {/* Member Search */}
           <Grid size={{ xs: 12 }}>
-            <Stack direction="row" spacing={2}>
-              <TextField
-                variant="outlined"
-                size="small"
-                value={searchMember}
-                onChange={(e) => setSearchMember(e.target.value)}
-                label="Search Member"
-                sx={{ flex: 1 }}
-                disabled={!!selectedMember}
-                InputProps={{
-                  endAdornment: searchMember && (
-                    <IconButton size="small" onClick={handleClearMember}>
-                      <ClearIcon />
-                    </IconButton>
-                  ),
-                }}
-              />
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<SearchIcon />}
-                onClick={handleMemberSearch}
-                size="small"
-                sx={{ mt: 0.3 }}
-              >
-                Search
-              </Button>
-            </Stack>
+            <TextField
+              variant="outlined"
+              size="small"
+              value={formik.values.memberId}
+              onChange={(e) => handleMemberSearch(e.target.value)}
+              label="Search Member Id"
+              placeholder="Search By Member Id"
+              fullWidth
+            />
           </Grid>
-
           {loadingMember ? (
             <Grid size={{ xs: 12 }}>
               <Box display="flex" justifyContent="center" alignItems="center">
@@ -138,62 +107,43 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
           ) : selectedMember ? (
             <Grid size={{ xs: 12 }}>
               <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
-                <CardContent
-                  sx={{
-                    padding: '0 !important',
-                  }}
-                >
+                <CardContent sx={{ padding: '0 !important' }}>
                   <Grid container spacing={2}>
-                    {/* Avatar on the left */}
-                    <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', alignItems: 'center' }}>
+                    {/* Avatar / Reservation Icon */}
+                    <Grid
+                      size={{ xs: 12, md: 2 }}
+                      sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
                       <Avatar src={selectedMember.avatarUrl} sx={{ width: 80, height: 80 }} />
                     </Grid>
 
-                    {/* Member details on the right */}
+                    {/* Reservation Details */}
                     <Grid size={{ xs: 12, md: 10 }}>
                       <Grid container spacing={1}>
                         <Grid size={{ xs: 12, md: 4 }}>
-                          <Typography fontWeight={600}>Member Name</Typography>
-                          <Typography>{selectedMember.name}</Typography>
+                          <Typography fontWeight={600}>Reservation Name</Typography>
+                          <Typography>{selectedMember.name || 'N/A'}</Typography>
                         </Grid>
                         <Grid size={{ xs: 12, md: 4 }}>
-                          <Typography fontWeight={600}>Member ID</Typography>
-                          <Typography>{selectedMember.memberId}</Typography>
+                          <Typography fontWeight={600}>Reservation ID</Typography>
+                          <Typography>{selectedMember.reservationId || 'N/A'}</Typography>
                         </Grid>
                         <Grid size={{ xs: 12, md: 4 }}>
                           <Typography fontWeight={600}>Email</Typography>
-                          <Typography>{selectedMember.email}</Typography>
-                        </Grid>
-                        {selectedMember.role === 'Student' && (
-                          <>
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Roll No</Typography>
-                              <Typography>{selectedMember.rollNo}</Typography>
-                            </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>GR No</Typography>
-                              <Typography>{selectedMember.grNo}</Typography>
-                            </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Class/Division</Typography>
-                              <Typography>
-                                {selectedMember.class}-{selectedMember.division}
-                              </Typography>
-                            </Grid>
-                          </>
-                        )}
-                        <Grid size={{ xs: 12, md: 4 }}>
-                          <Typography fontWeight={600}>Phone</Typography>
-                          <Typography>{selectedMember.contactNo}</Typography>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 4 }}>
-                          <Typography fontWeight={600}>Member Type</Typography>
-                          <Typography>{selectedMember.role}</Typography>
+                          <Typography>{selectedMember.email || 'N/A'}</Typography>
                         </Grid>
 
                         <Grid size={{ xs: 12, md: 4 }}>
-                          <Typography fontWeight={600}>Join Date</Typography>
-                          <Typography>{selectedMember.joinDate}</Typography>
+                          <Typography fontWeight={600}>Phone</Typography>
+                          <Typography>{selectedMember.contactNo || 'N/A'}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                          <Typography fontWeight={600}>Reservation Type</Typography>
+                          <Typography>{selectedMember.type || 'N/A'}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                          <Typography fontWeight={600}>Reservation Date</Typography>
+                          <Typography>{selectedMember.date || 'N/A'}</Typography>
                         </Grid>
                       </Grid>
                     </Grid>
@@ -201,8 +151,21 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                 </CardContent>
               </Card>
             </Grid>
+          ) : formik.values.memberId !== '' ? (
+            <Grid size={{ xs: 12 }}>
+              <div
+                style={{
+                  padding: '12px',
+                  backgroundColor: '#ffebee',
+                  borderRadius: '4px',
+                  border: '1px solid #f44336',
+                  color: '#d32f2f',
+                }}
+              >
+                Member with ID not found.
+              </div>
+            </Grid>
           ) : null}
-
           {/* Requested Date */}
           {/* Requested Date */}
           <Grid size={{ xs: 12, md: 6 }}>
@@ -215,7 +178,7 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                 value={formik.values.requestedDate}
                 onChange={(newValue) => {
                   formik.setFieldValue('requestedDate', newValue);
-                  formik.setFieldTouched('requestedDate', true);
+                  formik.setFieldTouched('requestedDate', false);
                 }}
                 minDate={dayjs(currentYear?.startDate)}
                 maxDate={dayjs(currentYear?.endDate)}
@@ -232,7 +195,6 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
               />
             </ShakingTextField>
           </Grid>
-
           {/* Reserve Due Date */}
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField
@@ -244,7 +206,7 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                 value={formik.values.reserveDueDate}
                 onChange={(newValue) => {
                   formik.setFieldValue('reserveDueDate', newValue);
-                  formik.setFieldTouched('reserveDueDate', true);
+                  formik.setFieldTouched('reserveDueDate', false);
                 }}
                 minDate={dayjs(formik.values.requestedDate || currentYear?.startDate)} // ensures reserve due date is after requested date
                 maxDate={dayjs(currentYear?.endDate)}
@@ -261,7 +223,6 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
               />
             </ShakingTextField>
           </Grid>
-
           {/* Reserved List Table */}
           <Grid size={12}>
             {reservedList?.length ? (
@@ -272,21 +233,29 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                   noDataText="No Reserved Members Found"
                   isLoading={memberLoading}
                   columns={[
-                    { id: 'memberId', label: 'Member ID', align: 'left', sticky: true },
-                    { id: 'name', label: 'Member Name', align: 'left' },
+                    {
+                      id: 'memberId',
+                      label: 'Member ID',
+                      align: 'left',
+                      sticky: true,
+                      minWidth: 120,
+                    },
+                    { id: 'name', label: 'Member Name', align: 'left', minWidth: 140 },
                     { id: 'role', label: 'Role', align: 'left' },
                     { id: 'class', label: 'Class', align: 'left' },
                     { id: 'division', label: 'Division', align: 'left' },
-                    { id: 'rollNo', label: 'Roll No', align: 'left' },
-                    { id: 'grNo', label: 'GR No', align: 'left' },
+                    { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
+                    { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 90 },
                     {
                       id: 'accessionNo',
-                      label: 'Accession No',
+                      label: 'Accession No.',
                       align: 'left',
+                      minWidth: 140,
                     },
                     {
                       id: 'reservedBook',
                       label: 'Reserved Book',
+                      minWidth: 140,
                       align: 'left',
                       render: (value) => (
                         <Typography variant="caption" fontSize="13px">
@@ -297,6 +266,7 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                     {
                       id: 'requestedDate',
                       label: 'Requested Date',
+                      minWidth: 150,
                       align: 'left',
                       filterType: 'date',
                       render: (value) => (
@@ -309,6 +279,7 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                       id: 'reserveDueDate',
                       label: 'Reserve Due Date',
                       align: 'left',
+                      minWidth: 160,
                       filterType: 'date',
                       render: (value) => (
                         <Typography variant="caption" fontSize="13px">

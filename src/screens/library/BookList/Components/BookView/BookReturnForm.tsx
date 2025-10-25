@@ -71,6 +71,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
       remarks: '',
     },
     validationSchema: Yup.object({
+      accessionNumber: Yup.string().required('Accession No. is required'),
       returnDate: Yup.mixed()
         .required('Return date is required')
         .test(
@@ -94,7 +95,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
         is: (val: string) => !!val && val !== 'none',
         then: (schema) =>
           schema
-            .required('Fine due date is required')
+            .required('Fine Due Date is required')
             .test(
               'is-valid-dayjs',
               'Fine due date must be a valid date',
@@ -195,10 +196,10 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
       <DialogScrollContent>
         <Grid container spacing={3}>
           {!accessionNo && (
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!(formik.touched.accessionNo && formik.errors.accessionNo)}>
                 <TextField
-                  label="Scan Barcode or Search by Accession No."
+                  label="Search by Accession No."
                   size="small"
                   fullWidth
                   value={formik.values.accessionNo}
@@ -206,7 +207,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                   disabled={!!accessionNo}
                   error={!!(formik.touched.accessionNo && formik.errors.accessionNo)}
                   helperText={(formik.touched.accessionNo && formik.errors.accessionNo) as string}
-                  placeholder="Enter accession number (e.g., A001, A002, A003)"
+                  placeholder="Enter accession number (e.g., ACC-0001, ACC-0002, ACC-0003)"
                 />
               </ShakingTextField>
             </Grid>
@@ -240,57 +241,59 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                           <Grid size={{ xs: 12, md: 4 }}>
                             {' '}
                             <Typography fontWeight={600}>Book Title</Typography>{' '}
-                            <Typography>{selectedBook?.book.title}</Typography>{' '}
+                            <Typography>
+                              {selectedBook?.book.title ? selectedBook?.book.title : '-'}
+                            </Typography>{' '}
                           </Grid>{' '}
                           <Grid size={{ xs: 12, md: 4 }}>
                             {' '}
                             <Typography fontWeight={600}>Accession No.</Typography>{' '}
-                            <Typography>{selectedBook?.accessionNo}</Typography>{' '}
+                            <Typography>{selectedBook?.accessionNo || '-'}</Typography>{' '}
                           </Grid>{' '}
                           <Grid size={{ xs: 12, md: 4 }}>
                             {' '}
                             <Typography fontWeight={600}>Author</Typography>{' '}
-                            <Typography>{selectedBook?.book.author}</Typography>{' '}
+                            <Typography>{selectedBook?.book.author || '-'}</Typography>{' '}
                           </Grid>{' '}
                           <Grid size={{ xs: 12, md: 4 }}>
                             {' '}
                             <Typography fontWeight={600}>ISBN</Typography>{' '}
-                            <Typography>{selectedBook?.book.isbn}</Typography>{' '}
+                            <Typography>{selectedBook?.book.isbn || '-'}</Typography>{' '}
                           </Grid>{' '}
                           <Grid size={{ xs: 12, md: 4 }}>
                             {' '}
                             <Typography fontWeight={600}>Publisher</Typography>{' '}
-                            <Typography>{selectedBook?.book.publisher}</Typography>{' '}
+                            <Typography>{selectedBook?.book.publisher || '-'}</Typography>{' '}
                           </Grid>{' '}
                           <Grid size={{ xs: 12, md: 4 }}>
                             {' '}
                             <Typography fontWeight={600}>Added On</Typography>{' '}
                             <Typography>
                               {' '}
-                              {dayjs(selectedBook?.book.createdOn).format('YYYY')}{' '}
+                              {selectedBook?.book.createdOn
+                                ? dayjs(selectedBook.book.createdOn).format('YYYY')
+                                : '-'}{' '}
                             </Typography>{' '}
                           </Grid>{' '}
                           <Grid size={{ xs: 12, md: 4 }}>
                             {' '}
                             <Typography fontWeight={600}>Language</Typography>{' '}
-                            <Typography>{selectedBook?.book.language || 'N/A'}</Typography>{' '}
+                            <Typography>{selectedBook?.book.language || '-'}</Typography>{' '}
                           </Grid>{' '}
                           <Grid size={{ xs: 12, md: 4 }}>
                             {' '}
                             <Typography fontWeight={600}>Edition</Typography>{' '}
-                            <Typography>{selectedBook?.book.edition || 'N/A'}</Typography>{' '}
+                            <Typography>{selectedBook?.book.edition || '-'}</Typography>{' '}
                           </Grid>{' '}
                           <Grid size={{ xs: 12, md: 4 }}>
                             {' '}
                             <Typography fontWeight={600}>Category</Typography>{' '}
-                            <Typography>{selectedBook?.book.category || 'N/A'}</Typography>{' '}
+                            <Typography>{selectedBook?.book.category || '-'}</Typography>{' '}
                           </Grid>{' '}
                           <Grid size={{ xs: 12, md: 4 }}>
                             {' '}
                             <Typography fontWeight={600}>No. of Pages</Typography>{' '}
-                            <Typography>
-                              {selectedBook?.book.numberOfPages || 'N/A'}
-                            </Typography>{' '}
+                            <Typography>{selectedBook?.book.numberOfPages || '-'}</Typography>{' '}
                           </Grid>{' '}
                         </Grid>{' '}
                       </Grid>{' '}
@@ -332,19 +335,19 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                             {selectedMember.role === 'Student' && (
                               <>
                                 <Grid size={{ xs: 12, md: 4 }}>
-                                  <Typography fontWeight={600}>Roll No</Typography>
-                                  <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                  <Typography fontWeight={600}>GR No</Typography>
-                                  <Typography>{selectedMember.grNo || 'N/A'}</Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
                                   <Typography fontWeight={600}>Class/Division</Typography>
                                   <Typography>
                                     {selectedMember.class || 'N/A'} -{' '}
                                     {selectedMember.division || 'N/A'}
                                   </Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>Roll No.</Typography>
+                                  <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                  <Typography fontWeight={600}>GR No.</Typography>
+                                  <Typography>{selectedMember.grNo || 'N/A'}</Typography>
                                 </Grid>
                               </>
                             )}
@@ -354,7 +357,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                               <Typography>{selectedMember.contactNo || 'N/A'}</Typography>
                             </Grid>
                             <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Member Type</Typography>
+                              <Typography fontWeight={600}>Role</Typography>
                               <Typography>{selectedMember.role}</Typography>
                             </Grid>
                             <Grid size={{ xs: 12, md: 4 }}>
@@ -378,7 +381,31 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
 
           {selectedBook && (
             <>
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.returnDate && formik.errors.returnDate)}>
+                  <DatePicker
+                    label="Return Date *"
+                    format="DD-MM-YYYY"
+                    value={formik.values.returnDate}
+                    onChange={(newValue) => {
+                      formik.setFieldValue('returnDate', newValue);
+                    }}
+                    minDate={dayjs(selectedBook.issueDate || currentYear?.startDate)}
+                    maxDate={dayjs(currentYear?.endDate)}
+                    sx={{ width: '100%' }}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        error: !!(formik.touched.returnDate && formik.errors.returnDate),
+                        helperText: (formik.touched.returnDate &&
+                          formik.errors.returnDate) as string,
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.chargeCategory && formik.errors.chargeCategory)}
                 >
@@ -459,32 +486,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                       />
                     </ShakingTextField>
                   </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <ShakingTextField
-                      error={!!(formik.touched.returnDate && formik.errors.returnDate)}
-                    >
-                      <DatePicker
-                        label="Return Date *"
-                        format="DD-MM-YYYY"
-                        value={formik.values.returnDate}
-                        onChange={(newValue) => {
-                          formik.setFieldValue('returnDate', newValue);
-                        }}
-                        minDate={dayjs(selectedBook.issueDate || currentYear?.startDate)}
-                        maxDate={dayjs(currentYear?.endDate)}
-                        sx={{ width: '100%' }}
-                        slotProps={{
-                          textField: {
-                            size: 'small',
-                            fullWidth: true,
-                            error: !!(formik.touched.returnDate && formik.errors.returnDate),
-                            helperText: (formik.touched.returnDate &&
-                              formik.errors.returnDate) as string,
-                          },
-                        }}
-                      />
-                    </ShakingTextField>
-                  </Grid>
+
                   <Grid size={{ xs: 12 }}>
                     <ShakingTextField error={!!(formik.touched.remarks && formik.errors.remarks)}>
                       <TextField
@@ -581,9 +583,9 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
-          startIcon={<Iconify icon={GlobalIcons.submit} width={16} height={16} />}
+          startIcon={<Iconify icon="carbon:return" width={16} height={16} />}
         >
-          Submit
+          Return
         </Button>
       </DialogActions>
     </BackPopUpChecked>

@@ -30,6 +30,12 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
   const options = allowedStatuses.map((status) => ({
     label: LibraryBookStatus[status],
     value: status,
+    description:
+      status === LibraryBookStatus.Removed
+        ? 'Book has been removed from the library'
+        : status === LibraryBookStatus.UnderMaintenance
+          ? 'Book is currently under maintenance'
+          : 'Book has been reported as lost',
   }));
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -70,7 +76,7 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
                   >
                     {option.label}
                     <Box sx={{ marginLeft: 'auto' }}>
-                      <CustomTooltip title={`Description for ${option.label}`} placement="right">
+                      <CustomTooltip title={option.description} placement="right">
                         <Iconify icon="mdi:information" width={20} />
                       </CustomTooltip>
                     </Box>

@@ -10,7 +10,7 @@ export const getInitialValues = (editData: IBookCopyWithBook | null) => ({
   division: editData?.division || '',
   memberId: editData?.memberId || '',
   memberName: editData?.memberName || '',
-  issueDate: editData?.issueDate ? dayjs(editData.issueDate) : null,
+  issueDate: editData?.issueDate ? dayjs(editData.issueDate) : dayjs(),
   accessionNumber: editData?.accessionNo || '',
   dueDate: editData?.dueDate ? dayjs(editData.dueDate) : null,
   status: editData?.status || LibraryBookStatus.Issued,

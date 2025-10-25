@@ -99,7 +99,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => (
     </Grid>
 
     {/* Payment Section */}
-    <Grid size={{ xs: 12 }}>
+    <Grid size={{ xs: 12 }} sx={{ pb: 0 }}>
       <SectionCard title="Payment Details">
         <Grid container spacing={2}>
           {!charge?.paymentDetails ||

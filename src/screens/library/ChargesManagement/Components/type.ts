@@ -6,6 +6,7 @@ export interface ILibraryChargeData {
   memberId: string;
   memberName: string;
   rollNo?: string;
+  grNo?: string;
   contactNo?: string;
   role: string; // restrict to roles (can extend later)
   chargeCategory: string;
