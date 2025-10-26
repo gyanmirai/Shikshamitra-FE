@@ -3,11 +3,13 @@ import type { IStopData, IStopPayload } from './type';
 export const getStopManagementInitialValues = (editData?: IStopData | null): IStopPayload => ({
   stopName: editData?.stopName || '',
   landmark: editData?.landmark || '',
-  buildingNo: editData?.buildingNo || null,
-  flatHouseNo: editData?.flatHouseNo || null,
+  addressLine2: editData?.addressLine2 ?? null,
+  addressLine1: editData?.addressLine1 ?? null,
   areaLocalityRoadName: editData?.areaLocalityRoadName || '',
+  amount: editData?.amount || '',
+  pincode: editData ? editData?.pincode : null,
   zone: editData?.zone || '',
-  status: editData?.status || 'Active',
+  status: editData?.status || 0,
   description: null,
   coordinates: {
     latitude: undefined,

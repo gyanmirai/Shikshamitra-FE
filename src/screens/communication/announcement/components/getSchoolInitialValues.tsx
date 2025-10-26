@@ -16,7 +16,7 @@ export const getSchoolWiseAnnouncementInitialValues = (
   status: initialValues?.status ?? 0,
   durationUnit: initialValues?.durationUnit ?? '',
   duration: initialValues?.duration ?? 0,
-  type: initialValues?.type || '',
+  type: initialValues?.type || [],
   attachment: initialValues?.attachment || (null as unknown as File),
   importance_level: initialValues?.importance_level || {
     levelName: 'normal',

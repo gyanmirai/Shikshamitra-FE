@@ -290,10 +290,11 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                 value={formik.values.memberId}
                 onChange={(e) => handleMemberSearch(e.target.value)}
                 label="Search Member Id"
-                placeholder="Search By Member Id"
                 fullWidth
                 error={!!(formik.touched.memberId && formik.errors.memberId)}
                 helperText={(formik.touched.memberId && formik.errors.memberId) as string}
+                placeholder="Search By Member Id (M001, M002)"
+                sx={{ flex: 1 }}
               />
             </ShakingTextField>
           </Grid>

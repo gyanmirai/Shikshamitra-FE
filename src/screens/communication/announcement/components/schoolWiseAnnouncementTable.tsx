@@ -1,23 +1,25 @@
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
-import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { RemoveCircle } from '@mui/icons-material';
+import React, { useMemo, useCallback } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Tab, Tabs, IconButton, Typography } from '@mui/material';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import { Box, Tab, Tabs, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 import {
   AnnouncementStatus,
   AnnouncementStatusColor,
   AnnouncementStatusOptions,
 } from 'src/enums/communication_announcement_status_type';
 
+import type { IAnnouncementType } from '../../settings/AnnouncementType/Components/type';
 import type {
   IAudience,
   ISchoolWiseAnnouncement,
@@ -30,6 +32,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
   onEdit,
   handleSwitchChange,
   onDelete,
+  onRemove,
   onView,
   onPublish,
 }) => {
@@ -80,6 +83,22 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
   const tableData = useMemo(
     () => (tabs.value === 'All' ? data || [] : data?.filter((i) => i.status === tabs.value)),
     [data, tabs.value]
+  );
+
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <MenuList>
+        <MenuItem
+          onClick={() => {
+            onRemove(row as ISchoolWiseAnnouncement);
+            pop.onClose();
+          }}
+        >
+          <RemoveCircle sx={{ width: '20px', height: '20px', color: 'error.main' }} /> Remove
+        </MenuItem>
+      </MenuList>
+    ),
+    [onRemove]
   );
 
   return (
@@ -141,6 +160,18 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               id: 'type',
               label: 'Type',
               align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {row.type?.map((aud: IAnnouncementType, index: string) => (
+                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SubjectColorIndicator color={aud.color} />
+                      <Typography variant="caption" fontSize="13px">
+                        {aud.announcementType}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ),
             },
             {
               id: 'audience',
@@ -184,6 +215,15 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               ),
             },
             {
+              id: 'duration',
+              label: 'Duration',
+              render: (value, row) => (
+                <Typography fontSize="13px">
+                  {value} {row.durationUnit}
+                </Typography>
+              ),
+            },
+            {
               id: 'importance_level',
               label: 'Importance Level',
               align: 'left',
@@ -197,7 +237,6 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
                 </Box>
               ),
             },
-            { id: 'duration', label: 'Duration' },
             { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
               id: 'createdOn',
@@ -283,10 +322,11 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               render: (_, row) => (
                 <ThreeDotsActions
                   placement="right-top"
+                  actions={(prop) => actions({ ...prop, row })}
                   showEditIcon
-                  showDeleteIcon
+                  showDeleteIcon={row.status === 0}
                   showViewIcon
-                  showThreeDots={false}
+                  showThreeDots={row.status === 1}
                   handleEditClick={() => onEdit(row as ISchoolWiseAnnouncement)}
                   handleDeleteClick={() => onDelete(row as ISchoolWiseAnnouncement)}
                   handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
@@ -322,7 +362,23 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
           }
           columns={[
             { id: 'title', label: 'Announcement', align: 'left', sticky: true },
-            { id: 'type', label: 'Type', align: 'left' },
+            {
+              id: 'type',
+              label: 'Type',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {row.type?.map((aud: IAnnouncementType, index: string) => (
+                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SubjectColorIndicator color={aud.color} />
+                      <Typography variant="caption" fontSize="13px">
+                        {aud.announcementType}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ),
+            },
             {
               id: 'audience',
               label: 'Audience',
@@ -344,6 +400,8 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               id: 'startDate',
               label: 'Start Date/Time',
               filterType: 'date',
+              minWidth: 150,
+
               align: 'left',
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
@@ -353,13 +411,32 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               id: 'endDate',
               label: 'End Date/Time',
               filterType: 'date',
+              minWidth: 150,
               align: 'left',
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
               ),
             },
-            { id: 'createdBy', label: 'Created By', align: 'left' },
-            { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
+            {
+              id: 'duration',
+              label: 'Duration',
+              render: (value, row) => (
+                <Typography fontSize="13px">
+                  {value} {row.durationUnit}
+                </Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
+            {
+              id: 'createdOn',
+              label: 'Created On',
+              filterType: 'date',
+              align: 'left',
+              minWidth: 120,
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
             {
               id: 'active',
               label: 'Publish',
@@ -453,7 +530,23 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
           }
           columns={[
             { id: 'title', label: 'Announcement', align: 'left', sticky: true },
-            { id: 'type', label: 'Type', align: 'left' },
+            {
+              id: 'type',
+              label: 'Type',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {row.type?.map((aud: IAnnouncementType, index: string) => (
+                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SubjectColorIndicator color={aud.color} />
+                      <Typography variant="caption" fontSize="13px">
+                        {aud.announcementType}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ),
+            },
             {
               id: 'audience',
               label: 'Audience',
@@ -475,6 +568,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
               id: 'startDate',
               label: 'Start Date/Time',
               filterType: 'date',
+              minWidth: 150,
               align: 'left',
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
@@ -483,14 +577,33 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             {
               id: 'endDate',
               label: 'End Date/Time',
+              minWidth: 150,
               filterType: 'date',
               align: 'left',
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
               ),
             },
-            { id: 'createdBy', label: 'Created By', align: 'left' },
-            { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
+            {
+              id: 'duration',
+              label: 'Duration',
+              render: (value, row) => (
+                <Typography fontSize="13px">
+                  {value} {row.durationUnit}
+                </Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
+            {
+              id: 'createdOn',
+              label: 'Created On',
+              filterType: 'date',
+              align: 'left',
+              minWidth: 120,
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
             {
               id: 'action',
               label: 'Actions',
@@ -501,10 +614,9 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
                 <ThreeDotsActions
                   placement="right-top"
                   showViewIcon
-                  showDeleteIcon
-                  showThreeDots={false}
+                  actions={(prop) => actions({ ...prop, row })}
+                  showThreeDots
                   handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
-                  handleDeleteClick={() => onDelete(row as ISchoolWiseAnnouncement)}
                 />
               ),
             },
@@ -537,7 +649,23 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
           }
           columns={[
             { id: 'title', label: 'Announcement', align: 'left', sticky: true },
-            { id: 'type', label: 'Type', align: 'left' },
+            {
+              id: 'type',
+              label: 'Type',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {row.type?.map((aud: IAnnouncementType, index: string) => (
+                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SubjectColorIndicator color={aud.color} />
+                      <Typography variant="caption" fontSize="13px">
+                        {aud.announcementType}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ),
+            },
             {
               id: 'audience',
               label: 'Audience',
@@ -573,8 +701,25 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
               ),
             },
+            {
+              id: 'duration',
+              label: 'Duration',
+              render: (value, row) => (
+                <Typography fontSize="13px">
+                  {value} {row.durationUnit}
+                </Typography>
+              ),
+            },
             { id: 'createdBy', label: 'Created By', align: 'left' },
-            { id: 'createdOn', label: 'Created On', filterType: 'date', align: 'left' },
+            {
+              id: 'createdOn',
+              label: 'Created On',
+              filterType: 'date',
+              align: 'left',
+              render: (value) => (
+                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+              ),
+            },
             {
               id: 'action',
               label: 'Actions',
@@ -587,8 +732,6 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
                   showViewIcon
                   showThreeDots={false}
                   handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
-                  showDeleteIcon
-                  handleDeleteClick={() => onDelete(row as ISchoolWiseAnnouncement)}
                 />
               ),
             },

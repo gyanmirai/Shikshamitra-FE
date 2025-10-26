@@ -26,7 +26,8 @@ const ComposeMessageStep = ({ formik }: { formik: FormikProps<INotificationSendS
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleEditorChange = useCallback(
     debounce((value, setFieldValue) => {
-      setFieldValue('selectedTemplate.message', value);
+      const trimmedValue = value.replace(/<p>(&nbsp;|\s)*<\/p>/g, '').trim();
+      setFieldValue('selectedTemplate.message', trimmedValue);
     }, 300),
     []
   );

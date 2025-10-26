@@ -128,7 +128,6 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
             { id: 'holidayType', label: 'Type', align: 'left' },
-            { id: 'importanceLevel', label: 'Importance', align: 'left' },
             {
               id: 'audience',
               label: 'Audience',
@@ -140,6 +139,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               label: 'Start Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 130,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),
@@ -149,16 +149,18 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               label: 'End Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 130,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),
             },
-            { id: 'createdBy', label: 'Created By', align: 'left' },
+            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
               id: 'createdOn',
               label: 'Created On',
               filterType: 'date',
               align: 'left',
+              minWidth: 120,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),
@@ -226,7 +228,6 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
             { id: 'holidayType', label: 'Type', align: 'left' },
-            { id: 'importanceLevel', label: 'Importance', align: 'left' },
             {
               id: 'audience',
               label: 'Audience',
@@ -238,6 +239,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               label: 'Start Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 130,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),
@@ -247,16 +249,18 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               label: 'End Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 130,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),
             },
-            { id: 'createdBy', label: 'Created By', align: 'left' },
+            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
               id: 'createdOn',
               label: 'Created On',
-              align: 'left',
               filterType: 'date',
+              align: 'left',
+              minWidth: 120,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),
@@ -291,13 +295,13 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
             { id: 'holidayType', label: 'Type', align: 'left' },
-            { id: 'importanceLevel', label: 'Importance', align: 'left' },
             { id: 'audience', label: 'Audience', align: 'left' },
             {
               id: 'startDate',
               label: 'Start Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 130,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),
@@ -307,16 +311,18 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               label: 'End Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 130,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),
             },
-            { id: 'createdBy', label: 'Created By', align: 'left' },
+            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
               id: 'createdOn',
               label: 'Created On',
               filterType: 'date',
               align: 'left',
+              minWidth: 120,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),
@@ -368,13 +374,13 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           columns={[
             { id: 'holidayName', label: 'Holiday Name', align: 'left', sticky: true },
             { id: 'holidayType', label: 'Type', align: 'left' },
-            { id: 'importanceLevel', label: 'Importance', align: 'left' },
             { id: 'audience', label: 'Audience', align: 'left' },
             {
               id: 'startDate',
               label: 'Start Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 130,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),
@@ -384,16 +390,18 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
               label: 'End Date',
               filterType: 'date',
               align: 'left',
+              minWidth: 130,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),
             },
-            { id: 'createdBy', label: 'Created By', align: 'left' },
+            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
             {
               id: 'createdOn',
               label: 'Created On',
-              align: 'left',
               filterType: 'date',
+              align: 'left',
+              minWidth: 120,
               render: (value) => (
                 <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY')}</Typography>
               ),

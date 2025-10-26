@@ -24,44 +24,74 @@ export const routeValidationSchema = [
       .max(20, 'Route Code cannot exceed 20 characters'),
 
     routeType: yup.string().required('Route Type is required'),
-
+    distance: yup.string().trim().required('Distance is required'),
     startPoint: yup
       .string()
       .trim()
       .required('Start Point is required')
       .max(100, 'Start Point cannot exceed 100 characters'),
-
     endPoint: yup
       .string()
       .trim()
       .required('End Point is required')
       .max(100, 'End Point cannot exceed 100 characters'),
+    pickupSchedule: yup.object().when('routeType', {
+      is: (val: string) => val === 'pickup' || val === 'both',
+      then: (schema) =>
+        schema.shape({
+          startTime: yup
+            .mixed()
+            .required('Pickup Start Time is required')
+            .test(
+              'is-valid-dayjs',
+              'Start Time must be a valid time',
+              (value) => value && dayjs(value as Dayjs).isValid()
+            ),
+          endTime: yup
+            .mixed()
+            .required('End Time is required')
+            .test(
+              'is-valid-dayjs',
+              'End Time must be a valid time',
+              (value) => value && dayjs(value as Dayjs).isValid()
+            )
+            .test('is-after-start-time', 'End Time must be after Start Time', function (value) {
+              const { startTime } = this.parent;
+              if (!value || !startTime) return true;
+              return dayjs(value as Dayjs).isAfter(dayjs(startTime as Dayjs));
+            }),
+        }),
+      otherwise: (schema) => schema.nullable(),
+    }),
 
-    distance: yup.string().trim().required('Distance is required'),
-    startTime: yup
-      .mixed()
-      .required('Start Time is required')
-      .test(
-        'is-valid-dayjs',
-        'Start Time must be a valid time',
-        (value) => value && dayjs(value as Dayjs).isValid()
-      ),
-
-    endTime: yup
-      .mixed()
-      .required('End Time is required')
-      .test(
-        'is-valid-dayjs',
-        'End Time must be a valid time',
-        (value) => value && dayjs(value as Dayjs).isValid()
-      )
-      .test('is-after-start-time', 'End Time must be after Start Time', function (value) {
-        const { startTime } = this.parent;
-        if (!value || !startTime) return true;
-        return dayjs(value as Dayjs).isAfter(dayjs(startTime as Dayjs));
-      }),
-
-    duration: yup.string().trim().required('Duration is required'),
+    dropoffSchedule: yup.object().when('routeType', {
+      is: (val: string) => val === 'drop' || val === 'both',
+      then: (schema) =>
+        schema.shape({
+          startTime: yup
+            .mixed()
+            .required('Start Time is required')
+            .test(
+              'is-valid-dayjs',
+              'Start Time must be a valid time',
+              (value) => value && dayjs(value as Dayjs).isValid()
+            ),
+          endTime: yup
+            .mixed()
+            .required('End Time is required')
+            .test(
+              'is-valid-dayjs',
+              'End Time must be a valid time',
+              (value) => value && dayjs(value as Dayjs).isValid()
+            )
+            .test('is-after-start-time', 'End Time must be after Start Time', function (value) {
+              const { startTime } = this.parent;
+              if (!value || !startTime) return true;
+              return dayjs(value as Dayjs).isAfter(dayjs(startTime as Dayjs));
+            }),
+        }),
+      otherwise: (schema) => schema.nullable(),
+    }),
 
     description: yup.string().nullable().max(500, 'Description cannot exceed 500 characters'),
   }),
@@ -103,31 +133,6 @@ export const routeValidationSchema = [
                 return dayjs(value as Dayjs).isSameOrAfter(dayjs(expectedArrivalTime as Dayjs));
               }
             ),
-          arrivalTime: yup
-            .mixed()
-            .nullable()
-            .test(
-              'is-valid-dayjs',
-              'Arrival Time must be a valid time',
-              (value) => !value || dayjs(value as Dayjs).isValid()
-            ),
-          departureTime: yup
-            .mixed()
-            .nullable()
-            .test(
-              'is-valid-dayjs',
-              'Departure Time must be a valid time',
-              (value) => !value || dayjs(value as Dayjs).isValid()
-            ),
-          distanceFromPrevious: yup
-            .string()
-            .trim()
-            .required('Distance from previous stop is required'),
-          order: yup
-            .number()
-            .required('Stop order is required')
-            .integer('Order must be a whole number')
-            .min(1, 'Order must be at least 1'),
         })
       )
       .min(1, 'At least one stop is required'),

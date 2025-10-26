@@ -1,8 +1,8 @@
 import React from 'react';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
-import { Box, Grid, Card, Typography, LinearProgress } from '@mui/material';
 import { Route, LocationOn, AccessTime } from '@mui/icons-material';
+import { Box, Grid, Card, Typography, LinearProgress } from '@mui/material';
 
 // Mock route data - replace with actual props/API data
 const mockRouteData = {
@@ -63,7 +63,7 @@ const RouteInformationCard = () => {
   );
 
   return (
-    <Card sx={{ p: 3, borderRadius: 2, boxShadow: 4, mb: 2 }}>
+    <Card sx={{ p: 2, borderRadius: 2, boxShadow: 'var(--shadows-4)', mb: 2 }}>
       {/* Header */}
       <Box
         sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}

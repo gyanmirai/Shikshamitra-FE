@@ -6,14 +6,27 @@ export const getInitialRouteData = (editData?: IRoutePayload): IRoutePayload => 
   // General Information
   routeName: editData?.routeName || '',
   routeCode: editData?.routeCode || '',
-  routeType: editData?.routeType || '',
-  startPoint: editData?.startPoint || '',
-  endPoint: editData?.endPoint || '',
+  routeType: editData?.routeType || '', // "Pickup", "Dropoff", or "Both"
   distance: editData?.distance || '',
-  startTime: editData?.startTime ? dayjs(editData.startTime) : null,
-  endTime: editData?.endTime ? dayjs(editData.endTime) : null,
   duration: editData?.duration || '',
   description: editData?.description || '',
+  startPoint: editData?.startPoint ?? '',
+  endPoint: editData?.endPoint ?? '',
+  // Pickup Schedule
+  pickupSchedule: {
+    startTime: editData?.dropoffSchedule?.startTime
+      ? dayjs(editData?.dropoffSchedule?.startTime)
+      : null,
+    endTime: editData?.dropoffSchedule?.endTime ? dayjs(editData?.dropoffSchedule?.endTime) : null,
+  },
+
+  // Dropoff Schedule
+  dropoffSchedule: {
+    startTime: editData?.dropoffSchedule?.startTime
+      ? dayjs(editData?.dropoffSchedule?.startTime)
+      : null,
+    endTime: editData?.dropoffSchedule?.endTime ? dayjs(editData?.dropoffSchedule?.endTime) : null,
+  },
 
   // Stops Assignment
   stops: editData?.stops || [],

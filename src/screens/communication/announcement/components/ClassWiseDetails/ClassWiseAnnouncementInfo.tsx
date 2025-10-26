@@ -3,14 +3,20 @@
 import dayjs from 'dayjs';
 import React from 'react';
 import { alpha } from '@mui/material/styles';
+import { Label } from 'src/components/label';
 import { Box, Card, Chip, Grid, Typography } from '@mui/material';
+import {
+  AnnouncementStatus,
+  AnnouncementStatusColor,
+} from 'src/enums/communication_announcement_status_type';
 import {
   Star,
   Groups,
+  Person,
   Category,
   Business,
-  Dashboard,
   AccessTime,
+  Notifications,
   Class as ClassIcon,
 } from '@mui/icons-material';
 
@@ -44,37 +50,24 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
 
   return (
     <Card sx={{ p: 2, borderRadius: 2, boxShadow: 4, mb: 2 }}>
-      {/* Details */}
       <Grid container spacing={2}>
-        {/* Title */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<Category />, 'primary.main')}
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Title
-              </Typography>
-              <Typography variant="body1" fontWeight="400">
-                {announcement.title || '—'}
-              </Typography>
-            </Box>
-          </Box>
+        {/* Description */}
+        <Grid size={{ xs: 12 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            {announcement.description || '—'}
+          </Typography>
         </Grid>
-
-        {/* Category */}
+        {/* Type */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<Dashboard />, 'primary.main')}
+            {renderIconBox(<Category />, 'info.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
-                Category
+                Type
               </Typography>
-              <Chip
-                label={announcement.type || 'N/A'}
-                size="small"
-                color="default"
-                variant="outlined"
-              />
+              <Typography variant="body1" fontWeight="600">
+                {announcement.type?.map((t) => t.announcementType).join(', ') || '—'}
+              </Typography>
             </Box>
           </Box>
         </Grid>
@@ -82,12 +75,16 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         {/* Importance Level */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<Star />, 'primary.main')}
+            {renderIconBox(<Star />, 'error.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
-                Importance Level
+                Importance
               </Typography>
-              <Typography variant="body1" fontWeight="400">
+              <Typography
+                variant="body1"
+                fontWeight="600"
+                sx={{ color: announcement.importance_level?.color }}
+              >
                 {announcement.importance_level?.levelName || 'Normal'}
               </Typography>
             </Box>
@@ -109,7 +106,6 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
                     label={org}
                     size="small"
                     sx={{ mr: 0.5, mb: 0.5 }}
-                    color="default"
                     variant="outlined"
                   />
                 ))
@@ -135,7 +131,6 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
                     label={cls}
                     size="small"
                     sx={{ mr: 0.5, mb: 0.5 }}
-                    color="default"
                     variant="outlined"
                   />
                 ))
@@ -161,7 +156,6 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
                     label={div}
                     size="small"
                     sx={{ mr: 0.5, mb: 0.5 }}
-                    color="default"
                     variant="outlined"
                   />
                 ))
@@ -178,9 +172,9 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
             {renderIconBox(<AccessTime />, 'success.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
-                Start Date
+                Announcement Declared On
               </Typography>
-              <Typography variant="body1" fontWeight="400">
+              <Typography variant="body1" fontWeight="600">
                 {announcement.startDate
                   ? dayjs(announcement.startDate).format('DD/MM/YYYY - hh:mmA')
                   : '—'}
@@ -195,12 +189,75 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
             {renderIconBox(<AccessTime />, 'primary.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
-                End Date
+                Announcement Closed On
               </Typography>
-              <Typography variant="body1" fontWeight="400">
+              <Typography variant="body1" fontWeight="600">
                 {announcement.endDate
                   ? dayjs(announcement.endDate).format('DD/MM/YYYY - hh:mmA')
                   : '—'}
+              </Typography>
+            </Box>
+          </Box>
+        </Grid>
+
+        {/* Duration */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {renderIconBox(<AccessTime />, 'info.main')}
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                Duration
+              </Typography>
+              <Typography variant="body1" fontWeight="600">
+                {announcement.duration || '—'}
+              </Typography>
+            </Box>
+          </Box>
+        </Grid>
+
+        {/* Status */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {renderIconBox(<AccessTime />, 'primary.main')}
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                Status
+              </Typography>
+              <Label
+                variant="soft"
+                color={AnnouncementStatusColor[announcement?.status as AnnouncementStatus] as any}
+              >
+                {AnnouncementStatus[announcement?.status as AnnouncementStatus]}
+              </Label>
+            </Box>
+          </Box>
+        </Grid>
+
+        {/* Announced By */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {renderIconBox(<Person />, 'primary.main')}
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                Announced By
+              </Typography>
+              <Typography variant="body1" fontWeight="600">
+                {announcement.createdBy || '—'}
+              </Typography>
+            </Box>
+          </Box>
+        </Grid>
+
+        {/* Notification Preferences */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {renderIconBox(<Notifications />, 'warning.main')}
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                Notification Preferences
+              </Typography>
+              <Typography variant="body1" fontWeight="600">
+                {announcement.notification_preferences?.join(', ') || '—'}
               </Typography>
             </Box>
           </Box>

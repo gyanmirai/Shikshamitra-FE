@@ -42,7 +42,6 @@ import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { feeConcessionApi } from './feeCollection/feeConcession';
 import { incomeDetailsApi } from './incomeApi/incomeDetailedApi';
-import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
 import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { paymentHistoryApi } from './feeCollection/paymentHistory';
@@ -187,7 +186,7 @@ const reducers = combineReducers({
   [transportApi.reducerPath]: transportApi.reducer,
   [libraryModuleApi.reducerPath]: libraryModuleApi.reducer,
   [openLibraryApi.reducerPath]: openLibraryApi.reducer,
-  [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
+  // [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
 });
 
 const store = configureStore({
@@ -214,7 +213,7 @@ const store = configureStore({
       payElementApi.middleware,
       payrollStructureApi.middleware,
       PFApi.middleware,
-      EventHolidayApi.middleware,
+      // EventHolidayApi.middleware,
       ProfessionalApi.middleware,
       StudentAttendanceRuleApi.middleware,
       StudentAttendanceTypeApi.middleware,
