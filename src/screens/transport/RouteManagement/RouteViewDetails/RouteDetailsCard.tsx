@@ -12,13 +12,13 @@ const RouteDetailsCard = () => (
     <Scrollbar sx={{ height: '100%' }}>
       <Grid container spacing={2}>
         {/* Left Column */}
-        <Grid size={{ xs: 12, md: 5 }} display="flex" flexDirection="column" gap={2}>
+        <Grid size={{ xs: 12, md: 6 }} display="flex" flexDirection="column" gap={2}>
           <RouteInformationCard />
           <CurrentVehicleCard />
         </Grid>
 
         {/* Right Column */}
-        <Grid size={{ xs: 12, md: 7 }} display="flex" flexDirection="column" gap={2}>
+        <Grid size={{ xs: 12, md: 6 }} display="flex" flexDirection="column" gap={2}>
           <RouteStopsCard />
         </Grid>
 

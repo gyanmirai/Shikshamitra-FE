@@ -135,7 +135,7 @@
     "schoolAssignedNumber": "01",
     "vehicleColor": "Yellow"
   },
-"stopManagementData": [
+  "stopManagementData": [
     {
       "id": "1",
       "stopName": "Mahendra Park",
@@ -217,7 +217,7 @@
       "approxKmFromSchool": 15
     }
   ],
-   "routeAssignedStudentData": [
+  "routeAssignedStudentData": [
     {
       "grNo": "GR001",
       "name": "Dharmik Jinjala",
@@ -275,7 +275,7 @@
       "students": 0
     }
   ],
-"vehicleTypes": [
+  "vehicleTypes": [
     {
       "id": "1",
       "typeName": "Bus",
@@ -324,7 +324,7 @@
       "documentSize": 5,
       "acceptedFormat": "PDF, JPEG",
       "description": "Registration Certificate book issued by the RTO containing vehicle registration details.",
-      "required" : true,
+      "required": true,
       "createdBy": "Dharmik Jinjala",
       "createdOn": "10-09-2025"
     },
@@ -334,7 +334,7 @@
       "documentSize": 5,
       "acceptedFormat": "PDF, PNG",
       "description": "Vehicle insurance document providing coverage against accidents and damages.",
-            "required" : true,
+      "required": true,
 
       "createdBy": "Dharmik Jinjala",
       "createdOn": "09-09-2025"
@@ -345,7 +345,7 @@
       "documentSize": 5,
       "acceptedFormat": "PDF, JPEG",
       "description": "Pollution Under Control certificate that verifies the vehicle meets emission standards.",
-            "required" : true,
+      "required": true,
 
       "createdBy": "Prerna Atre",
       "createdOn": "06-09-2025"
@@ -356,7 +356,7 @@
       "documentSize": 5,
       "acceptedFormat": "PDF, DOCX",
       "description": "Document certifying the vehicle is fit for road usage according to safety standards.",
-            "required" : false,
+      "required": false,
       "createdBy": "Mayur Solanki",
       "createdOn": "02-09-2025"
     },
@@ -366,7 +366,7 @@
       "documentSize": 5,
       "acceptedFormat": "PDF, DOCX",
       "description": "Authorization document allowing the vehicle to operate commercially in specific areas.",
-            "required" : true,
+      "required": true,
 
       "createdBy": "Raj Baku",
       "createdOn": "02-09-2025"
@@ -821,7 +821,7 @@
       "unassignedDate": null,
       "totalStudents": 35,
       "status": "Active",
-      "busImage": "/assets/vehicles/bus-1.png"
+      "imageUrl": "https://cdn-icons-png.flaticon.com/512/296/296216.png"
     },
     {
       "id": "2",
@@ -831,7 +831,7 @@
       "unassignedDate": "14-01-2024",
       "totalStudents": 42,
       "status": "Replaced",
-      "busImage": "/assets/vehicles/bus-2.png"
+      "imageUrl": "https://cdn-icons-png.flaticon.com/512/296/296216.png"
     },
     {
       "id": "3",
@@ -841,7 +841,7 @@
       "unassignedDate": "09-09-2023",
       "totalStudents": 38,
       "status": "Replaced",
-      "busImage": "/assets/vehicles/bus-3.png"
+      "imageUrl": "https://cdn-icons-png.flaticon.com/512/296/296216.png"
     }
   ],
   "driverConductorHistoryData": [
@@ -854,6 +854,7 @@
       "assignedFrom": "15-01-2024",
       "assignedTo": "Present",
       "totalTrips": 143,
+      "avatarUrl": "https://randomuser.me/api/portraits/men/11.jpg",
       "status": "Active",
       "avatar": "/assets/avatars/driver-1.jpg"
     },
@@ -866,6 +867,7 @@
       "assignedFrom": "10-10-2023",
       "assignedTo": "14-01-2024",
       "totalTrips": 94,
+      "avatarUrl": "https://randomuser.me/api/portraits/men/11.jpg",
       "status": "Replaced",
       "avatar": "/assets/avatars/conductor-1.jpg"
     },
@@ -878,6 +880,7 @@
       "assignedFrom": "01-06-2023",
       "assignedTo": "09-10-2023",
       "totalTrips": 32,
+      "avatarUrl": "https://randomuser.me/api/portraits/men/11.jpg",
       "status": "Replaced",
       "avatar": "/assets/avatars/driver-2.jpg"
     }
@@ -1218,7 +1221,14 @@
       "feeAmount": 200,
       "assignedStops": 6,
       "color": "#06b6d4",
-      "stops": ["Parvat Patiya", "Reshma Circle", "Maharana Pratap Circle", "Kangaroo Circle", "VIP Circle", "Ring Road"]
+      "stops": [
+        "Parvat Patiya",
+        "Reshma Circle",
+        "Maharana Pratap Circle",
+        "Kangaroo Circle",
+        "VIP Circle",
+        "Ring Road"
+      ]
     },
     {
       "id": "3",
@@ -1234,10 +1244,18 @@
       "feeAmount": 167,
       "assignedStops": 7,
       "color": "#f59e0b",
-      "stops": ["Godadara", "Kapodara", "Sarthana", "Kamrej", "Deep Darshan", "Punjan Plaza", "Aashpas Mandir"]
+      "stops": [
+        "Godadara",
+        "Kapodara",
+        "Sarthana",
+        "Kamrej",
+        "Deep Darshan",
+        "Punjan Plaza",
+        "Aashpas Mandir"
+      ]
     }
   ],
-   "availableStopsOptions": [
+  "availableStopsOptions": [
     { "value": "Maharana Pratap Circle", "label": "Maharana Pratap Circle" },
     { "value": "Kangaroo Circle", "label": "Kangaroo Circle" },
     { "value": "VIP Circle", "label": "VIP Circle" },
