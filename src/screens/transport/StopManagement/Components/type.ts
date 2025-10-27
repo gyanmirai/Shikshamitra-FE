@@ -1,26 +1,30 @@
 import type { Dayjs } from 'dayjs';
-import type { LabelColor } from 'src/components/label';
 
-export type StopStatusType = 'Active' | 'Inactive';
+export enum StopStatusType {
+  Active,
+  Inactive,
+}
+
+export const StopStatusTypeColor: Record<StopStatusType, string> = {
+  [StopStatusType.Active]: 'success',
+  [StopStatusType.Inactive]: 'error',
+};
 
 export const StopStatusOptions = [
-  { label: 'Active', value: 'Active' },
-  { label: 'Inactive', value: 'Inactive' },
+  { label: 'Active', value: StopStatusType.Active },
+  { label: 'Inactive', value: StopStatusType.Inactive },
 ];
-
-export const StopStatusTypeColors: Record<StopStatusType, LabelColor> = {
-  Active: 'success',
-  Inactive: 'error',
-};
 
 export interface IStopData {
   id: string;
   stopName: string;
   landmark: string;
-  buildingNo?: string;
-  flatHouseNo?: string;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  pincode: number | null;
   areaLocalityRoadName: string;
   zone: string;
+  amount: string;
   assignedStudents: number;
   status: StopStatusType;
   createdDate?: string;
@@ -40,10 +44,12 @@ export interface IStopInformation {
 export interface IStopPayload {
   stopName: string;
   landmark: string;
-  buildingNo?: string | null;
-  flatHouseNo?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  pincode: number | null;
   areaLocalityRoadName: string;
   zone: string;
+  amount: string;
   status?: StopStatusType;
   description?: string | null;
   coordinates?: {
@@ -103,7 +109,7 @@ export interface ChangeStopStatusProps {
   isOpen: boolean;
   onClose: (e: any, isSubmit: boolean) => void;
   stopData: IStopData | null;
-  onStatusChange: (statusData: IStopStatusChange) => void;
+  onStatusChange: (statusData: any) => void;
 }
 
 // Stop Management Table Props

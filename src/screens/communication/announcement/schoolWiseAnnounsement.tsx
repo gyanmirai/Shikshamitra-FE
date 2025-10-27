@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
@@ -26,6 +27,7 @@ import {
 } from '@mui/material';
 
 import AnnouncementForm from './schoolannouncementForm';
+import AnnouncementRemoveReasonForm from './removePublishForm';
 import SchoolWiseAnnouncementTable from './components/schoolWiseAnnouncementTable';
 import SchoolManagementViewDetails from './components/SchoolWiseDetails/SchoolManagementViewDetails';
 
@@ -51,6 +53,9 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
   const [deleteAnnouncement, setDeleteAnnouncement] = useState<ISchoolWiseAnnouncement | null>(
     null
   );
+  const [removeAnnouncement, setRemoveAnnouncement] = useState<ISchoolWiseAnnouncement | null>(
+    null
+  );
   // Controls the visibility of delete confirmation dialog
   const confirm_dialog = useBoolean();
   // Controls the visibility of publish modal
@@ -73,7 +78,9 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         setEditingAnnouncement(null);
         setOpen(false);
         publish_modal.onFalse();
+        confirm_dialog.onFalse();
         setPublishingAnnouncement(null);
+        setRemoveAnnouncement(null);
         dispatch(setIsChanges(false));
       }, 200); // Delay for dialog transition
     };
@@ -159,6 +166,10 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
             confirm_dialog.onTrue();
             setDeleteAnnouncement(row);
           }}
+          onRemove={(row) => {
+            confirm_dialog.onTrue();
+            setRemoveAnnouncement(row);
+          }}
           onView={(row) => {
             view_dialog.onTrue();
             setViewAnnouncement(row);
@@ -213,6 +224,23 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           <>
             Are you sure you want to publish{' '}
             <strong>&apos;{publishingAnnouncement?.title}&apos; </strong>announcement?
+            {publishingAnnouncement?.endDate && (
+              <>
+                <br />
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  {(() => {
+                    const now = dayjs();
+                    const end = dayjs(publishingAnnouncement.endDate);
+                    if (end.isSame(now, 'day')) {
+                      const hours = end.diff(now, 'hour');
+                      return `This announcement will be published for ${hours} hour${hours !== 1 ? 's' : ''} until ${end.format('MMM D, YYYY h:mm A')}.`;
+                    }
+                    const days = end.diff(now, 'day');
+                    return `This announcement will be published for ${days} day${days !== 1 ? 's' : ''} until ${end.format('MMM D, YYYY h:mm A')}.`;
+                  })()}
+                </Typography>
+              </>
+            )}
           </>
         }
         action={
@@ -255,6 +283,30 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
         maxWidth="md"
       >
         <SchoolManagementViewDetails announcement={viewAnnouncement} />
+      </CustomDialog>
+
+      <CustomDialog
+        open={confirm_dialog.value}
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Remove Annnouncement</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Remove announcement from the system. This action will permanently delete the announcement and it will no longer be visible to users."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        handleClose={() => {
+          confirm_dialog.onFalse();
+          setRemoveAnnouncement(null);
+        }}
+        maxWidth="xs"
+      >
+        <AnnouncementRemoveReasonForm onClose={handleCloseDialog} />
       </CustomDialog>
     </Box>
   );

@@ -12,6 +12,8 @@ import {
   useGetSelectableConductorsQuery,
 } from 'src/redux/transport/vehicle-management/route-management-api';
 
+import RouteDetailsView from './RouteBasicView';
+
 import type { IRoutePayload, IVehicleAssignmentPayload } from '../Components/type';
 
 interface VehicleAssignmentStepProps {
@@ -114,6 +116,9 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
     <SectionCard title="Vehicle Assignments">
       <Grid container spacing={2} size={{ xs: 12 }}>
         {/* Select Vehicles */}
+        <Grid size={{ xs: 12 }}>
+          <RouteDetailsView values={formik.values} />
+        </Grid>
         <Grid size={{ xs: 12 }} sx={{ mb: 3 }}>
           <ShakingTextField
             error={!!(formik.touched.vehicleAssignments && formik.errors.vehicleAssignments)}

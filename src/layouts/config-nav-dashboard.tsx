@@ -1566,6 +1566,13 @@ const transportModule = {
           shortcutKeyName: 'Alt+T+1',
         },
         {
+          title: 'Stop Management',
+          path: '/transport/stopManagement',
+          _action: 'stop-management',
+          shortcutKey: 'Alt+T+4',
+          shortcutKeyName: 'Alt+T+4',
+        },
+        {
           title: 'Route Management',
           path: '/transport/routeManagement',
           _action: 'routes-schedules',
@@ -1579,13 +1586,7 @@ const transportModule = {
           shortcutKey: 'Alt+T+3',
           shortcutKeyName: 'Alt+T+3',
         },
-        {
-          title: 'Stop Management',
-          path: '/transport/stopManagement',
-          _action: 'stop-management',
-          shortcutKey: 'Alt+T+4',
-          shortcutKeyName: 'Alt+T+4',
-        },
+
         {
           title: ' Transport Staff Management',
           path: '/transport/driverManagement',
@@ -1593,13 +1594,13 @@ const transportModule = {
           shortcutKey: 'Alt+T+3',
           shortcutKeyName: 'Alt+T+3',
         },
-        {
-          title: 'Route Allocation',
-          path: '/transport/member-transport',
-          _action: 'member-transport',
-          shortcutKey: 'Alt+T+4',
-          shortcutKeyName: 'Alt+T+4',
-        },
+        // {
+        //   title: 'Route Allocation',
+        //   path: '/transport/member-transport',
+        //   _action: 'member-transport',
+        //   shortcutKey: 'Alt+T+4',
+        //   shortcutKeyName: 'Alt+T+4',
+        // },
         // {
         //   title: 'Driver Management',
         //   path: '/transport/driver-management',

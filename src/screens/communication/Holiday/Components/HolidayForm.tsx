@@ -209,7 +209,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
 
             {/* Audience */}
             <Grid size={{ xs: 12 }}>
-              <SectionCard title="Audience Selection">
+              <SectionCard title="Class Selection">
                 <Grid size={{ xs: 12, md: 6 }}>
                   <ShakingTextField error={!!(formik.touched.classes && formik.errors.classes)}>
                     <CustomSelect

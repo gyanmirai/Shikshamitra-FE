@@ -13,11 +13,15 @@ export const stopManagementValidationSchema = yup.object().shape({
     .required('Landmark is required')
     .min(2, 'Landmark must be at least 2 characters')
     .max(100, 'Landmark must not exceed 100 characters'),
-
-  buildingNo: yup.string().nullable().max(50, 'Building No must not exceed 50 characters'),
-
-  flatHouseNo: yup.string().nullable().max(50, 'Flat/House No must not exceed 50 characters'),
-
+  zone: yup.string().required('Zone is required'),
+  approxKmFromSchool: yup.number().required('Approx km from school is required'),
+  pincode: yup
+    .number()
+    .test('pincode', 'Must be exactly 6 numbers', (value) =>
+      value ? !!`${value}`.match(/\b\d{6}\b/) : true
+    )
+    .nullable(),
+  amount: yup.string().required('Amount is required'),
   status: yup
     .string()
     .required('Status is required')

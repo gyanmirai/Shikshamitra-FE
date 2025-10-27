@@ -142,13 +142,23 @@ const UpcomingEvents = (props: TabComponentType) => {
         }}
         content={
           <>
-            Are you sure you want to delete <strong>&apos;{editingEvent?.title}&apos;</strong>{' '}
+            Are you sure you want to remove <strong>&apos;{editingEvent?.title}&apos;</strong>{' '}
             Event?
           </>
         }
         title="Delete"
         action={
-          <Button variant="contained" color="error" onClick={() => {}} size="small">
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => {
+              confirm_dialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Event : "${editingEvent?.title}" removed successfully.`,
+              });
+            }}
+            size="small"
+          >
             Yes
           </Button>
         }

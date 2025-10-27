@@ -1,23 +1,23 @@
 import type { Dayjs } from 'dayjs';
 
+export interface ISchedule {
+  startTime: Dayjs | string | null;
+  endTime: Dayjs | string | null;
+}
+
 export interface IRoutePayload {
-  // General Information
   routeName: string;
   routeCode: string;
   routeType: string;
-  startPoint: string;
-  endPoint: string;
   distance: string;
-  startTime: Dayjs | null;
-  endTime: Dayjs | null;
   duration: string;
   description: string;
-
-  // Stops Assignment
-  stops: IStopPayload[];
-
-  // Vehicle Assignments
-  vehicleAssignments: IVehicleAssignmentPayload[];
+  startPoint?: string;
+  endPoint?: string;
+  pickupSchedule?: ISchedule;
+  dropoffSchedule?: ISchedule;
+  stops: any[];
+  vehicleAssignments: any[];
 }
 
 export interface IStopPayload {

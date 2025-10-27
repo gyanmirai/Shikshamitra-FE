@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Card, Grid, TextField, Typography, CardContent, InputAdornment } from '@mui/material';
 
 import type { IStopData } from '../Components/type';
@@ -28,9 +30,9 @@ const StopInformation: React.FC<StopInformationProps> = ({ editData, formik, onF
           Stop Information
         </Typography>
 
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {/* Stop Name */}
-          <Grid size={12} mb={1}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.stopName && formik.errors.stopName)}>
               <TextField
                 fullWidth
@@ -54,7 +56,7 @@ const StopInformation: React.FC<StopInformationProps> = ({ editData, formik, onF
           </Grid>
 
           {/* Landmark */}
-          <Grid size={12} mb={1}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.landmark && formik.errors.landmark)}>
               <TextField
                 fullWidth
@@ -80,79 +82,145 @@ const StopInformation: React.FC<StopInformationProps> = ({ editData, formik, onF
             </ShakingTextField>
           </Grid>
 
-          {/* Building No/Flat/House No */}
-          <Grid size={12} mb={1}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Building No./Flat/House No."
-              name="buildingNo"
-              value={formik.values.buildingNo || ''}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-            />
-          </Grid>
-
-          {/* Area/Locality/Road Name */}
-          <Grid size={12} mb={1}>
-            <ShakingTextField
-              error={!!(formik.touched.areaLocalityRoadName && formik.errors.areaLocalityRoadName)}
-            >
-              <TextField
-                fullWidth
-                size="small"
-                label="Area/Locality/Road Name"
-                name="areaLocalityRoadName"
-                value={formik.values.areaLocalityRoadName}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={
-                  !!(formik.touched.areaLocalityRoadName && formik.errors.areaLocalityRoadName)
-                }
-                helperText={
-                  (formik.touched.areaLocalityRoadName &&
-                    formik.errors.areaLocalityRoadName) as string
-                }
-              />
-            </ShakingTextField>
-          </Grid>
-
           {/* Zone */}
-          <Grid size={12} mb={1}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField error={!!(formik.touched.zone && formik.errors.zone)}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Zone"
-                name="zone"
+              <CustomSelect
+                label="Zone *"
+                options={[
+                  { value: 'North', label: 'North' },
+                  { value: 'South', label: 'South' },
+                  { value: 'East', label: 'East' },
+                  { value: 'West', label: 'West' },
+                  { value: 'Central', label: 'Central' },
+                ]}
+                onChange={(val) => {
+                  formik.setFieldValue('zone', val);
+                }}
                 value={formik.values.zone}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+                formControlProps={{
+                  sx: { width: '100%' },
+                }}
                 error={!!(formik.touched.zone && formik.errors.zone)}
                 helperText={(formik.touched.zone && formik.errors.zone) as string}
               />
             </ShakingTextField>
           </Grid>
 
+          <Grid size={{ xs: 12, md: 4 }}>
+            <ShakingTextField error={!!(formik.touched.amount && formik.errors.amount)}>
+              <NumericFormatCustom
+                size="small"
+                fullWidth
+                label="Amount *"
+                name="amount"
+                value={formik.values.amount}
+                error={!!(formik.touched.amount && formik.errors.amount)}
+                helperText={(formik.touched.amount && formik.errors.amount) as string}
+                onChange={(e: any) => {
+                  // Remove non-numeric characters and parse to number
+                  const rawValue = e.target.value.replace(/[^0-9.]/g, '');
+                  formik.setFieldValue('amount', rawValue ? Number(rawValue) : '');
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 4 }}>
+            <ShakingTextField error={formik.touched.pincode && Boolean(formik.errors.pincode)}>
+              <TextField
+                fullWidth
+                size="small"
+                label="PIN Code"
+                type="number"
+                {...formik.getFieldProps('pincode')}
+                error={formik.touched.pincode && Boolean(formik.errors.pincode)}
+                helperText={formik.touched.pincode && formik.errors.pincode}
+                name="pincode"
+                onChange={(e) => {
+                  const { value } = e.target;
+                  if (value.length <= 6) {
+                    formik.handleChange(e);
+                    formik.validateField('pincode');
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                inputProps={{ maxLength: 6, pattern: '[0-9]*' }}
+              />
+            </ShakingTextField>
+          </Grid>
+
           {/* Approx Km from School */}
-          <Grid size={12} mb={1}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <ShakingTextField
-              error={!!(formik.touched.approxKmFromSchoo && formik.errors.approxKmFromSchoo)}
+              error={!!(formik.touched.approxKmFromSchool && formik.errors.approxKmFromSchool)}
             >
               <TextField
                 fullWidth
                 size="small"
-                label="Approx Km from School"
-                name="approxKmFromSchoo"
-                value={formik.values.approxKmFromSchoo}
-                onChange={formik.handleChange}
+                label="Approx Km from School *"
+                name="approxKmFromSchool"
+                value={formik.values.approxKmFromSchool}
+                onChange={(e) => {
+                  const { value } = e.target;
+                  // allow only digits
+                  formik.setFieldValue('approxKmFromSchool', value.replace(/\D/g, ''));
+                }}
                 onBlur={formik.handleBlur}
-                error={!!(formik.touched.approxKmFromSchoo && formik.errors.approxKmFromSchoo)}
+                error={!!(formik.touched.approxKmFromSchool && formik.errors.approxKmFromSchool)}
                 helperText={
-                  (formik.touched.approxKmFromSchoo && formik.errors.approxKmFromSchoo) as string
+                  (formik.touched.approxKmFromSchool && formik.errors.approxKmFromSchool) as string
                 }
               />
             </ShakingTextField>
+          </Grid>
+          {/* Building No/Flat/House No */}
+          {/* Address Line 1 */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <TextField
+              fullWidth
+              size="small"
+              multiline
+              rows={3}
+              label="Address Line 1"
+              name="addressLine1"
+              value={formik.values.addressLine1 || ''}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+          </Grid>
+
+          {/* Address Line 2 */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <TextField
+              fullWidth
+              size="small"
+              multiline
+              rows={3}
+              label="Address Line 2"
+              name="addressLine2"
+              value={formik.values.addressLine2 || ''}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 4 }}>
+            <TextField
+              fullWidth
+              size="small"
+              multiline
+              rows={3}
+              label="Description"
+              name="description"
+              value={formik.values.description || ''}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
           </Grid>
         </Grid>
       </CardContent>

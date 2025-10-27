@@ -74,13 +74,13 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
       label: 'Upcoming',
       value: EventStatus.Upcoming,
       count: announcementCounts.upcoming,
-      color: 'info',
+      color: 'warning',
     },
     {
       label: 'Completed',
       value: EventStatus.Completed,
       count: announcementCounts.completed,
-      color: 'warning',
+      color: 'info',
     },
   ];
 

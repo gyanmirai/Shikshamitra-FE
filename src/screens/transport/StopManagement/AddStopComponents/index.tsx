@@ -7,7 +7,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Grid, Button, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-import StopLocationMap from './StopLocationMap';
 import StopInformation from './StopManagementForm';
 import { stopManagementValidationSchema } from '../Components/StopManagementValidation';
 import { getStopManagementInitialValues } from '../Components/StopManagementInitialValuse';
@@ -45,12 +44,8 @@ const AddStopIndex: React.FC<AddStopIndexProps> = ({ open, onClose, editData }) 
           <Scrollbar sx={{ p: 2, height: '100%' }}>
             <Grid container spacing={2}>
               {/* Left Column - Stop Information Form */}
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12 }}>
                 <StopInformation editData={editData} formik={formik} />
-              </Grid>
-              {/* Right Column - Map */}
-              <Grid size={{ xs: 12, md: 8 }} display="flex" flexDirection="column" gap={2}>
-                <StopLocationMap formik={formik} />
               </Grid>
             </Grid>
           </Scrollbar>

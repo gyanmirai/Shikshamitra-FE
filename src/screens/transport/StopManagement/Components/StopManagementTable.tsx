@@ -1,4 +1,5 @@
 import type { RootState } from 'src/redux/store';
+import type { LabelColor } from 'src/components/label';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
@@ -15,9 +16,13 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetStopManagementDataQuery } from 'src/redux/transport/vehicle-management/stop-management-api';
 
 import ChangeStopStatusForm from './ChangeStopStatusForm';
-import { StopStatusOptions, StopStatusTypeColors } from './type';
-
-import type { IStopData, StopStatusType, IStopStatusChange } from './type';
+import {
+  StopStatusType,
+  type IStopData,
+  StopStatusOptions,
+  StopStatusTypeColor,
+  type IStopStatusChange,
+} from './type';
 
 interface StopManagementTableProps {
   addStop: any;
@@ -91,7 +96,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             id: 'stopName',
             label: 'Stop Name',
             align: 'left',
-            minWidth: 200,
+            minWidth: 120,
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
                 {value}
@@ -102,7 +107,17 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             id: 'landmark',
             label: 'Landmark',
             align: 'left',
-            minWidth: 180,
+            minWidth: 130,
+            render: (value) => (
+              <Typography variant="caption" fontSize="13px">
+                {value}
+              </Typography>
+            ),
+          },
+          {
+            id: 'zone',
+            label: 'Zone',
+            align: 'left',
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
                 {value}
@@ -121,10 +136,17 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             ),
           },
           {
-            id: 'approxKmFromSchool',
-            label: 'Distance to School',
+            id: 'amount',
+            label: 'Amount',
             align: 'left',
-            minWidth: 170,
+            filterType: 'number',
+            render: (value) => `₹ ${value?.toLocaleString()}`,
+          },
+          {
+            id: 'approxKmFromSchool',
+            label: 'Approx KM',
+            align: 'left',
+            minWidth: 120,
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
                 {value}
@@ -136,12 +158,11 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             label: 'Status',
             align: 'left',
             sticky: true,
-            minWidth: 50,
             filterType: 'enum',
             enumOptions: StopStatusOptions,
             render: (value) => {
-              const color = StopStatusTypeColors[value as StopStatusType];
-              return <Label color={color}>{value}</Label>;
+              const color = StopStatusTypeColor[value as StopStatusType] as LabelColor;
+              return <Label color={color}>{StopStatusType[value]}</Label>;
             },
           },
           {

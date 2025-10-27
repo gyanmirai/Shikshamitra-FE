@@ -1,6 +1,7 @@
 import type { Dayjs } from 'dayjs';
 
 import type { IImportanceLevel } from '../settings/ImportanceLevel/type';
+import type { IAnnouncementType } from '../settings/AnnouncementType/Components/type';
 
 export interface IAudience {
   value: string;
@@ -18,7 +19,7 @@ export interface ISchoolWiseAnnouncement {
   createdBy: string;
   cratedOn: Dayjs | string | null;
   status: number;
-  type: string;
+  type: IAnnouncementType[];
   durationUnit?: string;
   duration: number;
   attachment: File;
@@ -94,7 +95,8 @@ export interface IClassWiseAnnouncement {
   createdBy: string;
   cratedOn: Dayjs | string | null;
   status: number;
-  type: string;
+  type: IAnnouncementType[];
+  durationUnit?: string;
   duration: number;
   attachment: File | null;
   importance_level?: IImportanceLevel;
@@ -149,6 +151,7 @@ export interface ISchoolWiseAnnouncementTableProps {
   data: ISchoolWiseAnnouncement[];
   onEdit: (row: ISchoolWiseAnnouncement) => void;
   handleSwitchChange: (row: ISchoolWiseAnnouncement) => void;
+  onRemove: (row: ISchoolWiseAnnouncement) => void;
   onDelete: (row: ISchoolWiseAnnouncement) => void;
   onView: (row: ISchoolWiseAnnouncement) => void;
   onPublish: (row: ISchoolWiseAnnouncement) => void;
@@ -158,6 +161,7 @@ export interface IClassWiseAnnouncementTableProps {
   setOpen: (value: boolean) => void;
   data: IClassWiseAnnouncement[];
   onEdit: (row: IClassWiseAnnouncement) => void;
+  onRemove: (row: IClassWiseAnnouncement) => void;
   handleSwitchChange: (row: IClassWiseAnnouncement) => void;
   onDelete: (row: IClassWiseAnnouncement) => void;
   onView: (row: IClassWiseAnnouncement) => void;

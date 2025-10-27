@@ -80,6 +80,15 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
             <Iconify icon="solar:refresh-bold" sx={{ height: '16px', width: '16px' }} />
             Change Status
           </MenuItem>
+          <MenuItem
+            onClick={() => {
+              pop.onClose();
+              setSelectedRoute(routeRow);
+            }}
+          >
+            <Iconify icon="solar:refresh-bold" sx={{ height: '16px', width: '16px' }} />
+            Visulialize Route
+          </MenuItem>
         </MenuList>
       );
     },
@@ -88,7 +97,7 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
 
   return (
     <>
-      <Box sx={{ mt: 2 }}>
+      <Box>
         <CustomizableTable
           tableId="route-management-table"
           noDataText=" Not Routes Data Found"
@@ -182,7 +191,7 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
                       setOpenDialog?.(true);
                       setEditData?.(row);
                     }}
-                    placement="left-top"
+                    placement="right-center"
                   />
                 );
               },
