@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box } from '@mui/system';
-import { Tab, Card } from '@mui/material';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Tab, Card, Avatar } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -28,16 +28,27 @@ const VehicleHistory = () => {
       isLoading={isLoading}
       columns={[
         {
+          id: 'busNo',
+          label: 'Bus No.',
+          align: 'left',
+          sticky: true,
+          minWidth: '150px',
+          render: (value, row) => (
+            <Box display="flex" alignItems="center" gap={1}>
+              <Avatar
+                src={row.imageUrl || '/static/vehicle/bus-1.png'}
+                sx={{ width: 32, height: 32 }}
+                variant="rounded"
+              />
+              {value}
+            </Box>
+          ),
+        },
+        {
           id: 'driverName',
           label: 'Driver Name',
           align: 'left',
           minWidth: '150px',
-          sticky: true,
-        },
-        {
-          id: 'busNo',
-          label: 'Bus No.',
-          align: 'left',
         },
         {
           id: 'assignedDate',
@@ -92,6 +103,15 @@ const DriverConductorHistoryTable = () => {
           align: 'left',
           minWidth: '150px',
           sticky: true,
+          render: (value, row) => (
+            <Box display="flex" alignItems="center" gap={1}>
+              <Avatar
+                src={row.avatarUrl || '/static/avatars/default-avatar.jpg'}
+                sx={{ width: 32, height: 32 }}
+              />
+              {value}
+            </Box>
+          ),
         },
         {
           id: 'role',

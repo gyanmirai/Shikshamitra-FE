@@ -7,8 +7,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { SwapHoriz, Visibility } from '@mui/icons-material';
-import { Box, Card, Button, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Card, Button, Avatar, Divider, Typography } from '@mui/material';
 
 import ViewStudents from './ViewStudents';
 import ChangeVehicleForm from './ChangeVehicleForm';
@@ -16,9 +16,12 @@ import ChangeVehicleForm from './ChangeVehicleForm';
 // Mock vehicle data - replace with actual props/API data
 const mockVehicleData = {
   vehicleNumber: 'GJ-05-AD-2711',
+  imageUrl: 'https://cdn-icons-png.flaticon.com/512/296/296216.png',
   busCode: 'Bus-001',
-  contactNumber: '+91 6355030866',
-  totalStudents: 35,
+  schoolAssignedNumber: '05',
+  studentName: 'Dharmik Jinjala',
+  PhoneNumber: '9876543210',
+  avatarUrl: 'https://randomuser.me/api/portraits/men/11.jpg',
 };
 
 const CurrentVehicleCard = () => {
@@ -42,72 +45,92 @@ const CurrentVehicleCard = () => {
 
   return (
     <>
-      <Card sx={{ p: 3, borderRadius: 2, boxShadow: 4 }}>
+      <Card sx={{ p: 3, borderRadius: 2, boxShadow: 4, position: 'relative', minHeight: 120 }}>
         {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6" color="primary" fontWeight="bold">
-            Current Vehicle
+            Current Vehicle & Driver
           </Typography>
-
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<SwapHoriz />}
-              onClick={() => {
-                setSelectedVehicle(mockVehicleData);
-                changeVehicleDialog.onTrue();
-              }}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                px: 2,
-                py: 1,
-                fontSize: '0.875rem',
-                fontWeight: 500,
-              }}
-            >
-              Change Vehicle
-            </Button>
-
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Visibility />}
-              onClick={() => viewStudentsDialog.onTrue()} // Added onClick handler
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                px: 2,
-                py: 1,
-                fontSize: '0.875rem',
-                fontWeight: 500,
-              }}
-            >
-              View
-            </Button>
-          </Box>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<SwapHoriz />}
+            onClick={() => {
+              setSelectedVehicle(mockVehicleData);
+              changeVehicleDialog.onTrue();
+            }}
+            sx={{
+              textTransform: 'none',
+              borderRadius: 2,
+              px: 2,
+              py: 1,
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              bgcolor: 'background.paper',
+              boxShadow: 1,
+            }}
+          >
+            Change Vehicle
+          </Button>
         </Box>
 
-        {/* Vehicle Info */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" fontWeight="600" gutterBottom>
-              {mockVehicleData.vehicleNumber}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {mockVehicleData.busCode} {mockVehicleData.contactNumber}
-            </Typography>
+        {/* Main Content */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          {/* Vehicle Info */}
+          <Box display="flex" alignItems="center" gap={2} minWidth={220}>
+            <Avatar
+              src={mockVehicleData.imageUrl || '/static/vehicle/bus-1.png'}
+              sx={{ width: 56, height: 56 }}
+              variant="rounded"
+            />
+            <Box>
+              <Typography variant="subtitle1" fontWeight={600}>
+                {mockVehicleData.vehicleNumber}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                School Assigned No: {mockVehicleData.schoolAssignedNumber}
+              </Typography>
+            </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Total Students
+          {/* Divider */}
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              height: 56,
+              borderRightWidth: 3,
+              bgcolor: 'primary.main',
+              borderColor: 'primary.main',
+              width: '3px',
+              borderRadius: '10px',
+            }}
+          />
+
+          {/* Total Students */}
+          <Box display="flex" alignItems="center" gap={2} minWidth={220}>
+            <Avatar
+              src={mockVehicleData.avatarUrl || '/static/avatars/default-avatar.jpg'}
+              sx={{
+                width: 56,
+                height: 56,
+                border: '1px solid ',
+              }}
+            />
+            <Box>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                gutterBottom
+                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+              >
+                {mockVehicleData.studentName}
+                <Visibility
+                  sx={{ fontSize: 18, ml: 4, cursor: 'pointer' }}
+                  onClick={() => viewStudentsDialog.onTrue()}
+                />
               </Typography>
-              <Typography variant="h5" fontWeight="600" color="text.primary">
-                {mockVehicleData.totalStudents}
-              </Typography>
+              <Typography color="text.primary">{mockVehicleData.PhoneNumber}</Typography>
             </Box>
           </Box>
         </Box>
