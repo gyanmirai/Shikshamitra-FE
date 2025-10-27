@@ -21,6 +21,7 @@ import { useGetEventAnnouncementsQuery } from 'src/redux/communication/announcem
 
 import AddEvent from './addeventForm';
 import EventAnnouncementTable from './components/EventTable';
+import UploadFileUploadForm from './components/EventUploadGallery';
 import EventDetailsComponent from './components/EventDetails/EventDetailsComponent';
 
 import type { IEventAnnouncement } from './type';
@@ -38,6 +39,8 @@ const UpcomingEvents = (props: TabComponentType) => {
   const confirm_dialog = useBoolean();
   const view_dialog = useBoolean();
   const publish_modal = useBoolean();
+  const viewGalleryDialog = useBoolean();
+  const uploadPhotoVideoDialog = useBoolean();
   // State to control add/edit event form dialog
   const [open, setOpen] = useState(false);
 
@@ -53,6 +56,7 @@ const UpcomingEvents = (props: TabComponentType) => {
     const resetState = () => {
       setTimeout(() => {
         setEditingEvent(null);
+        uploadPhotoVideoDialog.onFalse();
         setOpen(false);
         dispatch(setIsChanges(false));
       }, 200); // Delay for dialog transition
@@ -130,6 +134,16 @@ const UpcomingEvents = (props: TabComponentType) => {
           onPublish={(row) => {
             publish_modal.onTrue();
             setEditingEvent(row);
+          }}
+          onUploadPhotoVideo={(row) => {
+            uploadPhotoVideoDialog.onTrue();
+            setEditingEvent(row);
+            // TODO: Implement upload photo/video logic
+          }}
+          onViewGallery={(row) => {
+            viewGalleryDialog.onTrue();
+            setEditingEvent(row);
+            // TODO: Implement view gallery logic
           }}
         />
       )}
@@ -217,6 +231,30 @@ const UpcomingEvents = (props: TabComponentType) => {
         maxWidth="md"
       >
         <EventDetailsComponent event={editingEvent} />
+      </CustomDialog>
+
+      <CustomDialog
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Upload Photos & Videos</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Upload media files for this event to share with students, teachers, and staff."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        open={uploadPhotoVideoDialog.value}
+        handleClose={() => {
+          setEditingEvent(null);
+          uploadPhotoVideoDialog.onFalse();
+        }}
+        maxWidth="sm"
+      >
+        <UploadFileUploadForm event={editingEvent} onClose={handleCloseDialog} />
       </CustomDialog>
     </Box>
   );

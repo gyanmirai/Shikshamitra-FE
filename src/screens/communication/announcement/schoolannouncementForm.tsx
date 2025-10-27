@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
+import { Close } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { useTheme } from '@mui/material/styles';
@@ -13,25 +14,29 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { DateTimePicker } from '@mui/x-date-pickers';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
-  Chip,
   Grid,
+  Chip,
+  Dialog,
   Button,
+  Divider,
   Checkbox,
   TextField,
   Typography,
+  IconButton,
   Autocomplete,
   DialogActions,
+  DialogContent,
   FormHelperText,
   FormControlLabel,
   // eslint-disable-next-line import/no-duplicates
@@ -79,6 +84,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
 
   console.log('formik erroes===', formik.errors);
   console.log('formik values===', formik.values);
+  console.log('formik initialValues===', formik.initialValues);
 
   return (
     <>
@@ -118,11 +124,12 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                       <Autocomplete
                         fullWidth
                         multiple
+                        filterSelectedOptions
                         options={[
                           {
                             announcementType: 'Academic',
                             description: 'Academic',
-                            color: '#1976d2',
+                            color: '#d219b3ff',
                           },
                           {
                             announcementType: 'Administrative',
@@ -135,6 +142,9 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                             color: '#4CAF50',
                           },
                         ]}
+                        isOptionEqualToValue={(option, value) =>
+                          option.announcementType === value.announcementType
+                        }
                         value={formik.values.type}
                         onChange={(_, newValue) => formik.setFieldValue('type', newValue)}
                         getOptionLabel={(option) => option.announcementType}
@@ -542,7 +552,23 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                 variant="contained"
                 size="small"
                 startIcon={<Iconify icon={GlobalIcons.eye} />}
-                onClick={() => previewDialog.onTrue()}
+                onClick={() => {
+                  formik.validateForm().then((errors) => {
+                    if (Object.keys(errors).length === 0) {
+                      previewDialog.onTrue();
+                    } else {
+                      formik.setTouched(
+                        Object.keys(errors).reduce(
+                          (acc, key) => {
+                            acc[key] = true;
+                            return acc;
+                          },
+                          {} as Record<string, boolean>
+                        )
+                      );
+                    }
+                  });
+                }}
               >
                 Preview
               </Button>
@@ -572,9 +598,25 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
           </Box>
         </form>
       </BackPopUpChecked>
-      <CustomDialog
+      <Dialog
         open={previewDialog.value}
-        title={
+        onClose={() => {
+          setIsChanges(false);
+          previewDialog.onFalse();
+        }}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            display: 'flex',
+            overflow: 'hidden',
+            flexDirection: 'column',
+            '& form': { minHeight: 0, display: 'flex', flex: '1 1 auto', flexDirection: 'column' },
+          },
+        }}
+      >
+        {/* Header */}
+        <Box display="flex" alignItems="center" justifyContent="space-between" p={1.5}>
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Preview</Typography>
             <CustomTooltip
@@ -586,14 +628,25 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
           </Box>
-        }
-        handleClose={() => {
-          previewDialog.onFalse();
-        }}
-        maxWidth="sm"
-      >
-        <SchoolWiseAnnouncementCard formikValues={formik.values} />
-      </CustomDialog>
+          <IconButton
+            aria-label="close"
+            onClick={() => {
+              setIsChanges(false);
+              previewDialog.onFalse();
+            }}
+            sx={{ color: theme.vars.palette.grey[500] }}
+          >
+            <Close />
+          </IconButton>
+        </Box>
+        <Divider />
+        {/* Scrollable Content */}
+        <Scrollbar>
+          <DialogContent sx={{ p: 2 }}>
+            <SchoolWiseAnnouncementCard formikValues={formik.values} />
+          </DialogContent>
+        </Scrollbar>
+      </Dialog>
     </>
   );
 };

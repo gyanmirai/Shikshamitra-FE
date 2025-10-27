@@ -1,7 +1,9 @@
 import React from 'react';
 import { alpha } from '@mui/material/styles';
+import { Label } from 'src/components/label';
 import { Box, Grid, Card, Typography } from '@mui/material';
-import { Category, EventNote, LocationOn, Link as LinkIcon } from '@mui/icons-material';
+import { EventStatus, EventStatusColor } from 'src/enums/event-type';
+import { Category, EventNote, LocationOn, AccessTime, Link as LinkIcon } from '@mui/icons-material';
 
 import type { IEventAnnouncement } from '../../type';
 
@@ -33,9 +35,12 @@ const EventDetailsCard = ({ event }: { event: IEventAnnouncement | null }) => {
           boxShadow: 1,
         }}
       >
-        {React.cloneElement(icon as React.ReactElement<{ sx?: { color: string } }>, {
-          sx: { color },
-        })}
+        {React.cloneElement(
+          icon as React.ReactElement<{ sx?: { color: string; fontSize?: number } }>,
+          {
+            sx: { color, fontSize: 17 },
+          }
+        )}
       </Box>
       <Box>
         <Typography variant="body2" color="text.secondary">
@@ -65,10 +70,22 @@ const EventDetailsCard = ({ event }: { event: IEventAnnouncement | null }) => {
             value={event?.eventMode === 'online' ? event?.onlineLink || '—' : event?.venue || '—'}
           />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        {/* Status */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <InfoItem
+            icon={<AccessTime sx={{ fontSize: 17 }} />}
+            label="Status"
+            value={
+              <Label variant="soft" color={EventStatusColor[event?.status as EventStatus] as any}>
+                {EventStatus[event?.status as EventStatus]}
+              </Label>
+            }
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
           <InfoItem icon={<EventNote />} label="Description" value={event?.description || '—'} />
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <InfoItem
             icon={<EventNote />}
             label="Recurrence"

@@ -14,7 +14,12 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
       .min(1, 'At least one organization is required')
       .required('Organizations are required'),
     audience: Yup.array()
-      .of(Yup.string())
+      .of(
+        Yup.string()
+          .trim()
+          .min(1, 'Audience cannot be empty')
+          .matches(/^[a-zA-Z0-9\s\-_]+$/, 'Audience contains invalid characters')
+      )
       .min(1, 'At least one audience is required')
       .required('Audience is required'),
     classes: Yup.array()

@@ -1,47 +1,59 @@
 import React from 'react';
+import { Iconify } from 'src/components/iconify';
 import { AttachFile, Visibility } from '@mui/icons-material';
-import { Box, Card, Stack, Button, Typography } from '@mui/material';
+import { Box, Card, Tooltip, IconButton, Typography } from '@mui/material';
 
 import type { IEventAnnouncement } from '../../type';
 
 const EventDescriptionComponent = ({ event }: { event: IEventAnnouncement | null }) => (
   <Box>
-    <Card sx={{ p: 2, mb: 2, boxShadow: 3 }}>
-      {/* Description */}
-      <Typography variant="body2" color="text.secondary" mb={0.5}>
-        Description
-      </Typography>
-      <Typography variant="body1" mb={2}>
-        {event?.description || '—'}
-      </Typography>
-    </Card>
     {/* Attachment */}
-    {event?.link && (
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{
-          p: 1.5,
-          border: '1px solid #e0e0e0',
-          borderRadius: 1,
-          mt: 2,
-          bgcolor: 'grey.50',
-        }}
-      >
-        <Stack direction="row" spacing={1} alignItems="center">
+    {event?.attachment ? (
+      <Card sx={{ p: 2, mb: 2, boxShadow: 3 }}>
+        <Box display="flex" alignItems="center" gap={2}>
           <AttachFile fontSize="small" color="action" />
-          <Typography variant="body2">Attachment: {event.link}</Typography>
-        </Stack>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={<Visibility />}
-          onClick={() => window.open(event.link, '_blank')}
-        >
-          View
-        </Button>
-      </Stack>
+          <Box flexGrow={1}>
+            <Typography variant="body1">{event.attachment.name}</Typography>
+            <Typography component="span" variant="body2" color="text.secondary">
+              {event.attachment.size && ` • ${event.attachment.size}`}
+            </Typography>
+          </Box>
+          <Box display="flex">
+            <Tooltip title="Preview">
+              <IconButton
+                aria-label="preview"
+                onClick={() => {
+                  // const url = URL.createObjectURL(event.attachment);
+                  // window.open(url, '_blank');
+                }}
+              >
+                <Visibility />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Download">
+              <IconButton
+                aria-label="download"
+                // onClick={() => {
+                //   const url = URL.createObjectURL(event.attachment);
+                //   const a = document.createElement('a');
+                //   a.href = url;
+                //   a.download = event.attachment.name;
+                //   a.click();
+                //   URL.revokeObjectURL(url);
+                // }}
+              >
+                <Iconify icon="mdi:download" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
+      </Card>
+    ) : (
+      <Card sx={{ p: 2, mb: 2, boxShadow: 3, display: 'flex', justifyContent: 'center' }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          No attachment uploaded
+        </Typography>
+      </Card>
     )}
   </Box>
 );

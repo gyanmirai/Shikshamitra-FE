@@ -16,6 +16,7 @@ import {
   Category,
   Business,
   AccessTime,
+  Description,
   Notifications,
   Class as ClassIcon,
 } from '@mui/icons-material';
@@ -42,21 +43,18 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         boxShadow: 1,
       }}
     >
-      {React.cloneElement(icon as React.ReactElement<{ sx?: { color: string } }>, {
-        sx: { color },
-      })}
+      {React.cloneElement(
+        icon as React.ReactElement<{ sx?: { color: string; fontSize?: number } }>,
+        {
+          sx: { color, fontSize: 17 },
+        }
+      )}
     </Box>
   );
 
   return (
     <Card sx={{ p: 2, borderRadius: 2, boxShadow: 4, mb: 2 }}>
       <Grid container spacing={2}>
-        {/* Description */}
-        <Grid size={{ xs: 12 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {announcement.description || '—'}
-          </Typography>
-        </Grid>
         {/* Type */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -75,7 +73,7 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         {/* Importance Level */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<Star />, 'error.main')}
+            {renderIconBox(<Star sx={{ fontSize: 17 }} />, 'error.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
                 Importance
@@ -94,7 +92,7 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         {/* Organizations */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<Business />, 'primary.main')}
+            {renderIconBox(<Business sx={{ fontSize: 17 }} />, 'primary.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
                 Organizations
@@ -119,7 +117,7 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         {/* Classes */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<ClassIcon />, 'primary.main')}
+            {renderIconBox(<ClassIcon sx={{ fontSize: 17 }} />, 'primary.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
                 Classes
@@ -144,7 +142,7 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         {/* Divisions */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<Groups />, 'primary.main')}
+            {renderIconBox(<Groups sx={{ fontSize: 17 }} />, 'primary.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
                 Divisions
@@ -169,7 +167,7 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         {/* Start Date */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<AccessTime />, 'success.main')}
+            {renderIconBox(<AccessTime sx={{ fontSize: 17 }} />, 'success.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
                 Announcement Declared On
@@ -186,7 +184,7 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         {/* End Date */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<AccessTime />, 'primary.main')}
+            {renderIconBox(<AccessTime sx={{ fontSize: 17 }} />, 'primary.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
                 Announcement Closed On
@@ -203,7 +201,7 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         {/* Duration */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<AccessTime />, 'info.main')}
+            {renderIconBox(<AccessTime sx={{ fontSize: 17 }} />, 'info.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
                 Duration
@@ -218,7 +216,7 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         {/* Status */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<AccessTime />, 'primary.main')}
+            {renderIconBox(<AccessTime sx={{ fontSize: 17 }} />, 'primary.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
                 Status
@@ -236,7 +234,7 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         {/* Announced By */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<Person />, 'primary.main')}
+            {renderIconBox(<Person sx={{ fontSize: 17 }} />, 'primary.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
                 Announced By
@@ -251,13 +249,39 @@ export default function ClassWiseAnnouncementDetailsInfoCard({
         {/* Notification Preferences */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderIconBox(<Notifications />, 'warning.main')}
+            {renderIconBox(<Notifications sx={{ fontSize: 17 }} />, 'warning.main')}
             <Box>
               <Typography variant="body2" color="text.secondary">
                 Notification Preferences
               </Typography>
               <Typography variant="body1" fontWeight="600">
                 {announcement.notification_preferences?.join(', ') || '—'}
+              </Typography>
+            </Box>
+          </Box>
+        </Grid>
+        <Grid size={{ xs: 12 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: 2,
+              }}
+            >
+              <Description sx={{ color: 'primary.main', fontSize: 17 }} />
+            </Box>
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                Description
+              </Typography>
+              <Typography variant="body1" fontWeight="600">
+                {announcement.description || '—'}
               </Typography>
             </Box>
           </Box>
