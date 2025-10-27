@@ -7,26 +7,33 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { cloneDeep } from 'lodash';
 import { GlobalIcons } from 'src/utils/icons';
+import { Editor } from 'src/components/editor';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { DatePicker, TimePicker, DateTimePicker } from '@mui/x-date-pickers';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
   Grid,
+  Chip,
   Button,
   Switch,
+  Checkbox,
   TextField,
+  Autocomplete,
   DialogActions,
   FormHelperText,
   FormControlLabel,
@@ -39,7 +46,18 @@ import { eventAnnouncementValidationSchema } from './components/getValidationEve
 
 import type { IAddEventProps } from './type';
 
+const options = [
+  { group: 'Roles', value: 'admin', label: 'Admin' },
+  { group: 'Roles', value: 'teacher', label: 'Teacher' },
+  { group: 'Roles', value: 'student', label: 'Student' },
+  { group: 'Classes', value: 'class1', label: 'Class 1' },
+  { group: 'Classes', value: 'class2', label: 'Class 2' },
+  { group: 'Classes', value: 'class3', label: 'Class 3' },
+];
+
 const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isEdit = false }) => {
+  const theme = useTheme();
+
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Redux state for current board, medium and medium setter
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -243,21 +261,88 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                   </ShakingTextField>
                 </Grid>
 
+                <Grid size={{ xs: 12, md: 6, sm: 3 }}>
+                  <ShakingTextField error={!!(formik.touched.type && formik.errors.type)}>
+                    <Autocomplete
+                      multiple
+                      disableCloseOnSelect
+                      options={options}
+                      groupBy={(option) => option?.group || ''}
+                      getOptionLabel={(option) => option?.label || ''}
+                      value={formik.values.audience
+                        .map((val) => options.find((opt) => opt.value === val))
+                        .filter(Boolean)}
+                      onChange={(_, newValue) =>
+                        formik.setFieldValue(
+                          'audience',
+                          newValue.map((opt) => opt?.value)
+                        )
+                      }
+                      renderOption={(props, option, { selected }) => (
+                        <li {...props} key={option?.value}>
+                          <Checkbox
+                            icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                            checkedIcon={<CheckBoxIcon fontSize="small" />}
+                            style={{ marginRight: 8 }}
+                            checked={selected}
+                          />
+                          {option?.label ?? ''}
+                        </li>
+                      )}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip
+                            {...getTagProps({ index })}
+                            key={option?.value ?? index}
+                            label={option?.label ?? ''}
+                            size="small"
+                            color="default"
+                            variant="soft"
+                          />
+                        ))
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Audience *"
+                          fullWidth
+                          size="small"
+                          error={formik.touched.audience && Boolean(formik.errors.audience)}
+                          helperText={
+                            formik.touched.audience && formik.errors.audience
+                              ? formik.errors.audience
+                              : ''
+                          }
+                        />
+                      )}
+                      sx={{ minWidth: 300 }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+
                 <Grid size={{ xs: 12 }}>
                   <ShakingTextField
                     error={!!(formik.touched.description && formik.errors.description)}
                   >
-                    <TextField
-                      fullWidth
-                      label="Description *"
-                      name="description"
-                      multiline
+                    <Editor
                       value={formik.values.description}
-                      onChange={formik.handleChange}
-                      error={formik.touched.description && Boolean(formik.errors.description)}
-                      helperText={formik.touched.description && formik.errors.description}
-                      size="small"
-                      rows={4}
+                      onChange={(value) => {
+                        formik.setFieldValue('description', value);
+                      }}
+                      placeholder="Description"
+                      sx={{
+                        border: `1px solid ${theme.vars.palette.grey[500]}`,
+                        borderRadius: 1,
+                        '&:hover': { borderColor: theme.vars.palette.text.primary },
+                        ...(!!formik.touched.description &&
+                          !!formik.errors.description && {
+                            borderColor: theme.palette.error.main,
+                          }),
+                        '&:focus-within': {
+                          borderColor: theme.vars.palette.text.primary,
+                          borderWidth: 2,
+                        },
+                      }}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -268,7 +353,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                     multiple={false}
                     showVisibleDocumentCount={1}
                     onChange={(value) => formik.setFieldValue('attachment', value)}
-                    primaryText="Please Upload Your File"
+                    primaryText="Click to upload event poster"
                     secondaryText="Maximum file size is 5MB"
                   />
                 </Grid>

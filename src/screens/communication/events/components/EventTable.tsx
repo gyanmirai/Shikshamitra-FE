@@ -3,7 +3,9 @@
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
+import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import { RemoveCircle } from '@mui/icons-material';
 import React, { useMemo, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -22,6 +24,8 @@ interface IEventAnnouncementTableProps {
   onDelete: (row: IEventAnnouncement) => void;
   onView: (row: IEventAnnouncement) => void;
   onPublish: (row: IEventAnnouncement) => void;
+  onUploadPhotoVideo: (row: IEventAnnouncement) => void;
+  onViewGallery: (row: IEventAnnouncement) => void;
 }
 
 const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
@@ -31,6 +35,8 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
   onDelete,
   onView,
   onPublish,
+  onUploadPhotoVideo,
+  onViewGallery,
 }) => {
   const theme = useTheme();
 
@@ -55,9 +61,29 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
         >
           <RemoveCircle sx={{ width: '20px', height: '20px', color: 'error.main' }} /> Remove
         </MenuItem>
+        {row.status === 2 && (
+          <>
+            <MenuItem
+              onClick={() => {
+                onUploadPhotoVideo(row as IEventAnnouncement);
+              }}
+            >
+              <Iconify icon={GlobalIcons.upload} width={16} height={16} />
+              Upload Photo/Video
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                onViewGallery(row as IEventAnnouncement);
+              }}
+            >
+              <Iconify icon={GlobalIcons.eye} width={16} height={16} />
+              View Gallery
+            </MenuItem>
+          </>
+        )}
       </MenuList>
     ),
-    [onDelete]
+    [onDelete, onUploadPhotoVideo, onViewGallery]
   );
 
   const tabs = useTabs('All');
@@ -115,134 +141,250 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
       </Box>
 
       {/* Table */}
-      <CustomizableTable
-        tableId="event-announcement-table"
-        noDataText={
-          <>
-            No event data found
-            <Box
-              onClick={() => {
-                setOpen(true);
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Add Event
-            </Box>
-          </>
-        }
-        data={tableData || []}
-        columns={[
-          { id: 'title', label: 'Title', align: 'left', sticky: true },
-          { id: 'type', label: 'Type', align: 'left' },
-          {
-            id: 'audience',
-            label: 'Audience',
-            align: 'left',
-            render: (value, row) => (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {row.audience?.map((aud: IAudience) => (
-                  <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <SubjectColorIndicator color={aud.color} />
-                    <Typography variant="caption" fontSize="13px">
-                      {aud.name}
-                    </Typography>
-                  </Box>
-                ))}
+      {tabs.value === 'All' ? (
+        <CustomizableTable
+          tableId="event-announcement-table"
+          noDataText={
+            <>
+              No event data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Event
               </Box>
-            ),
-          },
-          {
-            id: 'classes',
-            label: 'Classes',
-            align: 'left',
-            render: (val) => (val?.length ? val.join(',') : 'All'),
-          },
-          {
-            id: 'divisions',
-            label: 'Divisions',
-            align: 'left',
-            render: (val) => (val?.length ? val.join(',') : 'All'),
-          },
-          {
-            id: 'eventMode',
-            label: 'Mode',
-            align: 'left',
-            render: (val) => (
-              <Typography fontSize="13px">{val === 'online' ? 'Online' : 'Offline'}</Typography>
-            ),
-          },
-          {
-            id: 'startDate',
-            label: 'Start Date',
-            filterType: 'date',
-            minWidth: 110,
-            align: 'left',
-            render: (val) => (
-              <Typography fontSize="13px">{dayjs(val).format('DD-MM-YYYY')}</Typography>
-            ),
-          },
-          {
-            id: 'endDate',
-            label: 'End Date',
-            filterType: 'date',
-            minWidth: 110,
-            align: 'left',
-            render: (val) => (
-              <Typography fontSize="13px">{dayjs(val).format('DD-MM-YYYY')}</Typography>
-            ),
-          },
-          { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
-          {
-            id: 'createdOn',
-            label: 'Created On',
-            align: 'left',
-            minWidth: 120,
-            render: (val) => (
-              <Typography fontSize="13px">{dayjs(val).format('DD-MM-YYYY')}</Typography>
-            ),
-          },
-
-          {
-            id: 'status',
-            label: 'Status',
-            align: 'left',
-            filterType: 'enum',
-            enumOptions: EventStatusOptions,
-            sticky: true,
-            render: (val) => (
-              <Label variant="soft" color={EventStatusColor[val as EventStatus] as any}>
-                {EventStatus[val as EventStatus]}
-              </Label>
-            ),
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            align: 'center',
-            sticky: true,
-            isSort: false,
-            isFilter: false,
-            render: (_, row) => (
-              <ThreeDotsActions
-                placement="right-top"
-                actions={(prop) => actions({ ...prop, row })}
-                showEditIcon
-                showViewIcon
-                handleEditClick={() => onEdit(row as IEventAnnouncement)}
-                handleViewClick={() => onView(row as IEventAnnouncement)}
-              />
-            ),
-          },
-        ]}
-      />
+            </>
+          }
+          data={tableData || []}
+          columns={[
+            { id: 'title', label: 'Title', align: 'left', sticky: true },
+            { id: 'type', label: 'Type', align: 'left' },
+            {
+              id: 'audience',
+              label: 'Audience',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {row.audience?.map((aud: IAudience) => (
+                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SubjectColorIndicator color={aud.color} />
+                      <Typography variant="caption" fontSize="13px">
+                        {aud.name}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ),
+            },
+            {
+              id: 'classes',
+              label: 'Classes',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
+            },
+            {
+              id: 'divisions',
+              label: 'Divisions',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
+            },
+            {
+              id: 'eventMode',
+              label: 'Mode',
+              align: 'left',
+              render: (val) => (
+                <Typography fontSize="13px">{val === 'online' ? 'Online' : 'Offline'}</Typography>
+              ),
+            },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              filterType: 'date',
+              minWidth: 110,
+              align: 'left',
+              render: (val) => (
+                <Typography fontSize="13px">{dayjs(val).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              filterType: 'date',
+              minWidth: 110,
+              align: 'left',
+              render: (val) => (
+                <Typography fontSize="13px">{dayjs(val).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
+            {
+              id: 'createdOn',
+              label: 'Created On',
+              align: 'left',
+              minWidth: 120,
+              render: (val) => (
+                <Typography fontSize="13px">{dayjs(val).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            {
+              id: 'status',
+              label: 'Status',
+              align: 'left',
+              filterType: 'enum',
+              enumOptions: EventStatusOptions,
+              sticky: true,
+              render: (val) => (
+                <Label variant="soft" color={EventStatusColor[val as EventStatus] as any}>
+                  {EventStatus[val as EventStatus]}
+                </Label>
+              ),
+            },
+            {
+              id: 'actions',
+              label: 'Actions',
+              align: 'center',
+              sticky: true,
+              isSort: false,
+              isFilter: false,
+              render: (_, row) => (
+                <ThreeDotsActions
+                  placement="right-top"
+                  actions={(prop) => actions({ ...prop, row })}
+                  showEditIcon
+                  showViewIcon
+                  handleEditClick={() => onEdit(row as IEventAnnouncement)}
+                  handleViewClick={() => onView(row as IEventAnnouncement)}
+                />
+              ),
+            },
+          ]}
+        />
+      ) : (
+        <CustomizableTable
+          tableId="event-announcement-table"
+          noDataText={
+            <>
+              No event data found
+              <Box
+                onClick={() => {
+                  setOpen(true);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Event
+              </Box>
+            </>
+          }
+          data={tableData || []}
+          columns={[
+            { id: 'title', label: 'Title', align: 'left', sticky: true },
+            { id: 'type', label: 'Type', align: 'left' },
+            {
+              id: 'audience',
+              label: 'Audience',
+              align: 'left',
+              render: (value, row) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {row.audience?.map((aud: IAudience) => (
+                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SubjectColorIndicator color={aud.color} />
+                      <Typography variant="caption" fontSize="13px">
+                        {aud.name}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ),
+            },
+            {
+              id: 'classes',
+              label: 'Classes',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
+            },
+            {
+              id: 'divisions',
+              label: 'Divisions',
+              align: 'left',
+              render: (val) => (val?.length ? val.join(',') : 'All'),
+            },
+            {
+              id: 'eventMode',
+              label: 'Mode',
+              align: 'left',
+              render: (val) => (
+                <Typography fontSize="13px">{val === 'online' ? 'Online' : 'Offline'}</Typography>
+              ),
+            },
+            {
+              id: 'startDate',
+              label: 'Start Date',
+              filterType: 'date',
+              minWidth: 110,
+              align: 'left',
+              render: (val) => (
+                <Typography fontSize="13px">{dayjs(val).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            {
+              id: 'endDate',
+              label: 'End Date',
+              filterType: 'date',
+              minWidth: 110,
+              align: 'left',
+              render: (val) => (
+                <Typography fontSize="13px">{dayjs(val).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
+            {
+              id: 'createdOn',
+              label: 'Created On',
+              align: 'left',
+              minWidth: 120,
+              render: (val) => (
+                <Typography fontSize="13px">{dayjs(val).format('DD-MM-YYYY')}</Typography>
+              ),
+            },
+            {
+              id: 'actions',
+              label: 'Actions',
+              align: 'center',
+              sticky: true,
+              isSort: false,
+              isFilter: false,
+              render: (_, row) => (
+                <ThreeDotsActions
+                  placement="right-top"
+                  actions={(prop) => actions({ ...prop, row })}
+                  showEditIcon
+                  showViewIcon
+                  handleEditClick={() => onEdit(row as IEventAnnouncement)}
+                  handleViewClick={() => onView(row as IEventAnnouncement)}
+                />
+              ),
+            },
+          ]}
+        />
+      )}
     </Box>
   );
 };

@@ -2,11 +2,19 @@ import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { Box, Card, Grid, Typography } from '@mui/material';
-import { Groups, Person, Warning, Category, AccessTime, Notifications } from '@mui/icons-material';
 import {
   AnnouncementStatus,
   AnnouncementStatusColor,
 } from 'src/enums/communication_announcement_status_type';
+import {
+  Groups,
+  Person,
+  Warning,
+  Category,
+  AccessTime,
+  Description,
+  Notifications,
+} from '@mui/icons-material';
 
 import type { ISchoolWiseAnnouncement } from '../../type';
 
@@ -22,11 +30,6 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
     <Card sx={{ p: 2, borderRadius: 2, boxShadow: 4, mb: 2 }}>
       <Grid container spacing={2}>
         {/* Title & Description */}
-        <Grid size={{ xs: 12 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {announcement.description}
-          </Typography>
-        </Grid>
 
         {/* Announcement Type */}
         <Grid size={{ xs: 12, md: 6 }}>
@@ -43,7 +46,7 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
                 boxShadow: 2,
               }}
             >
-              <Category sx={{ color: 'info.main' }} />
+              <Category sx={{ color: 'info.main', fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -71,7 +74,9 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
                 boxShadow: 2,
               }}
             >
-              <Warning sx={{ color: announcement.importance_level?.color || 'error.main' }} />
+              <Warning
+                sx={{ color: announcement.importance_level?.color || 'error.main', fontSize: 17 }}
+              />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -103,7 +108,7 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
                 boxShadow: 1,
               }}
             >
-              <AccessTime sx={{ color: 'success.main' }} />
+              <AccessTime sx={{ color: 'success.main', fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -133,7 +138,7 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
                 boxShadow: 2,
               }}
             >
-              <AccessTime sx={{ color: 'primary.main' }} />
+              <AccessTime sx={{ color: 'primary.main', fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -162,7 +167,7 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
                 boxShadow: 2,
               }}
             >
-              <AccessTime sx={{ color: 'primary.main' }} />
+              <AccessTime sx={{ color: 'primary.main', fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -193,7 +198,7 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
                 boxShadow: 2,
               }}
             >
-              <AccessTime sx={{ color: 'info.main' }} />
+              <AccessTime sx={{ color: 'info.main', fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -221,7 +226,7 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
                 boxShadow: 2,
               }}
             >
-              <Groups sx={{ color: 'secondary.main' }} />
+              <Groups sx={{ color: 'secondary.main', fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -239,8 +244,8 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box
               sx={{
-                width: 36,
-                height: 36,
+                width: 32,
+                height: 32,
                 borderRadius: '50%',
                 bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15),
                 display: 'flex',
@@ -249,7 +254,7 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
                 boxShadow: 2,
               }}
             >
-              <Person sx={{ color: 'primary.main' }} />
+              <Person sx={{ color: 'primary.main', fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -277,7 +282,7 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
                 boxShadow: 2,
               }}
             >
-              <Notifications sx={{ color: 'warning.main' }} />
+              <Notifications sx={{ color: 'warning.main', fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -285,6 +290,32 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
               </Typography>
               <Typography variant="body1" fontWeight="600">
                 {announcement.notification_preferences?.join(', ') || '—'}
+              </Typography>
+            </Box>
+          </Box>
+        </Grid>
+        <Grid size={{ xs: 12 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15),
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: 2,
+              }}
+            >
+              <Description sx={{ color: 'primary.main', fontSize: 17 }} />
+            </Box>
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                Description
+              </Typography>
+              <Typography variant="body1" fontWeight="600">
+                {announcement.description || '—'}
               </Typography>
             </Box>
           </Box>
