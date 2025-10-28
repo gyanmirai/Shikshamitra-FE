@@ -1,16 +1,17 @@
 import Stack from '@mui/material/Stack';
 import Portal from '@mui/material/Portal';
+import StarterKit from '@tiptap/starter-kit';
 import Backdrop from '@mui/material/Backdrop';
 import { common, createLowlight } from 'lowlight';
 import LinkExtension from '@tiptap/extension-link';
 import ImageExtension from '@tiptap/extension-image';
-import StarterKitExtension from '@tiptap/starter-kit';
 import FormHelperText from '@mui/material/FormHelperText';
 import TextAlignExtension from '@tiptap/extension-text-align';
 import PlaceholderExtension from '@tiptap/extension-placeholder';
-import { useState, useEffect, forwardRef, useCallback } from 'react';
+import { useRef, useState, useEffect, forwardRef, useCallback } from 'react';
 import CodeBlockLowlightExtension from '@tiptap/extension-code-block-lowlight';
 import { useEditor, EditorContent, ReactNodeViewRenderer } from '@tiptap/react';
+import { List, Paper, Popover, ListItemText, ListItemButton } from '@mui/material';
 
 import { Toolbar } from './toolbar';
 import { Iconify } from '../iconify';
@@ -36,6 +37,8 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
       isToolbarShow = true,
       value: content = '',
       placeholder = 'Write something awesome...',
+      mentionItems = [],
+      mentionable = false,
       ...other
     },
     ref
@@ -44,21 +47,17 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
     const [showToolbar, setShowToolbar] = useState(isToolbarShow);
     const [isHovering, setIsHovering] = useState(false);
 
-    const handleToggleFullScreen = useCallback(() => {
-      setFullScreen((prev) => !prev);
-    }, []);
+    // Mention state
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+    const anchorSpanRef = useRef<HTMLSpanElement | null>(null);
+    const [mentionOpen, setMentionOpen] = useState(false);
+    const [filteredItems, setFilteredItems] = useState<{ id: string; label: string }[]>([]);
+    const [selectedIndex, setSelectedIndex] = useState(0);
 
-    const handleToggleToolbar = useCallback(() => {
-      setShowToolbar((prev) => !prev);
-    }, []);
-
-    const handleMouseEnter = useCallback(() => {
-      setIsHovering(true);
-    }, []);
-
-    const handleMouseLeave = useCallback(() => {
-      setIsHovering(false);
-    }, []);
+    const handleToggleFullScreen = useCallback(() => setFullScreen((prev) => !prev), []);
+    const handleToggleToolbar = useCallback(() => setShowToolbar((prev) => !prev), []);
+    const handleMouseEnter = useCallback(() => setIsHovering(true), []);
+    const handleMouseLeave = useCallback(() => setIsHovering(false), []);
 
     const lowlight = createLowlight(common);
 
@@ -66,15 +65,8 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
       content,
       editable,
       extensions: [
-        StarterKitExtension.configure({
+        StarterKit.configure({
           codeBlock: false,
-          code: { HTMLAttributes: { class: editorClasses.content.codeInline } },
-          heading: { HTMLAttributes: { class: editorClasses.content.heading } },
-          horizontalRule: { HTMLAttributes: { class: editorClasses.content.hr } },
-          listItem: { HTMLAttributes: { class: editorClasses.content.listItem } },
-          blockquote: { HTMLAttributes: { class: editorClasses.content.blockquote } },
-          bulletList: { HTMLAttributes: { class: editorClasses.content.bulletList } },
-          orderedList: { HTMLAttributes: { class: editorClasses.content.orderedList } },
         }),
         PlaceholderExtension.configure({
           placeholder,
@@ -85,45 +77,124 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
         LinkExtension.configure({
           autolink: true,
           openOnClick: false,
-          HTMLAttributes: { class: editorClasses.content.link },
         }),
         CodeBlockLowlightExtension.extend({
           addNodeView() {
             return ReactNodeViewRenderer(CodeHighlightBlock);
           },
-        }).configure({ lowlight, HTMLAttributes: { class: editorClasses.content.codeBlock } }),
+        }).configure({ lowlight }),
       ],
       onUpdate({ editor: _editor }) {
         const html = _editor.getHTML();
         onChange?.(html);
+        if (!mentionable) return;
+        const { from } = _editor.state.selection;
+        const textBeforeCursor = _editor.state.doc.textBetween(0, from, '\n', '\ufffc');
+        const match = textBeforeCursor.match(/@([a-zA-Z\s]*)$/);
+
+        if (match) {
+          const q = match[1];
+
+          const filtered = mentionItems.filter((item) =>
+            item.label.toLowerCase().includes(q.toLowerCase())
+          );
+          setFilteredItems(filtered);
+          setSelectedIndex(0); // reset selection when query changes
+
+          try {
+            const coords = _editor.view.coordsAtPos(from);
+            if (!anchorSpanRef.current) {
+              const span = document.createElement('span');
+              span.style.position = 'absolute';
+              span.style.pointerEvents = 'none';
+              span.style.width = '0px';
+              span.style.height = '0px';
+              document.body.appendChild(span);
+              anchorSpanRef.current = span;
+            }
+            const span = anchorSpanRef.current;
+            if (span) {
+              span.style.left = `${coords.left + window.scrollX}px`;
+              span.style.top = `${coords.bottom + window.scrollY}px`;
+              setAnchorEl(span);
+            }
+            setMentionOpen(true);
+          } catch (err) {
+            console.warn('coordsAtPos failed', err);
+            cleanupAnchorSpan();
+            setMentionOpen(false);
+          }
+        } else {
+          cleanupAnchorSpan();
+          setMentionOpen(false);
+          setFilteredItems([]);
+        }
       },
       immediatelyRender: false,
       ...other,
     });
 
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        if (editor?.isEmpty && content !== '<p></p>') {
-          editor.commands.setContent(content);
+    const cleanupAnchorSpan = () => {
+      if (anchorSpanRef.current) {
+        try {
+          anchorSpanRef.current.remove();
+        } catch (err) {
+          console.warn('remove anchor span failed', err);
         }
-      }, 100);
-      return () => clearTimeout(timer);
-    }, [content, editor]);
+        anchorSpanRef.current = null;
+        setAnchorEl(null);
+      }
+    };
+
+    const handleSelectMention = useCallback(
+      (item: { id: string; label: string }) => {
+        if (!editor) return;
+        const { state } = editor;
+        const { from } = state.selection;
+        const textBefore = state.doc.textBetween(0, from, '\n', '\ufffc');
+        const lastAt = textBefore.lastIndexOf('@');
+        if (lastAt !== -1) {
+          editor
+            .chain()
+            .focus()
+            .deleteRange({ from: lastAt, to: from })
+            .insertContent(`[${item.label}] `)
+            .run();
+        } else {
+          editor.chain().focus().insertContent(`[${item.label}] `).run();
+        }
+        cleanupAnchorSpan();
+        setMentionOpen(false);
+      },
+      [editor]
+    );
 
     useEffect(() => {
-      if (resetValue && !content) {
-        editor?.commands.clearContent();
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [content]);
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (!mentionOpen || filteredItems.length === 0) return;
 
-    useEffect(() => {
-      if (fullScreen) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = '';
-      }
-    }, [fullScreen]);
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev + 1) % filteredItems.length);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev === 0 ? filteredItems.length - 1 : prev - 1));
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          console.log(filteredItems[selectedIndex], 'filteredItems[selectedIndex]');
+          handleSelectMention(filteredItems[selectedIndex]);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          cleanupAnchorSpan();
+          setMentionOpen(false);
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [mentionOpen, filteredItems, selectedIndex, editor, handleSelectMention]);
+
+    useEffect(() => () => cleanupAnchorSpan(), []);
 
     return (
       <Portal disablePortal={!fullScreen}>
@@ -176,7 +247,6 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
               />
             )}
 
-            {/* <Scrollbar sx={{ height: '200px' }}> */}
             <EditorContent
               ref={ref}
               spellCheck="false"
@@ -187,7 +257,41 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
               className={editorClasses.content.root}
             />
 
-            {/* </Scrollbar> */}
+            {/* Mention Popper */}
+            {mentionable && (
+              <Popover
+                open={mentionOpen}
+                anchorEl={anchorEl}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                style={{ zIndex: 1600 }}
+              >
+                <Paper elevation={3}>
+                  <List dense sx={{ minWidth: 200, maxHeight: 220, overflow: 'auto' }}>
+                    {filteredItems.length > 0 ? (
+                      filteredItems.map((item, index) => (
+                        <ListItemButton
+                          key={item.id}
+                          selected={index === selectedIndex} // 👈 highlight active
+                          onClick={() => handleSelectMention(item)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleSelectMention(item);
+                            }
+                          }}
+                        >
+                          <ListItemText primary={item.label} />
+                        </ListItemButton>
+                      ))
+                    ) : (
+                      <ListItemButton disabled>
+                        <ListItemText primary="No matches" />
+                      </ListItemButton>
+                    )}
+                  </List>
+                </Paper>
+              </Popover>
+            )}
           </StyledRoot>
 
           {helperText && <FormHelperText error={!!error}>{helperText}</FormHelperText>}

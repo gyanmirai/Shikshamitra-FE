@@ -16,6 +16,8 @@ export type EditorProps = Partial<EditorOptions> & {
   slotProps?: {
     wrap: SxProps<Theme>;
   };
+  mentionItems?: { id: string; label: string }[];
+  mentionable?: boolean;
 };
 
 export type EditorToolbarProps = {
