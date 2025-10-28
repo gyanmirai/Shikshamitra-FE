@@ -1,10 +1,11 @@
 import type { FormikProps } from 'formik';
 
 import React from 'react';
+import { Box } from '@mui/system';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Grid, Checkbox, FormHelperText, FormControlLabel } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useGetDeliveryChannelTypeOptionsQuery } from 'src/redux/communication/setting/deliveryChannelApi';
+import { Grid, Chip, Checkbox, Typography, FormHelperText, FormControlLabel } from '@mui/material';
 
 import type { INotificationSendSchema } from './type';
 import type { IDeliveryChannel } from '../../../DeliveryChannelType/type';
@@ -27,38 +28,87 @@ const ChooseChannelsStep = ({ formik }: { formik: FormikProps<INotificationSendS
   };
 
   return (
-    <SectionCard title="Select Channels">
-      <Grid container spacing={2}>
-        {deliveryChannelData?.map((channel: IDeliveryChannel) => {
-          const isSelected = formik.values.channels?.includes(channel.deliveryChannel);
-          return (
-            <Grid size={{ sm: 3 }} key={channel.deliveryChannel}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={isSelected}
-                    onChange={() => handleToggle(channel.deliveryChannel)}
-                  />
-                }
-                label={channel.deliveryChannel}
-              />
-            </Grid>
-          );
-        })}
-        {formik.errors.channels && (
-          <FormHelperText
-            error
-            sx={{
-              left: 0,
-              fontSize: '10px !important',
-              marginLeft: 0, // 🚀 removes default left space
-            }}
-          >
-            {formik.errors.channels}
-          </FormHelperText>
-        )}
-      </Grid>
-    </SectionCard>
+    <>
+      <SectionCard title="Selected Members">
+        <Grid size={{ xs: 12 }}>
+          <Typography>
+            {formik.values.members.filter((member: any) => member.isSelect).length > 0
+              ? (() => {
+                  const selectedMembers = formik.values.members
+                    .filter((member: any) => member.isSelect)
+                    .map((member: any) => member.name);
+                  const count = selectedMembers.length;
+                  if (count > 5) {
+                    return (
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          gap: 0.5,
+                          flexWrap: 'wrap',
+                          verticalAlign: 'middle',
+                        }}
+                      >
+                        {selectedMembers.slice(0, 5).map((org: string) => (
+                          <Chip key={org} label={org} size="small" variant="outlined" />
+                        ))}
+                        <Typography component="span" sx={{ ml: 0.5 }}>
+                          +{count - 5}...
+                        </Typography>
+                      </Box>
+                    );
+                  }
+                  return (
+                    <Box
+                      sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', verticalAlign: 'middle' }}
+                    >
+                      {selectedMembers.map((org: string) => (
+                        <Chip key={org} label={org} size="small" variant="outlined" />
+                      ))}
+                    </Box>
+                  );
+                })()
+              : 'Please select members to send notifications'}
+          </Typography>
+        </Grid>
+      </SectionCard>
+      <SectionCard title="Select Channels">
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+            {deliveryChannelData?.map((channel: IDeliveryChannel) => {
+              const isSelected = formik.values.channels?.includes(channel.deliveryChannel);
+              return (
+                <FormControlLabel
+                  key={channel.deliveryChannel}
+                  control={
+                    <Checkbox
+                      checked={isSelected}
+                      onChange={() => handleToggle(channel.deliveryChannel)}
+                    />
+                  }
+                  label={
+                    <Typography sx={{ whiteSpace: 'nowrap' }}>{channel.deliveryChannel}</Typography>
+                  }
+                />
+              );
+            })}
+            {formik.errors.channels && (
+              <FormHelperText
+                error
+                sx={{
+                  fontSize: '11px !important',
+                  marginBottom: 0,
+                  position: 'none',
+                  marginLeft: ' 0px !important',
+                  bottom: 0,
+                }}
+              >
+                {formik.errors.channels}
+              </FormHelperText>
+            )}
+          </Box>
+        </Box>
+      </SectionCard>
+    </>
   );
 };
 

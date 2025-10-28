@@ -999,7 +999,7 @@ const communicationModule = {
           shortcutKeyName: 'Alt+C+N',
           children: [
             {
-              title: 'Send Notification',
+              title: 'Sent Notification',
               path: '/communication/notification/send-notification',
               _action: 'send-notification',
               shortcutKey: 'Alt+C+N+1',

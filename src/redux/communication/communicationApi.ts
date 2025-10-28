@@ -33,8 +33,10 @@ export const communicationApi = createApi({
             return { data: communicationData.deliveryChannelTypeData };
           case '/notificationTemplateData':
             return { data: communicationData.notificationTemplateData };
-          case '/notificationHistoryApi':
+          case '/notificationHistoryData':
             return { data: communicationData.notificationHistoryData };
+          case '/sentNotificationData':
+            return { data: communicationData.sentNotificationData };
           default:
             return {
               error: {
@@ -57,6 +59,7 @@ export const communicationApi = createApi({
     'DeliveryChannelTypeOptions',
     'NotificationTemplates',
     'NotificationHistory',
+    'SentNotificationHistory',
   ],
   endpoints: () => ({}),
 });

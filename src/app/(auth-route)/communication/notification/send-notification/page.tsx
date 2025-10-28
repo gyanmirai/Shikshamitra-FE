@@ -1,6 +1,6 @@
 import React from 'react';
-import NotificationFormStepper from 'src/screens/communication/settings/Notification/SendNotification';
+import SendNotification from 'src/screens/communication/settings/Notification/SendNotification';
 
-const NotificationPage = () => <NotificationFormStepper />;
+const NotificationPage = () => <SendNotification />;
 
 export default NotificationPage;
