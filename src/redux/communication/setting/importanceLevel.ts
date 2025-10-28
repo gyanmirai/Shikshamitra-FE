@@ -9,8 +9,16 @@ export const importanceLevelOptionsApi = communicationApi.injectEndpoints({
       }),
       providesTags: ['ImportanceLevelOptions'],
     }),
+    getSentNotificationHistory: builder.query({
+      query: () => ({
+        url: '/sentNotificationData',
+        method: 'GET',
+      }),
+      providesTags: ['SentNotificationHistory'],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetImportanceLevelOptionsQuery } = importanceLevelOptionsApi;
+export const { useGetImportanceLevelOptionsQuery, useGetSentNotificationHistoryQuery } =
+  importanceLevelOptionsApi;

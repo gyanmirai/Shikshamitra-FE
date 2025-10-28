@@ -646,11 +646,6 @@
     "deliveryChannel": "Mobile App Notification",
     "description": "Push notifications to the mobile app.",
     "color": "#FF9800"
-  },
-  {
-    "deliveryChannel": "In-App Message",
-    "description": "Display messages within the web or mobile app.",
-    "color": "#9C27B0"
   }
 ],
 "notificationTemplateData": [
@@ -759,6 +754,62 @@
     "failed": 50,
     "subject": "Notice: Scheduled System Maintenance",
     "body": "The student portal will be unavailable on April 2nd from 1:00 AM to 3:00 AM due to scheduled maintenance."
+  }
+],
+"sentNotificationData":[
+  {
+    "id": 1,
+    "role": "Student",
+    "title": "Exam Schedule Released",
+    "importanceLevel": "High",
+    "sentBy": "Principle Office",
+    "category": "Academic",
+    "subject": "Exam Schedule for Final Semester",
+    "channels": ["Email", "SMS"],
+    "status": 1,
+    "dateTime": "2024-01-15T10:30:00Z",
+    "recipients": 245,
+    "totalRecipients": 245,
+    "delivered": 240,
+    "opened": 198,
+    "failed": 5,
+    "body": "Dear students, the final semester exam schedule has been released. Please check your student portal for detailed timings and venues."
+  },
+  {
+    "id": 2,
+    "role": "Student",
+    "title": "Library Due Reminder",
+    "importanceLevel": "Low",
+    "sentBy": "Admin Office",
+    "category": "General",
+    "subject": "Pending Library Books",
+    "channels": ["Email"],
+    "status": 0,
+    "dateTime": "2024-02-05T09:00:00Z",
+    "recipients": 120,
+    "totalRecipients": 120,
+    "delivered": 0,
+    "opened": 0,
+    "failed": 0,
+    "body": "Please return or renew your library books before the due date to avoid penalties."
+  },
+  {
+    "id": 3,
+    "role": ["Student","Teacher"],
+    "title": "Sports Meet Invitation",
+    "importanceLevel": "Medium",
+    "sentBy": "Sports Committee",
+    "category": "Events",
+    "subject": "Annual Sports Meet",
+    "channels": ["SMS"],
+    "status": 1,
+    "dateTime": "2024-03-12T14:15:00Z",
+    "recipients": 300,
+    "totalRecipients": 300,
+    "delivered": 290,
+    "opened": 150,
+    "failed": 10,
+    "body": "We are excited to invite you to the Annual Sports Meet. Don’t miss the fun and competitions!"
   }
 ]
 }
