@@ -122,8 +122,18 @@ const BookIssueReturnTable = ({
           { id: 'role', label: 'Role', align: 'left', minWidth: '100px' },
           { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '120px' },
           { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '150px' },
-          { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
-          { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
+          {
+            id: 'classDivision',
+            label: 'Class/Division',
+            align: 'left',
+            minWidth: '130px',
+            render: (_value, row) => (
+              <span>
+                {row.classNo}
+                {row.division ? `-${row.division}` : ''}
+              </span>
+            ),
+          },
           { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
           { id: 'grNo', label: 'GR No.', align: 'left', minWidth: '120px' },
           { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '120px' },

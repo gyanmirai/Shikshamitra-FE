@@ -71,7 +71,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
       remarks: '',
     },
     validationSchema: Yup.object({
-      accessionNumber: Yup.string().required('Accession No. is required'),
+      accessionNo: Yup.string().required('Accession No. is required'),
       returnDate: Yup.mixed()
         .required('Return date is required')
         .test(
@@ -560,7 +560,21 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                         />
                       </>
                     ) : (
-                      <Typography>No reservations yet</Typography>
+                      <Card
+                        variant="outlined"
+                        sx={{
+                          boxShadow: 'var(--shadows-8)',
+                          background: '#fafbfc',
+                          p: 3,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Typography color="text.secondary" fontSize={20}>
+                          No reservations yet
+                        </Typography>
+                      </Card>
                     )}
                   </Grid>
                 </>

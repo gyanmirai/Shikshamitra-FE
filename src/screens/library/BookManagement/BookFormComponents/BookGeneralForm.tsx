@@ -10,8 +10,8 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useSearchBooksQuery } from 'src/redux/library/LibraryDataSearch';
-import { Box, Grid, TextField, Autocomplete, CircularProgress } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { Box, Grid, MenuItem, TextField, Autocomplete, CircularProgress } from '@mui/material';
 
 import { fetchBookDetails } from './getBookDetails';
 import { getInitialBookData } from '../Components/BookManageInitialValues';
@@ -351,23 +351,22 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
             <ShakingTextField error={!!(formik.touched.language && formik.errors.language)}>
               <TextField
                 fullWidth
+                select
                 name="language"
                 label="Language"
                 value={formik.values.language}
-                onChange={(e) => {
-                  const value = e.target.value
-                    .replace(/[^a-zA-Z\s]/g, '')
-                    .split(' ')
-                    .map((word) =>
-                      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                    )
-                    .join(' ');
-                  formik.setFieldValue('language', value);
-                }}
+                onChange={formik.handleChange}
                 error={!!(formik.touched.language && formik.errors.language)}
                 helperText={formik.touched.language && formik.errors.language}
                 size="small"
-              />
+              >
+                <MenuItem value="">Select Language</MenuItem>
+                <MenuItem value="Gujarati">Gujarati (ગુજરાતી)</MenuItem>
+                <MenuItem value="Hindi">Hindi (हिंदी)</MenuItem>
+                <MenuItem value="English">English</MenuItem>
+                <MenuItem value="Marathi">Marathi (मराठी)</MenuItem>
+                <MenuItem value="Sanskrit">Sanskrit (संस्कृत)</MenuItem>
+              </TextField>
             </ShakingTextField>
           )}
         </Grid>
@@ -403,7 +402,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                   }
                 }}
                 onKeyDown={(e) => {
-                  if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                  if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
                     e.preventDefault();
                   }
                 }}
@@ -443,6 +442,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
           )}
         </Grid>
 
+        {/* Applicable Classes */}
         <Grid size={{ xs: 12, md: 4 }}>
           {fieldsEnabled && (
             <ShakingTextField error={!!(formik.touched.classes && formik.errors.classes)}>
@@ -495,6 +495,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
           )}
         </Grid>
 
+        {/* Number of Pages */}
         <Grid size={{ xs: 12, md: 4 }}>
           {fieldsEnabled && (
             <ShakingTextField
@@ -512,7 +513,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
                   formik.setFieldTouched('numberOfPages', false);
                 }}
                 onKeyDown={(e) => {
-                  if (['e', 'E', '+', '-', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                  if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
                     e.preventDefault();
                   }
                 }}
@@ -526,7 +527,6 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
         </Grid>
 
         {/* Upload */}
-
         <Grid size={{ xs: 12 }}>
           {fieldsEnabled && (
             <CustomUpload

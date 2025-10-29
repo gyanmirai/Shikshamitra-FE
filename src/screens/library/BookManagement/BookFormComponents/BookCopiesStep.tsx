@@ -160,111 +160,6 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
                   </Box>
                 ),
               },
-              // {
-              //   id: 'rfidEnabled',
-              //   label: 'RFID Enabled',
-              //   minWidth: 130,
-              //   align: 'left',
-              //   render: (_, row) => (
-              //     <Box mb={1}>
-              //       <ShakingTextField
-              //         error={
-              //           !!(
-              //             formik?.touched?.copies?.[row.copyNo - 1]?.rfidEnabled &&
-              //             Array.isArray(formik?.errors?.copies) &&
-              //             typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-              //             (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)
-              //               ?.rfidEnabled
-              //           )
-              //         }
-              //       >
-              //         <Switch
-              //           size="small"
-              //           checked={formik.values.copies[row.copyNo - 1]?.rfidEnabled || false}
-              //           onChange={(e) => {
-              //             const updated = [...copies];
-              //             updated[row.copyNo - 1].rfidEnabled = e.target.checked;
-              //             setCopies(updated);
-              //             formik.setFieldValue('copies', updated);
-              //             formik.setFieldTouched(`copies.${row.copyNo - 1}.rfidEnabled`, true);
-              //           }}
-              //         />
-              //       </ShakingTextField>
-              //     </Box>
-              //   ),
-              // },
-              // {
-              //   id: 'rfidId',
-              //   label: '',
-              //   renderColumn(value) {
-              //     return (
-              //       <Box display="flex" alignItems="center" gap={1}>
-              //         RFID
-              //         <CustomTooltip
-              //           arrow
-              //           placement="right"
-              //           sx={{ textAlign: 'justify' }}
-              //           title="Enter the RFID for this copy if RFID is enabled. Only letters and numbers are allowed."
-              //         >
-              //           <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              //         </CustomTooltip>
-              //       </Box>
-              //     );
-              //   },
-              //   align: 'left',
-              //   render: (_, row) => (
-              //     <Box mb={1}>
-              //       <ShakingTextField
-              //         error={
-              //           !!(
-              //             formik?.touched?.copies?.[row.copyNo - 1]?.rfidId &&
-              //             Array.isArray(formik?.errors?.copies) &&
-              //             typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-              //             (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)?.rfidId
-              //           )
-              //         }
-              //       >
-              //         <TextField
-              //           size="small"
-              //           fullWidth
-              //           label="RFID *"
-              //           value={formik.values.copies[row.copyNo - 1]?.rfidId || ''}
-              //           disabled={!formik.values.copies[row.copyNo - 1]?.rfidEnabled}
-              //           onChange={(e) => {
-              //             const val = e.target.value
-              //               .replace(/[^a-zA-Z0-9\s]/g, '')
-              //               .split(' ')
-              //               .map((word) => word || '')
-              //               .join(' ');
-
-              //             const updated = [...copies];
-              //             updated[row.copyNo - 1].rfidId = val;
-              //             setCopies(updated);
-              //             formik.setFieldValue('copies', updated);
-              //             formik.setFieldTouched(`copies.${row.copyNo - 1}.rfidId`, false);
-              //           }}
-              //           error={
-              //             !!(
-              //               formik?.touched?.copies?.[row.copyNo - 1]?.rfidId &&
-              //               Array.isArray(formik?.errors?.copies) &&
-              //               typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-              //               (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)
-              //                 ?.rfidId
-              //             )
-              //           }
-              //           helperText={
-              //             (formik?.touched?.copies?.[row.copyNo - 1]?.rfidId &&
-              //               Array.isArray(formik?.errors?.copies) &&
-              //               typeof formik?.errors?.copies?.[row.copyNo - 1] === 'object' &&
-              //               (formik.errors.copies[row.copyNo - 1] as FormikErrors<IBookCopy>)
-              //                 ?.rfidId) ||
-              //             ''
-              //           }
-              //         />
-              //       </ShakingTextField>
-              //     </Box>
-              //   ),
-              // },
               {
                 id: 'section',
                 label: 'Section',
@@ -283,13 +178,13 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
                       }
                     >
                       <CustomSelect
-                        label="Section"
+                        label="Section *"
                         options={[
-                          { value: 'fiction', label: 'Fiction' },
-                          { value: 'non_fiction', label: 'Non-Fiction' },
-                          { value: 'reference', label: 'Reference' },
-                          { value: 'children', label: 'Children' },
-                          { value: 'magazines', label: 'Magazines' },
+                          { value: 'section_1', label: 'Section 1' },
+                          { value: 'section_2', label: 'Section 2' },
+                          { value: 'section_3', label: 'Section 3' },
+                          { value: 'section_4', label: 'Section 4' },
+                          { value: 'section_5', label: 'Section 5' },
                         ]}
                         name="section"
                         value={formik.values.copies[row.copyNo - 1]?.section || ''}
@@ -341,7 +236,7 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
                       }
                     >
                       <CustomSelect
-                        label="Shelf"
+                        label="Shelf *"
                         options={[
                           { value: 'shelf_a', label: 'Shelf A' },
                           { value: 'shelf_b', label: 'Shelf B' },
@@ -375,6 +270,7 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
                           )
                         }
                         formControlProps={{ sx: { minWidth: 200 } }}
+                        disabled={!formik.values.copies[row.copyNo - 1]?.section}
                       />
                     </ShakingTextField>
                   </Box>
@@ -393,7 +289,7 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
                       value={row.accessionNo}
                       format="CODE128" // other options: EAN13, UPC, etc.
                       width={1}
-                      height={1}
+                      height={20}
                       displayValue
                       background="#ffffff"
                       lineColor="#000000"

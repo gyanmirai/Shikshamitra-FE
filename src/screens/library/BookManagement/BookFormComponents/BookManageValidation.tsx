@@ -14,8 +14,29 @@ export const bookValidationSchema = [
       .string()
       .trim()
       .required('ISBN is required')
-      .max(18, 'ISBN cannot exceed 18 characters')
-      .matches(/^[\d-]+$/, 'ISBN can only contain digits and hyphens'),
+      .max(17, 'ISBN with hyphens cannot exceed 17 characters')
+      .test('isbn-validation', 'Please enter a valid ISBN-10 or ISBN-13', function (value) {
+        if (!value) return false;
+
+        // Remove hyphens and spaces
+        const cleanISBN = value.replace(/[-\s]/g, '');
+
+        // Check basic format
+        if (!/^[\dX]+$/i.test(cleanISBN)) {
+          return this.createError({
+            message: 'ISBN can only contain digits, hyphens, and X (for ISBN-10)',
+          });
+        }
+
+        // Length check
+        if (cleanISBN.length !== 10 && cleanISBN.length !== 13) {
+          return this.createError({
+            message: 'ISBN must be 10 or 13 digits (excluding hyphens)',
+          });
+        }
+
+        return true;
+      }),
     numberOfCopies: yup
       .number()
       .required('Number of copies is required')
@@ -34,7 +55,17 @@ export const bookValidationSchema = [
       }),
 
     // optional: file uploads or cover images
-    bookCoverImages: yup.array().nullable(),
+    bookCoverImages: yup
+      .array()
+      .nullable()
+      .transform((value, originalValue) => {
+        // If the original value is a string, wrap it in an array
+        if (typeof originalValue === 'string') {
+          return [originalValue];
+        }
+        // If it's already an array or null/undefined, return as is
+        return value;
+      }),
     documents: yup.array().nullable(),
 
     // We don't deeply validate copies here (copies validated in Step 1),

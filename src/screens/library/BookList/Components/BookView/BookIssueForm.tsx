@@ -19,6 +19,20 @@ import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
 import { useGetAllCopiesQuery } from 'src/redux/library/bookList/copies-api';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
+  Book,
+  Email,
+  Phone,
+  Badge,
+  Person,
+  School,
+  Numbers,
+  Category,
+  Language,
+  MenuBook,
+  Assignment,
+  CalendarMonth,
+} from '@mui/icons-material';
+import {
   Box,
   Grid,
   Card,
@@ -26,7 +40,6 @@ import {
   Avatar,
   TextField,
   Typography,
-  CardContent,
   DialogActions,
   CircularProgress,
 } from '@mui/material';
@@ -131,9 +144,6 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
       onClose(null, true);
     },
   });
-
-  console.log('formik=====', formik.values.accessionNumber);
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
@@ -175,88 +185,172 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
             if (selectedBook) {
               return (
                 <Grid size={{ xs: 12 }}>
-                  <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
-                    {' '}
-                    <CardContent sx={{ p: '0 !important' }}>
-                      {' '}
-                      <Grid container spacing={2}>
-                        {' '}
-                        <Grid size={{ xs: 12, md: 3 }}>
-                          {' '}
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      boxShadow: 'var(--shadows-8)',
+                      p: 2,
+                      background: '#fff',
+                      borderRadius: 3,
+                    }}
+                  >
+                    <Grid container spacing={2} alignItems="center">
+                      {/* Book Cover */}
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <Box
+                          sx={{
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                            boxShadow: 2,
+                            mx: 'auto',
+                            background: '#f5f5f5',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
                           <Box
                             component="img"
                             src={selectedBook?.book.bookCoverImages?.[0] || '/placeholder-book.jpg'}
                             alt={selectedBook?.book.title}
-                            sx={{ width: 240, height: 240, borderRadius: 2, flexShrink: 0 }}
-                          />{' '}
-                        </Grid>{' '}
-                        <Grid size={{ xs: 12, md: 9 }}>
-                          {' '}
-                          <Grid container spacing={1}>
-                            {' '}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              {' '}
-                              <Typography fontWeight={600}>Book Title</Typography>{' '}
-                              <Typography>
-                                {selectedBook?.book.title ? selectedBook?.book.title : '-'}
-                              </Typography>{' '}
-                            </Grid>{' '}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              {' '}
-                              <Typography fontWeight={600}>Accession No.</Typography>{' '}
-                              <Typography>{selectedBook?.accessionNo || '-'}</Typography>{' '}
-                            </Grid>{' '}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              {' '}
-                              <Typography fontWeight={600}>Author</Typography>{' '}
-                              <Typography>{selectedBook?.book.author || '-'}</Typography>{' '}
-                            </Grid>{' '}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              {' '}
-                              <Typography fontWeight={600}>ISBN</Typography>{' '}
-                              <Typography>{selectedBook?.book.isbn || '-'}</Typography>{' '}
-                            </Grid>{' '}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              {' '}
-                              <Typography fontWeight={600}>Publisher</Typography>{' '}
-                              <Typography>{selectedBook?.book.publisher || '-'}</Typography>{' '}
-                            </Grid>{' '}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              {' '}
-                              <Typography fontWeight={600}>Added On</Typography>{' '}
-                              <Typography>
-                                {' '}
-                                {selectedBook?.book.createdOn
-                                  ? dayjs(selectedBook.book.createdOn).format('YYYY')
-                                  : '-'}{' '}
-                              </Typography>{' '}
-                            </Grid>{' '}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              {' '}
-                              <Typography fontWeight={600}>Language</Typography>{' '}
-                              <Typography>{selectedBook?.book.language || '-'}</Typography>{' '}
-                            </Grid>{' '}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              {' '}
-                              <Typography fontWeight={600}>Edition</Typography>{' '}
-                              <Typography>{selectedBook?.book.edition || '-'}</Typography>{' '}
-                            </Grid>{' '}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              {' '}
-                              <Typography fontWeight={600}>Category</Typography>{' '}
-                              <Typography>{selectedBook?.book.category || '-'}</Typography>{' '}
-                            </Grid>{' '}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              {' '}
-                              <Typography fontWeight={600}>No. of Pages</Typography>{' '}
-                              <Typography>
-                                {selectedBook?.book.numberOfPages || '-'}
-                              </Typography>{' '}
-                            </Grid>{' '}
-                          </Grid>{' '}
-                        </Grid>{' '}
-                      </Grid>{' '}
-                    </CardContent>{' '}
+                            sx={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                            }}
+                          />
+                        </Box>
+                      </Grid>
+                      {/* Book Info */}
+                      <Grid size={{ xs: 12, md: 9 }}>
+                        <Grid container spacing={2}>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Book fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Book Title</Typography>
+                                <Typography>{selectedBook?.book.title || '-'}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Assignment fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Accession No.</Typography>
+                                <Typography>{selectedBook?.accessionNo || '-'}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Person fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Author</Typography>
+                                <Typography>{selectedBook?.book.author || '-'}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Numbers fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>ISBN</Typography>
+                                <Typography>{selectedBook?.book.isbn || '-'}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <MenuBook fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Publisher</Typography>
+                                <Typography>{selectedBook?.book.publisher || '-'}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <CalendarMonth fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Added On</Typography>
+                                <Typography>
+                                  {selectedBook?.book.createdOn
+                                    ? dayjs(selectedBook.book.createdOn).format('YYYY')
+                                    : '-'}
+                                </Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Language fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Language</Typography>
+                                <Typography>{selectedBook?.book.language || '-'}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Badge fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Edition</Typography>
+                                <Typography>{selectedBook?.book.edition || '-'}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Category fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Category</Typography>
+                                <Typography>{selectedBook?.book.category || '-'}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <MenuBook fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>No. of Pages</Typography>
+                                <Typography>{selectedBook?.book.numberOfPages || '-'}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                        </Grid>
+                      </Grid>
+                    </Grid>
                   </Card>
                 </Grid>
               );
@@ -313,69 +407,144 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
             if (selectedMember) {
               return (
                 <Grid size={{ xs: 12 }}>
-                  <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
-                    <CardContent sx={{ padding: '0 !important' }}>
-                      <Grid container spacing={2}>
-                        {/* Avatar */}
-                        <Grid
-                          size={{ xs: 12, md: 2 }}
-                          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        >
-                          <Avatar src={selectedMember.avatarUrl} sx={{ width: 80, height: 80 }} />
-                        </Grid>
-
-                        {/* Details */}
-                        <Grid size={{ xs: 12, md: 10 }}>
-                          <Grid container spacing={1}>
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Member Name</Typography>
-                              <Typography>{selectedMember.name}</Typography>
-                            </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Member ID</Typography>
-                              <Typography>{selectedMember.memberId}</Typography>
-                            </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Email</Typography>
-                              <Typography>{selectedMember.email || 'N/A'}</Typography>
-                            </Grid>
-
-                            {selectedMember.role === 'Student' && (
-                              <>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                  <Typography fontWeight={600}>Class/Division</Typography>
-                                  <Typography>
-                                    {selectedMember.class || 'N/A'} -{' '}
-                                    {selectedMember.division || 'N/A'}
-                                  </Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                  <Typography fontWeight={600}>Roll No.</Typography>
-                                  <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                  <Typography fontWeight={600}>GR No.</Typography>
-                                  <Typography>{selectedMember.grNo || 'N/A'}</Typography>
-                                </Grid>
-                              </>
-                            )}
-
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Phone</Typography>
-                              <Typography>{selectedMember.contactNo || 'N/A'}</Typography>
-                            </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Role</Typography>
-                              <Typography>{selectedMember.role}</Typography>
-                            </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Typography fontWeight={600}>Join Date</Typography>
-                              <Typography>{selectedMember.joinDate || 'N/A'}</Typography>
-                            </Grid>
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      boxShadow: 'var(--shadows-8)',
+                      p: 2,
+                      background: '#fff',
+                      borderRadius: 3,
+                    }}
+                  >
+                    <Grid container spacing={2} alignItems="center">
+                      {/* Avatar */}
+                      <Grid
+                        size={{ xs: 12, md: 2 }}
+                        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Avatar src={selectedMember.avatarUrl} sx={{ width: 80, height: 80 }} />
+                      </Grid>
+                      {/* Member Info */}
+                      <Grid size={{ xs: 12, md: 10 }}>
+                        <Grid container spacing={2}>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Person fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Member Name</Typography>
+                                <Typography>{selectedMember.name}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Assignment fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Member ID</Typography>
+                                <Typography>{selectedMember.memberId}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Email fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Email</Typography>
+                                <Typography>{selectedMember.email || 'N/A'}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          {selectedMember.role === 'Student' && (
+                            <>
+                              <Grid size={{ xs: 12, md: 4 }}>
+                                <Card
+                                  variant="outlined"
+                                  sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                                >
+                                  <School fontSize="small" color="primary" />
+                                  <Box>
+                                    <Typography fontWeight={600}>Class/Division</Typography>
+                                    <Typography>
+                                      {selectedMember.class || 'N/A'} -{' '}
+                                      {selectedMember.division || 'N/A'}
+                                    </Typography>
+                                  </Box>
+                                </Card>
+                              </Grid>
+                              <Grid size={{ xs: 12, md: 4 }}>
+                                <Card
+                                  variant="outlined"
+                                  sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                                >
+                                  <Numbers fontSize="small" color="primary" />
+                                  <Box>
+                                    <Typography fontWeight={600}>Roll No.</Typography>
+                                    <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
+                                  </Box>
+                                </Card>
+                              </Grid>
+                              <Grid size={{ xs: 12, md: 4 }}>
+                                <Card
+                                  variant="outlined"
+                                  sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                                >
+                                  <Badge fontSize="small" color="primary" />
+                                  <Box>
+                                    <Typography fontWeight={600}>GR No.</Typography>
+                                    <Typography>{selectedMember.grNo || 'N/A'}</Typography>
+                                  </Box>
+                                </Card>
+                              </Grid>
+                            </>
+                          )}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Phone fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Phone</Typography>
+                                <Typography>{selectedMember.contactNo || 'N/A'}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <Category fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Role</Typography>
+                                <Typography>{selectedMember.role}</Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Card
+                              variant="outlined"
+                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                            >
+                              <CalendarMonth fontSize="small" color="primary" />
+                              <Box>
+                                <Typography fontWeight={600}>Join Date</Typography>
+                                <Typography>{selectedMember.joinDate || 'N/A'}</Typography>
+                              </Box>
+                            </Card>
                           </Grid>
                         </Grid>
                       </Grid>
-                    </CardContent>
+                    </Grid>
                   </Card>
                 </Grid>
               );
