@@ -1,7 +1,10 @@
 import type { IStopData, IStopPayload } from './type';
 
-export const getStopManagementInitialValues = (editData?: IStopData | null): IStopPayload => ({
-  stopName: editData?.stopName || '',
+export const getStopManagementInitialValues = (
+  stopName?: string,
+  editData?: IStopData | null
+): IStopPayload => ({
+  stopName: editData?.stopName || stopName || '',
   landmark: editData?.landmark || '',
   addressLine2: editData?.addressLine2 ?? null,
   addressLine1: editData?.addressLine1 ?? null,

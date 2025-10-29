@@ -102,20 +102,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
   console.log('formik.values---', formik.values.attachments);
 
-  const handleDrop = (acceptedFiles: File[]) => {
-    formik.setFieldValue('attachments', [...(formik.values.attachments || []), ...acceptedFiles]);
-  };
-
-  const handleRemove = (fileToRemove: string | File) => {
-    const updatedDocuments = (formik.values.attachments || []).filter((file) => {
-      if (typeof fileToRemove === 'string') {
-        return file.name !== fileToRemove;
-      }
-      return file !== fileToRemove;
-    });
-    formik.setFieldValue('attachments', updatedDocuments);
-  };
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box

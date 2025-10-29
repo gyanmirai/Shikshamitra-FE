@@ -172,7 +172,6 @@ export function HeaderBase({
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-
                 gap: { xs: 1, sm: 1.5 },
               }}
             >

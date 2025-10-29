@@ -1,0 +1,13 @@
+import * as Yup from 'yup';
+
+export const transportValidationSchema = [
+  // Step 1: Select Student
+  Yup.object({
+    studentId: Yup.string().required('Please select a student'),
+  }),
+  // Step 2: Transport Application
+  Yup.object({
+    searchStop: Yup.string().required('Search stop is required'),
+    pickupType: Yup.string().required('Pickup type is required'),
+  }),
+];
