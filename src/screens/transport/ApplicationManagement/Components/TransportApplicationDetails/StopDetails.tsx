@@ -1,7 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import dayjs from 'dayjs';
+import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
@@ -12,13 +12,20 @@ import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import AddStopIndex from 'src/screens/transport/StopManagement/AddStopComponents';
-import { Box, Grid, Button, TableRow, TableCell, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { Box, Grid, Button, TableRow, TableCell, Typography, IconButton } from '@mui/material';
 
 const StopsDetails = ({ formik }: { formik: any }) => {
   const theme = useTheme();
+  const dispatch = useDispatch();
+  const addStopDialog = useBoolean();
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const handleAssignStop = (stop: any) => {
     formik.setFieldValue('studentDetails', {
@@ -29,20 +36,17 @@ const StopsDetails = ({ formik }: { formik: any }) => {
   };
 
   const handleAddStop = (newStop: any) => {
-    console.log('newStop----------', newStop);
-    // Mark all existing stops as not latest
     const updatedStops = formik.values.stops.map((stop: any) => ({
       ...stop,
       isLatestAdded: false,
     }));
 
-    // Add new stop with flag true
     const newStopWithFlag = {
       ...newStop,
-      id: `ST${Math.floor(Math.random() * 100000)}`, // Or your unique id logic
+      id: `ST${Math.floor(Math.random() * 100000)}`,
       isLatestAdded: true,
     };
-    // Update Formik field
+
     formik.setFieldValue('stops', [...updatedStops, newStopWithFlag]);
     formik.setFieldValue('studentDetails', {
       ...formik.values.studentDetails,
@@ -51,12 +55,6 @@ const StopsDetails = ({ formik }: { formik: any }) => {
     });
   };
 
-  const addStopDialog = useBoolean();
-  // Redux
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
-
-  // Handle form/dialog close
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       addStopDialog.onFalse();
@@ -65,6 +63,29 @@ const StopsDetails = ({ formik }: { formik: any }) => {
       addStopDialog.onFalse();
     }
   };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (index: number, event: React.DragEvent) => {
+    event.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (index: number) => {
+    if (draggedIndex === null) return;
+
+    const updatedStops = [...formik.values.stops];
+    const [movedItem] = updatedStops.splice(draggedIndex, 1);
+    updatedStops.splice(index, 0, movedItem);
+
+    formik.setFieldValue('stops', updatedStops);
+
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   return (
     <Box height="100%">
       <SectionCard
@@ -75,9 +96,7 @@ const StopsDetails = ({ formik }: { formik: any }) => {
               variant="contained"
               size="small"
               startIcon={<Add />}
-              onClick={() => {
-                addStopDialog.onTrue();
-              }}
+              onClick={() => addStopDialog.onTrue()}
             >
               Stop
             </Button>
@@ -91,24 +110,52 @@ const StopsDetails = ({ formik }: { formik: any }) => {
                 formik.values.studentDetails.assignedStop === stop.id &&
                 formik.values.studentDetails.assignedRoute === formik.values.selectedRoute.routeId;
 
+              const isDragging = draggedIndex === index;
+              const isDragOver = dragOverIndex === index && draggedIndex !== index;
+
               return (
                 <Grid
                   container
                   key={stop.id}
                   spacing={2}
+                  onDragOver={(e) => handleDragOver(index, e)}
+                  onDrop={() => handleDrop(index)}
+                  onDragEnd={() => {
+                    setDraggedIndex(null);
+                    setDragOverIndex(null);
+                  }}
                   sx={{
                     backgroundColor: stop.isLatestAdded
                       ? theme.palette.primary.lighter
-                      : 'transparent',
-                    border: '1px dashed #808080',
+                      : isDragOver
+                        ? theme.palette.action.hover
+                        : 'transparent',
+                    border: isDragging ? '2px dashed #1976d2' : '1px dashed #808080',
                     borderRadius: 2,
                     alignItems: 'center',
                     p: 1.5,
                     mb: 2,
+                    opacity: isDragging ? 0.6 : 1,
+                    transition: 'all 0.2s ease',
                   }}
                 >
-                  {/* Index */}
-                  <Grid size={{ xs: 0.5 }}>
+                  {/* Drag handle */}
+                  <Grid size={{ xs: 0.5 }} sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <IconButton
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      sx={{
+                        cursor: 'grab',
+                        color: isDragging ? 'primary.main' : 'text.secondary',
+                        '&:hover': { color: 'primary.main' },
+                      }}
+                    >
+                      <DragIndicatorIcon />
+                    </IconButton>
+                  </Grid>
+
+                  {/* Stop Number */}
+                  <Grid size={{ xs: 0.2 }}>
                     <Typography variant="body1" fontWeight={600}>
                       {index + 1}.
                     </Typography>
@@ -121,7 +168,8 @@ const StopsDetails = ({ formik }: { formik: any }) => {
                     </Typography>
                   </Grid>
 
-                  <Grid size={{ xs: 3 }}>
+                  {/* Arrival Time */}
+                  <Grid size={{ xs: 2.8 }}>
                     <TimePicker
                       label="Arrival Time"
                       value={stop.arrivalTime ? dayjs(stop.arrivalTime, 'HH:mm') : null}
@@ -132,15 +180,13 @@ const StopsDetails = ({ formik }: { formik: any }) => {
                         )
                       }
                       slotProps={{
-                        textField: {
-                          size: 'small',
-                          fullWidth: true,
-                        },
+                        textField: { size: 'small', fullWidth: true },
                       }}
                     />
                   </Grid>
 
-                  <Grid size={{ xs: 3 }}>
+                  {/* Departure Time */}
+                  <Grid size={{ xs: 2.8 }}>
                     <TimePicker
                       label="Departure Time"
                       value={stop.departureTime ? dayjs(stop.departureTime, 'HH:mm') : null}
@@ -151,10 +197,7 @@ const StopsDetails = ({ formik }: { formik: any }) => {
                         )
                       }
                       slotProps={{
-                        textField: {
-                          size: 'small',
-                          fullWidth: true,
-                        },
+                        textField: { size: 'small', fullWidth: true },
                       }}
                     />
                   </Grid>
@@ -205,9 +248,7 @@ const StopsDetails = ({ formik }: { formik: any }) => {
         }
         open={addStopDialog.value}
         maxWidth="md"
-        handleClose={() => {
-          addStopDialog.onFalse();
-        }}
+        handleClose={() => addStopDialog.onFalse()}
       >
         <AddStopIndex
           open={addStopDialog}
