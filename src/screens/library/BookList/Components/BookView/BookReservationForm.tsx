@@ -160,6 +160,7 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                   borderRadius: '4px',
                   border: '1px solid #f44336',
                   color: '#d32f2f',
+                  textAlign: 'center',
                 }}
               >
                 Member with ID not found.

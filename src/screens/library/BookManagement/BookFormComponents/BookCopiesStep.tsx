@@ -5,6 +5,7 @@ import Barcode from 'react-barcode';
 import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -20,6 +21,8 @@ interface BookCopiesStepProps {
 
 const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
   const [copies, setCopies] = useState<IBookCopy[]>(formik.values.copies || []);
+  const [openAccessionDialog, setOpenAccessionDialog] = useState(false);
+
   useEffect(() => {
     const newCopies = Array.from({ length: formik.values.numberOfCopies }, (_, i) => ({
       copyNo: i + 1,
@@ -60,7 +63,7 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
           <Button
             variant="contained"
             size="small"
-            onClick={() => {}}
+            onClick={() => setOpenAccessionDialog(true)}
             startIcon={<Iconify icon={GlobalIcons.download} />}
           >
             Generate Accession label
@@ -316,6 +319,38 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
           />
         </Box>
       )}
+
+      <CustomDialog
+        open={openAccessionDialog}
+        handleClose={() => setOpenAccessionDialog(false)}
+        maxWidth="sm"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Generate Accession Label</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Download or print accession labels for all book copies listed below."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
+          <img
+            src="https://barcode.tec-it.com/barcode.ashx?data=1234567890&code=Code128&translate-esc=true"
+            alt="Barcode Example"
+            style={{
+              maxWidth: '100%',
+              maxHeight: 350,
+              borderRadius: 8,
+              boxShadow: 'var(--shadows-8)',
+            }}
+          />
+        </Box>
+      </CustomDialog>
     </>
   );
 };

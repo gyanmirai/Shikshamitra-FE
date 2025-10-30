@@ -52,7 +52,7 @@ const ListView = ({
           }}
         >
           <Iconify icon={GlobalIcons.eye} sx={{ height: 16, width: 16, mr: 1 }} />
-          View All Reservation Book
+          View Reservations
         </MenuItem>
       </MenuList>
     ),
@@ -71,6 +71,11 @@ const ListView = ({
               py: 1.2,
               px: 1,
               '&:hover': { backgroundColor: 'rgba(0,0,0,0.02)' },
+              cursor: 'pointer',
+            }}
+            onClick={async () => {
+              const copies = await fetchCopies(book.id).unwrap();
+              onView?.({ ...book, copies });
             }}
           >
             {/* Left section - Image + Info */}
@@ -82,6 +87,7 @@ const ListView = ({
                   borderRadius: 1,
                   overflow: 'hidden',
                   bgcolor: 'grey.200',
+                  boxShadow: 10,
                 }}
               >
                 <Image

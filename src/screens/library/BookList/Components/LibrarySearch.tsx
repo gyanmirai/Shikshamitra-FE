@@ -39,8 +39,17 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
   onReserveBook,
   onViewAllReservationBook,
 }) => {
-  const [searchInput, setSearchInput] = useState(''); // typed text
-  // const [searchTerm, setSearchTerm] = useState(''); // term used for filtering
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 400); // debounce delay
+
+    return () => clearTimeout(handler);
+  }, [searchInput]);
+
   const [visibleCount, setVisibleCount] = useState(10);
   const loaderRef = useRef<HTMLDivElement | null>(null);
   // const {
@@ -55,15 +64,15 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
   const [books, setBooks] = useState(libraryDummyData.books);
   // console.log({ books, isLoading, error });
   const filteredBooks = useMemo(() => {
-    if (!searchInput) return books;
-    const term = searchInput.toLowerCase();
+    if (!debouncedSearch) return books;
+    const term = debouncedSearch.toLowerCase();
     return books.filter(
       (book) =>
         book.title.toLowerCase().includes(term) ||
         book.author.toLowerCase().includes(term) ||
         book.isbn.includes(term)
     );
-  }, [books, searchInput]);
+  }, [books, debouncedSearch]);
 
   const visibleBooks = useMemo(
     () => filteredBooks.slice(0, visibleCount),

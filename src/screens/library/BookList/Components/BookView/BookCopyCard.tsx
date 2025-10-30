@@ -31,7 +31,7 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
     <Card
       sx={{
         p: 2,
-        borderRadius: 3,
+        borderRadius: 1,
         boxShadow: 2,
         minWidth: 280,
         height: '100%',
