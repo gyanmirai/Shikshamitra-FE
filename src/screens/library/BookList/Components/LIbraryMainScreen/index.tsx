@@ -2,6 +2,7 @@ import type { IBook } from 'src/screens/library/BookManagement/Components/type';
 
 import React, { useMemo, useState } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { EmptyContent } from 'src/components/empty-content';
 import { Box, Grid, Button, TextField, CircularProgress } from '@mui/material';
 
 import ListView from './ListView';
@@ -35,12 +36,19 @@ const LibraryMainScreen: React.FC<LibrarySearchProps> = ({
   const [displayedBooks, setDisplayedBooks] = useState<IBook[]>([]);
   const [hasMore, setHasMore] = useState(true);
   // --- Filter logic ---
+  const [debouncedSearch, setDebouncedSearch] = useState(searchInput);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchInput), 300);
+    return () => clearTimeout(handler);
+  }, [searchInput]);
+
   const filteredBooks = useMemo(() => {
     let filtered = books;
 
     // Search filter
-    if (searchInput.trim()) {
-      const query = searchInput.toLowerCase();
+    if (debouncedSearch.trim()) {
+      const query = debouncedSearch.toLowerCase();
       filtered = filtered.filter(
         (b) =>
           b.title.toLowerCase().includes(query) ||
@@ -53,7 +61,7 @@ const LibraryMainScreen: React.FC<LibrarySearchProps> = ({
       filtered = filtered.filter((b) => b.title.charAt(0).toUpperCase() === selectedLetter);
     }
     return filtered;
-  }, [books, searchInput, selectedLetter]);
+  }, [books, debouncedSearch, selectedLetter]);
 
   React.useEffect(() => {
     const start = 0;
@@ -137,7 +145,16 @@ const LibraryMainScreen: React.FC<LibrarySearchProps> = ({
             variant="outlined"
             size="small"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSearchInput(val);
+              if (val.trim()) {
+                const firstChar = val.trim()[0].toUpperCase();
+                if (alphabet.includes(firstChar)) setSelectedLetter(firstChar);
+              } else {
+                setSelectedLetter('ALL');
+              }
+            }}
             label="Search by Title, Author, ISBN.."
             fullWidth
           />
@@ -173,7 +190,20 @@ const LibraryMainScreen: React.FC<LibrarySearchProps> = ({
       </Box>
 
       {/* View Rendering */}
-      {renderView()}
+      {displayedBooks.length === 0 ? (
+        <Box
+          sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}
+        >
+          <EmptyContent
+            title="No Books Available"
+            sx={{
+              width: '100%',
+            }}
+          />
+        </Box>
+      ) : (
+        renderView()
+      )}
       <Box ref={lastBookRef} sx={{ height: 20, mt: 2 }} />
       {hasMore && (
         <Box sx={{ textAlign: 'center', py: 2 }}>

@@ -5,19 +5,31 @@ import type {
 } from 'src/screens/library/BookManagement/Components/type';
 
 import dayjs from 'dayjs';
+import { debounce } from 'lodash';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
 import { useGetAllCopiesQuery } from 'src/redux/library/bookList/copies-api';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  Box,
+  Grid,
+  Card,
+  Button,
+  Avatar,
+  TextField,
+  Typography,
+  DialogActions,
+  CircularProgress,
+} from '@mui/material';
 import {
   Book,
   Email,
@@ -32,17 +44,6 @@ import {
   Assignment,
   CalendarMonth,
 } from '@mui/icons-material';
-import {
-  Box,
-  Grid,
-  Card,
-  Button,
-  Avatar,
-  TextField,
-  Typography,
-  DialogActions,
-  CircularProgress,
-} from '@mui/material';
 
 import { getInitialValues } from './getBookIssueInitialValues';
 import libraryDummyData from '../../../../../../libraryData.json';
@@ -71,34 +72,6 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     type: 'query',
     currentQueryAndMutation: useGetAllCopiesQuery,
   });
-
-  const handleSearchBook = (value: string) => {
-    formik.setFieldValue('accessionNumber', value);
-    if (!value) {
-      setSelectedBook(null);
-      return;
-    }
-
-    setLoading(true);
-
-    setTimeout(() => {
-      const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
-      const foundBook = foundCopy
-        ? {
-            ...foundCopy,
-            book: books?.find((b) => b.id === foundCopy.bookId),
-          }
-        : null;
-
-      if (foundBook) {
-        setSelectedBook(foundBook);
-        formik.setFieldValue('accessionNo', foundBook.accessionNo);
-      } else {
-        setSelectedBook(null);
-      }
-      setLoading(false);
-    }, 400);
-  };
 
   const handleMemberSearch = (value: string) => {
     formik.setFieldValue('memberId', value);
@@ -144,6 +117,37 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
       onClose(null, true);
     },
   });
+  const handleSearchBook = useCallback(
+    (value: string) => {
+      formik.setFieldValue('accessionNumber', value);
+      if (!value) {
+        setSelectedBook(null);
+        return;
+      }
+      setLoading(true);
+      setTimeout(() => {
+        const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
+        const foundBook = foundCopy
+          ? {
+              ...foundCopy,
+              book: books?.find((b) => b.id === foundCopy.bookId),
+            }
+          : null;
+
+        if (foundBook) {
+          setSelectedBook(foundBook);
+          formik.setFieldValue('accessionNumber', foundBook.accessionNo);
+        } else {
+          setSelectedBook(null);
+        }
+        setLoading(false);
+      }, 400);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [copies, books, formik.values.accessionNumber]
+  );
+  const debouncedBookSearch = useMemo(() => debounce(handleSearchBook, 500), [handleSearchBook]);
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
@@ -158,7 +162,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                   size="small"
                   fullWidth
                   value={formik.values.accessionNumber}
-                  onChange={(e) => handleSearchBook(e.target.value)}
+                  onChange={(e) => debouncedBookSearch(e.target.value)}
                   disabled={!!editData}
                   error={!!(formik.touched.accessionNumber && formik.errors.accessionNumber)}
                   helperText={
