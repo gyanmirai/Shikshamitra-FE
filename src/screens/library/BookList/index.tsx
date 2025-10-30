@@ -15,7 +15,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
-import LibrarySearch from './Components/LibrarySearch';
+import LibraryMainScreen from './Components/LIbraryMainScreen';
 import IssueBookModal from './Components/BookView/BookIssueForm';
 import BookViewDetail from './Components/BookView/BookViewDetail';
 import ReturnBookModal from './Components/BookView/BookReturnForm';
@@ -98,6 +98,8 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
       setSelectedCopy(null);
     }
   };
+
+  console.log('setSelectedBook---', setSelectedBook);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -216,7 +218,30 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
           />
         </Card>
       ) : (
-        <LibrarySearch
+        // <LibrarySearch
+        //   onDelete={(data) => {
+        //     setSelectedBook(data);
+        //     deleteDialog.onTrue();
+        //   }}
+        //   onView={(data) => {
+        //     viewDialog.onTrue();
+        //     setSelectedBook(data);
+        //   }}
+        //   onEdit={(data) => {
+        //     setSelectedBook(data);
+        //     setOpen(true);
+        //   }}
+        //   onReserveBook={(data) => {
+        //     setSelectedBook(data);
+        //     console.log('reserve data', data);
+        //     reserveDialog.onTrue();
+        //   }}
+        //   onViewAllReservationBook={(data) => {
+        //     viewAllReservationDialog.onTrue();
+        //     setSelectedBook(data);
+        //   }}
+        // />
+        <LibraryMainScreen
           onDelete={(data) => {
             setSelectedBook(data);
             deleteDialog.onTrue();
