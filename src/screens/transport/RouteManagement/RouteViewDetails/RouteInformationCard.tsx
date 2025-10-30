@@ -17,50 +17,51 @@ const mockRouteData = {
   totalCapacity: 45,
 };
 
+export const InfoItem = ({
+  icon,
+  label,
+  value,
+  color = 'primary.main',
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  color?: string;
+}) => (
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    <Box
+      sx={{
+        width: 32,
+        height: 32,
+        borderRadius: '50%',
+        bgcolor: (theme) => alpha(theme.palette.success.main, 0.15),
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: 1,
+      }}
+    >
+      {React.cloneElement(icon as React.ReactElement<{ sx?: { color: string } }>, {
+        sx: { color },
+      })}
+    </Box>
+    <Box>
+      <Typography variant="body2" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="body1" fontWeight="600">
+        {value}
+      </Typography>
+    </Box>
+  </Box>
+);
+
 const RouteInformationCard = () => {
   const capacityPercentage = Math.round(
     (mockRouteData.currentStudents / mockRouteData.totalCapacity) * 100
   );
 
   // eslint-disable-next-line react/no-unstable-nested-components
-  const InfoItem = ({
-    icon,
-    label,
-    value,
-    color = 'primary.main',
-  }: {
-    icon: React.ReactNode;
-    label: string;
-    value: React.ReactNode;
-    color?: string;
-  }) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-      <Box
-        sx={{
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          bgcolor: (theme) => alpha(theme.palette.success.main, 0.15),
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: 1,
-        }}
-      >
-        {React.cloneElement(icon as React.ReactElement<{ sx?: { color: string } }>, {
-          sx: { color },
-        })}
-      </Box>
-      <Box>
-        <Typography variant="body2" color="text.secondary">
-          {label}
-        </Typography>
-        <Typography variant="body1" fontWeight="600">
-          {value}
-        </Typography>
-      </Box>
-    </Box>
-  );
 
   return (
     <Card sx={{ p: 2, borderRadius: 2, boxShadow: 'var(--shadows-4)', mb: 2 }}>

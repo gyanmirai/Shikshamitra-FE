@@ -22,10 +22,6 @@ export const stopManagementValidationSchema = yup.object().shape({
     )
     .nullable(),
   amount: yup.string().required('Amount is required'),
-  status: yup
-    .string()
-    .required('Status is required')
-    .oneOf(['Active', 'Inactive'], 'Status must be either Active or Inactive'),
 
   description: yup.string().nullable().max(500, 'Description must not exceed 500 characters'),
 

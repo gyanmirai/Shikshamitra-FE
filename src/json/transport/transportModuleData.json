@@ -1262,5 +1262,167 @@
     { "value": "Ring Road", "label": "Ring Road" },
     { "value": "Varachha Road", "label": "Varachha Road" },
     { "value": "City Light", "label": "City Light" }
+  ],
+  "memberData" : [
+  {
+    "studentId": "STU1001",
+    "name": "Prerna Bhanudas Atre",
+    "class": 1,
+    "division": "A",
+    "rollNo": "12",
+    "role": "Student",
+    "grNo": "GR2025-0012",
+    "contactNo": "+91-9876543210",
+    "photoUrl": "https://example.com/photos/prerna-atre.jpg",
+    "searchStop": "Main Gate Stop",
+    "pickupType": "Home Pickup",
+    "landmark": "Near City Library",
+    "areaLocality": "Shivaji Nagar",
+    "description": "Prefers pickup from north gate.",
+    "status": 0,
+    "isStopExist" : false
+  },
+  {
+    "studentId": "STU1002",
+    "name": "Mayur Jagdish Patel",
+    "class": 1,
+    "division": "A",
+    "rollNo": "13",
+    "role": "Student",
+    "grNo": "GR2025-0013",
+    "contactNo": "+91-9876501234",
+    "photoUrl": "https://example.com/photos/mayur-patel.jpg",
+    "searchStop": "Bus Depot Stop",
+    "pickupType": "Common Stop",
+    "landmark": "Opposite City Mall",
+    "areaLocality": "Ellis Bridge",
+    "description": "Usually travels with Raj Mehta.",
+    "status": 1,
+        "isStopExist" : false
+
+  },
+  {
+    "studentId": "STU1003",
+    "name": "Raj Hemant Mehta",
+    "class": 2,
+    "division": "B",
+    "rollNo": "7",
+    "role": "Student",
+    "grNo": "GR2025-0007",
+    "contactNo": "+91-9898989898",
+    "photoUrl": "https://example.com/photos/raj-mehta.jpg",
+    "searchStop": "Community Hall Stop",
+    "pickupType": "Home Pickup",
+    "landmark": "Near Post Office",
+    "areaLocality": "Maninagar",
+    "description": "Needs drop till evening tuition.",
+    "status": 2,
+        "isStopExist" : true
+
+  },
+  {
+    "studentId": "STU1004",
+    "name": "Dharmik Ramesh Shah",
+    "class": 3,
+    "division": "C",
+    "rollNo": "22",
+    "role": "Student",
+    "grNo": "GR2025-0022",
+    "contactNo": "+91-9012345678",
+    "photoUrl": "https://example.com/photos/dharmik-shah.jpg",
+    "searchStop": "Central Park Stop",
+    "pickupType": "Common Stop",
+    "landmark": "Opposite Garden View Apartments",
+    "areaLocality": "Satellite",
+    "description": "Morning only transport required.",
+    "status": 3,
+        "isStopExist" : false
+
+  }
+],
+"routeStopData" : [
+    {
+      "routeId": "RT001",
+      "routeName": "Route A-1",
+      "startPoint": "School Gate",
+      "endPoint": "Kamrej",
+      "distance": "10 KM",
+      "capacity": 50,
+      "students": 50,
+      "status": 1,
+      "stops": [
+        { "id": "ST001", "stopName": "School Gate", "arrivalTime": "07:00", "departureTime": "07:05" },
+        { "id": "ST002", "stopName": "Varachha Main Road", "arrivalTime": "07:10", "departureTime": "07:12" },
+        { "id": "ST003", "stopName": "Yogi Chowk", "arrivalTime": "07:20", "departureTime": "07:22" },
+        { "id": "ST004", "stopName": "Kamrej Cross Road", "arrivalTime": "07:30", "departureTime": "07:32" },
+        { "id": "ST005", "stopName": "Kamrej", "arrivalTime": "07:40", "departureTime": "08:00" }
+      ]
+    },
+    {
+      "routeId": "RT002",
+      "routeName": "Route A-2",
+      "startPoint": "School Gate",
+      "endPoint": "Kapodara",
+      "distance": "10.5 KM",
+      "capacity": 55,
+      "students": 50,
+      "status": 0,
+      "stops": [
+        { "id": "ST006", "stopName": "School Gate", "arrivalTime": "07:00", "departureTime": "07:05" },
+        { "id": "ST007", "stopName": "Sarthana", "arrivalTime": "07:10", "departureTime": "07:12" },
+        { "id": "ST008", "stopName": "Vesu", "arrivalTime": "07:18", "departureTime": "07:20" },
+        { "id": "ST009", "stopName": "Kapodara Chowk", "arrivalTime": "07:28", "departureTime": "07:30" },
+        { "id": "ST010", "stopName": "Kapodara", "arrivalTime": "07:35", "departureTime": null }
+      ]
+    },
+    {
+      "routeId": "RT003",
+      "routeName": "Route A-3",
+      "startPoint": "School Gate",
+      "endPoint": "Simadi",
+      "distance": "11 KM",
+      "capacity": 40,
+      "students": 40,
+      "status": 0,
+      "stops": [
+        { "id": "ST011", "stopName": "School Gate", "arrivalTime": "07:00", "departureTime": "07:05" },
+        { "id": "ST012", "stopName": "Althan", "arrivalTime": "07:12", "departureTime": "07:14" },
+        { "id": "ST013", "stopName": "Udhna", "arrivalTime": "07:20", "departureTime": "07:22" },
+        { "id": "ST014", "stopName": "Parvat Patiya", "arrivalTime": "07:30", "departureTime": "07:32" },
+        { "id": "ST015", "stopName": "Simadi", "arrivalTime": "07:40", "departureTime": null }
+      ]
+    },
+    {
+      "routeId": "RT004",
+      "routeName": "Route A-4",
+      "startPoint": "School Gate",
+      "endPoint": "Adajan",
+      "distance": "12 KM",
+      "capacity": 40,
+      "students": 38,
+      "status": 1,
+      "stops": [
+        { "id": "ST016", "stopName": "School Gate", "arrivalTime": "07:00", "departureTime": "07:05" },
+        { "id": "ST017", "stopName": "Nanpura", "arrivalTime": "07:10", "departureTime": "07:12" },
+        { "id": "ST018", "stopName": "Adajan Patiya", "arrivalTime": "07:20", "departureTime": "07:22" },
+        { "id": "ST019", "stopName": "Adajan", "arrivalTime": "07:30", "departureTime": null }
+      ]
+    },
+    {
+      "routeId": "RT005",
+      "routeName": "Route A-5",
+      "startPoint": "School Gate",
+      "endPoint": "Godadara",
+      "distance": "10 KM",
+      "capacity": 45,
+      "students": 43,
+      "status": 1,
+      "stops": [
+        { "id": "ST020", "stopName": "School Gate", "arrivalTime": "07:00", "departureTime": "07:05" },
+        { "id": "ST021", "stopName": "Udhna Darwaja", "arrivalTime": "07:10", "departureTime": "07:12" },
+        { "id": "ST022", "stopName": "Limbayat", "arrivalTime": "07:18", "departureTime": "07:20" },
+        { "id": "ST023", "stopName": "Godadara", "arrivalTime": "07:30", "departureTime": null }
+      ]
+    }
   ]
 }
