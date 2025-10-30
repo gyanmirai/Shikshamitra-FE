@@ -69,7 +69,7 @@ const AnnouncementTypeCreation = () => {
         description="Manage announcement types such as Holiday Notice, Exam Alert, Event Update, etc. Use actions to edit or delete existing types. Click ‘Add Announcement Type’ to create a new one."
         links={[
           { name: 'Communication', href: '/communication/dashboard' },
-          { name: 'Setting', href: '/communication/setting' },
+          { name: 'Settings', href: '/communication/setting' },
           { name: 'Announcement Type', href: '/communication/announcement-type' },
         ]}
         action={

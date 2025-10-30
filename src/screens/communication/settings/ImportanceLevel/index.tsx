@@ -62,7 +62,7 @@ const ImportanceLevelCreation = () => {
         description="Manage importance levels for events or notifications. Use actions to edit or delete existing levels. Click ‘Add Importance Level’ to create a new one."
         links={[
           { name: 'Communication', href: '/communication/dashboard' },
-          { name: 'Setting', href: '/communication/setting' },
+          { name: 'Settings', href: '/communication/setting' },
           { name: 'Importance Level', href: '/communication/importance-level' },
         ]}
         action={

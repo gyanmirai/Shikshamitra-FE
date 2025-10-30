@@ -42,7 +42,7 @@ const HolidayTypeTable: React.FC<IHolidayTypeTableProps> = ({
     columns={[
       {
         id: 'holidayType',
-        label: 'Namw',
+        label: 'Name',
         align: 'left',
         render: (value, row) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
