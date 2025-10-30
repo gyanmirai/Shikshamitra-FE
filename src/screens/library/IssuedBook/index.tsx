@@ -176,7 +176,7 @@ const IssueReturnBook = () => {
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Select the issued book record to mark it as returned with return date and remarks if any."
+              title="Choose the issued book record you want to mark as returned, then enter the return date and any remarks if applicable."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

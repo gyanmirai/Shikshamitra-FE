@@ -71,6 +71,7 @@ const BookFormStepper = ({
       activeStep={activeStep}
       handleBack={() => setActiveStep(activeStep - 1)}
       validationSchema={bookValidationSchema[activeStep as keyof typeof bookValidationSchema]}
+      validateOnChange={false}
       handleNext={(
         isLastStep: boolean,
         value: any,

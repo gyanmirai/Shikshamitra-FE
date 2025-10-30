@@ -37,6 +37,7 @@ const staticRoles = [
 ];
 
 export const staticChargeCategories = [
+  { id: 'None', name: 'None', amount: '', isFixed: false },
   { id: 'Late Book Return', name: 'Late Book Return', amount: '', isFixed: false },
   { id: 'Damaged Book', name: 'Damaged Book', amount: '', isFixed: false },
   { id: 'Lost Book', name: 'Lost Book', amount: '', isFixed: false },
