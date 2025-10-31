@@ -54,7 +54,20 @@ const getValidationSchema = (currentYear: any) =>
     meetingTime: Yup.mixed().when(['repeatFrequency'], {
       is: (repeatFrequency: string) =>
         ['Daily', 'Weekly', 'Monthly', 'Custom'].includes(repeatFrequency),
-      then: (schema) => schema.required('Meeting time is required'),
+      then: (schema) => schema.required('Start time is required'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    endTime: Yup.mixed().when('repeatFrequency', {
+      is: (repeatFrequency: string) =>
+        ['Daily', 'Weekly', 'Monthly', 'Custom'].includes(repeatFrequency),
+      then: (schema) =>
+        schema
+          .required('End time is required')
+          .test('is-after-start-time', 'End time must be after start time', function (value) {
+            const { meetingTime } = this.parent;
+            if (!value || !meetingTime) return true;
+            return dayjs(value as Dayjs).isAfter(dayjs(meetingTime), 'minute');
+          }),
       otherwise: (schema) => schema.nullable(),
     }),
     startDate: Yup.mixed()
@@ -200,6 +213,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
       repeatFrequency: initialValues?.repeatFrequency || '',
       meetingDate: initialValues?.meetingDate || dayjs(),
       meetingTime: initialValues?.meetingTime || null,
+      endTime: initialValues?.endTime || null,
       startDate: initialValues?.startDate || null,
       repeatUntil: initialValues?.repeatUntil || null,
       customInterval: initialValues?.customInterval || '',
@@ -232,7 +246,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={!!(formik.touched.meetingTime && formik.errors.meetingTime)}>
                 <TimePicker
-                  label="Meeting Time *"
+                  label="Start Time *"
                   format="HH:mm"
                   name="meetingTime"
                   value={formik.values.meetingTime}
@@ -245,6 +259,26 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                       error: formik.touched.meetingTime && Boolean(formik.errors.meetingTime),
                       helperText:
                         formik.touched.meetingTime && (formik.errors.meetingTime as string),
+                    },
+                  }}
+                />
+              </ShakingTextField>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime)}>
+                <TimePicker
+                  label="End Time *"
+                  format="HH:mm"
+                  name="endTime"
+                  value={formik.values.endTime}
+                  onChange={(newValue) => formik.setFieldValue('endTime', newValue)}
+                  views={['hours', 'minutes']}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      error: formik.touched.endTime && Boolean(formik.errors.endTime),
+                      helperText: formik.touched.endTime && (formik.errors.endTime as string),
                     },
                   }}
                 />
@@ -358,7 +392,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                       error
                       sx={{
                         fontSize: '10px !important',
-                        marginBottom: 15,
+                        marginBottom: 23,
                         marginLeft: ' 10px !important',
                         bottom: 0,
                       }}
@@ -373,7 +407,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={!!(formik.touched.meetingTime && formik.errors.meetingTime)}>
                 <TimePicker
-                  label="Meeting Time *"
+                  label="Start Time *"
                   format="HH:mm"
                   name="meetingTime"
                   value={formik.values.meetingTime}
@@ -386,6 +420,27 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                       error: formik.touched.meetingTime && Boolean(formik.errors.meetingTime),
                       helperText:
                         formik.touched.meetingTime && (formik.errors.meetingTime as string),
+                    },
+                  }}
+                />
+              </ShakingTextField>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime)}>
+                <TimePicker
+                  label="End Time *"
+                  format="HH:mm"
+                  name="endTime"
+                  value={formik.values.endTime}
+                  onChange={(newValue) => formik.setFieldValue('endTime', newValue)}
+                  views={['hours', 'minutes']}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      error: formik.touched.endTime && Boolean(formik.errors.endTime),
+                      helperText: formik.touched.endTime && (formik.errors.endTime as string),
                     },
                   }}
                 />
@@ -531,7 +586,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={!!(formik.touched.meetingTime && formik.errors.meetingTime)}>
                 <TimePicker
-                  label="Meeting Time *"
+                  label="Start Time *"
                   format="HH:mm"
                   name="meetingTime"
                   value={formik.values.meetingTime}
@@ -549,6 +604,28 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                 />
               </ShakingTextField>
             </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime)}>
+                <TimePicker
+                  label="End Time *"
+                  format="HH:mm"
+                  name="endTime"
+                  value={formik.values.endTime}
+                  onChange={(newValue) => formik.setFieldValue('endTime', newValue)}
+                  views={['hours', 'minutes']}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small',
+                      error: formik.touched.endTime && Boolean(formik.errors.endTime),
+                      helperText: formik.touched.endTime && (formik.errors.endTime as string),
+                    },
+                  }}
+                />
+              </ShakingTextField>
+            </Grid>
+
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={!!(formik.touched.repeatUntil && formik.errors.repeatUntil)}>
                 <DatePicker
@@ -583,9 +660,9 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                   <CustomSelect
                     label="Repeat Every"
                     options={[
-                      { value: 'days', label: 'Day(s)' },
-                      { value: 'weeks', label: 'Week(s)' },
-                      { value: 'months', label: 'Month(s)' },
+                      { value: 'days', label: 'Per Day' },
+                      { value: 'weeks', label: 'Per Week' },
+                      { value: 'months', label: 'Per Month' },
                     ]}
                     valueKey="value"
                     labelKey="label"
@@ -790,7 +867,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                   error={!!(formik.touched.meetingTime && formik.errors.meetingTime)}
                 >
                   <TimePicker
-                    label="Meeting Time *"
+                    label="Start Time *"
                     format="HH:mm"
                     value={formik.values.meetingTime}
                     onChange={(newValue) => formik.setFieldValue('meetingTime', newValue)}
@@ -801,6 +878,27 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                         error: formik.touched.meetingTime && Boolean(formik.errors.meetingTime),
                         helperText:
                           formik.touched.meetingTime && (formik.errors.meetingTime as string),
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime)}>
+                  <TimePicker
+                    label="End Time *"
+                    format="HH:mm"
+                    name="endTime"
+                    value={formik.values.endTime}
+                    onChange={(newValue) => formik.setFieldValue('endTime', newValue)}
+                    views={['hours', 'minutes']}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        size: 'small',
+                        error: formik.touched.endTime && Boolean(formik.errors.endTime),
+                        helperText: formik.touched.endTime && (formik.errors.endTime as string),
                       },
                     }}
                   />
