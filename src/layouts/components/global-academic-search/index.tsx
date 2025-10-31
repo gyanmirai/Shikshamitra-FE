@@ -123,7 +123,7 @@ const GlobalAcademicSearch = () => {
 
   const pathname = usePathname();
 
-  const isFinanceRoute = pathname.startsWith('/finance');
+  const isShowOnlyYearModule = ['/finance', '/library'].some((route) => pathname.startsWith(route));
 
   return isYearLoading || isBoardLoading ? (
     <Skeleton variant="rounded" height={56} sx={{ minWidth: '300px', width: '100%' }} />
@@ -136,7 +136,7 @@ const GlobalAcademicSearch = () => {
         placement="left"
       >
         <AnimatedWrapper error={!currentYear?.name}>
-          {isFinanceRoute ? (
+          {isShowOnlyYearModule ? (
             <Autocomplete
               options={Array.from(
                 new Map(options.map((item) => [item.academicYear.name, item])).values()

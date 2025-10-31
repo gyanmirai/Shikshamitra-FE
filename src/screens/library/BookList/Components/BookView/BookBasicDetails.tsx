@@ -1,8 +1,11 @@
 import type { IBook } from 'src/screens/library/BookManagement/Components/type';
 
 import React from 'react';
+import Image from 'next/image';
 import { Iconify } from 'src/components/iconify';
 import { Box, Grid, Card, Stack, Paper, Typography } from '@mui/material';
+
+import noCover from '../../../../../assets/icons/no-cover.png';
 
 interface BookViewDetailProps {
   book: IBook | null;
@@ -18,17 +21,22 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
       bgcolor: 'background.paper',
     }}
   >
-    <Box
-      component="img"
-      src={book?.bookCoverImages?.[0] || '/placeholder-book.jpg'}
-      sx={{
+    <Image
+      src={book?.bookCoverImages?.[0] || noCover}
+      alt={book?.title || 'No Preview'}
+      width={250}
+      height={250}
+      unoptimized
+      style={{
         width: 240,
         height: 320,
-        borderRadius: 2,
+        borderRadius: 12,
         objectFit: 'cover',
         flexShrink: 0,
+        boxShadow: '0  rgba(0,0,0,0.15)',
       }}
     />
+
     <Box>
       <Typography variant="h6" color="primary.main">
         {book?.title}

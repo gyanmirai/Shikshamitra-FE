@@ -63,7 +63,7 @@ const DeliveryChannelTypeCreation = () => {
         description="Manage delivery channel types such as Email, SMS, Push Notification, etc. Use actions to edit or delete existing types. Click ‘Add Delivery Channel Type’ to create a new one."
         links={[
           { name: 'Communication', href: '/communication/dashboard' },
-          { name: 'Setting', href: '/communication/setting' },
+          { name: 'Settings', href: '/communication/setting' },
           { name: 'Delivery Channel Type', href: '/communication/delivery-channel-type' },
         ]}
         action={

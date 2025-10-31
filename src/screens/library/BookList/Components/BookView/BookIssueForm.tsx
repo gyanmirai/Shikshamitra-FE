@@ -7,11 +7,11 @@ import type {
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { Stack } from '@mui/system';
-import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
+import React, { useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -60,34 +60,6 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     currentQueryAndMutation: useGetAllCopiesQuery,
   });
 
-  const handleSearchBook = (value: string) => {
-    formik.setFieldValue('accessionNumber', value);
-    if (!value) {
-      setSelectedBook(null);
-      return;
-    }
-
-    setLoading(true);
-
-    setTimeout(() => {
-      const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
-      const foundBook = foundCopy
-        ? {
-            ...foundCopy,
-            book: books?.find((b) => b.id === foundCopy.bookId),
-          }
-        : null;
-
-      if (foundBook) {
-        setSelectedBook(foundBook);
-        formik.setFieldValue('accessionNo', foundBook.accessionNo);
-      } else {
-        setSelectedBook(null);
-      }
-      setLoading(false);
-    }, 400);
-  };
-
   const handleMemberSearch = (value: string) => {
     formik.setFieldValue('memberId', value);
 
@@ -132,6 +104,34 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
       onClose(null, true);
     },
   });
+  const handleSearchBook = useCallback(
+    (value: string) => {
+      formik.setFieldValue('accessionNumber', value);
+      if (!value) {
+        setSelectedBook(null);
+        return;
+      }
+      setLoading(true);
+      // No debounce, no setTimeout
+      const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
+      const foundBook = foundCopy
+        ? {
+            ...foundCopy,
+            book: books?.find((b) => b.id === foundCopy.bookId),
+          }
+        : null;
+
+      if (foundBook) {
+        setSelectedBook(foundBook);
+        formik.setFieldValue('accessionNumber', foundBook.accessionNo);
+      } else {
+        setSelectedBook(null);
+      }
+      setLoading(false);
+    },
+    [formik, copies, books]
+  );
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
@@ -142,7 +142,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                 error={!!(formik.touched.accessionNumber && formik.errors.accessionNumber)}
               >
                 <TextField
-                  label="Search by Accession No."
+                  label="Search by Accession No. *"
                   size="small"
                   fullWidth
                   value={formik.values.accessionNumber}
@@ -470,7 +470,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                   size="small"
                   value={formik.values.memberId}
                   onChange={(e) => handleMemberSearch(e.target.value)}
-                  label="Search Member Id"
+                  label="Search Member Id *"
                   fullWidth
                   error={!!(formik.touched.memberId && formik.errors.memberId)}
                   helperText={(formik.touched.memberId && formik.errors.memberId) as string}
@@ -757,8 +757,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                       formik.setFieldValue('issueDate', newValue);
                       formik.setFieldTouched('issueDate', false);
                     }}
-                    minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs(currentYear?.endDate)}
+                    maxDate={dayjs()}
                     sx={{ minWidth: 180, width: '100%' }}
                     slotProps={{
                       textField: {

@@ -42,7 +42,7 @@ export function NavToggleButton({ isNavMini, sx, ...other }: NavToggleButtonProp
         sx={{
           width: 16,
           height: 16,
-          ...(isNavMini && {
+          ...(!isNavMini && {
             transform: 'scaleX(-1)',
           }),
         }}

@@ -197,7 +197,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
             <Grid size={{ xs: 12 }}>
               <ShakingTextField error={!!(formik.touched.accessionNo && formik.errors.accessionNo)}>
                 <TextField
-                  label="Search by Accession No."
+                  label="Search by Accession No. *"
                   size="small"
                   fullWidth
                   value={formik.values.accessionNo}
