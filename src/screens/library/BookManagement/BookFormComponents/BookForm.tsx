@@ -36,7 +36,7 @@ const BookFormStepper = ({
       try {
         if (activeStep === 0) {
           shikshaMitraToast.success({
-            message: `Book "${values.title}" by ${values.author} general information saved successfully`,
+            message: `Book "${values.title}"general information saved successfully`,
           });
         } else if (activeStep === 1) {
           shikshaMitraToast.success({

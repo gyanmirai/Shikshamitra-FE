@@ -47,7 +47,7 @@ const SummaryView = ({
           }}
         >
           <Iconify icon={GlobalIcons.eye} sx={{ height: 16, width: 16, mr: 1 }} />
-          View All Reservation Book
+          View Reservation
         </MenuItem>
       </MenuList>
     ),
@@ -67,6 +67,11 @@ const SummaryView = ({
             borderRadius: 2,
             boxShadow: 'var(--shadows-10)',
             position: 'relative',
+            cursor: 'pointer',
+          }}
+          onClick={async () => {
+            const copies = await fetchCopies(book.id).unwrap();
+            onView?.({ ...book, copies });
           }}
         >
           {/* Book Cover */}
@@ -89,6 +94,8 @@ const SummaryView = ({
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
+                boxShadow: 'var(--shadows-12)',
+                borderRadius: '8px',
               }}
             />
           </Box>

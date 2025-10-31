@@ -31,12 +31,6 @@ export const getIssueBookSchema = (currentYear: any) =>
         'Due date must be a valid date',
         (value) => value && dayjs(value as any).isValid()
       )
-      // eslint-disable-next-line func-names
-      .test('is-after-issue-date', 'Due date cannot be before Issue date', function (value) {
-        const { issueDate } = this.parent;
-        if (!value || !issueDate) return true;
-        return dayjs(value as any).isSameOrAfter(dayjs(issueDate));
-      })
       .test(
         'min-date',
         (value) =>

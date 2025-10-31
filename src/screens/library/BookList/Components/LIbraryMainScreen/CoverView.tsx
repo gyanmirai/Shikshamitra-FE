@@ -26,9 +26,6 @@ const CoverView = ({
   onReserveBook,
   onViewAllReservationBook,
 }: { books: IBook[] } & LibrarySearchProps) => {
-  console.log('books---', books);
-
-  console.log('noCover---', noCover);
   const [fetchCopies] = useLazyGetCopiesByBookIdQuery();
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
@@ -63,7 +60,10 @@ const CoverView = ({
             pop.onClose();
           }}
         >
-          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
+          <Iconify
+            icon="solar:trash-bin-trash-bold"
+            sx={{ height: '16px', width: '16px', color: 'red' }}
+          />
           Delete
         </MenuItem>
         <MenuItem
@@ -86,7 +86,7 @@ const CoverView = ({
           }}
         >
           <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
-          View All Reservation Book
+          View Reservation
         </MenuItem>
       </MenuList>
     ),
@@ -100,7 +100,7 @@ const CoverView = ({
             sx={{
               position: 'relative',
               borderRadius: 2,
-              boxShadow: 'none',
+              boxShadow: 10,
               textAlign: 'center',
               p: 1,
               overflow: 'hidden',
@@ -112,13 +112,20 @@ const CoverView = ({
             }}
           >
             {/* Cover Image */}
-            <Box sx={{ position: 'relative' }}>
+            <Box
+              sx={{ position: 'relative', cursor: 'pointer' }}
+              onClick={async () => {
+                const copies = await fetchCopies(book.id).unwrap();
+                onView?.({ ...book, copies });
+              }}
+            >
               <Image
                 src={book.bookCoverImages?.[0] || noCover}
                 alt={book.title}
                 width={250}
                 height={250}
                 unoptimized
+                style={{ boxShadow: 'var(--shadows-10)', borderRadius: '8px' }}
               />
 
               {/* ThreeDotsActions replaces the individual edit/delete icons */}

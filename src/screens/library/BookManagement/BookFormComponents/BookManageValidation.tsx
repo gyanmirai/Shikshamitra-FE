@@ -13,10 +13,9 @@ export const bookValidationSchema = [
     isbn: yup
       .string()
       .trim()
-      .required('ISBN is required')
       .max(17, 'ISBN with hyphens cannot exceed 17 characters')
       .test('isbn-validation', 'Please enter a valid ISBN-10 or ISBN-13', function (value) {
-        if (!value) return false;
+        if (!value) return true;
 
         // Remove hyphens and spaces
         const cleanISBN = value.replace(/[-\s]/g, '');
@@ -105,6 +104,7 @@ export const bookValidationSchema = [
       )
       .required('At least one copy is required')
       .min(1, 'At least one book copy is required')
+      .max(100, 'Cannot add more than 100 copies at once')
       // Unique accession number test
       .test('unique-accessionNo', 'Accession numbers must be unique', (copies) => {
         if (!copies) return true;

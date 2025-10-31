@@ -207,7 +207,7 @@ const BorrowingReturnRules = () => {
           },
           {
             id: 'maxBooksPerMonth',
-            label: 'Max Books (At a Time)',
+            label: 'issue limit (At a Time)',
             align: 'left',
             isSort: false,
             isFilter: false,

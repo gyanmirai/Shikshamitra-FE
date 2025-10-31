@@ -10,8 +10,8 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useSearchBooksQuery } from 'src/redux/library/LibraryDataSearch';
+import { Box, Grid, TextField, Autocomplete, CircularProgress } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { Box, Grid, MenuItem, TextField, Autocomplete, CircularProgress } from '@mui/material';
 
 import { fetchBookDetails } from './getBookDetails';
 import { getInitialBookData } from '../Components/BookManageInitialValues';
@@ -24,6 +24,7 @@ interface BookGeneralStepProps {
 
 const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
   const [inputValue, setInputValue] = useState('');
+  const [debouncedInputValue, setDebouncedInputValue] = useState('');
   const [loadingBookDetails, setLoadingBookDetails] = useState(false);
   const [bookFound, setBookFound] = useState(false);
   const [fieldsEnabled, setFieldsEnabled] = useState(false);
@@ -33,7 +34,18 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
     currentMedium: medium,
     setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
-  const { data, isFetching } = useSearchBooksQuery(inputValue, { skip: !inputValue });
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedInputValue(inputValue);
+    }, 800); // debounce delay
+
+    return () => clearTimeout(handler);
+  }, [inputValue]);
+
+  const { data, isFetching } = useSearchBooksQuery(debouncedInputValue, {
+    skip: !debouncedInputValue,
+  });
 
   const [allClass, setAllClass] = useState<Standards[]>([]);
 
@@ -62,6 +74,22 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const languageOptions = [
+    { label: 'Gujarati (ગુજરાતી)', value: 'Gujarati' },
+    { label: 'Hindi (हिंदी)', value: 'Hindi' },
+    { label: 'English', value: 'English' },
+    { label: 'Marathi (मराठी)', value: 'Marathi' },
+    { label: 'Sanskrit (संस्कृत)', value: 'Sanskrit' },
+  ];
+
+  const applicableAgeOptions = [
+    { id: 'all', name: 'All' },
+    { id: '6-8', name: '6–8 years' },
+    { id: '9-12', name: '9–12 years' },
+    { id: '13-15', name: '13–15 years' },
+    { id: '15plus', name: '15 plus' },
+  ];
+
   return (
     <SectionCard title="General Information">
       <Grid container spacing={3}>
@@ -79,6 +107,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
               disableClearable={!formik.values.title}
               fullWidth
               value={formik.values.title}
+              inputValue={inputValue}
               onInputChange={(event, newInputValue, reason) => {
                 const cleanValue = newInputValue
                   .replace(/[^a-zA-Z0-9\s]/g, '')
@@ -349,24 +378,26 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
         <Grid size={{ xs: 12, md: 4 }}>
           {fieldsEnabled && (
             <ShakingTextField error={!!(formik.touched.language && formik.errors.language)}>
-              <TextField
+              <Autocomplete
                 fullWidth
-                select
-                name="language"
-                label="Language"
-                value={formik.values.language}
-                onChange={formik.handleChange}
-                error={!!(formik.touched.language && formik.errors.language)}
-                helperText={formik.touched.language && formik.errors.language}
-                size="small"
-              >
-                <MenuItem value="">Select Language</MenuItem>
-                <MenuItem value="Gujarati">Gujarati (ગુજરાતી)</MenuItem>
-                <MenuItem value="Hindi">Hindi (हिंदी)</MenuItem>
-                <MenuItem value="English">English</MenuItem>
-                <MenuItem value="Marathi">Marathi (मराठी)</MenuItem>
-                <MenuItem value="Sanskrit">Sanskrit (संस्कृत)</MenuItem>
-              </TextField>
+                options={languageOptions}
+                getOptionLabel={(option) => (typeof option === 'string' ? option : option.label)}
+                value={languageOptions.find((opt) => opt.value === formik.values.language) || null}
+                onChange={(_, newValue) => {
+                  formik.setFieldValue('language', newValue ? newValue.value : '');
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Language"
+                    size="small"
+                    error={!!(formik.touched.language && formik.errors.language)}
+                    helperText={formik.touched.language && formik.errors.language}
+                    fullWidth
+                  />
+                )}
+                isOptionEqualToValue={(option, value) => option.value === value.value}
+              />
             </ShakingTextField>
           )}
         </Grid>
@@ -442,54 +473,56 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
           )}
         </Grid>
 
-        {/* Applicable Classes */}
+        {/* Applicable Age */}
         <Grid size={{ xs: 12, md: 4 }}>
           {fieldsEnabled && (
-            <ShakingTextField error={!!(formik.touched.classes && formik.errors.classes)}>
+            <ShakingTextField
+              error={!!(formik.touched.applicableAge && formik.errors.applicableAge)}
+            >
               <CustomSelect
-                options={allClass}
-                label="Applicable Classes"
+                options={applicableAgeOptions}
+                label="Applicable Age"
                 multiple
-                value={formik.values.classes || []}
+                value={formik.values.applicableAge || []}
                 onChange={(val) => {
                   const value = val as string[];
 
-                  // All available class IDs (excluding "All")
-                  const allClassIds =
-                    allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
+                  // All available age IDs (excluding "All")
+                  const allAgeIds = applicableAgeOptions
+                    .filter((opt) => opt.id !== 'all')
+                    .map((opt) => opt.id);
 
                   const isAllClicked = value.includes('all');
-                  const wasAllPreviouslySelected = (formik.values.classes as string[]).includes(
-                    'all'
-                  );
+                  const wasAllPreviouslySelected = (
+                    formik.values.applicableAge as string[]
+                  ).includes('all');
 
                   if (isAllClicked && !wasAllPreviouslySelected) {
-                    formik.setFieldValue('classes', ['all', ...allClassIds]);
+                    formik.setFieldValue('applicableAge', ['all', ...allAgeIds]);
                   } else if (!isAllClicked && wasAllPreviouslySelected) {
-                    formik.setFieldValue('classes', []);
+                    formik.setFieldValue('applicableAge', []);
                   } else if (isAllClicked && wasAllPreviouslySelected) {
                     const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allClassIds.length) {
-                      formik.setFieldValue('classes', ['all', ...allClassIds]);
+                    if (selectedWithoutAll.length === allAgeIds.length) {
+                      formik.setFieldValue('applicableAge', ['all', ...allAgeIds]);
                     } else {
-                      formik.setFieldValue('classes', selectedWithoutAll);
+                      formik.setFieldValue('applicableAge', selectedWithoutAll);
                     }
                   } else {
                     const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allClassIds.length) {
-                      formik.setFieldValue('classes', ['all', ...allClassIds]);
+                    if (selectedWithoutAll.length === allAgeIds.length) {
+                      formik.setFieldValue('applicableAge', ['all', ...allAgeIds]);
                     } else {
-                      formik.setFieldValue('classes', selectedWithoutAll);
+                      formik.setFieldValue('applicableAge', selectedWithoutAll);
                     }
                   }
                 }}
-                onBlur={() => formik.setFieldTouched('classes', true)}
-                error={formik.touched.classes && Boolean(formik.errors.classes)}
-                helperText={(formik.touched.classes && formik.errors.classes) as string}
+                onBlur={() => formik.setFieldTouched('applicableAge', true)}
+                error={formik.touched.applicableAge && Boolean(formik.errors.applicableAge)}
+                helperText={(formik.touched.applicableAge && formik.errors.applicableAge) as string}
                 labelKey="name"
                 valueKey="id"
                 formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                disabled={!allClass.length} // disable if no class available
               />
             </ShakingTextField>
           )}

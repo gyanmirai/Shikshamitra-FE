@@ -5,14 +5,14 @@ import type {
 } from 'src/screens/library/BookManagement/Components/type';
 
 import dayjs from 'dayjs';
-import { debounce } from 'lodash';
 import { useFormik } from 'formik';
+import { Stack } from '@mui/system';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
+import React, { useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -23,6 +23,7 @@ import {
   Box,
   Grid,
   Card,
+  Paper,
   Button,
   Avatar,
   TextField,
@@ -30,20 +31,6 @@ import {
   DialogActions,
   CircularProgress,
 } from '@mui/material';
-import {
-  Book,
-  Email,
-  Phone,
-  Badge,
-  Person,
-  School,
-  Numbers,
-  Category,
-  Language,
-  MenuBook,
-  Assignment,
-  CalendarMonth,
-} from '@mui/icons-material';
 
 import { getInitialValues } from './getBookIssueInitialValues';
 import libraryDummyData from '../../../../../../libraryData.json';
@@ -125,28 +112,25 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
         return;
       }
       setLoading(true);
-      setTimeout(() => {
-        const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
-        const foundBook = foundCopy
-          ? {
-              ...foundCopy,
-              book: books?.find((b) => b.id === foundCopy.bookId),
-            }
-          : null;
+      // No debounce, no setTimeout
+      const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
+      const foundBook = foundCopy
+        ? {
+            ...foundCopy,
+            book: books?.find((b) => b.id === foundCopy.bookId),
+          }
+        : null;
 
-        if (foundBook) {
-          setSelectedBook(foundBook);
-          formik.setFieldValue('accessionNumber', foundBook.accessionNo);
-        } else {
-          setSelectedBook(null);
-        }
-        setLoading(false);
-      }, 400);
+      if (foundBook) {
+        setSelectedBook(foundBook);
+        formik.setFieldValue('accessionNumber', foundBook.accessionNo);
+      } else {
+        setSelectedBook(null);
+      }
+      setLoading(false);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [copies, books, formik.values.accessionNumber]
+    [formik, copies, books]
   );
-  const debouncedBookSearch = useMemo(() => debounce(handleSearchBook, 500), [handleSearchBook]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -158,11 +142,11 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                 error={!!(formik.touched.accessionNumber && formik.errors.accessionNumber)}
               >
                 <TextField
-                  label="Search by Accession No."
+                  label="Search by Accession No. *"
                   size="small"
                   fullWidth
                   value={formik.values.accessionNumber}
-                  onChange={(e) => debouncedBookSearch(e.target.value)}
+                  onChange={(e) => handleSearchBook(e.target.value)}
                   disabled={!!editData}
                   error={!!(formik.touched.accessionNumber && formik.errors.accessionNumber)}
                   helperText={
@@ -189,8 +173,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
             if (selectedBook) {
               return (
                 <Grid size={{ xs: 12 }}>
-                  <Card
-                    variant="outlined"
+                  <Box
                     sx={{
                       boxShadow: 'var(--shadows-8)',
                       p: 2,
@@ -229,133 +212,231 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                       <Grid size={{ xs: 12, md: 9 }}>
                         <Grid container spacing={2}>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <Book fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Book Title</Typography>
-                                <Typography>{selectedBook?.book.title || '-'}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:book-open-page-variant" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Book Title
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedBook?.book.title || '-'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <Assignment fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Accession No.</Typography>
-                                <Typography>{selectedBook?.accessionNo || '-'}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:barcode" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Accession No.
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedBook?.accessionNo || '-'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <Person fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Author</Typography>
-                                <Typography>{selectedBook?.book.author || '-'}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:account" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Author
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedBook?.book.author || '-'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <Numbers fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>ISBN</Typography>
-                                <Typography>{selectedBook?.book.isbn || '-'}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:barcode-scan" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    ISBN
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedBook?.book.isbn || '-'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <MenuBook fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Publisher</Typography>
-                                <Typography>{selectedBook?.book.publisher || '-'}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:office-building" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Publisher
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedBook?.book.publisher || '-'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <CalendarMonth fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Added On</Typography>
-                                <Typography>
-                                  {selectedBook?.book.createdOn
-                                    ? dayjs(selectedBook.book.createdOn).format('YYYY')
-                                    : '-'}
-                                </Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:calendar" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Added On
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedBook?.book.createdOn
+                                      ? dayjs(selectedBook.book.createdOn).format('YYYY')
+                                      : '-'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <Language fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Language</Typography>
-                                <Typography>{selectedBook?.book.language || '-'}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:translate" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Language
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedBook?.book.language || '-'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <Badge fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Edition</Typography>
-                                <Typography>{selectedBook?.book.edition || '-'}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:numeric" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Edition
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedBook?.book.edition || '-'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <Category fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Category</Typography>
-                                <Typography>{selectedBook?.book.category || '-'}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:shape" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Category
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedBook?.book.category || '-'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <MenuBook fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>No. of Pages</Typography>
-                                <Typography>{selectedBook?.book.numberOfPages || '-'}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:book-open-variant" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    No. of Pages
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedBook?.book.numberOfPages || '-'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                         </Grid>
                       </Grid>
                     </Grid>
-                  </Card>
+                  </Box>
                 </Grid>
               );
             }
@@ -370,6 +451,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                       borderRadius: '4px',
                       border: '1px solid #f44336',
                       color: '#d32f2f',
+                      textAlign: 'center',
                     }}
                   >
                     Accession number &quot;{formik.values.accessionNumber}&quot; not found.
@@ -380,22 +462,24 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
             return null;
           })()}
 
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(formik.touched.memberId && formik.errors.memberId)}>
-              <TextField
-                variant="outlined"
-                size="small"
-                value={formik.values.memberId}
-                onChange={(e) => handleMemberSearch(e.target.value)}
-                label="Search Member Id"
-                fullWidth
-                error={!!(formik.touched.memberId && formik.errors.memberId)}
-                helperText={(formik.touched.memberId && formik.errors.memberId) as string}
-                placeholder="Search By Member Id (M001, M002)"
-                sx={{ flex: 1 }}
-              />
-            </ShakingTextField>
-          </Grid>
+          {selectedBook && (
+            <Grid size={{ xs: 12 }}>
+              <ShakingTextField error={!!(formik.touched.memberId && formik.errors.memberId)}>
+                <TextField
+                  variant="outlined"
+                  size="small"
+                  value={formik.values.memberId}
+                  onChange={(e) => handleMemberSearch(e.target.value)}
+                  label="Search Member Id *"
+                  fullWidth
+                  error={!!(formik.touched.memberId && formik.errors.memberId)}
+                  helperText={(formik.touched.memberId && formik.errors.memberId) as string}
+                  placeholder="Search By Member Id (M001, M002)"
+                  sx={{ flex: 1 }}
+                />
+              </ShakingTextField>
+            </Grid>
+          )}
 
           {(() => {
             if (loadingMember) {
@@ -432,119 +516,205 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                       <Grid size={{ xs: 12, md: 10 }}>
                         <Grid container spacing={2}>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <Person fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Member Name</Typography>
-                                <Typography>{selectedMember.name}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={2} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:account" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Member Name
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedMember.name}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <Assignment fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Member ID</Typography>
-                                <Typography>{selectedMember.memberId}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={2} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:card-account-details" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Member ID
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedMember.memberId}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <Email fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Email</Typography>
-                                <Typography>{selectedMember.email || 'N/A'}</Typography>
-                              </Box>
-                            </Card>
-                          </Grid>
-                          {selectedMember.role === 'Student' && (
-                            <>
-                              <Grid size={{ xs: 12, md: 4 }}>
-                                <Card
-                                  variant="outlined"
-                                  sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
-                                >
-                                  <School fontSize="small" color="primary" />
-                                  <Box>
-                                    <Typography fontWeight={600}>Class/Division</Typography>
-                                    <Typography>
-                                      {selectedMember.class || 'N/A'} -{' '}
-                                      {selectedMember.division || 'N/A'}
-                                    </Typography>
-                                  </Box>
-                                </Card>
-                              </Grid>
-                              <Grid size={{ xs: 12, md: 4 }}>
-                                <Card
-                                  variant="outlined"
-                                  sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
-                                >
-                                  <Numbers fontSize="small" color="primary" />
-                                  <Box>
-                                    <Typography fontWeight={600}>Roll No.</Typography>
-                                    <Typography>{selectedMember.rollNo || 'N/A'}</Typography>
-                                  </Box>
-                                </Card>
-                              </Grid>
-                              <Grid size={{ xs: 12, md: 4 }}>
-                                <Card
-                                  variant="outlined"
-                                  sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
-                                >
-                                  <Badge fontSize="small" color="primary" />
-                                  <Box>
-                                    <Typography fontWeight={600}>GR No.</Typography>
-                                    <Typography>{selectedMember.grNo || 'N/A'}</Typography>
-                                  </Box>
-                                </Card>
-                              </Grid>
-                            </>
-                          )}
-                          <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
-                              variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
-                            >
-                              <Phone fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Phone</Typography>
-                                <Typography>{selectedMember.contactNo || 'N/A'}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={2} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:email" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Email
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600} noWrap>
+                                    {selectedMember.email || 'N/A'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <Category fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Role</Typography>
-                                <Typography>{selectedMember.role}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={2} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:school" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Class/Division
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {(selectedMember.class || 'N/A') +
+                                      (selectedMember.division
+                                        ? ` - ${selectedMember.division}`
+                                        : '')}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                           <Grid size={{ xs: 12, md: 4 }}>
-                            <Card
+                            <Paper
                               variant="outlined"
-                              sx={{ p: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
                             >
-                              <CalendarMonth fontSize="small" color="primary" />
-                              <Box>
-                                <Typography fontWeight={600}>Join Date</Typography>
-                                <Typography>{selectedMember.joinDate || 'N/A'}</Typography>
-                              </Box>
-                            </Card>
+                              <Stack direction="row" spacing={2} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:format-list-numbered" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Roll No.
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedMember.rollNo || 'N/A'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Paper
+                              variant="outlined"
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
+                            >
+                              <Stack direction="row" spacing={2} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:card-account-details-outline" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    GR No.
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedMember.grNo || 'N/A'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Paper
+                              variant="outlined"
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
+                            >
+                              <Stack direction="row" spacing={2} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:phone" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Phone
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedMember.contactNo || 'N/A'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Paper
+                              variant="outlined"
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
+                            >
+                              <Stack direction="row" spacing={2} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:account-group" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Role
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedMember.role}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
+                          </Grid>
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <Paper
+                              variant="outlined"
+                              sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
+                            >
+                              <Stack direction="row" spacing={2} alignItems="center" ml={2}>
+                                <Iconify icon="mdi:calendar-check" width={22} />
+                                <Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    textTransform="uppercase"
+                                  >
+                                    Join Date
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={600}>
+                                    {selectedMember.joinDate || 'N/A'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Paper>
                           </Grid>
                         </Grid>
                       </Grid>
@@ -564,6 +734,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                       borderRadius: '4px',
                       border: '1px solid #f44336',
                       color: '#d32f2f',
+                      textAlign: 'center',
                     }}
                   >
                     Member with ID or name &quot;{formik.values.memberId}&quot; not found.
@@ -586,8 +757,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                       formik.setFieldValue('issueDate', newValue);
                       formik.setFieldTouched('issueDate', false);
                     }}
-                    minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs(currentYear?.endDate)}
+                    maxDate={dayjs()}
                     sx={{ minWidth: 180, width: '100%' }}
                     slotProps={{
                       textField: {

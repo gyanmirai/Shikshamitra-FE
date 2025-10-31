@@ -1,10 +1,12 @@
 import type { FormikProps, FormikErrors } from 'formik';
 
+import { Grid } from '@mui/system';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import Barcode from 'react-barcode';
 import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -20,6 +22,7 @@ interface BookCopiesStepProps {
 
 const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
   const [copies, setCopies] = useState<IBookCopy[]>(formik.values.copies || []);
+  const [openAccessionDialog, setOpenAccessionDialog] = useState(false);
 
   useEffect(() => {
     const newCopies = Array.from({ length: formik.values.numberOfCopies }, (_, i) => ({
@@ -78,7 +81,7 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
           <Button
             variant="contained"
             size="small"
-            onClick={() => {}}
+            onClick={() => setOpenAccessionDialog(true)}
             startIcon={<Iconify icon={GlobalIcons.download} />}
           >
             Generate Accession label
@@ -339,6 +342,89 @@ const BookCopiesStep = ({ formik }: BookCopiesStepProps) => {
           />
         </Box>
       )}
+
+      <CustomDialog
+        open={openAccessionDialog}
+        handleClose={() => setOpenAccessionDialog(false)}
+        maxWidth="sm"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Generate Accession Label</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Download or print accession labels for all book copies listed below."
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <Box
+          sx={{
+            maxHeight: 400, // Set your preferred max height
+            overflowY: 'auto',
+            pr: 1, // Optional: add some padding for scrollbar
+            paddingLeft: 2,
+            paddingRight: 2,
+          }}
+        >
+          {/* Before your <Grid container ...> */}
+          {copies.some((copy) => !copy.accessionNo) && (
+            <Box
+              sx={{
+                p: 2,
+                backgroundColor: '#ffebee',
+                borderRadius: 2,
+                border: '1px solid #f44336',
+                color: '#d32f2f',
+                textAlign: 'left',
+                mb: 2,
+                width: '100%',
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                boxSizing: 'border-box',
+              }}
+            >
+              Accession number pending
+            </Box>
+          )}
+
+          <Grid container spacing={2} justifyContent="center" alignItems="center">
+            {copies.map((copy, idx) =>
+              copy.accessionNo ? (
+                <Grid size={{ xs: 12, sm: 4 }} key={idx} display="flex" justifyContent="center">
+                  <Box
+                    sx={{
+                      background: '#fff',
+                      borderRadius: 2,
+                      boxShadow: 'var(--shadows-8)',
+                      p: 2,
+                      mb: 2,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      width: 'fit-content',
+                    }}
+                  >
+                    <Barcode
+                      value={copy.accessionNo}
+                      format="CODE128"
+                      width={1}
+                      height={60}
+                      displayValue
+                      background="#ffffff"
+                      lineColor="#000000"
+                    />
+                  </Box>
+                </Grid>
+              ) : null
+            )}
+          </Grid>
+        </Box>
+      </CustomDialog>
     </>
   );
 };

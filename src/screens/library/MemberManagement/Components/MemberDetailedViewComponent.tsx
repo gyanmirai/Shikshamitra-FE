@@ -37,7 +37,7 @@ const TABS = [
   {
     value: 'borrow-history',
     label: 'Borrow History',
-    icon: <Iconify icon="solar:book-2-bold" />, // Added icon for borrow history
+    icon: <Iconify icon="fluent:book-contacts-24-filled" />, // Added icon for borrow history
     component: ({ member }: { member: IMember | null }) => <BorrowHistory member={member} />,
   },
 ];

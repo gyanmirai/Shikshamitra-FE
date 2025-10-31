@@ -196,6 +196,39 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => (
             </Stack>
           </Paper>
         </Grid>
+
+        {/* Price */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+            <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+              <Iconify icon="mdi:currency-inr" width={22} color="#637381" />
+              <Box>
+                <Typography variant="caption" color="text.secondary" textTransform="uppercase">
+                  Price
+                </Typography>
+                <Typography variant="body1" fontWeight={600}>
+                  {book?.price ? `₹${book.price.toFixed(2)}` : '—'}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
+        {/* Publish Date */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Paper variant="outlined" sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}>
+            <Stack direction="row" spacing={3} alignItems="center" ml={2}>
+              <Iconify icon="mdi:calendar-check" width={22} color="#637381" />
+              <Box>
+                <Typography variant="subtitle2" mb={0.5}>
+                  Publish Date
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {book?.publishDate ? new Date(book.publishDate).toLocaleDateString() : '—'}
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
       </Grid>
 
       {/* Description */}
