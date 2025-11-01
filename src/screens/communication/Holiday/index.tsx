@@ -66,7 +66,7 @@ const HolidayManagement = (props: TabComponentType) => {
           heading={editingHoliday ? 'Update Holiday' : 'Add Holiday'}
           description={`${editingHoliday ? 'Update' : 'Create'} holidays with details such as holiday name, type, and date range.`}
           links={[
-            { name: 'Communication', href: '/communication/dashboard' },
+            { name: 'Calendar', href: '/calendar/dashboard' },
             { name: 'Holidays' },
             { name: editingHoliday ? 'Update Holiday' : 'Add Holiday' },
           ]}
@@ -78,10 +78,7 @@ const HolidayManagement = (props: TabComponentType) => {
         <CustomBreadcrumbs
           heading="Holidays"
           description="View and manage all holidays. Add new holidays, update existing ones, or remove them as needed."
-          links={[
-            { name: 'Communication', href: '/communication/dashboard' },
-            { name: 'Holidays' },
-          ]}
+          links={[{ name: 'Calendar', href: '/calendar/dashboard' }, { name: 'Holidays' }]}
           sx={{ px: 1, mb: 2 }}
           action={
             <Button

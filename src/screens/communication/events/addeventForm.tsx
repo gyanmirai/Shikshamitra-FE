@@ -47,12 +47,12 @@ import { eventAnnouncementValidationSchema } from './components/getValidationEve
 import type { IAddEventProps } from './type';
 
 const options = [
-  { group: 'Roles', value: 'admin', label: 'Admin' },
-  { group: 'Roles', value: 'teacher', label: 'Teacher' },
-  { group: 'Roles', value: 'student', label: 'Student' },
-  { group: 'Classes', value: 'class1', label: 'Class 1' },
-  { group: 'Classes', value: 'class2', label: 'Class 2' },
-  { group: 'Classes', value: 'class3', label: 'Class 3' },
+  { value: 'cricketGroup', label: 'Cricket Group' },
+  { value: 'mathLegendGroup', label: 'Math Legend Group' },
+  { value: 'scienceInnovators', label: 'Science Innovators' },
+  { value: 'literatureClub', label: 'Literature Club' },
+  { value: 'musicTeam', label: 'Music Team' },
+  { value: 'artCrew', label: 'Art Crew' },
 ];
 
 const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isEdit = false }) => {
@@ -267,7 +267,6 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                       multiple
                       disableCloseOnSelect
                       options={options}
-                      groupBy={(option) => option?.group || ''}
                       getOptionLabel={(option) => option?.label || ''}
                       value={formik.values.audience
                         .map((val) => options.find((opt) => opt.value === val))
@@ -278,29 +277,29 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                           newValue.map((opt) => opt?.value)
                         )
                       }
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip
+                            {...getTagProps({ index })}
+                            key={option?.value}
+                            label={option?.label}
+                            size="small"
+                            color="default"
+                            variant="soft"
+                            sx={{ height: 22 }}
+                          />
+                        ))
+                      }
                       renderOption={(props, option, { selected }) => (
                         <li {...props} key={option?.value}>
                           <Checkbox
                             icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
                             checkedIcon={<CheckBoxIcon fontSize="small" />}
-                            style={{ marginRight: 8 }}
                             checked={selected}
                           />
-                          {option?.label ?? ''}
+                          {option?.label}
                         </li>
                       )}
-                      renderTags={(value, getTagProps) =>
-                        value.map((option, index) => (
-                          <Chip
-                            {...getTagProps({ index })}
-                            key={option?.value ?? index}
-                            label={option?.label ?? ''}
-                            size="small"
-                            color="default"
-                            variant="soft"
-                          />
-                        ))
-                      }
                       renderInput={(params) => (
                         <TextField
                           {...params}
@@ -308,11 +307,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                           fullWidth
                           size="small"
                           error={formik.touched.audience && Boolean(formik.errors.audience)}
-                          helperText={
-                            formik.touched.audience && formik.errors.audience
-                              ? formik.errors.audience
-                              : ''
-                          }
+                          helperText={formik.touched.audience && formik.errors.audience}
                         />
                       )}
                       sx={{ minWidth: 300 }}

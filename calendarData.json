@@ -1,0 +1,178 @@
+{
+    "employeeData" :[
+  {
+    "id": "e1",
+    "name": "Rajesh Kumar",
+    "role": "Admin",
+    "department": "Administration",
+    "employeeId": "EMP1001",
+    "email": "rajesh.kumar@school.com",
+    "contactNo": "+91 9876000001",
+    "avatar": "/assets/images/avatar/avatar-7.jpg"
+  },
+  {
+    "id": "e2",
+    "name": "Meena Patel",
+    "role": "Principal",
+    "department": "Management",
+    "employeeId": "EMP1002",
+    "email": "meena.patel@school.com",
+    "contactNo": "+91 9876000002",
+    "avatar": "/assets/images/avatar/avatar-8.jpg"
+  },
+  {
+    "id": "e3",
+    "name": "Karan Joshi",
+    "role": "Teacher",
+    "department": "Mathematics",
+    "employeeId": "EMP1003",
+    "email": "karan.joshi@school.com",
+    "contactNo": "+91 9876000003",
+    "avatar": "/assets/images/avatar/avatar-5.jpg"
+  },
+  {
+    "id": "e4",
+    "name": "Sneha Reddy",
+    "role": "Teacher",
+    "department": "Science",
+    "employeeId": "EMP1004",
+    "email": "sneha.reddy@school.com",
+    "contactNo": "+91 9876000004",
+    "avatar": "/assets/images/avatar/avatar-6.jpg"
+  },
+  {
+    "id": "e5",
+    "name": "Amit Shah",
+    "role": "Parent",
+    "department": "N/A",
+    "employeeId": "EMP1005",
+    "email": "amit.shah@school.com",
+    "contactNo": "+91 9876000005",
+    "avatar": "/assets/images/avatar/avatar-9.jpg"
+  },
+  {
+    "id": "e6",
+    "name": "Priya Nair",
+    "role": "Accountant",
+    "department": "Accounts",
+    "employeeId": "EMP1006",
+    "email": "priya.nair@school.com",
+    "contactNo": "+91 9876000006",
+    "avatar": "/assets/images/avatar/avatar-10.jpg"
+  },
+  {
+    "id": "e7",
+    "name": "Vivek Gupta",
+    "role": "Librarian",
+    "department": "Library",
+    "employeeId": "EMP1007",
+    "email": "vivek.gupta@school.com",
+    "contactNo": "+91 9876000007",
+    "avatar": "/assets/images/avatar/avatar-11.jpg"
+  },
+  {
+    "id": "e8",
+    "name": "Anjali Singh",
+    "role": "Receptionist",
+    "department": "Front Office",
+    "employeeId": "EMP1008",
+    "email": "anjali.singh@school.com",
+    "contactNo": "+91 9876000008",
+    "avatar": "/assets/images/avatar/avatar-12.jpg"
+  },
+  {
+    "id": "e9",
+    "name": "Rohit Verma",
+    "role": "Transport Manager",
+    "department": "Transport",
+    "employeeId": "EMP1009",
+    "email": "rohit.verma@school.com",
+    "contactNo": "+91 9876000009",
+    "avatar": "/assets/images/avatar/avatar-13.jpg"
+  },
+  {
+    "id": "e10",
+    "name": "Neha Chawla",
+    "role": "Hostel Warden",
+    "department": "Hostel",
+    "employeeId": "EMP1010",
+    "email": "neha.chawla@school.com",
+    "contactNo": "+91 9876000010",
+    "avatar": "/assets/images/avatar/avatar-14.jpg"
+  }
+],
+"usersData" : [
+  {
+    "id": "u1",
+    "name": "Aarav Patel",
+    "role": "Student",
+    "class": "10",
+    "div": "A",
+    "rollNo": 1,
+    "grNo": "GR1001",
+    "email": "aarav.patel@example.com",
+    "contactNo": "+91 9876543210",
+    "avatar": "/assets/images/avatar/avatar-1.jpg"
+  },
+  {
+    "id": "u2",
+    "name": "Diya Sharma",
+    "role": "Student",
+    "class": "10",
+    "div": "A",
+    "rollNo": 2,
+    "grNo": "GR1002",
+    "email": "diya.sharma@example.com",
+    "contactNo": "+91 9823456789",
+    "avatar": "/assets/images/avatar/avatar-2.jpg"
+  },
+  {
+    "id": "u3",
+    "name": "Rohan Mehta",
+    "role": "Student",
+    "class": "10",
+    "div": "B",
+    "rollNo": 5,
+    "grNo": "GR1005",
+    "email": "rohan.mehta@example.com",
+    "contactNo": "+91 9898989898",
+    "avatar": "/assets/images/avatar/avatar-3.jpg"
+  },
+  {
+    "id": "u4",
+    "name": "Isha Desai",
+    "role": "Student",
+    "class": "9",
+    "div": "A",
+    "rollNo": 12,
+    "grNo": "GR0901",
+    "email": "isha.desai@example.com",
+    "contactNo": "+91 9765432100",
+    "avatar": "/assets/images/avatar/avatar-4.jpg"
+  },
+  {
+    "id": "u5",
+    "name": "Karan Joshi",
+    "role": "Teacher",
+    "class": "10",
+    "div": "A",
+    "rollNo": null,
+    "grNo": "EMP2001",
+    "email": "karan.joshi@example.com",
+    "contactNo": "+91 9123456780",
+    "avatar": "/assets/images/avatar/avatar-5.jpg"
+  },
+  {
+    "id": "u6",
+    "name": "Sneha Reddy",
+    "role": "Teacher",
+    "class": "9",
+    "div": "B",
+    "rollNo": null,
+    "grNo": "EMP2002",
+    "email": "sneha.reddy@example.com",
+    "contactNo": "+91 9876501234",
+    "avatar": "/assets/images/avatar/avatar-6.jpg"
+  }
+]
+}

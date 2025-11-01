@@ -10,4 +10,5 @@ export interface IGroup {
   users: string[];
   roles: string[];
   total: number;
+  employees: string[];
 }

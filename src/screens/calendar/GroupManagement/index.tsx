@@ -28,7 +28,7 @@ const GroupManagement = () => {
               : 'Create or update calendar groups with important details, members, and settings. Share and manage group access efficiently.'
           }
           links={[
-            { name: 'Calendar', href: '/calendar' },
+            { name: 'Calendar', href: '/calendar/dashboard' },
             {
               name: 'Group Management',
               href: '/calendar/group-management',
@@ -49,7 +49,7 @@ const GroupManagement = () => {
         <CustomBreadcrumbs
           heading="Group Management"
           description="View and manage all calendar groups, including group details, members, and access settings. Add new groups, update existing ones, or remove them as needed."
-          links={[{ name: 'Calendar', href: '/calendar' }, { name: 'Group Management' }]}
+          links={[{ name: 'Calendar', href: '/calendar/dashboard' }, { name: 'Group Management' }]}
           sx={{ px: 1, mb: 1 }}
           action={
             <Button

@@ -1,20 +1,15 @@
-import type { RootState } from 'src/redux/store';
-
+import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
-import React, { useMemo, useState, useEffect } from 'react';
 import { useSearchParam } from 'src/hooks/use-search-param';
-import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -23,6 +18,7 @@ import {
   Box,
   Grid,
   Card,
+  Chip,
   Button,
   TextField,
   DialogActions,
@@ -32,6 +28,11 @@ import {
 import SelectionBaseSettings from './SelectionBaseSettings';
 import ConditionBaseSettings from './ConditionBaseSettings';
 import { getGroupInitialValues } from './getGroupInitialValues';
+
+export const groupValidationSchema = Yup.object().shape({
+  groupName: Yup.string().trim().required('Group Name is required'),
+  total: Yup.number().required('Total is required').min(1, 'Total must be at least 1'),
+});
 
 const TABS = [
   {
@@ -51,22 +52,17 @@ const TABS = [
 ];
 
 const GroupForm = ({ initialValues, isEdit, onClose }: any) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  console.log('currentYear---', currentYear);
   const theme = useTheme();
   const formik = useFormik({
     initialValues: getGroupInitialValues(initialValues),
+    validationSchema: groupValidationSchema,
     onSubmit: (values) => {
       console.log(values);
     },
   });
-  const { data: board, isLoading: boardLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBoardsQuery,
-  });
-  const [boards, setBoards] = useState([]);
 
-  const [groupedMediums, setGroupedMediums] = useState([]);
+  console.log('formik values----', formik.values);
+  console.log('formik erroes----', formik.errors);
 
   //   useEffect(() => {
   //     if (selectedBoards.length > 0) {
@@ -84,11 +80,6 @@ const GroupForm = ({ initialValues, isEdit, onClose }: any) => {
   //     }
   //   }, [currentYear]);
 
-  useEffect(() => {
-    if (currentYear?.boards) {
-      setBoards(currentYear.boards);
-    }
-  }, [currentYear]);
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'conditionBase' });
   const [isBackClick, setIsBackClick] = useState(false);
   // Dialog state for each tab
@@ -104,11 +95,6 @@ const GroupForm = ({ initialValues, isEdit, onClose }: any) => {
     [searchParams.tab]
   );
 
-  console.log('boards----', boards);
-  const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetClassByMediumQuery,
-  });
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
@@ -165,6 +151,7 @@ const GroupForm = ({ initialValues, isEdit, onClose }: any) => {
                 </Grid>
               </SectionCard>
             </Grid>
+
             <Grid size={{ xs: 12 }}>
               <Card
                 sx={{
@@ -190,6 +177,7 @@ const GroupForm = ({ initialValues, isEdit, onClose }: any) => {
                   ))}
                 </CustomTabs>
               </Card>
+
               <FormSlider
                 steps={TABS}
                 isBackClick={isBackClick}
@@ -213,6 +201,7 @@ const GroupForm = ({ initialValues, isEdit, onClose }: any) => {
             </Grid>
           </Scrollbar>
           <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+            <Chip label={`Total Users : ${formik.values.total || 0}`} sx={{ mr: 1.5 }} />
             <Button
               variant="outlined"
               size="small"

@@ -12,4 +12,5 @@ export const getGroupInitialValues = (initialValues: IGroup | null): IGroup => (
   users: initialValues?.users || [],
   roles: initialValues?.roles || [],
   total: initialValues?.total ?? 0,
+  employees: initialValues?.employees || [],
 });
