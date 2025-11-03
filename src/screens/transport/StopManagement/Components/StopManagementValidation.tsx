@@ -41,8 +41,5 @@ export const stopManagementValidationSchema = yup.object().shape({
 
 // Stop Status Change Validation Schema
 export const stopStatusChangeValidationSchema = yup.object().shape({
-  status: yup
-    .string()
-    .required('Status is required')
-    .oneOf(['Active', 'Inactive'], 'Status must be either Active or Inactive'),
+  status: yup.string().required('Status is required'),
 });

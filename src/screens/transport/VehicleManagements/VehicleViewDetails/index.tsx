@@ -1,11 +1,12 @@
 import React from 'react';
-import { Box, Grid } from '@mui/material';
+import { Grid } from '@mui/material';
+import { Scrollbar } from 'src/components/scrollbar';
 
 import MaintenanceHistory from './MaintenanceHistory';
 import VehicleInformationCard from './VehicleInformation';
 
 const VehicleViewDetails = () => (
-  <Box sx={{ p: 2 }} overflow="auto">
+  <Scrollbar sx={{ p: 2, height: '100%' }}>
     <Grid container spacing={2}>
       {/* Left Column */}
       <Grid size={{ xs: 12, md: 3 }}>
@@ -16,7 +17,7 @@ const VehicleViewDetails = () => (
         <MaintenanceHistory />
       </Grid>
     </Grid>
-  </Box>
+  </Scrollbar>
 );
 
 export default VehicleViewDetails;

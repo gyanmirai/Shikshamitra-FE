@@ -41,7 +41,7 @@ export const routeValidationSchema = [
         schema.shape({
           startTime: yup
             .mixed()
-            .required('Pickup Start Time is required')
+            .required('Start Time is required')
             .test(
               'is-valid-dayjs',
               'Start Time must be a valid time',
@@ -140,36 +140,25 @@ export const routeValidationSchema = [
 
   // Step 2: Vehicle Assignments
   yup.object().shape({
-    vehicleAssignments: yup
-      .array()
-      .of(
-        yup.object().shape({
-          vehicleId: yup.string().required('Vehicle is required'),
-          vehicleNo: yup
-            .string()
-            .trim()
-            .required('Vehicle No. is required')
-            .max(20, 'Vehicle No. cannot exceed 20 characters'),
-          capacity: yup
-            .number()
-            .required('Capacity is required')
-            .integer('Capacity must be a whole number')
-            .min(1, 'Capacity must be at least 1')
-            .max(100, 'Capacity cannot exceed 100'),
-          driverId: yup.string().required('Driver is required'),
-          driverName: yup
-            .string()
-            .trim()
-            .required('Driver Name is required')
-            .max(100, 'Driver Name cannot exceed 100 characters'),
-          conductorId: yup.string().required('Conductor is required'),
-          conductorName: yup
-            .string()
-            .trim()
-            .required('Conductor Name is required')
-            .max(100, 'Conductor Name cannot exceed 100 characters'),
-        })
-      )
-      .min(1, 'At least one vehicle assignment is required'),
+    vehicleAssignment: yup.object().shape({
+      vehicleId: yup.string().required('Vehicle is required'),
+      vehicleNo: yup
+        .string()
+        .trim()
+        .required('Vehicle No. is required')
+        .max(20, 'Vehicle No. cannot exceed 20 characters'),
+      capacity: yup
+        .number()
+        .required('Capacity is required')
+        .integer('Capacity must be a whole number')
+        .min(1, 'Capacity must be at least 1')
+        .max(100, 'Capacity cannot exceed 100'),
+      driverId: yup.string().required('Driver is required'),
+      driverName: yup
+        .string()
+        .trim()
+        .required('Driver Name is required')
+        .max(100, 'Driver Name cannot exceed 100 characters'),
+    }),
   }),
 ];

@@ -41,6 +41,8 @@ const DriverManagementScreen = () => {
     // Helper function to reset state after dialog closes
     const resetState = () => {
       setTimeout(() => {
+        addDriverDialog.onFalse();
+
         setSelectedDriverConductor(null);
         dispatch(setIsChanges(false));
       }, 200);
@@ -48,15 +50,11 @@ const DriverManagementScreen = () => {
 
     // If form was submitted or user confirms leaving with unsaved changes
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      addDriverDialog.onFalse();
       resetState();
     }
     // If no unsaved changes, simply close dialog
     else if (!isChanges) {
-      addDriverDialog.onFalse();
-      setTimeout(() => {
-        setSelectedDriverConductor(null);
-      }, 200);
+      resetState();
     }
   };
 

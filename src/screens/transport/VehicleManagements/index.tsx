@@ -68,7 +68,7 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
                 href: '/transport/vehicle-management',
               },
             ]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ px: 1, mb: 1 }}
           />
         ) : viewDialog.value ? (
           <CustomBreadcrumbs
@@ -98,7 +98,7 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
               { name: 'Transport', href: '/transport/dashboard' },
               { name: 'Vehicle Management' },
             ]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ px: 1, mb: 1 }}
             action={
               <Button
                 startIcon={<Add />}

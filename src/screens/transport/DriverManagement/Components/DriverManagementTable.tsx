@@ -1,12 +1,16 @@
+import type { RootState } from 'src/redux/store';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
 import CustomDialog from 'src/components/customDialog';
+import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Chip, MenuItem, MenuList, Typography } from '@mui/material';
 import { useGetDriverConductorDataQuery } from 'src/redux/transport/vehicle-management/driver-conductor-api';
 
@@ -21,7 +25,10 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
     currentQueryAndMutation: useGetDriverConductorDataQuery,
   });
 
-  const [isChanges, setIsChanges] = useState(false);
+  // Get isChanges state from Redux store to track if there are unsaved changes
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // Get dispatch function to dispatch Redux actions
+  const dispatch = useDispatch();
   const assignRouteDialog = useBoolean();
   const viewProfileDialog = useBoolean();
   const [selectedDriver, setSelectedDriver] = useState<IDriverConductor | null>(null);
@@ -30,7 +37,7 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       assignRouteDialog.onFalse();
       setSelectedDriver(null);
-      setIsChanges(false);
+      dispatch(setIsChanges(false));
     } else if (!isChanges) {
       assignRouteDialog.onFalse();
       setSelectedDriver(null);
@@ -70,6 +77,7 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
           {
             id: 'employeeId',
             label: 'Employee ID',
+            sticky: true,
             align: 'left',
             minWidth: 130,
             render: (value) => (
@@ -104,6 +112,7 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
             id: 'licenceExpiry',
             label: 'Licence Expiry',
             align: 'left',
+            filterType: 'date',
             minWidth: 140,
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
@@ -242,7 +251,7 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
           viewProfileDialog.onFalse();
           setSelectedDriver(null);
         }}
-        maxWidth="md"
+        maxWidth="sm"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Driver Profile</Typography>

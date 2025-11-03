@@ -2,6 +2,7 @@ import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
 import CustomSelect from 'src/components/custom-select';
+import { renderTimeViewClock } from '@mui/x-date-pickers';
 import { Grid, TextField, Typography } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -23,10 +24,10 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
   console.log('formik----', formik.errors);
 
   return (
-    <SectionCard title="General Information">
-      <Grid container spacing={2}>
+    <Grid size={{ xs: 12 }}>
+      <SectionCard title="General Information">
         {/* Route Name */}
-        <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <ShakingTextField error={!!(formik.touched.routeName && formik.errors.routeName)}>
             <TextField
               fullWidth
@@ -47,7 +48,7 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
         </Grid>
 
         {/* Route Code */}
-        <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <ShakingTextField error={!!(formik.touched.routeCode && formik.errors.routeCode)}>
             <TextField
               fullWidth
@@ -67,7 +68,7 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
         </Grid>
 
         {/* Route Type */}
-        <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <ShakingTextField error={!!(formik.touched.routeType && formik.errors.routeType)}>
             <CustomSelect
               label="Route Type *"
@@ -84,12 +85,12 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
         </Grid>
 
         {/* Distance */}
-        <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <ShakingTextField error={!!(formik.touched.distance && formik.errors.distance)}>
             <TextField
               fullWidth
               name="distance"
-              label="Distance *"
+              label="Distance(KM) *"
               value={formik.values.distance}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^0-9.\s]/g, '');
@@ -102,7 +103,7 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
           </ShakingTextField>
         </Grid>
         {/* Start Point */}
-        <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <ShakingTextField
             error={!!(Boolean(formik.touched?.startPoint) && formik.errors?.startPoint)}
           >
@@ -111,7 +112,10 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
               fullWidth
               size="small"
               value={formik.values?.startPoint ?? ''}
-              onChange={(e) => formik.setFieldValue('startPoint', e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                formik.setFieldValue('startPoint', value);
+              }}
               error={!!(formik.touched && formik.touched?.startPoint && formik.errors?.startPoint)}
               helperText={formik.touched?.startPoint && formik.errors?.startPoint}
             />
@@ -119,14 +123,17 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
         </Grid>
 
         {/* End Point */}
-        <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 1 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <ShakingTextField error={!!(formik.touched.endPoint && formik.errors.endPoint)}>
             <TextField
               label="End Point *"
               fullWidth
               size="small"
               value={formik?.values?.endPoint}
-              onChange={(e) => formik.setFieldValue('endPoint', e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                formik.setFieldValue('endPoint', value);
+              }}
               error={!!(formik.touched.endPoint && formik.errors.endPoint)}
               helperText={formik.touched.endPoint && formik.errors.endPoint}
             />
@@ -163,7 +170,7 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
                 </Typography>
 
                 {/* Start Time */}
-                <Grid size={{ xs: 12 }} mb={2}>
+                <Grid size={{ xs: 12 }} mb={3}>
                   <ShakingTextField
                     error={
                       !!(
@@ -198,6 +205,11 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
                             (formik.touched.pickupSchedule as any)?.startTime &&
                             (formik.errors.pickupSchedule as any)?.startTime,
                         },
+                      }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                        seconds: renderTimeViewClock,
                       }}
                     />
                   </ShakingTextField>
@@ -240,6 +252,11 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
                             (formik.errors.pickupSchedule as any)?.endTime,
                         },
                       }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                        seconds: renderTimeViewClock,
+                      }}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -254,7 +271,7 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
                 </Typography>
 
                 {/* Start Time */}
-                <Grid size={{ xs: 12 }} mb={2}>
+                <Grid size={{ xs: 12 }} mb={3}>
                   <ShakingTextField
                     error={
                       !!(
@@ -289,6 +306,11 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
                             (formik.touched.dropoffSchedule as any)?.startTime &&
                             (formik.errors.dropoffSchedule as any)?.startTime,
                         },
+                      }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                        seconds: renderTimeViewClock,
                       }}
                     />
                   </ShakingTextField>
@@ -331,6 +353,11 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
                             (formik.errors.dropoffSchedule as any)?.endTime,
                         },
                       }}
+                      viewRenderers={{
+                        hours: renderTimeViewClock,
+                        minutes: renderTimeViewClock,
+                        seconds: renderTimeViewClock,
+                      }}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -338,8 +365,8 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
             )}
           </Grid>
         </Grid>
-      </Grid>
-    </SectionCard>
+      </SectionCard>
+    </Grid>
   );
 };
 

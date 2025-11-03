@@ -63,29 +63,33 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
 
   // Actions menu (View only)
   const actions = useCallback(
-    ({ row }: any) => (
+    ({ popover: pop, row }: any) => (
       <MenuList>
         {onDelete && (
-          <MenuItem onClick={() => onDelete(row)} sx={{ color: 'error.main' }}>
+          <MenuItem
+            onClick={() => {
+              onDelete(row);
+              pop.onClose();
+            }}
+            sx={{ color: 'error.main' }}
+          >
             <RemoveCircle sx={{ width: 20, height: 20, mr: 1 }} />
             Remove
           </MenuItem>
         )}
-        <MenuItem onClick={() => onView(row)}>
-          <Iconify icon={GlobalIcons.eye} width={18} height={18} />
-          View
-        </MenuItem>
-        <MenuItem onClick={() => onView(row)}>
-          <Iconify icon={GlobalIcons.eye} width={18} height={18} />
-          View
-        </MenuItem>
-        <MenuItem onClick={() => onChangeStop?.(row)}>
+
+        <MenuItem
+          onClick={() => {
+            onChangeStop?.(row);
+            pop.onClose();
+          }}
+        >
           <Iconify icon={GlobalIcons.edit} width={18} height={18} />
           Change Stop
         </MenuItem>
       </MenuList>
     ),
-    [onDelete, onView, onChangeStop]
+    [onDelete, onChangeStop]
   );
 
   return (
@@ -142,6 +146,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
               label: 'Roll No.',
               align: 'left',
               minWidth: 90,
+              filterType: 'number',
             },
             {
               id: 'searchStop',
@@ -224,6 +229,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
               label: 'Roll No.',
               align: 'left',
               minWidth: 90,
+              filterType: 'number',
             },
             {
               id: 'searchStop',
@@ -273,6 +279,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
                 label: 'Roll No.',
                 align: 'left',
                 minWidth: 90,
+                filterType: 'number',
               },
               {
                 id: 'searchStop',
@@ -301,6 +308,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
                 render: (_, row) => (
                   <ThreeDotsActions
                     placement="right-top"
+                    actions={(prop) => actions({ ...prop, row })}
                     showViewIcon
                     handleViewClick={() => onView(row as ITransportApplicationPayload)}
                   />
