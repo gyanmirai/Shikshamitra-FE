@@ -22,7 +22,7 @@ export const getStopManagementInitialValues = (
 });
 
 export const getStopStatusChangeInitialValues = (stopData?: IStopData | null) => ({
-  status: stopData?.status || 'Active',
+  status: stopData?.status || 0,
   date: null,
   reason: '',
 });

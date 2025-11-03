@@ -1,3 +1,4 @@
+import type { Theme, SxProps } from '@mui/material/styles';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
@@ -51,13 +52,15 @@ export const SectionCard = ({
   children,
   headerContent = null,
   isLoading = false,
+  sx = {},
 }: {
   title?: string;
   children: React.ReactNode;
   headerContent?: React.ReactNode;
   isLoading?: boolean;
+  sx?: SxProps<Theme>;
 }) => (
-  <Paper sx={{ p: 2, mb: 3, position: 'relative' }} elevation={6}>
+  <Paper sx={{ p: 2, mb: 3, position: 'relative', ...sx }} elevation={6}>
     {isLoading && <LinearProgress sx={{ position: 'absolute', left: 0, top: 0, width: '100%' }} />}
     <Box
       display="flex"

@@ -144,7 +144,7 @@
       "addressLine2": "A-101",
       "pincode": 395010,
       "areaLocalityRoadName": "Kadodara-Surat Road",
-      "zone": "Surat Central",
+      "zone": "North",
       "amount": "200",
       "assignedStudents": 40,
       "status": 1,
@@ -160,7 +160,7 @@
       "addressLine2": "B-202",
       "pincode": 394210,
       "areaLocalityRoadName": "Kamrej Main Road",
-      "zone": "Kamrej Zone",
+      "zone": "South",
       "amount": "150",
       "assignedStudents": 15,
       "status": 1,
@@ -176,7 +176,7 @@
       "addressLine2": "C-303",
       "pincode": 395007,
       "areaLocalityRoadName": "Sarthana Jakatnaka Road",
-      "zone": "Sarthana Zone",
+      "zone": "East",
       "amount": "180",
       "assignedStudents": 25,
       "status": 0,
@@ -192,7 +192,7 @@
       "addressLine2": "D-404",
       "pincode": 395009,
       "areaLocalityRoadName": "Godadara Village Road",
-      "zone": "Godadara Zone",
+      "zone": "West",
       "amount": "120",
       "assignedStudents": 11,
       "status": 1,
@@ -208,7 +208,7 @@
       "addressLine2": "E-505",
       "pincode": 395007,
       "areaLocalityRoadName": "Dindoli Main Road",
-      "zone": "Dindoli Zone",
+      "zone": "South",
       "amount": "100",
       "assignedStudents": 3,
       "status": 1,
@@ -270,6 +270,24 @@
     },
     {
       "id": 4,
+      "name": "Deep Darshan School",
+      "time": "9:30 AM",
+      "students": 0
+    },
+     {
+      "id": 5,
+      "name": "Reshma Circle",
+      "time": "9:10 AM",
+      "students": 10
+    },
+    {
+      "id": 6,
+      "name": "Maharana Pratap Circle",
+      "time": "9:20 AM",
+      "students": 25
+    },
+    {
+      "id": 7,
       "name": "Deep Darshan School",
       "time": "9:30 AM",
       "students": 0
@@ -488,7 +506,7 @@
       "locationPoint": "Parvat Patiya",
       "driver": "Dharmik Jinjala",
       "stops": 7,
-      "status": "Current",
+      "status": 0,
       "startDate": "15-01-2024",
       "endDate": null
     },
@@ -498,7 +516,7 @@
       "locationPoint": "Dindoli Chowkdi",
       "driver": "Prerna Atre",
       "stops": 6,
-      "status": "Completed",
+      "status":1,
       "startDate": "20-08-2023",
       "endDate": "14-01-2024"
     },
@@ -508,7 +526,7 @@
       "locationPoint": "Kamrej Char Rasta",
       "driver": "Mayur Solanki",
       "stops": 3,
-      "status": "Completed",
+      "status": 1,
       "startDate": "10-06-2023",
       "endDate": "19-08-2023"
     },
@@ -518,7 +536,7 @@
       "locationPoint": "Vesu Circle",
       "driver": "Raj Patel",
       "stops": 5,
-      "status": "Completed",
+      "status": 1,
       "startDate": "15-03-2023",
       "endDate": "09-06-2023"
     },
@@ -528,7 +546,7 @@
       "locationPoint": "Adajan Patiya",
       "driver": "Kiran Shah",
       "stops": 8,
-      "status": "Completed",
+      "status": 1,
       "startDate": "10-01-2023",
       "endDate": "14-03-2023"
     }
@@ -540,7 +558,7 @@
       "licenseNo": "GJ05-2019-0012345",
       "experience": "5 Years",
       "route": "Parvat Patiya",
-      "status": "Active",
+      "status": 0,
       "assignedDate": "15-01-2024",
       "phoneNumber": "+91 9876543210"
     },
@@ -550,7 +568,7 @@
       "licenseNo": "GJ05-2018-0067890",
       "experience": "6 Years",
       "route": "Dindoli",
-      "status": "Inactive",
+      "status": 1,
       "assignedDate": "20-08-2023",
       "phoneNumber": "+91 9876543211"
     },
@@ -560,7 +578,7 @@
       "licenseNo": "GJ05-2020-0098765",
       "experience": "4 Years",
       "route": "Kamrej",
-      "status": "Active",
+      "status": 0,
       "assignedDate": "10-06-2023",
       "phoneNumber": "+91 9876543212"
     },
@@ -570,7 +588,7 @@
       "licenseNo": "GJ05-2017-0054321",
       "experience": "7 Years",
       "route": "Vesu",
-      "status": "Inactive",
+      "status": 1,
       "assignedDate": "15-03-2023",
       "phoneNumber": "+91 9876543213"
     },
@@ -580,7 +598,7 @@
       "licenseNo": "GJ05-2019-0076543",
       "experience": "5 Years",
       "route": "Adajan",
-      "status": "Active",
+      "status": 0,
       "assignedDate": "10-01-2023",
       "phoneNumber": "+91 9876543214"
     }
@@ -1110,7 +1128,7 @@
       "stops": "08",
       "capacity": 50,
       "students": 50,
-      "status": "Active"
+      "status": 0
     },
     {
       "id": "RT002",
@@ -1121,7 +1139,7 @@
       "stops": "06",
       "capacity": 55,
       "students": 50,
-      "status": "Inactive"
+      "status": 1
     },
     {
       "id": "RT003",
@@ -1132,7 +1150,7 @@
       "stops": "12",
       "capacity": 40,
       "students": 40,
-      "status": "Inactive"
+      "status": 1
     },
     {
       "id": "RT004",
@@ -1143,7 +1161,7 @@
       "stops": "03",
       "capacity": 40,
       "students": 38,
-      "status": "Active"
+      "status": 0
     },
     {
       "id": "RT005",
@@ -1154,7 +1172,7 @@
       "stops": "07",
       "capacity": 45,
       "students": 43,
-      "status": "Active"
+      "status": 0
     }
   ],
   "stopBasedFeeData": [

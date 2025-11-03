@@ -167,8 +167,11 @@ const StopInformation: React.FC<StopInformationProps> = ({ editData, formik, onF
                 value={formik.values.approxKmFromSchool}
                 onChange={(e) => {
                   const { value } = e.target;
-                  // allow only digits
-                  formik.setFieldValue('approxKmFromSchool', value.replace(/\D/g, ''));
+                  // allow digits and a single decimal point
+                  const sanitized = value
+                    .replace(/[^0-9.]/g, '') // remove anything except digits and dot
+                    .replace(/(\..*)\./g, '$1'); // keep only the first dot
+                  formik.setFieldValue('approxKmFromSchool', sanitized);
                 }}
                 onBlur={formik.handleBlur}
                 error={!!(formik.touched.approxKmFromSchool && formik.errors.approxKmFromSchool)}

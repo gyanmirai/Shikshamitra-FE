@@ -22,11 +22,13 @@ export const InfoItem = ({
   label,
   value,
   color = 'primary.main',
+  fontSize = 17,
 }: {
   icon: React.ReactNode;
   label: string;
   value: React.ReactNode;
   color?: string;
+  fontSize?: number;
 }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
     <Box
@@ -41,9 +43,12 @@ export const InfoItem = ({
         boxShadow: 1,
       }}
     >
-      {React.cloneElement(icon as React.ReactElement<{ sx?: { color: string } }>, {
-        sx: { color },
-      })}
+      {React.cloneElement(
+        icon as React.ReactElement<{ sx?: { color: string; fontSize?: number } }>,
+        {
+          sx: { color, fontSize },
+        }
+      )}
     </Box>
     <Box>
       <Typography variant="body2" color="text.secondary">
@@ -64,16 +69,16 @@ const RouteInformationCard = () => {
   // eslint-disable-next-line react/no-unstable-nested-components
 
   return (
-    <Card sx={{ p: 2, borderRadius: 2, boxShadow: 'var(--shadows-4)', mb: 2 }}>
+    <Card sx={{ p: 2, borderRadius: 2, boxShadow: 'var(--shadows-4)' }}>
       {/* Header */}
       <Box
-        sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}
+        sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}
       >
         <Box>
-          <Typography variant="h6" color="primary" fontWeight="bold" gutterBottom>
+          <Typography variant="h6" color="primary" fontWeight="bold">
             Route Details
           </Typography>
-          <Typography variant="h6" fontWeight="600" gutterBottom>
+          <Typography variant="h6" fontWeight="600">
             {mockRouteData.routeName}
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -86,7 +91,7 @@ const RouteInformationCard = () => {
       </Box>
 
       {/* Divider */}
-      <Box sx={{ borderBottom: '1px solid', borderColor: 'divider', mb: 3 }} />
+      <Box sx={{ borderBottom: '1px solid', borderColor: 'divider', mb: 1 }} />
 
       <Grid container spacing={3}>
         {/* Start Point */}
@@ -131,7 +136,7 @@ const RouteInformationCard = () => {
       </Grid>
 
       {/* Capacity Utilisation */}
-      <Box sx={{ mt: 4 }}>
+      <Box sx={{ mt: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="body2" color="text.secondary">
             Capacity Utilisation

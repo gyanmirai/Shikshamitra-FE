@@ -67,9 +67,6 @@ const TransportApplicationStepper = ({
             setIsLoading(false);
             return;
           }
-          shikshaMitraToast.success({
-            message: `Student "${values.studentId}" selected successfully.`,
-          });
         } else if (activeStep === 1) {
           shikshaMitraToast.success({
             message: `Transport application saved successfully for "${values.studentId}".`,

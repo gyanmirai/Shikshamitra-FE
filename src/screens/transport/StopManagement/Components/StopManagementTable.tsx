@@ -1,11 +1,11 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
-import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -39,6 +39,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
     type: 'query',
     currentQueryAndMutation: useGetStopManagementDataQuery,
   });
+  const dispatch = useDispatch();
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
@@ -47,11 +48,11 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
   const [selectedStop, setSelectedStop] = useState<IStopData | null>(null);
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (setIsChanges && window.confirm('Are you sure you want to leave this page?'))) {
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
       changeStatusDialog.onFalse();
       viewDetailsDialog.onFalse();
       setSelectedStop(null);
-      setIsChanges(false);
+      dispatch(setIsChanges(false));
     } else if (!isChanges) {
       changeStatusDialog.onFalse();
       viewDetailsDialog.onFalse();
@@ -96,7 +97,8 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             id: 'stopName',
             label: 'Stop Name',
             align: 'left',
-            minWidth: 120,
+            sticky: true,
+            minWidth: 200,
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
                 {value}
@@ -107,7 +109,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             id: 'landmark',
             label: 'Landmark',
             align: 'left',
-            minWidth: 130,
+            minWidth: 200,
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
                 {value}
@@ -118,6 +120,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             id: 'zone',
             label: 'Zone',
             align: 'left',
+            minWidth: 160,
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
                 {value}
@@ -129,6 +132,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             label: 'Assigned Students',
             align: 'left',
             minWidth: 170,
+            filterType: 'number',
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
                 {value}
@@ -139,6 +143,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             id: 'amount',
             label: 'Amount',
             align: 'left',
+            minWidth: 100,
             filterType: 'number',
             render: (value) => `₹ ${value?.toLocaleString()}`,
           },
@@ -146,6 +151,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             id: 'approxKmFromSchool',
             label: 'Approx KM',
             align: 'left',
+            filterType: 'number',
             minWidth: 120,
             render: (value) => (
               <Typography variant="caption" fontSize="13px">
@@ -158,6 +164,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             label: 'Status',
             align: 'left',
             sticky: true,
+            minWidth: 80,
             filterType: 'enum',
             enumOptions: StopStatusOptions,
             render: (value) => {
@@ -199,7 +206,6 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
           changeStatusDialog.onFalse();
           setSelectedStop(null);
         }}
-        maxWidth="sm"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">Change Status</Typography>

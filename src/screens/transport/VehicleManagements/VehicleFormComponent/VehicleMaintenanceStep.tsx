@@ -24,7 +24,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
             <TextField
               fullWidth
               name="insuranceCompany"
-              label="Insurance Company *"
+              label="Insurance Company"
               value={formik.values.insuranceCompany}
               onChange={formik.handleChange}
               error={!!(formik.touched.insuranceCompany && formik.errors.insuranceCompany)}
@@ -38,7 +38,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
             <TextField
               fullWidth
               name="policyNo"
-              label="Policy No. *"
+              label="Policy No."
               value={formik.values.policyNo}
               onChange={(e) => {
                 let value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
@@ -56,7 +56,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
             error={!!(formik.touched.insuranceIssueDate && formik.errors.insuranceIssueDate)}
           >
             <DatePicker
-              label="Issue Date *"
+              label="Issue Date"
               value={formik.values.insuranceIssueDate}
               format="DD/MM/YYYY"
               onChange={(date) => formik.setFieldValue('insuranceIssueDate', date)}
@@ -76,7 +76,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
             error={!!(formik.touched.insuranceExpiryDate && formik.errors.insuranceExpiryDate)}
           >
             <DatePicker
-              label="Expiry Date *"
+              label="Expiry Date"
               value={formik.values.insuranceExpiryDate}
               format="DD/MM/YYYY"
               onChange={(date) => formik.setFieldValue('insuranceExpiryDate', date)}
@@ -100,7 +100,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
           >
             <NumericFormatCustom
               size="small"
-              label="Coverage Amount *"
+              label="Coverage Amount"
               name="coverageAmount"
               value={formik.values.coverageAmount}
               onChange={formik.handleChange}
@@ -123,7 +123,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
             <TextField
               fullWidth
               name="pucCertificateNo"
-              label="Certificate No. *"
+              label="Certificate No."
               value={formik.values.pucCertificateNo}
               onChange={(e) => {
                 let value = e.target.value.replace(/[^a-zA-Z0-9-\s]/g, '');
@@ -139,7 +139,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.pucIssueDate && formik.errors.pucIssueDate)}>
             <DatePicker
-              label="Issue Date *"
+              label="Issue Date"
               format="DD/MM/YYYY"
               value={formik.values.pucIssueDate}
               onChange={(date) => formik.setFieldValue('pucIssueDate', date)}
@@ -157,7 +157,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
         <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.pucExpiryDate && formik.errors.pucExpiryDate)}>
             <DatePicker
-              label="Expiry Date *"
+              label="Expiry Date"
               format="DD/MM/YYYY"
               value={formik.values.pucExpiryDate}
               onChange={(date) => formik.setFieldValue('pucExpiryDate', date)}
@@ -185,7 +185,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
             <TextField
               fullWidth
               name="fitnessCertificateNo"
-              label="Certificate No. *"
+              label="Certificate No."
               value={formik.values.fitnessCertificateNo}
               onChange={(e) => {
                 let value = e.target.value.replace(/[^a-zA-Z0-9-\s]/g, '');
@@ -203,7 +203,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
             error={!!(formik.touched.fitnessIssueDate && formik.errors.fitnessIssueDate)}
           >
             <DatePicker
-              label="Issue Date *"
+              label="Issue Date"
               format="DD/MM/YYYY"
               value={formik.values.fitnessIssueDate}
               onChange={(date) => formik.setFieldValue('fitnessIssueDate', date)}
@@ -223,7 +223,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
             error={!!(formik.touched.fitnessExpiryDate && formik.errors.fitnessExpiryDate)}
           >
             <DatePicker
-              label="Expiry Date *"
+              label="Expiry Date"
               format="DD/MM/YYYY"
               value={formik.values.fitnessExpiryDate}
               onChange={(date) => formik.setFieldValue('fitnessExpiryDate', date)}
@@ -251,7 +251,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
             <TextField
               fullWidth
               name="roadTaxReceiptNo"
-              label="Tax Receipt No. *"
+              label="Tax Receipt No."
               value={formik.values.roadTaxReceiptNo}
               onChange={(e) => {
                 let value = e.target.value.replace(/[^a-zA-Z0-9-\s]/g, '');
@@ -269,7 +269,7 @@ const VehicleMaintenanceStep = ({ formik }: VehicleMaintenanceStepProps) => (
             error={!!(formik.touched.roadTaxIssueDate && formik.errors.roadTaxIssueDate)}
           >
             <DatePicker
-              label="Issue Date *"
+              label="Issue Date"
               format="DD/MM/YYYY"
               value={formik.values.roadTaxIssueDate}
               onChange={(date) => formik.setFieldValue('roadTaxIssueDate', date)}

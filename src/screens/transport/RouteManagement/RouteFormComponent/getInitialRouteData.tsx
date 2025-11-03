@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { RouteStatus } from 'src/enums/route-status';
 
 import type { IRouteData, IRoutesData, IRoutePayload } from '../Components/type';
 
@@ -32,12 +33,20 @@ export const getInitialRouteData = (editData?: IRoutePayload): IRoutePayload => 
   stops: editData?.stops || [],
 
   // Vehicle Assignments
-  vehicleAssignments: editData?.vehicleAssignments || [],
+  vehicleAssignment: editData?.vehicleAssignment || {
+    vehicleId: '',
+    vehicleNo: '',
+    capacity: 0,
+    driverId: '',
+    driverName: '',
+    conductorId: '',
+    conductorName: '',
+  },
 });
 
 // New function for stop status change form
 export const getInitialStopStatusData = (stopData?: IRoutesData | null) => ({
-  status: stopData?.status || 'Active',
+  status: stopData?.status || RouteStatus.Active,
   reason: stopData?.reason || '',
 });
 

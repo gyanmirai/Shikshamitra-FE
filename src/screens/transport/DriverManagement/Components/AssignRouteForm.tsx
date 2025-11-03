@@ -53,8 +53,8 @@ const AssignRouteForm: React.FC<IAssignRouteFormProps> = ({ onClose, driverData 
         <Grid container spacing={2}>
           {/* Driver Information */}
           <Grid size={{ xs: 12 }}>
-            <Card variant="outlined" sx={{ mb: 2 }}>
-              <CardContent>
+            <Card variant="outlined">
+              <CardContent sx={{ p: 2 }}>
                 <Box display="flex" alignItems="center" gap={2}>
                   <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
                     <Iconify icon="mdi:account" />
@@ -80,7 +80,7 @@ const AssignRouteForm: React.FC<IAssignRouteFormProps> = ({ onClose, driverData 
               <TextField
                 select
                 fullWidth
-                label="Select Route *"
+                label="Route *"
                 name="selectedRoute"
                 size="small"
                 value={formik.values.selectedRoute}
@@ -100,7 +100,14 @@ const AssignRouteForm: React.FC<IAssignRouteFormProps> = ({ onClose, driverData 
       </DialogScrollContent>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <Button startIcon={<Iconify icon={GlobalIcons.cancel} />} variant="outlined" size="small">
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          size="small"
+          onClick={() => {
+            onClose(null, false);
+          }}
+        >
           Cancel
         </Button>
         <Button

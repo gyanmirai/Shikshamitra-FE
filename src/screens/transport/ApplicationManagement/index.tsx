@@ -8,8 +8,10 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -127,7 +129,7 @@ const TransportRequests = () => {
               Transport Application
             </Button>
           }
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1 }}
         />
       )}
 
@@ -170,6 +172,38 @@ const TransportRequests = () => {
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmDialog.value}
+        onClose={() => {
+          setEditingRequest(null);
+          confirmDialog.onFalse();
+        }}
+        title="Remove"
+        content={
+          <>
+            Are you sure you want to remove transport request for{' '}
+            <strong>{editingRequest?.name}</strong>?
+          </>
+        }
+        action={
+          <Button
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              confirmDialog.onFalse();
+              shikshaMitraToast.success({
+                message: `Transport request for "${editingRequest?.name}" removed successfullly`,
+              });
+              setEditingRequest(null);
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
 
       <CustomDialog
         open={onConfirmDialog.value}

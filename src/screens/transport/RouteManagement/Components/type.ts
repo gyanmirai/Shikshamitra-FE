@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { RouteStatus } from 'src/enums/route-status';
 
 export interface ISchedule {
   startTime: Dayjs | string | null;
@@ -17,7 +18,7 @@ export interface IRoutePayload {
   pickupSchedule?: ISchedule;
   dropoffSchedule?: ISchedule;
   stops: any[];
-  vehicleAssignments: any[];
+  vehicleAssignment: any;
 }
 
 export interface IStopPayload {
@@ -44,8 +45,8 @@ export interface IVehicleAssignmentPayload {
 // Additional types for status management
 export interface IRoutesData {
   id: string;
-  stopName: string;
-  status: string;
+  routeName: string;
+  status: RouteStatus;
   reason?: string;
   // Add other stop properties as needed
 }
@@ -53,7 +54,7 @@ export interface IRoutesData {
 export interface ChangeStopStatusProps {
   isOpen: boolean;
   onClose: (e?: any, isSubmit?: boolean) => void;
-  stopData: IRoutesData | null;
+  routeData: IRoutesData | null;
   onStatusChange: (values: any) => void;
 }
 
