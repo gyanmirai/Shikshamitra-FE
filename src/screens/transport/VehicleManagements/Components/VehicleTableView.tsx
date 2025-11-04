@@ -81,6 +81,7 @@ const VehicleTableView = ({ onEdit, onView }: VehicleTableViewProps) => {
             label: 'Reg No.',
             align: 'left',
             minWidth: '170px',
+            sticky: true,
             render: (value, row) => (
               <Box display="flex" alignItems="center" gap={1}>
                 <Avatar
@@ -93,10 +94,22 @@ const VehicleTableView = ({ onEdit, onView }: VehicleTableViewProps) => {
             ),
           },
           { id: 'vehicleType', label: 'Vehicle Type', align: 'left', minWidth: '140px' },
-          { id: 'capacity', label: 'Capacity', align: 'left', minWidth: '100px' },
+          {
+            id: 'capacity',
+            label: 'Capacity',
+            align: 'left',
+            minWidth: '100px',
+            filterType: 'number',
+          },
           { id: 'route', label: 'Route', align: 'left', minWidth: '120px' },
           { id: 'driver', label: 'Driver', align: 'left', minWidth: '150px' },
-          { id: 'insuranceExpiry', label: 'Insurance Expiry', align: 'left', minWidth: '160px' },
+          {
+            id: 'insuranceExpiry',
+            label: 'Insurance Expiry',
+            align: 'left',
+            minWidth: '160px',
+            filterType: 'date',
+          },
           {
             id: 'status',
             label: 'Status',

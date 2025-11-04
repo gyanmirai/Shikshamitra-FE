@@ -130,7 +130,7 @@ const StopsDetails = ({ formik }: { formik: any }) => {
                       : isDragOver
                         ? theme.palette.action.hover
                         : 'transparent',
-                    border: isDragging ? '2px dashed #1976d2' : '1px dashed #808080',
+                    border: isDragging ? '2px dashed #808080' : '1px dashed #808080',
                     borderRadius: 2,
                     alignItems: 'center',
                     p: 1.5,
@@ -150,7 +150,7 @@ const StopsDetails = ({ formik }: { formik: any }) => {
                         '&:hover': { color: 'primary.main' },
                       }}
                     >
-                      <DragIndicatorIcon />
+                      <DragIndicatorIcon sx={{ fontSize: 20 }} />
                     </IconButton>
                   </Grid>
 
@@ -253,6 +253,7 @@ const StopsDetails = ({ formik }: { formik: any }) => {
         <AddStopIndex
           open={addStopDialog}
           onClose={handleClose}
+          routeDetails={formik.values.selectedRoute}
           stopName={formik.values.studentDetails.searchStop}
           handleSubmit={(newStop: any) => handleAddStop(newStop)}
         />

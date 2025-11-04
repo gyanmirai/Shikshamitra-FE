@@ -8,8 +8,8 @@ import { RouteStatus, RouteStatusColor } from 'src/enums/route-status';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { InfoItem } from 'src/screens/transport/RouteManagement/RouteViewDetails/RouteInformationCard';
 
-const RouteTopHeader = ({ formik }: { formik: any }) => {
-  if (!formik?.values?.selectedRoute) {
+const RouteTopHeader = ({ routeDetails }: { routeDetails?: any }) => {
+  if (!routeDetails) {
     return (
       <SectionCard title="Route Details">
         <Box display="flex" justifyContent="center" alignItems="center" height={80}>
@@ -22,14 +22,14 @@ const RouteTopHeader = ({ formik }: { formik: any }) => {
   return (
     <SectionCard title="Route Details">
       <Grid size={{ xs: 12, md: 3 }}>
-        <Typography variant="h6">{formik.values.selectedRoute.routeName}</Typography>
-        <Typography variant="caption">{formik.values.selectedRoute.routeId}</Typography>
+        <Typography variant="h6">{routeDetails.routeName}</Typography>
+        <Typography variant="caption">{routeDetails.routeId}</Typography>
       </Grid>
       <Grid size={{ xs: 12, md: 3 }}>
         <InfoItem
           icon={<LocationOn />}
           label="Start Point"
-          value={formik.values.selectedRoute.startPoint}
+          value={routeDetails.startPoint}
           color="success.main"
         />
       </Grid>
@@ -37,7 +37,7 @@ const RouteTopHeader = ({ formik }: { formik: any }) => {
         <InfoItem
           icon={<LocationOn />}
           label="End Point"
-          value={formik.values.selectedRoute.endPoint}
+          value={routeDetails.endPoint}
           color="error.main"
         />
       </Grid>
@@ -45,11 +45,9 @@ const RouteTopHeader = ({ formik }: { formik: any }) => {
         <Box display="flex" justifyContent="flex-end">
           <Label
             variant="soft"
-            color={
-              RouteStatusColor[formik.values.selectedRoute.status as RouteStatus] as LabelColor
-            }
+            color={RouteStatusColor[routeDetails.status as unknown as RouteStatus] as LabelColor}
           >
-            {RouteStatus[formik.values.selectedRoute.status]}
+            {RouteStatus[routeDetails.status]}
           </Label>
         </Box>
       </Grid>

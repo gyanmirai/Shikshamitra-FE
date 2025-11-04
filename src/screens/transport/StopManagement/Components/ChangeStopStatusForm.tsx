@@ -4,18 +4,31 @@ import React from 'react';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 
-import { StopStatusOptions } from './type';
+import { StopStatusType } from './type';
 import { stopStatusChangeValidationSchema } from './StopManagementValidation';
 import { getStopStatusChangeInitialValues } from './StopManagementInitialValuse';
 
 import type { ChangeStopStatusProps } from './type';
+
+const allowedStatuses = [StopStatusType.Active, StopStatusType.Inactive];
+
+const options = allowedStatuses.map((status) => ({
+  label: StopStatusType[status],
+  value: status,
+  description:
+    status === StopStatusType.Active
+      ? 'Stop is currently active and available for use.'
+      : status === StopStatusType.Inactive
+        ? 'Stop is inactive and not available for use.'
+        : 'Stop has been reported as lost.',
+}));
 
 const ChangeStopStatusForm: React.FC<ChangeStopStatusProps> = ({
   isOpen,
@@ -28,12 +41,14 @@ const ChangeStopStatusForm: React.FC<ChangeStopStatusProps> = ({
     validationSchema: stopStatusChangeValidationSchema,
     onSubmit: (values) => {
       shikshaMitraToast.success({
-        message: `Stop status changed to ${values.status} successfully`,
+        message: `Stop status for "${stopData?.stopName}" changed to ${StopStatusType[values.status]} successfully`,
       });
       onStatusChange(values);
       onClose(null, true);
     },
   });
+  console.log('formik---initialValues---', formik.initialValues);
+  console.log('formik---values---', formik.values);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -42,16 +57,42 @@ const ChangeStopStatusForm: React.FC<ChangeStopStatusProps> = ({
           {/* Select Status */}
           <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(formik.touched.status && formik.errors.status)}>
-              <CustomSelect
-                label="Select Status *"
-                name="status"
-                options={StopStatusOptions}
-                value={formik.values.status}
-                onChange={(value) => formik.setFieldValue('status', value)}
-                error={!!(formik.touched.status && formik.errors.status)}
-                helperText={formik.touched.status ? formik.errors.status : undefined}
-                formControlProps={{ fullWidth: true }}
+              <Autocomplete
+                options={options}
+                value={options.find((o) => o.value === formik.values.status)}
+                onChange={(_, newValue) => formik.setFieldValue('status', newValue?.value)}
                 size="small"
+                disableClearable
+                getOptionLabel={(option) => option.label}
+                isOptionEqualToValue={(option, value) => option.value === value.value}
+                renderOption={(props, option) => {
+                  const { key, ...otherProps } = props;
+                  return (
+                    <Box
+                      component="li"
+                      key={key}
+                      {...otherProps}
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}
+                    >
+                      {option.label}
+                      <Box sx={{ marginLeft: 'auto' }}>
+                        <CustomTooltip title={option.description} placement="right">
+                          <Iconify icon="mdi:information" width={20} />
+                        </CustomTooltip>
+                      </Box>
+                    </Box>
+                  );
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Status *"
+                    fullWidth
+                    size="small"
+                    error={!!(formik.touched.status && formik.errors.status)}
+                    helperText={formik.touched.status ? formik.errors.status : undefined}
+                  />
+                )}
               />
             </ShakingTextField>
           </Grid>

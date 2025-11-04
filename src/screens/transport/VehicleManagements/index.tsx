@@ -68,7 +68,7 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
                 href: '/transport/vehicle-management',
               },
             ]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ px: 1, mb: 1 }}
           />
         ) : viewDialog.value ? (
           <CustomBreadcrumbs

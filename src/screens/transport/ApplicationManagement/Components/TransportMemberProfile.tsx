@@ -44,7 +44,7 @@ const TransportMemberProfile = ({
                   <Typography>{selectedMember?.searchStop || 'N/A'}</Typography>
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
-                  <Typography fontWeight={600}>Is Exit</Typography>
+                  <Typography fontWeight={600}>Is Exist</Typography>
                   <Typography>
                     {fromViewScreen ? (selectedMember?.isStopExist ? 'Yes' : 'No') : 'N/A'}
                   </Typography>

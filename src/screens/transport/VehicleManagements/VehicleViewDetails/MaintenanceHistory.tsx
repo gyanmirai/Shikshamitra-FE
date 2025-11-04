@@ -1,12 +1,25 @@
-import { Box } from '@mui/system';
-import { useTabs } from 'src/hooks/use-tabs';
+import type { LabelColor } from 'src/components/label';
+
+import { useMemo, useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Tab, Card, Tooltip } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { useSearchParam } from 'src/hooks/use-search-param';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
+import {
+  VehicleRouteType,
+  VehicleRouteTypeColor,
+  VehicleRouteTypeOptions,
+} from 'src/enums/VehicleRouteType';
+import {
+  DriverStatusType,
+  DriverStatusTypeColor,
+  DriverStatusTypeOptions,
+} from 'src/enums/driver-status-enum';
 import {
   useGetmaintenanceDataQuery,
   useGetrouteHistoryDataQuery,
@@ -32,6 +45,7 @@ const RouteHistory = () => {
           id: 'routeName',
           label: 'Name',
           align: 'left',
+          sticky: true,
           minWidth: '150px',
         },
         {
@@ -51,15 +65,20 @@ const RouteHistory = () => {
           label: 'Stops',
           align: 'left',
           minWidth: '80px',
+          filterType: 'number',
         },
         {
           id: 'status',
           label: 'Status',
           align: 'left',
-          minWidth: '120px',
-          render: (value: 'Current' | 'Completed') => (
-            <Label color={value === 'Current' ? 'info' : 'success'}>{value}</Label>
-          ),
+          sticky: true,
+          minWidth: 80,
+          filterType: 'enum',
+          enumOptions: VehicleRouteTypeOptions,
+          render: (value) => {
+            const color = VehicleRouteTypeColor[value as VehicleRouteType] as LabelColor;
+            return <Label color={color}>{VehicleRouteType[value]}</Label>;
+          },
         },
       ]}
       data={routeHistoryData || []}
@@ -84,12 +103,14 @@ const DriverHistory = () => {
           label: 'Name',
           align: 'left',
           minWidth: '150px',
+          sticky: true,
         },
         {
           id: 'licenseNo',
           label: 'License No',
           align: 'left',
           minWidth: '150px',
+          filterType: 'number',
         },
         {
           id: 'experience',
@@ -107,10 +128,14 @@ const DriverHistory = () => {
           id: 'status',
           label: 'Status',
           align: 'left',
-          minWidth: '120px',
-          render: (value: 'Active' | 'Inactive') => (
-            <Label color={value === 'Active' ? 'success' : 'error'}>{value}</Label>
-          ),
+          sticky: true,
+          minWidth: 80,
+          filterType: 'enum',
+          enumOptions: DriverStatusTypeOptions,
+          render: (value) => {
+            const color = DriverStatusTypeColor[value as VehicleRouteType] as LabelColor;
+            return <Label color={color}>{DriverStatusType[value]}</Label>;
+          },
         },
       ]}
       data={driverHistoryData || []}
@@ -178,6 +203,7 @@ const MaintenanceHistoryTable = () => {
           label: 'Date',
           align: 'left',
           minWidth: '120px',
+          filterType: 'date',
         },
         {
           id: 'serviceType',
@@ -190,6 +216,7 @@ const MaintenanceHistoryTable = () => {
           label: 'Cost',
           align: 'left',
           minWidth: '120px',
+          filterType: 'number',
           render: (value) => `₹ ${value.toLocaleString()}`,
         },
         {
@@ -197,6 +224,7 @@ const MaintenanceHistoryTable = () => {
           label: 'Next Due',
           align: 'left',
           minWidth: '120px',
+          filterType: 'date',
         },
       ]}
       data={maintenanceHistoryData || []}
@@ -233,10 +261,17 @@ const TABS = [
 ];
 
 const MaintenanceHistory = () => {
-  const tabs = useTabs('documentDetails');
+  const [searchParams, setSearchParams] = useSearchParam({ tab: 'documentDetails' });
 
-  const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
-
+  const currentIndex = useMemo(
+    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
+  const [isBackClick, setIsBackClick] = useState(false);
+  const currentActiveComponent = useMemo(
+    () => TABS.find((tab) => tab.value === searchParams?.tab),
+    [searchParams.tab]
+  );
   return (
     <>
       {/* Tabs */}
@@ -246,8 +281,16 @@ const MaintenanceHistory = () => {
         }}
       >
         <CustomTabs
-          value={tabs.value}
-          onChange={tabs.onChange}
+          value={searchParams.tab}
+          onChange={(e, value) => {
+            const newIndex = TABS.findIndex((tab) => tab.value === value);
+            if (currentIndex > newIndex) {
+              setIsBackClick(true);
+            } else {
+              setIsBackClick(false);
+            }
+            setSearchParams({ tab: value });
+          }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
           role="tablist"
         >
@@ -258,9 +301,21 @@ const MaintenanceHistory = () => {
       </Card>
 
       {/* Tab Content */}
-      <Box>
-        <Scrollbar sx={{ p: 1 }}>{CurrentComponent && <CurrentComponent />}</Scrollbar>
-      </Box>
+
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBackClick}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+          },
+        }}
+      >
+        <Scrollbar sx={{ p: 1 }}>
+          {currentActiveComponent && <currentActiveComponent.component />}
+        </Scrollbar>
+      </FormSlider>
     </>
   );
 };

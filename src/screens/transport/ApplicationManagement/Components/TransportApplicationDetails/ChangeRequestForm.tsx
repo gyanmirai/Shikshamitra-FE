@@ -9,8 +9,8 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { Grid, Button, TextField, Typography, DialogActions, InputAdornment } from '@mui/material';
 
 import TransportMemberProfile from '../TransportMemberProfile';
 
@@ -66,15 +66,12 @@ const ChangeStopRequestForm = ({ onClose, selectedApplication }: Props) => {
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         {/* CURRENT STOP DETAILS */}
-        <SectionCard title="Current Stop Details">
-          <Grid size={{ xs: 12 }}>
-            <TransportMemberProfile selectedMember={selectedApplication} fromViewScreen={false} />
-          </Grid>
-        </SectionCard>
+
+        <TransportMemberProfile selectedMember={selectedApplication} fromViewScreen={false} />
 
         {/* NEW STOP DETAILS */}
-        <SectionCard title="Select New Stop">
-          <Grid container spacing={2}>
+        <SectionCard title="Select New Stop" paperProps={{ sx: { mt: 2 } }}>
+          <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <ShakingTextField error={!!(formik.touched.newStopName && formik.errors.newStopName)}>
                 <TextField
@@ -83,7 +80,14 @@ const ChangeStopRequestForm = ({ onClose, selectedApplication }: Props) => {
                   name="newStopName"
                   size="small"
                   value={formik.values.newStopName}
-                  onChange={formik.handleChange}
+                  onChange={(e) => {
+                    const value = e.target.value
+                      .replace(/[^a-zA-Z0-9\s-]/g, '') // allow letters, numbers, spaces, and hyphens
+                      .split(' ')
+                      .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : ''))
+                      .join(' ');
+                    formik.setFieldValue('newStopName', value);
+                  }}
                   error={formik.touched.newStopName && Boolean(formik.errors.newStopName)}
                   helperText={formik.touched.newStopName && formik.errors.newStopName}
                 />
@@ -119,6 +123,16 @@ const ChangeStopRequestForm = ({ onClose, selectedApplication }: Props) => {
                   size="small"
                   value={formik.values.newLandmark}
                   onChange={formik.handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Iconify
+                          icon="mdi:map-marker"
+                          sx={{ color: 'text.secondary', fontSize: 18 }}
+                        />
+                      </InputAdornment>
+                    ),
+                  }}
                   error={formik.touched.newLandmark && Boolean(formik.errors.newLandmark)}
                   helperText={formik.touched.newLandmark && formik.errors.newLandmark}
                 />
@@ -138,7 +152,7 @@ const ChangeStopRequestForm = ({ onClose, selectedApplication }: Props) => {
               >
                 <TextField
                   fullWidth
-                  label="Address Line 1 *"
+                  label="Address Line 1"
                   name="addressLine1"
                   size="small"
                   value={formik.values.addressLine1}
@@ -201,7 +215,9 @@ const ChangeStopRequestForm = ({ onClose, selectedApplication }: Props) => {
         <Button
           variant="contained"
           size="small"
-          type="submit"
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
           startIcon={<Iconify icon={GlobalIcons.submit} width={20} height={20} />}
         >
           Submit

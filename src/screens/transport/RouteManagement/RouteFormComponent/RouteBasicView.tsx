@@ -11,8 +11,8 @@ interface Props {
 
 export default function RouteDetailsView({ values }: Props) {
   return (
-    <Card sx={{ p: 2, borderRadius: 2, boxShadow: 4, mb: 2 }}>
-      <Typography variant="h6" color="primary" mb={2}>
+    <Card sx={{ p: 2, borderRadius: 2, boxShadow: 4 }}>
+      <Typography variant="h6" color="primary" mb={1}>
         Route Details
       </Typography>
 
@@ -22,8 +22,8 @@ export default function RouteDetailsView({ values }: Props) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box
               sx={{
-                width: 33,
-                height: 33,
+                width: 32,
+                height: 32,
                 borderRadius: '50%',
                 bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
                 display: 'flex',
@@ -32,7 +32,7 @@ export default function RouteDetailsView({ values }: Props) {
                 boxShadow: 1,
               }}
             >
-              <Route color="primary" />
+              <Route color="primary" sx={{ fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -50,8 +50,8 @@ export default function RouteDetailsView({ values }: Props) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box
               sx={{
-                width: 33,
-                height: 33,
+                width: 32,
+                height: 32,
                 borderRadius: '50%',
                 bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
                 display: 'flex',
@@ -60,7 +60,7 @@ export default function RouteDetailsView({ values }: Props) {
                 boxShadow: 1,
               }}
             >
-              <DirectionsBus color="primary" />
+              <DirectionsBus color="primary" sx={{ fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -77,8 +77,8 @@ export default function RouteDetailsView({ values }: Props) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box
               sx={{
-                width: 33,
-                height: 33,
+                width: 32,
+                height: 32,
                 borderRadius: '50%',
                 bgcolor: (theme) => alpha(theme.palette.success.main, 0.15),
                 display: 'flex',
@@ -87,7 +87,7 @@ export default function RouteDetailsView({ values }: Props) {
                 boxShadow: 1,
               }}
             >
-              <PinDrop sx={{ color: 'success.main' }} />
+              <PinDrop sx={{ color: 'success.main', fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -106,8 +106,8 @@ export default function RouteDetailsView({ values }: Props) {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box
                 sx={{
-                  width: 33,
-                  height: 33,
+                  width: 32,
+                  height: 32,
                   borderRadius: '50%',
                   bgcolor: (theme) => alpha(theme.palette.info.main, 0.15),
                   display: 'flex',
@@ -116,7 +116,7 @@ export default function RouteDetailsView({ values }: Props) {
                   boxShadow: 1,
                 }}
               >
-                <AccessTime sx={{ color: 'info.main' }} />
+                <AccessTime sx={{ color: 'info.main', fontSize: 17 }} />
               </Box>
               <Box>
                 <Typography variant="body2" color="text.secondary">
@@ -150,7 +150,7 @@ export default function RouteDetailsView({ values }: Props) {
                   boxShadow: 1,
                 }}
               >
-                <AccessTime sx={{ color: 'error.main' }} />
+                <AccessTime sx={{ color: 'error.main', fontSize: 17 }} />
               </Box>
               <Box>
                 <Typography variant="body2" color="text.secondary">
@@ -172,8 +172,8 @@ export default function RouteDetailsView({ values }: Props) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box
               sx={{
-                width: 33,
-                height: 33,
+                width: 32,
+                height: 32,
                 borderRadius: '50%',
                 bgcolor: (theme) => alpha(theme.palette.info.main, 0.15),
                 display: 'flex',
@@ -182,7 +182,7 @@ export default function RouteDetailsView({ values }: Props) {
                 boxShadow: 1,
               }}
             >
-              <PinDrop sx={{ color: 'info.main' }} />
+              <PinDrop sx={{ color: 'info.main', fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">
@@ -199,8 +199,8 @@ export default function RouteDetailsView({ values }: Props) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box
               sx={{
-                width: 33,
-                height: 33,
+                width: 32,
+                height: 32,
                 borderRadius: '50%',
                 bgcolor: (theme) => alpha(theme.palette.info.main, 0.15),
                 display: 'flex',
@@ -209,7 +209,7 @@ export default function RouteDetailsView({ values }: Props) {
                 boxShadow: 1,
               }}
             >
-              <PinDrop sx={{ color: 'info.main' }} />
+              <PinDrop sx={{ color: 'info.main', fontSize: 17 }} />
             </Box>
             <Box>
               <Typography variant="body2" color="text.secondary">

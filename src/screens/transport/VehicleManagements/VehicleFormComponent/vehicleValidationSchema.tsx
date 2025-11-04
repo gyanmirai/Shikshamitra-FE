@@ -77,35 +77,153 @@ export const vehicleValidationSchema = [
 
   // Step 2: Vehicle Maintenance (with robust date validation)
   yup.object().shape({}),
+  // yup.object().shape({
+  //   insuranceCompany: yup
+  //     .string()
+  //     .trim()
+  //     .required('Insurance Company is required')
+  //     .max(50, 'Insurance Company cannot exceed 50 characters'),
+
+  //   policyNo: yup
+  //     .string()
+  //     .trim()
+  //     .required('Policy No. is required')
+  //     .max(30, 'Policy No. cannot exceed 30 characters'),
+
+  //   insuranceIssueDate: yup
+  //     .mixed()
+  //     .required('Issue Date is required')
+  //     .test(
+  //       'is-valid-dayjs',
+  //       'Issue Date must be a valid date',
+  //       (value) => value && dayjs(value as Dayjs).isValid()
+  //     ),
+
+  //   insuranceExpiryDate: yup
+  //     .mixed()
+  //     .required('Expiry Date is required')
+  //     .test(
+  //       'is-valid-dayjs',
+  //       'Expiry Date must be a valid date',
+  //       (value) => value && dayjs(value as Dayjs).isValid()
+  //     )
+  //     .test('is-after-issue-date', 'Expiry Date cannot be before Issue Date', function (value) {
+  //       const { insuranceIssueDate } = this.parent;
+  //       if (!value || !insuranceIssueDate) return true;
+  //       return dayjs(value as Dayjs).isSameOrAfter(dayjs(insuranceIssueDate), 'day');
+  //     }),
+
+  //   coverageAmount: yup
+  //     .number()
+  //     .transform((value, originalValue) => {
+  //       // Remove ₹, commas, spaces, etc.
+  //       if (typeof originalValue === 'string') {
+  //         const cleaned = originalValue.replace(/[₹,\s]/g, '');
+  //         return cleaned ? Number(cleaned) : undefined;
+  //       }
+  //       return value;
+  //     })
+  //     .required('Coverage Amount is required')
+  //     .min(0, 'Coverage Amount cannot be negative')
+  //     .max(10000000, 'Coverage Amount cannot exceed 1 crore'),
+
+  //   pucCertificateNo: yup
+  //     .string()
+  //     .trim()
+  //     .required('Certificate No. is required')
+  //     .max(30, 'Certificate No. cannot exceed 30 characters'),
+
+  //   pucIssueDate: yup
+  //     .mixed()
+  //     .required('Issue Date is required')
+  //     .test(
+  //       'is-valid-dayjs',
+  //       'Issue Date must be a valid date',
+  //       (value) => value && dayjs(value as Dayjs).isValid()
+  //     ),
+  //   pucExpiryDate: yup
+  //     .mixed()
+  //     .required('Expiry Date is required')
+  //     .test(
+  //       'is-valid-dayjs',
+  //       'Expiry Date must be a valid date',
+  //       (value) => value && dayjs(value as Dayjs).isValid()
+  //     )
+  //     .test('is-after-issue-date', 'Expiry Date cannot be before Issue Date', function (value) {
+  //       const { pucIssueDate } = this.parent;
+  //       if (!value || !pucIssueDate) return true;
+  //       return dayjs(value as Dayjs).isSameOrAfter(dayjs(pucIssueDate), 'day');
+  //     }),
+
+  //   fitnessCertificateNo: yup
+  //     .string()
+  //     .trim()
+  //     .required('Fitness Certificate No. is required')
+  //     .max(30, 'Fitness Certificate No. cannot exceed 30 characters'),
+
+  //   fitnessIssueDate: yup
+  //     .mixed()
+  //     .required('Issue Date is required')
+  //     .test(
+  //       'is-valid-dayjs',
+  //       'Issue Date must be a valid date',
+  //       (value) => value && dayjs(value as Dayjs).isValid()
+  //     ),
+
+  //   fitnessExpiryDate: yup
+  //     .mixed()
+  //     .required('Expiry Date is required')
+  //     .test(
+  //       'is-valid-dayjs',
+  //       'Expiry Date must be a valid date',
+  //       (value) => value && dayjs(value as Dayjs).isValid()
+  //     )
+  //     .test('is-after-issue-date', 'Expiry Date cannot be before Issue Date', function (value) {
+  //       const { fitnessIssueDate } = this.parent;
+  //       if (!value || !fitnessIssueDate) return true;
+  //       return dayjs(value as Dayjs).isSameOrAfter(dayjs(fitnessIssueDate), 'day');
+  //     }),
+
+  //   roadTaxReceiptNo: yup
+  //     .string()
+  //     .trim()
+  //     .required('Tax Receipt No. is required')
+  //     .max(30, 'Tax Receipt No. cannot exceed 30 characters'),
+
+  //   roadTaxIssueDate: yup
+  //     .mixed()
+  //     .required('Tax Issue Date is required')
+  //     .test(
+  //       'is-valid-dayjs',
+  //       'Tax Issue Date must be a valid date',
+  //       (value) => value && dayjs(value as Dayjs).isValid()
+  //     ),
+  // }),
   yup.object().shape({
     insuranceCompany: yup
       .string()
       .trim()
-      .required('Insurance Company is required')
-      .max(50, 'Insurance Company cannot exceed 50 characters'),
+      .max(50, 'Insurance Company cannot exceed 50 characters')
+      .nullable(),
 
-    policyNo: yup
-      .string()
-      .trim()
-      .required('Policy No. is required')
-      .max(30, 'Policy No. cannot exceed 30 characters'),
+    policyNo: yup.string().trim().max(30, 'Policy No. cannot exceed 30 characters').nullable(),
 
     insuranceIssueDate: yup
       .mixed()
-      .required('Issue Date is required')
+      .nullable()
       .test(
         'is-valid-dayjs',
         'Issue Date must be a valid date',
-        (value) => value && dayjs(value as Dayjs).isValid()
+        (value) => !value || (value && dayjs(value as Dayjs).isValid())
       ),
 
     insuranceExpiryDate: yup
       .mixed()
-      .required('Expiry Date is required')
+      .nullable()
       .test(
         'is-valid-dayjs',
         'Expiry Date must be a valid date',
-        (value) => value && dayjs(value as Dayjs).isValid()
+        (value) => !value || (value && dayjs(value as Dayjs).isValid())
       )
       .test('is-after-issue-date', 'Expiry Date cannot be before Issue Date', function (value) {
         const { insuranceIssueDate } = this.parent;
@@ -115,6 +233,7 @@ export const vehicleValidationSchema = [
 
     coverageAmount: yup
       .number()
+      .nullable()
       .transform((value, originalValue) => {
         // Remove ₹, commas, spaces, etc.
         if (typeof originalValue === 'string') {
@@ -123,31 +242,31 @@ export const vehicleValidationSchema = [
         }
         return value;
       })
-      .required('Coverage Amount is required')
       .min(0, 'Coverage Amount cannot be negative')
       .max(10000000, 'Coverage Amount cannot exceed 1 crore'),
 
     pucCertificateNo: yup
       .string()
       .trim()
-      .required('Certificate No. is required')
-      .max(30, 'Certificate No. cannot exceed 30 characters'),
+      .max(30, 'Certificate No. cannot exceed 30 characters')
+      .nullable(),
 
     pucIssueDate: yup
       .mixed()
-      .required('Issue Date is required')
+      .nullable()
       .test(
         'is-valid-dayjs',
         'Issue Date must be a valid date',
-        (value) => value && dayjs(value as Dayjs).isValid()
+        (value) => !value || (value && dayjs(value as Dayjs).isValid())
       ),
+
     pucExpiryDate: yup
       .mixed()
-      .required('Expiry Date is required')
+      .nullable()
       .test(
         'is-valid-dayjs',
         'Expiry Date must be a valid date',
-        (value) => value && dayjs(value as Dayjs).isValid()
+        (value) => !value || (value && dayjs(value as Dayjs).isValid())
       )
       .test('is-after-issue-date', 'Expiry Date cannot be before Issue Date', function (value) {
         const { pucIssueDate } = this.parent;
@@ -158,25 +277,25 @@ export const vehicleValidationSchema = [
     fitnessCertificateNo: yup
       .string()
       .trim()
-      .required('Fitness Certificate No. is required')
-      .max(30, 'Fitness Certificate No. cannot exceed 30 characters'),
+      .max(30, 'Fitness Certificate No. cannot exceed 30 characters')
+      .nullable(),
 
     fitnessIssueDate: yup
       .mixed()
-      .required('Issue Date is required')
+      .nullable()
       .test(
         'is-valid-dayjs',
         'Issue Date must be a valid date',
-        (value) => value && dayjs(value as Dayjs).isValid()
+        (value) => !value || (value && dayjs(value as Dayjs).isValid())
       ),
 
     fitnessExpiryDate: yup
       .mixed()
-      .required('Expiry Date is required')
+      .nullable()
       .test(
         'is-valid-dayjs',
         'Expiry Date must be a valid date',
-        (value) => value && dayjs(value as Dayjs).isValid()
+        (value) => !value || (value && dayjs(value as Dayjs).isValid())
       )
       .test('is-after-issue-date', 'Expiry Date cannot be before Issue Date', function (value) {
         const { fitnessIssueDate } = this.parent;
@@ -187,16 +306,16 @@ export const vehicleValidationSchema = [
     roadTaxReceiptNo: yup
       .string()
       .trim()
-      .required('Tax Receipt No. is required')
-      .max(30, 'Tax Receipt No. cannot exceed 30 characters'),
+      .max(30, 'Tax Receipt No. cannot exceed 30 characters')
+      .nullable(),
 
     roadTaxIssueDate: yup
       .mixed()
-      .required('Tax Issue Date is required')
+      .nullable()
       .test(
         'is-valid-dayjs',
         'Tax Issue Date must be a valid date',
-        (value) => value && dayjs(value as Dayjs).isValid()
+        (value) => !value || (value && dayjs(value as Dayjs).isValid())
       ),
   }),
 ];

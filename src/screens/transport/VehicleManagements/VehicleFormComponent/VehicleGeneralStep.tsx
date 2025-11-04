@@ -144,8 +144,8 @@ const VehicleGeneralStep = ({ formik }: VehicleGeneralStepProps) => {
               label="Year of Manufacture *"
               value={formik.values.yearOfManufacture}
               onChange={(e) => {
-                // Only allow numbers
-                const value = e.target.value.replace(/[^0-9]/g, '');
+                // Only allow numbers and limit to 4 digits
+                const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
                 formik.setFieldValue('yearOfManufacture', value);
               }}
               error={!!(formik.touched.yearOfManufacture && formik.errors.yearOfManufacture)}

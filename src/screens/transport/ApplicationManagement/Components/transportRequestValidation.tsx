@@ -7,7 +7,7 @@ export const transportValidationSchema = [
   }),
   // Step 2: Transport Application
   Yup.object({
-    searchStop: Yup.string().required('Search stop is required'),
+    searchStop: Yup.string().required('Stop is required'),
     pickupType: Yup.string().required('Pickup type is required'),
   }),
 ];

@@ -2,6 +2,7 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
@@ -13,6 +14,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { RouteStatusType, RouteStatusOptions, RouteStatusTypeColor } from 'src/enums/route-enum';
 import { useGetRouteManagementDataQuery } from 'src/redux/transport/vehicle-management/route-management-api';
 
 import ChangeStopStatusForm from './ChangeStopStatusForm';
@@ -36,17 +38,6 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
 
   const changeStatusDialog = useBoolean();
   const [selectedRoute, setSelectedRoute] = useState<IRoutesData | null>(null);
-
-  const getStatusColor = (status: string): LabelColor => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'success';
-      case 'inactive':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -86,8 +77,8 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
               setSelectedRoute(routeRow);
             }}
           >
-            <Iconify icon="solar:refresh-bold" sx={{ height: '16px', width: '16px' }} />
-            Visulialize Route
+            <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
+            Visualize Route
           </MenuItem>
         </MenuList>
       );
@@ -108,66 +99,64 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
               sticky: true,
               label: 'Route Name',
               align: 'left',
-              minWidth: '130px',
+              minWidth: 200,
             },
             {
               id: 'id',
-              label: 'Route ID',
+              label: 'Route Code',
               align: 'left',
-              minWidth: '100px',
+              minWidth: 130,
             },
             {
               id: 'startPoint',
               label: 'Start Point',
               align: 'left',
-              minWidth: '120px',
+              minWidth: 120,
             },
             {
               id: 'endPoint',
               label: 'End Point',
               align: 'left',
-              minWidth: '120px',
+              minWidth: 120,
             },
             {
               id: 'distance',
               label: 'Distance',
               align: 'left',
-              minWidth: '100px',
+              minWidth: 100,
             },
             {
               id: 'stops',
               label: 'Stops',
               align: 'left',
-              minWidth: '80px',
+              filterType: 'number',
+              minWidth: 80,
             },
             {
               id: 'capacity',
               label: 'Capacity',
               align: 'left',
-              minWidth: '100px',
+              filterType: 'number',
+              minWidth: 100,
             },
             {
               id: 'students',
               label: 'Students',
               align: 'left',
-              minWidth: '100px',
+              filterType: 'number',
+              minWidth: 100,
             },
             {
               id: 'status',
               label: 'Status',
-              sticky: true,
               align: 'left',
-              minWidth: '100px',
-              render(value) {
-                return (
-                  <Label
-                    variant="soft"
-                    color={getStatusColor(value)}
-                    sx={{ textTransform: 'capitalize' }}
-                  >
-                    {value}
-                  </Label>
-                );
+              sticky: true,
+              minWidth: 80,
+              filterType: 'enum',
+              enumOptions: RouteStatusOptions,
+              render: (value) => {
+                const color = RouteStatusTypeColor[value as RouteStatusType] as LabelColor;
+                return <Label color={color}>{RouteStatusType[value]}</Label>;
               },
             },
             {
@@ -177,6 +166,7 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
               isFilter: false,
               isSort: false,
               sticky: true,
+              minWidth: 60,
               render(value, row) {
                 return (
                   <ThreeDotsActions
@@ -226,7 +216,7 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
         <ChangeStopStatusForm
           isOpen={changeStatusDialog.value}
           onClose={handleClose}
-          stopData={selectedRoute}
+          routeData={selectedRoute}
           onStatusChange={handleStatusChange}
         />
       </CustomDialog>

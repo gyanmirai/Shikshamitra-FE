@@ -74,7 +74,7 @@ const ZoneAreaSettingScreen = () => {
             Zone/Area
           </Button>
         }
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 1, mb: 2 }}
       />
       <ZoneAreaTable
         onDelete={(data) => {

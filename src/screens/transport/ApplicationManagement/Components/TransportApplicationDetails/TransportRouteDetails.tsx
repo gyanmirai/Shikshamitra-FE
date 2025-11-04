@@ -30,11 +30,11 @@ const TransportApplicationRouteDetail = ({
 
   const theme = useTheme();
   return (
-    <Grid container spacing={1} height="calc(100vh - 230px)" mt={2}>
+    <Grid container spacing={1} mt={2}>
       <>
         <Grid size={{ xs: 3 }} height="100%">
           <SectionCard title={`Suggested Routes : ${routeData?.length}`}>
-            <Scrollbar sx={{ height: 'calc(100% - 80px)' }}>
+            <Scrollbar>
               {routeData?.length ? (
                 routeData.map((route: any, index: any) => (
                   <Box

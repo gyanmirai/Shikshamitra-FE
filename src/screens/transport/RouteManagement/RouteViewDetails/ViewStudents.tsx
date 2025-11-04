@@ -1,11 +1,12 @@
 import React from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Button, Typography, DialogActions } from '@mui/material';
 import { useGetAvailableRoutesQuery } from 'src/redux/transport/vehicle-management/route-management-api';
 
 interface Student {
@@ -62,7 +63,7 @@ const ViewStudents: React.FC<ViewStudentsProps> = ({ open, onClose, routeData })
         </Box>
       }
     >
-      <Box sx={{ p: 3 }}>
+      <Scrollbar sx={{ height: '300px', p: 2 }}>
         <CustomizableTable
           tableId="assigned-students-table"
           noDataText="No Students Found"
@@ -137,27 +138,18 @@ const ViewStudents: React.FC<ViewStudentsProps> = ({ open, onClose, routeData })
           ]}
           data={mockStudentsData || []}
         />
-
-        {/* Footer with Cancel button */}
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            mt: 3,
-            pt: 2,
-            borderTop: '1px solid #e0e0e0',
-          }}
+      </Scrollbar>
+      {/* Footer with Cancel button */}
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          variant="outlined"
+          onClick={onClose}
+          startIcon={<Iconify icon="material-symbols:close" />}
+          size="small"
         >
-          <Button
-            variant="outlined"
-            onClick={onClose}
-            startIcon={<Iconify icon="material-symbols:close" />}
-            sx={{ minWidth: 120 }}
-          >
-            Cancel
-          </Button>
-        </Box>
-      </Box>
+          Cancel
+        </Button>
+      </DialogActions>
     </CustomDialog>
   );
 };

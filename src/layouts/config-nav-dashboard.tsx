@@ -1625,6 +1625,7 @@ const transportModule = {
           path: '/transport/dashboard',
           _action: 'transport-dashboard',
           shortcutKey: 'Alt+T+1',
+          caption: 'Coming Soon',
           shortcutKeyName: 'Alt+T+1',
         },
         {
@@ -1648,7 +1649,6 @@ const transportModule = {
           shortcutKey: 'Alt+T+3',
           shortcutKeyName: 'Alt+T+3',
         },
-
         {
           title: ' Transport Staff Management',
           path: '/transport/driverManagement',
@@ -1676,11 +1676,13 @@ const transportModule = {
           _action: 'reports-analytics',
           shortcutKey: 'Alt+T+6',
           shortcutKeyName: 'Alt+T+6',
+          caption: 'Coming Soon',
         },
         {
           title: 'Notification',
           path: '/transport/transport-notification',
           _action: 'transport-notification',
+          caption: 'Coming Soon',
         },
         {
           title: 'Settings',
