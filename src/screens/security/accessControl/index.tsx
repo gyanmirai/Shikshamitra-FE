@@ -341,6 +341,8 @@ const BoardScreenStep = ({
     [allBoards]
   );
 
+  console.log(nodeData, 'nodeData');
+
   // Helper function to find all child nodes
   const findAllChildren = (node: any, step = 0): any[] => {
     let childIds: string[] = step > 0 ? [node] : [];

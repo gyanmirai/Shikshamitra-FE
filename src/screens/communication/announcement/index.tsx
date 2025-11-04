@@ -8,14 +8,14 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import SchoolWiseAnnounsement from './schoolWiseAnnounsement';
+import Announsement from './schoolWiseAnnounsement';
 import ClassSpecificAnnouncement from './classSpecificAnnouncement';
 
 const TABS = [
   {
     value: 'schoolWiseAnnounsement',
     label: 'School Specific Announsement',
-    component: (props?: TabComponentType) => <SchoolWiseAnnounsement {...props} />,
+    component: (props?: TabComponentType) => <Announsement {...props} />,
   },
   {
     value: 'classSpecificAnnouncement',

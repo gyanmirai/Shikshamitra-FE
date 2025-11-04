@@ -9,18 +9,16 @@ import type { UsePopoverReturn } from 'src/components/custom-popover';
 
 import dayjs from 'dayjs';
 import { useState } from 'react';
-import { Box } from '@mui/material';
 import Stack from '@mui/material/Stack';
 import { useSelector } from 'react-redux';
 import Button from '@mui/material/Button';
-import MenuList from '@mui/material/MenuList';
-import MenuItem from '@mui/material/MenuItem';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { formatStr } from 'src/utils/format-time';
 import { DateCalendar } from '@mui/x-date-pickers';
 import LinearProgress from '@mui/material/LinearProgress';
+import { Box, Badge, Tooltip, ButtonGroup } from '@mui/material';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
@@ -48,6 +46,7 @@ type Props = {
   renderCompToHeader?: React.ReactNode;
   calendarRef?: React.RefObject<Calendar | FullCalendar | null>;
   format?: string;
+  showCalendarFilter?: boolean;
   setDate?: Dispatch<SetStateAction<string | Date>>;
 };
 
@@ -66,6 +65,7 @@ export function CalendarToolbar({
   calendarRef,
   format,
   setDate,
+  showCalendarFilter = false,
 }: Props) {
   const popover = usePopover();
   const datePopover = usePopover();
@@ -83,16 +83,49 @@ export function CalendarToolbar({
         sx={{ p: 2.5, pr: 2, position: 'relative' }}
       >
         <Box display="flex" gap={2}>
-          <Button
+          <ButtonGroup
             size="small"
-            color="inherit"
-            onClick={popover.onOpen}
-            startIcon={<Iconify icon={selectedItem.icon} />}
-            endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
-            sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+            sx={{
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              borderRadius: (theme) => theme.shape.borderRadius,
+              px: 1,
+              py: 0.5,
+              backgroundColor: (theme) => theme.vars.palette.background.paper,
+            }}
           >
-            {selectedItem.label}
-          </Button>
+            {viewOptions.map((viewOption) => (
+              <Tooltip title={viewOption.label} key={viewOption.value}>
+                <Button
+                  key={viewOption.value}
+                  onClick={() => {
+                    popover.onClose();
+                    onChangeView(viewOption.value);
+                  }}
+                  sx={{
+                    border: 'none',
+                    backgroundColor: (theme) =>
+                      viewOption.value === view ? theme.palette.action.selected : 'transparent',
+                    color: (theme) => theme.vars.palette.text.primary,
+                    borderRadius: (theme) => `${theme.shape.borderRadius} !important`,
+                    p: 0.5,
+                    minWidth: 32,
+                    '&:hover': {
+                      border: 'none',
+                      boxShadow: 'var(--shadows-1)',
+                    },
+                    '& .MuiButton-startIcon': {
+                      margin: 0,
+                    },
+                  }}
+                >
+                  <Iconify
+                    // sx={{ color: (theme) => theme.palette.text.primary }}
+                    icon={viewOption.icon}
+                  />
+                </Button>
+              </Tooltip>
+            ))}
+          </ButtonGroup>
           {renderCompToHeader}
         </Box>
         <Stack direction="row" alignItems="center" spacing={1}>
@@ -114,11 +147,13 @@ export function CalendarToolbar({
             Today
           </Button>
 
-          {/* <IconButton onClick={onOpenFilters}>
-            <Badge color="error" variant="dot" invisible={!canReset}>
-              <Iconify icon="ic:round-filter-list" />
-            </Badge>
-          </IconButton> */}
+          {showCalendarFilter && (
+            <IconButton onClick={onOpenFilters}>
+              <Badge color="error" variant="dot" invisible={!canReset}>
+                <Iconify icon="ic:round-filter-list" />
+              </Badge>
+            </IconButton>
+          )}
         </Stack>
 
         {loading && (
@@ -135,29 +170,6 @@ export function CalendarToolbar({
           />
         )}
       </Stack>
-
-      <CustomPopover
-        open={popover.open}
-        anchorEl={popover.anchorEl}
-        onClose={popover.onClose}
-        slotProps={{ arrow: { placement: 'top-left' } }}
-      >
-        <MenuList>
-          {viewOptions.map((viewOption) => (
-            <MenuItem
-              key={viewOption.value}
-              selected={viewOption.value === view}
-              onClick={() => {
-                popover.onClose();
-                onChangeView(viewOption.value);
-              }}
-            >
-              <Iconify icon={viewOption.icon} />
-              {viewOption.label}
-            </MenuItem>
-          ))}
-        </MenuList>
-      </CustomPopover>
 
       <CustomPopover
         open={datePopover.open}

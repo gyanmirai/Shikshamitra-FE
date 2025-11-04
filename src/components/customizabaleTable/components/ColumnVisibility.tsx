@@ -60,7 +60,8 @@ export const ColumnVisibility: React.FC<ColumnVisibilityProps> = ({
             {columns
               .filter(
                 (column) =>
-                  column?.label?.trim() &&
+                  typeof column?.label === 'string' &&
+                  column.label.trim() &&
                   column.label.toLowerCase().includes(columnSearchTerm.toLowerCase())
               )
               .map((column) => (

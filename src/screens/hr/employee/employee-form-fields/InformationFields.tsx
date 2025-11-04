@@ -1,3 +1,4 @@
+import type { GridProps, PaperProps } from '@mui/material';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
@@ -51,13 +52,17 @@ export const SectionCard = ({
   children,
   headerContent = null,
   isLoading = false,
+  paperProps = {},
+  gridProps = {},
 }: {
   title?: string;
   children: React.ReactNode;
   headerContent?: React.ReactNode;
   isLoading?: boolean;
+  paperProps?: PaperProps;
+  gridProps?: GridProps;
 }) => (
-  <Paper sx={{ p: 2, mb: 3, position: 'relative' }} elevation={6}>
+  <Paper sx={{ p: 2, mb: 3, position: 'relative', ...paperProps.sx }} elevation={6}>
     {isLoading && <LinearProgress sx={{ position: 'absolute', left: 0, top: 0, width: '100%' }} />}
     <Box
       display="flex"
@@ -72,7 +77,7 @@ export const SectionCard = ({
       )}
       {headerContent}
     </Box>
-    <Grid container spacing={3} sx={{ display: 'flex', alignItems: 'center' }}>
+    <Grid container spacing={3} sx={{ display: 'flex', alignItems: 'center', ...gridProps.sx }}>
       {children}
     </Grid>
   </Paper>

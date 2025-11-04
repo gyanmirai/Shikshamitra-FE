@@ -1,5 +1,6 @@
 import React from 'react';
+import CalendarDashboard from 'src/screens/calendar/Dashboard';
 
-const page = () => <div>page</div>;
+const page = () => <CalendarDashboard />;
 
 export default page;

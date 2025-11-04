@@ -7,14 +7,23 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import GroupForm from './Components/GroupForm';
 import GroupTable from './Components/GroupTable';
+// View-only dialog component for rich read presentation of a group's data
+import GroupViewDialog from './Components/GroupViewDialog';
+
+import type { IGroup } from './Components/type';
 
 const GroupManagement = () => {
-  const [open, setOpen] = useState(false);
-  const [editingGroup, setEditingGroup] = useState(null);
+  const [open, setOpen] = useState(false); // controls form (add/edit) visibility
+  const [editingGroup, setEditingGroup] = useState<IGroup | null>(null);
+  const [viewingGroup, setViewingGroup] = useState<IGroup | null>(null); // controls view dialog
 
   const handleCloseDialog = () => {
     setOpen(false);
     setEditingGroup(null);
+  };
+
+  const handleCloseView = () => {
+    setViewingGroup(null);
   };
 
   return (
@@ -45,6 +54,23 @@ const GroupManagement = () => {
             handleCloseDialog();
           }}
         />
+      ) : viewingGroup ? (
+        <CustomBreadcrumbs
+          heading="Group Details"
+          description="Detailed view of the selected calendar group including boards, mediums, classes, divisions, roles and audience breakdown."
+          links={[
+            { name: 'Calendar', href: '/calendar/dashboard' },
+            {
+              name: 'Group Management',
+              href: '/calendar/group-management',
+              onClick: handleCloseView,
+            },
+            { name: viewingGroup.groupName || 'Group Details' },
+          ]}
+          sx={{ px: 1, mb: 2 }}
+          isBack
+          onBack={handleCloseView}
+        />
       ) : (
         <CustomBreadcrumbs
           heading="Group Management"
@@ -72,6 +98,8 @@ const GroupManagement = () => {
             onClose={handleCloseDialog}
           />
         </Card>
+      ) : viewingGroup ? (
+        <GroupViewDialog open={!!viewingGroup} group={viewingGroup} onClose={handleCloseView} />
       ) : (
         <GroupTable
           onEdit={(group) => {
@@ -82,7 +110,7 @@ const GroupManagement = () => {
             /* TODO: implement delete logic */
           }}
           onView={(row) => {
-            /* TODO: implement view logic */
+            setViewingGroup(row as IGroup);
           }}
           setOpen={setOpen}
         />
@@ -91,3 +119,9 @@ const GroupManagement = () => {
   );
 };
 export default GroupManagement;
+
+// View Feature Notes:
+// - Triggered via ThreeDotsActions handleViewClick in GroupTable.
+// - Sets viewingGroup which switches layout to breadcrumb + GroupViewDialog.
+// - GroupViewDialog is read-only; closing resets viewingGroup to null and returns to table.
+// - Add/Edit flow is unaffected; view state is mutually exclusive with form state.

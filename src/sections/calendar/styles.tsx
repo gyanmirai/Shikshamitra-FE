@@ -138,6 +138,5 @@ export const StyledCalendar = styled('div')(({ theme }) => ({
 
   '& .ownEvent': {
     border: 'none',
-    borderLeft: '5px solid #000',
   },
 }));

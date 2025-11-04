@@ -30,7 +30,7 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
             style={getStickyStyle(column)}
             onClick={() => onSort(column.id, column.originalId)}
           >
-            {column.label}
+            {column.renderColumn ? column.renderColumn(column) : column.label}
             {sorts.find((sort) => sort.column === column.id)?.direction === 'asc' ? '↑' : '↓'}
           </TableCell>
         ) : null

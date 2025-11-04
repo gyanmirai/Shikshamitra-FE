@@ -9,13 +9,13 @@ export interface IColumnFilterAnchor {
 
 export interface IColumn {
   id: string;
-  label: string;
+  label: React.ReactNode; // allow rich header content
   filterType?: 'string' | 'number' | 'date' | 'enum' | 'formattedNumber';
   isFilter?: boolean;
   minWidth?: number | string;
   align?: 'right' | 'left' | 'center';
   render?: (value: any, row: IData) => React.ReactNode;
-  renderColumn?: (value: IColumn) => React.ReactNode;
+  renderColumn?: (col: IColumn) => React.ReactNode; // header specific custom render
   children?: (row: IData) => React.ReactNode;
   onSort?: (a: any, b: any) => any[];
   isSort?: boolean;

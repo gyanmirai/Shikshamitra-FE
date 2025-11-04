@@ -1,3 +1,4 @@
+import type { CardProps } from '@mui/material';
 import type { ICalendarEvent } from 'src/types/calendar';
 import type { EventClickArg, CalendarOptions, EventSourceInput } from '@fullcalendar/core';
 
@@ -33,6 +34,9 @@ type CommonCalenderProps = CalendarOptions & {
     icon: string;
   }[];
   renderCompToHeader?: React.ReactNode;
+  showCalendarFilter?: boolean;
+  onOPenFiler?: () => void;
+  containerProps?: CardProps;
 };
 
 const CommonCalender = ({
@@ -47,6 +51,9 @@ const CommonCalender = ({
   formate,
   viewOptions,
   renderCompToHeader = null,
+  showCalendarFilter = false,
+  onOPenFiler = () => {},
+  containerProps = {},
   ...props
 }: CommonCalenderProps) => {
   const theme = useTheme();
@@ -89,7 +96,7 @@ const CommonCalender = ({
         },
       }}
     >
-      <Card sx={{ ...flexProps, minHeight: '70vh' }}>
+      <Card sx={{ minHeight: '70vh', ...flexProps }} {...containerProps}>
         <StyledCalendar sx={{ ...flexProps, '.fc.fc-media-screen': { flex: '1 1 auto' } }}>
           {showCalendarToolbar && (
             <CalendarToolbar
@@ -104,9 +111,10 @@ const CommonCalender = ({
               onPrevDate={onDatePrev}
               onToday={onDateToday}
               onChangeView={onChangeView}
-              onOpenFilters={() => {}}
+              onOpenFilters={onOPenFiler}
               viewOptions={viewOptions as any}
               renderCompToHeader={renderCompToHeader}
+              showCalendarFilter={showCalendarFilter}
             />
           )}
 
