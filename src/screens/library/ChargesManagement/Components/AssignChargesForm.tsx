@@ -3,11 +3,15 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import Image from 'next/image';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
+import { ExpandMore } from '@mui/icons-material';
+import noCover from 'src/assets/icons/no-cover.png';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -16,15 +20,16 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import {
   Box,
   Grid,
-  Card,
-  Paper,
   Stack,
   Button,
   Avatar,
   TextField,
+  Accordion,
   Typography,
-  CardContent,
   DialogActions,
+  CircularProgress,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 
 import { assignLibraryChargeInitialValues } from './AssignChargeInitialValues';
@@ -258,20 +263,114 @@ function fillEditData(editData: any) {
 
 const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [expandedMemberAccordion, setExpandedMemberAccordion] = useState(false);
+  const [loadingMember, setLoadingMember] = useState(false);
+  const [expandedBookAccordion, setExpandedBookAccordion] = useState(false);
+  const [loadingBook, setLoadingBook] = useState(false);
 
   const formik = useFormik({
     initialValues: assignLibraryChargeInitialValues(fillEditData(editData)),
     validationSchema: assignLibraryChargeValidationSchema(currentYear),
     onSubmit: (values) => {
-      // // const bookTitle = selectedBook?.title || values.bookTitle || '';
-      // shikshaMitraToast.success({
-      //   message: editData
-      //     ? `Charges for "${bookTitle}" updated successfully`
-      //     : `Charges for "${bookTitle}" assigned successfully`,
-      // });
       onClose(null, true);
     },
   });
+
+  // Get selected member
+  const selectedMember = useMemo(() => {
+    if (!formik.values.memberId) return null;
+    return staticMembers.find((m) => m.memberId === formik.values.memberId) || null;
+  }, [formik.values.memberId]);
+
+  // Member details using useMemo
+  const memberDetails = useMemo(() => {
+    if (!selectedMember) return [];
+    const details = [
+      { label: 'Member Name', icon: 'mdi:account', value: selectedMember.name || '—' },
+      { label: 'Email', icon: 'mdi:email', value: selectedMember.email || '—' },
+      {
+        label: 'Member ID',
+        icon: 'mdi:card-account-details',
+        value: selectedMember.memberId || '—',
+      },
+      { label: 'Phone', icon: 'mdi:phone', value: selectedMember.contactNo || '—' },
+      { label: 'Role', icon: 'mdi:account-group', value: selectedMember.role || '—' },
+      { label: 'Join Date', icon: 'mdi:calendar-check', value: selectedMember.joinDate || '—' },
+    ];
+
+    if (selectedMember.role === 'Student') {
+      details.splice(
+        3,
+        0,
+        {
+          label: 'Class/Division',
+          icon: 'mdi:school',
+          value: `${selectedMember.class || '—'} - ${selectedMember.division || '—'}`,
+        },
+        {
+          label: 'Roll No.',
+          icon: 'mdi:format-list-numbered',
+          value: selectedMember.rollNo || '—',
+        },
+        {
+          label: 'GR No.',
+          icon: 'mdi:card-account-details-outline',
+          value: selectedMember.grNo || '—',
+        }
+      );
+    }
+
+    return details;
+  }, [selectedMember]);
+
+  // Get selected book
+  const selectedBook = useMemo(() => {
+    if (formik.values.bookNumber === 'Acc001') {
+      return {
+        bookNumber: 'Acc001',
+        title: 'Introduction to Physics',
+        author: 'Dr. John Smith',
+        isbn: '978-0123456789',
+        category: 'Science',
+        publisher: 'Academic Press',
+        edition: '3rd Edition',
+        coverImage: '/placeholder-book.jpg',
+      };
+    }
+    return null;
+  }, [formik.values.bookNumber]);
+
+  // Book details using useMemo
+  const bookDetails = useMemo(() => {
+    if (!selectedBook) return [];
+    return [
+      { label: 'Book Title', icon: 'mdi:book-open-page-variant', value: selectedBook.title || '—' },
+      { label: 'Accession No.', icon: 'mdi:barcode', value: selectedBook.bookNumber || '—' },
+      { label: 'Author', icon: 'mdi:account-edit', value: selectedBook.author || '—' },
+      { label: 'ISBN', icon: 'mdi:barcode-scan', value: selectedBook.isbn || '—' },
+      { label: 'Publisher', icon: 'mdi:domain', value: selectedBook.publisher || '—' },
+      { label: 'Edition', icon: 'mdi:book-variant', value: selectedBook.edition || '—' },
+      { label: 'Category', icon: 'mdi:shape', value: selectedBook.category || '—' },
+    ];
+  }, [selectedBook]);
+
+  // Handle member search with loading
+  const handleMemberIdChange = (value: string) => {
+    formik.setFieldValue('memberId', value);
+    if (value) {
+      setLoadingMember(true);
+      setTimeout(() => setLoadingMember(false), 300);
+    }
+  };
+
+  // Handle book number change with loading
+  const handleBookNumberChange = (value: string) => {
+    formik.setFieldValue('bookNumber', value);
+    if (value) {
+      setLoadingBook(true);
+      setTimeout(() => setLoadingBook(false), 300);
+    }
+  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -285,7 +384,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                 size="small"
                 fullWidth
                 value={formik.values.memberId}
-                onChange={(e) => formik.setFieldValue('memberId', e.target.value)}
+                onChange={(e) => handleMemberIdChange(e.target.value)}
                 error={!!(formik.touched.memberId && formik.errors.memberId)}
                 helperText={(formik.touched.memberId && formik.errors.memberId) as string}
                 placeholder="Enter member ID (e.g., M001, M002, M003)"
@@ -295,239 +394,184 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
 
           {/* Member Details Display */}
           {(() => {
-            const selectedMember = staticMembers.find((m) => m.memberId === formik.values.memberId);
+            if (loadingMember) {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <Box display="flex" justifyContent="center" alignItems="center" py={2}>
+                    <CircularProgress size={20} />
+                  </Box>
+                </Grid>
+              );
+            }
 
             if (selectedMember) {
               return (
                 <Grid size={{ xs: 12 }}>
-                  <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
-                    <CardContent sx={{ padding: '0 !important' }}>
+                  <Accordion
+                    expanded={expandedMemberAccordion}
+                    onChange={() => setExpandedMemberAccordion(!expandedMemberAccordion)}
+                    sx={{
+                      boxShadow: 1,
+                      borderRadius: '12px !important',
+                      '&:before': { display: 'none' },
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      mb: 2,
+                    }}
+                  >
+                    <AccordionSummary
+                      expandIcon={<ExpandMore />}
+                      sx={{
+                        '& .MuiAccordionSummary-content': {
+                          my: 1.5,
+                          display: 'block',
+                        },
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        color="primary.main"
+                        mb={expandedMemberAccordion ? 0 : 1}
+                      >
+                        Member Details
+                      </Typography>
+
+                      {/* Show preview when collapsed */}
+                      {!expandedMemberAccordion && (
+                        <Grid container spacing={2} mt={0.5}>
+                          <Grid size={{ xs: 12, sm: 4 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              <Iconify icon="mdi:account" width={18} color="text.secondary" />
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  display="block"
+                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                >
+                                  Member Name:
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={600}
+                                  color="text.primary"
+                                  sx={{ fontSize: '0.75rem' }}
+                                  noWrap
+                                >
+                                  {selectedMember.name || '—'}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 4 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              <Iconify
+                                icon="mdi:card-account-details"
+                                width={18}
+                                color="text.secondary"
+                              />
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  display="block"
+                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                >
+                                  Member ID:
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={600}
+                                  color="text.primary"
+                                  sx={{ fontSize: '0.75rem' }}
+                                  noWrap
+                                >
+                                  {selectedMember.memberId || '—'}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 4 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              <Iconify icon="mdi:account-group" width={18} color="text.secondary" />
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  display="block"
+                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                >
+                                  Role:
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={600}
+                                  color="text.primary"
+                                  sx={{ fontSize: '0.75rem' }}
+                                  noWrap
+                                >
+                                  {selectedMember.role || '—'}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          </Grid>
+                        </Grid>
+                      )}
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ pt: 0 }}>
                       <Grid container spacing={2}>
-                        {/* Avatar on the left */}
+                        {/* Avatar */}
                         <Grid
                           size={{ xs: 12, md: 2 }}
-                          sx={{ display: 'flex', alignItems: 'center' }}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            minHeight: 150,
+                          }}
                         >
-                          <Avatar src={selectedMember.avatarUrl} sx={{ width: 80, height: 80 }} />
+                          <Avatar
+                            src={selectedMember.avatarUrl}
+                            sx={{
+                              width: 80,
+                              height: 80,
+                            }}
+                          />
                         </Grid>
-
-                        {/* Member details on the right */}
+                        {/* Member Details Grid - 4 per row */}
                         <Grid size={{ xs: 12, md: 10 }}>
-                          <Grid container spacing={1}>
-                            {/* Member Name */}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Paper
-                                variant="outlined"
-                                sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                              >
-                                <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                                  <Iconify icon="mdi:account" width={22} />
-                                  <Box>
+                          <Grid container spacing={2}>
+                            {memberDetails.map((d) => (
+                              <Grid key={d.label} size={{ xs: 12, sm: 6, md: 3 }}>
+                                <Stack direction="row" spacing={1.5} alignItems="center">
+                                  <Iconify icon={d.icon} width={20} color="text.secondary" />
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
                                     <Typography
                                       variant="caption"
                                       color="text.secondary"
-                                      textTransform="uppercase"
+                                      display="block"
+                                      sx={{ fontSize: '0.7rem', lineHeight: 1.2 }}
                                     >
-                                      Member Name
+                                      {d.label}:
                                     </Typography>
-                                    <Typography variant="body1" fontWeight={600}>
-                                      {selectedMember.name}
-                                    </Typography>
-                                  </Box>
-                                </Stack>
-                              </Paper>
-                            </Grid>
-                            {/* Member ID */}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Paper
-                                variant="outlined"
-                                sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                              >
-                                <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                                  <Iconify icon="mdi:card-account-details" width={22} />
-                                  <Box>
                                     <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                      textTransform="uppercase"
+                                      variant="body2"
+                                      fontWeight={600}
+                                      color="text.primary"
+                                      sx={{ fontSize: '0.8rem' }}
+                                      noWrap
                                     >
-                                      Member ID
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight={600}>
-                                      {selectedMember.memberId}
+                                      {d.value}
                                     </Typography>
                                   </Box>
                                 </Stack>
-                              </Paper>
-                            </Grid>
-                            {/* Email */}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Paper
-                                variant="outlined"
-                                sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                              >
-                                <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                                  <Iconify icon="mdi:email" width={22} />
-                                  <Box>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                      textTransform="uppercase"
-                                    >
-                                      Email
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight={600}>
-                                      {selectedMember.email}
-                                    </Typography>
-                                  </Box>
-                                </Stack>
-                              </Paper>
-                            </Grid>
-                            {/* Student-specific fields */}
-                            {selectedMember.role === 'Student' && (
-                              <>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                  <Paper
-                                    variant="outlined"
-                                    sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                                  >
-                                    <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                                      <Iconify icon="mdi:school" width={22} />
-                                      <Box>
-                                        <Typography
-                                          variant="caption"
-                                          color="text.secondary"
-                                          textTransform="uppercase"
-                                        >
-                                          Class/Division
-                                        </Typography>
-                                        <Typography variant="body1" fontWeight={600}>
-                                          {selectedMember.class}-{selectedMember.division}
-                                        </Typography>
-                                      </Box>
-                                    </Stack>
-                                  </Paper>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                  <Paper
-                                    variant="outlined"
-                                    sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                                  >
-                                    <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                                      <Iconify icon="mdi:format-list-numbered" width={22} />
-                                      <Box>
-                                        <Typography
-                                          variant="caption"
-                                          color="text.secondary"
-                                          textTransform="uppercase"
-                                        >
-                                          Roll No.
-                                        </Typography>
-                                        <Typography variant="body1" fontWeight={600}>
-                                          {selectedMember.rollNo || 'N/A'}
-                                        </Typography>
-                                      </Box>
-                                    </Stack>
-                                  </Paper>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                  <Paper
-                                    variant="outlined"
-                                    sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                                  >
-                                    <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                                      <Iconify icon="mdi:card-account-details-outline" width={22} />
-                                      <Box>
-                                        <Typography
-                                          variant="caption"
-                                          color="text.secondary"
-                                          textTransform="uppercase"
-                                        >
-                                          GR No.
-                                        </Typography>
-                                        <Typography variant="body1" fontWeight={600}>
-                                          {selectedMember.grNo || 'N/A'}
-                                        </Typography>
-                                      </Box>
-                                    </Stack>
-                                  </Paper>
-                                </Grid>
-                              </>
-                            )}
-                            {/* Phone */}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Paper
-                                variant="outlined"
-                                sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                              >
-                                <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                                  <Iconify icon="mdi:phone" width={22} />
-                                  <Box>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                      textTransform="uppercase"
-                                    >
-                                      Phone
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight={600}>
-                                      {selectedMember.contactNo}
-                                    </Typography>
-                                  </Box>
-                                </Stack>
-                              </Paper>
-                            </Grid>
-                            {/* Member Type */}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Paper
-                                variant="outlined"
-                                sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                              >
-                                <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                                  <Iconify icon="mdi:account-group" width={22} />
-                                  <Box>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                      textTransform="uppercase"
-                                    >
-                                      Member Type
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight={600}>
-                                      {selectedMember.role}
-                                    </Typography>
-                                  </Box>
-                                </Stack>
-                              </Paper>
-                            </Grid>
-                            {/* Join Date */}
-                            <Grid size={{ xs: 12, md: 4 }}>
-                              <Paper
-                                variant="outlined"
-                                sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                              >
-                                <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                                  <Iconify icon="mdi:calendar-check" width={22} />
-                                  <Box>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                      textTransform="uppercase"
-                                    >
-                                      Join Date
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight={600}>
-                                      {selectedMember.joinDate || 'N/A'}
-                                    </Typography>
-                                  </Box>
-                                </Stack>
-                              </Paper>
-                            </Grid>
+                              </Grid>
+                            ))}
                           </Grid>
                         </Grid>
                       </Grid>
-                    </CardContent>
-                  </Card>
+                    </AccordionDetails>
+                  </Accordion>
                 </Grid>
               );
             }
@@ -535,23 +579,21 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
             if (formik.values.memberId !== '') {
               return (
                 <Grid size={{ xs: 12 }}>
-                  <div
-                    style={{
-                      padding: '12px',
-                      backgroundColor: '#ffebee',
-                      borderRadius: '4px',
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      bgcolor: '#ffebee',
+                      borderRadius: 1,
                       border: '1px solid #f44336',
                       color: '#d32f2f',
                       textAlign: 'center',
                     }}
                   >
-                    Member with ID &quot;{formik.values.memberId}&quot; not found. Available IDs:{' '}
-                    {staticMembers.map((m) => m.id).join(', ')}
-                  </div>
+                    Member with ID &quot;{formik.values.memberId}&quot; not found.
+                  </Box>
                 </Grid>
               );
             }
-
             return null;
           })()}
 
@@ -563,7 +605,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                 size="small"
                 fullWidth
                 value={formik.values.bookNumber}
-                onChange={(e) => formik.setFieldValue('bookNumber', e.target.value)}
+                onChange={(e) => handleBookNumberChange(e.target.value)}
                 error={!!(formik.touched.bookNumber && formik.errors.bookNumber)}
                 helperText={(formik.touched.bookNumber && formik.errors.bookNumber) as string}
                 placeholder="Enter Accession no (e.g., Acc001)"
@@ -572,188 +614,210 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
           </Grid>
 
           {/* Book Details Display */}
-          {formik.values.bookNumber === 'Acc001' ? (
-            <Grid size={{ xs: 12 }}>
-              <Card variant="outlined" sx={{ boxShadow: 'var(--shadows-8)', p: 2 }}>
-                <CardContent sx={{ p: '0 !important' }}>
-                  <Grid container spacing={2}>
-                    {/* Book Image */}
-                    <Grid
-                      size={{ xs: 12, md: 3 }}
-                      sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          {(() => {
+            if (loadingBook) {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <Box display="flex" justifyContent="center" alignItems="center" py={2}>
+                    <CircularProgress size={20} />
+                  </Box>
+                </Grid>
+              );
+            }
+
+            if (selectedBook) {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <Accordion
+                    expanded={expandedBookAccordion}
+                    onChange={() => setExpandedBookAccordion(!expandedBookAccordion)}
+                    sx={{
+                      boxShadow: 1,
+                      borderRadius: '12px !important',
+                      '&:before': { display: 'none' },
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      mb: 2,
+                    }}
+                  >
+                    <AccordionSummary
+                      expandIcon={<ExpandMore />}
+                      sx={{
+                        '& .MuiAccordionSummary-content': {
+                          my: 1.5,
+                          display: 'block',
+                        },
+                      }}
                     >
-                      <Box
-                        component="img"
-                        src="/placeholder-book.jpg"
-                        alt="Introduction to Physics"
-                        sx={{
-                          width: 180,
-                          height: 140,
-                          borderRadius: 2,
-                          objectFit: 'cover',
-                          boxShadow: 1,
-                        }}
-                      />
-                    </Grid>
-                    {/* Book Details */}
-                    <Grid size={{ xs: 12, md: 8 }}>
-                      <Grid container spacing={1}>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <Paper
-                            variant="outlined"
-                            sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                          >
-                            <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                              <Iconify icon="mdi:book-open-page-variant" width={22} />
-                              <Box>
+                      <Typography
+                        variant="h6"
+                        color="primary.main"
+                        mb={expandedBookAccordion ? 0 : 1}
+                      >
+                        Book Details
+                      </Typography>
+
+                      {/* Show preview when collapsed */}
+                      {!expandedBookAccordion && (
+                        <Grid container spacing={2} mt={0.5}>
+                          <Grid size={{ xs: 12, sm: 4 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              <Iconify
+                                icon="mdi:book-open-page-variant"
+                                width={18}
+                                color="text.secondary"
+                              />
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
                                 <Typography
                                   variant="caption"
                                   color="text.secondary"
-                                  textTransform="uppercase"
+                                  display="block"
+                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
                                 >
-                                  Book Title
+                                  Book Title:
                                 </Typography>
-                                <Typography variant="body1" fontWeight={600}>
-                                  Introduction to Physics
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={600}
+                                  color="text.primary"
+                                  sx={{ fontSize: '0.75rem' }}
+                                  noWrap
+                                >
+                                  {selectedBook.title || '—'}
                                 </Typography>
                               </Box>
                             </Stack>
-                          </Paper>
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 4 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              <Iconify icon="mdi:barcode" width={18} color="text.secondary" />
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  display="block"
+                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                >
+                                  Accession No.:
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={600}
+                                  color="text.primary"
+                                  sx={{ fontSize: '0.75rem' }}
+                                  noWrap
+                                >
+                                  {selectedBook.bookNumber || '—'}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          </Grid>
+                          <Grid size={{ xs: 12, sm: 4 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              <Iconify icon="mdi:account-edit" width={18} color="text.secondary" />
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  display="block"
+                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                >
+                                  Author:
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={600}
+                                  color="text.primary"
+                                  sx={{ fontSize: '0.75rem' }}
+                                  noWrap
+                                >
+                                  {selectedBook.author || '—'}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          </Grid>
                         </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <Paper
-                            variant="outlined"
-                            sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                          >
-                            <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                              <Iconify icon="mdi:barcode" width={22} />
-                              <Box>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  textTransform="uppercase"
-                                >
-                                  Accession No.
-                                </Typography>
-                                <Typography variant="body1" fontWeight={600}>
-                                  Acc001
-                                </Typography>
-                              </Box>
-                            </Stack>
-                          </Paper>
+                      )}
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ pt: 0 }}>
+                      <Grid container spacing={2}>
+                        {/* Book Cover */}
+
+                        <Grid size={{ xs: 12, md: 2 }}>
+                          <Image
+                            src={noCover}
+                            alt={selectedBook?.title || 'No Preview'}
+                            width={250}
+                            height={250}
+                            unoptimized
+                            style={{
+                              width: '100%',
+                              height: '120px',
+                              maxWidth: 150,
+                              borderRadius: 8,
+                              boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+                            }}
+                          />
                         </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <Paper
-                            variant="outlined"
-                            sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                          >
-                            <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                              <Iconify icon="mdi:account-edit" width={22} />
-                              <Box>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  textTransform="uppercase"
-                                >
-                                  Author
-                                </Typography>
-                                <Typography variant="body1" fontWeight={600}>
-                                  Dr. John Smith
-                                </Typography>
-                              </Box>
-                            </Stack>
-                          </Paper>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <Paper
-                            variant="outlined"
-                            sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                          >
-                            <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                              <Iconify icon="mdi:barcode-scan" width={22} />
-                              <Box>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  textTransform="uppercase"
-                                >
-                                  ISBN
-                                </Typography>
-                                <Typography variant="body1" fontWeight={600}>
-                                  978-0123456789
-                                </Typography>
-                              </Box>
-                            </Stack>
-                          </Paper>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <Paper
-                            variant="outlined"
-                            sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                          >
-                            <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                              <Iconify icon="mdi:domain" width={22} />
-                              <Box>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  textTransform="uppercase"
-                                >
-                                  Publisher
-                                </Typography>
-                                <Typography variant="body1" fontWeight={600}>
-                                  Academic Press
-                                </Typography>
-                              </Box>
-                            </Stack>
-                          </Paper>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                          <Paper
-                            variant="outlined"
-                            sx={{ p: 0.5, borderRadius: 2, bgcolor: 'grey.50' }}
-                          >
-                            <Stack direction="row" spacing={2} alignItems="center" ml={2}>
-                              <Iconify icon="mdi:book-variant" width={22} />
-                              <Box>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  textTransform="uppercase"
-                                >
-                                  Edition
-                                </Typography>
-                                <Typography variant="body1" fontWeight={600}>
-                                  3rd Edition
-                                </Typography>
-                              </Box>
-                            </Stack>
-                          </Paper>
+
+                        {/* Book Details Grid - 4 per row */}
+                        <Grid size={{ xs: 12, md: 10 }}>
+                          <Grid container spacing={2}>
+                            {bookDetails.map((d) => (
+                              <Grid key={d.label} size={{ xs: 12, sm: 6, md: 3 }}>
+                                <Stack direction="row" spacing={1.5} alignItems="center">
+                                  <Iconify icon={d.icon} width={20} color="text.secondary" />
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                      display="block"
+                                      sx={{ fontSize: '0.7rem', lineHeight: 1.2 }}
+                                    >
+                                      {d.label}:
+                                    </Typography>
+                                    <Typography
+                                      variant="body2"
+                                      fontWeight={600}
+                                      color="text.primary"
+                                      sx={{ fontSize: '0.8rem' }}
+                                      noWrap
+                                    >
+                                      {d.value}
+                                    </Typography>
+                                  </Box>
+                                </Stack>
+                              </Grid>
+                            ))}
+                          </Grid>
                         </Grid>
                       </Grid>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Grid>
-          ) : (
-            formik.values.bookNumber !== '' && (
-              <Grid size={{ xs: 12 }}>
-                <div
-                  style={{
-                    padding: '12px',
-                    backgroundColor: '#ffebee',
-                    borderRadius: '4px',
-                    border: '1px solid #f44336',
-                    color: '#d32f2f',
-                  }}
-                >
-                  Book with number &quot;{formik.values.bookNumber}&quot; not found. Available
-                  numbers: BK001, BK002, BK003, BK004
-                </div>
-              </Grid>
-            )
-          )}
+                    </AccordionDetails>
+                  </Accordion>
+                </Grid>
+              );
+            }
+
+            if (formik.values.bookNumber !== '') {
+              return (
+                <Grid size={{ xs: 12 }}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      bgcolor: '#ffebee',
+                      borderRadius: 1,
+                      border: '1px solid #f44336',
+                      color: '#d32f2f',
+                      textAlign: 'center',
+                    }}
+                  >
+                    Book with Accession no &quot;{formik.values.bookNumber}&quot; not found.
+                  </Box>
+                </Grid>
+              );
+            }
+            return null;
+          })()}
 
           {/* Charge Category */}
           <Grid size={{ xs: 12, md: 6 }}>
@@ -795,7 +859,6 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                 error={!!(formik.touched.amount && formik.errors.amount)}
                 helperText={(formik.touched.amount && formik.errors.amount) as string}
                 onChange={(e: any) => {
-                  // Remove non-numeric characters and parse to number
                   const rawValue = e.target.value.replace(/[^0-9.]/g, '');
                   formik.setFieldValue('amount', rawValue ? Number(rawValue) : '');
                 }}

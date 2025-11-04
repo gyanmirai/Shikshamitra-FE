@@ -9,12 +9,13 @@ import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Button, TextField, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Stack, Button, TextField, Typography } from '@mui/material';
 import { useGetBorrowingReturnRulesQuery } from 'src/redux/library/settingApi';
 
 // Base validation schema for a single field
@@ -207,7 +208,24 @@ const BorrowingReturnRules = () => {
           },
           {
             id: 'maxBooksPerMonth',
-            label: 'issue limit (At a Time)',
+            label: '',
+            renderColumn: (value: any): React.ReactNode => (
+              <Stack direction="row" spacing={1} alignItems="center">
+                Borrow Limit (At a Time)
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  sx={{ textAlign: 'justify' }}
+                  title="Set the maximum number of books that can be borrowed at the same time by members of this role. Value must be between 0 and 99."
+                >
+                  <Iconify
+                    icon="lucide:info"
+                    sx={{ cursor: 'pointer', width: 16, height: 16 }}
+                    color="info.main"
+                  />
+                </CustomTooltip>
+              </Stack>
+            ),
             align: 'left',
             isSort: false,
             isFilter: false,
@@ -222,7 +240,7 @@ const BorrowingReturnRules = () => {
                     <TextField
                       size="small"
                       type="number"
-                      label="Max Books (Month)"
+                      label="Borrow Limit (At a Time)"
                       value={value === 0 ? '0' : value || ''}
                       onChange={(e) => {
                         const val = e.target.value.replace(/[^0-9]/g, '');
@@ -244,7 +262,24 @@ const BorrowingReturnRules = () => {
           },
           {
             id: 'reservationLimit',
-            label: 'Reservation Limit (At a Time)',
+            label: '',
+            renderColumn: (value: any): React.ReactNode => (
+              <Stack direction="row" spacing={1} alignItems="center">
+                Reservation Limit (At a Time)
+                <CustomTooltip
+                  arrow
+                  placement="right"
+                  sx={{ textAlign: 'justify' }}
+                  title="Set the maximum number of books that can be reserved at the same time by members of this role. Reservations allow members to queue for books that are currently unavailable. Value must be between 0 and 99."
+                >
+                  <Iconify
+                    icon="lucide:info"
+                    sx={{ cursor: 'pointer', width: 16, height: 16 }}
+                    color="info.main"
+                  />
+                </CustomTooltip>
+              </Stack>
+            ),
             align: 'left',
             isSort: false,
             isFilter: false,
@@ -259,7 +294,7 @@ const BorrowingReturnRules = () => {
                     <TextField
                       size="small"
                       type="number"
-                      label="Reservation Limit (Month)"
+                      label="Reservation Limit (At a Time)"
                       value={value === 0 ? '0' : value || ''}
                       onChange={(e) => {
                         const val = e.target.value.replace(/[^0-9]/g, '');

@@ -3,45 +3,20 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useRef, useState, useEffect } from 'react';
-import { Add, Delete, ExpandMore } from '@mui/icons-material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import {
-  Box,
-  Grid,
-  Button,
-  TextField,
-  Accordion,
-  Typography,
-  IconButton,
-  DialogActions,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import { getSectionInitialValues } from './SectionManagementInitialValues';
 import { sectionManagementValidationSchema } from './SectionManagementValidationSchema';
 
 import type { ISectionFormProps } from './type';
 
-interface ShelfRow {
-  id: string;
-  name: string;
-}
-
-interface ShelfData {
-  id: string;
-  name: string;
-  rows: ShelfRow[];
-}
-
 const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData }) => {
   const [shelfCount, setShelfCount] = useState(editData?.numberOfColumns || 0);
   const [editingShelfIndex, setEditingShelfIndex] = useState<number | null>(null);
   const [shelfNames, setShelfNames] = useState<string[]>([]);
-  const [shelvesData, setShelvesData] = useState<ShelfData[]>([]);
-  const [expandedShelf, setExpandedShelf] = useState<string | false>(false);
   const shelfInputRef = useRef<HTMLInputElement>(null);
 
   const formik = useFormik({
@@ -67,16 +42,15 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
       const newCount = Number(formik.values.numberOfColumns);
       setShelfCount(newCount);
 
-      // Initialize shelves data
-      const newShelvesData = Array.from({ length: newCount }, (_, index) => ({
-        id: `shelf-${index}`,
-        name: shelfNames[index] || `Shelf ${index + 1}`,
-        rows: [],
-      }));
-      setShelvesData(newShelvesData);
+      // Preserve existing shelf names or create default names
+      const newShelfNames = Array.from(
+        { length: newCount },
+        (_, index) => shelfNames[index] || `Shelf ${index + 1}`
+      );
+      setShelfNames(newShelfNames);
     } else {
       setShelfCount(0);
-      setShelvesData([]);
+      setShelfNames([]);
     }
   }, [formik.values.numberOfColumns, shelfNames]);
 
@@ -91,13 +65,6 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
     const newShelfNames = [...shelfNames];
     newShelfNames[editingShelfIndex] = event.target.value;
     setShelfNames(newShelfNames);
-
-    // Update shelves data
-    const newShelvesData = [...shelvesData];
-    if (newShelvesData[editingShelfIndex]) {
-      newShelvesData[editingShelfIndex].name = event.target.value;
-      setShelvesData(newShelvesData);
-    }
   };
 
   const saveShelfName = () => {
@@ -108,39 +75,6 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
     if (event.key === 'Enter') {
       saveShelfName();
     }
-  };
-
-  // Handle accordion expansion
-  const handleAccordionChange =
-    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
-      setExpandedShelf(isExpanded ? panel : false);
-    };
-
-  // Add new row to shelf
-  const addRowToShelf = (shelfIndex: number) => {
-    const newShelvesData = [...shelvesData];
-    const rowId = `row-${Date.now()}`;
-    const newRow: ShelfRow = {
-      id: rowId,
-      name: `Row ${newShelvesData[shelfIndex].rows.length + 1}`,
-    };
-
-    newShelvesData[shelfIndex].rows.push(newRow);
-    setShelvesData(newShelvesData);
-  };
-
-  // Remove row from shelf
-  const removeRowFromShelf = (shelfIndex: number, rowIndex: number) => {
-    const newShelvesData = [...shelvesData];
-    newShelvesData[shelfIndex].rows.splice(rowIndex, 1);
-    setShelvesData(newShelvesData);
-  };
-
-  // Update row name
-  const updateRowName = (shelfIndex: number, rowIndex: number, newName: string) => {
-    const newShelvesData = [...shelvesData];
-    newShelvesData[shelfIndex].rows[rowIndex].name = newName;
-    setShelvesData(newShelvesData);
   };
 
   return (
@@ -160,10 +94,10 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
                 value={formik.values.sectionName}
                 onChange={(e) => {
                   let value = e.target.value
-                    .replace(/[^a-zA-Z0-9\s]/g, '') // Allow letters, numbers, spaces
-                    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-                    .replace(/^\d+/, '') // Remove leading numbers
-                    .trimStart(); // Remove leading spaces
+                    .replace(/[^a-zA-Z0-9\s]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .replace(/^\d+/, '')
+                    .trimStart();
                   value = value
                     .split(' ')
                     .map((word) =>
@@ -205,140 +139,65 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
           </Grid>
         </Grid>
 
-        {/* Shelves Accordion */}
-        <Box sx={{ mt: 2 }}>
-          {shelvesData.map((shelf, shelfIndex) => (
-            <Accordion
-              key={shelf.id}
-              expanded={expandedShelf === shelf.id}
-              onChange={handleAccordionChange(shelf.id)}
-              sx={{
-                mb: 1,
-                border: '1px solid #e0e0e0',
-                borderRadius: '8px !important',
-                '&:before': {
-                  display: 'none',
-                },
-                boxShadow: 'none',
-              }}
-            >
-              <AccordionSummary
-                expandIcon={<ExpandMore />}
-                sx={{
-                  backgroundColor: 'background.paper',
-                  borderRadius: '8px',
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                  },
-                }}
-              >
-                {editingShelfIndex === shelfIndex ? (
-                  <TextField
-                    inputRef={shelfInputRef}
-                    size="small"
-                    value={shelf.name}
-                    onChange={handleShelfNameChange}
-                    onBlur={saveShelfName}
-                    onKeyDown={handleShelfNameKeyDown}
-                    autoFocus
-                    variant="outlined"
-                    onClick={(e) => e.stopPropagation()}
-                    sx={{ mr: 2 }}
-                    InputProps={{
-                      sx: {
-                        color: 'primary.main',
-                        fontWeight: 600,
-                      },
-                    }}
-                  />
-                ) : (
-                  <Typography
-                    color="primary"
-                    fontWeight="600"
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                    }}
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      handleShelfClick(shelfIndex);
-                    }}
-                  >
-                    {shelf.name}
-                  </Typography>
-                )}
-              </AccordionSummary>
-
-              <AccordionDetails>
-                <Box>
+        {/* Shelves List - Simple Cards */}
+        {shelfCount > 0 && (
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
+              Shelves ({shelfCount})
+            </Typography>
+            <Grid container spacing={2}>
+              {Array.from({ length: shelfCount }).map((_, index) => (
+                <Grid key={`shelf-${index}`} size={{ xs: 12, sm: 6, md: 4 }}>
                   <Box
                     sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      mb: 2,
+                      p: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 2,
+                      backgroundColor: 'background.paper',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                        borderColor: 'primary.main',
+                      },
                     }}
                   >
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Rows ({shelf.rows.length})
-                    </Typography>
-                    <Button
-                      size="small"
-                      startIcon={<Add />}
-                      onClick={() => addRowToShelf(shelfIndex)}
-                      variant="outlined"
-                    >
-                      Add Row
-                    </Button>
-                  </Box>
-
-                  {/* Rows List */}
-                  {shelf.rows.map((row, rowIndex) => (
-                    <Box
-                      key={row.id}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        mb: 1,
-                        p: 1,
-                        border: '1px solid #f0f0f0',
-                        borderRadius: 1,
-                        backgroundColor: '#fafafa',
-                      }}
-                    >
+                    {editingShelfIndex === index ? (
                       <TextField
+                        inputRef={shelfInputRef}
                         size="small"
-                        value={row.name}
-                        onChange={(e) => updateRowName(shelfIndex, rowIndex, e.target.value)}
+                        fullWidth
+                        value={shelfNames[index] || `Shelf ${index + 1}`}
+                        onChange={handleShelfNameChange}
+                        onBlur={saveShelfName}
+                        onKeyDown={handleShelfNameKeyDown}
+                        autoFocus
                         variant="outlined"
-                        sx={{ flexGrow: 1 }}
+                        InputProps={{
+                          sx: {
+                            color: 'primary.main',
+                            fontWeight: 600,
+                          },
+                        }}
                       />
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => removeRowFromShelf(shelfIndex, rowIndex)}
+                    ) : (
+                      <Typography
+                        color="primary"
+                        fontWeight="600"
+                        sx={{
+                          cursor: 'pointer',
+                          textAlign: 'center',
+                        }}
+                        onDoubleClick={() => handleShelfClick(index)}
                       >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  ))}
-
-                  {shelf.rows.length === 0 && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ textAlign: 'center', py: 2 }}
-                    >
-                      No rows added yet. Click &quot;Add Row&quot; to create rows.
-                    </Typography>
-                  )}
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-          ))}
-        </Box>
+                        {shelfNames[index] || `Shelf ${index + 1}`}
+                      </Typography>
+                    )}
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
       </DialogScrollContent>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>

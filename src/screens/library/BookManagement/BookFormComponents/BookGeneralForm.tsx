@@ -222,7 +222,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
               <TextField
                 fullWidth
                 name="isbn"
-                label="ISBN *"
+                label="ISBN"
                 value={formik.values.isbn}
                 onChange={(e) => {
                   const value = e.target.value.replace(/[^0-9-]/g, '');
