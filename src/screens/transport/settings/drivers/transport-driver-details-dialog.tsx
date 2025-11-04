@@ -27,7 +27,7 @@ const TransportDriverDetailsDialog: React.FC<TransportDriverDetailsDialogProps> 
   };
 
   return (
-    <CustomDialog maxWidth="sm" title="Driver Details" handleClose={onClose} open={dialogValue}>
+    <CustomDialog title="Driver Details" handleClose={onClose} open={dialogValue}>
       <Box
         sx={{
           padding: 2,
