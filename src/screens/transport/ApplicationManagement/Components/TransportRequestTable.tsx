@@ -139,7 +139,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
               id: 'grNo',
               label: 'GR No.',
               align: 'left',
-              minWidth: 80,
+              minWidth: 120,
             },
             {
               id: 'rollNo',
@@ -152,12 +152,12 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
               id: 'searchStop',
               label: 'Preferred Stop',
               align: 'left',
-              minWidth: 140,
+              minWidth: 170,
             },
             {
               id: 'areaLocality',
               label: 'Area Locality',
-              minWidth: 130,
+              minWidth: 160,
               align: 'left',
               render: (val) => (
                 <Typography variant="body2" noWrap sx={{ maxWidth: 220 }}>
@@ -170,6 +170,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
               label: 'Status',
               align: 'left',
               filterType: 'enum',
+              minWidth: 100,
               enumOptions: TransportStatusOptions,
               sticky: true,
               render: (val) => (
@@ -185,6 +186,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
               id: 'actions',
               label: 'Actions',
               align: 'left',
+              minWidth: 50,
               sticky: true,
               isSort: false,
               isFilter: false,
@@ -207,7 +209,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
           noDataText="No requests found"
           columns={[
             { id: 'name', label: 'Name', align: 'left', sticky: true },
-            { id: 'role', label: 'Role', align: 'left' },
+            { id: 'role', label: 'Role', align: 'left', minWidth: 80 },
             {
               id: 'class',
               label: 'Class',
@@ -222,7 +224,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
               id: 'grNo',
               label: 'GR No.',
               align: 'left',
-              minWidth: 80,
+              minWidth: 140,
             },
             {
               id: 'rollNo',
@@ -234,13 +236,14 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
             {
               id: 'searchStop',
               label: 'Preferred Stop',
-              minWidth: 140,
+              minWidth: 170,
               align: 'left',
             },
             {
               id: 'areaLocality',
               label: 'Area Locality',
               align: 'left',
+              minWidth: 160,
               render: (val) => (
                 <Typography variant="body2" noWrap sx={{ maxWidth: 220 }}>
                   {val}
@@ -272,7 +275,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
                 id: 'grNo',
                 label: 'GR No.',
                 align: 'left',
-                minWidth: 80,
+                minWidth: 120,
               },
               {
                 id: 'rollNo',
@@ -301,9 +304,10 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
               {
                 id: 'actions',
                 label: 'Actions',
-                align: 'center',
+                align: 'left',
                 isSort: false,
                 sticky: true,
+                minWidth: 80,
                 isFilter: false,
                 render: (_, row) => (
                   <ThreeDotsActions

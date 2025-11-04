@@ -253,6 +253,7 @@ const StopsDetails = ({ formik }: { formik: any }) => {
         <AddStopIndex
           open={addStopDialog}
           onClose={handleClose}
+          routeDetails={formik.values.selectedRoute}
           stopName={formik.values.studentDetails.searchStop}
           handleSubmit={(newStop: any) => handleAddStop(newStop)}
         />

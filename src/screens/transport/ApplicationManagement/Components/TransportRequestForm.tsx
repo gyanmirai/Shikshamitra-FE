@@ -63,13 +63,13 @@ const TransportApplicationStepper = ({
       try {
         if (activeStep === 0) {
           if (!values.studentId) {
-            shikshaMitraToast.error({ message: 'Please select a student before proceeding.' });
+            shikshaMitraToast.error({ message: 'Please select a student before proceeding' });
             setIsLoading(false);
             return;
           }
         } else if (activeStep === 1) {
           shikshaMitraToast.success({
-            message: `Transport application saved successfully for "${values.studentId}".`,
+            message: `Transport application saved successfully for "${values.studentId}"`,
           });
         }
 
@@ -78,14 +78,14 @@ const TransportApplicationStepper = ({
         } else {
           shikshaMitraToast.success({
             message: selectedApplication
-              ? `Transport application updated successfully.`
-              : `Transport application created successfully.`,
+              ? `Transport application updated successfully`
+              : `Transport application created successfully`,
           });
           onClose?.(null, true);
         }
       } catch (error) {
         console.error(error);
-        shikshaMitraToast.error({ message: 'Something went wrong. Please try again.' });
+        shikshaMitraToast.error({ message: 'Something went wrong. Please try again' });
       } finally {
         setIsLoading(false);
       }
@@ -99,7 +99,7 @@ const TransportApplicationStepper = ({
       initialValues={initialValues}
       steps={steps}
       activeStep={activeStep}
-      validateOnChange
+      validateOnChange={false}
       handleBack={() => setActiveStep(activeStep - 1)}
       validationSchema={
         transportValidationSchema[activeStep as keyof typeof transportValidationSchema]

@@ -289,7 +289,11 @@ const StopsStep = ({ formik }: StopsStepProps) => {
               labelKey="zoneName"
               valueKey="zoneName"
               value={formik.values.zone}
-              onChange={(value) => formik.setFieldValue('zone', value)}
+              onChange={(value) => {
+                formik.setFieldValue('zone', value, false);
+                formik.setFieldValue('stops', []); // clear stops
+                formik.setFieldTouched('stops', false);
+              }}
               error={!!(formik.touched.zone && formik.errors.zone)}
               helperText={formik.touched.zone ? formik.errors.zone : undefined}
               formControlProps={{ fullWidth: true }}

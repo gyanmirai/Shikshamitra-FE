@@ -110,7 +110,7 @@ const RouteInformationCard = () => {
             icon={<LocationOn />}
             label="End Point"
             value={mockRouteData.endPoint}
-            color="error.main"
+            color="success.main"
           />
         </Grid>
 

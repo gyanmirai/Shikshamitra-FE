@@ -162,6 +162,7 @@ const StopInformation: React.FC<StopInformationProps> = ({ editData, formik, onF
               <TextField
                 fullWidth
                 size="small"
+                type="number"
                 label="Approx Km from School *"
                 name="approxKmFromSchool"
                 value={formik.values.approxKmFromSchool}

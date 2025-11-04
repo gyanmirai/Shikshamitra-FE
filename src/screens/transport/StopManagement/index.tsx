@@ -82,7 +82,7 @@ const StopManagement = () => {
               Stop
             </Button>
           }
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1, mb: 2 }}
         />
       )}
 

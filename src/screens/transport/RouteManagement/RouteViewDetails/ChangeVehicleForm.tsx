@@ -86,15 +86,15 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       {/* Scrollable Content */}
-      <DialogScrollContent sx={{ maxHeight: '70vh', minHeight: '400px' }}>
+      <DialogScrollContent>
         <Box sx={{ p: 1, minWidth: 600 }}>
           {/* Current Vehicle Section */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" fontWeight="600" gutterBottom color="primary.main">
+            <Typography variant="h6" gutterBottom color="primary.main">
               Current Vehicle
             </Typography>
 
-            <Card sx={{ p: 3, backgroundColor: '#f8f9fa', border: '1px solid #e9ecef' }}>
+            <Card sx={{ p: 2, backgroundColor: '#f8f9fa', border: '1px solid #e9ecef' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -132,8 +132,8 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
           </Box>
 
           {/* Select New Vehicle Section */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle1" fontWeight="600" gutterBottom color="primary.main">
+          <Box>
+            <Typography variant="h6" gutterBottom color="primary.main">
               Select New Vehicle
             </Typography>
 
@@ -238,13 +238,14 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
           backgroundColor: 'white',
           position: 'sticky',
           bottom: 0,
-          zIndex: 1,
+
           boxShadow: '0 -2px 8px rgba(0,0,0,0.1)',
         }}
       >
         <Button
           variant="outlined"
           onClick={() => onClose(null, false)}
+          size="small"
           startIcon={<Iconify icon="material-symbols:close" />}
         >
           Cancel
@@ -253,6 +254,7 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
           variant="contained"
           onClick={(e: any) => formik.handleSubmit(e)}
           disabled={!selectedVehicle}
+          size="small"
           startIcon={<Iconify icon="material-symbols:check" />}
         >
           Change Vehicle

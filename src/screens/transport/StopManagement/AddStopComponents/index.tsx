@@ -10,12 +10,15 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import StopInformation from './StopManagementForm';
 import { stopManagementValidationSchema } from '../Components/StopManagementValidation';
 import { getStopManagementInitialValues } from '../Components/StopManagementInitialValuse';
+import RouteTopHeader from '../../ApplicationManagement/Components/TransportApplicationDetails/RouteTopHeader';
 
 import type { IStopData } from '../Components/type';
+import type { IRouteData } from '../../RouteManagement/Components/type';
 
 interface AddStopIndexProps {
   open: any;
   onClose: (e: any, isSubmit?: boolean) => void;
+  routeDetails?: IRouteData | null;
   editData?: IStopData | null;
   stopName?: string;
   handleSubmit?: (values: any) => void;
@@ -24,6 +27,7 @@ interface AddStopIndexProps {
 const AddStopIndex: React.FC<AddStopIndexProps> = ({
   open,
   onClose,
+  routeDetails,
   editData,
   stopName,
   handleSubmit,
@@ -52,8 +56,13 @@ const AddStopIndex: React.FC<AddStopIndexProps> = ({
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box display="flex" flexDirection="column" gap={2} height="100%">
         <Scrollbar sx={{ p: 2, height: '100%' }}>
-          <Grid container spacing={2}>
+          <Grid container>
             {/* Left Column - Stop Information Form */}
+            {routeDetails && (
+              <Grid size={{ xs: 12 }} sx={{ mb: 0 }}>
+                <RouteTopHeader routeDetails={routeDetails} />
+              </Grid>
+            )}
             <Grid size={{ xs: 12 }}>
               <StopInformation editData={editData} formik={formik} />
             </Grid>

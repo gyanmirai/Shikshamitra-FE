@@ -6,7 +6,7 @@ import RouteTopHeader from './RouteTopHeader';
 
 const RouteStopDetails = ({ formik }: { formik: any }) => (
   <Box sx={{ height: '100%' }}>
-    <RouteTopHeader formik={formik} />
+    <RouteTopHeader routeDetails={formik.values.selectedRoute} />
     <StopsDetails formik={formik} />
   </Box>
 );

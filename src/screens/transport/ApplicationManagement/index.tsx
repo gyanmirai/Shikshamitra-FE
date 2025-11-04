@@ -208,11 +208,29 @@ const TransportRequests = () => {
       <CustomDialog
         open={onConfirmDialog.value}
         title={
-          selectedMode === 'Approve'
-            ? 'Approve Application'
-            : selectedMode === 'Reject'
-              ? 'Reject Application'
-              : 'Hold Application'
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {selectedMode === 'Approve'
+                ? 'Approve Application'
+                : selectedMode === 'Reject'
+                  ? 'Reject Application'
+                  : 'Hold Application'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                selectedMode === 'Approve'
+                  ? 'Approve the transport application to confirm route assignment.'
+                  : selectedMode === 'Reject'
+                    ? 'Reject the transport application with a reason.'
+                    : 'Hold the transport application for further review.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
         }
         handleClose={() => {
           onConfirmDialog.onFalse();

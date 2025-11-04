@@ -291,7 +291,7 @@ const MaintenanceHistory = () => {
             }
             setSearchParams({ tab: value });
           }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, mb: 1 }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
           role="tablist"
         >
           {TABS.map((tab) => (

@@ -51,8 +51,8 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
       vehicleId: vehicleData?.vehicleId || selectedVehicle,
       vehicleNo: vehicleData?.vehicleNo || '',
       capacity: vehicleData?.capacity || 0,
-      driverId: 'MO11',
-      driverName: 'Mayur Solanki',
+      driverId: '',
+      driverName: '',
       conductorId: '',
       conductorName: '',
     };
@@ -126,7 +126,7 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Vehicle *"
+                  label="Vehicle"
                   size="small"
                   error={
                     !!(
@@ -156,13 +156,12 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
             }
           >
             <CustomSelect
-              label="Driver *"
+              label="Driver"
               name="vehicleAssignment.driverId"
               fullWidth
               options={availableDrivers}
               value={formik.values.vehicleAssignment.driverId}
               labelKey="driverName"
-              disabled
               onChange={(value) => {
                 const selectedDriver = availableDrivers.find(
                   (driver: any) => driver.value === value
