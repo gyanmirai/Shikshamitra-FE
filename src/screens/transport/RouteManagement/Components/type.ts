@@ -18,6 +18,7 @@ export interface IRoutePayload {
   pickupSchedule?: ISchedule;
   dropoffSchedule?: ISchedule;
   stops: any[];
+  stopData?: any[];
   vehicleAssignment: any;
 }
 

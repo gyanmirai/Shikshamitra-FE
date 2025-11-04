@@ -35,7 +35,7 @@ const AssignRouteForm: React.FC<IAssignRouteFormProps> = ({ onClose, driverData 
   });
 
   const routesData = availableRoutes || [];
-
+  console.log('routesData---', routesData);
   const formik = useFormik({
     initialValues: getAssignRouteInitialValues(driverData),
     validationSchema: assignRouteValidationSchema,

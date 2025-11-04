@@ -3,10 +3,10 @@ import type { LabelColor } from 'src/components/label';
 import { useMemo, useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Tab, Card, Tooltip } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
+import { Tab, Card, Tooltip, IconButton } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
@@ -61,6 +61,12 @@ const RouteHistory = () => {
           minWidth: '150px',
         },
         {
+          id: 'conductorName',
+          label: 'Conductor',
+          align: 'left',
+          minWidth: '150px',
+        },
+        {
           id: 'stops',
           label: 'Stops',
           align: 'left',
@@ -111,6 +117,12 @@ const DriverHistory = () => {
           align: 'left',
           minWidth: '150px',
           filterType: 'number',
+        },
+        {
+          id: 'assignedDate',
+          label: 'Assigned Date',
+          align: 'left',
+          minWidth: '150px',
         },
         {
           id: 'experience',
@@ -179,6 +191,34 @@ const DocumentDetailsTable = () => {
             );
           },
         },
+        {
+          id: 'view',
+          label: 'View',
+          isFilter: false,
+          isSort: false,
+          minWidth: '6vw',
+          align: 'left',
+          render(value, row) {
+            return (
+              <IconButton
+                style={{
+                  textAlign: 'left',
+                  marginLeft: '0px',
+                  justifyContent: 'flex-start',
+                  display: 'flex',
+                }}
+                disabled={row.status !== 'Uploaded'}
+                onClick={() => {
+                  if (row.file) {
+                    window.open(URL.createObjectURL(row.file), '_blank');
+                  }
+                }}
+              >
+                <Iconify icon="carbon:view-filled" />
+              </IconButton>
+            );
+          },
+        },
       ]}
       data={documentRows || []}
     />
@@ -210,6 +250,9 @@ const MaintenanceHistoryTable = () => {
           label: 'Servicing Type',
           align: 'left',
           minWidth: '180px',
+          render(value, row) {
+            return value.join(', ');
+          },
         },
         {
           id: 'cost',
@@ -218,6 +261,12 @@ const MaintenanceHistoryTable = () => {
           minWidth: '120px',
           filterType: 'number',
           render: (value) => `₹ ${value.toLocaleString()}`,
+        },
+        {
+          id: 'description',
+          label: 'Remarks',
+          align: 'left',
+          minWidth: '180px',
         },
         {
           id: 'nextDue',

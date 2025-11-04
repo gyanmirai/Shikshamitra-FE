@@ -15,6 +15,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetStopBasedFeeDataQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
+import StopBasedModel from './Components/StopBasedModel';
 import FeeModelSelection from './Components/FeeModelSelection';
 import DistanceBasedModel from './Components/DistanceBasedModel';
 import { getInitialValuesByModel } from './Components/getInitialValuesByModel';
@@ -89,11 +90,11 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
                   </Card>
                 )}
 
-                {/* {formik.values.model === 'stop-based' && (
-          <Card sx={{ boxShadow: 'var(--shadows-4)' }}>
-            <StopBasedModel formik={formik} />
-          </Card>
-        )} */}
+                {formik.values.model === 'stop-based' && (
+                  <Card sx={{ boxShadow: 'var(--shadows-4)' }}>
+                    <StopBasedModel formik={formik} />
+                  </Card>
+                )}
 
                 {/* {formik.values.model === 'zone-based' && (
           <Card sx={{ boxShadow: 'var(--shadows-4)' }}>

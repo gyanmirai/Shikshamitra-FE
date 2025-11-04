@@ -89,45 +89,117 @@ const VehicleInformationCard = () => {
 
         {/* Vehicle Type and Capacity */}
         <Grid container spacing={2} sx={{ mb: 1 }}>
-          <Grid size={{ xs: 6 }}>
+          {/* Vehicle Type */}
+          <Grid size={{ xs: 12, sm: 6 }}>
             <Box
               sx={{
-                border: '1px solid background.border',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                gap: 1,
                 borderRadius: 2,
-                p: 1.5,
+                p: 2,
                 height: '100%',
-                bgcolor: 'background.neutral',
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                transition: 'all 0.25s ease-in-out',
+                '&:hover': {
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                  transform: 'translateY(-2px)',
+                },
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <DirectionsCarIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-                <Typography sx={{ fontSize: '0.8rem', fontWeight: 500, color: 'primary.main' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <DirectionsCarIcon sx={{ fontSize: 22, color: 'primary.main' }} />
+                <Typography
+                  sx={{
+                    fontSize: '0.85rem',
+                    fontWeight: 400,
+                    color: 'text.secondary',
+                    letterSpacing: 0.3,
+                  }}
+                >
                   Vehicle Type
                 </Typography>
               </Box>
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'primary.main' }}>
-                {vehicle?.vehicleType || 'Bus'}/{vehicle?.feature || 'AC'}
+
+              <Typography
+                sx={{
+                  fontSize: '0.9rem',
+                  fontWeight: 400,
+                  color: 'primary.main',
+                  ml: 3.5, // aligns text visually under label
+                }}
+              >
+                {(vehicle?.vehicleType || 'Bus')?.length > 12
+                  ? `${(vehicle?.vehicleType || 'Bus').slice(0, 12)}...`
+                  : vehicle?.vehicleType || 'Bus'}
+                /{vehicle?.feature || 'AC'}
               </Typography>
             </Box>
           </Grid>
-          <Grid size={{ xs: 6 }}>
+
+          {/* Capacity */}
+          <Grid size={{ xs: 12, sm: 6 }}>
             <Box
               sx={{
-                border: '1px solid background.border',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                gap: 1,
                 borderRadius: 2,
-                p: 1.5,
+                p: 2,
                 height: '100%',
-                bgcolor: 'background.neutral',
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                transition: 'all 0.25s ease-in-out',
+                '&:hover': {
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                  transform: 'translateY(-2px)',
+                },
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <GroupIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-                <Typography sx={{ fontSize: '0.8rem', fontWeight: 500, color: 'primary.main' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <GroupIcon sx={{ fontSize: 22, color: 'primary.main' }} />
+                <Typography
+                  sx={{
+                    fontSize: '0.85rem',
+                    fontWeight: 400,
+                    color: 'text.secondary',
+                    letterSpacing: 0.3,
+                  }}
+                >
                   Capacity
                 </Typography>
               </Box>
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'primary.main' }}>
-                {vehicle?.seatingCapacity || '45'} Seats
+
+              <Typography
+                sx={{
+                  fontSize: '0.9rem',
+                  fontWeight: 400,
+                  color: 'primary.main',
+                  ml: 3.5, // aligns text perfectly under the label
+                }}
+              >
+                {(vehicle?.seatingCapacity || '45') > 99
+                  ? `${vehicle?.seatingCapacity || '45'} Seats`
+                  : `${vehicle?.seatingCapacity || '45'} Seats`}
               </Typography>
             </Box>
           </Grid>
@@ -135,42 +207,108 @@ const VehicleInformationCard = () => {
 
         {/* School Assign No.  and Fuel Type */}
         <Grid container spacing={2} sx={{ mb: 1 }}>
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <Box
               sx={{
-                border: '1px solid background.border',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                gap: 1,
                 borderRadius: 2,
-                p: 1.5,
-                bgcolor: 'background.neutral',
+                p: 2,
+                height: '100%',
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                transition: 'all 0.25s ease-in-out',
+                '&:hover': {
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                  transform: 'translateY(-2px)',
+                },
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <DirectionsCarIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-                <Typography sx={{ fontSize: '0.8rem', fontWeight: 500, color: 'primary.main' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <DirectionsCarIcon sx={{ fontSize: 22, color: 'primary.main' }} />
+                <Typography
+                  sx={{
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: 'text.secondary',
+                    letterSpacing: 0.3,
+                  }}
+                >
                   Bus No.
                 </Typography>
               </Box>
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'primary.main' }}>
+
+              <Typography
+                sx={{
+                  fontSize: '0.9rem',
+                  fontWeight: 400,
+                  color: 'primary.main',
+                  ml: 3.5,
+                }}
+              >
                 {vehicle?.schoolAssignedNumber || '01'}
               </Typography>
             </Box>
           </Grid>
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <Box
               sx={{
-                border: '1px solid background.border',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                gap: 1,
                 borderRadius: 2,
-                p: 1.5,
-                bgcolor: 'background.neutral',
+                p: 2,
+                height: '100%',
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                transition: 'all 0.25s ease-in-out',
+                '&:hover': {
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                  transform: 'translateY(-2px)',
+                },
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <LocalGasStationIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-                <Typography sx={{ fontSize: '0.8rem', fontWeight: 500, color: 'primary.main' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <LocalGasStationIcon sx={{ fontSize: 22, color: 'primary.main' }} />
+                <Typography
+                  sx={{
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: 'text.secondary',
+                    letterSpacing: 0.3,
+                  }}
+                >
                   Fuel Type
                 </Typography>
               </Box>
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'primary.main' }}>
+
+              <Typography
+                sx={{
+                  fontSize: '0.9rem',
+                  fontWeight: 400,
+                  color: 'primary.main',
+                  ml: 3.5,
+                }}
+              >
                 {vehicle?.fuelType || '45'}
               </Typography>
             </Box>
@@ -180,50 +318,96 @@ const VehicleInformationCard = () => {
         {/* Expiry Date Cards */}
         <Grid container spacing={2} sx={{ mb: 1 }}>
           {/* Insurance */}
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <Box
               sx={{
-                border: '1px solid background.border',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                gap: 1,
                 borderRadius: 2,
-                p: 1.5,
-                bgcolor: 'background.neutral',
+                p: 2,
+                height: '100%',
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                transition: 'all 0.25s ease-in-out',
+                '&:hover': {
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                  transform: 'translateY(-2px)',
+                },
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <VerifiedUserIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-                <Typography sx={{ fontSize: '0.8rem', fontWeight: 500, color: 'primary.main' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <VerifiedUserIcon sx={{ fontSize: 22, color: 'primary.main' }} />
+                <Typography
+                  sx={{
+                    fontSize: '0.85rem',
+                    fontWeight: 400,
+                    color: 'text.secondary',
+                    letterSpacing: 0.3,
+                  }}
+                >
                   Insurance
                 </Typography>
               </Box>
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'primary.main' }}>
+              <Typography
+                sx={{
+                  fontSize: '0.9rem',
+                  fontWeight: 400,
+                  color: 'primary.main',
+                  ml: 3.5,
+                }}
+              >
                 {vehicle?.insuranceExpiry || '10-12-2024'}
               </Typography>
             </Box>
           </Grid>
-          <Grid size={{ xs: 6 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <Box
               sx={{
-                border: '1px solid background.border',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                gap: 1,
                 borderRadius: 2,
-                p: 1.5,
-                bgcolor: 'background.neutral',
+                p: 2,
+                height: '100%',
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                transition: 'all 0.25s ease-in-out',
+                '&:hover': {
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                  transform: 'translateY(-2px)',
+                },
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <RouteIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-                <Typography sx={{ fontSize: '0.8rem', fontWeight: 500, color: 'primary.main' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <RouteIcon sx={{ fontSize: 22, color: 'primary.main' }} />
+                <Typography
+                  sx={{
+                    fontSize: '0.85rem',
+                    fontWeight: 400,
+                    color: 'text.secondary',
+                    letterSpacing: 0.3,
+                  }}
+                >
                   Route
                 </Typography>
               </Box>
               <Typography
                 sx={{
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  fontWeight: 400,
                   maxWidth: '100%',
                   color: 'primary.main',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
+                  ml: 3.5,
                 }}
                 title={vehicle?.route || 'Route-CC'}
               >

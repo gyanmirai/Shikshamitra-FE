@@ -51,6 +51,12 @@ const VehicleHistory = () => {
           minWidth: '150px',
         },
         {
+          id: 'conductorName',
+          label: 'Conductor Name',
+          align: 'left',
+          minWidth: '170px',
+        },
+        {
           id: 'assignedDate',
           label: 'Assigned Date',
           align: 'left',
@@ -61,6 +67,18 @@ const VehicleHistory = () => {
           label: 'Unassigned Date',
           align: 'left',
           minWidth: '160px',
+        },
+        {
+          id: 'totalRunningDays',
+          label: 'Total Running Days',
+          align: 'left',
+          minWidth: '180px',
+        },
+        {
+          id: 'reason',
+          label: 'Reason',
+          align: 'left',
+          minWidth: '180px',
         },
         {
           id: 'totalStudents',
@@ -150,14 +168,10 @@ const DriverConductorHistoryTable = () => {
           minWidth: '120px',
         },
         {
-          id: 'status',
-          label: 'Status',
+          id: 'remarks',
+          label: 'Remarks',
           align: 'left',
-          minWidth: '100px',
-          sticky: true,
-          render: (value: 'Active' | 'Replaced') => (
-            <Label color={value === 'Active' ? 'success' : 'default'}>{value}</Label>
-          ),
+          minWidth: '180px',
         },
       ]}
       data={mockVehicleHistory || []}

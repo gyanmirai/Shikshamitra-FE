@@ -1,18 +1,30 @@
 import type { Dayjs } from 'dayjs';
 import type { LabelColor } from 'src/components/label';
 
-export type VehicleStatusType = 'Active' | 'Inactive' | 'Maintenance';
-
+export enum VehicleStatusType {
+  Active,
+  Inactive,
+  Maintenance,
+}
 export const VehicleStatusOptions = [
-  { label: 'Active', value: 'Active' },
-  { label: 'Inactive', value: 'Inactive' },
-  { label: 'Maintenance', value: 'Maintenance' },
+  {
+    label: VehicleStatusType[VehicleStatusType.Active],
+    value: VehicleStatusType[VehicleStatusType.Active],
+  },
+  {
+    label: VehicleStatusType[VehicleStatusType.Inactive],
+    value: VehicleStatusType[VehicleStatusType.Inactive],
+  },
+  {
+    label: VehicleStatusType[VehicleStatusType.Maintenance],
+    value: VehicleStatusType[VehicleStatusType.Maintenance],
+  },
 ];
 
 export const VehicleStatusTypeColors: Record<VehicleStatusType, LabelColor> = {
-  Active: 'success',
-  Inactive: 'error',
-  Maintenance: 'warning',
+  [VehicleStatusType.Active]: 'success',
+  [VehicleStatusType.Inactive]: 'error',
+  [VehicleStatusType.Maintenance]: 'warning',
 };
 
 export interface IVehicleData {

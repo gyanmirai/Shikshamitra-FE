@@ -141,7 +141,7 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
             },
             {
               id: 'students',
-              label: 'Students',
+              label: 'Members',
               align: 'left',
               filterType: 'number',
               minWidth: 100,

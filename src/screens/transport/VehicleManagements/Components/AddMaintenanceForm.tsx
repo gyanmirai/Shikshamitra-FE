@@ -4,6 +4,7 @@ import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -20,6 +21,7 @@ interface AddMaintenanceFormProps {
 }
 
 const initialValues = {
+  serviceType: [],
   serviceDate: null,
   serviceNotes: '',
   serviceCost: '',
@@ -45,6 +47,31 @@ const AddMaintenanceForm: React.FC<AddMaintenanceFormProps> = ({ open, onClose }
       <DialogScrollContent>
         <Grid container spacing={3}>
           {/* Service Date */}
+
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(formik.touched.serviceType && formik.errors.serviceType)}>
+              <CustomSelect
+                label="Service Type *"
+                multiple
+                options={[
+                  { value: 'Regular', label: 'Regular' },
+                  { value: 'Major', label: 'Major' },
+                  { value: 'Minor', label: 'Minor' },
+                  { value: 'Emergency', label: 'Emergency' },
+                  { value: 'Body Work', label: 'Body Work' },
+                ]}
+                name="serviceType"
+                value={formik.values.serviceType}
+                onChange={(val) => formik.setFieldValue('serviceType', val)}
+                formControlProps={{ sx: { minWidth: 275, width: '100%' } }}
+                error={!!(formik.touched.serviceType && formik.errors.serviceType)}
+                helperText={
+                  ((formik.touched.serviceType && formik.errors.serviceType) as string) || ''
+                }
+              />
+            </ShakingTextField>
+          </Grid>
+
           <Grid size={{ xs: 12, md: 6 }}>
             <ShakingTextField error={!!(formik.touched.serviceDate && formik.errors.serviceDate)}>
               <DatePicker

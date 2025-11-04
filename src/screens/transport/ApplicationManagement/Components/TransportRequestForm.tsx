@@ -39,7 +39,7 @@ const TransportApplicationStepper = ({
   const [activeStep, setActiveStep] = useState(0);
 
   // Step Names
-  const steps = ['Select Student', 'Transport Application'];
+  const steps = ['Select Member', 'Transport Application'];
 
   // Step Components
   const stepComponents = [SelectStudentStep, TransportApplicationForm];
