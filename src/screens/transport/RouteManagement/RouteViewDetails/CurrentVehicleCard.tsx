@@ -1,20 +1,19 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { SwapHoriz } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { SwapHoriz, Visibility } from '@mui/icons-material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Card, Button, Avatar, Divider, Typography } from '@mui/material';
 
-import ViewStudents from './ViewStudents';
 import ChangeVehicleForm from './ChangeVehicleForm';
 
 // Mock vehicle data - replace with actual props/API data
-const mockVehicleData = {
+export const mockVehicleData = {
   vehicleNumber: 'GJ-05-AD-2711',
   imageUrl: 'https://cdn-icons-png.flaticon.com/512/296/296216.png',
   busCode: 'Bus-001',
@@ -29,7 +28,6 @@ const CurrentVehicleCard = () => {
   const dispatch = useDispatch();
 
   const changeVehicleDialog = useBoolean();
-  const viewStudentsDialog = useBoolean(); // Added for View Students dialog
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -75,7 +73,9 @@ const CurrentVehicleCard = () => {
         </Box>
 
         {/* Main Content */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 3 }}
+        >
           {/* Vehicle Info */}
           <Box display="flex" alignItems="center" gap={2} minWidth={220}>
             <Avatar
@@ -125,10 +125,6 @@ const CurrentVehicleCard = () => {
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
               >
                 {mockVehicleData.studentName}
-                <Visibility
-                  sx={{ fontSize: 18, ml: 4, cursor: 'pointer' }}
-                  onClick={() => viewStudentsDialog.onTrue()}
-                />
               </Typography>
               <Typography color="text.primary">{mockVehicleData.PhoneNumber}</Typography>
             </Box>
@@ -162,11 +158,6 @@ const CurrentVehicleCard = () => {
       </CustomDialog>
 
       {/* View Students Dialog */}
-      <ViewStudents
-        open={viewStudentsDialog.value}
-        onClose={() => viewStudentsDialog.onFalse()}
-        routeData={mockVehicleData} // Pass vehicle/route data if needed
-      />
     </>
   );
 };
