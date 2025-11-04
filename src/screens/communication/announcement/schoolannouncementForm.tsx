@@ -6,7 +6,6 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { Close } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { useTheme } from '@mui/material/styles';
@@ -14,12 +13,12 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { DateTimePicker } from '@mui/x-date-pickers';
-import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Close, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -48,11 +47,13 @@ import SchoolWiseAnnouncementCard from './components/SchoolWiseDetails/SchoolWis
 
 import type { ISchoolWiseAnnouncementFormProps } from './type';
 
-export const audienceOptions = [
-  { value: 'Staff', name: 'Staff', color: '#4CAF50' },
-  { value: 'Students', name: 'Students', color: '#2196F3' },
-  { value: 'Parents', name: 'Parents', color: '#FF9800' },
-  { value: 'Teachers', name: 'Teachers', color: '#9C27B0' },
+const options = [
+  { value: 'cricketGroup', label: 'Cricket Group' },
+  { value: 'mathLegendGroup', label: 'Math Legend Group' },
+  { value: 'scienceInnovators', label: 'Science Innovators' },
+  { value: 'literatureClub', label: 'Literature Club' },
+  { value: 'musicTeam', label: 'Music Team' },
+  { value: 'artCrew', label: 'Art Crew' },
 ];
 
 const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
@@ -188,76 +189,54 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                   </Grid>
                   <Grid size={{ xs: 12, md: 6, sm: 3 }}>
                     <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
-                      <CustomSelect
-                        label="Audience *"
-                        options={[
-                          { value: 'All', name: 'All', color: '#FFFFFF' },
-                          ...audienceOptions,
-                        ]} // include "All" option
+                      <Autocomplete
                         multiple
-                        value={formik.values.audience.map((aud) => aud.name)}
-                        onChange={(val) => {
-                          const value = val as string[];
-
-                          const allAudienceIds = audienceOptions.map((aud) => aud.name); // all names except 'All'
-                          const isAllClicked = value.includes('All');
-                          const wasAllPreviouslySelected = formik.values.audience.some(
-                            (aud: any) => aud.name === 'All'
-                          );
-
-                          if (isAllClicked && !wasAllPreviouslySelected) {
-                            // "All" was just clicked - select all audience
-                            formik.setFieldValue('audience', [
-                              { value: 'All', name: 'All', color: '#FFFFFF' },
-                              ...audienceOptions,
-                            ]);
-                          } else if (!isAllClicked && wasAllPreviouslySelected) {
-                            // "All" was just unchecked - deselect all
-                            formik.setFieldValue('audience', []);
-                          } else if (isAllClicked && wasAllPreviouslySelected) {
-                            // Individual item was selected/deselected while "All" was already selected
-                            const selectedWithoutAll = value.filter((name) => name !== 'All');
-
-                            if (selectedWithoutAll.length === allAudienceIds.length) {
-                              // All individual items are selected, keep "All" selected
-                              formik.setFieldValue('audience', [
-                                { value: 'All', name: 'All', color: '#FFFFFF' },
-                                ...audienceOptions,
-                              ]);
-                            } else {
-                              // Not all individual items are selected, remove "All"
-                              const selectedObjects = audienceOptions.filter((opt) =>
-                                selectedWithoutAll.includes(opt.name)
-                              );
-                              formik.setFieldValue('audience', selectedObjects);
-                            }
-                          } else {
-                            // "All" is not selected, handle individual selections
-                            const selectedWithoutAll = value.filter((name) => name !== 'All');
-                            if (selectedWithoutAll.length === allAudienceIds.length) {
-                              // All individual items selected, add "All"
-                              formik.setFieldValue('audience', [
-                                { value: 'All', name: 'All', color: '#FFFFFF' },
-                                ...audienceOptions,
-                              ]);
-                            } else {
-                              const selectedObjects = audienceOptions.filter((opt) =>
-                                selectedWithoutAll.includes(opt.name)
-                              );
-                              formik.setFieldValue('audience', selectedObjects);
-                            }
-                          }
-                        }}
-                        onBlur={() => formik.setFieldTouched('audience', true)}
-                        labelKey="name"
-                        valueKey="value"
-                        formControlProps={{ fullWidth: true, sx: { minWidth: 200 } }}
-                        error={formik.touched.audience && Boolean(formik.errors.audience)}
-                        helperText={
-                          Array.isArray(formik.errors.audience)
-                            ? formik.errors.audience.join(', ')
-                            : (formik.touched.audience && formik.errors.audience) || undefined
+                        disableCloseOnSelect
+                        options={options}
+                        getOptionLabel={(option) => option?.label || ''}
+                        value={formik.values.audience
+                          .map((val) => options.find((opt) => opt.value === val))
+                          .filter(Boolean)}
+                        onChange={(_, newValue) =>
+                          formik.setFieldValue(
+                            'audience',
+                            newValue.map((opt) => opt?.value)
+                          )
                         }
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip
+                              {...getTagProps({ index })}
+                              key={option?.value}
+                              label={option?.label}
+                              size="small"
+                              color="default"
+                              variant="soft"
+                              sx={{ height: 22 }}
+                            />
+                          ))
+                        }
+                        renderOption={(props, option, { selected }) => (
+                          <li {...props} key={option?.value}>
+                            <Checkbox
+                              icon={<CheckBoxOutlineBlank fontSize="small" />}
+                              checkedIcon={<CheckBox fontSize="small" />}
+                              checked={selected}
+                            />
+                            {option?.label}
+                          </li>
+                        )}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Audience *"
+                            fullWidth
+                            size="small"
+                            error={formik.touched.audience && Boolean(formik.errors.audience)}
+                            helperText={formik.touched.audience && formik.errors.audience}
+                          />
+                        )}
+                        sx={{ minWidth: 300 }}
                       />
                     </ShakingTextField>
                   </Grid>

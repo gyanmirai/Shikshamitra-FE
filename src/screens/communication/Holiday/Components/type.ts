@@ -8,7 +8,7 @@ export interface IHoliday {
   endDate: Dayjs | string | null; // End Date
   description: string; // Description / Message Body
   attachment?: File | null; // File Uploads (circular, poster, pdf, etc.)
-  classes: string[];
+  audience: string[];
   createdBy: string;
   createdOn: Dayjs | string | null;
   status: number; // Draft / Published / Archived

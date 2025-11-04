@@ -4,8 +4,8 @@ import React from 'react';
 import { Box } from '@mui/system';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { useGetDeliveryChannelTypeOptionsQuery } from 'src/redux/communication/setting/deliveryChannelApi';
 import { Grid, Chip, Checkbox, Typography, FormHelperText, FormControlLabel } from '@mui/material';
+import { useGetDeliveryChannelTypeOptionsQuery } from 'src/redux/communication/setting/deliveryChannelApi';
 
 import type { INotificationSendSchema } from './type';
 import type { IDeliveryChannel } from '../../../DeliveryChannelType/type';

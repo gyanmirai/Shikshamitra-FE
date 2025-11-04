@@ -15,14 +15,32 @@ import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
+import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  Box,
+  Chip,
+  Grid,
+  Button,
+  Checkbox,
+  TextField,
+  Autocomplete,
+  DialogActions,
+} from '@mui/material';
 
 import { holidayValidationSchema } from './getHolidayValidationSchema';
 
 import type { IHoliday, IHolidayFormProps } from './type';
 
+const options = [
+  { value: 'cricketGroup', label: 'Cricket Group' },
+  { value: 'mathLegendGroup', label: 'Math Legend Group' },
+  { value: 'scienceInnovators', label: 'Science Innovators' },
+  { value: 'literatureClub', label: 'Literature Club' },
+  { value: 'musicTeam', label: 'Music Team' },
+  { value: 'artCrew', label: 'Art Crew' },
+];
 const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEdit = false }) => {
   const theme = useTheme();
 
@@ -38,7 +56,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
       holidayName: initialValues?.holidayName || '',
       holidayType: initialValues?.holidayType || '',
       startDate: initialValues?.startDate || null,
-      classes: initialValues?.classes || [],
+      audience: initialValues?.audience || [],
       endDate: initialValues?.endDate || null,
       description: initialValues?.description || '',
       attachment: initialValues?.attachment || null,
@@ -209,60 +227,57 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
 
             {/* Audience */}
             <Grid size={{ xs: 12 }}>
-              <SectionCard title="Class Selection">
+              <SectionCard title="Audience Selection" paperProps={{ sx: { mb: 0 } }}>
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField error={!!(formik.touched.classes && formik.errors.classes)}>
-                    <CustomSelect
-                      options={allClass}
-                      label="Class *"
+                  <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
+                    <Autocomplete
                       multiple
-                      value={formik.values.classes}
-                      onChange={(val) => {
-                        const value = val as string[];
-
-                        const allClassIds =
-                          allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
-                        const isAllClicked = value.includes('all');
-                        const wasAllPreviouslySelected = (
-                          formik.values.classes as string[]
-                        ).includes('all');
-
-                        if (isAllClicked && !wasAllPreviouslySelected) {
-                          // "All" was just clicked - select all classes
-                          formik.setFieldValue('classes', ['all', ...allClassIds]);
-                        } else if (!isAllClicked && wasAllPreviouslySelected) {
-                          // "All" was just unchecked - deselect all classes
-                          formik.setFieldValue('classes', []);
-                        } else if (isAllClicked && wasAllPreviouslySelected) {
-                          // Individual item was selected/deselected while "All" was already selected
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-
-                          if (selectedWithoutAll.length === allClassIds.length) {
-                            // All individual items are selected, keep "All" selected
-                            formik.setFieldValue('classes', ['all', ...allClassIds]);
-                          } else {
-                            // Not all individual items are selected, remove "All"
-                            formik.setFieldValue('classes', selectedWithoutAll);
-                          }
-                        } else {
-                          // "All" is not selected, handle individual selections
-                          const selectedWithoutAll = value.filter((id) => id !== 'all');
-
-                          if (selectedWithoutAll.length === allClassIds.length) {
-                            // All individual items are selected, add "All"
-                            formik.setFieldValue('classes', ['all', ...allClassIds]);
-                          } else {
-                            // Not all items selected, just keep individual selections
-                            formik.setFieldValue('classes', selectedWithoutAll);
-                          }
-                        }
-                      }}
-                      onBlur={() => formik.setFieldTouched('classes', true)}
-                      error={formik.touched.classes && Boolean(formik.errors.classes)}
-                      helperText={(formik.touched.classes && formik.errors.classes) as string}
-                      labelKey="name"
-                      valueKey="id"
-                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                      disableCloseOnSelect
+                      options={options}
+                      getOptionLabel={(option) => option?.label || ''}
+                      value={formik.values.audience
+                        .map((val) => options.find((opt) => opt.value === val))
+                        .filter(Boolean)}
+                      onChange={(_, newValue) =>
+                        formik.setFieldValue(
+                          'audience',
+                          newValue.map((opt) => opt?.value)
+                        )
+                      }
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip
+                            {...getTagProps({ index })}
+                            key={option?.value}
+                            label={option?.label}
+                            size="small"
+                            color="default"
+                            variant="soft"
+                            sx={{ height: 22 }}
+                          />
+                        ))
+                      }
+                      renderOption={(props, option, { selected }) => (
+                        <li {...props} key={option?.value}>
+                          <Checkbox
+                            icon={<CheckBoxOutlineBlank fontSize="small" />}
+                            checkedIcon={<CheckBox fontSize="small" />}
+                            checked={selected}
+                          />
+                          {option?.label}
+                        </li>
+                      )}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Audience *"
+                          fullWidth
+                          size="small"
+                          error={formik.touched.audience && Boolean(formik.errors.audience)}
+                          helperText={formik.touched.audience && formik.errors.audience}
+                        />
+                      )}
+                      sx={{ minWidth: 300 }}
                     />
                   </ShakingTextField>
                 </Grid>

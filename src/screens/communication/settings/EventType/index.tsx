@@ -66,7 +66,7 @@ const EventTypeCreation = () => {
         heading="Event Type"
         description="Manage event types such as Workshop, Seminar, Sports Event, etc. Use actions to edit or delete existing types. Click ‘Add Event Type’ to create a new one."
         links={[
-          { name: 'Communication', href: '/communication/dashboard' },
+          { name: 'Calendar', href: '/calendar/dashboard' },
           { name: 'Settings', href: '/communication/setting' },
           { name: 'Event Type', href: '/communication/event-type' },
         ]}

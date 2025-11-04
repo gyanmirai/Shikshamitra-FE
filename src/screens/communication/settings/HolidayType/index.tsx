@@ -66,7 +66,7 @@ const HolidayTypeCreation = () => {
         heading="Holiday Type"
         description="Manage holiday types such as National Holiday, Festival Holiday, Optional Holiday, etc. Use actions to edit or delete existing types. Click ‘Add Holiday Type’ to create a new one."
         links={[
-          { name: 'Communication', href: '/communication/dashboard' },
+          { name: 'Calendar', href: '/calendar/dashboard' },
           { name: 'Settings', href: '/communication/setting' },
           { name: 'Holiday Type', href: '/communication/holiday-type' },
         ]}

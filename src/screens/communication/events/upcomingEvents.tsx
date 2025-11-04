@@ -79,7 +79,7 @@ const UpcomingEvents = (props: TabComponentType) => {
               : 'Create new school events with important details, schedules, and notifications. Share event information efficiently with students, teachers, and staff.'
           }
           links={[
-            { name: 'Communication', href: '/communication/dashboard' },
+            { name: 'Calendar', href: '/calendar/dashboard' },
             { name: 'Events' },
             { name: editingEvent ? 'Update Event' : 'Add Event' },
           ]}
@@ -93,7 +93,7 @@ const UpcomingEvents = (props: TabComponentType) => {
         <CustomBreadcrumbs
           heading="Events"
           description="View and manage all school events, including event details, schedules, and status. Add new events, update existing ones, or remove them as needed."
-          links={[{ name: 'Communication', href: '/communication/dashboard' }, { name: 'Events' }]}
+          links={[{ name: 'Calendar', href: '/calendar/dashboard' }, { name: 'Events' }]}
           sx={{ px: 1, mb: 1 }}
           action={
             <Button

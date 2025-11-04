@@ -33,7 +33,7 @@ import SchoolManagementViewDetails from './components/SchoolWiseDetails/SchoolMa
 
 import type { ISchoolWiseAnnouncement } from './type';
 
-const SchoolWiseAnnounsement = (props: TabComponentType) => {
+const Announcement = (props: TabComponentType) => {
   // Controls form visibility through URL search parameters
   const [open, setOpen] = useState(false);
   const { data: announcementData } = useQueryAndMutation({
@@ -104,15 +104,14 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           }
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
-            { name: 'Announcements' },
             {
-              name: 'School Announcement',
-              href: '/communication/announcement/schoolWiseAnnounsement',
+              name: 'Announcements',
               onClick(e) {
                 setOpen(false);
                 setEditingAnnouncement(null);
               },
             },
+
             { name: editingAnnouncement ? 'Update Announcement' : 'Add Announcement' },
           ]}
           sx={{ px: 1, mb: 2 }}
@@ -128,7 +127,6 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Announcements' },
-            { name: 'School Announcement' },
           ]}
           sx={{ px: 1, mb: 2 }}
           action={
@@ -312,4 +310,4 @@ const SchoolWiseAnnounsement = (props: TabComponentType) => {
   );
 };
 
-export default SchoolWiseAnnounsement;
+export default Announcement;

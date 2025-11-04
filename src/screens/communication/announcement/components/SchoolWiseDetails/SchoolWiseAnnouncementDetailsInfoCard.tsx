@@ -233,7 +233,7 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
                 Audience
               </Typography>
               <Typography variant="body1" fontWeight="600">
-                {announcement.audience?.map((a) => a.value).join(', ') || '—'}
+                {announcement.audience?.map((a) => a).join(', ') || '—'}
               </Typography>
             </Box>
           </Box>

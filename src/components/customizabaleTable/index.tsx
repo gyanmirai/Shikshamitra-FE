@@ -491,7 +491,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   };
 
   return (
-    <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 1 }} ref={setTableRef}>
+    <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 0 }} ref={setTableRef}>
       <Box sx={{ display: 'flex', alignItems: 'center', p: isSearch ? 1 : 0, gap: 1 }}>
         {isSearch && (
           <TextField
@@ -563,10 +563,14 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto' }}
                   >
                     {columns
-                      .filter(
-                        (column) =>
-                          column?.label?.trim() &&
-                          column.label.toLowerCase().includes(columnSearchTerm.toLowerCase())
+                      .filter((column) =>
+                        (() => {
+                          if (typeof column?.label !== 'string') return false;
+                          const lbl = column.label as string;
+                          return (
+                            lbl.trim() && lbl.toLowerCase().includes(columnSearchTerm.toLowerCase())
+                          );
+                        })()
                       )
                       .map((column) => (
                         <FormControlLabel

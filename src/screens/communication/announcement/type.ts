@@ -13,7 +13,7 @@ export interface ISchoolWiseAnnouncement {
   id: string;
   title: string;
   description: string;
-  audience: IAudience[];
+  audience: string[];
   startDate: Dayjs | null;
   endDate: Dayjs | null;
   createdBy: string;
