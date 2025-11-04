@@ -19,9 +19,10 @@ import {
 type ViewDialogProps = {
   open: boolean;
   onClose: () => void;
+  data: any;
 };
 
-export default function ViewDialog({ open, onClose }: ViewDialogProps) {
+export default function ViewDialog({ open, onClose, data }: ViewDialogProps) {
   return (
     <Dialog
       open={open}
@@ -93,7 +94,7 @@ export default function ViewDialog({ open, onClose }: ViewDialogProps) {
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxWidth: { md: '68%' } }}>
           <Chip
-            label="Upcoming Event"
+            label={`Upcoming ${data?.type}`}
             color="success"
             variant="outlined"
             sx={{
@@ -114,12 +115,13 @@ export default function ViewDialog({ open, onClose }: ViewDialogProps) {
               lineHeight: 1.3,
             }}
           >
-            Parent-Teacher Conference
+            {data?.title}
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 0.5 }}>
             <Chip
-              label="Meeting"
+              label={data?.holidayType || data?.eventType || 'General'}
               size="small"
+              variant="outlined"
               sx={{
                 backgroundColor: (theme) => theme.palette.background.paper,
                 color: (theme) => theme.palette.text.primary,
@@ -128,8 +130,9 @@ export default function ViewDialog({ open, onClose }: ViewDialogProps) {
               }}
             />
             <Chip
-              label="Online"
+              label={data?.mode || 'Offline'}
               size="small"
+              variant="outlined"
               sx={{
                 backgroundColor: (theme) => theme.palette.background.paper,
                 color: (theme) => theme.palette.text.primary,
@@ -146,36 +149,40 @@ export default function ViewDialog({ open, onClose }: ViewDialogProps) {
         <Grid container spacing={1.5}>
           <Grid size={{ xs: 12, md: 6 }}>
             <InfoCard
-              icon={<CalendarTodayIcon color="success" />}
+              icon={<CalendarTodayIcon color="primary" />}
               title="Date"
               subtitle="Oct 5, 2025"
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <InfoCard
-              icon={<AccessTimeIcon color="success" />}
+              icon={<AccessTimeIcon color="primary" />}
               title="Time"
               subtitle="10:00 AM - 2:00 PM"
             />
           </Grid>
 
           <Grid size={{ xs: 12 }}>
-            <InfoCard icon={<GroupIcon color="success" />} title="Audience" subtitle="120 Users" />
+            <InfoCard icon={<GroupIcon color="primary" />} title="Audience" subtitle="120 Users" />
           </Grid>
 
           <Grid size={{ xs: 12 }}>
             <InfoCard
-              icon={<LinkIcon color="success" />}
-              title="Meeting Link"
+              icon={<LinkIcon color="primary" />}
+              title={data?.mode === 'online' ? 'Meeting Link' : 'Venue'}
               subtitle={
-                <Link
-                  href="https://meet.example.com/ptc-2025"
-                  target="_blank"
-                  underline="hover"
-                  sx={{ color: 'success.main', fontWeight: 600 }}
-                >
-                  https://meet.example.com/ptc-2025
-                </Link>
+                data?.mode === 'online' ? (
+                  <Link
+                    href="https://meet.example.com/ptc-2025"
+                    target="_blank"
+                    underline="hover"
+                    sx={{ color: 'success.main', fontWeight: 600 }}
+                  >
+                    https://meet.example.com/ptc-2025
+                  </Link>
+                ) : (
+                  data?.venue || '-'
+                )
               }
             />
           </Grid>
@@ -184,7 +191,7 @@ export default function ViewDialog({ open, onClose }: ViewDialogProps) {
             <InfoCard
               icon={<InfoTwoTone color="success" />}
               title="Description"
-              subtitle="Quarterly parent-teacher meeting to discuss student progress.s"
+              subtitle={data?.description}
             />
             {/* <Box sx={{ mt: 2 }}>
               <Typography variant="subtitle1" fontWeight="600">
