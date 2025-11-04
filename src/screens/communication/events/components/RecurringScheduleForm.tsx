@@ -604,7 +604,6 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime)}>
                 <TimePicker
@@ -626,6 +625,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
               </ShakingTextField>
             </Grid>
 
+            {/* Repeat Until */}
             <Grid size={{ xs: 12, md: 6 }}>
               <ShakingTextField error={!!(formik.touched.repeatUntil && formik.errors.repeatUntil)}>
                 <DatePicker
@@ -777,7 +777,24 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
               {formik.values.customInterval === 'months' && (
                 <>
                   {/* On Day Option */}
-                  <Grid size={{ xs: 12, md: 4 }}>
+                  <Grid
+                    size={{ xs: 12, md: 6 }}
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 2,
+                      position: 'relative',
+                      '&:after': {
+                        position: 'absolute',
+                        content: '""',
+                        height: '100%',
+                        top: '0%',
+                        right: '-12px',
+                        borderRight: '2px solid',
+                        borderColor: 'divider',
+                      },
+                    }}
+                  >
                     <FormControlLabel
                       value="onDay"
                       control={<Radio />}
@@ -785,8 +802,6 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                       checked={formik.values.monthlyOption === 'onDay'}
                       onChange={() => formik.setFieldValue('monthlyOption', 'onDay')}
                     />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 8 }}>
                     <ShakingTextField error={!!(formik.touched.onDay && formik.errors.onDay)}>
                       <TextField
                         size="small"
@@ -806,9 +821,10 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                       />
                     </ShakingTextField>
                   </Grid>
-
-                  {/* On The Option */}
-                  <Grid size={{ xs: 12, md: 4 }}>
+                  <Grid
+                    size={{ xs: 12, md: 6 }}
+                    sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+                  >
                     <FormControlLabel
                       value="onThe"
                       control={<Radio />}
@@ -816,47 +832,49 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
                       checked={formik.values.monthlyOption === 'onThe'}
                       onChange={() => formik.setFieldValue('monthlyOption', 'onThe')}
                     />
-                  </Grid>
-
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <ShakingTextField
-                      error={!!(formik.touched.onTheWeek && formik.errors.onTheWeek)}
-                    >
-                      <CustomSelect
-                        options={[
-                          { value: 'First', label: 'First' },
-                          { value: 'Second', label: 'Second' },
-                          { value: 'Third', label: 'Third' },
-                          { value: 'Fourth', label: 'Fourth' },
-                          { value: 'Last', label: 'Last' },
-                        ]}
-                        disabled={formik.values.monthlyOption !== 'onThe'}
-                        label="On Week *"
-                        value={formik.values.onTheWeek || 'First'}
-                        onChange={(val) => formik.setFieldValue('onTheWeek', val)}
-                        formControlProps={{ fullWidth: true }}
-                      />
-                    </ShakingTextField>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <ShakingTextField error={!!(formik.touched.onTheDay && formik.errors.onTheDay)}>
-                      <CustomSelect
-                        options={[
-                          { value: 'Monday', label: 'Monday' },
-                          { value: 'Tuesday', label: 'Tuesday' },
-                          { value: 'Wednesday', label: 'Wednesday' },
-                          { value: 'Thursday', label: 'Thursday' },
-                          { value: 'Friday', label: 'Friday' },
-                          { value: 'Saturday', label: 'Saturday' },
-                          { value: 'Sunday', label: 'Sunday' },
-                        ]}
-                        disabled={formik.values.monthlyOption !== 'onThe'}
-                        label="On Day *"
-                        value={formik.values.onTheDay || 'Monday'}
-                        onChange={(val) => formik.setFieldValue('onTheDay', val)}
-                        formControlProps={{ fullWidth: true }}
-                      />
-                    </ShakingTextField>
+                    <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+                      <ShakingTextField
+                        error={!!(formik.touched.onTheWeek && formik.errors.onTheWeek)}
+                        sx={{ width: '100%' }}
+                      >
+                        <CustomSelect
+                          options={[
+                            { value: 'First', label: 'First' },
+                            { value: 'Second', label: 'Second' },
+                            { value: 'Third', label: 'Third' },
+                            { value: 'Fourth', label: 'Fourth' },
+                            { value: 'Last', label: 'Last' },
+                          ]}
+                          disabled={formik.values.monthlyOption !== 'onThe'}
+                          label="On Week *"
+                          value={formik.values.onTheWeek || 'First'}
+                          onChange={(val) => formik.setFieldValue('onTheWeek', val)}
+                          formControlProps={{ fullWidth: true }}
+                          sx={{ flex: 1 }}
+                        />
+                      </ShakingTextField>
+                      <ShakingTextField
+                        error={!!(formik.touched.onTheDay && formik.errors.onTheDay)}
+                        sx={{ width: '100%' }}
+                      >
+                        <CustomSelect
+                          options={[
+                            { value: 'Monday', label: 'Monday' },
+                            { value: 'Tuesday', label: 'Tuesday' },
+                            { value: 'Wednesday', label: 'Wednesday' },
+                            { value: 'Thursday', label: 'Thursday' },
+                            { value: 'Friday', label: 'Friday' },
+                            { value: 'Saturday', label: 'Saturday' },
+                            { value: 'Sunday', label: 'Sunday' },
+                          ]}
+                          disabled={formik.values.monthlyOption !== 'onThe'}
+                          label="On Day *"
+                          value={formik.values.onTheDay || 'Monday'}
+                          onChange={(val) => formik.setFieldValue('onTheDay', val)}
+                          formControlProps={{ fullWidth: true }}
+                        />
+                      </ShakingTextField>
+                    </Box>
                   </Grid>
                 </>
               )}

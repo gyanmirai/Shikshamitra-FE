@@ -511,6 +511,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                       title="Recurring Schedule"
                       open={openRecurringDialog.value}
                       handleClose={() => openRecurringDialog.onFalse()}
+                      maxWidth="sm"
                     >
                       <RecurringScheduleForm
                         initialValues={formik.values}

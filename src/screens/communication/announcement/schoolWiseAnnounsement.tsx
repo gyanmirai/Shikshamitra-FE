@@ -122,7 +122,7 @@ const Announcement = (props: TabComponentType) => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="School Announcement"
+          heading="Announcement"
           description="View and manage all school-wide announcements, including message content, target audience, and publication status. Add new announcements, update existing ones, or remove them as needed."
           links={[
             { name: 'Communication', href: '/communication/dashboard' },
@@ -136,7 +136,7 @@ const Announcement = (props: TabComponentType) => {
               variant="contained"
               onClick={() => setOpen(true)}
             >
-              School Announcement
+              Announcement
             </Button>
           }
         />
