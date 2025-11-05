@@ -63,7 +63,7 @@ const ChargeReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) =
 
         <Button
           type="submit"
-          variant="contained"
+          variant="soft"
           color={mode === 'Reject' ? 'error' : 'success'}
           startIcon={<Iconify icon={mode === 'Reject' ? GlobalIcons.cancel : GlobalIcons.tick} />}
           size="small"

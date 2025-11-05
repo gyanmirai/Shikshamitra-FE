@@ -116,7 +116,7 @@ const FeeStructure = () => {
               Fee Structure
             </Button>
           }
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1, mb: 2 }}
         />
       )}
       <>
@@ -152,16 +152,18 @@ const FeeStructure = () => {
       </>
 
       {viewFeeStructureDialog.value && (
-        <ViewFeeStructure
-          open={viewFeeStructureDialog}
-          onClose={() => {
-            viewFeeStructureDialog.onFalse();
-            setTimeout(() => {
-              setSelectedFeeStructure(null);
-            }, 200);
-          }}
-          data={selectedFeeStructure}
-        />
+        <Card sx={{ height: '100%', boxShadow: 'none' }}>
+          <ViewFeeStructure
+            open={viewFeeStructureDialog}
+            onClose={() => {
+              viewFeeStructureDialog.onFalse();
+              setTimeout(() => {
+                setSelectedFeeStructure(null);
+              }, 200);
+            }}
+            data={selectedFeeStructure}
+          />
+        </Card>
       )}
 
       <ConfirmDialog

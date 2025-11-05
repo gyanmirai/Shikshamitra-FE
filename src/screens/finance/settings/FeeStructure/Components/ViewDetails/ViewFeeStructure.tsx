@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
 
 import ClassSelectionView from './ClassSelectionView';
 import FeeStructureViewCard from './FeeStructureViewCard';
@@ -22,7 +23,7 @@ const ViewFeeStructure = ({
   if (!feeStructure) return null;
 
   return (
-    <>
+    <Scrollbar sx={{ height: '100%', p: 2 }}>
       <ViewBasicDetailsOfStructure feeStructure={feeStructure} />
       {/* Class Selection */}
       <ClassSelectionView
@@ -50,7 +51,7 @@ const ViewFeeStructure = ({
             />
           );
         })}
-    </>
+    </Scrollbar>
   );
 };
 

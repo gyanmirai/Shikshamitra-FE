@@ -491,7 +491,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   };
 
   return (
-    <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 0 }} ref={setTableRef}>
+    <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 1 }} ref={setTableRef}>
       <Box sx={{ display: 'flex', alignItems: 'center', p: isSearch ? 1 : 0, gap: 1 }}>
         {isSearch && (
           <TextField

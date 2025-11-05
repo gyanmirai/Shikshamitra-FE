@@ -1,4 +1,5 @@
 import React from 'react';
+import { Label } from 'src/components/label';
 import { Grid, Paper, Typography } from '@mui/material';
 
 import type { IFeeStructure } from '../../type';
@@ -56,13 +57,9 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
         <Typography variant="body2" color="text.secondary">
           Status
         </Typography>
-        <Typography
-          variant="body1"
-          fontWeight="600"
-          color={feeStructure?.status === 1 ? 'success.main' : 'error.main'}
-        >
+        <Label variant="soft" color={feeStructure?.status === 1 ? 'success' : 'error'}>
           {feeStructure?.status === 1 ? 'Active' : 'Inactive'}
-        </Typography>
+        </Label>
       </Grid>
 
       {/* Receipt Book */}

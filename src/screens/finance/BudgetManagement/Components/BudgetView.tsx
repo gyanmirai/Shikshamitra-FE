@@ -42,18 +42,11 @@ const BudgetDetailsCard: React.FC<{
       >
         {/* Basic Details */}
         <Card sx={{ p: 2, mb: 2 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
             <Typography variant="h6" gutterBottom color="primary.main">
               Basic Details
             </Typography>
-            <Label
-              variant="outlined"
-              sx={{
-                color: 'success.main',
-                borderColor: 'success.main',
-                bgcolor: 'success.lighter',
-              }}
-            >
+            <Label variant="soft" color="success">
               {statusMap[Number(budget?.status)] ?? 'Unknown'}
             </Label>
           </Box>
@@ -265,11 +258,7 @@ const BudgetDetailsCard: React.FC<{
           variant="outlined"
           startIcon={<Iconify icon="material-symbols:close" />}
           onClick={() => handleClose(null, false)}
-          sx={{
-            minWidth: { xs: 80, sm: 100 }, // Smaller on mobile
-            fontSize: { xs: '0.75rem', sm: '0.875rem' }, // Smaller text on mobile
-          }}
-          size={window.innerWidth < 600 ? 'small' : 'medium'}
+          size="small"
         >
           Cancel
         </Button>
@@ -279,15 +268,7 @@ const BudgetDetailsCard: React.FC<{
           onClick={() => {
             // Handle download report action
           }}
-          sx={{
-            minWidth: { xs: 120, sm: 150 }, // Smaller on mobile
-            fontSize: { xs: '0.75rem', sm: '0.875rem' }, // Smaller text on mobile
-            bgcolor: 'grey.800',
-            '&:hover': {
-              bgcolor: 'grey.900',
-            },
-          }}
-          size={window.innerWidth < 600 ? 'small' : 'medium'}
+          size="small"
         >
           Download Report
         </Button>

@@ -24,14 +24,14 @@ export default function ConcessionsCard() {
 
   return (
     <Card sx={{ borderRadius: 3, boxShadow: 3, height: '100%' }}>
-      <CardContent>
+      <CardContent sx={{ p: 2 }}>
         {/* Header */}
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="h6" sx={{ color: 'primary.main' }}>
             Concessions Applied
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Total Savings: ₹{total.toLocaleString('en-IN')}
+            Total Savings : ₹ {total.toLocaleString('en-IN')}
           </Typography>
         </Box>
 

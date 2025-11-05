@@ -24,9 +24,9 @@ export default function InstallmentStatusCard() {
 
   return (
     <Card sx={{ borderRadius: 3, boxShadow: 3, height: '100%' }}>
-      <CardContent>
+      <CardContent sx={{ p: 2 }}>
         {/* Header */}
-        <Typography variant="h6" fontWeight="bold">
+        <Typography variant="h6" sx={{ color: 'primary.main' }}>
           Installment Status
         </Typography>
         <Typography variant="body2" color="text.secondary" mb={2}>

@@ -84,7 +84,6 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                   <TextField
                     size="small"
                     fullWidth
-                    autoFocus
                     name={field}
                     label="Receipt Book Name *"
                     value={formik.values[field]}
@@ -112,7 +111,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     size="small"
                     fullWidth
                     name={field}
-                    label="Prefix *"
+                    label="Prefix"
                     value={formik.values[field]}
                     onChange={(e) => {
                       const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
@@ -138,7 +137,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     size="small"
                     fullWidth
                     name={field}
-                    label="Suffix *"
+                    label="Suffix"
                     value={formik.values[field]}
                     onChange={(e) => {
                       const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '');
@@ -165,7 +164,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     fullWidth
                     type="number"
                     name={field}
-                    label="Starting Number *"
+                    label="Starting Number"
                     value={formik.values[field]}
                     onChange={(e) => {
                       formik.setFieldValue(field, e.target.value);
@@ -191,7 +190,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
                     fullWidth
                     type="number"
                     name={field}
-                    label="Ending Number *"
+                    label="Ending Number"
                     value={formik.values[field]}
                     onChange={(e) => {
                       formik.setFieldValue(field, e.target.value);

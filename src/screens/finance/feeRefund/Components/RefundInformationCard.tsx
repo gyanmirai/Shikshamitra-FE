@@ -13,31 +13,22 @@ const RefundInfo: React.FC<{ refund: IStudentFeeData }> = ({ refund }) => (
     <Grid container spacing={2}>
       {/* Paid Terms */}
       <Grid size={6}>
-        <Typography color="text.secondary">Refund Terms</Typography>
-        {refund?.paidTerms && refund.paidTerms.length > 0 ? (
-          <Box mt={1} display="flex">
-            <Typography variant="body2" fontWeight="300">
-              {refund.paidTerms.map((term, idx) => (
-                <React.Fragment key={`term-${idx}`}>
-                  {term}
-                  {refund?.paidTerms && idx < refund.paidTerms.length - 1 ? ', ' : ''}
-                </React.Fragment>
-              ))}
-            </Typography>
-          </Box>
-        ) : (
-          <Typography variant="body1" fontWeight="600">
-            —
-          </Typography>
-        )}
+        <Typography variant="body2" color="text.secondary">
+          Refund Terms
+        </Typography>
+        <Typography variant="body1" fontWeight="medium">
+          {refund?.paidTerms && refund.paidTerms.length > 0 ? refund.paidTerms.join(', ') : '—'}
+        </Typography>
       </Grid>
 
       {/* Applicable Fee Heads */}
       <Grid size={6}>
-        <Typography color="text.secondary">Applicable Fee Heads</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Applicable Fee Heads
+        </Typography>
         {refund?.applicableFeeHeads && refund.applicableFeeHeads.length > 0 ? (
           <Box mt={1} display="flex">
-            <Typography variant="body2" fontWeight="300">
+            <Typography variant="body1" fontWeight="medium">
               {refund.applicableFeeHeads.map((head, idx) => (
                 <React.Fragment key={`head-${idx}`}>
                   {head.feeHead}

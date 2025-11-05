@@ -29,7 +29,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
 
     <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
       <Button
-        variant="contained"
+        variant="soft"
         color="error"
         onClick={onReject}
         size="small"
@@ -39,7 +39,7 @@ const ChargeDetailsCard: React.FC<Props> = ({
       </Button>
 
       <Button
-        variant="contained"
+        variant="soft"
         color="success"
         onClick={onApprove}
         size="small"
