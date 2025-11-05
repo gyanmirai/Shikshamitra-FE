@@ -118,7 +118,7 @@ const RegistrationFormScreen = () => {
           description="After an inquiry Registration Form in a School ERP is provided to the prospective students for the admission process. "
           links={[
             { name: 'Student', href: '/student/enrollment/dashboard/' },
-            { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
+            { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
             { name: 'Registration Form Issued' },
           ]}
           sx={{ mb: 1 }}
@@ -151,6 +151,27 @@ const RegistrationFormScreen = () => {
                 minWidth: '180px',
                 align: 'left',
                 sticky: true,
+                render: (value, row) => {
+                  const fullName = `${row.lastName} ${row.firstName} ${row.middleName}`.trim();
+
+                  return (
+                    <CustomTooltip title={fullName} arrow sx={{ textAlign: 'justify' }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: '13px',
+                          display: 'block',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '150px',
+                        }}
+                      >
+                        {fullName}
+                      </Typography>
+                    </CustomTooltip>
+                  );
+                },
               },
               {
                 id: 'formNumber',
@@ -313,29 +334,6 @@ const RegistrationFormScreen = () => {
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
         />{' '}
       </CustomDialog>
-      {/* <ConfirmDialog
-        title="Move"
-        content="Are you sure want to move in registration ?"
-        action={
-          <LoadingButton
-            variant="contained"
-            loading={isLoading}
-            color="error"
-            onClick={async () => {
-              await moveToRegistration(moveId);
-              refetch();
-              confirmMovePopup.onFalse();
-            }}
-          >
-            Move
-          </LoadingButton>
-        }
-        open={confirmMovePopup.value}
-        onClose={() => {
-          confirmMovePopup.onFalse();
-          setMoveId(null);
-        }}
-      /> */}
     </Box>
   );
 };

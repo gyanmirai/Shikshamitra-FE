@@ -200,7 +200,7 @@ export const CommunicationForm = ({
       dueDate: data?.dueDate ? dayjs(data?.dueDate) : null,
     },
     validationSchema: Yup.object({
-      msg: Yup.string().required('Notes are required'),
+      msg: Yup.string().trim().min(1, 'Notes are required').required('Notes are required'),
       status: Yup.string().required('Status is required'),
       dueDate: Yup.string().required('Next Reminder Date is required'),
     }),

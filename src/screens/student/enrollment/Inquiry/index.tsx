@@ -296,7 +296,7 @@ const InquiryScreen = () => {
         description="Streamlined management of admission related inquiries from the students and parents."
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Student Enrollment', href: '/student/enrollment/inquiry' },
+          { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
           { name: 'Inquiry' },
         ]}
         sx={{ mb: 1 }}
