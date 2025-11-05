@@ -15,6 +15,10 @@ export const maintenanceValidationSchema = yup.object().shape({
       'Service Date cannot be in the future',
       (value) => value && dayjs(value as dayjs.Dayjs).isSameOrBefore(dayjs(), 'day')
     ),
+  serviceType: yup
+    .array()
+    .of(yup.string().required('Service Type is required'))
+    .min(1, 'At least one Service Type is required'),
   nextServiceDate: yup
     .mixed()
     .nullable()

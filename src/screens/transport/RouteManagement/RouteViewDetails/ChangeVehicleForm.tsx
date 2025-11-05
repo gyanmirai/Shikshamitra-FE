@@ -1,23 +1,26 @@
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
-import { Search } from '@mui/icons-material';
+import { varAlpha } from 'src/theme/styles';
+import { Label } from 'src/components/label';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetAvailableVehiclesQuery } from 'src/redux/transport/vehicle-management/route-management-api';
 import {
   Box,
+  Grid,
   Card,
-  Chip,
   Radio,
   Button,
   TextField,
   Typography,
   RadioGroup,
   DialogActions,
-  InputAdornment,
 } from '@mui/material';
 
 interface ChangeVehicleFormProps {
@@ -40,10 +43,11 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
 
   const [selectedVehicle, setSelectedVehicle] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
-
+  const theme = useTheme();
   const formik = useFormik({
     initialValues: {
       selectedVehicle: '',
+      reason: '',
     },
     onSubmit: (values) => {
       if (selectedVehicle) {
@@ -90,49 +94,68 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
         <Box sx={{ p: 1, minWidth: 600 }}>
           {/* Current Vehicle Section */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom color="primary.main">
-              Current Vehicle
-            </Typography>
-
-            <Card sx={{ p: 2, backgroundColor: '#f8f9fa', border: '1px solid #e9ecef' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Card sx={{ p: 2, border: '1px solid #e9ecef' }}>
+              <Typography variant="h6" gutterBottom color="primary.main">
+                Current Vehicle
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
                     Registration No.
                   </Typography>
                   <Typography variant="body1" fontWeight="500" gutterBottom>
                     {currentVehicle.registrationNo}
                   </Typography>
-
-                  <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mt: 2 }}>
+                </Grid>
+                <Grid size={{ xs: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
                     Make & Model
                   </Typography>
-                  <Typography variant="body1" fontWeight="500">
+                  <Typography variant="body1" fontWeight="500" gutterBottom>
                     {currentVehicle.makeModel}
                   </Typography>
-                </Box>
-
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                </Grid>
+                <Grid size={{ xs: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
                     Vehicle Type
                   </Typography>
                   <Typography variant="body1" fontWeight="500" gutterBottom>
                     {currentVehicle.vehicleType}
                   </Typography>
-
-                  <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mt: 2 }}>
+                </Grid>
+                <Grid size={{ xs: 3 }}>
+                  <Typography variant="body2" color="text.secondary">
                     Seating Capacity
                   </Typography>
-                  <Typography variant="body1" fontWeight="500">
+                  <Typography variant="body1" fontWeight="500" gutterBottom>
                     {currentVehicle.seatingCapacity}
                   </Typography>
-                </Box>
-              </Box>
+                </Grid>
+              </Grid>
             </Card>
           </Box>
+          <Grid size={{ xs: 12 }}>
+            <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
+              <TextField
+                fullWidth
+                label="Reason"
+                name="reason"
+                size="small"
+                multiline
+                rows={3}
+                value={formik.values.reason}
+                onChange={(e) => {
+                  formik.setFieldValue('reason', e.target.value);
+                  formik.setFieldTouched('reason', true);
+                }}
+                error={formik.touched.reason && Boolean(formik.errors.reason)}
+                helperText={formik.touched.reason && formik.errors.reason}
+              />
+            </ShakingTextField>
+          </Grid>
 
           {/* Select New Vehicle Section */}
-          <Box>
+          <Box sx={{ mt: 2 }}>
             <Typography variant="h6" gutterBottom color="primary.main">
               Select New Vehicle
             </Typography>
@@ -140,18 +163,11 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
             {/* Search Field */}
             <Box sx={{ mb: 3 }}>
               <TextField
-                placeholder="Search by reg no or..."
                 size="small"
                 fullWidth
+                label="Search by Reg no."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search sx={{ color: 'text.secondary', fontSize: 20 }} />
-                    </InputAdornment>
-                  ),
-                }}
               />
             </Box>
 
@@ -163,61 +179,70 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
                 formik.setFieldValue('selectedVehicle', e.target.value);
               }}
             >
-              {filteredVehicles?.map((vehicle: any) => (
-                <Card
-                  key={vehicle.id}
-                  sx={{
-                    p: 2,
-                    mb: 2,
-                    border:
-                      selectedVehicle === vehicle.id ? '2px solid #4caf50' : '1px solid #e0e0e0',
-                    backgroundColor: selectedVehicle === vehicle.id ? '#f1f8e9' : 'white',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      borderColor: '#4caf50',
-                    },
-                  }}
-                  onClick={() => {
-                    setSelectedVehicle(vehicle.id);
-                    formik.setFieldValue('selectedVehicle', vehicle.id);
-                  }}
-                >
-                  <Box
-                    sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              <Scrollbar sx={{ height: '150px' }}>
+                {filteredVehicles?.map((vehicle: any) => (
+                  <Card
+                    key={vehicle.id}
+                    sx={{
+                      p: 1,
+                      mb: 2,
+                      border: selectedVehicle === vehicle.id ? '2px solid' : '1px solid',
+                      borderColor: selectedVehicle === vehicle.id ? 'primary.main' : 'grey.300',
+                      backgroundColor:
+                        selectedVehicle === vehicle.id
+                          ? varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
+                          : 'background.paper',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        borderColor: '#4caf50',
+                      },
+                    }}
+                    onClick={() => {
+                      setSelectedVehicle(vehicle.id);
+                      formik.setFieldValue('selectedVehicle', vehicle.id);
+                    }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Radio
-                        value={vehicle.id}
-                        size="small"
-                        sx={{
-                          color: selectedVehicle === vehicle.id ? '#4caf50' : 'default',
-                          '&.Mui-checked': {
-                            color: '#4caf50',
-                          },
-                        }}
-                      />
-                      <Box>
-                        <Typography variant="body1" fontWeight="600" gutterBottom>
-                          {vehicle?.registrationNo}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {vehicle?.makeModel}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Type: {vehicle?.type} | Seats: {vehicle?.seatingCapacity}
-                        </Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Radio
+                          value={vehicle.id}
+                          size="small"
+                          sx={{
+                            color:
+                              selectedVehicle === vehicle.id
+                                ? varAlpha(theme.vars.palette.primary.mainChannel, 0.04)
+                                : 'default',
+                            '&.Mui-checked': {
+                              color: 'success.main',
+                            },
+                          }}
+                        />
+                        <Box display="flex" gap={2}>
+                          <Typography variant="body1" fontWeight="600">
+                            {vehicle?.registrationNo}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {vehicle?.makeModel}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Type : {vehicle?.type} | Seats : {vehicle?.seatingCapacity}
+                          </Typography>
+                        </Box>
                       </Box>
-                    </Box>
 
-                    <Chip
-                      label={vehicle?.status}
-                      size="small"
-                      color={getStatusColor(vehicle?.status) as any}
-                      variant="outlined"
-                    />
-                  </Box>
-                </Card>
-              ))}
+                      <Label variant="soft" color={getStatusColor(vehicle?.status) as any}>
+                        {vehicle?.status}
+                      </Label>
+                    </Box>
+                  </Card>
+                ))}
+              </Scrollbar>
             </RadioGroup>
 
             {filteredVehicles?.length === 0 && (
@@ -234,12 +259,7 @@ const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
       {/* Sticky Action Buttons */}
       <DialogActions
         sx={{
-          borderTop: '1px solid #e0e0e0',
-          backgroundColor: 'white',
-          position: 'sticky',
           bottom: 0,
-
-          boxShadow: '0 -2px 8px rgba(0,0,0,0.1)',
         }}
       >
         <Button

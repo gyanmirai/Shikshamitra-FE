@@ -1,5 +1,6 @@
 'use client';
 
+import dayjs from 'dayjs';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
@@ -195,7 +196,11 @@ const StopsStep = ({ formik }: StopsStepProps) => {
                         <TimePicker
                           label="Expected Arrival *"
                           format="hh:mm A"
-                          value={stop.expectedArrivalTime}
+                          value={
+                            stop.expectedArrivalTime
+                              ? dayjs(stop.expectedArrivalTime, 'hh:mm A')
+                              : null
+                          }
                           onChange={(val) =>
                             formik.setFieldValue(`stops.${index}.expectedArrivalTime`, val)
                           }
@@ -234,7 +239,11 @@ const StopsStep = ({ formik }: StopsStepProps) => {
                         <TimePicker
                           label="Expected Departure *"
                           format="hh:mm A"
-                          value={stop.expectedDepartureTime}
+                          value={
+                            stop.expectedDepartureTime
+                              ? dayjs(stop.expectedDepartureTime, 'hh:mm A')
+                              : null
+                          }
                           onChange={(val) =>
                             formik.setFieldValue(`stops.${index}.expectedDepartureTime`, val)
                           }

@@ -31,7 +31,7 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
     type: 'query',
     currentQueryAndMutation: useGetSelectableDriversQuery,
   });
-
+  console.log('availableDrivers---', availableDrivers);
   const { data: availableConductors = [] } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSelectableConductorsQuery,
@@ -161,7 +161,7 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
               fullWidth
               options={availableDrivers}
               value={formik.values.vehicleAssignment.driverId}
-              labelKey="driverName"
+              labelKey="name"
               onChange={(value) => {
                 const selectedDriver = availableDrivers.find(
                   (driver: any) => driver.value === value

@@ -25,6 +25,7 @@ export const getInitialValuesByModel = (
     'stop-based': {
       model: 'stop-based',
       effectiveFrom: baseDate,
+      feeFrequency: '',
     },
 
     // 'zone-based': {

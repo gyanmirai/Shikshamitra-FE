@@ -1,6 +1,5 @@
 import type { RootState } from 'src/redux/store';
 
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
@@ -10,8 +9,8 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Chip, MenuItem, MenuList, Typography } from '@mui/material';
 import { useGetDriverConductorDataQuery } from 'src/redux/transport/vehicle-management/driver-conductor-api';
 
 import DriverProfile from './DriverProfile';
@@ -75,9 +74,20 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
         noDataText={<>Driver/Conductor Data Not Found </>}
         columns={[
           {
+            id: 'name',
+            label: 'Name',
+            align: 'left',
+            sticky: true,
+            minWidth: 150,
+            render: (value) => (
+              <Typography variant="caption" fontSize="13px">
+                {value}
+              </Typography>
+            ),
+          },
+          {
             id: 'employeeId',
             label: 'Employee ID',
-            sticky: true,
             align: 'left',
             minWidth: 130,
             render: (value) => (
@@ -97,17 +107,7 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
               </Typography>
             ),
           },
-          {
-            id: 'name',
-            label: 'Name',
-            align: 'left',
-            minWidth: 150,
-            render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value}
-              </Typography>
-            ),
-          },
+
           {
             id: 'licenceExpiry',
             label: 'Licence Expiry',
@@ -147,51 +147,11 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
             label: 'Assigned Route',
             align: 'left',
             minWidth: 150,
-            render: (value, row) => {
-              const driverRow = row as IDriverConductor;
-              if (driverRow.role === 'Driver' && !value) {
-                return (
-                  <Chip
-                    size="small"
-                    label="Assign Route"
-                    variant="outlined"
-                    sx={{
-                      fontSize: '11px',
-                      cursor: 'pointer',
-                      '&:hover': {
-                        backgroundColor: 'primary.light',
-                        color: 'white',
-                      },
-                    }}
-                    onClick={() => {
-                      setSelectedDriver(driverRow);
-                      assignRouteDialog.onTrue();
-                    }}
-                  />
-                );
-              }
-              return (
-                <Typography variant="caption" fontSize="13px">
-                  {value || '-'}
-                </Typography>
-              );
-            },
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            align: 'left',
-            sticky: true,
-            minWidth: 120,
-            render: (value) => {
-              if (value === 'Active') {
-                return <Label color="success">{value}</Label>;
-              }
-              if (value === 'On Leave') {
-                return <Label color="error">{value}</Label>;
-              }
-              return <Label color="default">{value}</Label>;
-            },
+            render: (value, row) => (
+              <Typography variant="caption" fontSize="13px">
+                {Array.isArray(value) ? value.join(', ') : value || '-'}
+              </Typography>
+            ),
           },
           {
             id: 'action',

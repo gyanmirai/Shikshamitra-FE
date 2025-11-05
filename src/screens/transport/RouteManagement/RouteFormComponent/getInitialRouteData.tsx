@@ -30,7 +30,7 @@ export const getInitialRouteData = (editData?: IRoutePayload): IRoutePayload => 
   },
 
   // Stops Assignment
-  stops: editData?.stops || [],
+  stops: editData?.stopData || [],
 
   // Vehicle Assignments
   vehicleAssignment: editData?.vehicleAssignment || {
