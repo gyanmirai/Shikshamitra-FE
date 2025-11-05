@@ -138,15 +138,6 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
 
               <Grid size={{ xs: 12, sm: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Current Issued Books
-                </Typography>
-                <Typography variant="subtitle2" fontWeight="medium">
-                  {member?.currentIssue || '10'}
-                </Typography>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 2 }}>
-                <Typography variant="body2" color="text.secondary">
                   Overdue Return Books
                 </Typography>
                 <Typography variant="subtitle2" fontWeight="medium">
@@ -171,15 +162,6 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
                   {member?.contactNo || 'N/A'}
                 </Typography>
               </Grid>
-              <Grid size={{ xs: 12, sm: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Pending Return Books
-                </Typography>
-                <Typography variant="subtitle2" fontWeight="medium">
-                  10
-                </Typography>
-              </Grid>
-
               <Grid size={{ xs: 12, sm: 2 }}>
                 <Typography variant="body2" color="text.secondary">
                   Reserved Books

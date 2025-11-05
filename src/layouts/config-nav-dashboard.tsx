@@ -1581,13 +1581,13 @@ const libraryModule = {
               shortcutKey: 'Alt+L+S+2',
               shortcutKeyName: 'Alt+L+S+2',
             },
-            {
-              title: 'Book Conditions',
-              path: '/library/settings/book-condition',
-              _action: 'book-condition-setting',
-              shortcutKey: 'Alt+L+S+1',
-              shortcutKeyName: 'Alt+L+S+1',
-            },
+            // {
+            //   title: 'Book Conditions',
+            //   path: '/library/settings/book-condition',
+            //   _action: 'book-condition-setting',
+            //   shortcutKey: 'Alt+L+S+1',
+            //   shortcutKeyName: 'Alt+L+S+1',
+            // },
             {
               title: 'Library Hours',
               path: '/library/settings/library-timing',

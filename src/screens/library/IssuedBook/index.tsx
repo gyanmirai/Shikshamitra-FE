@@ -3,7 +3,6 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { ArrowBack } from '@mui/icons-material';
 // import { useGetIssuedBooksQuery } from 'src/redux/library/issueReturnBook';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -78,56 +77,23 @@ const IssueReturnBook = () => {
             <Button
               onClick={() => issueDialog.onTrue()}
               size="small"
-              startIcon={<Iconify icon="cib:stackoverflow" />}
+              startIcon={<Iconify icon="octicon:issue-closed-16" width={16} height={10} />}
               variant="contained"
-              color="success"
             >
-              Issue Book
+              Issue
             </Button>
             <Button
               onClick={() => returnDialog.onTrue()}
               size="small"
-              startIcon={<ArrowBack />}
+              startIcon={<Iconify icon="mdi:arrow-u-left-top" width={16} height={10} />}
               variant="contained"
-              color="warning"
             >
-              Return Book
+              Return
             </Button>
           </Box>
         }
         sx={{ px: 1, mb: 1 }}
       />
-
-      {/* Dialog for Add/Edit */}
-      {/* <CustomDialog
-        open={addDialog.value}
-        handleClose={() => {
-          addDialog.onFalse();
-          setSelectedRecord(null);
-        }}
-        maxWidth="md"
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedRecord ? 'Update Issue/Return Record' : 'Issue Book'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                selectedRecord
-                  ? 'Update the issued/returned book record including return date and status.'
-                  : 'Select a member and book to issue with issue date and due date.'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <IssueBookForm open={addDialog} onClose={handleClose} editData={null} />
-      </CustomDialog> */}
 
       <CustomDialog
         open={issueDialog.value}

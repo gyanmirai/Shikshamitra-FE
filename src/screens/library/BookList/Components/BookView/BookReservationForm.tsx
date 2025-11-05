@@ -94,7 +94,7 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
               value={formik.values.memberId}
               onChange={(e) => handleMemberSearch(e.target.value)}
               label="Search Member Id"
-              placeholder="Search By Member Id"
+              placeholder="Enter Member Id"
               fullWidth
             />
           </Grid>

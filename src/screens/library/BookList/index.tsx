@@ -275,6 +275,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         maxWidth="md"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Iconify icon="octicon:issue-closed-16" />
             <Typography variant="h5">Issue Book</Typography>
             <CustomTooltip
               arrow
@@ -322,6 +323,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         maxWidth="md"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Iconify icon="mdi:arrow-u-left-top" />
             <Typography variant="h5">Return Book</Typography>
             <CustomTooltip
               arrow
@@ -468,7 +470,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
           bookHistoryDialog.onFalse();
           setSelectedCopy(null);
         }}
-        maxWidth="md"
+        maxWidth="lg"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">

@@ -49,6 +49,9 @@ export interface IBook {
   bookCoverImages: string[]; // URLs or file references
   copies?: IBookCopy[];
   documents?: File[];
+  section?: string;
+  discription?: string;
+  shelf?: string;
   damagedBook?: number;
   numberOfPages: number;
   classes: string[];

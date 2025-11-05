@@ -123,7 +123,9 @@ const GlobalAcademicSearch = () => {
 
   const pathname = usePathname();
 
-  const isShowOnlyYearModule = ['/finance', '/library'].some((route) => pathname.startsWith(route));
+  const isShowOnlyYearModule = ['/finance', '/library', '/calendar'].some((route) =>
+    pathname.startsWith(route)
+  );
 
   return isYearLoading || isBoardLoading ? (
     <Skeleton variant="rounded" height={56} sx={{ minWidth: '300px', width: '100%' }} />
