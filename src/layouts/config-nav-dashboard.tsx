@@ -894,6 +894,13 @@ const academicModule = (isDdvs: boolean) => ({
             },
           ],
         },
+        {
+          title: 'Notification',
+          path: '/academic/notification',
+          _action: 'notification',
+          shortcutKey: 'Alt+N',
+          shortcutKeyName: 'Alt+N',
+        },
       ],
     },
   ],

@@ -90,7 +90,7 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
       {showBreadCumb &&
         (open ? (
           <CustomBreadcrumbs
-            heading="Budgeting"
+            heading={selectedBudget?.budgetName ? 'Update Budget' : 'Add Budget'}
             description={
               selectedBudget?.budgetName
                 ? 'Update existing budget details including category, amount, and allocations.'
@@ -100,6 +100,7 @@ const ScheduleBudget = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
               { name: 'Finance', href: '/finance/dashboard' },
               { name: 'Budget', href: '/finance/budgeting', onClick: () => setOpen(false) },
               { name: 'Budgeting' },
+              { name: selectedBudget?.budgetName ? 'Update Budget' : 'Add Budget' },
             ]}
             sx={{ px: 1 }}
             isBack

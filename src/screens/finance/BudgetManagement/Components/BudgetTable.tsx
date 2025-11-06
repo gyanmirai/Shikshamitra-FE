@@ -196,7 +196,13 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
           tableId="budget-table-pending"
           noDataText="Pending Budgets Not Found"
           columns={[
-            { id: 'budgetTitle', label: 'Budget Title', align: 'left', minWidth: '150px' },
+            {
+              id: 'budgetTitle',
+              label: 'Budget Title',
+              align: 'left',
+              minWidth: '150px',
+              sticky: true,
+            },
             { id: 'budgetCategory', label: 'Type', align: 'left' },
             {
               id: 'startDate',
@@ -219,40 +225,44 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               filterType: 'number',
               minWidth: '200px',
               render(value) {
-                return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
-              },
-            },
-            { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
-            { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
-            {
-              id: 'action',
-              label: 'Actions',
-              align: 'left',
-              isFilter: false,
-              isSort: false,
-              sticky: true,
-              render(value, row) {
                 return (
-                  <ThreeDotsActions
-                    showViewIcon
-                    showEditIcon
-                    showDeleteIcon
-                    handleViewClick={() => {
-                      onViewDetail?.(row);
-                    }}
-                    handleEditClick={() => {
-                      setOpenDialog?.(true);
-                      setEditData?.(row);
-                    }}
-                    handleDeleteClick={() => {
-                      onDelete?.(row.id);
-                    }}
-                    actions={(prop) => getActionsForStatus('pending', row, prop.popover)}
-                    placement="right-top"
-                  />
+                  <Typography variant="caption" fontSize="13px">
+                    {formatNumber(value, 'INR')}
+                  </Typography>
                 );
               },
             },
+            { id: 'allocated', label: 'Allocated', align: 'left', filterType: 'number' },
+            // { id: 'unallocated', label: 'Unallocated', align: 'left', filterType: 'number' },
+            // {
+            //   id: 'action',
+            //   label: 'Actions',
+            //   align: 'left',
+            //   isFilter: false,
+            //   isSort: false,
+            //   sticky: true,
+            //   render(value, row) {
+            //     return (
+            //       <ThreeDotsActions
+            //         showViewIcon
+            //         showEditIcon
+            //         showDeleteIcon
+            //         handleViewClick={() => {
+            //           onViewDetail?.(row);
+            //         }}
+            //         handleEditClick={() => {
+            //           setOpenDialog?.(true);
+            //           setEditData?.(row);
+            //         }}
+            //         handleDeleteClick={() => {
+            //           onDelete?.(row.id);
+            //         }}
+            //         actions={(prop) => getActionsForStatus('pending', row, prop.popover)}
+            //         placement="right-top"
+            //       />
+            //     );
+            //   },
+            // },
           ]}
           data={tableData || []}
         />

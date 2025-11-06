@@ -56,62 +56,78 @@ const ViewStudentAllConcession = ({
   return (
     <Scrollbar sx={{ height: '500px', p: 2 }}>
       <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, mb: 2 }}>
-        <Typography variant="h6" mb={2} color="primary.main">
+        <Typography variant="h6" mb={1} color="primary.main">
           Student Information
         </Typography>
         <Grid container spacing={2}>
           <Grid size={3}>
-            <Typography color="text.secondary">Student Name</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Student Name
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {data?.studentName}
             </Typography>
           </Grid>
 
           <Grid size={3}>
-            <Typography color="text.secondary">Roll No.</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Roll No.
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {data?.rollNo}
             </Typography>
           </Grid>
 
           <Grid size={3}>
-            <Typography color="text.secondary">Sibling</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Sibling
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {data?.sibling}
             </Typography>
           </Grid>
 
           <Grid size={3}>
-            <Typography color="text.secondary">Contact No.</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Contact No.
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {data?.contactNo}
             </Typography>
           </Grid>
 
           <Grid size={3}>
-            <Typography color="text.secondary">Class/Division</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Class/Division
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {data?.classDivision}
             </Typography>
           </Grid>
 
           <Grid size={3}>
-            <Typography color="text.secondary">GR No.</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              GR No.
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {data?.grNo}
             </Typography>
           </Grid>
 
           <Grid size={3}>
-            <Typography color="text.secondary">Parent Name</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Parent Name
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {data?.parentName}
             </Typography>
           </Grid>
 
           <Grid size={3}>
-            <Typography color="text.secondary">Email</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Email
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {data?.email}
             </Typography>
           </Grid>
@@ -125,7 +141,8 @@ const ViewStudentAllConcession = ({
             id: 'concessionType',
             label: 'Concession Type',
             align: 'left',
-            minWidth: 150,
+            sticky: true,
+            minWidth: 160,
           },
           {
             id: 'requestDate',

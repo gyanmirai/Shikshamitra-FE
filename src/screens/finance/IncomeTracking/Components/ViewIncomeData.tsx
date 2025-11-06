@@ -29,7 +29,7 @@ const ViewIncomeData = ({
         }}
       >
         <Box sx={{}}>
-          <Typography variant="h6" mb={2} color="primary.main">
+          <Typography variant="h6" mb={1} color="primary.main">
             Income Information
           </Typography>
           <Grid container spacing={2}>

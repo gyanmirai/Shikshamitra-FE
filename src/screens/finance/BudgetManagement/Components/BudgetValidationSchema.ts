@@ -56,12 +56,12 @@ export const budgetValidationSchema = (currentYear: any) => [
       .required('Total Budget Amount is required')
       .min(1, 'Total Budget Amount Must be greater than 0'),
 
-    spendingThreshold: Yup.number()
-      .min(1, 'Threshold must be at least 1%')
-      .max(100, 'Threshold cannot exceed 100%')
-      .required('Spending Threshold is required'),
+    // spendingThreshold: Yup.number()
+    //   .min(1, 'Threshold must be at least 1%')
+    //   .max(100, 'Threshold cannot exceed 100%')
+    //   .required('Spending Threshold is required'),
 
-    departments: Yup.array().min(1, 'Select at least one department'),
+    // departments: Yup.array().min(1, 'Select at least one department'),
   }),
 
   // Step 2 – Subcategories

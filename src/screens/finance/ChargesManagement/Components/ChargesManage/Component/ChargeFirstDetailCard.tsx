@@ -35,10 +35,10 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
             Applied for
           </Typography>
 
-          <Grid container spacing={3}>
+          <Grid container spacing={2}>
             {/* Left Column - Basic Details */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Box display="flex" flexDirection="column" gap={2}>
+            <Grid size={{ xs: 12 }}>
+              <Box display="flex" gap={7}>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
                     Category
@@ -89,8 +89,8 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
             </Grid>
 
             {/* Right Column - Description and Additional Notes */}
-            <Grid size={{ xs: 12, md: 8 }}>
-              <Box display="flex" flexDirection="column" gap={3}>
+            <Grid size={{ xs: 12 }}>
+              <Box display="flex" flexDirection="column" gap={2}>
                 {/* Purpose/Description Section */}
                 <Box>
                   <Typography variant="body2" color="text.secondary">
@@ -106,11 +106,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
                       backgroundColor: theme.palette.grey[50],
                     }}
                   >
-                    <Typography
-                      sx={{ fontWeight: 300, lineHeight: 1.6 }}
-                      variant="body2"
-                      color="text.secondary"
-                    >
+                    <Typography sx={{ fontWeight: 300, lineHeight: 1.6 }} variant="body1">
                       {charge?.description ||
                         'Annual tuition fee applicable for Class 10 students in divisions A and B.'}
                     </Typography>
@@ -132,11 +128,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
                       backgroundColor: theme.palette.grey[50],
                     }}
                   >
-                    <Typography
-                      sx={{ fontWeight: 300, lineHeight: 1.6 }}
-                      variant="body2"
-                      color="text.secondary"
-                    >
+                    <Typography sx={{ fontWeight: 300, lineHeight: 1.6 }} variant="body1">
                       {charge?.additionalNotes || 'Installments allowed in two parts.'}
                     </Typography>
                   </Box>

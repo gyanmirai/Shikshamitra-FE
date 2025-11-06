@@ -68,37 +68,44 @@ const ViewStudentAllCharges = ({
     <Scrollbar sx={{ height: '500px', p: 2 }}>
       {/* Student Info */}
       <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, mb: 2 }}>
-        <Typography variant="h6" mb={2} color="primary.main">
+        <Typography variant="h6" mb={1} color="primary.main">
           Student Information
         </Typography>
         <Grid container spacing={2}>
           <Grid size={{ xs: 3 }}>
-            <Typography color="text.secondary">Student Name</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Student Name
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {data?.studentName || '-'}
             </Typography>
           </Grid>
 
           <Grid size={{ xs: 3 }}>
-            <Typography color="text.secondary">Roll No.</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Roll No.
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {data?.rollNo || '-'}
             </Typography>
           </Grid>
 
           <Grid size={{ xs: 3 }}>
-            <Typography color="text.secondary">GR No.</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              GR No.
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {data?.grNo || '-'}
             </Typography>
           </Grid>
 
           <Grid size={{ xs: 3 }}>
-            <Typography color="text.secondary">Class/Division</Typography>
-            <Typography
-              sx={{ fontWeight: 300 }}
-              variant="body2"
-            >{`${data?.class || '-'} / ${data?.division || '-'}`}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Class/Division
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
+              {`${data?.class || '-'} / ${data?.division || '-'}`}
+            </Typography>
           </Grid>
         </Grid>
       </Box>
@@ -114,6 +121,7 @@ const ViewStudentAllCharges = ({
             id: 'category',
             label: 'Category',
             align: 'left',
+            sticky: true,
             minWidth: 150,
           },
           {

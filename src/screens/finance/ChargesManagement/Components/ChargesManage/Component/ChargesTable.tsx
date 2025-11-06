@@ -73,6 +73,7 @@ const ChargesTable = ({
         {
           id: 'category',
           label: 'Charge Category',
+          sticky: true,
           align: 'left',
           minWidth: '160px',
           isFilter: true,

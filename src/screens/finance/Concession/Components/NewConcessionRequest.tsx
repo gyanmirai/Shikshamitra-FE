@@ -19,14 +19,15 @@ import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { useGetConcessionTypeQuery } from 'src/redux/finance/concessionType';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
-  Box,
   Grid,
   Chip,
+  Card,
   Button,
   Tooltip,
   TextField,
   IconButton,
   Typography,
+  CardContent,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
@@ -141,6 +142,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             <ShakingTextField error={!!(formik.touched.medium && formik.errors.medium)}>
               <CustomSelect
                 label="Medium *"
+                disabled={!formik.values.board}
                 options={mediums}
                 labelKey="name"
                 valueKey="id"
@@ -164,6 +166,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 label="Class *"
                 options={classes || []}
                 labelKey="name"
+                disabled={!formik.values.medium}
                 valueKey="id"
                 value={formik.values.className}
                 onChange={(val) => {
@@ -184,6 +187,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 label="Division *"
                 options={allDivision}
                 labelKey="name"
+                disabled={!formik.values.className}
                 valueKey="id"
                 value={formik.values.division}
                 onChange={(val) => {
@@ -203,6 +207,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 loading={studentLoading}
                 noOptionsText="No Student Found"
                 fullWidth
+                disabled={!formik.values.division}
                 options={tableData}
                 value={formik.values.studentName}
                 onChange={(e, value) => {
@@ -277,45 +282,50 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           {formik.values.concessionType && (
             <>
               <Grid size={{ xs: 12 }}>
-                <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
-                  <Grid container spacing={2}>
-                    {/* Applicable Fee Head */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Applicable Fee Head
-                      </Typography>
-                      <Typography variant="body1" fontWeight="400">
-                        {Array.isArray(formik.values.applicableFeeHeads)
-                          ? formik.values.applicableFeeHeads.join(', ')
-                          : formik.values.applicableFeeHeads || '-'}
-                      </Typography>
+                <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
+                  <CardContent sx={{ p: 2 }}>
+                    <Typography variant="h6" color="#00A76F" gutterBottom>
+                      Requestor Information
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {/* Applicable Fee Head */}
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Applicable Fee Head
+                        </Typography>
+                        <Typography variant="body1" fontWeight="400">
+                          {Array.isArray(formik.values.applicableFeeHeads)
+                            ? formik.values.applicableFeeHeads.join(', ')
+                            : formik.values.applicableFeeHeads || '-'}
+                        </Typography>
+                      </Grid>
+
+                      {/* Amount */}
+                      {formik.values.amount && (
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Amount
+                          </Typography>
+                          <Typography variant="body1" fontWeight="400">
+                            {formatNumber(formik.values.amount, 'INR')}
+                          </Typography>
+                        </Grid>
+                      )}
+
+                      {/* Percentage */}
+                      {formik.values.percentage && (
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Percentage
+                          </Typography>
+                          <Typography variant="body1" fontWeight="400">
+                            {formik.values.percentage}%
+                          </Typography>
+                        </Grid>
+                      )}
                     </Grid>
-
-                    {/* Amount */}
-                    {formik.values.amount && (
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          Amount
-                        </Typography>
-                        <Typography variant="body1" fontWeight="400">
-                          {formatNumber(formik.values.amount, 'INR')}
-                        </Typography>
-                      </Grid>
-                    )}
-
-                    {/* Percentage */}
-                    {formik.values.percentage && (
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          Percentage
-                        </Typography>
-                        <Typography variant="body1" fontWeight="400">
-                          {formik.values.percentage}%
-                        </Typography>
-                      </Grid>
-                    )}
-                  </Grid>
-                </Box>
+                  </CardContent>
+                </Card>
               </Grid>
 
               <CustomizableTable

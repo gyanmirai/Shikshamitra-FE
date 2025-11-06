@@ -57,7 +57,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         id: 'expenseCategory',
         label: 'Expense Category',
         align: 'left',
-        minWidth: '160px',
+        minWidth: 170,
         filterType: 'string',
         sticky: true,
       },

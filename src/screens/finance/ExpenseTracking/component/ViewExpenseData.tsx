@@ -39,28 +39,34 @@ const ViewExpenseData = ({
             mb: 2,
           }}
         >
-          <Typography variant="h6" mb={2} color="primary.main">
+          <Typography variant="h6" mb={1} color="primary.main">
             Expense Information
           </Typography>
 
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 4 }}>
-              <Typography color="text.secondary">Expense Category</Typography>
-              <Typography sx={{ fontWeight: 300 }} variant="body2">
+              <Typography variant="body2" color="text.secondary">
+                Expense Category
+              </Typography>
+              <Typography variant="body1" fontWeight="medium">
                 {expenseData?.expenseCategory || '-'}
               </Typography>
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-              <Typography color="text.secondary">Budget</Typography>
-              <Typography sx={{ fontWeight: 300 }} variant="body2">
+              <Typography variant="body2" color="text.secondary">
+                Budget
+              </Typography>
+              <Typography variant="body1" fontWeight="medium">
                 {expenseData?.budget || '-'}
               </Typography>
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-              <Typography color="text.secondary">Total Expense Amount</Typography>
-              <Typography sx={{ fontWeight: 300 }} variant="body2">
+              <Typography variant="body2" color="text.secondary">
+                Total Expense Amount
+              </Typography>
+              <Typography variant="body1" fontWeight="medium">
                 ₹ {expenseDetailedData?.totalExpenseAmount?.toLocaleString() || '0'}
               </Typography>
             </Grid>

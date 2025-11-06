@@ -3,7 +3,7 @@ import type { FormikProps } from 'formik';
 import React from 'react';
 import dayjs from 'dayjs';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Card, Chip, Grid, Typography, CardContent } from '@mui/material';
+import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
 
 import type { IBudgetFormValues } from './type';
 
@@ -13,14 +13,14 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
   return (
     <Box>
       <Card sx={{ borderRadius: 3, boxShadow: 2, mb: 2 }}>
-        <CardContent>
+        <CardContent sx={{ padding: 2 }}>
           <Typography variant="h6" color="primary" gutterBottom>
             Basic Information
           </Typography>
 
           <Grid container spacing={2}>
             {/* Budget Title */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, sm: 3 }}>
               <Typography variant="body2" color="text.secondary">
                 Budget Title
               </Typography>
@@ -38,15 +38,15 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
             </Grid>
 
             {/* Threshold */}
-            <Grid size={{ xs: 12, sm: 3 }}>
+            {/* <Grid size={{ xs: 12, sm: 3 }}>
               <Typography variant="body2" color="text.secondary">
                 Threshold Alert
               </Typography>
               <Typography variant="subtitle1">{values.spendingThreshold} %</Typography>
-            </Grid>
+            </Grid> */}
 
             {/* Departments */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            {/* <Grid size={{ xs: 12, sm: 6 }}>
               <Typography variant="body2" color="text.secondary">
                 Assigned Department
               </Typography>
@@ -55,7 +55,7 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
                   <Chip key={index} label={dept} size="small" variant="outlined" />
                 ))}
               </Box>
-            </Grid>
+            </Grid> */}
 
             {/* Total Budget */}
             <Grid size={{ xs: 12, sm: 3 }}>
@@ -91,7 +91,7 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
         </CardContent>
       </Card>
       <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
-        <CardContent>
+        <CardContent sx={{ padding: 2 }}>
           <Typography variant="h6" color="primary" gutterBottom>
             Allocation
           </Typography>
