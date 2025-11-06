@@ -10,11 +10,8 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import {
-  FeeStructureClassStatusType,
-  FeeStructureClassStatusTypeColors,
-} from 'src/enums/fee-structure-statusType';
 import {
   Box,
   Grid,
@@ -73,11 +70,8 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                 return (
                   <Box key={className} textAlign="center">
                     <Button
-                      variant="contained"
-                      color={
-                        FeeStructureClassStatusTypeColors[status as FeeStructureClassStatusType] ??
-                        'primary'
-                      }
+                      variant={currentClickableClass === className ? 'contained' : 'outlined'}
+                      color={currentClickableClass === className ? 'primary' : undefined}
                       onClick={() => {
                         // Only allow clicking if class has data or is being set as current
                         if (hasData || currentClickableClass !== className) {
@@ -110,10 +104,10 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                         textTransform: 'none',
                         fontWeight: 500,
                         // Disable button if it has no data and is not current
-                        ...(!hasData &&
-                          currentClickableClass !== className && {
-                            opacity: 0.6,
-                          }),
+                        // ...(!hasData &&
+                        //   currentClickableClass !== className && {
+                        //     opacity: 0.6,
+                        //   }),
                       }}
                     >
                       {className.replace('Class ', '')}
@@ -247,7 +241,7 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                       </Box>
                     </AccordionSummary>
 
-                    <AccordionDetails>
+                    <AccordionDetails sx={{ padding: 0, pr: 3 }}>
                       <Grid container spacing={3}>
                         <FeeStructureCard
                           className={className}

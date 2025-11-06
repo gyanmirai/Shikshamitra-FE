@@ -35,24 +35,30 @@ const ViewIncomeData = ({
           <Grid container spacing={2}>
             {/* Income Category */}
             <Grid size={{ xs: 12, md: 4 }}>
-              <Typography color="text.secondary">Income Category</Typography>
-              <Typography sx={{ fontWeight: 300 }} variant="body2">
+              <Typography variant="body2" color="text.secondary">
+                Income Category
+              </Typography>
+              <Typography variant="body1" fontWeight="medium">
                 {incomeData?.incomeCategory || '-'}
               </Typography>
             </Grid>
 
             {/* Budget */}
             <Grid size={{ xs: 12, md: 4 }}>
-              <Typography color="text.secondary">Budget</Typography>
-              <Typography sx={{ fontWeight: 300 }} variant="body2">
+              <Typography variant="body2" color="text.secondary">
+                Budget
+              </Typography>
+              <Typography variant="body1" fontWeight="medium">
                 {incomeData?.budget || '-'}
               </Typography>
             </Grid>
 
             {/* Total Amount Received */}
             <Grid size={{ xs: 12, md: 4 }}>
-              <Typography color="text.secondary">Total Amount Received</Typography>
-              <Typography sx={{ fontWeight: 300 }} variant="body2">
+              <Typography variant="body2" color="text.secondary">
+                Total Amount Received
+              </Typography>
+              <Typography variant="body1" fontWeight="medium">
                 ₹ {incomeData?.amount || 0}
               </Typography>
             </Grid>
@@ -61,7 +67,7 @@ const ViewIncomeData = ({
       </Card>
 
       {/* Income Lists */}
-      <Typography variant="h6" mb={2} color="primary.main" ml={1}>
+      <Typography variant="h6" mb={1} color="primary.main" ml={1}>
         Income Lists
       </Typography>
 

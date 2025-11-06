@@ -30,7 +30,7 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
   return (
     <Box sx={{ p: 2 }}>
       <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-        <CardContent>
+        <CardContent sx={{ p: 2 }}>
           <Typography variant="h6" color="primary.main" gutterBottom>
             Applied for
           </Typography>
@@ -40,29 +40,36 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
             <Grid size={{ xs: 12, md: 4 }}>
               <Box display="flex" flexDirection="column" gap={2}>
                 <Box>
-                  <Typography color="text.secondary">Category</Typography>
-                  <Typography sx={{ fontWeight: 300 }} variant="body2">
+                  <Typography variant="body2" color="text.secondary">
+                    Category
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
                     {charge?.category}
                   </Typography>
                 </Box>
 
                 <Box>
-                  <Typography color="text.secondary">Amount</Typography>
-                  <Typography sx={{ fontWeight: 300 }} variant="body2">
-                    {' '}
+                  <Typography variant="body2" color="text.secondary">
+                    Amount
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
                     {formatNumber(charge?.amount ?? 0, 'INR')}
                   </Typography>
                 </Box>
 
                 <Box>
-                  <Typography color="text.secondary">Due Date</Typography>
-                  <Typography sx={{ fontWeight: 300 }} variant="body2">
+                  <Typography variant="body2" color="text.secondary">
+                    Due Date
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium">
                     {charge?.dueDate}
                   </Typography>
                 </Box>
 
                 <Box>
-                  <Typography color="text.secondary">Priority</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Priority
+                  </Typography>
                   <Label
                     color={
                       priority.color as
@@ -86,7 +93,9 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
               <Box display="flex" flexDirection="column" gap={3}>
                 {/* Purpose/Description Section */}
                 <Box>
-                  <Typography color="text.secondary">Purpose/Description</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Purpose/Description
+                  </Typography>
                   <Box
                     sx={{
                       border: 1,
@@ -110,7 +119,9 @@ const ChargeFirstDetailsCard: React.FC<Props> = ({ charge }) => {
 
                 {/* Additional Details Section */}
                 <Box>
-                  <Typography color="text.secondary">Additional Details</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Additional Details
+                  </Typography>
                   <Box
                     sx={{
                       border: 1,

@@ -533,7 +533,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
               </Grid>
 
               {/* Subject Cards Section */}
-              {formik?.values?.subjects?.length && (
+              {formik.values.subjects && formik.values.subjects.length > 0 && (
                 <Grid size={{ xs: 12 }}>
                   {formik?.values?.subjects?.map((subject, index) => (
                     <SubjectCard

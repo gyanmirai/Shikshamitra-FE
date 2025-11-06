@@ -42,7 +42,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                 alignItems: 'center',
                 p: 1,
                 gap: 2,
-                mb: 4,
+                mb: 2,
               }}
             >
               <Grid size={0.1}>

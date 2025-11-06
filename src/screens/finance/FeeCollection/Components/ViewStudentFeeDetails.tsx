@@ -27,13 +27,13 @@ const StudentInfoCard = ({ student }: { student: IStudentFee }) => {
           bgcolor: 'background.paper',
         }}
       >
-        <Typography variant="h6" gutterBottom sx={{ color: 'sucess.main' }}>
+        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
           Student Information
         </Typography>
 
         <Grid container spacing={1}>
           {/* Left Side: Avatar */}
-          <Grid size={{ xs: 12, sm: 2 }} display="flex">
+          <Grid size={{ xs: 12, sm: 1 }} display="flex">
             <Avatar
               src="/assets/images/avatar/default-student.jpg"
               alt={student?.name || 'Student'}
@@ -42,7 +42,7 @@ const StudentInfoCard = ({ student }: { student: IStudentFee }) => {
           </Grid>
 
           {/* Right Side: Student Details */}
-          <Grid size={{ xs: 12, sm: 10 }}>
+          <Grid size={{ xs: 12, sm: 11 }}>
             <Grid container spacing={2}>
               {fields.map((field) => (
                 <Grid size={{ xs: 12, sm: 2 }} key={field.label}>

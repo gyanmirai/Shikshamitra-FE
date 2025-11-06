@@ -13,56 +13,70 @@ export default function StudentRefundInfo({ student }: { student: IStudentFeeDat
       <Grid container spacing={2}>
         {/* Student Name */}
         <Grid size={{ xs: 4 }}>
-          <Typography color="text.secondary">Student Name</Typography>
-          <Typography sx={{ fontWeight: 300 }} variant="body2">
+          <Typography variant="body2" color="text.secondary">
+            Student Name
+          </Typography>
+          <Typography variant="body1" fontWeight="medium">
             {student?.name}
           </Typography>
         </Grid>
 
         {/* Roll No */}
         <Grid size={{ xs: 4 }}>
-          <Typography color="text.secondary">Roll No.</Typography>
-          <Typography sx={{ fontWeight: 300 }} variant="body2">
+          <Typography variant="body2" color="text.secondary">
+            Roll No.
+          </Typography>
+          <Typography variant="body1" fontWeight="medium">
             {student?.rollNo}
           </Typography>
         </Grid>
 
         {/* Board */}
         <Grid size={{ xs: 4 }}>
-          <Typography color="text.secondary">Board</Typography>
-          <Typography sx={{ fontWeight: 300 }} variant="body2">
+          <Typography variant="body2" color="text.secondary">
+            Board
+          </Typography>
+          <Typography variant="body1" fontWeight="medium">
             {student?.board}
           </Typography>
         </Grid>
 
         {/* Total Paid Fees */}
         <Grid size={{ xs: 4 }}>
-          <Typography color="text.secondary">Total Paid Fees</Typography>
-          <Typography sx={{ fontWeight: 300 }} variant="body2">
+          <Typography variant="body2" color="text.secondary">
+            Total Paid Fees
+          </Typography>
+          <Typography variant="body1" fontWeight="medium">
             ₹ {student?.totalPaidFees?.toLocaleString()}
           </Typography>
         </Grid>
 
         {/* Class / Division */}
         <Grid size={{ xs: 4 }}>
-          <Typography color="text.secondary">Class/Division</Typography>
-          <Typography sx={{ fontWeight: 300 }} variant="body2">
+          <Typography variant="body2" color="text.secondary">
+            Class/Division
+          </Typography>
+          <Typography variant="body1" fontWeight="medium">
             {student?.class}-{student?.division}
           </Typography>
         </Grid>
 
         {/* Medium */}
         <Grid size={{ xs: 4 }}>
-          <Typography color="text.secondary">Medium</Typography>
-          <Typography sx={{ fontWeight: 300 }} variant="body2">
+          <Typography variant="body2" color="text.secondary">
+            Medium
+          </Typography>
+          <Typography variant="body1" fontWeight="medium">
             {student?.medium}
           </Typography>
         </Grid>
 
         {/* Total Pending Fees */}
         <Grid size={{ xs: 4 }}>
-          <Typography color="text.secondary">Total Pending Fees</Typography>
-          <Typography sx={{ fontWeight: 300 }} variant="body2">
+          <Typography variant="body2" color="text.secondary">
+            Total Pending Fees
+          </Typography>
+          <Typography variant="body1" fontWeight="medium">
             ₹ {student?.totalPendingFees?.toLocaleString()}
           </Typography>
         </Grid>

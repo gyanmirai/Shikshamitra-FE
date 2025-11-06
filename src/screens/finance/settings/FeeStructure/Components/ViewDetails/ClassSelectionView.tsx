@@ -1,12 +1,8 @@
 import { useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Box, Grid, Button, Typography } from '@mui/material';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import { Box, Grid, Button } from '@mui/material';
+import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import {
-  FeeStructureClassStatusType,
-  FeeStructureClassStatusTypeColors,
-} from 'src/enums/fee-structure-statusType';
 
 import type { IClassWiseFeeData } from '../../type';
 
@@ -54,16 +50,12 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
             return (
               <Box key={className} textAlign="center">
                 <Button
-                  variant="contained"
-                  color={FeeStructureClassStatusTypeColors[status]}
+                  variant={selectedClass === className ? 'contained' : 'outlined'}
+                  color={selectedClass === className ? 'primary' : undefined}
                   sx={{
                     minWidth: 80,
                     textTransform: 'none',
                     fontWeight: 500,
-                    ...(!hasData &&
-                      selectedClass !== className && {
-                        opacity: 0.6,
-                      }),
                   }}
                   onClick={() => {
                     if (hasData || selectedClass !== className) {
@@ -81,7 +73,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
 
       {/* Legend */}
 
-      <Grid size={12}>
+      {/* <Grid size={12}>
         <Box display="flex" alignItems="center" gap={3} mb={2}>
           {[
             FeeStructureClassStatusType.Current,
@@ -111,7 +103,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
             );
           })}
         </Box>
-      </Grid>
+      </Grid> */}
     </SectionCard>
   );
 };

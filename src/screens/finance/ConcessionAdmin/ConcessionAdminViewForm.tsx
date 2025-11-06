@@ -22,55 +22,71 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
       <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, mb: 2 }}>
         <Grid container spacing={2}>
           <Grid size={{ xs: 4 }}>
-            <Typography color="text.secondary">Concession Name</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Concession Name
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {student?.concession?.concessionName}
             </Typography>
           </Grid>
           <Grid size={{ xs: 4 }}>
-            <Typography color="text.secondary">Concession Type</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Concession Type
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {student?.concession?.concessionType}
             </Typography>
           </Grid>
           <Grid size={{ xs: 4 }}>
-            <Typography color="text.secondary">Student Name </Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Student Name
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {student?.studentName}
             </Typography>
           </Grid>
 
           <Grid size={{ xs: 4 }}>
-            <Typography color="text.secondary">Roll No. </Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Roll No.
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {student?.rollNo}
             </Typography>
           </Grid>
 
           <Grid size={{ xs: 4 }}>
-            <Typography color="text.secondary">Contact No. </Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Contact No.
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {student?.contactNo}
             </Typography>
           </Grid>
 
           <Grid size={{ xs: 4 }}>
-            <Typography color="text.secondary">Class/Division </Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Class/Division
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {student?.classDivision}
             </Typography>
           </Grid>
 
           <Grid size={{ xs: 4 }}>
-            <Typography color="text.secondary">GR No. </Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              GR No.
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {student?.grNo}
             </Typography>
           </Grid>
 
           <Grid size={{ xs: 4 }}>
-            <Typography color="text.secondary">Parent Name </Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Parent Name
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {student?.parentName}
             </Typography>
           </Grid>
@@ -78,29 +94,36 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
           {student?.concession?.concessionType === 'percentage' &&
           student?.concession?.percentage !== undefined ? (
             <Grid size={{ xs: 4 }}>
-              <Typography color="text.secondary">Percentage</Typography>
-              <Typography sx={{ fontWeight: 300 }} variant="body2">
+              <Typography variant="body2" color="text.secondary">
+                Percentage
+              </Typography>
+              <Typography variant="body1" fontWeight="medium">
                 {student.concession.percentage}%
               </Typography>
             </Grid>
           ) : (
             <Grid size={{ xs: 4 }}>
-              <Typography color="text.secondary">Amount</Typography>
-              <Typography sx={{ fontWeight: 300 }} variant="body2">
+              <Typography variant="body2" color="text.secondary">
+                Amount
+              </Typography>
+              <Typography variant="body1" fontWeight="medium">
                 {student.concession?.amount}
               </Typography>
             </Grid>
           )}
           <Grid size={{ xs: 4 }}>
-            <Typography color="text.secondary">Email </Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
+            <Typography variant="body2" color="text.secondary">
+              Email
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {student?.email}
             </Typography>
           </Grid>
           <Grid size={{ xs: 8 }}>
-            <Typography color="text.secondary">Applicable Fee Heads </Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
-              {' '}
+            <Typography variant="body2" color="text.secondary">
+              Applicable Fee Heads
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
               {Array.isArray(student.applicableFeeHeads)
                 ? student.applicableFeeHeads.join(', ')
                 : student.applicableFeeHeads || '-'}
@@ -250,7 +273,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
     <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, width: '100%' }}>
         <Button
-          variant="contained"
+          variant="soft"
           color="error"
           onClick={onReject}
           size="small"
@@ -260,7 +283,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
         </Button>
 
         <Button
-          variant="contained"
+          variant="soft"
           color="success"
           onClick={onApprove}
           size="small"
