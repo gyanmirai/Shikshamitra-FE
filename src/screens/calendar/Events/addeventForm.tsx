@@ -21,9 +21,9 @@ import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { DatePicker, TimePicker, DateTimePicker } from '@mui/x-date-pickers';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { DatePicker, DateTimePicker, MobileTimePicker } from '@mui/x-date-pickers';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
@@ -102,6 +102,8 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
       onClose(null, true);
     },
   });
+
+  console.log('formik.values', formik);
 
   // Update organizations list when medium changes
   useEffect(() => {
@@ -203,7 +205,6 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
     formik.values.startDate,
     formik.values.endDate,
     formik.values.meetingDate,
-    formik.values.meetingTime,
     formik.values.type,
   ]);
 
@@ -269,7 +270,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                       options={options}
                       getOptionLabel={(option) => option?.label || ''}
                       value={formik.values.audience
-                        .map((val) => options.find((opt) => opt.value === val))
+                        .map((val: any) => options.find((opt) => opt.value === val))
                         .filter(Boolean)}
                       onChange={(_, newValue) =>
                         formik.setFieldValue(
@@ -358,7 +359,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Scheduling">
                 {formik.values.type === 'meeting' ? (
-                  <Grid size={{ xs: 12, md: 6 }}>
+                  <Grid size={{ xs: 12, md: 3 }}>
                     <FormControlLabel
                       control={
                         <Switch
@@ -378,7 +379,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                   </Grid>
                 ) : (
                   <>
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                       <ShakingTextField
                         error={!!(formik.touched.startDate && formik.errors.startDate) || false}
                       >
@@ -426,7 +427,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                         />
                       </ShakingTextField>
                     </Grid>
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                       <ShakingTextField
                         error={!!(formik.touched.endDate && formik.errors.endDate) || false}
                       >
@@ -472,7 +473,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
 
                 {formik.values.isRecurring && (
                   <>
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                       <ShakingTextField
                         error={!!(formik.touched.repeatFrequency && formik.errors.repeatFrequency)}
                       >
@@ -530,7 +531,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
 
                 {!formik.values.isRecurring && formik.values.type === 'meeting' && (
                   <>
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <ShakingTextField
                         error={!!(formik.touched.meetingDate && formik.errors.meetingDate)}
                       >
@@ -557,27 +558,52 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                       </ShakingTextField>
                     </Grid>
 
-                    <Grid size={{ xs: 12, md: 6 }}>
+                    <Grid size={{ xs: 12, md: 3 }}>
                       <ShakingTextField
-                        error={!!(formik.touched.meetingTime && formik.errors.meetingTime)}
+                        error={!!(formik.touched.startTime && formik.errors.startTime)}
                       >
-                        <TimePicker
-                          label="Meeting Time *"
+                        <MobileTimePicker
+                          label="Start Time *"
                           format="HH:mm"
-                          name="meetingTime"
-                          value={formik.values.meetingTime}
-                          onChange={(newValue) => formik.setFieldValue('meetingTime', newValue)}
+                          name="startTime"
+                          value={formik.values.startTime}
+                          onChange={(newValue) => formik.setFieldValue('startTime', newValue)}
                           views={['hours', 'minutes']}
                           slotProps={{
                             textField: {
                               fullWidth: true,
                               size: 'small',
-                              error:
-                                formik.touched.meetingTime && Boolean(formik.errors.meetingTime),
+                              error: formik.touched.startTime && Boolean(formik.errors.startTime),
                               helperText:
-                                formik.touched.meetingTime &&
-                                typeof formik.errors.meetingTime === 'string'
-                                  ? formik.errors.meetingTime
+                                formik.touched.startTime &&
+                                typeof formik.errors.startTime === 'string'
+                                  ? formik.errors.startTime
+                                  : undefined,
+                            },
+                          }}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 3 }}>
+                      <ShakingTextField error={!!(formik.touched.endTime && formik.errors.endTime)}>
+                        <MobileTimePicker
+                          label="End Time *"
+                          format="HH:mm"
+                          name="endTime"
+                          value={formik.values.endTime}
+                          onChange={(newValue) => {
+                            console.log(newValue);
+                            formik.setFieldValue('endTime', newValue);
+                          }}
+                          views={['hours', 'minutes']}
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              size: 'small',
+                              error: formik.touched.endTime && Boolean(formik.errors.endTime),
+                              helperText:
+                                formik.touched.endTime && typeof formik.errors.endTime === 'string'
+                                  ? formik.errors.endTime
                                   : undefined,
                             },
                           }}

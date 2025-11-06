@@ -56,7 +56,8 @@ export interface IEventAnnouncement {
   isRecurring: boolean;
   repeatFrequency?: string; // Daily, Weekly, Monthly, Custom
   meetingDate: string | null;
-  meetingTime: string | null;
+  startTime: Dayjs | null;
+  endTime: Dayjs | null;
   repeatUntil?: string | number;
   day?: string;
 

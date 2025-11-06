@@ -1084,16 +1084,16 @@ const calendarModule = {
       subheader: '',
       items: [
         {
-          title: 'Dashboard',
-          path: '/calendar/dashboard',
-          _action: 'dashboard',
+          title: 'Calendar View',
+          path: '/calendar/view',
+          _action: 'view',
           shortcutKey: 'Alt+C+1',
           shortcutKeyName: 'Alt+C+1',
         },
         {
           title: 'Events',
-          path: '/calendar/eventsAndCalendar',
-          _action: 'eventsAndCalendar',
+          path: '/calendar/events',
+          _action: 'events',
           shortcutKey: 'Alt+C+E',
           shortcutKeyName: 'Alt+C+E',
         },
@@ -2372,7 +2372,7 @@ export const navData = (isDdvs: boolean) => [
       },
       {
         title: 'Calendar',
-        path: '/calendar/dashboard',
+        path: '/calendar/view',
         icon: ICONS.calendar,
         _action: 'calendar',
         shortcutKey: 'Alt+K',

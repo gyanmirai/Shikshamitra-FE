@@ -7,7 +7,7 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
   Yup.object().shape({
     id: Yup.string().nullable(), // not required for creation
     title: Yup.string().required('Title is required'),
-    description: Yup.string().required('Description is required'),
+    description: Yup.string(),
     type: Yup.string().required('Event Type is required'),
     organizations: Yup.array()
       .of(Yup.string())
@@ -22,14 +22,14 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
       )
       .min(1, 'At least one audience is required')
       .required('Audience is required'),
-    classes: Yup.array()
-      .of(Yup.string())
-      .min(1, 'At least one class must be selected')
-      .required('Classes are required'),
-    divisions: Yup.array()
-      .of(Yup.string())
-      .min(1, 'At least one division must be selected')
-      .required('Divisions are required'),
+    // classes: Yup.array()
+    //   .of(Yup.string())
+    //   .min(1, 'At least one class must be selected')
+    //   .required('Classes are required'),
+    // divisions: Yup.array()
+    //   .of(Yup.string())
+    //   .min(1, 'At least one division must be selected')
+    //   .required('Divisions are required'),
 
     startDate: Yup.mixed()
       .required('Start Date-Time is required')
@@ -66,19 +66,19 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
           if (!value || !startDate) return true;
           return dayjs(value as Dayjs).isSameOrAfter(dayjs(startDate), 'day');
         }
-      )
-      .test(
-        'min-date',
-        (value) =>
-          `End Date-Time must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day')
-      )
-      .test(
-        'max-date',
-        (value) =>
-          `End Date-Time must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       ),
+    // .test(
+    //   'min-date',
+    //   (value) =>
+    //     `End Date-Time must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
+    //   (value) => value && dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+    // )
+    // .test(
+    //   'max-date',
+    //   (value) =>
+    //     `End Date-Time must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
+    //   (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+    // ),
 
     link: Yup.string().url('Must be a valid URL').nullable(),
 
@@ -128,11 +128,35 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
           ),
       otherwise: (schema) => schema.nullable(),
     }),
-    meetingTime: Yup.mixed().when('type', {
-      is: 'meeting',
-      then: (schema) => schema.required('Meeting time is required'),
-      otherwise: (schema) => schema.nullable(),
-    }),
+    // meetingTime: Yup.mixed().when('type', {
+    //   is: 'meeting',
+    //   then: (schema) => schema.required('Meeting time is required'),
+    //   otherwise: (schema) => schema.nullable(),
+    // }),
+    startTime: Yup.mixed()
+      .nullable()
+
+      .test('start-before-end', 'Start Time must be before End Time', function (value) {
+        const { endTime, type } = this.parent;
+        if (type === 'meeting' && !value) {
+          return this.createError({ message: 'Start Time is required' });
+        }
+        if (!value || !endTime) return true;
+
+        return (value as Dayjs).isBefore(endTime);
+      }),
+    endTime: Yup.mixed()
+      .nullable()
+
+      .test('end-after-start', 'End Time must be after Start Time', function (value) {
+        const { startTime, type } = this.parent;
+        if (type === 'meeting' && !value) {
+          return this.createError({ message: 'End Time is required' });
+        }
+        if (!value || !startTime) return true;
+        // Compare times as HH:mm
+        return (value as Dayjs).isAfter(startTime);
+      }),
     isRecurring: Yup.boolean().when('type', {
       is: 'meeting',
       then: (schema) => schema,
