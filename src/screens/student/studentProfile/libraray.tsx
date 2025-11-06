@@ -1,231 +1,208 @@
 import type { LabelColor } from 'src/components/label';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Label } from 'src/components/label';
-import { Box, Tab, Tabs } from '@mui/material';
+import { useTabs } from 'src/hooks/use-tabs';
+import { Box, Tab, Card } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { CustomTabs } from 'src/components/custom-tabs';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  FinesChargesStatusType,
+  FinesChargesStatusTypeColors,
+  FinesChargesStatusTypeOptions,
+} from 'src/enums/library-status-types';
+import {
+  useGetIssuedBooksQuery,
+  useGetFinesChargesQuery,
+  useGetReservedBooksQuery,
+} from 'src/redux/memberManagement/memberManagementApi';
 
 import type { StudentTabsComponentType } from '.';
 
-const libraryData = [
+const TABS = [
   {
-    memberId: 'A9i878',
-    name: 'Vikas',
-    role: 'Student',
-    memberStatus: 'Active',
-    class: '10',
-    borrowLimit: 5,
-    currentIssue: 3,
-    remainingLimit: 2,
-    pendingReturn: 3,
-    overdueReturn: 3,
-    currentBorrowerBook: [
-      {
-        bookName: 'To Kill a Mockingbird',
-        author: 'Harper Lee',
-        publisher: 'J.B. Lippincott & Co.',
-        year: 1960,
-        issueDate: '2024-12-01',
-        dueDate: '2024-12-15',
-        daysOverdue: 0,
-      },
-      {
-        bookName: '1984',
-        author: 'George Orwell',
-        publisher: 'Secker & Warburg',
-        year: 1949,
-        issueDate: '2024-11-25',
-        dueDate: '2024-12-09',
-        daysOverdue: 10,
-      },
-    ],
-    reservedBooks: [
-      {
-        bookName: 'The Great Gatsby',
-        author: 'F. Scott Fitzgerald',
-        publisher: "Charles Scribner's Sons",
-        year: 1925,
-        reservationStatus: 'Active',
-        positionInQueue: 2,
-        reservationExpiryDate: '2024-12-20',
-      },
-      {
-        bookName: 'Pride and Prejudice',
-        author: 'Jane Austen',
-        publisher: 'T. Egerton',
-        year: 1813,
-        reservationStatus: 'Completed',
-        positionInQueue: '-',
-        reservationExpiryDate: null,
-      },
-    ],
-    fineHistory: [
-      {
-        amountPaid: 20.0,
-        paymentDate: '2024-12-05',
-        paymentMode: 'Cash',
-        reason: 'Overdue Book',
-      },
-      {
-        amountPaid: 30.0,
-        paymentDate: '2024-11-20',
-        paymentMode: 'UPI',
-        reason: 'Lost Book',
-      },
-    ],
-
-    pastBorrowedBooks: [
-      {
-        bookName: 'Moby Dick',
-        author: 'Herman Melville',
-        issueDate: '2024-10-01',
-        returnDate: '2024-10-15',
-      },
-      {
-        bookName: 'War and Peace',
-        author: 'Leo Tolstoy',
-        issueDate: '2024-09-10',
-        returnDate: '2024-09-24',
-      },
-    ],
-
-    issuedBooks: [
-      {
-        bookId: 'B1',
-        title: 'Introduction to Algorithms',
-        issueDate: '11-01-2024',
-        dueDate: '12-01-204',
-        issueCount: 2,
-        status: 'issued',
-      },
-    ],
+    value: 'borrowed-books',
+    label: 'Borrowed Books',
+    icon: <Iconify icon="solar:book-bookmark-bold" />,
+  },
+  {
+    value: 'reserved-books',
+    label: 'Reserved Books',
+    icon: <Iconify icon="solar:calendar-bold" />,
+  },
+  {
+    value: 'charges',
+    label: 'Charges',
+    icon: <Iconify icon="solar:wallet-money-bold" />,
+  },
+  {
+    value: 'borrow-history',
+    label: 'Borrow History',
+    icon: <Iconify icon="fluent:book-contacts-24-filled" />,
   },
 ];
 
 const Libraray = (props: StudentTabsComponentType) => {
-  // const [activeTab, setActiveTab] = useState('currentIssue');
+  const tabs = useTabs('borrowed-books');
 
-  // const cardStyles = (tab: string) => ({
-  //   py: 2,
-  //   textAlign: 'center',
-  //   typography: 'h4',
-  //   maxWidth: '250px',
-  //   width: '100%',
-  //   transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
-  //   cursor: 'pointer',
-  //   transform: activeTab === tab ? 'scale(1.025)' : 'scale(1)',
-  //   boxShadow: activeTab === tab ? 6 : 3,
-  //   border: activeTab === tab ? '2px solidrgb(0, 0, 0)' : '2px solid transparent',
-  //   backgroundColor: activeTab === tab ? 'rgba(25, 118, 210, 0.1)' : 'white',
-  //   '&:hover': {
-  //     transform: 'scale(1.025)',
-  //     boxShadow: 6,
-  //   },
-  // });
+  const { data: borrowedBooks, isLoading: borrowedLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetIssuedBooksQuery,
+  });
 
-  const [searchParams, setSearchParams] = useState({ tab: 'borrowingHistory' });
-  const TABS = [
-    {
-      value: 'borrowingHistory',
-      label: 'Borrowing History',
-      icon: <Iconify icon="stash:feed-duotone" width={20} />,
-      color: 'default',
-      count: 100,
-      //   component: () => <FinanceFeeStructureOverview />,
-    },
-    {
-      value: 'currentIssue',
-      label: 'Current Issue',
-      icon: <Iconify icon="fluent-mdl2:account-management" width={20} />,
-      color: 'success',
-      count: 20,
-      //   component: () => <FinanceStudentStructureOverview />,
-    },
-    {
-      value: 'reservation',
-      label: 'Reservation',
-      icon: <Iconify icon="fluent-mdl2:account-management" width={20} />,
-      color: 'warning',
-      count: 20,
-      //   component: () => <FinanceStudentStructureOverview />,
-    },
-  ];
+  const { data: reservedBooks, isLoading: reservedLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetReservedBooksQuery,
+  });
+
+  const { data: finesCharges, isLoading: finesChargesLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFinesChargesQuery,
+  });
+
+  const { data: mockIssuedBooks, isLoading: mockIssuedLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetIssuedBooksQuery,
+  });
+
+  const renderTabContent = () => {
+    switch (tabs.value) {
+      case 'borrowed-books':
+        return (
+          <Box>
+            <CustomizableTable
+              tableId="borrowed-books-table"
+              noDataText="No Borrowed Books Data Found"
+              isLoading={borrowedLoading}
+              columns={[
+                { id: 'bookTitle', label: 'Book Title', align: 'left' },
+                { id: 'bookId', label: 'Book Category', align: 'left' },
+                { id: 'accessionNo', label: 'Accession No.', align: 'left' },
+                { id: 'issueDate', label: 'Issued on', align: 'left' },
+                { id: 'dueDate', label: 'Due on', align: 'left' },
+              ]}
+              data={borrowedBooks || []}
+            />
+          </Box>
+        );
+      case 'reserved-books':
+        return (
+          <Box>
+            <CustomizableTable
+              tableId="reserved-books-table"
+              noDataText="No Reserved Books Data Found"
+              isLoading={reservedLoading}
+              columns={[
+                { id: 'bookTitle', label: 'Book Title', align: 'left' },
+                { id: 'bookCategory', label: 'Book Category', align: 'left' },
+                { id: 'reservationDate', label: 'Reserved on', align: 'left' },
+                { id: 'author', label: 'Author', align: 'left' },
+              ]}
+              data={reservedBooks || []}
+            />
+          </Box>
+        );
+      case 'charges':
+        return (
+          <Box>
+            <CustomizableTable
+              tableId="fines-charges-table"
+              noDataText="No Fines or Charges Data Found"
+              isLoading={finesChargesLoading}
+              columns={[
+                {
+                  id: 'bookTitle',
+                  sticky: true,
+                  minWidth: '150px',
+                  label: 'Book Title',
+                  align: 'left',
+                },
+                { id: 'bookCategory', minWidth: '150px', label: 'Book Category', align: 'left' },
+                { id: 'accessionNo', minWidth: '180px', label: 'Accession No.', align: 'left' },
+                {
+                  id: 'amount',
+                  label: 'Amount',
+                  align: 'left',
+                  filterType: 'number',
+                  render(value) {
+                    return new Intl.NumberFormat('en-IN', {
+                      style: 'currency',
+                      currency: 'INR',
+                      minimumFractionDigits: 2,
+                    }).format(value);
+                  },
+                },
+                { id: 'dateIssued', label: 'Date', align: 'left' },
+                { id: 'chargeType', minWidth: '180px', label: 'Charge Type', align: 'left' },
+                { id: 'reason', minWidth: '300px', label: 'Reason', align: 'left' },
+                {
+                  id: 'status',
+                  label: 'Status',
+                  align: 'left',
+                  sticky: true,
+                  filterType: 'enum',
+                  enumOptions: FinesChargesStatusTypeOptions,
+                  render(value) {
+                    const color =
+                      FinesChargesStatusTypeColors[value as FinesChargesStatusType] || 'default';
+                    return (
+                      <Label color={color as LabelColor}>{FinesChargesStatusType[value]}</Label>
+                    );
+                  },
+                },
+              ]}
+              data={finesCharges || []}
+            />
+          </Box>
+        );
+      case 'borrow-history':
+        return (
+          <Box>
+            <CustomizableTable
+              tableId="issued-books-table"
+              noDataText="No Borrowed History Data Found"
+              isLoading={mockIssuedLoading}
+              columns={[
+                { id: 'bookTitle', label: 'Book Title', align: 'left' },
+                { id: 'bookId', label: 'Book Category', align: 'left' },
+                { id: 'accessionNo', label: 'Accession No.', align: 'left' },
+                { id: 'issueDate', label: 'Issued on', align: 'left' },
+                { id: 'dueDate', label: 'Due on', align: 'left' },
+              ]}
+              data={mockIssuedBooks || []}
+            />
+          </Box>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Box>
-      <Tabs
-        value={searchParams.tab}
-        onChange={(e, value) => setSearchParams({ tab: value })}
+      {/* Tabs */}
+      <Card
         sx={{
-          mb: 2,
-          '& .MuiTabs-flexContainer': { gap: 2 },
-          flexGrow: 1,
+          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
-        {TABS.map((tab) => (
-          <Tab
-            sx={{ fontSize: '12px' }}
-            key={tab.value}
-            label={
-              <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                {tab.label}{' '}
-                <Label
-                  variant="soft"
-                  //   variant={tab.value === EmployeeAttendanceStatus.All ? 'filled' : 'soft'}
-                  color={(tab?.color as LabelColor) || 'default'}
-                >
-                  {' '}
-                  {tab.count}
-                </Label>
-              </Box>
-            }
-            // icon={tab.icon}
-            value={tab.value}
-          />
-        ))}
-      </Tabs>
+        <CustomTabs
+          value={tabs.value}
+          onChange={tabs.onChange}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          role="tablist"
+        >
+          {TABS.map((tab) => (
+            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+          ))}
+        </CustomTabs>
+      </Card>
 
-      {searchParams.tab === 'currentIssue' && (
-        <CustomizableTable
-          tableId="currentIssue"
-          isShowedDense={false}
-          data={libraryData[0].currentBorrowerBook}
-          columns={[
-            { id: 'bookId', label: 'Book Id' },
-            { id: 'bookName', label: 'Title' },
-            { id: 'issueDate', label: 'Issue Date', filterType: 'date' },
-            { id: 'dueDate', label: 'Due Date', filterType: 'date' },
-            { id: 'daysOverdue', label: 'Days Overdue' },
-          ]}
-        />
-      )}
-
-      {searchParams.tab === 'borrowingHistory' && (
-        <CustomizableTable
-          tableId="borrowingHistory"
-          data={libraryData[0].pastBorrowedBooks}
-          columns={[
-            { id: 'bookId', label: 'Book Id' },
-            { id: 'bookName', label: 'Title' },
-            { id: 'issueDate', label: 'Issue Date', filterType: 'date' },
-            { id: 'returnDate', label: 'Return Date', filterType: 'date' },
-          ]}
-        />
-      )}
-
-      {searchParams.tab === 'reservation' && (
-        <CustomizableTable
-          tableId="reservation"
-          data={libraryData[0].reservedBooks}
-          columns={[
-            { id: 'bookId', label: 'Book Id' },
-            { id: 'bookName', label: 'Title' },
-            { id: 'reservationStatus', label: 'Reservation Status' },
-            { id: 'positionInQueue', label: 'Position In Queue' },
-            // { id: "reservationExpiryDate", label: "Return Date" },
-          ]}
-        />
-      )}
+      {/* Tab Content */}
+      <Scrollbar sx={{ p: 1 }}>{renderTabContent()}</Scrollbar>
     </Box>
   );
 };

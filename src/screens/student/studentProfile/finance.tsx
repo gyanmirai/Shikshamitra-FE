@@ -1,6 +1,8 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
+import { varAlpha } from 'src/theme/styles';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Label } from 'src/components/label/label';
@@ -18,8 +20,8 @@ import {
 import {
   Box,
   Card,
+  Grid,
   Stack,
-  Divider,
   MenuList,
   MenuItem,
   Accordion,
@@ -34,195 +36,258 @@ import type { StudentTabsComponentType } from '.';
 import type { PaymentDate } from './finance-profile-data/finance-profile-fee-data';
 
 const Finance = (props: StudentTabsComponentType) => {
-  // State for managing the receipt dialog visibility
   const receiptDialog = useBoolean();
+  const theme = useTheme();
+
   return (
     <>
-      <Stack direction="row" spacing={2} alignItems="center">
-        <Card
-          elevation={3}
-          sx={{
-            py: 2,
-            textAlign: 'center',
-            typography: 'h4',
-            maxWidth: '250px',
-            width: '100%',
-          }}
-        >
-          <Stack
-            direction="row"
-            divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
+      <Grid container spacing={2.5}>
+        {/* Total Fees Card */}
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Card
+            elevation={0}
+            sx={{
+              p: 3,
+              height: '140px',
+              border: `1px solid ${varAlpha(theme.palette.primary.mainChannel, 0.12)}`,
+              borderRadius: 2,
+              background: `linear-gradient(135deg, ${varAlpha(theme.palette.primary.mainChannel, 0.05)} 0%, ${varAlpha(
+                theme.palette.primary.mainChannel,
+                0.01
+              )} 100%)`,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: `0 12px 24px ${varAlpha(theme.palette.primary.mainChannel, 0.15)}`,
+              },
+            }}
           >
-            <Stack width={1}>
-              <Box fontSize="14px">
-                Total Fees:
-                <Label
-                  sx={{ ml: '10px' }}
-                  variant="soft"
-                  color="success"
-                  fontSize="12px"
-                  display="inline-block"
+            <Stack spacing={1} height="100%" justifyContent="center">
+              <Box display="flex" alignItems="center" gap={1}>
+                <Iconify icon="mdi:currency-inr" width={24} />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: '16px', fontWeight: 500 }}
                 >
-                  ₹ 60,000
-                </Label>
+                  Total Fees
+                </Typography>
               </Box>
+              <Typography variant="h4" fontWeight={700} sx={{ marginLeft: '5px' }}>
+                ₹ 60,000
+              </Typography>
             </Stack>
-          </Stack>
-        </Card>
+          </Card>
+        </Grid>
 
-        <Card
-          elevation={3}
-          sx={{
-            py: 2,
-            textAlign: 'center',
-            typography: 'h4',
-            maxWidth: '250px',
-            width: '100%',
-          }}
-        >
-          <Stack
-            direction="row"
-            divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
+        {/* Paid Fees Card */}
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Card
+            elevation={0}
+            sx={{
+              p: 3,
+              height: '140px',
+              border: `1px solid ${varAlpha(theme.palette.success.mainChannel, 0.12)}`,
+              borderRadius: 2,
+              background: `linear-gradient(135deg, ${varAlpha(theme.palette.success.mainChannel, 0.05)} 0%, ${varAlpha(
+                theme.palette.success.mainChannel,
+                0.01
+              )} 100%)`,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: `0 12px 24px ${varAlpha(theme.palette.success.mainChannel, 0.15)}`,
+              },
+            }}
           >
-            <Stack width={1}>
-              <Box fontSize="14px">
-                Paid Fees:
-                <Label
-                  sx={{ ml: '10px' }}
-                  variant="soft"
-                  color="success"
-                  fontSize="12px"
-                  display="inline-block"
+            <Stack spacing={1} height="100%" justifyContent="center">
+              <Box display="flex" alignItems="center" gap={1}>
+                <Iconify icon="mdi:check-circle" width={24} />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: '16px', fontWeight: 500 }}
                 >
-                  ₹ 40,000
-                </Label>
+                  Paid Fees
+                </Typography>
               </Box>
+              <Typography
+                variant="h4"
+                fontWeight={700}
+                sx={{ marginLeft: '5px' }}
+                color="success.main"
+              >
+                ₹ 40,000
+              </Typography>
             </Stack>
-          </Stack>
-        </Card>
-        <Card
-          elevation={3}
-          sx={{
-            py: 2,
-            textAlign: 'center',
-            typography: 'h4',
-            maxWidth: '250px',
-            width: '100%',
-          }}
-        >
-          <Stack
-            direction="row"
-            divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
+          </Card>
+        </Grid>
+
+        {/* Pending Fees Card */}
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Card
+            elevation={0}
+            sx={{
+              p: 3,
+              height: '140px',
+              border: `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.12)}`,
+              borderRadius: 2,
+              background: `linear-gradient(135deg, ${varAlpha(theme.palette.warning.mainChannel, 0.05)} 0%, ${varAlpha(
+                theme.palette.warning.mainChannel,
+                0.01
+              )} 100%)`,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: `0 12px 24px ${varAlpha(theme.palette.warning.mainChannel, 0.15)}`,
+              },
+            }}
           >
-            <Stack width={1}>
-              <Box fontSize="14px">
-                Pending Fees:
-                <Label
-                  sx={{ ml: '10px' }}
-                  variant="soft"
-                  color="warning"
-                  fontSize="12px"
-                  display="inline-block"
+            <Stack spacing={1} height="100%" justifyContent="center">
+              <Box display="flex" alignItems="center" gap={1}>
+                <Iconify icon="mdi:clock-outline" width={24} />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: '16px', fontWeight: 500 }}
                 >
-                  ₹ 20,000
-                </Label>
+                  Pending Fees
+                </Typography>
               </Box>
+              <Typography
+                variant="h4"
+                fontWeight={700}
+                sx={{ marginLeft: '5px' }}
+                color="warning.main"
+              >
+                ₹ 20,000
+              </Typography>
             </Stack>
-          </Stack>
-        </Card>
-        <Card
-          elevation={3}
-          sx={{
-            py: 2,
-            textAlign: 'center',
-            typography: 'h4',
-            maxWidth: '250px',
-            width: '100%',
-          }}
-        >
-          <Stack
-            direction="row"
-            divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
+          </Card>
+        </Grid>
+
+        {/* Overdue Fees Card */}
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Card
+            elevation={0}
+            sx={{
+              p: 3,
+              height: '140px',
+              border: `1px solid ${varAlpha(theme.palette.error.mainChannel, 0.12)}`,
+              borderRadius: 2,
+              background: `linear-gradient(135deg, ${varAlpha(theme.palette.error.mainChannel, 0.05)} 0%, ${varAlpha(
+                theme.palette.error.mainChannel,
+                0.01
+              )} 100%)`,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: `0 12px 24px ${varAlpha(theme.palette.error.mainChannel, 0.15)}`,
+              },
+            }}
           >
-            <Stack width={1}>
-              <Box fontSize="14px">
-                Overdue Fees:
-                <Label
-                  sx={{ ml: '10px' }}
-                  variant="soft"
-                  color="error"
-                  fontSize="12px"
-                  display="inline-block"
+            <Stack spacing={1} height="100%" justifyContent="center">
+              <Box display="flex" alignItems="center" gap={1}>
+                <Iconify icon="mdi:alert-circle" width={24} />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: '16px', fontWeight: 500 }}
                 >
-                  ₹ 20,000
-                </Label>
+                  Overdue Fees
+                </Typography>
               </Box>
+              <Typography
+                variant="h4"
+                fontWeight={700}
+                sx={{ marginLeft: '5px' }}
+                color="error.main"
+              >
+                ₹ 20,000
+              </Typography>
             </Stack>
-          </Stack>
-        </Card>
-        <Card
-          elevation={3}
-          sx={{
-            py: 2,
-            textAlign: 'center',
-            typography: 'h4',
-            maxWidth: '250px',
-            width: '100%',
-          }}
-        >
-          <Stack
-            direction="row"
-            divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
+          </Card>
+        </Grid>
+
+        {/* Pending Refund Card */}
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Card
+            elevation={0}
+            sx={{
+              p: 3,
+              height: '140px',
+              border: `1px solid ${varAlpha(theme.palette.info.mainChannel, 0.12)}`,
+              borderRadius: 2,
+              background: `linear-gradient(135deg, ${varAlpha(theme.palette.info.mainChannel, 0.05)} 0%, ${varAlpha(
+                theme.palette.info.mainChannel,
+                0.01
+              )} 100%)`,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: `0 12px 24px ${varAlpha(theme.palette.info.mainChannel, 0.15)}`,
+              },
+            }}
           >
-            <Stack width={1}>
-              <Box fontSize="14px">
-                Pending Refund:
-                <Label
-                  sx={{ ml: '10px' }}
-                  variant="soft"
-                  color="error"
-                  fontSize="12px"
-                  display="inline-block"
+            <Stack spacing={1} height="100%" justifyContent="center">
+              <Box display="flex" alignItems="center" gap={1}>
+                <Iconify icon="mdi:cash-refund" width={24} />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: '16px', fontWeight: 500 }}
                 >
-                  ₹ 0
-                </Label>
+                  Pending Refund
+                </Typography>
               </Box>
+              <Typography variant="h4" fontWeight={700} sx={{ marginLeft: '5px' }}>
+                ₹ 0
+              </Typography>
             </Stack>
-          </Stack>
-        </Card>
-        <Card
-          elevation={3}
-          sx={{
-            py: 2,
-            textAlign: 'center',
-            typography: 'h4',
-            maxWidth: '250px',
-            width: '100%',
-          }}
-        >
-          <Stack
-            direction="row"
-            divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
+          </Card>
+        </Grid>
+
+        {/* Pending Charges Card */}
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Card
+            elevation={0}
+            sx={{
+              p: 3,
+              height: '140px',
+              border: `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.12)}`,
+              borderRadius: 2,
+              background: `linear-gradient(135deg, ${varAlpha(theme.palette.warning.mainChannel, 0.05)} 0%, ${varAlpha(
+                theme.palette.warning.mainChannel,
+                0.01
+              )} 100%)`,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: `0 12px 24px ${varAlpha(theme.palette.warning.mainChannel, 0.15)}`,
+              },
+            }}
           >
-            <Stack width={1}>
-              <Box fontSize="14px">
-                Pending Charges:
-                <Label
-                  sx={{ ml: '10px' }}
-                  variant="soft"
-                  color="error"
-                  fontSize="12px"
-                  display="inline-block"
+            <Stack spacing={1} height="100%" justifyContent="center">
+              <Box display="flex" alignItems="center" gap={1}>
+                <Iconify icon="mdi:cash-plus" width={24} />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: '16px', fontWeight: 500 }}
                 >
-                  ₹ 500
-                </Label>
+                  Pending Charges
+                </Typography>
               </Box>
+              <Typography variant="h4" fontWeight={700} sx={{ marginLeft: '5px' }}>
+                ₹ 500
+              </Typography>
             </Stack>
-          </Stack>
-        </Card>
-      </Stack>
-      <Box sx={{ height: 'calc(100vh - 400px)' }}>
-        <Box sx={{ my: 2 }} />
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Chart Section */}
+      <Box sx={{ height: 'calc(100vh - 400px)', mt: 3 }}>
         <AppAreaInstalled
           title="Fee Insights"
           selectSeries="2024"
@@ -242,7 +307,6 @@ const Finance = (props: StudentTabsComponentType) => {
               'Nov',
               'Dec',
             ],
-
             series: [
               {
                 name: '2024',
@@ -261,6 +325,7 @@ const Finance = (props: StudentTabsComponentType) => {
           }}
           sx={{ height: '100%' }}
         />
+
         <Box sx={{ my: 2 }} />
         {students[0].fees.map((feeHead: any) => (
           <Accordion key={feeHead.feeHeadId}>
@@ -458,17 +523,19 @@ const Finance = (props: StudentTabsComponentType) => {
             </AccordionDetails>
           </Accordion>
         ))}
+
+        <CustomDialog
+          open={receiptDialog.value}
+          title=""
+          handleClose={receiptDialog.onFalse}
+          maxWidth="md"
+          fullWidth
+        >
+          <PaymentReceipt />
+        </CustomDialog>
       </Box>
-      <CustomDialog
-        open={receiptDialog.value}
-        title=""
-        handleClose={receiptDialog.onFalse}
-        maxWidth="md"
-        fullWidth
-      >
-        <PaymentReceipt />
-      </CustomDialog>
     </>
   );
 };
+
 export default Finance;
