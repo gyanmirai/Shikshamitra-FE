@@ -10,8 +10,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CommonCalender from 'src/components/calender';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import ViewDialog from './Components/ViewDialog';
 import FilterDialog from './Components/FilterDialog';
+import CalendarViewDialog from './Components/ViewDialog';
 
 import type { Filters } from './Components/FilterDialog';
 
@@ -318,7 +318,7 @@ const data = [
   },
 ];
 
-const CalendarDashboard = () => {
+const CalendarView = () => {
   const theme = useTheme();
   const [filters, setFilters] = useState<Filters>({
     eventType: [],
@@ -369,8 +369,8 @@ const CalendarDashboard = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Dashboard"
-        links={[{ name: 'Calendar' }, { name: 'Dashboard' }]}
+        heading="Calendar View"
+        links={[{ name: 'Calendar' }, { name: 'Calendar View' }]}
         sx={{ px: 1, mb: 2 }}
       />
 
@@ -455,7 +455,7 @@ const CalendarDashboard = () => {
         }}
       />
 
-      <ViewDialog
+      <CalendarViewDialog
         open={Boolean(currentDateClick)}
         onClose={() => setCurrentDateClick(null)}
         data={currentDateClick}
@@ -470,4 +470,4 @@ const CalendarDashboard = () => {
   );
 };
 
-export default CalendarDashboard;
+export default CalendarView;

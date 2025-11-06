@@ -1,5 +1,6 @@
 import SubLayout from 'src/components/sub-layout';
 import { DashboardLayout } from 'src/layouts/dashboard';
+import PageTransition from 'src/components/page-transition';
 import AuthRouteLayout from 'src/components/auth-route-layout';
 
 const AuthLayout: React.FC<{ children: React.ReactNode }> = ({
@@ -9,7 +10,9 @@ const AuthLayout: React.FC<{ children: React.ReactNode }> = ({
 }) => (
   <AuthRouteLayout>
     <DashboardLayout>
-      <SubLayout>{children}</SubLayout>
+      <SubLayout>
+        <PageTransition>{children}</PageTransition>
+      </SubLayout>
     </DashboardLayout>
   </AuthRouteLayout>
 );

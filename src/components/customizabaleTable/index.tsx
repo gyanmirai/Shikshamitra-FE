@@ -491,8 +491,20 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   };
 
   return (
-    <Card sx={{ boxShadow: 'var(--shadows-4)', mt: 0 }} ref={setTableRef}>
-      <Box sx={{ display: 'flex', alignItems: 'center', p: isSearch ? 1 : 0, gap: 1 }}>
+    <Card
+      sx={{
+        boxShadow: 'var(--shadows-4)',
+        mt: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%', // or a parent-calculated height
+        minHeight: 0, // important for flex children with overflow
+      }}
+      ref={setTableRef}
+    >
+      <Box
+        sx={{ display: 'flex', alignItems: 'center', p: isSearch ? 1 : 0, gap: 1, flexShrink: 0 }}
+      >
         {isSearch && (
           <TextField
             variant="outlined"
@@ -653,8 +665,28 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         onClose={() => setFilterAnchorEl(null)}
         onApplyFilter={handleApplyColumnFilter}
       />
-      <ComponentBlock sx={{ px: 0, py: 0, boxShadow: 'none', gap: 0.5 }}>
-        <TableContainer component={Scrollbar} sx={{ maxHeight: '440px', ...sx }} {...other}>
+      <ComponentBlock
+        sx={{
+          px: 0,
+          py: 0,
+          boxShadow: 'none',
+          gap: 0.5,
+          // display: 'flex',
+          // flexDirection: 'column',
+          // flex: 1,
+          // minHeight: 0,
+        }}
+      >
+        <TableContainer
+          component={Scrollbar}
+          sx={{
+            flex: 1,
+            // minHeight: 0, // ensures proper shrinking in flexbox
+            // height: '100%', // fills the parent
+            ...sx,
+          }}
+          {...other}
+        >
           <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
             <TableHead>
               <TableRow>

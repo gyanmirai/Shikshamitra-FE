@@ -1,98 +1,102 @@
 {
-"schoolWiseAnnouncementData": [
-  {
-    "id": "ANN-001",
-    "title": "School Sports Day Announcement",
-    "description": "Annual Sports Day will be held on 25th September. All students are required to wear their house uniforms.",
-    "audience": [
-      { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
-      { "value": "Parents", "name": "Parents", "color": "#faad14" }
-    ],
-    "duration": "10 days",
-    "startDate": "2025-09-25T09:00:00.000Z",
-    "endDate": "2025-10-01T18:00:00.000Z",
-    "createdBy": "Jinjala Dharmik Ramesh",
-    "createdOn": "2025-09-10T08:30:00.000Z",
-    "status": 0,
-        "type": [{
-    "announcementType": "Academic",
-    "description": "Academic",
-    "color": "#1976d2"
-  }],
-    "importance_level": {
-      "levelName": "critical",
-      "description": "High-priority announcement with significant importance for all audiences.",
-      "color": "#D32F2F"
-    },
-    "link": "https://schoolportal.com/announcements/sports-day",
-    "active": 0,
-    "notification_preferences": ["Email", "SMS", "In-App"],
-    "isAllowAcknoledgement": true,
-    "viewedBy": 120
-  },
-   {
-        "id": "ANN-002",
-        "title": "Uniform Policy Reminder",
-        "description": "Students are reminded to adhere to the updated uniform policy. Regular checks will be conducted from next week. Detailed guidelines are available on the school portal.",
-        "audience": [
-          { "value": "Students", "name": "Students", "color": "#1890ff" },
-          { "value": "Parents", "name": "Parents", "color": "#faad14" }
-        ],
-        "startDate": "2025-10-20T08:00:00.000Z",
-        "endDate": "2025-10-30T17:00:00.000Z",
-        "duration": "10 days",
-        "createdBy": "Jinjala Dharmik Ramesh",
-        "createdOn": "2025-09-18T11:00:00.000Z",
-        "status": 1,
-            "type": [{
-    "announcementType": "Administrative",
-    "description": "Administrative related announcements and notices",
-    "color": "#FF9800"
-            }],
-        "attachment": null,
-        "importance_level": {
-          "levelName": "high",
-          "description": "Important notice for compliance with school discipline policy.",
-          "color": "#F57C00"
-        },
-        "link": "https://schoolportal.com/announcements/uniform-policy",
-        "active": 1,
-        "notification_preferences": ["In-App"],
-        "isAllowAcknoledgement": true,
-        "viewedBy": 290
+  "schoolWiseAnnouncementData": [
+    {
+      "id": "ANN-001",
+      "title": "School Sports Day Announcement",
+      "description": "Annual Sports Day will be held on 25th September. All students are required to wear their house uniforms.",
+      "audience": [
+        { "value": "Teachers", "name": "Teachers", "color": "#52c41a" },
+        { "value": "Parents", "name": "Parents", "color": "#faad14" }
+      ],
+      "duration": "10 days",
+      "startDate": "2025-09-25T09:00:00.000Z",
+      "endDate": "2025-10-01T18:00:00.000Z",
+      "createdBy": "Jinjala Dharmik Ramesh",
+      "createdOn": "2025-09-10T08:30:00.000Z",
+      "status": 0,
+      "type": [
+        {
+          "announcementType": "Academic",
+          "description": "Academic",
+          "color": "#1976d2"
+        }
+      ],
+      "importance_level": {
+        "levelName": "critical",
+        "description": "High-priority announcement with significant importance for all audiences.",
+        "color": "#D32F2F"
       },
-      {
-        "id": "ANN-003",
-        "title": "Parent Portal Maintenance",
-        "description": "The parent portal will be under maintenance on 28th September from 8 PM to 10 PM. During this period, access to report cards and attendance records will be unavailable.",
-        "audience": [
-          { "value": "Parents", "name": "Parents", "color": "#faad14" }
-        ],
-        "startDate": "2025-10-28T20:00:00.000Z",
-        "endDate": "2025-10-28T22:00:00.000Z",
-        "duration": "2 hours",
-        "createdBy": "Prerna Atre",
-        "createdOn": "2025-09-25T09:45:00.000Z",
-        "status": 2,
-                 "type": [{
-    "announcementType": "Extracurricular",
-    "description": "Extracurricular activities and event-related updates",
-    "color": "#4CAF50"
-  }],
-     
-        "attachment": null,
-        "importance_level": {
-          "levelName": "urgent",
-          "description": "System downtime notice that requires awareness.",
-          "color": "#FF5252"
-        },
-        "link": "https://schoolportal.com/announcements/portal-maintenance",
-        "active": 1,
-        "notification_preferences": ["In-App", "Email"],
-        "isAllowAcknoledgement": false,
-        "viewedBy": 132
-      }
-],
+      "link": "https://schoolportal.com/announcements/sports-day",
+      "active": 0,
+      "notification_preferences": ["Email", "SMS", "In-App"],
+      "isAllowAcknoledgement": true,
+      "viewedBy": 120
+    },
+    {
+      "id": "ANN-002",
+      "title": "Uniform Policy Reminder",
+      "description": "Students are reminded to adhere to the updated uniform policy. Regular checks will be conducted from next week. Detailed guidelines are available on the school portal.",
+      "audience": [
+        { "value": "Students", "name": "Students", "color": "#1890ff" },
+        { "value": "Parents", "name": "Parents", "color": "#faad14" }
+      ],
+      "startDate": "2025-10-20T08:00:00.000Z",
+      "endDate": "2025-10-30T17:00:00.000Z",
+      "duration": "10 days",
+      "createdBy": "Jinjala Dharmik Ramesh",
+      "createdOn": "2025-09-18T11:00:00.000Z",
+      "status": 1,
+      "type": [
+        {
+          "announcementType": "Administrative",
+          "description": "Administrative related announcements and notices",
+          "color": "#FF9800"
+        }
+      ],
+      "attachment": null,
+      "importance_level": {
+        "levelName": "high",
+        "description": "Important notice for compliance with school discipline policy.",
+        "color": "#F57C00"
+      },
+      "link": "https://schoolportal.com/announcements/uniform-policy",
+      "active": 1,
+      "notification_preferences": ["In-App"],
+      "isAllowAcknoledgement": true,
+      "viewedBy": 290
+    },
+    {
+      "id": "ANN-003",
+      "title": "Parent Portal Maintenance",
+      "description": "The parent portal will be under maintenance on 28th September from 8 PM to 10 PM. During this period, access to report cards and attendance records will be unavailable.",
+      "audience": [{ "value": "Parents", "name": "Parents", "color": "#faad14" }],
+      "startDate": "2025-10-28T20:00:00.000Z",
+      "endDate": "2025-10-28T22:00:00.000Z",
+      "duration": "2 hours",
+      "createdBy": "Prerna Atre",
+      "createdOn": "2025-09-25T09:45:00.000Z",
+      "status": 2,
+      "type": [
+        {
+          "announcementType": "Extracurricular",
+          "description": "Extracurricular activities and event-related updates",
+          "color": "#4CAF50"
+        }
+      ],
+
+      "attachment": null,
+      "importance_level": {
+        "levelName": "urgent",
+        "description": "System downtime notice that requires awareness.",
+        "color": "#FF5252"
+      },
+      "link": "https://schoolportal.com/announcements/portal-maintenance",
+      "active": 1,
+      "notification_preferences": ["In-App", "Email"],
+      "isAllowAcknoledgement": false,
+      "viewedBy": 132
+    }
+  ],
   "classWiseAnnouncementData": [
     {
       "id": "ANN-201",
@@ -104,7 +108,7 @@
         { "value": "Parents", "name": "Parents", "color": "#faad14" }
       ],
       "organizations": ["Primary"],
-      "classes": ["1","2"],
+      "classes": ["1", "2"],
       "divisions": ["All"],
       "startDate": "2025-09-15T10:00:00Z",
       "endDate": "2025-09-15T12:00:00Z",
@@ -112,11 +116,13 @@
       "createdBy": "Jinjala Dharmik Ramesh",
       "createdOn": "2025-09-10T09:00:00Z",
       "status": 0,
-      "type": [{
-    "announcementType": "Academic",
-    "description": "Academic",
-    "color": "#1976d2"
-  }],
+      "type": [
+        {
+          "announcementType": "Academic",
+          "description": "Academic",
+          "color": "#1976d2"
+        }
+      ],
       "importance_level": {
         "levelName": "critical",
         "description": "High-priority announcement for all audiences of the class.",
@@ -146,11 +152,13 @@
       "createdBy": "Jinjala Dharmik Ramesh",
       "createdOn": "2025-09-12T08:30:00Z",
       "status": 1,
-      "type": [{
-    "announcementType": "Administrative",
-    "description": "Administrative related announcements and notices",
-    "color": "#FF9800"
-  }],
+      "type": [
+        {
+          "announcementType": "Administrative",
+          "description": "Administrative related announcements and notices",
+          "color": "#FF9800"
+        }
+      ],
       "importance_level": {
         "levelName": "high",
         "description": "Important schedule for academic planning.",
@@ -180,11 +188,13 @@
       "createdBy": "Jinjala Dharmik Ramesh",
       "createdOn": "2025-09-15T14:00:00Z",
       "status": 1,
-      "type": [{
-    "announcementType": "Extracurricular",
-    "description": "Extracurricular activities and event-related updates",
-    "color": "#4CAF50"
-  }],
+      "type": [
+        {
+          "announcementType": "Extracurricular",
+          "description": "Extracurricular activities and event-related updates",
+          "color": "#4CAF50"
+        }
+      ],
       "importance_level": {
         "levelName": "critical",
         "description": "High-priority notice for students and teachers to prepare for exams.",
@@ -197,23 +207,12 @@
       "viewedBy": 200
     }
   ],
- "eventData": [
+  "eventData": [
     {
       "id": "1",
       "title": "Annual Sports Day",
       "description": "A fun-filled sports event for all classes with various competitions.",
-      "audience": [
-        {
-          "value": "Teachers",
-          "name": "Teachers",
-          "color": "#52c41a"
-        },
-        {
-          "value": "Parents",
-          "name": "Parents",
-          "color": "#faad14"
-        }
-      ],
+      "audience": ["Sports Committee"],
       "recurrenceSummary": "Every Wednesday until 17 Dec 2025",
       "organizations": ["Sports Committee"],
       "classes": ["10", "11", "12"],
@@ -239,18 +238,7 @@
       "id": "2",
       "title": "Online Coding Workshop",
       "description": "A workshop on competitive programming conducted by industry experts.",
-      "audience": [      
-        {
-          "value": "Teachers",
-          "name": "Teachers",
-          "color": "#52c41a"
-        },
-        {
-          "value": "Parents",
-          "name": "Parents",
-          "color": "#faad14"
-        }
-      ],
+      "audience": ["Computer Science Club"],
       "recurrenceSummary": "Every Wednesday until 17 Dec 2025",
       "organizations": ["Computer Science Club"],
       "classes": ["9"],
@@ -279,18 +267,7 @@
       "id": "3",
       "title": "Parent-Teacher Meeting",
       "description": "Discussion on student academic progress and future planning.",
-      "audience": [
-        {
-          "value": "Students",
-          "name": "Students",
-          "color": "#1890ff"
-        },
-        {
-          "value": "Teachers",
-          "name": "Teachers",
-          "color": "#52c41a"
-        }
-      ],
+      "audience": ["Academic Committee"],
       "recurrenceSummary": "Every Wednesday until 17 Dec 2025",
       "organizations": ["Academic Committee"],
       "classes": ["1", "2", "3", "4"],
@@ -316,279 +293,279 @@
       "day": "Monday"
     }
   ],
-"holidayData" : [
-  {
-    "id": "1",
-    "holidayName": "Independence Day 2025",
-    "holidayType": "National Holiday",
-    "importanceLevel": "High",
-    "startDate": "2025-05-01",
-    "endDate": "2025-06-01",
-    "description": "Celebration of Independence Day for students across all organizations.",
-    "attachment": null,
-    "organizations": ["All"],
-    "audience": ["Students"],
-    "createdBy": "Jinjala Dharmik Ramesh",
-    "createdOn": "2025-04-30",
-    "status": 1
-  },
-  {
-    "id": "2",
-    "holidayName": "Christmas Day 2025",
-    "holidayType": "Religious",
-    "importanceLevel": "Normal",
-    "startDate": "2025-05-04",
-    "endDate": "2025-05-04",
-    "description": "Christmas Day celebration for parents at primary organization.",
-    "attachment": null,
-    "organizations": ["Primary"],
-    "audience": ["Parents"],
-    "createdBy": "Yagnik Jethabhai Vadher",
-    "createdOn": "2025-05-02",
-    "status": 0
-  },
-  {
-    "id": "3",
-    "holidayName": "Teacher’s Day 2025",
-    "holidayType": "Observance",
-    "importanceLevel": "Normal",
-    "startDate": "2025-05-06",
-    "endDate": "2025-05-06",
-    "description": "Teacher’s Day observance for parents in secondary organization.",
-    "attachment": null,
-    "organizations": ["Secondary"],
-    "audience": ["Parents"],
-    "createdBy": "Jagruti Jethabhai Vadher",
-    "createdOn": "2025-05-03",
-    "status": 2
-  },
-  {
-    "id": "4",
-    "holidayName": "Annual School Foundation Day 2025",
-    "holidayType": "Institutional",
-    "importanceLevel": "High",
-    "startDate": "2025-05-08",
-    "endDate": "2025-05-08",
-    "description": "Annual School Foundation celebration for students across all organizations.",
-    "attachment": null,
-    "organizations": ["All"],
-    "audience": ["Students"],
-    "createdBy": "Vaishali Jethabhai Vadher",
-    "createdOn": "2025-05-05",
-    "status": 1
-  },
-  {
-    "id": "5",
-    "holidayName": "Makar Sankranti 2025",
-    "holidayType": "Festival",
-    "importanceLevel": "Normal",
-    "startDate": "2025-05-10",
-    "endDate": "2025-06-10",
-    "description": "Makar Sankranti festival celebration for students in primary organization.",
-    "attachment": null,
-    "organizations": ["Primary"],
-    "audience": ["Students"],
-    "createdBy": "Renuka Yagnikbhai Vadher",
-    "createdOn": "2025-05-09",
-    "status": 0
-  }
-],
-"meetingData" : [
-  {
-    "id": 1,
-    "title": "Parent-Teacher Meeting",
-    "status": 1,
-    "type": "Parent-Teacher",
-    "importance_level": "High",
-    "description": "Discussion on student performance and progress.",
-    "attachment": [
-      "https://schoolportal.com/files/agenda.pdf",
-      "https://schoolportal.com/files/notice.png"
-    ],
-    "audience": ["Parents", "Teachers"],
-    "organizations": ["ABC School"],
-    "classes": ["10th Grade", "9th Grade"],
-    "divisions": ["A", "B"],
-    "students": ["S101", "S102", "S103"],
-    "startDate": "2025-09-20T09:00:00.000Z",
-    "endDate": "2025-09-20T11:00:00.000Z",
-    "meetingDate": "2025-09-20",
-    "meetingTime": "10:00 AM",
-    "meetingAgenda": "Review exam results, address parent concerns, set academic goals.",
-    "link": "https://meet.google.com/xyz-123",
-    "meetingType": "Online",
-    "classRoom": "Virtual",
-    "isRecurring": true,
-    "day": "Saturday",
-    "repeatFrequency": "Weekly",
-    "mode": "Video Conference",
-    "repeatUntil": "2025-12-31"
-  },
-  {
-    "id": 2,
-    "title": "Staff Meeting",
-    "status": 1,
-    "type": "Staff",
-    "importance_level": "Medium",
-    "description": "Monthly staff updates and planning session.",
-    "attachment": [],
-    "audience": ["Teachers", "Administration"],
-    "organizations": ["ABC School"],
-    "classes": [],
-    "divisions": [],
-    "students": [],
-    "startDate": "2025-09-25T13:00:00.000Z",
-    "endDate": "2025-09-25T15:00:00.000Z",
-    "meetingDate": "2025-09-25",
-    "meetingTime": "01:00 PM",
-    "meetingAgenda": "Plan upcoming events, assign responsibilities, discuss improvements.",
-    "link": "",
-    "meetingType": "Offline",
-    "classRoom": "Conference Hall",
-    "isRecurring": false,
-    "mode": "In-Person"
-  },
-  {
-    "id": 3,
-    "title": "General Assembly",
-    "status": 0,
-    "type": "General",
-    "importance_level": "Low",
-    "description": "School-wide assembly for announcements.",
-    "attachment": ["https://schoolportal.com/files/assembly-note.pdf"],
-    "audience": ["Students", "Teachers"],
-    "organizations": ["ABC School"],
-    "classes": ["All"],
-    "divisions": ["All"],
-    "students": [],
-    "startDate": "2025-09-18T08:00:00.000Z",
-    "endDate": "2025-09-18T09:00:00.000Z",
-    "meetingDate": "2025-09-18",
-    "meetingTime": "08:00 AM",
-    "meetingAgenda": "Share upcoming exam schedule and extracurricular activities.",
-    "link": "",
-    "meetingType": "Offline",
-    "classRoom": "Auditorium",
-    "isRecurring": true,
-    "day": "Thursday",
-    "repeatFrequency": "Monthly",
-    "mode": "In-Person",
-    "repeatUntil": "2026-06-01"
-  }
-],
- "announcementTypeData": [
-  {
-    "announcementType": "Academic",
-    "description": "Covers holidays, exams, results, timetable changes, and syllabus updates",
-    "color": "#1E88E5"
-  },
-  {
-    "announcementType": "Administrative",
-    "description": "Includes fee notices, school policies, transport, and official circulars",
-    "color": "#43A047"
-  },
-  {
-    "announcementType": "Extracurricular",
-    "description": "Sports events, cultural programs, competitions, and annual functions",
-    "color": "#F4511E"
-  },
-  {
-    "announcementType": "General",
-    "description": "For miscellaneous updates, greetings, and non-categorized notices",
-    "color": "#8E24AA"
-  }
-],
-"eventTypeData": [
-  {
-    "eventType": "Academic",
-    "description": "Covers examinations, workshops, seminars, and subject-related events.",
-    "color": "#3F51B5"
-  },
-  {
-    "eventType": "Cultural",
-    "description": "Includes annual day, cultural fest, music, dance, and drama programs.",
-    "color": "#9C27B0"
-  },
-  {
-    "eventType": "Sports",
-    "description": "Sports day, inter-house competitions, tournaments, and fitness activities.",
-    "color": "#4CAF50"
-  },
-  {
-    "eventType": "National Celebration",
-    "description": "Events like Independence Day, Republic Day, Teachers’ Day, and Children’s Day.",
-    "color": "#F44336"
-  },
-  {
-    "eventType": "Community & Social",
-    "description": "Awareness programs, charity drives, environmental campaigns, and social service.",
-    "color": "#009688"
-  },
-  {
-    "eventType": "Administrative",
-    "description": "Orientation programs, parent-teacher meetings, farewell, and award ceremonies.",
-    "color": "#FF9800"
-  }
-],
-"holidayTypeData": [
-  {
-    "holidayType": "Public Holiday",
-    "description": "National or state-wide holiday observed across the country or state.",
-    "color": "#F44336"
-  },
-  {
-    "holidayType": "School Holiday",
-    "description": "Holiday declared by the school management for specific reasons.",
-    "color": "#3F51B5"
-  },
-  {
-    "holidayType": "Festival Holiday",
-    "description": "Holiday for celebrating cultural, religious, or regional festivals.",
-    "color": "#FF9800"
-  },
-  {
-    "holidayType": "National Holiday",
-    "description": "Holiday for significant national occasions such as Independence Day and Republic Day.",
-    "color": "#4CAF50"
-  },
-  {
-    "holidayType": "Special Holiday",
-    "description": "Declared for unique circumstances such as weather conditions, elections, or emergencies.",
-    "color": "#9C27B0"
-  },
-  {
-    "holidayType": "Winter/Summer Break",
-    "description": "Extended vacation period for students and staff, usually seasonal.",
-    "color": "#00BCD4"
-  }
-],
-  "surveyTypeData" : [
-  {
-    "surveyType": "Feedback",
-    "description": "Collect feedback from students and staff.",
-    "createdBy": "Admin",
-    "createdDate": "2025-09-18"
-  },
-  {
-    "surveyType": "Assessment",
-    "description": "Conduct academic assessments for various subjects.",
-    "createdBy": "Teacher1",
-    "createdDate": "2025-09-15"
-  },
-  {
-    "surveyType": "Poll",
-    "description": "Short polls for quick opinions on school matters.",
-    "createdBy": "Admin",
-    "createdDate": "2025-09-10"
-  },
-  {
-    "surveyType": "Event Feedback",
-    "description": "Gather feedback after school events or workshops.",
-    "createdBy": "EventCoordinator",
-    "createdDate": "2025-09-12"
-  }
-],
- "meetingTypeData": [
+  "holidayData": [
+    {
+      "id": "1",
+      "holidayName": "Independence Day 2025",
+      "holidayType": "National Holiday",
+      "importanceLevel": "High",
+      "startDate": "2025-05-01",
+      "endDate": "2025-06-01",
+      "description": "Celebration of Independence Day for students across all organizations.",
+      "attachment": null,
+      "organizations": ["All"],
+      "audience": ["All CBSE Students"],
+      "createdBy": "Jinjala Dharmik Ramesh",
+      "createdOn": "2025-04-30",
+      "status": 1
+    },
+    {
+      "id": "2",
+      "holidayName": "Christmas Day 2025",
+      "holidayType": "Religious",
+      "importanceLevel": "Normal",
+      "startDate": "2025-05-04",
+      "endDate": "2025-05-04",
+      "description": "Christmas Day celebration for parents at primary organization.",
+      "attachment": null,
+      "organizations": ["All"],
+      "audience": ["All Stundents"],
+      "createdBy": "Yagnik Jethabhai Vadher",
+      "createdOn": "2025-05-02",
+      "status": 0
+    },
+    {
+      "id": "3",
+      "holidayName": "Teacher’s Day 2025",
+      "holidayType": "Observance",
+      "importanceLevel": "Normal",
+      "startDate": "2025-05-06",
+      "endDate": "2025-05-06",
+      "description": "Teacher’s Day observance for parents in secondary organization.",
+      "attachment": null,
+      "organizations": ["Secondary"],
+      "audience": ["All Parents"],
+      "createdBy": "Jagruti Jethabhai Vadher",
+      "createdOn": "2025-05-03",
+      "status": 2
+    },
+    {
+      "id": "4",
+      "holidayName": "Annual School Foundation Day 2025",
+      "holidayType": "Institutional",
+      "importanceLevel": "High",
+      "startDate": "2025-05-08",
+      "endDate": "2025-05-08",
+      "description": "Annual School Foundation celebration for students across all organizations.",
+      "attachment": null,
+      "organizations": ["All"],
+      "audience": ["All Students"],
+      "createdBy": "Vaishali Jethabhai Vadher",
+      "createdOn": "2025-05-05",
+      "status": 1
+    },
+    {
+      "id": "5",
+      "holidayName": "Makar Sankranti 2025",
+      "holidayType": "Festival",
+      "importanceLevel": "Normal",
+      "startDate": "2025-05-10",
+      "endDate": "2025-06-10",
+      "description": "Makar Sankranti festival celebration for students in primary organization.",
+      "attachment": null,
+      "organizations": ["Primary"],
+      "audience": ["GSEB Students"],
+      "createdBy": "Renuka Yagnikbhai Vadher",
+      "createdOn": "2025-05-09",
+      "status": 0
+    }
+  ],
+  "meetingData": [
+    {
+      "id": 1,
+      "title": "Parent-Teacher Meeting",
+      "status": 1,
+      "type": "Parent-Teacher",
+      "importance_level": "High",
+      "description": "Discussion on student performance and progress.",
+      "attachment": [
+        "https://schoolportal.com/files/agenda.pdf",
+        "https://schoolportal.com/files/notice.png"
+      ],
+      "audience": ["Parents", "Teachers"],
+      "organizations": ["ABC School"],
+      "classes": ["10th Grade", "9th Grade"],
+      "divisions": ["A", "B"],
+      "students": ["S101", "S102", "S103"],
+      "startDate": "2025-09-20T09:00:00.000Z",
+      "endDate": "2025-09-20T11:00:00.000Z",
+      "meetingDate": "2025-09-20",
+      "meetingTime": "10:00 AM",
+      "meetingAgenda": "Review exam results, address parent concerns, set academic goals.",
+      "link": "https://meet.google.com/xyz-123",
+      "meetingType": "Online",
+      "classRoom": "Virtual",
+      "isRecurring": true,
+      "day": "Saturday",
+      "repeatFrequency": "Weekly",
+      "mode": "Video Conference",
+      "repeatUntil": "2025-12-31"
+    },
+    {
+      "id": 2,
+      "title": "Staff Meeting",
+      "status": 1,
+      "type": "Staff",
+      "importance_level": "Medium",
+      "description": "Monthly staff updates and planning session.",
+      "attachment": [],
+      "audience": ["Teachers", "Administration"],
+      "organizations": ["ABC School"],
+      "classes": [],
+      "divisions": [],
+      "students": [],
+      "startDate": "2025-09-25T13:00:00.000Z",
+      "endDate": "2025-09-25T15:00:00.000Z",
+      "meetingDate": "2025-09-25",
+      "meetingTime": "01:00 PM",
+      "meetingAgenda": "Plan upcoming events, assign responsibilities, discuss improvements.",
+      "link": "",
+      "meetingType": "Offline",
+      "classRoom": "Conference Hall",
+      "isRecurring": false,
+      "mode": "In-Person"
+    },
+    {
+      "id": 3,
+      "title": "General Assembly",
+      "status": 0,
+      "type": "General",
+      "importance_level": "Low",
+      "description": "School-wide assembly for announcements.",
+      "attachment": ["https://schoolportal.com/files/assembly-note.pdf"],
+      "audience": ["Students", "Teachers"],
+      "organizations": ["ABC School"],
+      "classes": ["All"],
+      "divisions": ["All"],
+      "students": [],
+      "startDate": "2025-09-18T08:00:00.000Z",
+      "endDate": "2025-09-18T09:00:00.000Z",
+      "meetingDate": "2025-09-18",
+      "meetingTime": "08:00 AM",
+      "meetingAgenda": "Share upcoming exam schedule and extracurricular activities.",
+      "link": "",
+      "meetingType": "Offline",
+      "classRoom": "Auditorium",
+      "isRecurring": true,
+      "day": "Thursday",
+      "repeatFrequency": "Monthly",
+      "mode": "In-Person",
+      "repeatUntil": "2026-06-01"
+    }
+  ],
+  "announcementTypeData": [
+    {
+      "announcementType": "Academic",
+      "description": "Covers holidays, exams, results, timetable changes, and syllabus updates",
+      "color": "#1E88E5"
+    },
+    {
+      "announcementType": "Administrative",
+      "description": "Includes fee notices, school policies, transport, and official circulars",
+      "color": "#43A047"
+    },
+    {
+      "announcementType": "Extracurricular",
+      "description": "Sports events, cultural programs, competitions, and annual functions",
+      "color": "#F4511E"
+    },
+    {
+      "announcementType": "General",
+      "description": "For miscellaneous updates, greetings, and non-categorized notices",
+      "color": "#8E24AA"
+    }
+  ],
+  "eventTypeData": [
+    {
+      "eventType": "Academic",
+      "description": "Covers examinations, workshops, seminars, and subject-related events.",
+      "color": "#3F51B5"
+    },
+    {
+      "eventType": "Cultural",
+      "description": "Includes annual day, cultural fest, music, dance, and drama programs.",
+      "color": "#9C27B0"
+    },
+    {
+      "eventType": "Sports",
+      "description": "Sports day, inter-house competitions, tournaments, and fitness activities.",
+      "color": "#4CAF50"
+    },
+    {
+      "eventType": "National Celebration",
+      "description": "Events like Independence Day, Republic Day, Teachers’ Day, and Children’s Day.",
+      "color": "#F44336"
+    },
+    {
+      "eventType": "Community & Social",
+      "description": "Awareness programs, charity drives, environmental campaigns, and social service.",
+      "color": "#009688"
+    },
+    {
+      "eventType": "Administrative",
+      "description": "Orientation programs, parent-teacher meetings, farewell, and award ceremonies.",
+      "color": "#FF9800"
+    }
+  ],
+  "holidayTypeData": [
+    {
+      "holidayType": "Public Holiday",
+      "description": "National or state-wide holiday observed across the country or state.",
+      "color": "#F44336"
+    },
+    {
+      "holidayType": "School Holiday",
+      "description": "Holiday declared by the school management for specific reasons.",
+      "color": "#3F51B5"
+    },
+    {
+      "holidayType": "Festival Holiday",
+      "description": "Holiday for celebrating cultural, religious, or regional festivals.",
+      "color": "#FF9800"
+    },
+    {
+      "holidayType": "National Holiday",
+      "description": "Holiday for significant national occasions such as Independence Day and Republic Day.",
+      "color": "#4CAF50"
+    },
+    {
+      "holidayType": "Special Holiday",
+      "description": "Declared for unique circumstances such as weather conditions, elections, or emergencies.",
+      "color": "#9C27B0"
+    },
+    {
+      "holidayType": "Winter/Summer Break",
+      "description": "Extended vacation period for students and staff, usually seasonal.",
+      "color": "#00BCD4"
+    }
+  ],
+  "surveyTypeData": [
+    {
+      "surveyType": "Feedback",
+      "description": "Collect feedback from students and staff.",
+      "createdBy": "Admin",
+      "createdDate": "2025-09-18"
+    },
+    {
+      "surveyType": "Assessment",
+      "description": "Conduct academic assessments for various subjects.",
+      "createdBy": "Teacher1",
+      "createdDate": "2025-09-15"
+    },
+    {
+      "surveyType": "Poll",
+      "description": "Short polls for quick opinions on school matters.",
+      "createdBy": "Admin",
+      "createdDate": "2025-09-10"
+    },
+    {
+      "surveyType": "Event Feedback",
+      "description": "Gather feedback after school events or workshops.",
+      "createdBy": "EventCoordinator",
+      "createdDate": "2025-09-12"
+    }
+  ],
+  "meetingTypeData": [
     {
       "meetingType": "Team Meeting",
       "description": "Regular team sync-up meeting",
@@ -614,202 +591,202 @@
       "createdDate": "2025-09-12T16:00:00Z"
     }
   ],
-"importanceLevelData": [
-  {
-    "levelName": "High",
-    "description": "Requires immediate attention and action.",
-    "color": "#F44336"
-  },
-  {
-    "levelName": "Medium",
-    "description": "Important but not urgent; should be addressed soon.",
-    "color": "#FF9800"
-  },
-  {
-    "levelName": "Low",
-    "description": "Can be addressed at a later time; low priority.",
-    "color": "#4CAF50"
-  }
-],
-"deliveryChannelTypeData": [
-  {
-    "deliveryChannel": "Email",
-    "description": "Send communication through email.",
-    "color": "#3F51B5"
-  },
-  {
-    "deliveryChannel": "SMS",
-    "description": "Send communication via text messages.",
-    "color": "#4CAF50"
-  },
-  {
-    "deliveryChannel": "Mobile App Notification",
-    "description": "Push notifications to the mobile app.",
-    "color": "#FF9800"
-  }
-],
-"notificationTemplateData": [
-  {
-    "id": "TMP-001",
-    "templateName": "Exam Notification",
-    "hashtags": ["#Academic", "#Exam"],
-    "targetRole": "Student",
-    "subject": "Final Exam 2025",
-    "message": "Dear students, your final exams will begin on 15th March 2025. Please check the timetable on the school portal."
-  },
-  {
-    "id": "TMP-002",
-    "templateName": "Fee Reminder",
-    "hashtags": ["#Reminder", "#Finance"],
-    "targetRole": "Parent",
-    "subject": "Monthly Fee Reminder",
-    "message": "Dear Parents, kindly clear the pending school fees for your ward by 10th October 2025 to avoid late charges."
-  },
-  {
-    "id": "TMP-003",
-    "templateName": "Holiday Announcement",
-    "hashtags": ["#Holiday", "#Festival"],
-    "targetRole": "Teacher",
-    "subject": "Navratri Celebration",
-    "message": "School will remain closed on 12th October 2025 on account of Navratri. Wishing you a joyous celebration."
-  },
-  {
-    "id": "TMP-004",
-    "templateName": "Parent-Teacher Meeting",
-    "hashtags": ["#PTM", "#Communication"],
-    "targetRole": "Parent",
-    "subject": "PTM Notification",
-    "message": "Dear Parents, Parent-Teacher Meeting is scheduled for 20th October 2025 at 10:00 AM in the school auditorium."
-  },
-  {
-    "id": "TMP-005",
-    "templateName": "Sports Day Invite",
-    "hashtags": ["#Sports", "#Event"],
-    "targetRole": "Student",
-    "subject": "Annual Sports Day",
-    "message": "We are excited to invite you to our Annual Sports Day on 5th November 2025. Participation is mandatory for all students."
-  }
-],
-"notificationHistoryData" : [
-  {
-    "id": 1,
-    "dateTime": "2024-01-15T10:30:00Z",
-    "title": "Exam Schedule Released",
-    "category": "Academic",
-    "sentBy": "John Doe",
-    "recipients": 245,
-    "channels": ["Email", "SMS"],
-    "status": 1,
-    "totalRecipients": 245,
-    "delivered": 240,
-    "opened": 198,
-    "failed": 5,
-    "subject": "Important: Exam Schedule for Final Semester",
-    "body": "Dear students, the final semester exam schedule has been released. Please check your student portal for detailed timings and venues."
-  },
-  {
-    "id": 2,
-    "dateTime": "2024-02-05T09:00:00Z",
-    "title": "Library Due Reminder",
-    "category": "General",
-    "sentBy": "Admin Office",
-    "recipients": 120,
-    "channels": ["Email"],
-    "status": 0,
-    "totalRecipients": 120,
-    "delivered": 0,
-    "opened": 0,
-    "failed": 0,
-    "subject": "Reminder: Pending Library Books",
-    "body": "Please return or renew your library books before the due date to avoid penalties."
-  },
-  {
-    "id": 3,
-    "dateTime": "2024-03-12T14:15:00Z",
-    "title": "Sports Meet Invitation",
-    "category": "Events",
-    "sentBy": "Sports Committee",
-    "recipients": 300,
-    "channels": ["SMS"],
-    "status": 1,
-    "totalRecipients": 300,
-    "delivered": 290,
-    "opened": 150,
-    "failed": 10,
-    "subject": "Join Us: Annual Sports Meet",
-    "body": "We are excited to invite you to the Annual Sports Meet. Don’t miss the fun and competitions!"
-  },
-  {
-    "id": 4,
-    "dateTime": "2024-04-01T08:45:00Z",
-    "title": "System Maintenance",
-    "category": "Technical",
-    "sentBy": "IT Support",
-    "recipients": 500,
-    "channels": ["Email", "Push Notification"],
-    "status": 1,
-    "totalRecipients": 500,
-    "delivered": 450,
-    "opened": 0,
-    "failed": 50,
-    "subject": "Notice: Scheduled System Maintenance",
-    "body": "The student portal will be unavailable on April 2nd from 1:00 AM to 3:00 AM due to scheduled maintenance."
-  }
-],
-"sentNotificationData":[
-  {
-    "id": 1,
-    "role": "Student",
-    "title": "Exam Schedule Released",
-    "importanceLevel": "High",
-    "sentBy": "Principle Office",
-    "category": "Academic",
-    "subject": "Exam Schedule for Final Semester",
-    "channels": ["Email", "SMS"],
-    "status": 1,
-    "dateTime": "2024-01-15T10:30:00Z",
-    "recipients": 245,
-    "totalRecipients": 245,
-    "delivered": 240,
-    "opened": 198,
-    "failed": 5,
-    "body": "Dear students, the final semester exam schedule has been released. Please check your student portal for detailed timings and venues."
-  },
-  {
-    "id": 2,
-    "role": "Student",
-    "title": "Library Due Reminder",
-    "importanceLevel": "Low",
-    "sentBy": "Admin Office",
-    "category": "General",
-    "subject": "Pending Library Books",
-    "channels": ["Email"],
-    "status": 0,
-    "dateTime": "2024-02-05T09:00:00Z",
-    "recipients": 120,
-    "totalRecipients": 120,
-    "delivered": 0,
-    "opened": 0,
-    "failed": 0,
-    "body": "Please return or renew your library books before the due date to avoid penalties."
-  },
-  {
-    "id": 3,
-    "role": ["Student","Teacher"],
-    "title": "Sports Meet Invitation",
-    "importanceLevel": "Medium",
-    "sentBy": "Sports Committee",
-    "category": "Events",
-    "subject": "Annual Sports Meet",
-    "channels": ["SMS"],
-    "status": 1,
-    "dateTime": "2024-03-12T14:15:00Z",
-    "recipients": 300,
-    "totalRecipients": 300,
-    "delivered": 290,
-    "opened": 150,
-    "failed": 10,
-    "body": "We are excited to invite you to the Annual Sports Meet. Don’t miss the fun and competitions!"
-  }
-]
+  "importanceLevelData": [
+    {
+      "levelName": "High",
+      "description": "Requires immediate attention and action.",
+      "color": "#F44336"
+    },
+    {
+      "levelName": "Medium",
+      "description": "Important but not urgent; should be addressed soon.",
+      "color": "#FF9800"
+    },
+    {
+      "levelName": "Low",
+      "description": "Can be addressed at a later time; low priority.",
+      "color": "#4CAF50"
+    }
+  ],
+  "deliveryChannelTypeData": [
+    {
+      "deliveryChannel": "Email",
+      "description": "Send communication through email.",
+      "color": "#3F51B5"
+    },
+    {
+      "deliveryChannel": "SMS",
+      "description": "Send communication via text messages.",
+      "color": "#4CAF50"
+    },
+    {
+      "deliveryChannel": "Mobile App Notification",
+      "description": "Push notifications to the mobile app.",
+      "color": "#FF9800"
+    }
+  ],
+  "notificationTemplateData": [
+    {
+      "id": "TMP-001",
+      "templateName": "Exam Notification",
+      "hashtags": ["#Academic", "#Exam"],
+      "targetRole": "Student",
+      "subject": "Final Exam 2025",
+      "message": "Dear students, your final exams will begin on 15th March 2025. Please check the timetable on the school portal."
+    },
+    {
+      "id": "TMP-002",
+      "templateName": "Fee Reminder",
+      "hashtags": ["#Reminder", "#Finance"],
+      "targetRole": "Parent",
+      "subject": "Monthly Fee Reminder",
+      "message": "Dear Parents, kindly clear the pending school fees for your ward by 10th October 2025 to avoid late charges."
+    },
+    {
+      "id": "TMP-003",
+      "templateName": "Holiday Announcement",
+      "hashtags": ["#Holiday", "#Festival"],
+      "targetRole": "Teacher",
+      "subject": "Navratri Celebration",
+      "message": "School will remain closed on 12th October 2025 on account of Navratri. Wishing you a joyous celebration."
+    },
+    {
+      "id": "TMP-004",
+      "templateName": "Parent-Teacher Meeting",
+      "hashtags": ["#PTM", "#Communication"],
+      "targetRole": "Parent",
+      "subject": "PTM Notification",
+      "message": "Dear Parents, Parent-Teacher Meeting is scheduled for 20th October 2025 at 10:00 AM in the school auditorium."
+    },
+    {
+      "id": "TMP-005",
+      "templateName": "Sports Day Invite",
+      "hashtags": ["#Sports", "#Event"],
+      "targetRole": "Student",
+      "subject": "Annual Sports Day",
+      "message": "We are excited to invite you to our Annual Sports Day on 5th November 2025. Participation is mandatory for all students."
+    }
+  ],
+  "notificationHistoryData": [
+    {
+      "id": 1,
+      "dateTime": "2024-01-15T10:30:00Z",
+      "title": "Exam Schedule Released",
+      "category": "Academic",
+      "sentBy": "John Doe",
+      "recipients": 245,
+      "channels": ["Email", "SMS"],
+      "status": 1,
+      "totalRecipients": 245,
+      "delivered": 240,
+      "opened": 198,
+      "failed": 5,
+      "subject": "Important: Exam Schedule for Final Semester",
+      "body": "Dear students, the final semester exam schedule has been released. Please check your student portal for detailed timings and venues."
+    },
+    {
+      "id": 2,
+      "dateTime": "2024-02-05T09:00:00Z",
+      "title": "Library Due Reminder",
+      "category": "General",
+      "sentBy": "Admin Office",
+      "recipients": 120,
+      "channels": ["Email"],
+      "status": 0,
+      "totalRecipients": 120,
+      "delivered": 0,
+      "opened": 0,
+      "failed": 0,
+      "subject": "Reminder: Pending Library Books",
+      "body": "Please return or renew your library books before the due date to avoid penalties."
+    },
+    {
+      "id": 3,
+      "dateTime": "2024-03-12T14:15:00Z",
+      "title": "Sports Meet Invitation",
+      "category": "Events",
+      "sentBy": "Sports Committee",
+      "recipients": 300,
+      "channels": ["SMS"],
+      "status": 1,
+      "totalRecipients": 300,
+      "delivered": 290,
+      "opened": 150,
+      "failed": 10,
+      "subject": "Join Us: Annual Sports Meet",
+      "body": "We are excited to invite you to the Annual Sports Meet. Don’t miss the fun and competitions!"
+    },
+    {
+      "id": 4,
+      "dateTime": "2024-04-01T08:45:00Z",
+      "title": "System Maintenance",
+      "category": "Technical",
+      "sentBy": "IT Support",
+      "recipients": 500,
+      "channels": ["Email", "Push Notification"],
+      "status": 1,
+      "totalRecipients": 500,
+      "delivered": 450,
+      "opened": 0,
+      "failed": 50,
+      "subject": "Notice: Scheduled System Maintenance",
+      "body": "The student portal will be unavailable on April 2nd from 1:00 AM to 3:00 AM due to scheduled maintenance."
+    }
+  ],
+  "sentNotificationData": [
+    {
+      "id": 1,
+      "role": "Student",
+      "title": "Exam Schedule Released",
+      "importanceLevel": "High",
+      "sentBy": "Principle Office",
+      "category": "Academic",
+      "subject": "Exam Schedule for Final Semester",
+      "channels": ["Email", "SMS"],
+      "status": 1,
+      "dateTime": "2024-01-15T10:30:00Z",
+      "recipients": 245,
+      "totalRecipients": 245,
+      "delivered": 240,
+      "opened": 198,
+      "failed": 5,
+      "body": "Dear students, the final semester exam schedule has been released. Please check your student portal for detailed timings and venues."
+    },
+    {
+      "id": 2,
+      "role": "Student",
+      "title": "Library Due Reminder",
+      "importanceLevel": "Low",
+      "sentBy": "Admin Office",
+      "category": "General",
+      "subject": "Pending Library Books",
+      "channels": ["Email"],
+      "status": 0,
+      "dateTime": "2024-02-05T09:00:00Z",
+      "recipients": 120,
+      "totalRecipients": 120,
+      "delivered": 0,
+      "opened": 0,
+      "failed": 0,
+      "body": "Please return or renew your library books before the due date to avoid penalties."
+    },
+    {
+      "id": 3,
+      "role": ["Student", "Teacher"],
+      "title": "Sports Meet Invitation",
+      "importanceLevel": "Medium",
+      "sentBy": "Sports Committee",
+      "category": "Events",
+      "subject": "Annual Sports Meet",
+      "channels": ["SMS"],
+      "status": 1,
+      "dateTime": "2024-03-12T14:15:00Z",
+      "recipients": 300,
+      "totalRecipients": 300,
+      "delivered": 290,
+      "opened": 150,
+      "failed": 10,
+      "body": "We are excited to invite you to the Annual Sports Meet. Don’t miss the fun and competitions!"
+    }
+  ]
 }
