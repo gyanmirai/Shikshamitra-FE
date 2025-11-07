@@ -1,6 +1,6 @@
 import React from 'react';
-import UpcomingEvents from 'src/screens/communication/events/upcomingEvents';
+import Events from 'src/screens/calendar/Events';
 
-const UpcomingEventsScreen = () => <UpcomingEvents />;
+const UpcomingEventsScreen = () => <Events />;
 
 export default UpcomingEventsScreen;
