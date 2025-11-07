@@ -143,7 +143,7 @@ export function CalendarToolbar({
         </Stack>
 
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Button size="small" color="error" variant="contained" onClick={onToday}>
+          <Button size="small" variant="contained" onClick={onToday}>
             Today
           </Button>
 

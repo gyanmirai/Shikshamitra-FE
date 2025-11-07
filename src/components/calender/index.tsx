@@ -12,7 +12,6 @@ import { useTheme } from '@mui/material/styles';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import timelinePlugin from '@fullcalendar/timeline';
-import { DashboardContent } from 'src/layouts/dashboard';
 import interactionPlugin from '@fullcalendar/interaction';
 import { StyledCalendar } from 'src/sections/calendar/styles';
 import { useCalendar } from 'src/sections/calendar/hooks/use-calendar';
@@ -37,6 +36,7 @@ type CommonCalenderProps = CalendarOptions & {
   showCalendarFilter?: boolean;
   onOPenFiler?: () => void;
   containerProps?: CardProps;
+  canReset?: boolean;
 };
 
 const CommonCalender = ({
@@ -54,6 +54,7 @@ const CommonCalender = ({
   showCalendarFilter = false,
   onOPenFiler = () => {},
   containerProps = {},
+  canReset,
   ...props
 }: CommonCalenderProps) => {
   const theme = useTheme();
@@ -87,67 +88,69 @@ const CommonCalender = ({
   }, [onInitialView]);
 
   return (
-    <DashboardContent
-      maxWidth="xl"
-      sx={{
-        ...flexProps,
-        [theme.breakpoints.up('lg')]: {
-          px: 0,
-        },
-      }}
-    >
-      <Card sx={{ minHeight: '70vh', ...flexProps }} {...containerProps}>
-        <StyledCalendar sx={{ ...flexProps, '.fc.fc-media-screen': { flex: '1 1 auto' } }}>
-          {showCalendarToolbar && (
-            <CalendarToolbar
-              date={fDate(date, formate)}
-              format={formate}
-              setDate={setDate}
-              calendarRef={calendarRef}
-              view={view}
-              canReset
-              loading={isLoading}
-              onNextDate={onDateNext}
-              onPrevDate={onDatePrev}
-              onToday={onDateToday}
-              onChangeView={onChangeView}
-              onOpenFilters={onOPenFiler}
-              viewOptions={viewOptions as any}
-              renderCompToHeader={renderCompToHeader}
-              showCalendarFilter={showCalendarFilter}
-            />
-          )}
-
-          <Calendar
-            weekends
-            editable
-            droppable
-            selectable
-            rerenderDelay={10}
-            allDayMaintainDuration
-            eventResizableFromStart
-            ref={calendarRef}
-            initialDate={date}
-            initialView={view}
-            dayMaxEventRows={3}
-            eventDisplay="block"
-            events={data || []}
-            headerToolbar={false}
-            select={onSelectRange}
-            eventClick={onDateClick}
-            aspectRatio={3}
-            eventDrop={(arg) => {
-              onDropEvent(arg, onEventDrop);
-            }}
-            eventResize={(arg) => {
-              onResizeEvent(arg, onEventResize);
-            }}
-            plugins={[listPlugin, dayGridPlugin, timelinePlugin, timeGridPlugin, interactionPlugin]}
-            {...props}
+    // <DashboardContent
+    //   maxWidth="xl"
+    //   sx={{
+    //     ...flexProps,
+    //     [theme.breakpoints.up('lg')]: {
+    //       px: 0,
+    //     },
+    //   }}
+    // >
+    <Card sx={{ minHeight: '70vh', ...flexProps }} {...containerProps}>
+      <StyledCalendar
+        sx={{ ...flexProps, height: '100%', '.fc.fc-media-screen': { flex: '1 1 auto' } }}
+      >
+        {showCalendarToolbar && (
+          <CalendarToolbar
+            date={fDate(date, formate)}
+            format={formate}
+            setDate={setDate}
+            calendarRef={calendarRef}
+            view={view}
+            canReset={!!canReset}
+            loading={isLoading}
+            onNextDate={onDateNext}
+            onPrevDate={onDatePrev}
+            onToday={onDateToday}
+            onChangeView={onChangeView}
+            onOpenFilters={onOPenFiler}
+            viewOptions={viewOptions as any}
+            renderCompToHeader={renderCompToHeader}
+            showCalendarFilter={showCalendarFilter}
           />
-        </StyledCalendar>
-      </Card>
-    </DashboardContent>
+        )}
+
+        <Calendar
+          weekends
+          editable
+          droppable
+          selectable
+          rerenderDelay={10}
+          allDayMaintainDuration
+          eventResizableFromStart
+          ref={calendarRef}
+          initialDate={date}
+          initialView={view}
+          dayMaxEventRows={3}
+          eventDisplay="block"
+          events={data || []}
+          headerToolbar={false}
+          select={onSelectRange}
+          eventClick={onDateClick}
+          aspectRatio={3}
+          eventDrop={(arg) => {
+            onDropEvent(arg, onEventDrop);
+          }}
+          eventResize={(arg) => {
+            onResizeEvent(arg, onEventResize);
+          }}
+          plugins={[listPlugin, dayGridPlugin, timelinePlugin, timeGridPlugin, interactionPlugin]}
+          {...props}
+        />
+      </StyledCalendar>
+    </Card>
+    // </DashboardContent>
   );
 };
 
