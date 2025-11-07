@@ -12,8 +12,8 @@ export const schoolWiseValidationSchema = (currentYear: any) =>
     audience: Yup.array()
       .of(
         Yup.object().shape({
-          name: Yup.string().required(),
-          color: Yup.string().required(),
+          value: Yup.string().required(),
+          label: Yup.string().required(),
         })
       )
       .min(1, 'At least one audience is required'),

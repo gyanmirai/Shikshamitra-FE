@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Box, Switch } from '@mui/material';
+import { Box, Card, Switch } from '@mui/material';
+import React, { useState, useEffect } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
@@ -9,35 +9,64 @@ import {
   NotificationStatusOptions,
 } from 'src/enums/notification-status-type';
 
-import EditNotificationDialog from '../edit-notification-dialog';
+import EditNotificationDialog from '../editNotificationDialog';
 
-const notificationsData = [
+const initialNotificationsData = [
   {
-    id: '2',
-    event: 'Leave Request',
-    triggerCondition: 'When a student requests leave.',
+    id: '1',
+    event: 'Update Student Details',
+    triggerCondition: 'When any change occurs in student records.',
+    isActive: NotificationStatusType.Active,
     recipient: [
       {
         name: 'admin',
-        message: '[Student Name] has requested leave for [Date(s)]. Please review the request.',
+        message: 'Student details for [Student Name] have been updated.',
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Date(s)]'],
+        placeHolder: ['[Student Name]'],
+        placeHolderOptions: [{ value: '[Student Name]', label: 'Student Name' }],
+        isEnable: true,
+      },
+      {
+        name: 'parent',
+        message:
+          'Dear [Parent Name], the details for [Student Name] have been updated. Please review the changes in the student portal.',
+        communicationChannel: ['WhatsApp', 'Email'],
+        placeHolder: ['[Student Name]', '[Parent Name]'],
         placeHolderOptions: [
           { value: '[Student Name]', label: 'Student Name' },
-          { value: '[Date(s)]', label: 'Leave Date(s)' },
+          { value: '[Parent Name]', label: 'Parent Name' },
+        ],
+        isEnable: true,
+      },
+    ],
+  },
+  {
+    id: '2',
+    event: 'Generate GR Number',
+    triggerCondition: 'When a new GR number is assigned.',
+    isActive: NotificationStatusType.Inactive,
+    recipient: [
+      {
+        name: 'admin',
+        message: 'A GR number has been assigned to [Student Name]: [GR Number].',
+        communicationChannel: ['WhatsApp', 'Email'],
+        placeHolder: ['[Student Name]', '[GR Number]'],
+        placeHolderOptions: [
+          { value: '[Student Name]', label: 'Student Name' },
+          { value: '[GR Number]', label: 'GR Number' },
         ],
         isEnable: true,
       },
       {
         name: 'parent',
         message:
-          'Dear [Parent Name], a leave request has been submitted for [Student Name] for [Date(s)]. You can check the status in the portal.',
+          'Dear [Parent Name], the GR number for [Student Name] has been assigned as [GR Number]. Please keep this for future reference.',
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Parent Name]', '[Date(s)]'],
+        placeHolder: ['[Student Name]', '[Parent Name]', '[GR Number]'],
         placeHolderOptions: [
           { value: '[Student Name]', label: 'Student Name' },
           { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Date(s)]', label: 'Leave Date(s)' },
+          { value: '[GR Number]', label: 'GR Number' },
         ],
         isEnable: true,
       },
@@ -45,59 +74,31 @@ const notificationsData = [
   },
   {
     id: '3',
-    event: 'Approve Leave',
-    triggerCondition: 'When a leave request is approved.',
+    event: 'Generate Roll Number',
+    triggerCondition: 'When a new roll number is assigned.',
+    isActive: NotificationStatusType.Active,
     recipient: [
       {
-        name: 'parent',
-        message:
-          "Dear [Parent Name], [Student Name]'s leave request for [Date(s)] has been approved.",
+        name: 'admin',
+        message: 'A roll number has been assigned to [Student Name]: [Roll Number].',
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Parent Name]', '[Date(s)]'],
+        placeHolder: ['[Student Name]', '[Roll Number]'],
         placeHolderOptions: [
           { value: '[Student Name]', label: 'Student Name' },
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Date(s)]', label: 'Leave Date(s)' },
+          { value: '[Roll Number]', label: 'Roll Number' },
         ],
         isEnable: true,
       },
-    ],
-  },
-  {
-    id: '4',
-    event: 'Reject Leave',
-    triggerCondition: 'When a leave request is rejected.',
-    recipient: [
       {
         name: 'parent',
         message:
-          "Dear [Parent Name], unfortunately, [Student Name]'s leave request for [Date(s)] has been rejected. Please contact the school for further details.",
+          'Dear [Parent Name], the roll number for [Student Name] has been assigned as [Roll Number]. Please use this for future communication.',
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Parent Name]', '[Date(s)]'],
+        placeHolder: ['[Student Name]', '[Parent Name]', '[Roll Number]'],
         placeHolderOptions: [
           { value: '[Student Name]', label: 'Student Name' },
           { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Date(s)]', label: 'Leave Date(s)' },
-        ],
-        isEnable: true,
-      },
-    ],
-  },
-  {
-    id: '5',
-    event: 'Mark Attendance',
-    triggerCondition: 'When attendance is recorded (present/absent).',
-    recipient: [
-      {
-        name: 'parent',
-        message:
-          'Dear [Parent Name], [Student Name] has been marked [Present/Absent] for [Date]. You can check attendance records in the portal.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Parent Name]', '[Date]'],
-        placeHolderOptions: [
-          { value: '[Student Name]', label: 'Student Name' },
-          { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Date]', label: 'Attendance Date' },
+          { value: '[Roll Number]', label: 'Roll Number' },
         ],
         isEnable: true,
       },
@@ -105,25 +106,63 @@ const notificationsData = [
   },
 ];
 
-const AttendanceNotificationManagement = () => {
+interface StudentRecordNotificationManagementProps {
+  dialog?: any;
+}
+
+const StudentRecordNotificationManagement = ({
+  dialog,
+}: StudentRecordNotificationManagementProps) => {
   // State variable to control the visibility of the EditNotificationDialog.
   const [open, setOpen] = useState(false);
   // State variable to store the data of the selected notification for editing.
   const [selectedData, setSelectedData] = useState<any>(null);
   // State variable to determine whether the dialog is in view mode or edit mode.
   const [view, setView] = useState(false);
+  // State variable to manage notifications data
+  const [notificationsData, setNotificationsData] = useState(initialNotificationsData);
 
-  // Handler function to close the EditNotificationDialog and reset related state variables.
+  // Sync local open state with parent dialog
+  useEffect(() => {
+    if (dialog) {
+      if (open) {
+        dialog.onTrue();
+      } else {
+        dialog.onFalse();
+      }
+    }
+  }, [open, dialog]);
+
+  // Handler function to close the EditNotificationDialog and reset related states.
   const closeHandler = () => {
     setOpen(false);
     setSelectedData(null);
     setView(false);
   };
 
+  // Handler to toggle notification status
+  const handleToggleStatus = (id: string) => {
+    setNotificationsData((prevData) =>
+      prevData.map((notification) =>
+        notification.id === id
+          ? {
+              ...notification,
+              isActive:
+                notification.isActive === NotificationStatusType.Active
+                  ? NotificationStatusType.Inactive
+                  : NotificationStatusType.Active,
+            }
+          : notification
+      )
+    );
+  };
+
   return (
-    <>
+    <Box>
       {open ? (
-        <EditNotificationDialog data={selectedData} onClose={closeHandler} isFromView={view} />
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <EditNotificationDialog data={selectedData} onClose={closeHandler} isFromView={view} />
+        </Card>
       ) : (
         <CustomizableTable
           tableId="student-auto-notification-configuration"
@@ -148,7 +187,6 @@ const AttendanceNotificationManagement = () => {
                 ));
               },
             },
-
             {
               id: 'isActive',
               label: 'Active',
@@ -159,10 +197,8 @@ const AttendanceNotificationManagement = () => {
                 return (
                   <Box>
                     <Switch
-                      checked={NotificationStatusType.Active === row.isActive}
-                      onChange={(event) => {
-                        console.log(event.target.checked);
-                      }}
+                      checked={row.isActive === NotificationStatusType.Active}
+                      onChange={() => handleToggleStatus(row.id)}
                     />
                   </Box>
                 );
@@ -198,8 +234,8 @@ const AttendanceNotificationManagement = () => {
           ]}
         />
       )}
-    </>
+    </Box>
   );
 };
 
-export default AttendanceNotificationManagement;
+export default StudentRecordNotificationManagement;

@@ -6,13 +6,13 @@ import SubmitButton from 'src/components/submit-button';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Switch, Typography, DialogActions, FormControlLabel } from '@mui/material';
 
-import CustomPlaceholderInput from './textfiled-for-message-with-placeholder';
+import CustomPlaceholderInput from './textfiledForMessageWithPlaceholder';
 
 import type {
   IRecipient,
   INotificationData,
   IEditNotificationDialogProps,
-} from './edit-notification-dialog-interface';
+} from './editNotificationDialogInterface';
 
 const CHANNEL_OPTIONS = [
   { value: 'In-App', label: 'In-App' },

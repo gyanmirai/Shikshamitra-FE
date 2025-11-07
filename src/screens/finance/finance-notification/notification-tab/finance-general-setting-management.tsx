@@ -5,7 +5,7 @@ import { Box, Card, Switch } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import notificationData from 'src/json/finance/notification/generalSettingNotificationData.json';
-import EditNotificationDialog from 'src/screens/student/studentNotification/edit-notification-dialog';
+import EditNotificationDialog from 'src/screens/student/studentNotification/editNotificationDialog';
 
 const FinanceGeneralSettingtNotificationManagement = () => {
   const [open, setOpen] = useState(false);
