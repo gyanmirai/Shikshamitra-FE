@@ -87,7 +87,6 @@ const TABS = [
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Finance {...props} />
     ),
-    disabled: true,
   },
   {
     value: 'documents',
@@ -96,7 +95,7 @@ const TABS = [
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Document {...props} />
     ),
-    disabled: true,
+    disibled: true,
   },
   {
     value: 'communications',
@@ -105,7 +104,6 @@ const TABS = [
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Communication {...props} />
     ),
-    disabled: true,
   },
   {
     value: 'transportation',
@@ -114,7 +112,6 @@ const TABS = [
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <StudentTransportProfile {...props} />
     ),
-    disabled: true,
   },
   {
     value: 'library',
@@ -123,7 +120,6 @@ const TABS = [
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Library {...props} />
     ),
-    disabled: true,
   },
   {
     value: 'hostel',
@@ -132,7 +128,7 @@ const TABS = [
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <HostelRoomMate {...props} />
     ),
-    disabled: true,
+    disibled: true,
   },
 ];
 
@@ -544,7 +540,7 @@ const StudentProfileView = () => {
               icon={tab.icon}
               label={tab.label}
               role="tab"
-              disabled={tab.disabled}
+              disabled={tab.disibled}
             />
           ))}
         </Tabs>
