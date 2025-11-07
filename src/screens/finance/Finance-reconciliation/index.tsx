@@ -226,7 +226,6 @@ const FinanceReconciliation = () => {
             borderRadius: '8px',
             bgcolor: 'background.paper',
             boxShadow: 'var(--shadows-3)',
-            my: 2,
           }}
         >
           <DatePicker

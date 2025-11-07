@@ -71,7 +71,11 @@ const FeeCollection = () => {
         <CustomBreadcrumbs
           heading="Fee Details"
           description="View detailed fee information and payment history for the selected student."
-          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Fee Collection' }]}
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Fee Collection' },
+            { name: 'Fee Details' },
+          ]}
           sx={{ px: 1, mb: 2 }}
           isBack={viewDialog.value}
           onBack={() => {

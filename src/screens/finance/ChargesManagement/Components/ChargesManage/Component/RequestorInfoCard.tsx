@@ -1,6 +1,6 @@
 import React from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
+import { Box, Card, Grid, Paper, Typography, CardContent } from '@mui/material';
 
 import type { RequestorInfoProps } from './type';
 
@@ -13,8 +13,9 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => (
         </Typography>
 
         {/* First Row - Basic Info */}
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 3 }}>
+        <Grid container spacing={1}>
+          {/* Name */}
+          <Grid size={{ xs: 12, md: 4 }}>
             <Typography variant="body2" color="text.secondary">
               Name
             </Typography>
@@ -22,7 +23,9 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => (
               {charge?.requestorName || 'Dharmik Jinjala'}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
+
+          {/* Department */}
+          <Grid size={{ xs: 12, md: 4 }}>
             <Typography variant="body2" color="text.secondary">
               Department
             </Typography>
@@ -30,28 +33,59 @@ const RequestorInfoCard: React.FC<RequestorInfoProps> = ({ charge }) => (
               {charge?.department || 'Science'}
             </Typography>
           </Grid>
-
-          <Grid size={{ xs: 12, md: 3 }}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Typography variant="body2" color="text.secondary">
-              Affected Students
+              Requested On
             </Typography>
             <Typography variant="body1" fontWeight="medium">
-              Class : {charge?.class}
-            </Typography>
-            <Typography variant="body1" fontWeight="medium">
-              Division : {charge?.divisions?.join(', ') || 'ALL'}
-            </Typography>
-            <Typography variant="body1" fontWeight="medium">
-              Students : {charge?.students || 80}
-            </Typography>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 3 }}>
-            <Typography color="text.secondary">Requested On</Typography>
-            <Typography sx={{ fontWeight: 300 }} variant="body2">
               {charge?.requestedOn || '20-08-2025'}
             </Typography>
           </Grid>
+          {/* Affected Students */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Affected Students
+            </Typography>
+
+            <Paper
+              variant="outlined"
+              sx={{
+                borderRadius: 2,
+                p: 2,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                backgroundColor: '#f9fafb',
+              }}
+            >
+              <Box textAlign="center">
+                <Typography variant="body2" color="text.secondary">
+                  Class
+                </Typography>
+                <Typography variant="body1" fontWeight="medium">
+                  {charge?.class || '10'}
+                </Typography>
+              </Box>
+              <Box textAlign="center">
+                <Typography variant="body2" color="text.secondary">
+                  Division
+                </Typography>
+                <Typography variant="body1" fontWeight="medium">
+                  {charge?.divisions?.join(', ') || 'A, B'}
+                </Typography>
+              </Box>
+              <Box textAlign="center">
+                <Typography variant="body2" color="text.secondary">
+                  Students
+                </Typography>
+                <Typography variant="body1" fontWeight="medium">
+                  {charge?.students || '70'}
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
+
+          {/* Requested On */}
         </Grid>
 
         {/* Affected Students Table Section */}

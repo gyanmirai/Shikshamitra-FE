@@ -96,7 +96,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
       {/* 🔹 Actions */}
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
-          variant="contained"
+          variant="soft"
           color="error"
           onClick={onReject}
           size="small"
@@ -105,7 +105,7 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
           Reject
         </Button>
         <Button
-          variant="contained"
+          variant="soft"
           color="success"
           onClick={onApprove}
           size="small"

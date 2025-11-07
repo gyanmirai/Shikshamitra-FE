@@ -42,7 +42,9 @@ const StudentChargeListTable: React.FC<ICombinedProps> = ({ data, onViewAllCharg
           render: (value, row) => (
             <Box display="flex" alignItems="center" gap={1}>
               <Avatar sx={{ width: 32, height: 32 }}>{row.studentName[0]}</Avatar>
-              {row.studentName}
+              <Box component="span" sx={{ typography: 'caption', fontSize: 13 }}>
+                {row.studentName}
+              </Box>
             </Box>
           ),
         },
@@ -66,7 +68,7 @@ const StudentChargeListTable: React.FC<ICombinedProps> = ({ data, onViewAllCharg
           id: 'charges',
           label: 'Total Charges',
           align: 'left',
-          minWidth: 120,
+          minWidth: 160,
           render: (value, row) => row.charges.length || 0,
         },
         {

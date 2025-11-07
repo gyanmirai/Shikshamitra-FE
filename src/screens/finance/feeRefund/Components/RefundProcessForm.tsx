@@ -385,7 +385,7 @@ const RefundProcessForm: React.FC<IRefundProcessFormProps> = ({ open, onClose, s
           Cancel
         </Button>
         <Button
-          variant="contained"
+          variant="soft"
           type="submit"
           color="success"
           onClick={(e: any) => {

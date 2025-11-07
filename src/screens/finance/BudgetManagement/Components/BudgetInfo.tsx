@@ -187,17 +187,14 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
                 formik.setFieldValue('startDate', newDate);
                 formik.setFieldTouched('startDate', false);
               }}
-              minDate={dayjs()}
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               slotProps={{
                 textField: {
                   size: 'small',
                   fullWidth: true,
                   error: formik.touched.startDate && Boolean(formik.errors.startDate),
                   helperText: formik.touched.startDate ? formik.errors.startDate : ' ',
-                  FormHelperTextProps: {
-                    sx: { margin: 0, position: 'static', whiteSpace: 'normal' },
-                  },
-                  InputLabelProps: { sx: { lineHeight: '1.2em' } },
                 },
               }}
             />
@@ -215,17 +212,14 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
                 formik.setFieldValue('endDate', newDate);
                 formik.setFieldTouched('endDate', true, false);
               }}
-              disablePast
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               slotProps={{
                 textField: {
                   size: 'small',
                   fullWidth: true,
                   error: formik.touched.endDate && Boolean(formik.errors.endDate),
                   helperText: formik.touched.endDate ? formik.errors.endDate : ' ',
-                  FormHelperTextProps: {
-                    sx: { margin: 0, position: 'static', whiteSpace: 'normal' },
-                  },
-                  InputLabelProps: { sx: { lineHeight: '1.2em' } },
                 },
               }}
             />
@@ -233,7 +227,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
         </Grid>
 
         {/* Department */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        {/* <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField error={!!(formik.touched.departments && formik.errors.departments)}>
             <ResponsiveMultiSelect
               label="Department *"
@@ -251,7 +245,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
               }
             />
           </ShakingTextField>
-        </Grid>
+        </Grid> */}
 
         {/* Total Budget Amount */}
         <Grid size={{ xs: 12, md: 4 }}>
@@ -277,7 +271,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
         </Grid>
 
         {/* Spending Threshold */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        {/* <Grid size={{ xs: 12, md: 4 }}>
           <ShakingTextField
             error={!!(formik.touched.spendingThreshold && formik.errors.spendingThreshold)}
           >
@@ -301,7 +295,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
               size="small"
             />
           </ShakingTextField>
-        </Grid>
+        </Grid> */}
 
         {/* Description */}
         <Grid size={{ xs: 12 }}>

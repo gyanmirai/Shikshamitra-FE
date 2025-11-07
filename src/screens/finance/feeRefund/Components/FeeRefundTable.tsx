@@ -51,7 +51,7 @@ const StudentFeeRefundTable: React.FC<IStudentFeeTableProps> = ({
       columns={[
         {
           id: 'name',
-          label: 'Name',
+          label: 'Student Name',
           align: 'left',
           minWidth: 170,
           sticky: true,

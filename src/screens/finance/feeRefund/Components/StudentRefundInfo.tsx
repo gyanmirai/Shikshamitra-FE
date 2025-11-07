@@ -6,7 +6,7 @@ export default function StudentRefundInfo({ student }: { student: IStudentFeeDat
   return (
     <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, mb: 2 }}>
       {/* Heading */}
-      <Typography variant="h6" mb={2} color="primary.main">
+      <Typography variant="h6" mb={1} color="primary.main">
         Student Information
       </Typography>
 

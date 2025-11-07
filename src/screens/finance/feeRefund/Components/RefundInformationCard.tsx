@@ -6,7 +6,7 @@ import type { IStudentFeeData } from '../type';
 const RefundInfo: React.FC<{ refund: IStudentFeeData }> = ({ refund }) => (
   <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, mb: 2 }}>
     {/* Heading */}
-    <Typography variant="h6" mb={2} color="primary.main">
+    <Typography variant="h6" mb={1} color="primary.main">
       Refund Information
     </Typography>
 
