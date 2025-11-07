@@ -23,7 +23,7 @@ export const StudentApi = createApi({
         queryString = queryString ? `?${queryString.slice(0, -1)}` : '';
 
         return {
-          url: `/app/student/filtered-list${queryString}`,
+          url: `/app/student/filtered-li  st`,
           method: 'GET',
         };
       },

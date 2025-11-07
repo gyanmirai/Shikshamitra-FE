@@ -109,6 +109,27 @@ const InquiryTable = ({
             minWidth: '150px',
             align: 'left',
             sticky: true,
+            render: (value, row) => {
+              const fullName = `${row.lastName} ${row.firstName} ${row.middleName}`.trim();
+
+              return (
+                <CustomTooltip title={fullName} arrow sx={{ textAlign: 'justify' }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: '13px',
+                      display: 'block',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      maxWidth: '150px',
+                    }}
+                  >
+                    {fullName}
+                  </Typography>
+                </CustomTooltip>
+              );
+            },
           },
           { id: 'standard.name', label: 'Class', align: 'left' },
           {

@@ -266,6 +266,7 @@ const InquiryForm = ({
           onSubmit={handleSubmit}
         >
           <Scrollbar sx={{ px: 1, height: '100%' }}>
+            {/** Basic Details Section */}
             <SectionCard title="Basic Details">
               <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.academicYear && errors.academicYear) || false}>
@@ -375,8 +376,9 @@ const InquiryForm = ({
                     onChange={(e) => {
                       const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       const capitalized = capitalize(onlyLetters);
-                      setFieldValue('firstName', capitalized);
+                      if (capitalized.length <= 30) setFieldValue('firstName', capitalized);
                     }}
+                    inputProps={{ maxLength: 30 }}
                   />
                 </ShakingTextField>
               </Grid>
@@ -393,8 +395,9 @@ const InquiryForm = ({
                     onChange={(e) => {
                       const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       const capitalized = capitalize(onlyLetters);
-                      setFieldValue('middleName', capitalized);
+                      if (capitalized.length <= 30) setFieldValue('middleName', capitalized);
                     }}
+                    inputProps={{ maxLength: 30 }}
                   />
                 </ShakingTextField>
               </Grid>
@@ -411,8 +414,9 @@ const InquiryForm = ({
                     onChange={(e) => {
                       const onlyLetters = e.target.value.replace(/[^a-zA-Z\s]/g, '');
                       const capitalized = capitalize(onlyLetters);
-                      setFieldValue('lastName', capitalized);
+                      if (capitalized.length <= 30) setFieldValue('lastName', capitalized);
                     }}
+                    inputProps={{ maxLength: 30 }}
                   />
                 </ShakingTextField>
               </Grid>
@@ -456,7 +460,7 @@ const InquiryForm = ({
                         color: (theme) =>
                           touched.gender && errors.gender
                             ? '#ff563d !important'
-                            : `${theme.vars.palette.common.black} !important`,
+                            : `${theme.vars.palette.text.primary} !important`,
                         mr: 1,
                       }}
                     >
@@ -484,9 +488,9 @@ const InquiryForm = ({
                     value={values.previousSchool}
                     onChange={(e) => {
                       const onlyLetters = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-
-                      setFieldValue('previousSchool', onlyLetters);
+                      if (onlyLetters.length <= 50) setFieldValue('previousSchool', onlyLetters);
                     }}
+                    inputProps={{ maxLength: 50 }}
                     size="small"
                     name="previousSchool"
                     label="Previous School"
@@ -497,6 +501,7 @@ const InquiryForm = ({
               </Grid>
             </SectionCard>
 
+            {/** Inquiry Details Section */}
             <SectionCard title="Inquiry Details">
               <Grid size={{ xs: 12, md: 4 }} mb={1}>
                 <ShakingTextField
@@ -507,6 +512,7 @@ const InquiryForm = ({
                     name="dateOfInquiry"
                     value={values.dateOfInquiry}
                     format="DD-MM-YYYY"
+                    maxDate={dayjs()}
                     onChange={(newValue) => {
                       setFieldValue('dateOfInquiry', newValue);
                       setFieldTouched('dateOfInquiry', true);
@@ -543,19 +549,25 @@ const InquiryForm = ({
               </Grid>
             </SectionCard>
 
+            {/** Contact Information Section */}
             <SectionCard title="Contact Information">
               <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.email && errors.email) || false}>
                   <TextField
                     value={values.email}
                     fullWidth
-                    // type='email'
                     size="small"
                     name="email"
                     label="Email"
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      if (value.length <= 35) {
+                        setFieldValue('email', value);
+                      }
+                    }}
                     error={touched.email && Boolean(errors.email)}
                     helperText={touched.email && errors.email}
+                    inputProps={{ maxLength: 35 }}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -611,6 +623,8 @@ const InquiryForm = ({
                 </ShakingTextField>
               </Grid>
             </SectionCard>
+
+            {/** Address Details Section */}
             <SectionCard title="Address Details">
               <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.addressLine1 && errors.addressLine1) || false}>
@@ -618,7 +632,13 @@ const InquiryForm = ({
                     name="addressLine1"
                     label="Building No./Flat/House No."
                     value={values.addressLine1}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      if (value.length <= 50) {
+                        setFieldValue('addressLine1', value);
+                      }
+                    }}
+                    inputProps={{ maxLength: 50 }}
                     error={touched.addressLine1 && Boolean(errors.addressLine1)}
                     helperText={touched.addressLine1 && errors.addressLine1}
                     fullWidth
@@ -632,7 +652,13 @@ const InquiryForm = ({
                     name="addressLine2"
                     label="Area/Locality/Road Name"
                     value={values.addressLine2}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      if (value.length <= 50) {
+                        setFieldValue('addressLine2', value);
+                      }
+                    }}
+                    inputProps={{ maxLength: 50 }}
                     error={touched.addressLine2 && Boolean(errors.addressLine2)}
                     helperText={(touched.addressLine2 && errors.addressLine2) || ''}
                     fullWidth
@@ -646,7 +672,13 @@ const InquiryForm = ({
                     name="addressLine3"
                     label="Landmark"
                     value={values.addressLine3}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      if (value.length <= 50) {
+                        setFieldValue('addressLine3', value);
+                      }
+                    }}
+                    inputProps={{ maxLength: 50 }}
                     error={touched.addressLine3 && Boolean(errors.addressLine3)}
                     helperText={(touched.addressLine3 && errors.addressLine3) || ''}
                     fullWidth
@@ -730,6 +762,7 @@ const InquiryForm = ({
               </Grid>
             </SectionCard>
           </Scrollbar>
+
           <DialogActions sx={{ flexShrink: 0, p: 2 }}>
             <Button
               variant="outlined"

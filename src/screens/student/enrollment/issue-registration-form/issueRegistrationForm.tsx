@@ -118,7 +118,13 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
                       error={touched.formNumber && Boolean(errors.formNumber)}
                       helperText={touched.formNumber && errors.formNumber}
                       value={values.formNumber}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        const onlyLettersAndNumbers = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                        if (onlyLettersAndNumbers.length <= 30) {
+                          setFieldValue('formNumber', onlyLettersAndNumbers);
+                        }
+                      }}
+                      inputProps={{ maxLength: 30 }}
                     />
                   </ShakingTextField>
                 </Grid>
