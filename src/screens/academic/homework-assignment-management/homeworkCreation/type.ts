@@ -12,9 +12,9 @@ export interface UploadedFile {
 
 export interface DivisionHomeworkMeta {
   divisionId: string; // ID or name of the division
-  createdAt: Dayjs | string | null; // When the homework was assigned
-  publishDate: Dayjs | string | null; // When the homework is published
-  dueDate: Dayjs | string | null; // When the homework is due
+  createdAt: Dayjs | null; // When the homework was assigned
+  publishDate: Dayjs | null; // When the homework is published
+  dueDate: Dayjs | null; // When the homework is due
   status: number; // 0 = Draft, 1 = Published
 }
 

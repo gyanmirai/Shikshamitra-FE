@@ -4,12 +4,12 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -26,7 +26,7 @@ const SeatAllocation = () => {
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
-
+  const [selectedClass, setSelectedClass] = useState('');
   const [rooms, setRooms] = useState([
     { id: '1', name: 'Room 101' },
     { id: '2', name: 'Room 102' },
@@ -102,8 +102,7 @@ const SeatAllocation = () => {
               p: 2,
             }}
           >
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              {' '}
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <CustomSelect
                 options={allDivision}
                 label="Division"
@@ -124,6 +123,9 @@ const SeatAllocation = () => {
                 formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
                 disabled={!division}
               />
+              <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>
+                Class : {selectedClass}
+              </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Button
@@ -149,7 +151,7 @@ const SeatAllocation = () => {
             </Box>
           </Box>
           {/* </SectionCard> */}
-          <SeatAllocationSection division={division} classRoom={room} />
+          <SeatAllocationSection division={division} classRoom={room} className={selectedClass} />
         </CustomDialog>
       ) : (
         <>
@@ -161,9 +163,14 @@ const SeatAllocation = () => {
             onChange={(val) => setClasses(val as string)}
             labelKey="name"
             valueKey="name"
-            formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+            formControlProps={{ sx: { maxWidth: '250px', width: '100%', ml: 1 } }}
           />
-          <SeatAllocationTable openSeatAllocation={openSeatAllocation} />
+          <SeatAllocationTable
+            openSeatAllocation={openSeatAllocation}
+            onSeatAllocate={(className) => {
+              setSelectedClass(className);
+            }}
+          />
         </>
       )}
     </Box>

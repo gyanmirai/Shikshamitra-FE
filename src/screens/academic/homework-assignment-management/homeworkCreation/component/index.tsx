@@ -83,7 +83,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   const [viewHomework, setViewHomework] = useState<IHomeworkDetail | null>(null);
 
   // State to store the list of homework/subject assignments
-  const [homeworkData, setHomeworkData] = useState<IHomework[]>(homeworkTableData);
+  const [homeworkData, setHomeworkData] = useState<any[]>(homeworkTableData);
   // Redux dispatch
   const dispatch = useDispatch();
 

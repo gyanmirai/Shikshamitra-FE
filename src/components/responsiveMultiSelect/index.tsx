@@ -59,17 +59,20 @@ export function ResponsiveMultiSelect<T>({
           onChange(newValue.map(getOptionValue));
         }}
         isOptionEqualToValue={(option, val) => getOptionValue(option) === getOptionValue(val)}
-        renderOption={(props, option, { selected }: AutocompleteRenderOptionState) => (
-          <li {...props}>
-            <Checkbox
-              icon={<CheckBoxOutlineBlankIcon />}
-              checkedIcon={<CheckBoxIcon />}
-              style={{ marginRight: 8 }}
-              checked={selected}
-            />
-            {getOptionLabel(option)}
-          </li>
-        )}
+        renderOption={(props, option, { selected }: AutocompleteRenderOptionState) => {
+          const { key, ...safeProps } = props;
+          return (
+            <li key={key} {...safeProps}>
+              <Checkbox
+                icon={<CheckBoxOutlineBlankIcon />}
+                checkedIcon={<CheckBoxIcon />}
+                style={{ marginRight: 8 }}
+                checked={selected}
+              />
+              {getOptionLabel(option)}
+            </li>
+          );
+        }}
         renderTags={(tagValue: T[]) => {
           const container = containerRef.current;
           const containerWidth = container?.offsetWidth || 0;

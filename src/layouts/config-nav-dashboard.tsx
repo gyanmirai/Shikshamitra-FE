@@ -671,7 +671,6 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+C+3',
               shortcutKeyName: 'Alt+A+C+3',
               disabled: !isDdvs,
-              caption: 'Coming Soon',
             },
             {
               title: 'Setting',
@@ -703,7 +702,6 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+T+3',
               shortcutKeyName: 'Alt+A+T+3',
               disabled: !isDdvs,
-              caption: 'Coming Soon',
             },
             {
               title: 'Setting',
