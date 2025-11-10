@@ -589,6 +589,13 @@ const classManagementModule = {
           shortcutKey: 'Alt+A+Z',
           shortcutKeyName: 'Alt+A+Z',
         },
+        {
+          title: 'Notification',
+          path: '/classManagement/notification-management',
+          _action: 'notification-management',
+          shortcutKey: 'Alt+A+N',
+          shortcutKeyName: 'Alt+A+N',
+        },
       ],
     },
   ],
