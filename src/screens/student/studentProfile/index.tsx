@@ -223,215 +223,226 @@ export function StudentProfile() {
   };
 
   return (
-    <Box>
-      {currentStudent ? (
-        <CustomBreadcrumbs
-          heading="Student List"
-          links={[
-            { name: 'Student', href: '/student/enrollment/dashboard' },
-            { name: 'Student Records', href: '/student/overview/' },
-            { name: 'Student List' },
-          ]}
-          sx={{ mb: 2 }}
-          isBack
-          onBack={() => setSearchParams('student', '')}
-          description="View and manage comprehensive student information including academics, attendance, finance and more."
-        />
-      ) : (
-        <CustomBreadcrumbs
-          heading="Student List"
-          links={[
-            { name: 'Student', href: '/student/enrollment/dashboard' },
-            { name: 'Student Records', href: '/student/overview/' },
-            { name: 'Student List' },
-          ]}
-          sx={{ mb: 2 }}
-          description="Browse and search through the complete list of enrolled students. Select a student to view their detailed profile."
-        />
-      )}
-
-      {!currentStudent && (
-        <>
-          <Box display="flex" gap={2} flexWrap="wrap" mb={2} ml={1}>
-            <CustomSelect
-              options={allOrganization}
-              label="Organization"
-              value={organization}
-              onChange={(val) => setOrganization(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!medium}
-            />
-            <CustomSelect
-              options={allClass}
-              label="Class"
-              value={classes}
-              onChange={(val) => setClass(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!organization}
-            />
-            <CustomSelect
-              options={allDivision}
-              label="Division"
-              value={division}
-              onChange={(val) => setDivision(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!classes}
-            />
-          </Box>
-          <CustomizableTable
-            onSendNotification={handlerSendNotification}
-            showCheckbox={selectedStudents.length !== 0}
-            tableId="student-list"
-            noDataText={<>No Student Data Found </>}
-            data={tableData}
-            isLoading={isLoading}
-            columns={[
-              // {
-              //   id: 'checkBox',
-              //   align: 'left',
-              //   minWidth: '60px',
-              //   sticky: true,
-              //   isSort: false,
-              //   isFilter: false,
-              //   label: '',
-              //   renderColumn() {
-              //     return (
-              //       <Checkbox
-              //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-              //         onChange={(e) => {
-              //           if (e.target.checked) {
-              //             setSelectedStudents(tableData || []);
-              //           } else {
-              //             setSelectedStudents([]);
-              //           }
-              //         }}
-              //       />
-              //     );
-              //   },
-              //   render(value, row) {
-              //     return (
-              //       <Checkbox
-              //         checked={selectedStudents.some((i: any) => i.id === row.id)}
-              //         onChange={(e) => {
-              //           if (e.target.checked) {
-              //             setSelectedStudents([...selectedStudents, row]);
-              //           } else {
-              //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-              //           }
-              //         }}
-              //       />
-              //     );
-              //   },
-              // },
-              {
-                id: 'name',
-                label: 'Student Name',
-                sticky: true,
-                minWidth: '14vw',
-                align: 'left',
-                render: (value, row) => (
-                  <Box style={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar
-                      sx={{ width: 32, height: 32, mr: 1 }}
-                      src={convertBase64Format(row.profilePicture)}
-                      alt={value}
-                    />
-                    <Typography component="span" fontSize="12px">
-                      {value}
-                    </Typography>
-                  </Box>
-                ),
-              },
-              {
-                id: 'rollNo',
-                label: 'Roll No.',
-                minWidth: '6vw',
-                align: 'left',
-                render: (value, row) => value || '-',
-              },
-              {
-                id: 'grNoRecord',
-                label: 'Gr No.',
-                minWidth: '6vw',
-                align: 'left',
-                render: (value, row) => value || '-',
-              },
-
-              {
-                id: 'genderValue',
-                label: 'Gender',
-                minWidth: '6vw',
-                align: 'left',
-                filterType: 'enum',
-                enumOptions: GenderOptions,
-              },
-              {
-                id: 'dobValue',
-                label: 'Date of Birth',
-                minWidth: '10vw',
-                align: 'left',
-                filterType: 'date',
-              },
-              { id: 'age', label: 'Age', minWidth: '8vw', align: 'left' },
-              { id: 'address', label: 'Address', minWidth: '14vw', align: 'left' },
-              { id: 'email', label: 'Email', minWidth: '8vw', align: 'left' },
-              // { id: 'class', label: 'Class' },
-              // { id: 'division', label: 'Division' },
-              {
-                id: 'parentContactNumber',
-                label: 'Parent Contact No.',
-                minWidth: '12vw',
-                align: 'left',
-              },
-              {
-                id: 'RTE',
-                label: 'RTE',
-                minWidth: '6vw',
-                align: 'left',
-                filterType: 'enum',
-                enumOptions: [
-                  { label: 'Yes', value: 'Yes' },
-                  { label: 'No', value: 'No' },
-                ],
-              },
-              {
-                id: 'action',
-                label: 'Action',
-                isSort: false,
-                isFilter: false,
-                sticky: true,
-                minWidth: 50,
-                align: 'left',
-                render: (value, row) => (
-                  <ThreeDotsActions
-                    showViewIcon
-                    showThreeDots={false}
-                    handleViewClick={() => {
-                      setSearchParams('student', row.id);
-                    }}
-                  />
-                ),
-              },
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: 'background.default',
+        }}
+      >
+        {currentStudent ? (
+          <CustomBreadcrumbs
+            heading="Student List"
+            links={[
+              { name: 'Student', href: '/student/enrollment/dashboard' },
+              { name: 'Student Records', href: '/student/overview/' },
+              { name: 'Student List' },
             ]}
+            sx={{ mb: 2 }}
+            isBack
+            onBack={() => setSearchParams('student', '')}
+            description="View and manage comprehensive student information including academics, attendance, finance and more."
           />
-        </>
-      )}
+        ) : (
+          <CustomBreadcrumbs
+            heading="Student List"
+            links={[
+              { name: 'Student', href: '/student/enrollment/dashboard' },
+              { name: 'Student Records', href: '/student/overview/' },
+              { name: 'Student List' },
+            ]}
+            sx={{ mb: 2 }}
+            description="Browse and search through the complete list of enrolled students. Select a student to view their detailed profile."
+          />
+        )}
+      </Box>
 
-      {currentStudent && <StudentProfileView />}
+      <Box sx={{ flex: 1, overflow: 'auto' }}>
+        {!currentStudent && (
+          <>
+            <Box display="flex" gap={2} flexWrap="wrap" mb={2} ml={1} mt={1}>
+              <CustomSelect
+                options={allOrganization}
+                label="Organization"
+                value={organization}
+                onChange={(val) => setOrganization(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                disabled={!medium}
+              />
+              <CustomSelect
+                options={allClass}
+                label="Class"
+                value={classes}
+                onChange={(val) => setClass(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                disabled={!organization}
+              />
+              <CustomSelect
+                options={allDivision}
+                label="Division"
+                value={division}
+                onChange={(val) => setDivision(val as string)}
+                labelKey="name"
+                valueKey="id"
+                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+                disabled={!classes}
+              />
+            </Box>
+            <CustomizableTable
+              onSendNotification={handlerSendNotification}
+              showCheckbox={selectedStudents.length !== 0}
+              tableId="student-list"
+              noDataText={<>No Student Data Found </>}
+              data={tableData}
+              isLoading={isLoading}
+              columns={[
+                // {
+                //   id: 'checkBox',
+                //   align: 'left',
+                //   minWidth: '60px',
+                //   sticky: true,
+                //   isSort: false,
+                //   isFilter: false,
+                //   label: '',
+                //   renderColumn() {
+                //     return (
+                //       <Checkbox
+                //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
+                //         onChange={(e) => {
+                //           if (e.target.checked) {
+                //             setSelectedStudents(tableData || []);
+                //           } else {
+                //             setSelectedStudents([]);
+                //           }
+                //         }}
+                //       />
+                //     );
+                //   },
+                //   render(value, row) {
+                //     return (
+                //       <Checkbox
+                //         checked={selectedStudents.some((i: any) => i.id === row.id)}
+                //         onChange={(e) => {
+                //           if (e.target.checked) {
+                //             setSelectedStudents([...selectedStudents, row]);
+                //           } else {
+                //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                //           }
+                //         }}
+                //       />
+                //     );
+                //   },
+                // },
+                {
+                  id: 'name',
+                  label: 'Student Name',
+                  sticky: true,
+                  minWidth: '14vw',
+                  align: 'left',
+                  render: (value, row) => (
+                    <Box style={{ display: 'flex', alignItems: 'center' }}>
+                      <Avatar
+                        sx={{ width: 32, height: 32, mr: 1 }}
+                        src={convertBase64Format(row.profilePicture)}
+                        alt={value}
+                      />
+                      <Typography component="span" fontSize="12px">
+                        {value}
+                      </Typography>
+                    </Box>
+                  ),
+                },
+                {
+                  id: 'rollNo',
+                  label: 'Roll No.',
+                  minWidth: '6vw',
+                  align: 'left',
+                  render: (value, row) => value || '-',
+                },
+                {
+                  id: 'grNoRecord',
+                  label: 'Gr No.',
+                  minWidth: '6vw',
+                  align: 'left',
+                  render: (value, row) => value || '-',
+                },
+
+                {
+                  id: 'genderValue',
+                  label: 'Gender',
+                  minWidth: '6vw',
+                  align: 'left',
+                  filterType: 'enum',
+                  enumOptions: GenderOptions,
+                },
+                {
+                  id: 'dobValue',
+                  label: 'Date of Birth',
+                  minWidth: '10vw',
+                  align: 'left',
+                  filterType: 'date',
+                },
+                { id: 'age', label: 'Age', minWidth: '8vw', align: 'left' },
+                { id: 'address', label: 'Address', minWidth: '14vw', align: 'left' },
+                { id: 'email', label: 'Email', minWidth: '8vw', align: 'left' },
+                // { id: 'class', label: 'Class' },
+                // { id: 'division', label: 'Division' },
+                {
+                  id: 'parentContactNumber',
+                  label: 'Parent Contact No.',
+                  minWidth: '12vw',
+                  align: 'left',
+                },
+                {
+                  id: 'RTE',
+                  label: 'RTE',
+                  minWidth: '6vw',
+                  align: 'left',
+                  filterType: 'enum',
+                  enumOptions: [
+                    { label: 'Yes', value: 'Yes' },
+                    { label: 'No', value: 'No' },
+                  ],
+                },
+                {
+                  id: 'action',
+                  label: 'Action',
+                  isSort: false,
+                  isFilter: false,
+                  sticky: true,
+                  minWidth: 50,
+                  align: 'left',
+                  render: (value, row) => (
+                    <ThreeDotsActions
+                      showViewIcon
+                      showThreeDots={false}
+                      handleViewClick={() => {
+                        setSearchParams('student', row.id);
+                      }}
+                    />
+                  ),
+                },
+              ]}
+            />
+          </>
+        )}
+
+        {currentStudent && <StudentProfileView />}
+      </Box>
     </Box>
   );
 }
 
 const StudentProfileView = () => {
   const tabs = useTabs('dashboard');
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  // Find the currently active tab component based on selected tab value
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === tabs.value),
     [tabs.value]
@@ -448,127 +459,236 @@ const StudentProfileView = () => {
     params: searchParams?.student,
     options: { skip: !searchParams?.student },
   });
-  console.log(currentStudent, 'currentStudent==========>');
+
+  // eslint-disable-next-line consistent-return
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.scrollTop > 50) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    const scrollContainer = document.querySelector('[data-scroll-container]');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
+
   return isLoading ? (
     'Loading ...'
   ) : (
     <>
-      <Card
+      <Box
         sx={{
-          mb: 2,
-          borderTopLeftRadius: 0,
-          borderTopRightRadius: 0,
-          boxShadow: 'var(--shadows-4)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 999,
+          backgroundColor: 'background.default',
+          pb: 1,
+          transition: 'all 0.3s ease-in-out',
         }}
       >
-        <Paper
+        <Card
           sx={{
-            p: 1,
-            // borderBottom: '1px dashed',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderLeft: (theme) => `4px solid ${theme.vars.palette.success.main}`,
-            borderRadius: 1,
+            mb: 1,
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
+            boxShadow: 'var(--shadows-4)',
           }}
         >
-          <Box display="flex" gap={2} alignItems="center">
-            <Avatar
-              src={convertBase64Format(currentStudent?.profilePicture as string)}
-              sx={{ width: 64, height: 64 }}
-            />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Name
-              </Typography>
-              <Typography fontWeight={500} variant="body2">
-                {currentStudent?.lastName || '-'} {currentStudent?.firstName || '-'}{' '}
-                {currentStudent?.middleName || '-'}
-              </Typography>
+          <Paper
+            sx={{
+              py: isScrolled ? 0.5 : 0.75,
+              px: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderLeft: (theme) => `4px solid ${theme.vars.palette.success.main}`,
+              borderRadius: 1,
+              transition: 'all 0.3s ease-in-out',
+            }}
+          >
+            <Box
+              display="flex"
+              gap={isScrolled ? 1.5 : 2}
+              alignItems="center"
+              sx={{ transition: 'gap 0.3s ease-in-out' }}
+            >
+              {!isScrolled && (
+                <Avatar
+                  src={convertBase64Format(currentStudent?.profilePicture)}
+                  alt={`${currentStudent?.firstName} ${currentStudent?.lastName}`}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    transition: 'all 0.3s ease-in-out',
+                    opacity: isScrolled ? 0 : 1,
+                  }}
+                />
+              )}
+              <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    fontSize: isScrolled ? '10px' : '12px',
+                    transition: 'font-size 0.3s ease-in-out',
+                  }}
+                >
+                  Name
+                </Typography>
+                <Typography
+                  fontWeight={500}
+                  variant="body2"
+                  sx={{
+                    fontSize: isScrolled ? '12px' : '14px',
+                    transition: 'font-size 0.3s ease-in-out',
+                  }}
+                >
+                  {currentStudent?.lastName || '-'} {currentStudent?.firstName || '-'}{' '}
+                  {currentStudent?.middleName || '-'}
+                </Typography>
+              </Box>
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
+              />
+              <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    fontSize: isScrolled ? '10px' : '12px',
+                    transition: 'font-size 0.3s ease-in-out',
+                  }}
+                >
+                  Gr No.
+                </Typography>
+                <Typography
+                  fontWeight={500}
+                  variant="body2"
+                  sx={{
+                    fontSize: isScrolled ? '12px' : '14px',
+                    transition: 'font-size 0.3s ease-in-out',
+                  }}
+                >
+                  {currentStudent?.grNoRecord || '-'}
+                </Typography>
+              </Box>
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
+              />
+              <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    fontSize: isScrolled ? '10px' : '12px',
+                    transition: 'font-size 0.3s ease-in-out',
+                  }}
+                >
+                  Roll No.
+                </Typography>
+                <Typography
+                  fontWeight={500}
+                  variant="body2"
+                  sx={{
+                    fontSize: isScrolled ? '12px' : '14px',
+                    transition: 'font-size 0.3s ease-in-out',
+                  }}
+                >
+                  {currentStudent?.rollNo || '-'}
+                </Typography>
+              </Box>
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
+              />
+              <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    fontSize: isScrolled ? '10px' : '12px',
+                    transition: 'font-size 0.3s ease-in-out',
+                  }}
+                >
+                  Class
+                </Typography>
+                <Typography
+                  fontWeight={500}
+                  variant="body2"
+                  sx={{
+                    fontSize: isScrolled ? '12px' : '14px',
+                    transition: 'font-size 0.3s ease-in-out',
+                  }}
+                >
+                  {currentStudent?.standard?.name}-{currentStudent?.division?.name}
+                </Typography>
+              </Box>
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
+              />
+              <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    fontSize: isScrolled ? '10px' : '12px',
+                    transition: 'font-size 0.3s ease-in-out',
+                  }}
+                >
+                  Medium
+                </Typography>
+                <Typography
+                  fontWeight={500}
+                  variant="body2"
+                  sx={{
+                    fontSize: isScrolled ? '12px' : '14px',
+                    transition: 'font-size 0.3s ease-in-out',
+                  }}
+                >
+                  {currentStudent?.educationMedium?.name || '-'}
+                </Typography>
+              </Box>
             </Box>
-            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Gr No.
-              </Typography>
-              <Typography fontWeight={500} variant="body2">
-                {currentStudent?.grNoRecord || '-'}
-              </Typography>
-            </Box>
-            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Roll No.
-              </Typography>
-              <Typography fontWeight={500} variant="body2">
-                {currentStudent?.rollNo || '-'}
-              </Typography>
-            </Box>
-            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Class
-              </Typography>
-              <Typography fontWeight={500} variant="body2">
-                {currentStudent?.standard?.name}-{currentStudent?.division?.name}
-              </Typography>
-            </Box>
-            <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">
-                Medium
-              </Typography>
-              <Typography fontWeight={500} variant="body2">
-                {currentStudent?.educationMedium?.name || '-'}
-              </Typography>
-            </Box>
-          </Box>
+          </Paper>
+        </Card>
+        <Paper elevation={2} sx={{ px: 2 }}>
+          <Tabs
+            value={tabs.value}
+            onChange={tabs.onChange}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
+            role="tablist"
+          >
+            {TABS.map((tab) => (
+              <Tab
+                sx={{ fontSize: '12px' }}
+                key={tab.value}
+                value={tab.value}
+                icon={tab.icon}
+                label={tab.label}
+                role="tab"
+                disabled={tab.disibled}
+              />
+            ))}
+          </Tabs>
         </Paper>
-      </Card>
-      <Paper elevation={2} sx={{ mb: 2, px: 2 }}>
-        <Tabs
-          value={tabs.value}
-          onChange={tabs.onChange}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
-          role="tablist"
-        >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              value={tab.value}
-              icon={tab.icon}
-              label={tab.label}
-              role="tab"
-              disabled={tab.disibled}
-            />
-          ))}
-        </Tabs>
-      </Paper>
-      {/* <Dialog open={icardDialog.value} onClose={icardDialog.onFalse}>
-        <StudentIDCard
-          student={{
-            name: currentStudent?.name || 'John Doe',
-            grNo: currentStudent?.grNoRecord || '-',
-            rollNo: currentStudent?.rollNo || '-',
-            class: `${currentStudent?.standard?.name}-${currentStudent?.division?.name}`,
-            // division: 'Higher Secondary',
-            contactNo: currentStudent?.primaryContactNumber || '-',
-            email: currentStudent?.email || '-',
-            address: currentStudent?.addressLine1 || '-',
-            dob: dayjs(currentStudent?.dateOfBirth).format('DD/MM/YYYY') || '-',
-            // bloodGroup:  || '-',
-            academicYear: currentStudent?.academicYear?.name || '-',
-            gender: GenderType[currentStudent?.genderType],
-            profilePicture: convertBase64Format(currentStudent?.profilePicture as string) || '',
-          }}
-        />
-      </Dialog> */}
-      {/* <Scrollbar sx={{ flexGrow: 1 }}> */}
+      </Box>
+
       {currentActiveComponent?.component && (
         <currentActiveComponent.component tabs={tabs} student={currentStudent} refetch={refetch} />
       )}
-      {/* </Scrollbar> */}
     </>
   );
 };
