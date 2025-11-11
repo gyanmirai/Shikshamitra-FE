@@ -77,13 +77,9 @@ const CurriculumSetting = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Setting"
+        heading="Settings"
         description="Set up global subjects and elective groups to manage curriculum consistently across different classes."
-        links={[
-          { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-          { name: 'Setting' },
-        ]}
+        links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
         sx={{ px: 1, mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />

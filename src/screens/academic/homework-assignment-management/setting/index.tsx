@@ -77,17 +77,13 @@ const HomeworkSetting = () => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Setting"
+        heading="Settings"
         description={
           currentActiveComponent?.value === 'homeworkType'
             ? 'Design and organize various types of homework for students.'
             : 'Create and manage different types of assignments for student assessment'
         }
-        links={[
-          { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Homework & Assignment', href: '/academic/homeworkCreation' },
-          { name: 'Setting' },
-        ]}
+        links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
         sx={{ px: 1, mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />

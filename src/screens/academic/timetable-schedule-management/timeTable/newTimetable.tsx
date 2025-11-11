@@ -650,7 +650,7 @@ const TimeTableGrid = ({
                   onDragStart={handleDragStart}
                   subjectsGroups={subjectsGroups}
                   selectedClass={classes}
-                  timetable={timetable} // Add this prop
+                  timetable={timetable}
                 />
               </Box>
             </Paper>
