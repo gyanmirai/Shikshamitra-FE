@@ -4,6 +4,7 @@ export interface IIncomeCategory {
   id: string;
   incomeCategoryName: string;
   description?: string;
+  tags: string[];
 }
 
 export interface IIncomeCategoryTableProps {

@@ -119,24 +119,27 @@
       { "value": "Academic Budget 2025", "label": "Academic Budget 2025" }
     ]
   },
-  "incomeCategoryData": [
+ "incomeCategoryData": [
     {
       "id": "1",
       "incomeCategoryName": "Donation",
       "budget": "Income Budget 2025",
+      "tags": ["fundraising", "charity", "external support"],
       "description": "All Donation income will record in this category."
     },
     {
       "id": "2",
       "incomeCategoryName": "Event Income",
       "budget": "Cultural & Sports Event Income 2025",
-      "description": "Primary source of income collected from students as academic fees for the..."
+      "tags": ["event", "sponsorship", "ticket sales", "student participation"],
+      "description": "Income generated from participation fees, sponsorships, and ticket sales of various events."
     },
     {
       "id": "3",
       "incomeCategoryName": "Tuition Fees",
       "budget": "Annual Tuition Income 2025",
-      "description": "Income generated from participation fees, sponsorships, and ticket sales of..."
+      "tags": ["student", "academic", "recurring", "fees"],
+      "description": "Primary source of income collected from students as academic fees for the academic year."
     }
   ],
   "incomeOptions": {

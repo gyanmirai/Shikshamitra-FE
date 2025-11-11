@@ -14,7 +14,7 @@ export const paymentTermValidationSchema = (currentYear: any) =>
       .typeError('Total installments must be a number')
       .min(1, 'At least 1 installment required')
       .max(12, 'Maximum 12 installments allowed')
-      .required('Total installments is required'),
+      .required('Total Installments is required'),
 
     // academicYearId: Yup.string().required('Academic Year is required'),
 
@@ -91,10 +91,6 @@ export const paymentTermValidationSchema = (currentYear: any) =>
               (value) =>
                 value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
             ),
-          gracePeriod: Yup.number()
-            .min(1, 'Grace Period must be greater than 0')
-            .required('Grace Period is required'),
-          overdueCharges: Yup.number().required('Overdue Charges is required'),
         })
       )
       .required('Installments are required')
