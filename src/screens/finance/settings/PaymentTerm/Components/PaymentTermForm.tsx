@@ -162,7 +162,9 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                           id: 'id',
                           label: 'Sr No.',
                           align: 'left',
-                          minWidth: 80,
+                          isFilter: false,
+                          isSort: false,
+                          minWidth: 45,
                           filterType: 'number',
                           render(value, row) {
                             return <span>{row.id}</span>;
@@ -279,11 +281,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                                 <DatePicker
                                   name={`installments.${row.index}.dueDate`}
                                   label="Due Date *"
-                                  value={
-                                    formik.values.installments[row.index]?.dueDate
-                                      ? dayjs(formik.values.installments[row.index]?.dueDate)
-                                      : null
-                                  }
+                                  value={formik.values.installments[row.index]?.dueDate}
                                   onChange={(newValue) => {
                                     const updated = [...installments];
                                     updated[row.index].dueDate = newValue;
@@ -293,6 +291,8 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                                       false
                                     );
                                   }}
+                                  minDate={dayjs(currentYear?.startDate)}
+                                  maxDate={dayjs(currentYear?.endDate)}
                                   format="DD/MM/YYYY"
                                   slotProps={{
                                     textField: {
@@ -361,11 +361,9 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                               <DatePicker
                                 name={`installments.${row.index}.reminderDate`}
                                 label="Reminder Date *"
-                                value={
-                                  formik.values.installments[row.index]?.reminderDate
-                                    ? dayjs(formik.values.installments[row.index]?.reminderDate)
-                                    : null
-                                }
+                                value={formik.values.installments[row.index]?.reminderDate}
+                                minDate={dayjs(currentYear?.startDate)}
+                                maxDate={dayjs(currentYear?.endDate)}
                                 onChange={(newValue) => {
                                   const updated = [...installments];
                                   updated[row.index].reminderDate = newValue;
@@ -385,7 +383,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                                       width: '100%',
                                       padding: '0',
                                       borderRadius: 1,
-                                      ...(hasError && { mb: 1.5 }),
+                                      mb: 1.5,
                                     },
                                     error: hasError,
                                     helperText: hasError
@@ -421,7 +419,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                                 fullWidth
                                 size="small"
                                 type="number"
-                                label="Grace Period *"
+                                label="Grace Period"
                                 name={`installments.${row.index}.gracePeriod`}
                                 inputProps={{ min: 0 }}
                                 value={formik.values.installments[row.index]?.gracePeriod || ''}
@@ -439,7 +437,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                                   width: '100%',
                                   padding: '0',
                                   borderRadius: 1,
-                                  ...(hasError && { mb: 1.5 }),
+                                  mb: 1.5,
                                 }}
                                 error={hasError}
                                 helperText={
@@ -463,7 +461,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                           label: 'Overdue Charges(Per Day)',
                           filterType: 'number',
                           align: 'left',
-                          minWidth: 170,
+                          minWidth: 220,
                           render(value, row) {
                             const hasError =
                               Boolean(
@@ -476,7 +474,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                               <NumericFormatCustom
                                 size="small"
                                 fullWidth
-                                label="Overdue Charges *"
+                                label="Overdue Charges"
                                 name={`installments.${row.index}.overdueCharges`}
                                 value={
                                   formik.values.installments[row.index]?.overdueCharges !==
@@ -500,7 +498,7 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                                   width: '100%',
                                   padding: '0',
                                   borderRadius: 1,
-                                  ...(hasError && { mb: 1.5 }),
+                                  mb: 1.5,
                                 }}
                                 error={hasError}
                                 helperText={

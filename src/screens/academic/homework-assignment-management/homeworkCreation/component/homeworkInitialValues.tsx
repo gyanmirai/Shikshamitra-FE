@@ -15,8 +15,8 @@ export const getHomeworkInitialValues = (
     editData?.divisions?.map((div) => ({
       divisionId: div.divisionId,
       createdAt: div.createdAt ? dayjs(div.createdAt) : null,
-      publishDate: div.publishDate ? dayjs(div.publishDate) : null,
-      dueDate: div.dueDate ? dayjs(div.dueDate) : null,
+      publishDate: div.publishDate ? dayjs(div.publishDate) : dayjs(),
+      dueDate: div.dueDate ? dayjs(div.dueDate) : dayjs(),
       status: div.status ?? 0,
     })) || [],
   subject: editData?.subject || '',

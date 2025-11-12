@@ -1,529 +1,247 @@
-import type { LabelColor } from 'src/components/label';
-import type { AttendanceStatusType } from 'src/enums/attendance-type';
-
-import dayjs from 'dayjs';
-import React, { useState } from 'react';
-import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
-import { CalendarView } from 'src/sections/calendar/view';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import CustomizableTable from 'src/components/customizabaleTable';
-import DetailRow from 'src/screens/communication/announcement/components/detailRow';
-import scheduledSurveyData from 'src/json/communication/feedback/scheduledSurveyData.json';
-import { AttendanceStatusOptions, AttendanceStatusTypeColors } from 'src/enums/attendance-type';
-import {
-  Box,
-  Card,
-  Grid,
-  Chip,
-  Paper,
-  Button,
-  Divider,
-  Typography,
-  CircularProgress,
-} from '@mui/material';
+import { EmptyContent } from 'src/components/empty-content';
+import { Box, Card, Chip, Stack, Avatar, Divider, Typography, IconButton } from '@mui/material';
 
 import type { StudentTabsComponentType } from '.';
 
-const meetings = [
-  {
-    id: 1,
-    title: 'Monthly Staff Meeting',
-    status: 'Present',
-    audience: ['Teacher'],
-    organization: ['ABC School'],
-    className: [],
-    division: [],
-    students: [],
-    meetingDate: dayjs('2024-12-15'),
-    meetingTime: dayjs('2024-12-15T10:00'),
-    meetingAgenda: 'Discuss curriculum updates and training schedules.',
-    link: '',
-    meetingType: 'Offline',
-    classRoom: 'Conference Room 1',
-    isRecurring: true,
-    repeatFrequency: 'Monthly',
-    repeatUntil: dayjs('2025-06-15'),
-  },
-  {
-    id: 2,
-    title: 'Parent-Teacher Interaction',
-    status: 'Absent',
-    audience: ['Parent'],
-    organization: [],
-    className: ['10'],
-    division: ['A'],
-    students: ['Student1', 'Student2'],
-    meetingDate: dayjs('2024-12-18'),
-    meetingTime: dayjs('2024-12-18T09:30'),
-    meetingAgenda: 'Discuss individual student progress.',
-    link: 'https://example.com/meeting-link',
-    meetingType: 'Virtual',
-    classRoom: '',
-    isRecurring: false,
-  },
-  {
-    id: 3,
-    title: 'Class Orientation',
-    status: 'Present',
-    audience: ['Student'],
-    organization: [],
-    className: ['8'],
-    division: ['B'],
-    students: ['Student3', 'Student4'],
-    meetingDate: dayjs('2024-12-10'),
-    meetingTime: dayjs('2024-12-10T12:00'),
-    meetingAgenda: 'Orientation for new students.',
-    link: '',
-    meetingType: 'Offline',
-    classRoom: 'Auditorium',
-    isRecurring: false,
-  },
-  {
-    id: 4,
-    title: 'School Board Meeting',
-    status: 'Absent',
-    audience: ['Teacher'],
-    organization: ['XYZ Education Trust'],
-    className: [],
-    division: [],
-    students: [],
-    meetingDate: dayjs('2024-12-20'),
-    meetingTime: dayjs('2024-12-20T14:00'),
-    meetingAgenda: 'Discuss budget and infrastructure plans.',
-    link: 'https://example.com/board-meeting',
-    meetingType: 'Virtual',
-    classRoom: '',
-    isRecurring: false,
-  },
-  {
-    id: 5,
-    title: 'Weekly Parent Discussion',
-    status: 'Absent',
-    audience: ['Parent'],
-    organization: [],
-    className: ['9'],
-    division: ['C'],
-    students: ['Student5', 'Student6'],
-    meetingDate: dayjs('2024-12-14'),
-    meetingTime: dayjs('2024-12-14T16:00'),
-    meetingAgenda: "Discuss weekly updates on students' performance.",
-    link: '',
-    meetingType: 'Offline',
-    classRoom: 'Room 202',
-    isRecurring: true,
-    repeatFrequency: 'Weekly',
-    day: 'Tuesday',
-    repeatUntil: dayjs('2025-03-14'),
-  },
-];
+interface AnnouncementCardProps {
+  title: string;
+  category: string;
+  description: string;
+  message: string;
+  signature: string;
+  createdBy: string;
+  createdOn: string;
+  isRead?: boolean;
+}
+
+const AnnouncementCard = ({
+  title,
+  category,
+  description,
+  message,
+  signature,
+  createdBy,
+  createdOn,
+  isRead = false,
+}: AnnouncementCardProps) => (
+  <Card
+    sx={{
+      position: 'relative',
+      overflow: 'hidden',
+      mb: 2,
+      transition: 'all 0.3s ease',
+      borderLeft: '4px solid',
+      borderLeftColor: 'primary.main',
+      backgroundColor: isRead ? 'background.paper' : 'grey.50',
+      '&:hover': {
+        boxShadow: 8,
+        transform: 'translateY(-2px)',
+      },
+    }}
+  >
+    {/* Header Section */}
+    <Box
+      sx={{
+        p: 2,
+        pb: 1.5,
+        bgcolor: 'grey.100',
+      }}
+    >
+      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
+        <Box flex={1}>
+          <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+            <Typography variant="h6" fontWeight={600} color="text.primary">
+              {title}
+            </Typography>
+            {!isRead && (
+              <Box
+                sx={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  bgcolor: 'error.main',
+                }}
+              />
+            )}
+          </Stack>
+          <Chip
+            label={category}
+            size="small"
+            color="primary"
+            variant="soft"
+            sx={{
+              height: 24,
+              fontSize: '0.75rem',
+              fontWeight: 600,
+            }}
+          />
+        </Box>
+        <IconButton size="small" sx={{ mt: -0.5 }}>
+          <Iconify icon="eva:more-vertical-fill" />
+        </IconButton>
+      </Stack>
+    </Box>
+
+    <Divider />
+
+    {/* Content Section */}
+    <Box sx={{ p: 2.5 }}>
+      {/* Description */}
+      {description && (
+        <Typography
+          variant="subtitle2"
+          color="text.secondary"
+          mb={2}
+          sx={{
+            fontStyle: 'italic',
+            pl: 2,
+            borderLeft: '3px solid',
+            borderLeftColor: 'primary.main',
+          }}
+        >
+          {description}
+        </Typography>
+      )}
+
+      {/* Message Body */}
+      <Typography
+        variant="body2"
+        color="text.primary"
+        sx={{
+          whiteSpace: 'pre-line',
+          lineHeight: 1.8,
+          mb: 2,
+        }}
+      >
+        {message}
+      </Typography>
+
+      {/* Signature */}
+      {signature && (
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            fontStyle: 'italic',
+            mt: 2,
+            pl: 2,
+          }}
+        >
+          {signature}
+        </Typography>
+      )}
+    </Box>
+
+    <Divider />
+
+    {/* Footer Section */}
+    <Box
+      sx={{
+        p: 1.5,
+        bgcolor: 'grey.50',
+      }}
+    >
+      <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <Avatar
+            sx={{
+              width: 32,
+              height: 32,
+              bgcolor: 'primary.main',
+              fontSize: '0.875rem',
+            }}
+          >
+            {createdBy.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box>
+            <Typography variant="caption" fontWeight={600} color="text.primary" display="block">
+              {createdBy}
+            </Typography>
+            <Stack direction="row" alignItems="center" spacing={0.5}>
+              <Iconify icon="solar:calendar-outline" width={14} />
+              <Typography variant="caption" color="text.secondary">
+                {createdOn}
+              </Typography>
+            </Stack>
+          </Box>
+        </Stack>
+
+        <Stack direction="row" spacing={1}>
+          <IconButton
+            size="small"
+            sx={{
+              bgcolor: 'grey.200',
+              '&:hover': {
+                bgcolor: 'grey.300',
+              },
+            }}
+          >
+            <Iconify icon="solar:bookmark-outline" width={18} />
+          </IconButton>
+          <IconButton
+            size="small"
+            sx={{
+              bgcolor: 'grey.200',
+              '&:hover': {
+                bgcolor: 'grey.300',
+              },
+            }}
+          >
+            <Iconify icon="solar:share-outline" width={18} />
+          </IconButton>
+        </Stack>
+      </Stack>
+    </Box>
+  </Card>
+);
 
 const Communication = (props: StudentTabsComponentType) => {
-  // State to manage meeting table data with initial meetings data
-  const [meetingTableData] = useState(meetings);
-  // State to manage survey table data with initial survey data
-  const [surveyTableData] = useState<any | null>(scheduledSurveyData);
-  // Boolean state to control view details dialog visibility
-  const viewDetailsDialog = useBoolean();
-  // Boolean state to control view summary dialog visibility
-  const viewSummaryDialog = useBoolean();
-
-  // State to store currently selected survey for viewing
-  const [viewSurvey, setViewSurvey] = useState<any | null>(null);
-
-  // Handler to close dialogs and reset survey view state
-  const handleClose = () => {
-    setViewSurvey(null);
-    viewDetailsDialog.onFalse();
-    viewSummaryDialog.onFalse();
-  };
+  // Sample data - replace with actual data from props or API
+  const announcements: AnnouncementCardProps[] = [
+    {
+      title: 'School Annual Day',
+      category: 'Event',
+      description: 'Join us for the annual day celebrations!',
+      message:
+        'We are excited to announce that the school annual day will be held on 25th December. There will be various cultural programs and activities. All students are encouraged to participate and make this event memorable.',
+      signature: 'Principal',
+      createdBy: 'John Doe',
+      createdOn: '10/12/2023',
+      isRead: false,
+    },
+  ];
 
   return (
-    <Box>
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card
-            sx={{
-              display: 'flex',
-              p: 1,
-              width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
-            }}
-          >
-            <Box sx={{ flexGrow: 1 }}>
-              <Box display="flex" gap={2}>
-                <Iconify icon="mdi:bell" width={20} height={20} sx={{ color: 'primary.main' }} />
-                <Typography variant="subtitle1">New Announcement</Typography>
-              </Box>
-              <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-                <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
-                  {[
-                    'Student record updated',
-                    'Student attendance updated',
-                    'Student record updated',
-                    'Student record updated',
-                    'Student attendance updated',
-                    'Student record updated',
-                  ].map((exam, index) => (
-                    <Box component="li" key={index} sx={{ mb: 1 }}>
-                      <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                        {exam}
-                      </Button>
-                    </Box>
-                  ))}
-                </Box>
-              </Scrollbar>
-            </Box>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card
-            sx={{
-              display: 'flex',
-              p: 1,
-              width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
-            }}
-          >
-            <Box sx={{ flexGrow: 1 }}>
-              <Box display="flex" gap={2}>
-                <Iconify
-                  icon="mdi:event"
-                  width={20}
-                  height={20}
-                  sx={{ color: 'secondary.main', mt: 0.3 }}
-                />
-                <Typography variant="subtitle1">Upcoming Events</Typography>
-              </Box>
-              <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-                <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
-                  {[
-                    'Student record updated',
-                    'Student attendance updated',
-                    'Student record updated',
-                  ].map((exam, index) => (
-                    <Box component="li" key={index} sx={{ mb: 1 }}>
-                      <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                        {exam}
-                      </Button>
-                    </Box>
-                  ))}
-                </Box>
-              </Scrollbar>
-            </Box>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card
-            sx={{
-              display: 'flex',
-              p: 1,
-              width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.vars.palette.info.mainChannel, 0.1),
-            }}
-          >
-            <Box sx={{ flexGrow: 1 }}>
-              <Box display="flex" gap={2}>
-                <Iconify
-                  icon="mdi:message-text"
-                  width={20}
-                  height={20}
-                  sx={{ color: 'info.main', mt: 0.4 }}
-                />
-                <Typography variant="subtitle1">New Messages</Typography>
-              </Box>
-              <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-                <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
-                  {[
-                    'Student record updated',
-                    'Student attendance updated',
-                    'Student record updated',
-                  ].map((exam, index) => (
-                    <Box component="li" key={index} sx={{ mb: 1 }}>
-                      <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                        {exam}
-                      </Button>
-                    </Box>
-                  ))}
-                </Box>
-              </Scrollbar>
-            </Box>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Card
-            sx={{
-              display: 'flex',
-              p: 1,
-              width: '100%',
-              backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
-            }}
-          >
-            <Box sx={{ flexGrow: 1 }}>
-              <Box display="flex" gap={2}>
-                <Iconify
-                  icon="ri:survey-line"
-                  width={20}
-                  height={20}
-                  sx={{ color: 'warning.main' }}
-                />
-                <Typography variant="subtitle1">Pending Survey</Typography>
-              </Box>
-              <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-                <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
-                  {[
-                    'Student record updated',
-                    'Student attendance updated',
-                    'Student record updated',
-                  ].map((exam, index) => (
-                    <Box component="li" key={index} sx={{ mb: 1 }}>
-                      <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                        {exam}
-                      </Button>
-                    </Box>
-                  ))}
-                </Box>
-              </Scrollbar>
-            </Box>
-          </Card>
-        </Grid>
-      </Grid>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <Box sx={{ p: 2, pb: 1 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Box>
+            <Typography variant="h5" color="text.secondary">
+              {announcements.length} announcement(s)
+            </Typography>
+          </Box>
+        </Stack>
+      </Box>
 
-      <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
-        <Typography variant="h6">Past Survey</Typography>
-      </Box>
-      <CustomizableTable
-        tableId="survey-table"
-        columns={[
-          { id: 'surveyTitle', label: 'Survey Title' },
-          { id: 'description', label: 'Survey Description' },
-          {
-            id: 'endDate',
-            label: 'Submit Date',
-            align: 'left',
-            filterType: 'date',
-            minWidth: '180px',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('DD MMM YYYY')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'responseRate',
-            label: 'Response Rate',
-            align: 'left',
-            filterType: 'number',
-            minWidth: '180px',
-            render(value, row) {
-              return (
-                <Box sx={{ position: 'relative', display: 'inline-flex', ml: 2 }}>
-                  <CircularProgress variant="determinate" value={value} />
-                  <Box
-                    sx={{
-                      top: 0,
-                      left: 0,
-                      bottom: 0,
-                      right: 0,
-                      position: 'absolute',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
-                      {value}%
-                    </Typography>
-                  </Box>
-                </Box>
-              );
-            },
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            isFilter: false,
-            isSort: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  // actions={(prop) => actions({ ...prop, row })}
-                  showViewIcon
-                  showThreeDots={false}
-                  handleViewClick={() => {
-                    viewDetailsDialog.onTrue();
-                    setViewSurvey(row);
-                  }}
-                  placement="right-top"
-                />
-              );
-            },
-          },
-        ]}
-        data={surveyTableData}
-      />
-      <Divider sx={{ my: 2 }} />
-      <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
-        <Typography variant="h6">Previous Meetings</Typography>
-      </Box>
-      <CustomizableTable
-        tableId="meeting-table"
-        columns={[
-          { id: 'title', label: 'Title' },
-          { id: 'meetingType', label: 'Meeting Type', align: 'left', minWidth: '180px' },
-          {
-            id: 'meetingDate',
-            label: 'Meeting Date',
-            align: 'left',
-            filterType: 'date',
-            minWidth: '180px',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('DD MMM YYYY')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'meetingTime',
-            label: 'Meeting Time',
-            align: 'left',
-            minWidth: '180px',
-            render: (value, row) => (
-              <Typography fontSize="12px" gutterBottom>
-                {dayjs(value).format('HH:mm')}
-              </Typography>
-            ),
-          },
-          {
-            id: 'organization',
-            label: 'Organizations',
-            render: (value: any) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value && value.length > 0
-                  ? value.map((org: string) => (
-                      <Chip key={org} label={org} size="small" variant="outlined" />
-                    ))
-                  : '-'}
-              </Box>
-            ),
-          },
-          {
-            id: 'className',
-            label: 'Class',
-            render: (value: any) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value && value.length > 0
-                  ? value.map((org: string) => (
-                      <Chip key={org} label={org} size="small" variant="outlined" />
-                    ))
-                  : '-'}
-              </Box>
-            ),
-          },
-          {
-            id: 'division',
-            label: 'Division',
-            render: (value: any) => (
-              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {value && value.length > 0
-                  ? value.map((org: string) => (
-                      <Chip key={org} label={org} size="small" variant="outlined" />
-                    ))
-                  : '-'}
-              </Box>
-            ),
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            filterType: 'enum',
-            enumOptions: AttendanceStatusOptions,
-            render(value, row) {
-              const color = AttendanceStatusTypeColors[value as AttendanceStatusType] as LabelColor;
-              return value === 'Present' ? (
-                <Iconify icon="mdi:check-circle-outline" width={20} height={20} sx={{ color }} />
-              ) : (
-                <Iconify icon="mdi:cross-circle" width={20} height={20} sx={{ color }} />
-              );
-            },
-          },
-        ]}
-        data={meetingTableData}
-      />
-      <Divider sx={{ my: 2 }} />
-      <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
-        <Typography variant="h6">Events</Typography>
-      </Box>
-      <CalendarView />
-      <CustomDialog
-        title="Survey Detail View"
-        open={viewDetailsDialog.value}
-        handleClose={handleClose}
-        maxWidth="md"
-      >
-        <ViewSurveyDetail survey={viewSurvey} />
-      </CustomDialog>
+      <Divider />
+
+      {/* Scrollable Content */}
+      <Scrollbar sx={{ flexGrow: 1, p: 2 }}>
+        {announcements.length > 0 ? (
+          announcements.map((announcement, index) => (
+            <AnnouncementCard key={index} {...announcement} />
+          ))
+        ) : (
+          <Box sx={{ mt: 5 }}>
+            <EmptyContent title="No Announce Data Found" />
+          </Box>
+        )}
+      </Scrollbar>
     </Box>
   );
 };
 
 export default Communication;
-
-const response = [
-  { id: 'q1', question: 'How do you rate the quality of the teaching?', answer: 'Excellent' },
-  {
-    id: 'q2',
-    question: 'Are you satisfied with the course materials provided?',
-    answer: 'Yes, very satisfied',
-  },
-  { id: 'q3', question: 'How much time do you spend on homework daily?', answer: '2 hours' },
-];
-
-export const ViewSurveyDetail = ({ survey }: any) => (
-  <Box sx={{ display: 'flex', flexDirection: 'column', p: 2 }}>
-    <Scrollbar sx={{ height: '400px' }}>
-      <Box sx={{ display: 'flex' }}>
-        <Card sx={{ p: 1, width: '100%' }}>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Typography variant="h6" className="font-semibold">
-              {survey?.surveyTitle}
-            </Typography>
-          </Box>
-          <hr className="my-6 border-gray-200" />
-          <DetailRow
-            label="Description"
-            icon="mdi:text-box-outline"
-            value={
-              <Typography variant="body2" className="text-gray-700">
-                {survey?.description}
-              </Typography>
-            }
-          />
-        </Card>
-      </Box>
-      <Typography variant="h6" mb={1} mt={1}>
-        Responses Details
-      </Typography>
-      <Box display="flex" flexDirection="column" gap={2}>
-        <Scrollbar sx={{ height: '200px' }}>
-          {response.map((val: any, index: any) => (
-            <React.Fragment key={index}>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Paper elevation={4} sx={{ p: 2, width: '100%', mt: 1 }}>
-                  <Typography variant="body1">Question: {val.question}</Typography>
-                  <Typography variant="body2">Answer: {val.answer}</Typography>
-                </Paper>
-              </Box>
-            </React.Fragment>
-          ))}
-        </Scrollbar>
-      </Box>
-    </Scrollbar>
-    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-      <Button variant="contained">Close Survey</Button>
-    </Box>
-  </Box>
-);

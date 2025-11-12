@@ -148,9 +148,12 @@ const SubjectTable = ({
                   </Box>
                 ) : Array.isArray(value) ? (
                   <>
-                    <Typography variant="caption" fontSize="13px">
-                      ({row.subject})
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SubjectColorIndicator color={row.subjectColor} />
+                      <Typography variant="caption" fontSize="13px">
+                        {row.subject}
+                      </Typography>
+                    </Box>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                       {value.map((subjectName: string, index: number) => {
                         const subjectCode = Array.isArray(row.subjectCode)
@@ -165,7 +168,7 @@ const SubjectTable = ({
                           <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                             <SubjectColorIndicator color={subjectColor} />
                             <Typography variant="caption" fontSize="13px">
-                              {subjectName} ({subjectCode})
+                              ({subjectName} ({subjectCode}))
                             </Typography>
                           </Box>
                         );

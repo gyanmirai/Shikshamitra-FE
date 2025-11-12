@@ -13,9 +13,11 @@ import type { ISeatAllocation, IStudentRoomAssignment } from '../type';
 const SeatAllocationSection = ({
   division,
   classRoom,
+  className,
 }: {
   division: string;
   classRoom: string;
+  className: string;
 }) => {
   // Material-UI theme hook for accessing theme colors and styling properties
   const theme = useTheme();

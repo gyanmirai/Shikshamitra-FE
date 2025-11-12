@@ -4,8 +4,10 @@ export interface IChargeData {
   id: string;
   category: string;
   class: string;
-  divisions: string[];
-  students: number; // total count
+  division: string;
+  grNo: number;
+  studentName: string; // total count
+  rollNo: number;
   studentList?: {
     id: string;
     name: string;

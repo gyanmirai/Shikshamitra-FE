@@ -9,10 +9,14 @@ export const getInitialConcessionFormData = (
   division: editData?.division || '',
   feeHead: editData?.feeHead || '',
   studentName: editData?.studentName || '',
-  concessionType: editData?.concessionType || '',
   reason: editData?.reason || '',
-  documents: editData?.documents || [],
-  amount: editData?.amount ?? (editData?.concessionType === 'fixed' ? 0 : undefined),
-  percentage: editData?.percentage ?? (editData?.concessionType === 'percentage' ? 0 : undefined),
-  applicableFeeHeads: editData?.applicableFeeHeads || [],
+  concessions: editData?.concessions?.length
+    ? editData.concessions.map((c) => ({
+        concessionType: c.concessionType || '',
+        applicableFeeHeads: c.applicableFeeHeads || [],
+        amount: c.amount || undefined,
+        percentage: c.percentage || undefined,
+        documents: c.documents || [],
+      }))
+    : [],
 });

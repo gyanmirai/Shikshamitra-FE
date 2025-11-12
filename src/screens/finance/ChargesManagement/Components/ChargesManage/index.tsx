@@ -8,8 +8,10 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Box, Card, Button, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -38,6 +40,7 @@ const ChargesManagement = () => {
   // Boolean hooks to control dialog visibility
   const viewChargeDetailsDialog = useBoolean();
   const editChargeDialog = useBoolean();
+  const removeChargeDialog = useBoolean();
 
   // Redux state and dispatch
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -62,11 +65,13 @@ const ChargesManagement = () => {
       setSelectedMode('');
       setSelectedChargeData(null);
       addChargeDialog.onFalse();
+      // viewChargeDetailsDialog.onFalse();
       resetState();
     } else if (!isChanges) {
       onConfirmDialg.onFalse();
       setSelectedMode('');
       setSelectedChargeData(null);
+      // viewChargeDetailsDialog.onFalse();
       // Close dialog if there are no unsaved changes
       addChargeDialog.onFalse();
     }
@@ -99,132 +104,164 @@ const ChargesManagement = () => {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CustomBreadcrumbs
-        heading="Assign Charge"
-        description="This screen shows a list of all existing charges with an option to create a new one. charges including tuition fees, exam fees, and other miscellaneous charges."
-        links={[
-          { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Charges', href: '/finance/charge-management/chargesRequest' },
-          { name: 'Assign Charge' },
-        ]}
-        sx={{ px: 1, mb: 1 }}
-        action={
-          <Button
-            startIcon={<Add />}
-            variant="contained"
-            onClick={addChargeDialog.onTrue}
-            size="small"
-          >
-            Charge
-          </Button>
-        }
-      />
-      <ChargesTable
-        data={chargeData}
-        onView={(data) => {
-          viewChargeDetailsDialog.onTrue();
-          setSelectedChargeData(data);
-        }}
-        onEdit={(data) => {
-          editChargeDialog.onTrue();
-          setSelectedChargeData(data);
-        }}
-        onAddCharge={() => {
-          addChargeDialog.onTrue();
-        }}
-      />
-
-      {/* Add Charge Dialog */}
-      <CustomDialog
-        open={addChargeDialog.value}
-        handleClose={() => {
-          addChargeDialog?.onFalse();
-        }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Add Charge</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="This modal is used to create a new charge by filling in all the required fields."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        maxWidth="sm"
-      >
-        <ChargeForm open={addChargeDialog} onClose={handleClose} />
-      </CustomDialog>
-
-      {/* Edit Charge Dialog */}
-      <CustomDialog
-        open={editChargeDialog.value}
-        handleClose={() => {
-          editChargeDialog?.onFalse();
-          setSelectedChargeData(null);
-        }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Update Charge</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="This modal is used to edit an existing charge by modifying the required fields."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        maxWidth="sm"
-      >
-        <ChargeForm
-          open={editChargeDialog}
-          onClose={handleEditClose}
-          editData={selectedChargeData}
-          isEdit
+      {viewChargeDetailsDialog.value ? (
+        <CustomBreadcrumbs
+          heading="View Charge"
+          description="View and manage student charges."
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            {
+              name: 'Charges',
+              href: '/finance/charge-management/chargesRequest',
+              onClick(e) {
+                viewChargeDetailsDialog.onFalse();
+                setSelectedChargeData(null);
+              },
+            },
+            { name: 'View Charge' },
+          ]}
+          isBack
+          onBack={() => {
+            viewChargeDetailsDialog.onFalse();
+            setSelectedChargeData(null);
+          }}
+          sx={{ px: 1, mb: 2 }}
         />
-      </CustomDialog>
-
-      {/* View Charge Dialog */}
-      <CustomDialog
-        open={viewChargeDetailsDialog.value}
-        handleClose={() => {
-          viewChargeDetailsDialog?.onFalse();
-          setSelectedChargeData(null);
-        }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">View Charge</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="This modal is used to view all details related to a particular charge."
+      ) : addChargeDialog.value ? (
+        <CustomBreadcrumbs
+          heading="Add Charge"
+          description="View and manage student charges."
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            {
+              name: 'Charges',
+              href: '/finance/charge-management/chargesRequest',
+              onClick(e) {
+                addChargeDialog.onFalse();
+                setSelectedChargeData(null);
+              },
+            },
+            { name: 'Add Charge' },
+          ]}
+          isBack
+          onBack={() => {
+            handleClose(null, false);
+          }}
+          sx={{ px: 1, mb: 2 }}
+        />
+      ) : editChargeDialog.value ? (
+        <CustomBreadcrumbs
+          heading="Update Charge"
+          description="View and manage student charges."
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            {
+              name: 'Charges',
+              href: '/finance/charge-management/chargesRequest',
+              onClick(e) {
+                editChargeDialog.onFalse();
+                setSelectedChargeData(null);
+              },
+            },
+            { name: 'Update Charge' },
+          ]}
+          isBack
+          onBack={() => {
+            editChargeDialog.onFalse();
+            setSelectedChargeData(null);
+          }}
+          sx={{ px: 1, mb: 2 }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Charges"
+          description="This screen shows a list of all existing charges with an option to create a new one. charges including tuition fees, exam fees, and other miscellaneous charges."
+          links={[
+            { name: 'Finance', href: '/finance/dashboard' },
+            { name: 'Charges', href: '/finance/charge-management/chargesRequest' },
+          ]}
+          action={
+            <Button
+              startIcon={<Add />}
+              variant="contained"
+              onClick={addChargeDialog.onTrue}
+              size="small"
             >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        maxWidth="sm"
-      >
-        <ChargeDetailsCard
-          charge={selectedChargeData}
-          isActionShow={false}
-          onApprove={() => {
+              Charge
+            </Button>
+          }
+          sx={{ px: 1, mb: 1 }}
+        />
+      )}
+      {!addChargeDialog.value && !viewChargeDetailsDialog.value && !editChargeDialog.value && (
+        <ChargesTable
+          data={chargeData}
+          onView={(data) => {
+            viewChargeDetailsDialog.onTrue();
+            setSelectedChargeData(data);
+          }}
+          onEdit={(data) => {
+            editChargeDialog.onTrue();
+            setSelectedChargeData(data);
+          }}
+          onAddCharge={() => {
+            addChargeDialog.onTrue();
+          }}
+          onApprove={(data) => {
             onConfirmDialg.onTrue();
             setSelectedMode('Approve');
-            // Handle approve logic
+            setSelectedChargeData(data);
           }}
-          onReject={() => {
+          onReject={(data) => {
             onConfirmDialg.onTrue();
             setSelectedMode('Reject');
-            // Handle reject logic
+            setSelectedChargeData(data);
+          }}
+          onRemove={(data) => {
+            removeChargeDialog.onTrue();
+            setSelectedChargeData(data);
           }}
         />
-      </CustomDialog>
+      )}
+
+      {/* Add Charge Dialog */}
+      {addChargeDialog.value && (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <ChargeForm open={addChargeDialog} onClose={handleClose} />
+        </Card>
+      )}
+
+      {/* Edit Charge Dialog */}
+      {editChargeDialog.value && (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <ChargeForm
+            open={editChargeDialog}
+            onClose={handleEditClose}
+            editData={selectedChargeData}
+            isEdit
+          />
+        </Card>
+      )}
+
+      {/* View Charge Dialog */}
+      {viewChargeDetailsDialog.value && (
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <ChargeDetailsCard
+            charge={selectedChargeData}
+            isActionShow={false}
+            onApprove={() => {
+              onConfirmDialg.onTrue();
+              setSelectedMode('Approve');
+              // Handle approve logic
+            }}
+            onReject={() => {
+              onConfirmDialg.onTrue();
+              setSelectedMode('Reject');
+              // Handle reject logic
+            }}
+          />
+        </Card>
+      )}
 
       <CustomDialog
         open={onConfirmDialg.value}
@@ -252,6 +289,36 @@ const ChargesManagement = () => {
       >
         <ChargeReasonApprovalForm onClose={handleClose} mode={selectedMode} />
       </CustomDialog>
+      <ConfirmDialog
+        open={removeChargeDialog.value}
+        onClose={() => {
+          setSelectedChargeData(null);
+          removeChargeDialog.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete charge <strong>{selectedChargeData?.category}</strong>?
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              removeChargeDialog.onFalse();
+              setSelectedChargeData(null);
+              shikshaMitraToast.success({
+                message: `Charge ${selectedChargeData?.category} deleted successfully for ${selectedChargeData?.studentName}`,
+              });
+              // Handle delete action here
+            }}
+          >
+            Yes
+          </Button>
+        }
+      />
     </Box>
   );
 };

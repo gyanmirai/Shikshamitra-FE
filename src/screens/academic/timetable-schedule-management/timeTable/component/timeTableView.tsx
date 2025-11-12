@@ -78,7 +78,9 @@ const TimeTableView: React.FC<ITimeTableView> = ({
                 {timetable.map((timeTableItem, index) => (
                   <TableRow key={index}>
                     <TableCell>
-                      {timeTableItem.startTime} - {timeTableItem.endTime}
+                      {timeTableItem.startTime}
+                      <br />
+                      {timeTableItem.endTime}
                     </TableCell>
                     {(timeTableItem.isBreak ? [''] : timeTableItem.dayData).map((dayItem, ind) => (
                       <TimeTableCell

@@ -21,24 +21,41 @@
       "name": "Maintenance 2025"
     }
   ],
-  "expenseCategories": [
+"expenseCategories": [
     {
       "id": "1",
       "expenseCategoryName": "Internet Bills",
       "budget": "Hardwares Expenses 2025",
+      "tags": ["wifi", "broadband", "monthly bill"],
       "description": "All Internet Bills expenses will record in this category"
     },
     {
       "id": "2", 
       "expenseCategoryName": "Furniture",
       "budget": "Furniture Repairing 2025",
+      "tags": ["maintenance", "office", "woodwork"],
       "description": "All Furniture repairing expenses will record in this category"
     },
     {
       "id": "3",
       "expenseCategoryName": "Benches",
       "budget": "Benches 2025", 
+      "tags": ["classroom", "equipment", "purchase"],
       "description": "All Benches expenses will record in this category"
+    },
+    {
+      "id": "4",
+      "expenseCategoryName": "Electricity",
+      "budget": "Utility Expenses 2025",
+      "tags": ["power", "utility", "monthly bill", "infrastructure"],
+      "description": "All electricity expenses including power bills and maintenance will record in this category"
+    },
+    {
+      "id": "5",
+      "expenseCategoryName": "Salary",
+      "budget": "Staff Salaries 2025",
+      "tags": ["staff", "hr", "payroll", "monthly expense"],
+      "description": "All staff and employee salary-related expenses will record in this category"
     }
   ]
 }

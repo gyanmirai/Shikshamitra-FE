@@ -105,45 +105,51 @@ const TimetableSettingScreen = () => {
     [searchParams.tab]
   );
 
+  // Check if any dialog is open
+  const isAnyDialogOpen =
+    addWeeklyLectureDialog.value || addLectureSlotDialog.value || addRoomDialog.value;
+
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Setting"
-        description="Configure timetable settings by defining weekly lectures, lecture slots, and room allocations."
-        links={[
-          { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Timetable', href: '/academic/newTimetable' },
-          { name: 'Setting' },
-        ]}
-        sx={{ px: 1, mb: 2 }}
-        action={renderButton[searchParams.tab as keyof typeof renderButton]}
-      />
+      {/* Only show breadcrumbs and tabs when no dialog is open */}
+      {!isAnyDialogOpen && (
+        <>
+          <CustomBreadcrumbs
+            heading="Settings"
+            description="Configure timetable settings by defining weekly lectures, lecture slots, and room allocations."
+            links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
+            sx={{ px: 1, mb: 2 }}
+            action={renderButton[searchParams.tab as keyof typeof renderButton]}
+          />
 
-      <Card
-        sx={{
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-        }}
-      >
-        <CustomTabs
-          value={searchParams.tab}
-          onChange={(e, value) => {
-            const newIndex = TABS.findIndex((tab) => tab.value === value);
-            if (currentIndex > newIndex) {
-              setIsBackClick(true);
-            } else {
-              setIsBackClick(false);
-            }
+          <Card
+            sx={{
+              '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+            }}
+          >
+            <CustomTabs
+              value={searchParams.tab}
+              onChange={(e, value) => {
+                const newIndex = TABS.findIndex((tab) => tab.value === value);
+                if (currentIndex > newIndex) {
+                  setIsBackClick(true);
+                } else {
+                  setIsBackClick(false);
+                }
 
-            setSearchParams({ tab: value });
-          }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-          role="tablist"
-        >
-          {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
-          ))}
-        </CustomTabs>
-      </Card>
+                setSearchParams({ tab: value });
+              }}
+              sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+              role="tablist"
+            >
+              {TABS.map((tab) => (
+                <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+              ))}
+            </CustomTabs>
+          </Card>
+        </>
+      )}
+
       <FormSlider
         steps={TABS}
         isBackClick={isBackClick}
@@ -154,7 +160,7 @@ const TimetableSettingScreen = () => {
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Scrollbar sx={{ p: isAnyDialogOpen ? 0 : 1 }}>
           {currentActiveTab?.component && (
             <currentActiveTab.component
               addWeeklyLectureDialog={addWeeklyLectureDialog}
@@ -162,6 +168,7 @@ const TimetableSettingScreen = () => {
               addRoomDialog={addRoomDialog}
               isEdit={isEdit}
               setIsEdit={setIsEdit}
+              showBreadcrumb={isAnyDialogOpen}
             />
           )}
         </Scrollbar>

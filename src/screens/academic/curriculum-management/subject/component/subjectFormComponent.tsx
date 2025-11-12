@@ -277,7 +277,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
   // State to control visibility of add Elective subject dialog
   const addElectiveSubjectDialog = useBoolean();
   // State to track selected option for the autocomplete
-  const [selectedOption, setSelectedOption] = useState<any>(null);
+  const [selectedOption, setSelectedOption] = useState<any[]>([]);
   // Flag to prevent infinite update loops
   const [isInitializing, setIsInitializing] = useState(true);
 
@@ -345,7 +345,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
       );
 
       if (option) {
-        setSelectedOption(option);
+        setSelectedOption(option ? [option] : []);
 
         // If we're editing, make sure the subjects array is initialized in formik values
         if (data.subjects && data.subjects.length > 0) {
@@ -358,64 +358,68 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
   }, [data, isEdit, isInitializing, formik]);
 
   // Handle subject selection change
-  const handleSubjectChange = (newValue: any) => {
-    if (!newValue) {
+  const handleSubjectChange = (newValue: any[]) => {
+    if (!newValue || newValue.length === 0) {
       formik.setFieldValue('subjectName', '');
       formik.setFieldValue('subjectType', 'Core');
       formik.setFieldValue('subjects', []);
-      setSelectedOption(null);
+      setSelectedOption([]);
       return;
     }
 
-    // Update Formik values for subject name and type
-    formik.setFieldValue('subjectName', newValue.value);
-    formik.setFieldValue('subjectType', newValue.type);
     setSelectedOption(newValue);
     formik.setFieldTouched('subjectName', false);
 
-    // Determine if this is a Core subject or an Elective group
-    if (newValue.type === 'Core') {
-      // For Core subject, create a single subject entry
-      const newSubject = {
-        id: Date.now() + Math.random(),
-        name: newValue.name,
-        subjectName: newValue.value,
-        className: formik.values.className || '',
-        subjectCode: '',
-        primaryTeacher: {},
-        secondaryTeacher: [],
-        description: '',
-        isSubjectOpen: true,
-        learningGoal: '',
-        prerequisites: '',
-        subjectColor: newValue.subjectColor,
-        scheduleDate: null,
-        status: 'Draft',
-      };
-      // Update subjects array in formik state
-      formik.setFieldValue('subjects', [newSubject]);
-    } else if (newValue.type === 'Elective') {
-      // For Elective group, create multiple subject entries
-      const initialElectives = newValue.subjects.map((subject: any) => ({
-        id: Date.now() + Math.random(),
-        name: subject.name,
-        subjectName: subject.name,
-        className: formik.values.className || '',
-        subjectCode: '',
-        primaryTeacher: {},
-        secondaryTeacher: [],
-        isSubjectOpen: true,
-        description: '',
-        learningGoal: '',
-        prerequisites: '',
-        subjectColor: subject.subjectColor,
-        scheduleDate: null,
-        status: 'Draft',
-      }));
+    // Combine all subjects from selected options
+    const allSubjects: any[] = [];
 
-      // Update subjects array in formik state
-      formik.setFieldValue('subjects', initialElectives);
-    }
+    newValue.forEach((option) => {
+      if (option.type === 'Core') {
+        const newSubject = {
+          id: Date.now() + Math.random(),
+          name: option.value,
+          subjectName: option.value,
+          className: formik.values.className || '',
+          subjectCode: '',
+          primaryTeacher: {},
+          secondaryTeacher: [],
+          description: '',
+          isSubjectOpen: true,
+          learningGoal: '',
+          prerequisites: '',
+          subjectColor: option.subjectColor,
+          scheduleDate: null,
+          status: 'Draft',
+        };
+        allSubjects.push(newSubject);
+      } else if (option.type === 'Elective') {
+        const electives = option.subjects.map((subject: any) => ({
+          id: Date.now() + Math.random(),
+          name: subject.name,
+          subjectName: subject.name,
+          className: formik.values.className || '',
+          subjectCode: '',
+          primaryTeacher: {},
+          secondaryTeacher: [],
+          isSubjectOpen: true,
+          description: '',
+          learningGoal: '',
+          prerequisites: '',
+          subjectColor: subject.subjectColor,
+          scheduleDate: null,
+          status: 'Draft',
+        }));
+        allSubjects.push(...electives);
+      }
+    });
+
+    // Update formik values
+    formik.setFieldValue('subjects', allSubjects);
+    // Store comma-separated subject names
+    formik.setFieldValue('subjectName', newValue.map((v) => v.label).join(', '));
+    // Set type based on what's selected (you may need custom logic here)
+    const hasCore = newValue.some((v) => v.type === 'Core');
+    formik.setFieldValue('subjectType', hasCore ? 'Core' : 'Elective');
   };
 
   // Handle changes to individual subject fields
@@ -470,6 +474,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                   error={!!(formik.touched.subjectName && formik.errors.subjectName)}
                 >
                   <Autocomplete
+                    multiple
                     fullWidth
                     size="small"
                     disabled={isPublished}
@@ -498,7 +503,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Subject *"
+                        label="Subjects *"
                         name="subjectName"
                         error={formik.touched.subjectName && Boolean(formik.errors.subjectName)}
                         helperText={formik.touched.subjectName && formik.errors.subjectName}

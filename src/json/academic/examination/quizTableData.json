@@ -6,7 +6,7 @@
     "subject": "Mathematics",
     "subjectCode": "MATH101",
     "subjectColor": "#FF5733",
-    "quizTitle": "Algebra Basics",
+    "quizTitle": "Algebra Basics Quiz",
     "createdAt": "01-12-2024",
     "quizDate": "15-12-2024",
     "quizTime": "10:00 AM",
@@ -111,7 +111,7 @@
   },
   {
     "id": "7",
-    "class": "9",
+    "class": "12",
     "division": ["B", "C"],
     "subject": "Biology",
     "subjectCode": "BIO701",
@@ -153,27 +153,27 @@
     "marksStatus": 1,
     "status": 5
   },
-  {
+   {
     "id": "9",
     "class": "7",
     "division": ["E"],
-    "subject": "Civics",
-    "subjectCode": "CIV901",
-    "subjectColor": "#FF6D00",
-    "quizTitle": "Democracy & Rights",
-    "createdAt": "26-12-2024",
-    "quizDate": "09-01-2025",
-    "quizTime": "09:30 AM",
-    "quizEndDate": "09-01-2025",
-    "quizEndTime": "10:00 AM",
-    "quizDuration": "30 mins",
-    "attemptsAllow": 1,
-    "totalMarks": 50,
-    "passingMarks": 25,
-    "obtainedMarks": 48,
-    "grade": "A+",
+    "subject": "Mathematics",
+    "subjectCode": "MTH701",
+    "subjectColor": "#1976D2",
+    "quizTitle": "Fractions and Decimals",
+    "createdAt": "2024-12-27T09:15:00Z",
+    "quizDate": "2025-01-11",
+    "quizTime": "10:00 AM",
+    "quizEndDate": "2025-01-11",
+    "quizEndTime": "10:45 AM",
+    "quizDuration": "45 mins",
+    "attemptsAllowed": 1,
+    "totalMarks": 40,
+    "passingMarks": 20,
+    "obtainedMarks": 36,
+    "grade": "A",
     "marksStatus": 1,
-    "status": 5
+    "status": 1
   },
   {
     "id": "10",
@@ -197,6 +197,4 @@
     "marksStatus": 1,
     "status": 5
   }
-
-
 ]

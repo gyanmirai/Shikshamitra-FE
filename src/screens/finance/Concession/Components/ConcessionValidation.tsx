@@ -6,7 +6,7 @@ export const concessionValidation = Yup.object().shape({
   className: Yup.string().required('Class is required'),
   division: Yup.string().required('Division is required'),
   studentName: Yup.object().required('Student is required'),
-  concessionType: Yup.string().required('Concession type is required'),
-  reason: Yup.string().required('Reason is required'),
-  feeHead: Yup.string().required('Fee head is required'),
+  concessions: Yup.array()
+    .min(1, 'At least one concession is required')
+    .required('Concessions are required'),
 });

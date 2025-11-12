@@ -10,8 +10,10 @@ import { useFormik } from 'formik';
 import _, { isNumber } from 'lodash';
 import autoTable from 'jspdf-autotable';
 import debounce from 'src/utils/debounce';
+import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
+import { useBoolean } from 'src/hooks/use-boolean';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { formatNumber } from 'src/utils/formate_number';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -55,6 +57,8 @@ import {
 
 import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
+import CustomDialog from '../customDialog';
+import CustomTooltip from '../custom-tooltip';
 import { parseFormattedNumber } from './utlis';
 import { EmptyContent } from '../empty-content';
 import { ComponentBlock } from '../component-block';
@@ -429,7 +433,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         : sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
     [serverSide, sortedData, page, rowsPerPage]
   );
-
+  const fullScreenDialog = useBoolean();
   const handleChangeDense = (event: React.ChangeEvent<HTMLInputElement>) => {
     handelChangeParams({ dense: event.target.checked });
   };
@@ -647,6 +651,25 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   &nbsp; Export as PDF
                 </MenuItem>
               </Menu>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', p: isSearch ? 1 : 0, gap: 1 }}>
+              <CustomTooltip
+                arrow
+                placement="bottom-end"
+                title={fullScreenDialog.value ? 'Exit Fullscreen' : 'Fullscreen'}
+              >
+                <IconButton
+                  onClick={fullScreenDialog.onToggle}
+                  sx={{ color: varAlpha(theme.vars.palette.grey['900Channel'], 1) }}
+                >
+                  <Iconify
+                    icon={
+                      fullScreenDialog.value ? 'ic:sharp-fullscreen-exit' : 'ic:sharp-fullscreen'
+                    }
+                  />
+                </IconButton>
+              </CustomTooltip>
             </Box>
           </Box>
         )}
@@ -944,6 +967,20 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         )}
       </ComponentBlock>
     </Card>
+  );
+
+  return (
+    <>
+      {!fullScreenDialog.value && tableContent}
+      <CustomDialog
+        title={tableId}
+        fullScreen
+        open={fullScreenDialog.value}
+        handleClose={() => fullScreenDialog.onFalse()}
+      >
+        {tableContent}
+      </CustomDialog>
+    </>
   );
 };
 

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
 import { Box, Card, Switch } from '@mui/material';
+import React, { useState, useEffect } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
@@ -9,31 +9,57 @@ import {
   NotificationStatusOptions,
 } from 'src/enums/notification-status-type';
 
-import EditNotificationDialog from '../edit-notification-dialog';
+import EditNotificationDialog from '../editNotificationDialog';
 
-const notificationsData = [
+const initialNotificationsData = [
   {
-    id: '2',
-    event: 'Move to Admission',
-    triggerCondition: 'When the student is transitioned to admission.',
+    id: '1',
+    event: 'Leave Request',
+    triggerCondition: 'When a student requests leave.',
+    isActive: NotificationStatusType.Active,
     recipient: [
       {
         name: 'admin',
-        message: 'The student [Student Name] has been moved to admission.',
+        message: '[Student Name] has requested leave for [Date(s)]. Please review the request.',
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]'],
-        placeHolderOptions: [{ value: '[Student Name]', label: 'Student Name' }],
+        placeHolder: ['[Student Name]', '[Date(s)]'],
+        placeHolderOptions: [
+          { value: '[Student Name]', label: 'Student Name' },
+          { value: '[Date(s)]', label: 'Leave Date(s)' },
+        ],
         isEnable: true,
       },
       {
         name: 'parent',
         message:
-          'Dear [Parent Name], congratulations! [Student Name] has progressed to the admission stage. Please check for further steps.',
+          'Dear [Parent Name], a leave request has been submitted for [Student Name] for [Date(s)]. You can check the status in the portal.',
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Parent Name]'],
+        placeHolder: ['[Student Name]', '[Parent Name]', '[Date(s)]'],
         placeHolderOptions: [
           { value: '[Student Name]', label: 'Student Name' },
           { value: '[Parent Name]', label: 'Parent Name' },
+          { value: '[Date(s)]', label: 'Leave Date(s)' },
+        ],
+        isEnable: true,
+      },
+    ],
+  },
+  {
+    id: '2',
+    event: 'Approve Leave',
+    triggerCondition: 'When a leave request is approved.',
+    isActive: NotificationStatusType.Inactive,
+    recipient: [
+      {
+        name: 'parent',
+        message:
+          "Dear [Parent Name], [Student Name]'s leave request for [Date(s)] has been approved.",
+        communicationChannel: ['WhatsApp', 'Email'],
+        placeHolder: ['[Student Name]', '[Parent Name]', '[Date(s)]'],
+        placeHolderOptions: [
+          { value: '[Student Name]', label: 'Student Name' },
+          { value: '[Parent Name]', label: 'Parent Name' },
+          { value: '[Date(s)]', label: 'Leave Date(s)' },
         ],
         isEnable: true,
       },
@@ -41,27 +67,20 @@ const notificationsData = [
   },
   {
     id: '3',
-    event: 'Approve Admission',
-    triggerCondition: 'When the admission is approved.',
+    event: 'Reject Leave',
+    triggerCondition: 'When a leave request is rejected.',
+    isActive: NotificationStatusType.Active,
     recipient: [
-      {
-        name: 'admin',
-        message: 'Admission for [Student Name] has been approved.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]'],
-        placeHolderOptions: [{ value: '[Student Name]', label: 'Student Name' }],
-        isEnable: true,
-      },
       {
         name: 'parent',
         message:
-          "Dear [Parent Name], we are pleased to inform you that [Student Name]'s admission has been approved. Welcome to [School Name]!",
+          "Dear [Parent Name], unfortunately, [Student Name]'s leave request for [Date(s)] has been rejected. Please contact the school for further details.",
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Parent Name]', '[School Name]'],
+        placeHolder: ['[Student Name]', '[Parent Name]', '[Date(s)]'],
         placeHolderOptions: [
           { value: '[Student Name]', label: 'Student Name' },
           { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[School Name]', label: 'School Name' },
+          { value: '[Date(s)]', label: 'Leave Date(s)' },
         ],
         isEnable: true,
       },
@@ -69,26 +88,20 @@ const notificationsData = [
   },
   {
     id: '4',
-    event: 'Pending Admission',
-    triggerCondition: 'When the admission is in a pending state.',
+    event: 'Mark Attendance',
+    triggerCondition: 'When attendance is recorded (present/absent).',
+    isActive: NotificationStatusType.Inactive,
     recipient: [
-      {
-        name: 'admin',
-        message: 'Admission for [Student Name] is currently pending.',
-        communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]'],
-        placeHolderOptions: [{ value: '[Student Name]', label: 'Student Name' }],
-        isEnable: true,
-      },
       {
         name: 'parent',
         message:
-          "Dear [Parent Name], [Student Name]'s admission is under review. We will notify you once a decision is made.",
+          'Dear [Parent Name], [Student Name] has been marked [Present/Absent] for [Date]. You can check attendance records in the portal.',
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Parent Name]'],
+        placeHolder: ['[Student Name]', '[Parent Name]', '[Date]'],
         placeHolderOptions: [
           { value: '[Student Name]', label: 'Student Name' },
           { value: '[Parent Name]', label: 'Parent Name' },
+          { value: '[Date]', label: 'Attendance Date' },
         ],
         isEnable: true,
       },
@@ -96,19 +109,53 @@ const notificationsData = [
   },
 ];
 
-const AdmissionNotificationManagement = () => {
-  // State variable to control the visibility of the dialog.
-  const [open, setOpen] = useState(false);
-  // State variable to store the selected notification data.
-  const [selectedData, setSelectedData] = useState<any>(null);
-  // State variable to determine whether the dialog is in view mode.
-  const [view, setView] = useState(false);
+interface AttendanceNotificationManagementProps {
+  dialog?: any;
+}
 
-  // Handler function to close the dialog and reset related states.
+const AttendanceNotificationManagement = ({ dialog }: AttendanceNotificationManagementProps) => {
+  // State variable to control the visibility of the EditNotificationDialog.
+  const [open, setOpen] = useState(false);
+  // State variable to store the data of the selected notification for editing.
+  const [selectedData, setSelectedData] = useState<any>(null);
+  // State variable to determine whether the dialog is in view mode or edit mode.
+  const [view, setView] = useState(false);
+  // State variable to manage notifications data
+  const [notificationsData, setNotificationsData] = useState(initialNotificationsData);
+
+  // Sync local open state with parent dialog
+  useEffect(() => {
+    if (dialog) {
+      if (open) {
+        dialog.onTrue();
+      } else {
+        dialog.onFalse();
+      }
+    }
+  }, [open, dialog]);
+
+  // Handler function to close the EditNotificationDialog and reset related state variables.
   const closeHandler = () => {
     setOpen(false);
     setSelectedData(null);
     setView(false);
+  };
+
+  // Handler to toggle notification status
+  const handleToggleStatus = (id: string) => {
+    setNotificationsData((prevData) =>
+      prevData.map((notification) =>
+        notification.id === id
+          ? {
+              ...notification,
+              isActive:
+                notification.isActive === NotificationStatusType.Active
+                  ? NotificationStatusType.Inactive
+                  : NotificationStatusType.Active,
+            }
+          : notification
+      )
+    );
   };
 
   return (
@@ -141,7 +188,6 @@ const AdmissionNotificationManagement = () => {
                 ));
               },
             },
-
             {
               id: 'isActive',
               label: 'Active',
@@ -152,10 +198,8 @@ const AdmissionNotificationManagement = () => {
                 return (
                   <Box>
                     <Switch
-                      checked={NotificationStatusType.Active === row.isActive}
-                      onChange={(event) => {
-                        console.log(event.target.checked);
-                      }}
+                      checked={row.isActive === NotificationStatusType.Active}
+                      onChange={() => handleToggleStatus(row.id)}
                     />
                   </Box>
                 );
@@ -195,4 +239,4 @@ const AdmissionNotificationManagement = () => {
   );
 };
 
-export default AdmissionNotificationManagement;
+export default AttendanceNotificationManagement;

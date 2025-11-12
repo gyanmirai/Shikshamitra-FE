@@ -53,17 +53,25 @@ const AcademicNotificationScreen = () => {
     () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
+  const [isViewMode, setIsViewMode] = useState(false);
+
   const [isBackClick, setIsBackClick] = useState(false);
   return (
     <Box sx={{ height: '100%' }}>
       {dialog?.value ? (
         <CustomBreadcrumbs
-          heading="Notification Settings"
+          heading={isViewMode ? 'View Notification' : 'Edit Notification'}
           description="Configure notifications for curriculum, timetable, homework, and examinations."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Notifications', href: '/academic/notifications' },
-            { name: 'Settings' },
+            {
+              name: 'Notification',
+              href: '/academic/notification',
+              onClick(e) {
+                dialog.onFalse();
+              },
+            },
+            isViewMode ? { name: 'View Notification' } : { name: 'Edit Notification' },
           ]}
           isBack
           onBack={() => {
@@ -73,12 +81,11 @@ const AcademicNotificationScreen = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Notification Settings"
+          heading="Notification"
           description="Configure notifications for curriculum, timetable, homework, and examinations."
           links={[
             { name: 'Academics', href: '/academic/dashboard' },
-            { name: 'Notifications', href: '/academic/notifications' },
-            { name: 'Settings' },
+            { name: 'Notification', href: '/academic/notification' },
           ]}
           sx={{ px: 1, mb: 2 }}
         />
@@ -123,6 +130,7 @@ const AcademicNotificationScreen = () => {
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               dialog={dialog}
+              setIsViewMode={setIsViewMode}
               // searchParams={searchParams}
               // setSearchParams={setSearchParams}
             />
