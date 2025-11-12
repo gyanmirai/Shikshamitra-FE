@@ -5,7 +5,8 @@
     "class": "I",
     "rollNo": 1,
     "studentId": 101,
-    "isRoomAssign": false 
+    "isRoomAssign": false,
+    "isSeatAllocate": false
   },
   {
     "seatNumber": 2,

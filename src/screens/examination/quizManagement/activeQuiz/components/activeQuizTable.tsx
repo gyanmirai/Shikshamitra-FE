@@ -11,7 +11,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Tab, Chip, Tabs, Button, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Button, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   ScheduleExamStatus,
   ScheduleExamStatusColor,
@@ -200,6 +200,7 @@ const QuizTable = ({
                   id: 'subject',
                   label: 'Subject',
                   align: 'left',
+                  minWidth: 160,
                   filterType: 'string',
                   render(value, row) {
                     return (
@@ -307,17 +308,14 @@ const QuizTable = ({
                   label: 'Divisions',
                   align: 'left',
                   filterType: 'string',
-                  render(value, row) {
-                    return (
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {value?.length
-                          ? value.map((item: string) => (
-                              <Chip key={item} label={item} size="small" variant="outlined" />
-                            ))
-                          : '-'}
-                      </Box>
-                    );
-                  },
+                  render: (value) => <Box>{value.join(', ')}</Box>,
+                },
+                {
+                  id: 'quizTitle',
+                  label: 'Title',
+                  align: 'left',
+                  minWidth: 160,
+                  filterType: 'string',
                 },
                 {
                   id: 'subject',
@@ -343,15 +341,10 @@ const QuizTable = ({
                   },
                 },
                 {
-                  id: 'quizTitle',
-                  label: 'Title',
-                  align: 'left',
-                  filterType: 'string',
-                },
-                {
                   id: 'createdAt',
                   label: 'Created At',
                   align: 'left',
+                  minWidth: 120,
                   filterType: 'date',
                 },
                 {
@@ -370,12 +363,14 @@ const QuizTable = ({
                   id: 'quizEndDate',
                   label: 'End Date',
                   align: 'left',
+                  minWidth: 100,
                   filterType: 'date',
                 },
                 {
                   id: 'quizEndTime',
                   label: 'End Time',
                   align: 'left',
+                  minWidth: 100,
                   filterType: 'date',
                 },
                 {
@@ -388,18 +383,21 @@ const QuizTable = ({
                   id: 'totalMarks',
                   label: 'Total Marks',
                   align: 'left',
+                  minWidth: 120,
                   filterType: 'number',
                 },
                 {
                   id: 'passingMarks',
                   label: 'Passing Marks',
                   align: 'left',
+                  minWidth: 140,
                   filterType: 'number',
                 },
                 {
                   id: 'marksStatus',
                   label: 'Marks Status',
                   filterType: 'enum',
+                  minWidth: 130,
                   sticky: true,
                   enumOptions: ScheduleExamStatusOptions,
                   align: 'left',

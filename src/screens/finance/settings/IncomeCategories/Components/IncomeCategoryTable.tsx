@@ -51,6 +51,18 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         ),
       },
       {
+        id: 'tags',
+        label: 'Tags',
+        align: 'left',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {Array.isArray(value) && value.length > 0
+              ? value.map((tag) => `${tag}`).join(' ')
+              : '-'}
+          </Typography>
+        ),
+      },
+      {
         id: 'description',
         label: 'Description',
         align: 'left',

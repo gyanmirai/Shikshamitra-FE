@@ -5,7 +5,7 @@ import type { Division } from 'src/types/school';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import RoomIcon from '@mui/icons-material/Room';
-import { Chip, Grid, Stack, Typography } from '@mui/material';
+import { Box, Chip, Grid, Stack, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import type { IRoomDetails, IExamFormValues, ISubjectRoomDetail } from '../type';
@@ -32,34 +32,42 @@ const RoomAllocationReview = ({ formik }: { formik: FormikProps<IExamFormValues>
     () => allClass.find((cls: any) => cls.id === formik.values.className)?.divisions || [],
     [allClass, formik.values.className]
   );
+  const hasAnyRoomAssigned = Object.values(formik?.values?.roomDetails ?? {}).some((subject: any) =>
+    Object.values(subject?.divisions ?? {}).some(
+      (div: any) => Array.isArray(div?.roomIds) && div.roomIds.length > 0
+    )
+  );
 
   return (
-    <SectionCard title="Room Allocation">
-      {Object.entries(roomDetails as IRoomDetails).map(
-        ([subjectName, subjectDetail]: [string, ISubjectRoomDetail]) => (
-          <Grid size={{ xs: 12 }} key={subjectName}>
-            <SectionCard key={subjectName} title={`${subjectName}`}>
-              {Object.entries(subjectDetail.divisions).map(([divisionName, divisionData]) => (
-                <Grid size={{ xs: 12 }} display="flex" flexDirection="column" key={divisionName}>
-                  <Typography fontWeight={600} display="flex" alignItems="center" mb={1}>
-                    <RoomIcon sx={{ fontSize: 18, mr: 0.5, color: 'primary.main' }} />
-                    Division :{' '}
-                    {divisions?.find((div: Division) => div.id === divisionName)?.name ||
-                      divisionName}
-                  </Typography>
-
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
-                    {divisionData.roomIds?.map((room: string, index: number) => (
-                      <Chip key={index} label={`${room}`} variant="outlined" />
-                    ))}
-                  </Stack>
-                </Grid>
-              ))}
-            </SectionCard>
-          </Grid>
-        )
+    <>
+      {hasAnyRoomAssigned && (
+        <SectionCard title="Room Allocation">
+          {Object.entries(roomDetails as IRoomDetails).map(
+            ([subjectName, subjectDetail]: [string, ISubjectRoomDetail]) => (
+              <Grid size={{ xs: 6 }} key={subjectName} sx={{ mb: -3 }}>
+                <SectionCard key={subjectName} title={`${subjectName}`}>
+                  {Object.entries(subjectDetail.divisions).map(([divisionName, divisionData]) => (
+                    <Box display="flex" flexDirection="column">
+                      <Typography fontWeight={600} display="flex" alignItems="center" mb={1}>
+                        <RoomIcon sx={{ fontSize: 18, mr: 0.5, color: 'primary.main' }} />
+                        Division :{' '}
+                        {divisions?.find((div: Division) => div.id === divisionName)?.name ||
+                          divisionName}
+                      </Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        {divisionData.roomIds?.map((room: string, index: number) => (
+                          <Chip key={index} label={`${room}`} variant="outlined" />
+                        ))}
+                      </Stack>
+                    </Box>
+                  ))}
+                </SectionCard>
+              </Grid>
+            )
+          )}
+        </SectionCard>
       )}
-    </SectionCard>
+    </>
   );
 };
 export default RoomAllocationReview;

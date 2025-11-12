@@ -1,7 +1,7 @@
 [
     {
       "id": 1,
-      "name": "Standard Academic Scale",
+      "name": "80 Marks Week Exam Grade",
       "totalMarks": 80,
       "gradingScale": [
         { "minMarks": 72, "maxMarks": 80, "grade": "A+" },
@@ -15,7 +15,7 @@
     },
     {
       "id": 2,
-      "name": "Competitive Examination Scale",
+      "name": "Schedule Exam grade",
       "totalMarks": 100,
       "gradingScale": [
         { "minMarks": 90, "maxMarks": 100, "grade": "A+" },
@@ -29,7 +29,7 @@
     },
     {
       "id": 3,
-      "name": "Elementary Level Scale",
+      "name": "50 Marks Exam",
       "totalMarks": 50,
       "gradingScale": [
         { "minMarks": 45, "maxMarks": 50, "grade": "A+" },

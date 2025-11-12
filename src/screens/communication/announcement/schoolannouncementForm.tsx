@@ -95,6 +95,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
             <Scrollbar sx={{ p: 2, height: '100%' }}>
               <Grid size={{ xs: 12 }}>
                 <SectionCard title="Basic Information">
+                  {/* Title TextField and Announcement Type Autocomplete */}
                   <Grid size={{ xs: 12, md: 6, sm: 3 }}>
                     <ShakingTextField error={!!(formik.touched.title && formik.errors.title)}>
                       <TextField
@@ -120,6 +121,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                       />
                     </ShakingTextField>
                   </Grid>
+                  {/* Announcement Type Autocomplete and Audience Autocomplete */}
                   <Grid size={{ xs: 12, md: 6, sm: 3 }}>
                     <ShakingTextField error={!!(formik.touched.type && formik.errors.type)}>
                       <Autocomplete
@@ -187,6 +189,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                       />
                     </ShakingTextField>
                   </Grid>
+                  {/* Audience Autocomplete and Importance Level Autocomplete */}
                   <Grid size={{ xs: 12, md: 6, sm: 3 }}>
                     <ShakingTextField error={!!(formik.touched.audience && formik.errors.audience)}>
                       <Autocomplete
@@ -194,15 +197,11 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                         disableCloseOnSelect
                         options={options}
                         getOptionLabel={(option) => option?.label || ''}
-                        value={formik.values.audience
-                          .map((val) => options.find((opt) => opt.value === val))
-                          .filter(Boolean)}
-                        onChange={(_, newValue) =>
-                          formik.setFieldValue(
-                            'audience',
-                            newValue.map((opt) => opt?.value)
-                          )
-                        }
+                        value={formik.values.audience}
+                        onChange={(_, newValue) => {
+                          formik.setFieldValue('audience', newValue);
+                        }}
+                        isOptionEqualToValue={(option, value) => option.value === value.value}
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip
@@ -233,13 +232,18 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                             fullWidth
                             size="small"
                             error={formik.touched.audience && Boolean(formik.errors.audience)}
-                            helperText={formik.touched.audience && formik.errors.audience}
+                            helperText={
+                              Array.isArray(formik.errors.audience)
+                                ? formik.errors.audience.join(', ')
+                                : (formik.touched.audience && formik.errors.audience) || undefined
+                            }
                           />
                         )}
                         sx={{ minWidth: 300 }}
                       />
                     </ShakingTextField>
                   </Grid>
+                  {/* Importance Level Autocomplete and Description Editor */}
                   <Grid size={{ xs: 12, md: 6, sm: 3 }}>
                     <ShakingTextField
                       error={!!(formik.touched.importance_level && formik.errors.importance_level)}
@@ -296,7 +300,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                       />
                     </ShakingTextField>
                   </Grid>
-
+                  {/* Description Editor and File Uploader */}
                   <Grid size={{ xs: 12 }}>
                     <Editor
                       value={formik.values.description}
@@ -319,7 +323,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                       }}
                     />
                   </Grid>
-
+                  {/* File Uploader */}
                   <Grid size={{ xs: 12 }}>
                     <FileUploader
                       value={formik.values.attachment as any}
@@ -332,7 +336,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                   </Grid>
                 </SectionCard>
               </Grid>
-
+              {/* Notification Preferences Checkboxes */}
               <Grid size={{ xs: 12 }}>
                 <SectionCard title="Delivery Channels">
                   <Grid size={{ xs: 12 }}>

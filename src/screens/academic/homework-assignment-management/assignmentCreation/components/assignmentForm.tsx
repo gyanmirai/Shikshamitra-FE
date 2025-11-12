@@ -6,7 +6,9 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
+import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -15,13 +17,8 @@ import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
-import {
-  Box,
-  Grid,
-  TextField,
-  Typography,
-} from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import { getAssignmentInitialValues } from './assignmentInitialValues';
@@ -181,6 +178,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       formik.setFieldValue('divisions', newDivisions);
                       formik.setFieldValue('students', selectedDivs.length ? allStudentIds : []);
                     }}
+                    labelKey="name"
+                    valueKey="name"
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     error={!!(formik.touched.divisions && formik.errors.divisions)}
                     helperText={
@@ -288,13 +287,14 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       >
                         <DateTimePicker
                           label="Publish Date *"
-                          value={div.publishDate ? dayjs(div.publishDate) : null}
+                          value={div.publishDate}
                           onChange={(val) =>
                             formik.setFieldValue(`divisions[${idx}].publishDate`, val)
                           }
                           minDate={dayjs(currentYear?.startDate)}
                           maxDate={dayjs(currentYear?.endDate)}
-                          minDateTime={dayjs()}
+                          // minDateTime={dayjs()}
+                          format="DD/MM/YYYY hh:mm"
                           slotProps={{
                             textField: {
                               fullWidth: true,
@@ -304,6 +304,11 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                                 formik.errors.divisions?.[idx]?.publishDate &&
                                 formik.touched.divisions?.[idx]?.publishDate
                               ),
+                              helperText:
+                                formik.touched.divisions?.[idx]?.publishDate &&
+                                typeof formik.errors.divisions?.[idx] === 'object'
+                                  ? (formik.errors.divisions?.[idx] as any)?.publishDate
+                                  : '',
                             },
                           }}
                         />
@@ -322,10 +327,11 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                       >
                         <DateTimePicker
                           label="Due Date *"
-                          value={div.dueDate ? dayjs(div.dueDate) : null}
+                          value={div.dueDate}
                           onChange={(val) => formik.setFieldValue(`divisions[${idx}].dueDate`, val)}
                           disabled={!div.publishDate}
-                          minDateTime={dayjs()}
+                          format="DD/MM/YYYY hh:mm"
+                          // minDateTime={dayjs()}
                           minDate={dayjs(currentYear?.startDate)}
                           maxDate={dayjs(currentYear?.endDate)}
                           slotProps={{
@@ -337,6 +343,11 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
                                 formik.errors.divisions?.[idx]?.dueDate &&
                                 formik.touched.divisions?.[idx]?.dueDate
                               ),
+                              helperText:
+                                formik.touched.divisions?.[idx]?.dueDate &&
+                                typeof formik.errors.divisions?.[idx] === 'object'
+                                  ? (formik.errors.divisions?.[idx] as any)?.dueDate
+                                  : '',
                             },
                           }}
                         />
@@ -349,6 +360,33 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
           )}
         </Scrollbar>
       </Box>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => onClose(null, false)}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={() => {
+            // formik.setFieldValue('status', 1);
+            formik.handleSubmit();
+          }}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={editData ? 16 : 20}
+              height={editData ? 16 : 20}
+            />
+          }
+        >
+          {editData ? 'Update' : 'Submit'}
+        </Button>
+      </DialogActions>
     </BackPopUpChecked>
   );
 };

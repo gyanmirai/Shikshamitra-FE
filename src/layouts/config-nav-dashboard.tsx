@@ -589,6 +589,13 @@ const classManagementModule = {
           shortcutKey: 'Alt+A+Z',
           shortcutKeyName: 'Alt+A+Z',
         },
+        {
+          title: 'Notification',
+          path: '/classManagement/notification-management',
+          _action: 'notification-management',
+          shortcutKey: 'Alt+A+N',
+          shortcutKeyName: 'Alt+A+N',
+        },
       ],
     },
   ],
@@ -671,7 +678,6 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+C+3',
               shortcutKeyName: 'Alt+A+C+3',
               disabled: !isDdvs,
-              caption: 'Coming Soon',
             },
             {
               title: 'Setting',
@@ -703,7 +709,6 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKey: 'Alt+A+T+3',
               shortcutKeyName: 'Alt+A+T+3',
               disabled: !isDdvs,
-              caption: 'Coming Soon',
             },
             {
               title: 'Setting',
@@ -1184,26 +1189,26 @@ const financeModule = {
         },
         {
           title: 'Charges',
-          path: '',
+          path: '/finance/charge-management',
           _action: 'fee-charges',
           shortcutKey: 'Alt+F+3',
           shortcutKeyName: 'Alt+F+3',
-          children: [
-            {
-              title: 'Assign Charge',
-              path: '/finance/charge-management/chargesRequest',
-              _action: 'charges-request',
-              shortcutKey: 'Alt+F+3',
-              shortcutKeyName: 'Alt+F+3',
-            },
-            {
-              title: 'Charges List',
-              path: '/finance/charge-management/chargesList',
-              _action: 'charges-list',
-              shortcutKey: 'Alt+F+4',
-              shortcutKeyName: 'Alt+F+4',
-            },
-          ],
+          // children: [
+          //   {
+          //     title: 'Assign Charge',
+          //     path: '/finance/charge-management/chargesRequest',
+          //     _action: 'charges-request',
+          //     shortcutKey: 'Alt+F+3',
+          //     shortcutKeyName: 'Alt+F+3',
+          //   },
+          //   {
+          //     title: 'Charges List',
+          //     path: '/finance/charge-management/chargesList',
+          //     _action: 'charges-list',
+          //     shortcutKey: 'Alt+F+4',
+          //     shortcutKeyName: 'Alt+F+4',
+          //   },
+          // ],
         },
         {
           title: 'Fee Refund',
@@ -1214,26 +1219,26 @@ const financeModule = {
         },
         {
           title: 'Concession',
-          path: '',
+          path: '/finance/concession',
           _action: 'fee-concession',
           shortcutKey: 'Alt+F+5',
           shortcutKeyName: 'Alt+F+5',
-          children: [
-            {
-              title: 'Concession Request',
-              path: '/finance/concession/concessionRequest',
-              _action: 'fee-structure-overview',
-              shortcutKey: 'Alt+F+3',
-              shortcutKeyName: 'Alt+F+3',
-            },
-            {
-              title: 'Concession List',
-              path: '/finance/concession/concessionList',
-              _action: 'student-fee-strcuture',
-              shortcutKey: 'Alt+F+4',
-              shortcutKeyName: 'Alt+F+4',
-            },
-          ],
+          // children: [
+          //   {
+          //     title: 'Concession Request',
+          //     path: '/finance/concession/concessionRequest',
+          //     _action: 'fee-structure-overview',
+          //     shortcutKey: 'Alt+F+3',
+          //     shortcutKeyName: 'Alt+F+3',
+          //   },
+          //   {
+          //     title: 'Concession List',
+          //     path: '/finance/concession/concessionList',
+          //     _action: 'student-fee-strcuture',
+          //     shortcutKey: 'Alt+F+4',
+          //     shortcutKeyName: 'Alt+F+4',
+          //   },
+          // ],
         },
         {
           title: 'Invoice & Receipt',

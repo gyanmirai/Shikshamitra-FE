@@ -5,21 +5,18 @@ import type { Board, Medium } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
+import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetConcessionsQuery } from 'src/redux/finance/ConcessionManagement/concessionApi';
 
 import StudentConcessionListTable from './ConcessionListTable';
-import ViewStudentAllConcession from '../Components/ViewStudentAllConcession';
 
 import type { IConcession, IStudentInfo } from '../type';
 
@@ -102,7 +99,7 @@ const ConcessionList = () => {
         }}
       />
 
-      <CustomDialog
+      {/* <CustomDialog
         open={onViewAllConcession.value}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
@@ -132,7 +129,7 @@ const ConcessionList = () => {
             }}
           />
         )}
-      </CustomDialog>
+      </CustomDialog> */}
 
       <ConfirmDialog
         open={publish_modal.value}

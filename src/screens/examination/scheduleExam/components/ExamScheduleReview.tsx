@@ -31,6 +31,7 @@ const ExamScheduleReview = ({ formik }: { formik: FormikProps<IExamFormValues> }
           {
             id: 'examDate',
             label: 'Date',
+            filterType: 'date',
             align: 'left',
             render: (value: any) => (value ? dayjs(value).format('DD-MM-YYYY') : '-'),
           },
@@ -49,12 +50,14 @@ const ExamScheduleReview = ({ formik }: { formik: FormikProps<IExamFormValues> }
           {
             id: 'totalMarks',
             label: 'Total Marks',
+            filterType: 'number',
             align: 'left',
             render: (value: any) => (value != null ? value : '-'),
           },
           {
             id: 'passingMarks',
             label: 'Passing Marks',
+            filterType: 'number',
             align: 'left',
             render: (value: any) => (value != null ? value : '-'),
           },

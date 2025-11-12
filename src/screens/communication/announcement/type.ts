@@ -1,19 +1,21 @@
 import type { Dayjs } from 'dayjs';
+import type { ReactNode } from 'react';
 
 import type { IImportanceLevel } from '../settings/ImportanceLevel/type';
 import type { IAnnouncementType } from '../settings/AnnouncementType/Components/type';
 
 export interface IAudience {
+  name: ReactNode;
+  color: string | undefined;
   value: string;
-  name: string;
-  color: string;
+  label: string;
 }
 
 export interface ISchoolWiseAnnouncement {
   id: string;
   title: string;
   description: string;
-  audience: string[];
+  audience: IAudience[];
   startDate: Dayjs | null;
   endDate: Dayjs | null;
   createdBy: string;
@@ -51,7 +53,7 @@ export interface ISchoolWiseAnnouncementFormValues {
   title: string;
   description: string;
   status: string;
-  audience: string[];
+  audience: IAudience[];
   organization: string[];
   publishDate: Dayjs | string | null;
   expiryDate: Dayjs | string | null;
@@ -110,7 +112,7 @@ export interface IClassWiseAnnouncement {
 export interface IClassWiseAnnouncementFormValues {
   title: string;
   description: string;
-  audience: string[];
+  audience: IAudience[];
   publishDate: Dayjs | null;
   expiryDate: Dayjs | null;
   className: string[];
@@ -133,7 +135,7 @@ export interface IClassWiseAnnouncementFormProps {
 export interface IClassWiseAnnouncementFormikValues {
   title: string;
   description: string;
-  audience: string[];
+  audience: IAudience[];
   publishDate: Dayjs | null;
   expiryDate: Dayjs | null;
   className: string[];
