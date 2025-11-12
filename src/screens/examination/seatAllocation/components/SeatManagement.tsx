@@ -89,7 +89,7 @@ const SeatManagement = ({
               .sort((a, b) => a - b);
 
             return (
-              <Grid size={6} key={`column-${colIdx}`}>
+              <Grid size={4} key={`column-${colIdx}`}>
                 <Typography align="center" variant="subtitle2" sx={{ mb: 2 }}>
                   Column {colIdx + 1}
                 </Typography>
@@ -132,7 +132,6 @@ const SeatManagement = ({
           justifyContent: 'center',
           alignItems: 'center',
           gap: 3,
-
           // borderTop: '1px solid #e0e0e0',
         }}
       >

@@ -75,7 +75,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
               </Box>
             </Grid>
 
-            <Grid size={{ xs: 12 }} mb={-2}>
+            <Grid size={{ xs: 12 }}>
               <Typography variant="subtitle2">Student Submission</Typography>
             </Grid>
 

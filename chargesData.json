@@ -3,120 +3,94 @@
     {
       "id": "CH-001",
       "category": "Library Fine",
-      "class": "10",  
-      "divisions": ["A", "B"],
-      "students": 70,
-      "studentList": [
-        { "id": "ST-101", "name": "Aarav Sharma", "division": "A" },
-        { "id": "ST-102", "name": "Priya Patel", "division": "A" },
-        { "id": "ST-103", "name": "Rahul Verma", "division": "B" },
-        { "id": "ST-104", "name": "Sneha Iyer", "division": "B" }
-      ],
+      "class": "10",
+      "division": "A",
+      "rollNo": 1,
+      "grNo" : "GR0012",
+      "studentName": "Atre Prerna Bhanudas",
       "amount": "15,000",
       "priority": 1,
       "dueDate": "2025-09-15T09:00:00.000Z",
-      "status": 1,
+      "status": 0,
       "description": "Annual tuition fee applicable for Class 10 students in divisions A and B.",
       "academicYear": "2025-2026",
       "board": "CBSE",
       "medium": "English",
       "additionalNotes": "Installments allowed in two parts.",
-      "charges" : [
-  {
-    "id": "1",
-    "category": "Tuition",
-    "class": "10",
-    "divisions": ["A", "B"],
-    "students": 60,
-    "studentList": [
-      {
-        "id": "S101",
-        "name": "Rohan Sharma",
-        "division": "A",
-        "rollNo": "12",
-        "grNo": "GR0012"
-      },
-      {
-        "id": "S102",
-        "name": "Priya Verma",
-        "division": "B",
-        "rollNo": "8",
-        "grNo": "GR0020"
-      }
-    ],
-    "amount": 5000,
-    "priority": 1,
-      "dueDate": "2025-09-15T09:00:00.000Z",
-    "status": 1,
-    "description": "Monthly tuition fees for October",
-    "academicYear": "2025-26",
-    "board": "CBSE",
-    "medium": "English",
-    "additionalNotes": "Late fee applicable after due date",
-    "requestorName": "Mr. Gupta",
-    "department": "Accounts",
-    "requestedOn": "2025-09-20"
-  },
-  {
-    "id": "2",
-    "category": "Library",
-    "class": "10",
-    "divisions": ["C"],
-    "students": 25,
-    "studentList": [
-      {
-        "id": "S201",
-        "name": "Aman Singh",
-        "division": "C",
-        "rollNo": "15",
-        "grNo": "GR0031"
-      }
-    ],
-    "amount": 1000,
-    "priority": 2,
-      "dueDate": "2025-10-15T09:00:00.000Z",
-    "status": 0,
-    "description": "Annual library subscription fee",
-    "academicYear": "2025-26",
-    "board": "CBSE",
-    "medium": "English",
-    "requestorName": "Mrs. Sharma",
-    "department": "Library",
-    "requestedOn": "2025-09-25"
-  },
-  {
-    "id": "3",
-    "category": "Sports",
-    "class": "9",
-    "divisions": ["A"],
-    "students": 40,
-    "amount": 1500,
-    "priority": 3,
-      "dueDate": "2024-10-15T09:00:00.000Z",
-    "status": 1,
-    "description": "Sports and games fund",
-    "academicYear": "2025-26",
-    "board": "ICSE",
-    "medium": "Hindi",
-    "additionalNotes": "Covers football and cricket kits",
-    "requestorName": "Mr. Das",
-    "department": "Sports",
-    "requestedOn": "2025-09-28"
-  }
-]
+      "charges": [
+        {
+          "id": "1",
+          "category": "Tuition",
+          "class": "10",
+          "divisions": ["A", "B"],
+          "students": 60,
+          "studentList": [
+            { "id": "S101", "name": "Rohan Sharma", "division": "A", "rollNo": "12", "grNo": "GR0012" },
+            { "id": "S102", "name": "Priya Verma", "division": "B", "rollNo": "8", "grNo": "GR0020" }
+          ],
+          "amount": 5000,
+          "priority": 1,
+          "dueDate": "2025-09-15T09:00:00.000Z",
+          "status": 1,
+          "description": "Monthly tuition fees for October",
+          "academicYear": "2025-26",
+          "board": "CBSE",
+          "medium": "English",
+          "additionalNotes": "Late fee applicable after due date",
+          "requestorName": "Mr. Gupta",
+          "department": "Accounts",
+          "requestedOn": "2025-09-20"
+        },
+        {
+          "id": "2",
+          "category": "Library",
+          "class": "10",
+          "divisions": ["C"],
+          "students": 25,
+          "studentList": [
+            { "id": "S201", "name": "Aman Singh", "division": "C", "rollNo": "15", "grNo": "GR0031" }
+          ],
+          "amount": 1000,
+          "priority": 2,
+          "dueDate": "2025-10-15T09:00:00.000Z",
+          "status": 0,
+          "description": "Annual library subscription fee",
+          "academicYear": "2025-26",
+          "board": "CBSE",
+          "medium": "English",
+          "requestorName": "Mrs. Sharma",
+          "department": "Library",
+          "requestedOn": "2025-09-25"
+        },
+        {
+          "id": "3",
+          "category": "Sports",
+          "class": "9",
+          "divisions": ["A"],
+          "students": 40,
+          "amount": 1500,
+          "priority": 3,
+          "dueDate": "2024-10-15T09:00:00.000Z",
+          "status": 1,
+          "description": "Sports and games fund",
+          "academicYear": "2025-26",
+          "board": "ICSE",
+          "medium": "Hindi",
+          "additionalNotes": "Covers football and cricket kits",
+          "requestorName": "Mr. Das",
+          "department": "Sports",
+          "requestedOn": "2025-09-28"
+        }
+      ]
     },
     {
       "id": "CH-002",
       "category": "Transport Damage",
       "class": "9",
-      "divisions": ["A", "C"],
-      "students": 55,
-      "studentList": [
-        { "id": "ST-201", "name": "Karan Mehta", "division": "A" },
-        { "id": "ST-202", "name": "Riya Nair", "division": "A" },
-        { "id": "ST-203", "name": "Aditya Joshi", "division": "C" },
-        { "id": "ST-204", "name": "Megha Gupta", "division": "C" }
-      ],
+      "division": "A",
+      "rollNo": 2,
+         "grNo" : "GR0022",
+      "studentName": "Karan Mehta",
       "amount": "5,000",
       "priority": 2,
       "dueDate": "2025-10-15T09:00:00.000Z",
@@ -126,103 +100,80 @@
       "board": "CBSE",
       "medium": "English",
       "additionalNotes": "Includes Physics, Chemistry, and Biology labs.",
-            "charges" : [
-  {
-    "id": "1",
-    "category": "Tuition",
-    "class": "10",
-    "divisions": ["A", "B"],
-    "students": 60,
-    "studentList": [
-      {
-        "id": "S101",
-        "name": "Rohan Sharma",
-        "division": "A",
-        "rollNo": "12",
-        "grNo": "GR0012"
-      },
-      {
-        "id": "S102",
-        "name": "Priya Verma",
-        "division": "B",
-        "rollNo": "8",
-        "grNo": "GR0020"
-      }
-    ],
-    "amount": 5000,
-    "priority": 1,
-    "dueDate": "2024-09-15T09:00:00.000Z",
-    "status": 2,
-    "description": "Monthly tuition fees for October",
-    "academicYear": "2025-26",
-    "board": "CBSE",
-    "medium": "English",
-    "additionalNotes": "Late fee applicable after due date",
-    "requestorName": "Mr. Gupta",
-    "department": "Accounts",
-    "requestedOn": "2025-09-20"
-  },
-  {
-    "id": "2",
-    "category": "Library",
-    "class": "10",
-    "divisions": ["C"],
-    "students": 25,
-    "studentList": [
-      {
-        "id": "S201",
-        "name": "Aman Singh",
-        "division": "C",
-        "rollNo": "15",
-        "grNo": "GR0031"
-      }
-    ],
-    "amount": 1000,
-    "priority": 2,
-    "dueDate": "2024-10-20T09:00:00.000Z",
-    "status": 0,
-    "description": "Annual library subscription fee",
-    "academicYear": "2025-26",
-    "board": "CBSE",
-    "medium": "English",
-    "requestorName": "Mrs. Sharma",
-    "department": "Library",
-    "requestedOn": "2025-09-25"
-  },
-  {
-    "id": "3",
-    "category": "Sports",
-    "class": "9",
-    "divisions": ["A"],
-    "students": 40,
-    "amount": 1500,
-    "priority": 3,
-    "dueDate": "2026-09-15T09:00:00.000Z",
-    "status": 0,
-    "description": "Sports and games fund",
-    "academicYear": "2025-26",
-    "board": "ICSE",
-    "medium": "Hindi",
-    "additionalNotes": "Covers football and cricket kits",
-    "requestorName": "Mr. Das",
-    "department": "Sports",
-    "requestedOn": "2025-09-28"
-  }
-]
+      "charges": [
+        {
+          "id": "1",
+          "category": "Tuition",
+          "class": "10",
+          "divisions": ["A", "B"],
+          "students": 60,
+          "studentList": [
+            { "id": "S101", "name": "Rohan Sharma", "division": "A", "rollNo": "12", "grNo": "GR0012" },
+            { "id": "S102", "name": "Priya Verma", "division": "B", "rollNo": "8", "grNo": "GR0020" }
+          ],
+          "amount": 5000,
+          "priority": 1,
+          "dueDate": "2024-09-15T09:00:00.000Z",
+          "status": 2,
+          "description": "Monthly tuition fees for October",
+          "academicYear": "2025-26",
+          "board": "CBSE",
+          "medium": "English",
+          "additionalNotes": "Late fee applicable after due date",
+          "requestorName": "Mr. Gupta",
+          "department": "Accounts",
+          "requestedOn": "2025-09-20"
+        },
+        {
+          "id": "2",
+          "category": "Library",
+          "class": "10",
+          "divisions": ["C"],
+          "students": 25,
+          "studentList": [
+            { "id": "S201", "name": "Aman Singh", "division": "C", "rollNo": "15", "grNo": "GR0031" }
+          ],
+          "amount": 1000,
+          "priority": 2,
+          "dueDate": "2024-10-20T09:00:00.000Z",
+          "status": 0,
+          "description": "Annual library subscription fee",
+          "academicYear": "2025-26",
+          "board": "CBSE",
+          "medium": "English",
+          "requestorName": "Mrs. Sharma",
+          "department": "Library",
+          "requestedOn": "2025-09-25"
+        },
+        {
+          "id": "3",
+          "category": "Sports",
+          "class": "9",
+          "divisions": ["A"],
+          "students": 40,
+          "amount": 1500,
+          "priority": 3,
+          "dueDate": "2026-09-15T09:00:00.000Z",
+          "status": 0,
+          "description": "Sports and games fund",
+          "academicYear": "2025-26",
+          "board": "ICSE",
+          "medium": "Hindi",
+          "additionalNotes": "Covers football and cricket kits",
+          "requestorName": "Mr. Das",
+          "department": "Sports",
+          "requestedOn": "2025-09-28"
+        }
+      ]
     },
     {
       "id": "CH-003",
       "category": "Hostel Maintenance",
       "class": "8",
-      "divisions": ["A", "B", "C"],
-      "students": 120,
-      "studentList": [
-        { "id": "ST-301", "name": "Manav Desai", "division": "A" },
-        { "id": "ST-302", "name": "Ananya Reddy", "division": "B" },
-        { "id": "ST-303", "name": "Ishaan Singh", "division": "C" },
-        { "id": "ST-304", "name": "Pooja Kulkarni", "division": "B" },
-        { "id": "ST-305", "name": "Vikram Chauhan", "division": "A" }
-      ],
+         "grNo" : "GR0013",
+      "division": "B",
+      "rollNo": 15,
+      "studentName": "Ananya Reddy",
       "amount": "3,000",
       "priority": 0,
       "dueDate": "2025-09-20T09:00:00.000Z",
@@ -232,102 +183,80 @@
       "board": "CBSE",
       "medium": "English",
       "additionalNotes": "Covers ground maintenance and coaching charges.",
-            "charges" : [
-  {
-    "id": "1",
-    "category": "Tuition",
-    "class": "10",
-    "divisions": ["A", "B"],
-    "students": 60,
-    "studentList": [
-      {
-        "id": "S101",
-        "name": "Rohan Sharma",
-        "division": "A",
-        "rollNo": "12",
-        "grNo": "GR0012"
-      },
-      {
-        "id": "S102",
-        "name": "Priya Verma",
-        "division": "B",
-        "rollNo": "8",
-        "grNo": "GR0020"
-      }
-    ],
-    "amount": 5000,
-    "priority": 1,
-      "dueDate": "2026-09-22T09:00:00.000Z",
-    "status": 0,
-    "description": "Monthly tuition fees for October",
-    "academicYear": "2025-26",
-    "board": "CBSE",
-    "medium": "English",
-    "additionalNotes": "Late fee applicable after due date",
-    "requestorName": "Mr. Gupta",
-    "department": "Accounts",
-    "requestedOn": "2025-09-20"
-  },
-  {
-    "id": "2",
-    "category": "Library",
-    "class": "10",
-    "divisions": ["C"],
-    "students": 25,
-    "studentList": [
-      {
-        "id": "S201",
-        "name": "Aman Singh",
-        "division": "C",
-        "rollNo": "15",
-        "grNo": "GR0031"
-      }
-    ],
-    "amount": 1000,
-    "priority": 2,
-      "dueDate": "2025-09-15T09:00:00.000Z",
-    "status": 0,
-    "description": "Annual library subscription fee",
-    "academicYear": "2025-26",
-    "board": "CBSE",
-    "medium": "English",
-    "requestorName": "Mrs. Sharma",
-    "department": "Library",
-    "requestedOn": "2025-09-25"
-  },
-  {
-    "id": "3",
-    "category": "Sports",
-    "class": "9",
-    "divisions": ["A"],
-    "students": 40,
-    "amount": 1500,
-    "priority": 3,
-      "dueDate": "2025-09-15T09:00:00.000Z",
-    "status": 1,
-    "description": "Sports and games fund",
-    "academicYear": "2025-26",
-    "board": "ICSE",
-    "medium": "Hindi",
-    "additionalNotes": "Covers football and cricket kits",
-    "requestorName": "Mr. Das",
-    "department": "Sports",
-    "requestedOn": "2025-09-28"
-  }
-]
+      "charges": [
+        {
+          "id": "1",
+          "category": "Tuition",
+          "class": "10",
+          "divisions": ["A", "B"],
+          "students": 60,
+          "studentList": [
+            { "id": "S101", "name": "Rohan Sharma", "division": "A", "rollNo": "12", "grNo": "GR0012" },
+            { "id": "S102", "name": "Priya Verma", "division": "B", "rollNo": "8", "grNo": "GR0020" }
+          ],
+          "amount": 5000,
+          "priority": 1,
+          "dueDate": "2026-09-22T09:00:00.000Z",
+          "status": 0,
+          "description": "Monthly tuition fees for October",
+          "academicYear": "2025-26",
+          "board": "CBSE",
+          "medium": "English",
+          "additionalNotes": "Late fee applicable after due date",
+          "requestorName": "Mr. Gupta",
+          "department": "Accounts",
+          "requestedOn": "2025-09-20"
+        },
+        {
+          "id": "2",
+          "category": "Library",
+          "class": "10",
+          "divisions": ["C"],
+          "students": 25,
+          "studentList": [
+            { "id": "S201", "name": "Aman Singh", "division": "C", "rollNo": "15", "grNo": "GR0031" }
+          ],
+          "amount": 1000,
+          "priority": 2,
+          "dueDate": "2025-09-15T09:00:00.000Z",
+          "status": 0,
+          "description": "Annual library subscription fee",
+          "academicYear": "2025-26",
+          "board": "CBSE",
+          "medium": "English",
+          "requestorName": "Mrs. Sharma",
+          "department": "Library",
+          "requestedOn": "2025-09-25"
+        },
+        {
+          "id": "3",
+          "category": "Sports",
+          "class": "9",
+          "divisions": ["A"],
+          "students": 40,
+          "amount": 1500,
+          "priority": 3,
+          "dueDate": "2025-09-15T09:00:00.000Z",
+          "status": 1,
+          "description": "Sports and games fund",
+          "academicYear": "2025-26",
+          "board": "ICSE",
+          "medium": "Hindi",
+          "additionalNotes": "Covers football and cricket kits",
+          "requestorName": "Mr. Das",
+          "department": "Sports",
+          "requestedOn": "2025-09-28"
+        }
+      ]
     },
     {
       "id": "CH-004",
       "category": "Tuition Fees Fine",
       "class": "10",
-      "divisions": ["B", "C"],
-      "students": 65,
-      "studentList": [
-        { "id": "ST-401", "name": "Nikhil Bansal", "division": "B" },
-        { "id": "ST-402", "name": "Shruti Deshmukh", "division": "C" },
-        { "id": "ST-403", "name": "Arjun Malhotra", "division": "B" },
-        { "id": "ST-404", "name": "Divya Menon", "division": "C" }
-      ],
+         "grNo" : "GR0015",
+      "division": "B",
+      "rollNo": 3,
+      "studentName": "Nikhil Bansal",
       "amount": "2,500",
       "priority": 2,
       "dueDate": "2025-09-15T09:00:00.000Z",
@@ -337,102 +266,80 @@
       "board": "CBSE",
       "medium": "English",
       "additionalNotes": "Includes question paper printing and evaluation charges.",
-            "charges" : [
-  {
-    "id": "1",
-    "category": "Tuition",
-    "class": "10",
-    "divisions": ["A", "B"],
-    "students": 60,
-    "studentList": [
-      {
-        "id": "S101",
-        "name": "Rohan Sharma",
-        "division": "A",
-        "rollNo": "12",
-        "grNo": "GR0012"
-      },
-      {
-        "id": "S102",
-        "name": "Priya Verma",
-        "division": "B",
-        "rollNo": "8",
-        "grNo": "GR0020"
-      }
-    ],
-    "amount": 5000,
-    "priority": 1,
-      "dueDate": "2025-09-15T09:00:00.000Z",
-    "status": 1,
-    "description": "Monthly tuition fees for October",
-    "academicYear": "2025-26",
-    "board": "CBSE",
-    "medium": "English",
-    "additionalNotes": "Late fee applicable after due date",
-    "requestorName": "Mr. Gupta",
-    "department": "Accounts",
-    "requestedOn": "2025-09-20"
-  },
-  {
-    "id": "2",
-    "category": "Library",
-    "class": "10",
-    "divisions": ["C"],
-    "students": 25,
-    "studentList": [
-      {
-        "id": "S201",
-        "name": "Aman Singh",
-        "division": "C",
-        "rollNo": "15",
-        "grNo": "GR0031"
-      }
-    ],
-    "amount": 1000,
-    "priority": 2,
-      "dueDate": "2025-09-15T09:00:00.000Z",
-    "status": 0,
-    "description": "Annual library subscription fee",
-    "academicYear": "2025-26",
-    "board": "CBSE",
-    "medium": "English",
-    "requestorName": "Mrs. Sharma",
-    "department": "Library",
-    "requestedOn": "2025-09-25"
-  },
-  {
-    "id": "3",
-    "category": "Sports",
-    "class": "9",
-    "divisions": ["A"],
-    "students": 40,
-    "amount": 1500,
-    "priority": 3,
-      "dueDate": "2025-09-15T09:00:00.000Z",
-    "status": 1,
-    "description": "Sports and games fund",
-    "academicYear": "2025-26",
-    "board": "ICSE",
-    "medium": "Hindi",
-    "additionalNotes": "Covers football and cricket kits",
-    "requestorName": "Mr. Das",
-    "department": "Sports",
-    "requestedOn": "2025-09-28"
-  }
-]
+      "charges": [
+        {
+          "id": "1",
+          "category": "Tuition",
+          "class": "10",
+          "divisions": ["A", "B"],
+          "students": 60,
+          "studentList": [
+            { "id": "S101", "name": "Rohan Sharma", "division": "A", "rollNo": "12", "grNo": "GR0012" },
+            { "id": "S102", "name": "Priya Verma", "division": "B", "rollNo": "8", "grNo": "GR0020" }
+          ],
+          "amount": 5000,
+          "priority": 1,
+          "dueDate": "2025-09-15T09:00:00.000Z",
+          "status": 1,
+          "description": "Monthly tuition fees for October",
+          "academicYear": "2025-26",
+          "board": "CBSE",
+          "medium": "English",
+          "additionalNotes": "Late fee applicable after due date",
+          "requestorName": "Mr. Gupta",
+          "department": "Accounts",
+          "requestedOn": "2025-09-20"
+        },
+        {
+          "id": "2",
+          "category": "Library",
+          "class": "10",
+          "divisions": ["C"],
+          "students": 25,
+          "studentList": [
+            { "id": "S201", "name": "Aman Singh", "division": "C", "rollNo": "15", "grNo": "GR0031" }
+          ],
+          "amount": 1000,
+          "priority": 2,
+          "dueDate": "2025-09-15T09:00:00.000Z",
+          "status": 0,
+          "description": "Annual library subscription fee",
+          "academicYear": "2025-26",
+          "board": "CBSE",
+          "medium": "English",
+          "requestorName": "Mrs. Sharma",
+          "department": "Library",
+          "requestedOn": "2025-09-25"
+        },
+        {
+          "id": "3",
+          "category": "Sports",
+          "class": "9",
+          "divisions": ["A"],
+          "students": 40,
+          "amount": 1500,
+          "priority": 3,
+          "dueDate": "2025-09-15T09:00:00.000Z",
+          "status": 1,
+          "description": "Sports and games fund",
+          "academicYear": "2025-26",
+          "board": "ICSE",
+          "medium": "Hindi",
+          "additionalNotes": "Covers football and cricket kits",
+          "requestorName": "Mr. Das",
+          "department": "Sports",
+          "requestedOn": "2025-09-28"
+        }
+      ]
     },
     {
       "id": "CH-005",
       "category": "Competition Fees",
       "class": "7",
-      "divisions": ["A", "D"],
-      "students": 60,
-      "studentList": [
-        { "id": "ST-501", "name": "Rohan Khanna", "division": "A" },
-        { "id": "ST-502", "name": "Neha Choudhary", "division": "D" },
-        { "id": "ST-503", "name": "Siddharth Jain", "division": "A" },
-        { "id": "ST-504", "name": "Tanvi Shah", "division": "D" }
-      ],
+         "grNo" : "GR0015",
+      "division": "A",
+      "rollNo": 5,
+      "studentName": "Rohan Khanna",
       "amount": "1,200",
       "priority": 1,
       "dueDate": "2025-09-15T09:00:00.000Z",
@@ -442,89 +349,71 @@
       "board": "CBSE",
       "medium": "English",
       "additionalNotes": "Includes digital library and book lending services.",
-            "charges" : [
-  {
-    "id": "1",
-    "category": "Tuition",
-    "class": "10",
-    "divisions": ["A", "B"],
-    "students": 60,
-    "studentList": [
-      {
-        "id": "S101",
-        "name": "Rohan Sharma",
-        "division": "A",
-        "rollNo": "12",
-        "grNo": "GR0012"
-      },
-      {
-        "id": "S102",
-        "name": "Priya Verma",
-        "division": "B",
-        "rollNo": "8",
-        "grNo": "GR0020"
-      }
-    ],
-    "amount": 5000,
-    "priority": 1,
-      "dueDate": "2025-09-15T09:00:00.000Z",
-    "status": 1,
-    "description": "Monthly tuition fees for October",
-    "academicYear": "2025-26",
-    "board": "CBSE",
-    "medium": "English",
-    "additionalNotes": "Late fee applicable after due date",
-    "requestorName": "Mr. Gupta",
-    "department": "Accounts",
-    "requestedOn": "2025-09-20"
-  },
-  {
-    "id": "2",
-    "category": "Library",
-    "class": "10",
-    "divisions": ["C"],
-    "students": 25,
-    "studentList": [
-      {
-        "id": "S201",
-        "name": "Aman Singh",
-        "division": "C",
-        "rollNo": "15",
-        "grNo": "GR0031"
-      }
-    ],
-    "amount": 1000,
-    "priority": 2,
-      "dueDate": "2025-09-15T09:00:00.000Z",
-    "status": 0,
-    "description": "Annual library subscription fee",
-    "academicYear": "2025-26",
-    "board": "CBSE",
-    "medium": "English",
-    "requestorName": "Mrs. Sharma",
-    "department": "Library",
-    "requestedOn": "2025-09-25"
-  },
-  {
-    "id": "3",
-    "category": "Sports",
-    "class": "9",
-    "divisions": ["A"],
-    "students": 40,
-    "amount": 1500,
-    "priority": 3,
-      "dueDate": "2025-09-15T09:00:00.000Z",
-    "status": 1,
-    "description": "Sports and games fund",
-    "academicYear": "2025-26",
-    "board": "ICSE",
-    "medium": "Hindi",
-    "additionalNotes": "Covers football and cricket kits",
-    "requestorName": "Mr. Das",
-    "department": "Sports",
-    "requestedOn": "2025-09-28"
-  }
-]
+      "charges": [
+        {
+          "id": "1",
+          "category": "Tuition",
+          "class": "10",
+          "divisions": ["A", "B"],
+          "students": 60,
+          "studentList": [
+            { "id": "S101", "name": "Rohan Sharma", "division": "A", "rollNo": "12", "grNo": "GR0012" },
+            { "id": "S102", "name": "Priya Verma", "division": "B", "rollNo": "8", "grNo": "GR0020" }
+          ],
+          "amount": 5000,
+          "priority": 1,
+          "dueDate": "2025-09-15T09:00:00.000Z",
+          "status": 1,
+          "description": "Monthly tuition fees for October",
+          "academicYear": "2025-26",
+          "board": "CBSE",
+          "medium": "English",
+          "additionalNotes": "Late fee applicable after due date",
+          "requestorName": "Mr. Gupta",
+          "department": "Accounts",
+          "requestedOn": "2025-09-20"
+        },
+        {
+          "id": "2",
+          "category": "Library",
+          "class": "10",
+          "divisions": ["C"],
+          "students": 25,
+          "studentList": [
+            { "id": "S201", "name": "Aman Singh", "division": "C", "rollNo": "15", "grNo": "GR0031" }
+          ],
+          "amount": 1000,
+          "priority": 2,
+          "dueDate": "2025-09-15T09:00:00.000Z",
+          "status": 0,
+          "description": "Annual library subscription fee",
+          "academicYear": "2025-26",
+          "board": "CBSE",
+          "medium": "English",
+          "requestorName": "Mrs. Sharma",
+          "department": "Library",
+          "requestedOn": "2025-09-25"
+        },
+        {
+          "id": "3",
+          "category": "Sports",
+          "class": "9",
+          "divisions": ["A"],
+          "students": 40,
+          "amount": 1500,
+          "priority": 3,
+          "dueDate": "2025-09-15T09:00:00.000Z",
+          "status": 1,
+          "description": "Sports and games fund",
+          "academicYear": "2025-26",
+          "board": "ICSE",
+          "medium": "Hindi",
+          "additionalNotes": "Covers football and cricket kits",
+          "requestorName": "Mr. Das",
+          "department": "Sports",
+          "requestedOn": "2025-09-28"
+        }
+      ]
     }
   ],
  "studentChargeData": [

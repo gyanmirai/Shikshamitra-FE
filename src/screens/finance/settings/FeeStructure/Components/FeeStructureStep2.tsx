@@ -9,7 +9,6 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
@@ -112,39 +111,6 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                     >
                       {className.replace('Class ', '')}
                     </Button>
-                  </Box>
-                );
-              })}
-            </Box>
-          </Grid>
-
-          {/* Status Legend */}
-          <Grid size={12}>
-            <Box display="flex" alignItems="center" gap={3} mb={2}>
-              {[
-                FeeStructureClassStatusType.Current,
-                FeeStructureClassStatusType.Completed,
-                FeeStructureClassStatusType.Remaining,
-              ].map((statusKey) => {
-                const count = Object.values(formik.values.feeStructureClasses)
-                  .flat()
-                  .filter((cls: any) => cls.status === statusKey).length;
-
-                const dotColor =
-                  statusKey === FeeStructureClassStatusType.Current
-                    ? theme.vars.palette.info.main
-                    : statusKey === FeeStructureClassStatusType.Completed
-                      ? theme.vars.palette.success.main
-                      : theme.vars.palette.warning.main;
-
-                return (
-                  <Box key={statusKey} display="flex" alignItems="center" gap={1}>
-                    <FiberManualRecordIcon sx={{ fontSize: 12, color: dotColor.toString() }} />
-                    <Typography variant="body2" color="text.primary">
-                      {FeeStructureClassStatusType[statusKey]}{' '}
-                      {statusKey !== FeeStructureClassStatusType.Current &&
-                        `(${String(count).padStart(2, '0')})`}
-                    </Typography>
                   </Box>
                 );
               })}

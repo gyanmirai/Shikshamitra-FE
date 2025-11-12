@@ -21,7 +21,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { Box, Chip, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useGetBudgetOptionsQuery,
   useGetExpenseCategoryQuery,
@@ -182,6 +182,18 @@ const FinanceExpenseCategory = () => {
             align: 'left',
           },
           {
+            id: 'tags',
+            label: 'Tags',
+            align: 'left',
+            render: (value) => (
+              <Typography variant="caption" fontSize="13px">
+                {Array.isArray(value) && value.length > 0
+                  ? value.map((tag) => `${tag}`).join(' ')
+                  : '-'}
+              </Typography>
+            ),
+          },
+          {
             id: 'description',
             label: 'Description',
             minWidth: '300px',
@@ -243,17 +255,6 @@ const FinanceExpenseCategory = () => {
             </CustomTooltip>
           </Box>
         }
-        maxWidth="sm"
-        fullWidth
-        paperProps={{
-          sx: {
-            width: '580px',
-            maxWidth: '90vw',
-            maxHeight: '90vh',
-            display: 'flex',
-            flexDirection: 'column',
-          },
-        }}
       >
         <ExpenseCategoryDialog
           open={addDialog.value || editDialog.value}
@@ -304,6 +305,7 @@ interface ExpenseCategoryDialogProps {
 
 const ExpenseCategoryDialog = ({ open, onClose, editData, onSave }: ExpenseCategoryDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [tag, setTag] = useState('');
 
   // Get budget options from API
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -316,6 +318,10 @@ const ExpenseCategoryDialog = ({ open, onClose, editData, onSave }: ExpenseCateg
   const validationSchema = Yup.object().shape({
     expenseCategoryName: Yup.string().required('Expense Category Name is required'),
     description: Yup.string().optional(),
+    tags: Yup.array()
+      .of(Yup.string().required('Each tag must be a non-empty string'))
+      .min(1, 'At least one tag is required')
+      .required('Tags are required'),
   });
 
   // Initialize formik form with initial values and submit handler
@@ -323,6 +329,7 @@ const ExpenseCategoryDialog = ({ open, onClose, editData, onSave }: ExpenseCateg
     initialValues: {
       expenseCategoryName: editData?.expenseCategoryName || '',
       description: editData?.description || '',
+      tags: editData?.tags || [],
     },
     validationSchema,
     enableReinitialize: true,
@@ -345,6 +352,23 @@ const ExpenseCategoryDialog = ({ open, onClose, editData, onSave }: ExpenseCateg
     onClose(null, false);
   };
 
+  const handleKeyDown = (e: any) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const trimmed = tag.trim();
+      if (trimmed && !formik.values.tags.includes(trimmed)) {
+        formik.setFieldValue('tags', [...formik.values.tags, trimmed]);
+        setTag('');
+      }
+    }
+  };
+
+  const handleDelete = (deleteTag: any) => {
+    formik.setFieldValue(
+      'tags',
+      formik.values.tags.filter((t: string) => t !== deleteTag)
+    );
+  };
   return (
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -398,6 +422,54 @@ const ExpenseCategoryDialog = ({ open, onClose, editData, onSave }: ExpenseCateg
                 label="Description"
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
+              />
+            </ShakingTextField>
+
+            <ShakingTextField error={!!(formik.touched.tags && formik.errors.tags) || false}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Tags"
+                placeholder="Type a tag and press Enter"
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+                onKeyDown={handleKeyDown}
+                InputProps={{
+                  startAdornment: (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 0.5,
+                        alignItems: 'center',
+                        maxWidth: '100%',
+                      }}
+                    >
+                      {formik.values.tags.map((t: string, index: string) => (
+                        <Chip key={index} label={t} onDelete={() => handleDelete(t)} size="small" />
+                      ))}
+                    </Box>
+                  ),
+                }}
+                error={formik.touched.tags && Boolean(formik.errors.tags)}
+                helperText={
+                  formik.touched.tags && typeof formik.errors.tags === 'string'
+                    ? formik.errors.tags
+                    : undefined
+                }
+                sx={{
+                  '& .MuiInputBase-root': {
+                    flexWrap: 'wrap',
+                    alignItems: 'flex-start',
+                    minHeight: 'auto',
+                    pt: '10px',
+                  },
+                  '& .MuiInputBase-input': {
+                    flexGrow: 1,
+                    minWidth: '80px',
+                    mb: '4px',
+                  },
+                }}
               />
             </ShakingTextField>
           </Stack>

@@ -1,5 +1,5 @@
 import React from 'react';
-import Reports from 'src/screens/academic/curriculum-management/reports';
+import CurriuculumManagementReports from 'src/screens/academic/curriculum-management/reports';
 
-const ReportsScreen = () => <Reports />;
+const ReportsScreen = () => <CurriuculumManagementReports />;
 export default ReportsScreen;

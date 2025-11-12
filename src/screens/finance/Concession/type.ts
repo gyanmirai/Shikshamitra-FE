@@ -7,16 +7,18 @@ export interface IConcession {
   division: string;
   studentName: string;
   concessionName?: string;
-  concessionType: string;
   reason: string;
   feeHead: string;
   documentStatus?: number;
-  documents: IConcessionDocument[];
   status?: number; // e.g., Pending / Approved / Rejected
-  amount?: number; // required if type = "fixed"
-  percentage?: number;
   documentRequired?: boolean;
-  applicableFeeHeads?: string[];
+  concessions: {
+    concessionType: string;
+    applicableFeeHeads: string[];
+    amount?: number;
+    percentage?: number;
+    documents: any[];
+  }[];
 }
 
 export interface IStudentInfo {
@@ -38,7 +40,13 @@ export interface IStudentInfo {
   status?: number;
   totalConcession: number;
   concession?: IConcession;
-  concessions?: IConcession[]; // 👈 multiple concessions
+  concessions: {
+    concessionType: string;
+    applicableFeeHeads: string[];
+    amount?: number;
+    percentage?: number;
+    documents: any[];
+  }[];
   amount?: number; // required if type = "fixed"
   percentage?: number;
 }

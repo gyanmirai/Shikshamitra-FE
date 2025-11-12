@@ -8,25 +8,17 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
-import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import {
-  Grid,
-  Chip,
-  Button,
-  Checkbox,
-  TextField,
-  Autocomplete,
-  DialogActions,
-} from '@mui/material';
+import { Box, Grid, Button, Checkbox, TextField, Autocomplete, DialogActions } from '@mui/material';
 
 import type { IChargeFormProps } from './type';
 
@@ -61,8 +53,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         board: editData.board || '',
         medium: editData.medium || '',
         class: editData.class || '',
-        divisions: editData.divisions || [],
-        students: editData.studentList || [],
+        division: editData.division || '',
+        studentName: editData.studentName || '',
         additionalNotes: editData.additionalNotes || '',
       };
     }
@@ -76,8 +68,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       board: '',
       medium: '',
       class: '',
-      divisions: [],
-      students: [],
+      division: '',
+      studentName: '',
       additionalNotes: '',
     };
   }, [isEdit, editData]);
@@ -116,12 +108,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         ),
       priority: Yup.string().required('Priority is required'),
       class: Yup.string().required('Class is required'),
-      divisions: Yup.array()
-        .min(1, 'At least one division must be selected')
-        .required('Divisions are required'),
-      students: Yup.array()
-        .min(1, 'At least one student must be selected')
-        .required('Students are required'),
+      division: Yup.string().required('Division is required'),
+      studentName: Yup.string().required('Student Name is required'),
     }),
     onSubmit: (values) => {
       onClose(null, true);
@@ -129,6 +117,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
+  console.log('erroress---', errors);
+  console.log('values---', values);
 
   // Update classes when medium changes (only when medium changes)
   useEffect(() => {
@@ -166,14 +156,14 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
 
   // Fetch students when class and divisions are selected
   useEffect(() => {
-    if (values.class && values.divisions.length > 0) {
+    if (values.class && values.division) {
       const filterCriteria = {
         classIds: [values.class],
-        divisionIds: values.divisions.filter((d) => d !== 'all'),
+        divisionIds: [values.division],
       };
       getStudents(filterCriteria);
     }
-  }, [values.class, values.divisions, getStudents]);
+  }, [values.class, values.division, getStudents]);
 
   // Student table data
   const tableData = useMemo(
@@ -186,278 +176,244 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   );
 
   return (
-    <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-      <DialogScrollContent>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.chargeCategory && errors.chargeCategory) || false}>
-              <CustomSelect
-                name="chargeCategory"
-                label="Charge Category *"
-                options={[
-                  { id: 'Library Fine', name: 'Library Fine' },
-                  { id: 'Transport Damage', name: 'Transport Damage' },
-                  { id: 'Hostel Maintenance', name: 'Hostel Maintenance' },
-                ]}
-                labelKey="name"
-                valueKey="id"
-                value={values.chargeCategory}
-                onChange={(value) => setFieldValue('chargeCategory', value)}
-                error={!!(touched.chargeCategory && errors.chargeCategory) || false}
-                helperText={(touched.chargeCategory && errors.chargeCategory) || ''}
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.description && errors.description) || false}>
-              <TextField
-                name="description"
-                label="Purpose/Description *"
-                multiline
-                minRows={3}
-                fullWidth
-                value={values.description}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={!!(touched.description && errors.description)}
-                helperText={(touched.description && errors.description) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 6 }}>
-            <ShakingTextField error={!!(touched.class && errors.class) || false}>
-              <CustomSelect
-                name="class"
-                label="Class *"
-                options={allClass}
-                labelKey="name"
-                valueKey="id"
-                value={values.class}
-                onChange={(value) => {
-                  setFieldValue('class', value);
-                  setFieldTouched('class', false);
-                  setFieldValue('divisions', []);
-                }}
-                error={!!(touched.class && errors.class) || false}
-                helperText={(touched.class && errors.class) || ''}
-                formControlProps={{ sx: { width: '100%' } }}
-                multiple={false}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 6 }}>
-            <ShakingTextField error={!!(touched.divisions && errors.divisions) || false}>
-              <CustomSelect
-                name="divisions"
-                label="Division *"
-                labelKey="name"
-                valueKey="id"
-                multiple
-                disabled={!values.class}
-                options={[
-                  { id: 'all', name: 'All' },
-                  ...(allClass?.find((i: Standards) => i.id === values.class)?.divisions || []),
-                ]}
-                value={values.divisions}
-                onChange={(val) => {
-                  const value = val as string[];
-                  const divisionOptions =
-                    allClass?.find((i: Standards) => i.id === values.class)?.divisions || [];
-                  const allDivisionIds = divisionOptions.map((d) => d.id);
-                  const isAllClicked = value.includes('all');
-                  const wasAllPreviouslySelected = (values.divisions as string[]).includes('all');
-
-                  if (isAllClicked && !wasAllPreviouslySelected) {
-                    setFieldValue('divisions', ['all', ...allDivisionIds]);
-                  } else if (!isAllClicked && wasAllPreviouslySelected) {
-                    setFieldValue('divisions', []);
-                  } else if (isAllClicked && wasAllPreviouslySelected) {
-                    const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allDivisionIds.length) {
-                      setFieldValue('divisions', ['all', ...allDivisionIds]);
-                    } else {
-                      setFieldValue('divisions', selectedWithoutAll);
-                    }
-                  } else {
-                    const selectedWithoutAll = value.filter((id) => id !== 'all');
-                    if (selectedWithoutAll.length === allDivisionIds.length) {
-                      setFieldValue('divisions', ['all', ...allDivisionIds]);
-                    } else {
-                      setFieldValue('divisions', selectedWithoutAll);
-                    }
-                  }
-                  setFieldTouched('divisions', false);
-                  setFieldValue('students', []);
-                }}
-                formControlProps={{ sx: { width: '100%' } }}
-                error={!!(touched.divisions && errors.divisions)}
-                helperText={(touched.divisions && errors.divisions) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.students && errors.students) || false}>
-              <Autocomplete
-                loading={isLoading}
-                multiple
-                fullWidth
-                disableCloseOnSelect
-                value={values.students}
-                disabled={values.divisions.length === 0}
-                onChange={(e, value: any) => setFieldValue('students', value)}
-                renderTags={(tagValue, getTagProps) =>
-                  tagValue.map((option, index) => {
-                    const { key, ...chipProps } = getTagProps({ index });
-                    return (
-                      <Chip
-                        key={key}
-                        label={option.name}
-                        size="small"
-                        {...chipProps}
-                        variant="soft"
-                      />
-                    );
-                  })
-                }
-                options={tableData}
-                getOptionLabel={(option: any) => option?.name || ''}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                renderOption={(props, option, { selected }) => (
-                  <li {...props} key={option.id}>
-                    <Checkbox
-                      icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                      checkedIcon={<CheckBoxIcon fontSize="small" />}
-                      style={{ marginRight: 8 }}
-                      checked={selected}
-                    />
-                    {option.name}
-                  </li>
-                )}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Select Student *"
-                    fullWidth
-                    error={!!(touched.students && errors.students)}
-                    helperText={(touched.students && errors.students) as string}
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+        <Box display="flex" flexDirection="column" gap={2} height="100%">
+          <Scrollbar sx={{ p: 2, height: '100%' }}>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12 }}>
+                <ShakingTextField
+                  error={!!(touched.chargeCategory && errors.chargeCategory) || false}
+                >
+                  <CustomSelect
+                    name="chargeCategory"
+                    label="Charge Category *"
+                    options={[
+                      { id: 'Library Fine', name: 'Library Fine' },
+                      { id: 'Transport Damage', name: 'Transport Damage' },
+                      { id: 'Hostel Maintenance', name: 'Hostel Maintenance' },
+                    ]}
+                    labelKey="name"
+                    valueKey="id"
+                    value={values.chargeCategory}
+                    onChange={(value) => setFieldValue('chargeCategory', value)}
+                    error={!!(touched.chargeCategory && errors.chargeCategory) || false}
+                    helperText={(touched.chargeCategory && errors.chargeCategory) || ''}
+                    formControlProps={{ fullWidth: true }}
                   />
-                )}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid size={{ xs: 6 }}>
-            <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
-              <NumericFormatCustom
-                size="small"
-                fullWidth
-                label="Amount *"
-                name="amount"
-                value={values.amount || ''}
-                onChange={(e) => {
-                  let val = e.target.value;
-                  // Remove currency symbol, commas, spaces and negative signs
-                  val = val.replace(/\D/g, '');
-                  // Convert to number and ensure it's positive
-                  if (/^\d*$/.test(val)) {
-                    setFieldValue('amount', val); // keep it as string while typing
-                  }
-                }}
-                sx={{
-                  width: '100%',
-                  padding: '0',
-                  borderRadius: 1,
-                }}
-                error={!!(touched.amount && errors.amount)}
-                helperText={(touched.amount && errors.amount) as string}
-              />
-            </ShakingTextField>
-          </Grid>
+                </ShakingTextField>
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <ShakingTextField error={!!(touched.description && errors.description) || false}>
+                  <TextField
+                    name="description"
+                    label="Purpose/Description *"
+                    multiline
+                    minRows={3}
+                    fullWidth
+                    value={values.description}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={!!(touched.description && errors.description)}
+                    helperText={(touched.description && errors.description) as string}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-          <Grid size={{ xs: 6 }}>
-            <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
-              <DatePicker
-                label="Due Date *"
-                name="dueDate"
-                format="DD/MM/YYYY"
-                minDate={dayjs().startOf('day')} // disables all past dates
-                maxDate={dayjs(currentYear?.endDate)}
-                value={dayjs(values.dueDate) || null}
-                onChange={(newValue) => setFieldValue('dueDate', newValue)}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    fullWidth: true,
-                    error: !!(touched.dueDate && errors.dueDate),
-                    helperText: (touched.dueDate && errors.dueDate) as string,
-                    onBlur: () => setFieldTouched('dueDate', true),
-                  },
-                }}
-              />
-            </ShakingTextField>
-          </Grid>
+              <Grid size={{ xs: 6 }}>
+                <ShakingTextField error={!!(touched.class && errors.class) || false}>
+                  <CustomSelect
+                    name="class"
+                    label="Class *"
+                    options={allClass}
+                    labelKey="name"
+                    valueKey="id"
+                    value={values.class}
+                    onChange={(value) => {
+                      setFieldValue('class', value);
+                      setFieldTouched('class', false);
+                    }}
+                    error={!!(touched.class && errors.class) || false}
+                    helperText={(touched.class && errors.class) || ''}
+                    formControlProps={{ sx: { width: '100%' } }}
+                    multiple={false}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
-              <CustomSelect
-                name="priority"
-                label="Priority *"
-                options={[
-                  { id: '0', name: 'Low' },
-                  { id: '1', name: 'Medium' },
-                  { id: '2', name: 'High' },
-                ]}
-                labelKey="name"
-                valueKey="id"
-                value={values.priority}
-                onChange={(value) => setFieldValue('priority', value)}
-                error={!!(touched.priority && errors.priority) || false}
-                helperText={(touched.priority && errors.priority) || ''}
-                formControlProps={{ fullWidth: true }}
-              />
-            </ShakingTextField>
-          </Grid>
+              <Grid size={{ xs: 6 }}>
+                <ShakingTextField error={!!(touched.division && errors.division) || false}>
+                  <CustomSelect
+                    name="division"
+                    label="Division *"
+                    labelKey="name"
+                    valueKey="id"
+                    disabled={!values.class}
+                    options={
+                      allClass?.find((i: Standards) => i.id === values.class)?.divisions || []
+                    }
+                    value={values.division}
+                    onChange={(value) => {
+                      setFieldValue('division', value);
+                      setFieldTouched('division', false);
+                      setFieldValue('studentName', '');
+                    }}
+                    formControlProps={{ sx: { width: '100%' } }}
+                    error={!!(touched.division && errors.division)}
+                    helperText={(touched.division && errors.division) as string}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              name="additionalNotes"
-              label="Additional Notes"
-              multiline
-              minRows={3}
-              fullWidth
-              value={values.additionalNotes}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-            />
-          </Grid>
-        </Grid>
-      </DialogScrollContent>
+              <Grid size={{ xs: 12 }}>
+                <ShakingTextField error={!!(touched.studentName && errors.studentName) || false}>
+                  <Autocomplete
+                    loading={isLoading}
+                    fullWidth
+                    disableCloseOnSelect
+                    value={values.studentName}
+                    disabled={!values.division}
+                    onChange={(e, value: any) => {
+                      setFieldValue('studentName', value);
+                      setFieldTouched('studentName', false);
+                    }}
+                    options={tableData}
+                    getOptionLabel={(option: any) => option?.name || ''}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
+                    renderOption={(props, option, { selected }) => (
+                      <li {...props} key={option.id}>
+                        <Checkbox
+                          icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+                          checkedIcon={<CheckBoxIcon fontSize="small" />}
+                          style={{ marginRight: 8 }}
+                          checked={selected}
+                        />
+                        {option.name}
+                      </li>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        size="small"
+                        label="Student *"
+                        fullWidth
+                        error={!!(touched.studentName && errors.studentName)}
+                        helperText={(touched.studentName && errors.studentName) as string}
+                      />
+                    )}
+                  />
+                </ShakingTextField>
+              </Grid>
+              <Grid size={{ xs: 6 }}>
+                <ShakingTextField error={!!(touched.amount && errors.amount) || false}>
+                  <NumericFormatCustom
+                    size="small"
+                    fullWidth
+                    label="Amount *"
+                    name="amount"
+                    value={values.amount || ''}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      // Remove currency symbol, commas, spaces and negative signs
+                      val = val.replace(/\D/g, '');
+                      // Convert to number and ensure it's positive
+                      if (/^\d*$/.test(val)) {
+                        setFieldValue('amount', val); // keep it as string while typing
+                      }
+                    }}
+                    sx={{
+                      width: '100%',
+                      padding: '0',
+                      borderRadius: 1,
+                    }}
+                    error={!!(touched.amount && errors.amount)}
+                    helperText={(touched.amount && errors.amount) as string}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={() => onClose(null, false)}
-          variant="outlined"
-          size="small"
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          variant="contained"
-          size="small"
-          onClick={(e: any) => {
-            formik.handleSubmit(e);
-          }}
-          startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
-        >
-          {isEdit ? 'Update' : 'Submit'}
-        </Button>
-      </DialogActions>
+              <Grid size={{ xs: 6 }}>
+                <ShakingTextField error={!!(touched.dueDate && errors.dueDate) || false}>
+                  <DatePicker
+                    label="Due Date *"
+                    name="dueDate"
+                    format="DD/MM/YYYY"
+                    minDate={dayjs().startOf('day')} // disables all past dates
+                    maxDate={dayjs(currentYear?.endDate)}
+                    value={dayjs(values.dueDate) || null}
+                    onChange={(newValue) => setFieldValue('dueDate', newValue)}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        error: !!(touched.dueDate && errors.dueDate),
+                        helperText: (touched.dueDate && errors.dueDate) as string,
+                        onBlur: () => setFieldTouched('dueDate', true),
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <ShakingTextField error={!!(touched.priority && errors.priority) || false}>
+                  <CustomSelect
+                    name="priority"
+                    label="Priority *"
+                    options={[
+                      { id: '0', name: 'Low' },
+                      { id: '1', name: 'Medium' },
+                      { id: '2', name: 'High' },
+                    ]}
+                    labelKey="name"
+                    valueKey="id"
+                    value={values.priority}
+                    onChange={(value) => setFieldValue('priority', value)}
+                    error={!!(touched.priority && errors.priority) || false}
+                    helperText={(touched.priority && errors.priority) || ''}
+                    formControlProps={{ fullWidth: true }}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  name="additionalNotes"
+                  label="Additional Notes"
+                  multiline
+                  minRows={3}
+                  fullWidth
+                  value={values.additionalNotes}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+              </Grid>
+            </Grid>
+          </Scrollbar>
+
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+            <Button
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={() => onClose(null, false)}
+              variant="outlined"
+              size="small"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              size="small"
+              onClick={(e: any) => {
+                formik.handleSubmit(e);
+              }}
+              startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
+            >
+              {isEdit ? 'Update' : 'Submit'}
+            </Button>
+          </DialogActions>
+        </Box>
+      </form>
     </BackPopUpChecked>
   );
 };

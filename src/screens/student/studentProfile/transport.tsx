@@ -11,7 +11,7 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
   // Mock transport data (replace with real props.student values)
   const transport = {
     routeName: 'Route A-1',
-    routeType: 'Morning / Evening',
+    routeType: 'Pickup And Drop',
     startPoint: 'Main Gate',
     endPoint: 'School Campus',
     stopName: 'Central Square',
@@ -66,6 +66,7 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
           </Button>
         </Box>
       </Grid>
+
       {/* Route Details Card */}
       <Grid size={{ xs: 12, md: 6 }}>
         <Card
@@ -74,7 +75,6 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
             borderRadius: '12px',
             border: '1px solid',
             borderColor: 'divider',
-
             height: '100%',
           }}
         >
@@ -90,10 +90,31 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
               <Iconify icon="mdi:routes" width={24} />
               Route Details
             </Typography>
+            <hr
+              style={{
+                border: 'none',
+                borderTop: '1px solid #e0e0e0',
+                margin: '1px',
+                marginBottom: '20px',
+              }}
+            />
 
-            <Grid container spacing={2}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 2,
+                justifyContent: 'space-between',
+              }}
+            >
               {routeDetails.map((d) => (
-                <Grid key={d.label} size={{ xs: 12, sm: 6 }}>
+                <Box
+                  key={d.label}
+                  sx={{
+                    maxWidth: 140,
+                    width: '100%',
+                  }}
+                >
                   <Stack direction="row" spacing={1.5} alignItems="center">
                     <Iconify icon={d.icon} width={20} color="text.secondary" />
                     <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -117,9 +138,9 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
                       </Typography>
                     </Box>
                   </Stack>
-                </Grid>
+                </Box>
               ))}
-            </Grid>
+            </Box>
           </CardContent>
         </Card>
       </Grid>
@@ -132,7 +153,6 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
             borderRadius: '12px',
             border: '1px solid',
             borderColor: 'divider',
-
             height: '100%',
           }}
         >
@@ -148,10 +168,31 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
               <Iconify icon="mdi:account-tie" width={24} />
               Driver & Vehicle Details
             </Typography>
+            <hr
+              style={{
+                border: 'none',
+                borderTop: '1px solid #e0e0e0',
+                margin: '1px',
+                marginBottom: '20px',
+              }}
+            />
 
-            <Grid container spacing={2}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 2,
+                justifyContent: 'space-between',
+              }}
+            >
               {driverDetails.map((d) => (
-                <Grid key={d.label} size={{ xs: 12, sm: 6 }}>
+                <Box
+                  key={d.label}
+                  sx={{
+                    maxWidth: 140,
+                    width: '100%',
+                  }}
+                >
                   <Stack direction="row" spacing={1.5} alignItems="center">
                     <Iconify icon={d.icon} width={20} color="text.secondary" />
                     <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -175,9 +216,9 @@ const StudentTransportProfile = (props: StudentTabsComponentType) => {
                       </Typography>
                     </Box>
                   </Stack>
-                </Grid>
+                </Box>
               ))}
-            </Grid>
+            </Box>
           </CardContent>
         </Card>
       </Grid>

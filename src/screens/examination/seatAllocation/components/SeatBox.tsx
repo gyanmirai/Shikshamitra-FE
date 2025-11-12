@@ -1,4 +1,6 @@
 import React from 'react';
+import { varAlpha } from 'src/theme/styles';
+import { useTheme } from '@mui/material/styles';
 import { RemoveCircle } from '@mui/icons-material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -18,6 +20,8 @@ const SeatBox = ({
   onStudentRemove: (studentId: number | null) => void;
   onSeatSwap: (fromSeatNumber: number, toSeatNumber: number) => void;
 }) => {
+  const theme = useTheme();
+
   const [isDragOver, setIsDragOver] = React.useState(false);
   const removeStudentDialog = useBoolean();
 
@@ -91,19 +95,21 @@ const SeatBox = ({
 
   const getBgColor = () => {
     // Only show drag over effect on empty seats
-    if (isDragOver && !seat.isAssigned) return 'primary.light'; // Blue for drop zone
-    if (seat.isAssigned) return 'success.main'; // Green for occupied
+    if (isDragOver && !seat.isAssigned)
+      return varAlpha(theme.vars.palette.primary.mainChannel, 0.5); // Blue for drop zone
+    if (seat.isAssigned) return varAlpha(theme.vars.palette.primary.mainChannel, 0.2); // Green for occupied
     return 'grey.200'; // Gray for empty
   };
 
   const getTextColor = () => {
-    if (isDragOver) return 'white';
-    if (seat.isAssigned) return 'white';
+    if (isDragOver) return theme.palette.common.black;
+    if (seat.isAssigned) return theme.palette.common.black;
     return 'black';
   };
 
   const getBorderStyle = () => {
     if (isDragOver && !seat.isAssigned) return '2px dashed white'; // White dashed for drop zone
+    if (seat.isAssigned) return `2px solid ${theme.palette.primary.main}`;
     return 'none';
   };
 
@@ -148,11 +154,13 @@ const SeatBox = ({
       {seat.isAssigned && (
         <Box sx={{ width: '100%', position: 'relative' }}>
           <Box display="flex" flexDirection="column" alignItems="center">
-            <Typography variant="caption" noWrap sx={{ maxWidth: '110px' }}>
+            <Typography variant="subtitle2" noWrap sx={{ maxWidth: '110px' }}>
               {seat.studentName}
             </Typography>
-            <Typography variant="caption" noWrap sx={{ maxWidth: '110px', fontSize: '0.65rem' }}>
-              Class : {seat.class} , Roll No. : {seat.rollNo}
+            <Typography variant="caption" sx={{ maxWidth: '110px', fontSize: '0.65rem' }}>
+              <strong>Class : </strong>
+              {seat.class} , <strong>Roll No. : </strong>
+              {seat.rollNo}
             </Typography>
           </Box>
 
@@ -164,8 +172,8 @@ const SeatBox = ({
               }}
               sx={{
                 position: 'absolute',
-                top: -33,
-                right: 2,
+                top: -32,
+                right: 0,
                 zIndex: 1,
                 '& .MuiIconButton-root': {
                   padding: '4px',

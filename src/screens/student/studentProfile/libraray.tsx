@@ -4,7 +4,6 @@ import React from 'react';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Box, Tab, Card } from '@mui/material';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -26,22 +25,18 @@ const TABS = [
   {
     value: 'borrowed-books',
     label: 'Borrowed Books',
-    icon: <Iconify icon="solar:book-bookmark-bold" />,
   },
   {
     value: 'reserved-books',
     label: 'Reserved Books',
-    icon: <Iconify icon="solar:calendar-bold" />,
   },
   {
     value: 'charges',
     label: 'Charges',
-    icon: <Iconify icon="solar:wallet-money-bold" />,
   },
   {
     value: 'borrow-history',
     label: 'Borrow History',
-    icon: <Iconify icon="fluent:book-contacts-24-filled" />,
   },
 ];
 
@@ -196,7 +191,7 @@ const Libraray = (props: StudentTabsComponentType) => {
           role="tablist"
         >
           {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+            <Tab key={tab.value} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
       </Card>
