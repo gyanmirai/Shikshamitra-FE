@@ -10,11 +10,22 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Grid, Button, Switch, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetLibraryTimingQuery } from 'src/redux/library/settingApi';
+import {
+  Box,
+  Table,
+  Paper,
+  Button,
+  Switch,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
+  Typography,
+  TableContainer,
+} from '@mui/material';
 
 const LibraryTimingCreation = () => {
   // State for managing timing data
@@ -25,9 +36,10 @@ const LibraryTimingCreation = () => {
   // Dialog control states
   const resetDialog = useBoolean();
   const saveDialog = useBoolean();
+  const sameAsSchoolDialog = useBoolean();
 
   // Fetch library timing data
-  const { data: fetchedTimingData, isLoading } = useQueryAndMutation({
+  const { data: fetchedTimingData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLibraryTimingQuery,
   });
@@ -142,6 +154,28 @@ const LibraryTimingCreation = () => {
     setOriginalTimingData(timingData);
   };
 
+  // Handler for setting same hours as school
+  const handleSameAsSchoolHours = () => {
+    const defaultStartTime = '09:00 AM';
+    const defaultEndTime = '05:00 PM';
+
+    setTimingData((prev) =>
+      prev.map((timing) => ({
+        ...timing,
+        startTime: defaultStartTime,
+        endTime: defaultEndTime,
+        status: 'On',
+      }))
+    );
+
+    // Clear all errors
+    setErrors({});
+
+    shikshaMitraToast.success({
+      message: 'Library hours set same as school hours',
+    });
+  };
+
   // Helper to check if there are any changes
   const hasChanges = JSON.stringify(timingData) !== JSON.stringify(originalTimingData);
 
@@ -156,131 +190,183 @@ const LibraryTimingCreation = () => {
           { name: 'Library Hours' },
         ]}
         action={
-          <Box display="flex" gap={2}>
-            <Button
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-              onClick={() => resetDialog.onTrue()}
-              disabled={!hasChanges}
-              size="small"
-            >
-              Reset
-            </Button>
-            <Button
-              startIcon={<Save />}
-              variant="contained"
-              onClick={() => saveDialog.onTrue()}
-              disabled={!hasChanges}
-              size="small"
-            >
-              Save
-            </Button>
-          </Box>
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mdi:clock-outline" />}
+            size="small"
+            onClick={() => sameAsSchoolDialog.onTrue()}
+          >
+            Same as School Hours
+          </Button>
         }
         sx={{ px: 1, mb: 2 }}
       />
 
-      <CustomizableTable
-        tableId="library-timing-table"
-        isFilter={false}
-        isLoading={isLoading}
-        isSearch={false}
-        isPagination={false}
-        columns={[
-          {
-            id: 'day',
-            label: 'Day',
-            align: 'left',
-            isSort: false,
-            isFilter: false,
-            render: (value) => (
-              <Typography variant="body2" fontWeight={500}>
-                {value}
-              </Typography>
-            ),
-          },
-          {
-            id: 'startTime',
-            label: 'Start Time',
-            align: 'left',
-            isSort: false,
-            isFilter: false,
-            render: (value, row) => (
-              <Grid container spacing={1} sx={{ mb: 2 }}>
-                <Grid size={12}>
-                  <TimePicker
-                    label=""
-                    value={value ? dayjs(value, 'hh:mm A') : null}
-                    onChange={(newValue) => handleTimeChange(row.id, 'startTime', newValue)}
-                    disabled={row.status === 'Off'}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        placeholder: value || 'Select start time',
-                        error: Boolean(errors[`${row.id}_startTime`]),
-                        helperText: errors[`${row.id}_startTime`] || '',
-                      },
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            ),
-          },
-          {
-            id: 'endTime',
-            label: 'End Time',
-            align: 'left',
-            isSort: false,
-            isFilter: false,
-            render: (value, row) => (
-              <Grid container spacing={1} sx={{ mb: 2 }}>
-                <Grid size={12}>
-                  <TimePicker
-                    label=""
-                    value={value ? dayjs(value, 'hh:mm A') : null}
-                    onChange={(newValue) => handleTimeChange(row.id, 'endTime', newValue)}
-                    disabled={row.status === 'Off'}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        placeholder: value || 'Select end time',
-                        error: Boolean(errors[`${row.id}_endTime`]),
-                        helperText: errors[`${row.id}_endTime`] || '',
-                      },
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            ),
-          },
-          {
-            id: 'status',
-            label: 'Open This Day',
-            align: 'left',
-            isSort: false,
-            isFilter: false,
-            render: (value, row) => (
-              <CustomTooltip
-                placement="top"
-                title={
-                  value !== 'Off'
-                    ? 'Library is open on this day. Toggle to mark as closed.'
-                    : 'Library is closed on this day. Toggle to mark as open.'
-                }
-              >
-                <Switch
-                  size="small"
-                  checked={value !== 'Off'}
-                  onChange={(e) => handleStatusChange(row.id, e.target.checked)}
-                />
-              </CustomTooltip>
-            ),
-          },
-        ]}
-        data={timingData || []}
-      />
+      <Box sx={{ px: 1, overflow: 'auto', flex: 1 }}>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  sx={{
+                    fontWeight: 600,
+                    minWidth: 120,
+                    position: 'sticky',
+                    left: 0,
+                    backgroundColor: 'background.paper',
+                    zIndex: 2,
+                  }}
+                >
+                  <Typography variant="subtitle2">Time</Typography>
+                </TableCell>
+                {timingData.map((row) => (
+                  <TableCell key={row.id} align="center" sx={{ fontWeight: 600, minWidth: 180 }}>
+                    <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+                      <Typography variant="subtitle2">{row.day}</Typography>
+                      <CustomTooltip
+                        placement="top"
+                        title={
+                          row.status !== 'Off'
+                            ? 'Library is open on this day. Toggle to mark as closed.'
+                            : 'Library is closed on this day. Toggle to mark as open.'
+                        }
+                      >
+                        <Switch
+                          size="small"
+                          checked={row.status !== 'Off'}
+                          onChange={(e) => handleStatusChange(row.id, e.target.checked)}
+                        />
+                      </CustomTooltip>
+                    </Box>
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {/* Start Time Row */}
+              <TableRow>
+                <TableCell
+                  sx={{
+                    fontWeight: 600,
+                    verticalAlign: 'top',
+                    pt: 2,
+                    position: 'sticky',
+                    left: 0,
+                    backgroundColor: 'background.paper',
+                    zIndex: 1,
+                  }}
+                >
+                  Start Time
+                </TableCell>
+                {timingData.map((row) => (
+                  <TableCell key={row.id} align="center" sx={{ verticalAlign: 'top', pt: 2 }}>
+                    <Box>
+                      <TimePicker
+                        value={row.startTime ? dayjs(row.startTime, 'hh:mm A') : null}
+                        onChange={(newValue) => handleTimeChange(row.id, 'startTime', newValue)}
+                        disabled={row.status === 'Off'}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            placeholder: 'hh:mm aa',
+                            error: Boolean(errors[`${row.id}_startTime`]),
+                            sx: { maxWidth: 140 },
+                          },
+                        }}
+                      />
+                      {errors[`${row.id}_startTime`] && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{
+                            display: 'block',
+                            mt: 0.5,
+                            fontSize: '0.75rem',
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {errors[`${row.id}_startTime`]}
+                        </Typography>
+                      )}
+                    </Box>
+                  </TableCell>
+                ))}
+              </TableRow>
+
+              {/* End Time Row */}
+              <TableRow>
+                <TableCell
+                  sx={{
+                    fontWeight: 600,
+                    verticalAlign: 'top',
+                    pt: 2,
+                    position: 'sticky',
+                    left: 0,
+                    backgroundColor: 'background.paper',
+                    zIndex: 1,
+                  }}
+                >
+                  End Time
+                </TableCell>
+                {timingData.map((row) => (
+                  <TableCell key={row.id} align="center" sx={{ verticalAlign: 'top', pt: 2 }}>
+                    <Box>
+                      <TimePicker
+                        value={row.endTime ? dayjs(row.endTime, 'hh:mm A') : null}
+                        onChange={(newValue) => handleTimeChange(row.id, 'endTime', newValue)}
+                        disabled={row.status === 'Off'}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            placeholder: 'hh:mm aa',
+                            error: Boolean(errors[`${row.id}_endTime`]),
+                            sx: { maxWidth: 140 },
+                          },
+                        }}
+                      />
+                      {errors[`${row.id}_endTime`] && (
+                        <Typography
+                          variant="caption"
+                          color="error"
+                          sx={{
+                            display: 'block',
+                            mt: 0.5,
+                            fontSize: '0.75rem',
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {errors[`${row.id}_endTime`]}
+                        </Typography>
+                      )}
+                    </Box>
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+
+      <Box sx={{ px: 1, py: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+        <Button
+          variant="outlined"
+          startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+          onClick={() => resetDialog.onTrue()}
+          disabled={!hasChanges}
+          size="small"
+        >
+          Reset
+        </Button>
+        <Button
+          startIcon={<Save />}
+          variant="contained"
+          onClick={() => saveDialog.onTrue()}
+          disabled={!hasChanges}
+          size="small"
+        >
+          Save
+        </Button>
+      </Box>
 
       <ConfirmDialog
         open={resetDialog.value}
@@ -312,6 +398,26 @@ const LibraryTimingCreation = () => {
             onClick={handleSave}
           >
             Save
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={sameAsSchoolDialog.value}
+        onClose={() => sameAsSchoolDialog.onFalse()}
+        title="Same as School Hours"
+        content="Are you sure you want to set library hours same as school hours? This will override current timings."
+        action={
+          <Button
+            startIcon={<Iconify icon="mdi:clock-outline" />}
+            variant="contained"
+            size="small"
+            onClick={() => {
+              handleSameAsSchoolHours();
+              sameAsSchoolDialog.onFalse();
+            }}
+          >
+            Confirm
           </Button>
         }
       />
