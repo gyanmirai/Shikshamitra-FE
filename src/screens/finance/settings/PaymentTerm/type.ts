@@ -4,8 +4,8 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 export interface IInstallment {
   id: number;
   installmentName: string;
-  dueDate: string | null | Dayjs; // ISO date string e.g., "2025-03-30"
-  reminderDate: string | null | Dayjs;
+  dueDate: null | Dayjs; // ISO date string e.g., "2025-03-30"
+  reminderDate: null | Dayjs;
   gracePeriod: number | null;
   overdueCharges: number | null;
 }

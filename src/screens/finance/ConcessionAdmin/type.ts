@@ -12,8 +12,7 @@ export interface IConcessionDocument {
 
 export interface IViewConcessionRequestProps {
   viewConcessionRequest: UseBooleanReturn;
-  student: IStudentInfo;
-  documents: IConcessionDocument[] | undefined;
+  student: IStudentInfo | null;
   onApprove: () => void;
   onReject: () => void;
   onMismatch: () => void;
