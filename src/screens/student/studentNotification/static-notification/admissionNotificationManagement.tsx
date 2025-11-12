@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Box, Switch } from '@mui/material';
+import { Box, Card, Switch } from '@mui/material';
+import React, { useState, useEffect } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
@@ -9,17 +9,18 @@ import {
   NotificationStatusOptions,
 } from 'src/enums/notification-status-type';
 
-import EditNotificationDialog from '../edit-notification-dialog';
+import EditNotificationDialog from '../editNotificationDialog';
 
-const notificationsData = [
+const initialNotificationsData = [
   {
-    id: '2',
-    event: 'Update Student Details',
-    triggerCondition: 'When any change occurs in student records.',
+    id: '1',
+    event: 'Move to Admission',
+    triggerCondition: 'When the student is transitioned to admission.',
+    isActive: NotificationStatusType.Active,
     recipient: [
       {
         name: 'admin',
-        message: 'Student details for [Student Name] have been updated.',
+        message: 'The student [Student Name] has been moved to admission.',
         communicationChannel: ['WhatsApp', 'Email'],
         placeHolder: ['[Student Name]'],
         placeHolderOptions: [{ value: '[Student Name]', label: 'Student Name' }],
@@ -28,7 +29,7 @@ const notificationsData = [
       {
         name: 'parent',
         message:
-          'Dear [Parent Name], the details for [Student Name] have been updated. Please review the changes in the student portal.',
+          'Dear [Parent Name], congratulations! [Student Name] has progressed to the admission stage. Please check for further steps.',
         communicationChannel: ['WhatsApp', 'Email'],
         placeHolder: ['[Student Name]', '[Parent Name]'],
         placeHolderOptions: [
@@ -40,62 +41,57 @@ const notificationsData = [
     ],
   },
   {
-    id: '3',
-    event: 'Generate GR Number',
-    triggerCondition: 'When a new GR number is assigned.',
+    id: '2',
+    event: 'Approve Admission',
+    triggerCondition: 'When the admission is approved.',
+    isActive: NotificationStatusType.Active,
     recipient: [
       {
         name: 'admin',
-        message: 'A GR number has been assigned to [Student Name]: [GR Number].',
+        message: 'Admission for [Student Name] has been approved.',
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[GR Number]'],
-        placeHolderOptions: [
-          { value: '[Student Name]', label: 'Student Name' },
-          { value: '[GR Number]', label: 'GR Number' },
-        ],
+        placeHolder: ['[Student Name]'],
+        placeHolderOptions: [{ value: '[Student Name]', label: 'Student Name' }],
         isEnable: true,
       },
       {
         name: 'parent',
         message:
-          'Dear [Parent Name], the GR number for [Student Name] has been assigned as [GR Number]. Please keep this for future reference.',
+          "Dear [Parent Name], we are pleased to inform you that [Student Name]'s admission has been approved. Welcome to [School Name]!",
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Parent Name]', '[GR Number]'],
+        placeHolder: ['[Student Name]', '[Parent Name]', '[School Name]'],
         placeHolderOptions: [
           { value: '[Student Name]', label: 'Student Name' },
           { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[GR Number]', label: 'GR Number' },
+          { value: '[School Name]', label: 'School Name' },
         ],
         isEnable: true,
       },
     ],
   },
   {
-    id: '4',
-    event: 'Generate Roll Number',
-    triggerCondition: 'When a new roll number is assigned.',
+    id: '3',
+    event: 'Pending Admission',
+    triggerCondition: 'When the admission is in a pending state.',
+    isActive: NotificationStatusType.Inactive,
     recipient: [
       {
         name: 'admin',
-        message: 'A roll number has been assigned to [Student Name]: [Roll Number].',
+        message: 'Admission for [Student Name] is currently pending.',
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Roll Number]'],
-        placeHolderOptions: [
-          { value: '[Student Name]', label: 'Student Name' },
-          { value: '[Roll Number]', label: 'Roll Number' },
-        ],
+        placeHolder: ['[Student Name]'],
+        placeHolderOptions: [{ value: '[Student Name]', label: 'Student Name' }],
         isEnable: true,
       },
       {
         name: 'parent',
         message:
-          'Dear [Parent Name], the roll number for [Student Name] has been assigned as [Roll Number]. Please use this for future communication.',
+          "Dear [Parent Name], [Student Name]'s admission is under review. We will notify you once a decision is made.",
         communicationChannel: ['WhatsApp', 'Email'],
-        placeHolder: ['[Student Name]', '[Parent Name]', '[Roll Number]'],
+        placeHolder: ['[Student Name]', '[Parent Name]'],
         placeHolderOptions: [
           { value: '[Student Name]', label: 'Student Name' },
           { value: '[Parent Name]', label: 'Parent Name' },
-          { value: '[Roll Number]', label: 'Roll Number' },
         ],
         isEnable: true,
       },
@@ -103,24 +99,61 @@ const notificationsData = [
   },
 ];
 
-const StudentRecordNotificationManagement = () => {
-  // State variable to control the visibility of the EditNotificationDialog.
-  const [open, setOpen] = useState(false);
-  // State variable to store the data of the selected notification for editing.
-  const [selectedData, setSelectedData] = useState<any>(null);
-  // State variable to determine whether the dialog is in view mode or edit mode.
-  const [view, setView] = useState(false);
+interface AdmissionNotificationManagementProps {
+  dialog?: any;
+}
 
-  // Handler function to close the EditNotificationDialog and reset related states.
+const AdmissionNotificationManagement = ({ dialog }: AdmissionNotificationManagementProps) => {
+  // State variable to control the visibility of the dialog.
+  const [open, setOpen] = useState(false);
+  // State variable to store the selected notification data.
+  const [selectedData, setSelectedData] = useState<any>(null);
+  // State variable to determine whether the dialog is in view mode.
+  const [view, setView] = useState(false);
+  // State variable to manage notifications data
+  const [notificationsData, setNotificationsData] = useState(initialNotificationsData);
+
+  // Sync local open state with parent dialog
+  useEffect(() => {
+    if (dialog) {
+      if (open) {
+        dialog.onTrue();
+      } else {
+        dialog.onFalse();
+      }
+    }
+  }, [open, dialog]);
+
+  // Handler function to close the dialog and reset related states.
   const closeHandler = () => {
     setOpen(false);
     setSelectedData(null);
     setView(false);
   };
+
+  // Handler to toggle notification status
+  const handleToggleStatus = (id: string) => {
+    setNotificationsData((prevData) =>
+      prevData.map((notification) =>
+        notification.id === id
+          ? {
+              ...notification,
+              isActive:
+                notification.isActive === NotificationStatusType.Active
+                  ? NotificationStatusType.Inactive
+                  : NotificationStatusType.Active,
+            }
+          : notification
+      )
+    );
+  };
+
   return (
     <>
       {open ? (
-        <EditNotificationDialog data={selectedData} onClose={closeHandler} isFromView={view} />
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <EditNotificationDialog data={selectedData} onClose={closeHandler} isFromView={view} />
+        </Card>
       ) : (
         <CustomizableTable
           tableId="student-auto-notification-configuration"
@@ -145,7 +178,6 @@ const StudentRecordNotificationManagement = () => {
                 ));
               },
             },
-
             {
               id: 'isActive',
               label: 'Active',
@@ -156,10 +188,8 @@ const StudentRecordNotificationManagement = () => {
                 return (
                   <Box>
                     <Switch
-                      checked={NotificationStatusType.Active === row.isActive}
-                      onChange={(event) => {
-                        console.log(event.target.checked);
-                      }}
+                      checked={row.isActive === NotificationStatusType.Active}
+                      onChange={() => handleToggleStatus(row.id)}
                     />
                   </Box>
                 );
@@ -199,4 +229,4 @@ const StudentRecordNotificationManagement = () => {
   );
 };
 
-export default StudentRecordNotificationManagement;
+export default AdmissionNotificationManagement;

@@ -1,5 +1,5 @@
 import React from 'react';
-import StudentNotificationTabScreen from 'src/screens/student/studentNotification/student-notification-tab';
+import StudentNotificationTabScreen from 'src/screens/student/studentNotification/studentNotificationTab';
 
 const studentNotification = () => <StudentNotificationTabScreen />;
 

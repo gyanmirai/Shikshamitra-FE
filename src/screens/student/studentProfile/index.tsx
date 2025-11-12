@@ -448,7 +448,6 @@ const StudentProfileView = () => {
     params: searchParams?.student,
     options: { skip: !searchParams?.student },
   });
-  console.log(currentStudent, 'currentStudent==========>');
   return isLoading ? (
     'Loading ...'
   ) : (

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Box, Switch } from '@mui/material';
+import { Box, Card, Switch } from '@mui/material';
+import React, { useState, useEffect } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
@@ -9,13 +9,15 @@ import {
   NotificationStatusOptions,
 } from 'src/enums/notification-status-type';
 
-import EditNotificationDialog from '../edit-notification-dialog';
+import EditNotificationDialog from '../editNotificationDialog';
 
-const notificationsData = [
+// Add isActive property to each notification object
+const initialNotificationsData = [
   {
     id: '1',
     event: 'Submit Inquiry',
     triggerCondition: 'When Adding a New inquiry.',
+    isActive: NotificationStatusType.Active,
     recipient: [
       {
         name: 'parent',
@@ -47,15 +49,8 @@ const notificationsData = [
     id: '2',
     event: 'Close Inquiry',
     triggerCondition: 'When closing a particular inquiry.',
+    isActive: NotificationStatusType.Active,
     recipient: [
-      // {
-      //     name: "admin",
-      //     message: "Inquiry for [Student Name] has been closed.",
-      //     communicationChannel: ["Email"],
-      //     placeHolder: ["[Student Name]"],
-      //     placeHolderOptions: [{ value: "[Student Name]", label: "Student Name" }],
-      //     isEnable: true,
-      // },
       {
         name: 'parent',
         message:
@@ -82,6 +77,7 @@ const notificationsData = [
     id: '3',
     event: 'Move to Registration',
     triggerCondition: 'When the inquiry is converted to a registration.',
+    isActive: NotificationStatusType.Inactive,
     recipient: [
       {
         name: 'admin',
@@ -91,7 +87,6 @@ const notificationsData = [
         placeHolderOptions: [{ value: '[Student Name]', label: 'Student Name' }],
         isEnable: true,
       },
-
       {
         name: 'parent',
         message:
@@ -110,6 +105,7 @@ const notificationsData = [
     id: '4',
     event: 'Move to Admission',
     triggerCondition: 'When the student moves to admission.',
+    isActive: NotificationStatusType.Active,
     recipient: [
       {
         name: 'admin',
@@ -119,7 +115,6 @@ const notificationsData = [
         placeHolderOptions: [{ value: '[Student Name]', label: 'Student Name' }],
         isEnable: true,
       },
-
       {
         name: 'parent',
         message:
@@ -138,6 +133,7 @@ const notificationsData = [
     id: '5',
     event: 'Modify Inquiry Details',
     triggerCondition: 'When any changes occur in the inquiry details.',
+    isActive: NotificationStatusType.Inactive,
     recipient: [
       {
         name: 'admin',
@@ -147,7 +143,6 @@ const notificationsData = [
         placeHolderOptions: [{ value: '[Student Name]', label: 'Student Name' }],
         isEnable: true,
       },
-
       {
         name: 'parent',
         message:
@@ -166,6 +161,7 @@ const notificationsData = [
     id: '6',
     event: 'Change Inquiry Status',
     triggerCondition: 'When status changes (Interested, Pending, Not Interested).',
+    isActive: NotificationStatusType.Active,
     recipient: [
       {
         name: 'admin',
@@ -184,6 +180,7 @@ const notificationsData = [
     id: '7',
     event: 'Follow-up Reminder',
     triggerCondition: 'When the next follow-up date is approaching.',
+    isActive: NotificationStatusType.Active,
     recipient: [
       {
         name: 'admin',
@@ -213,11 +210,27 @@ const notificationsData = [
   },
 ];
 
-const NewStudentNotificationForInquiry = () => {
+interface NewStudentNotificationForInquiryProps {
+  dialog?: any;
+}
+
+const NewStudentNotificationForInquiry = ({ dialog }: NewStudentNotificationForInquiryProps) => {
   // State variables to manage the dialog and selected notification data
   const [open, setOpen] = useState(false);
   const [selectedData, setSelectedData] = useState<any>(null);
   const [view, setView] = useState(false);
+  const [notificationsData, setNotificationsData] = useState(initialNotificationsData);
+
+  // Sync local open state with parent dialog
+  useEffect(() => {
+    if (dialog) {
+      if (open) {
+        dialog.onTrue();
+      } else {
+        dialog.onFalse();
+      }
+    }
+  }, [open, dialog]);
 
   // Handler function to close the dialog and reset selected data and view state
   const closeHandler = () => {
@@ -225,10 +238,30 @@ const NewStudentNotificationForInquiry = () => {
     setSelectedData(null);
     setView(false);
   };
+
+  // Handler to toggle notification status
+  const handleToggleStatus = (id: string) => {
+    setNotificationsData((prevData) =>
+      prevData.map((notification) =>
+        notification.id === id
+          ? {
+              ...notification,
+              isActive:
+                notification.isActive === NotificationStatusType.Active
+                  ? NotificationStatusType.Inactive
+                  : NotificationStatusType.Active,
+            }
+          : notification
+      )
+    );
+  };
+
   return (
     <>
       {open ? (
-        <EditNotificationDialog data={selectedData} onClose={closeHandler} isFromView={view} />
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+          <EditNotificationDialog data={selectedData} onClose={closeHandler} isFromView={view} />
+        </Card>
       ) : (
         <CustomizableTable
           tableId="student-auto-notification-configuration"
@@ -263,10 +296,8 @@ const NewStudentNotificationForInquiry = () => {
                 return (
                   <Box>
                     <Switch
-                      checked={NotificationStatusType.Active === row.isActive}
-                      onChange={(event) => {
-                        console.log(event.target.checked);
-                      }}
+                      checked={row.isActive === NotificationStatusType.Active}
+                      onChange={() => handleToggleStatus(row.id)}
                     />
                   </Box>
                 );

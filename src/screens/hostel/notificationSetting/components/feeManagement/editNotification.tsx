@@ -2,14 +2,14 @@ import type {
   IRecipient,
   INotificationData,
   IEditNotificationDialogProps,
-} from 'src/screens/student/studentNotification/edit-notification-dialog-interface';
+} from 'src/screens/student/studentNotification/editNotificationDialogInterface';
 
 import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
-import CustomPlaceholderInput from 'src/screens/student/studentNotification/textfiled-for-message-with-placeholder';
+import CustomPlaceholderInput from 'src/screens/student/studentNotification/textfiledForMessageWithPlaceholder';
 import {
   Box,
   Grid,

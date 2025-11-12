@@ -1,6 +1,6 @@
 export enum NotificationStatusType {
   Active,
-  Deactive,
+  Inactive,
 }
 
 export const NotificationStatusOptions = [
@@ -9,7 +9,7 @@ export const NotificationStatusOptions = [
     value: NotificationStatusType.Active,
   },
   {
-    label: 'Deactive',
-    value: NotificationStatusType.Deactive,
+    label: 'Inactive',
+    value: NotificationStatusType.Inactive,
   },
 ];
