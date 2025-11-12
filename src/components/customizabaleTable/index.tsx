@@ -98,6 +98,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   );
   const [tableRef, setTableRef] = useState<any>(null);
   const theme = useTheme();
+  const fullScreenDialog = useBoolean();
 
   const [stickyMap, setStickyMap] = useState<{
     left: Record<string, number>;
@@ -217,22 +218,25 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     setStickyMap({ left: leftOffsets, right: rightOffsets });
   }, [columnVisibility, columns]);
 
-  const getStickyStyle = (col: IColumn): React.CSSProperties => {
-    const base: React.CSSProperties = {
-      position: col.sticky ? 'sticky' : 'static',
-      // background: col.sticky ? theme.vars.palette.background.paper : undefined,
-    };
+  const getStickyStyle = useCallback(
+    (col: IColumn): React.CSSProperties => {
+      const base: React.CSSProperties = {
+        position: col.sticky ? 'sticky' : 'static',
+        // background: col.sticky ? theme.vars.palette.background.paper : undefined,
+      };
 
-    const colId = col.id as string;
-    if (stickyMap.left[colId] !== undefined) {
-      return { ...base, left: stickyMap.left[colId] };
-    }
-    if (stickyMap.right[colId] !== undefined) {
-      return { ...base, right: stickyMap.right[colId] };
-    }
+      const colId = col.id as string;
+      if (stickyMap.left[colId] !== undefined) {
+        return { ...base, left: stickyMap.left[colId] };
+      }
+      if (stickyMap.right[colId] !== undefined) {
+        return { ...base, right: stickyMap.right[colId] };
+      }
 
-    return base;
-  };
+      return base;
+    },
+    [stickyMap.left, stickyMap.right]
+  );
 
   const handleChangePage = useCallback(
     (event: unknown, newPage: number) => {
@@ -244,21 +248,32 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     },
     [handelChangeParams, serverSide, onServerPagination, rowsPerPage]
   );
-  const removeFilter = (index: number) => {
-    handelChangeParams({ filters: filters.filter((_a, i) => i !== index) });
-    // setFilters(filters.filter((_a, i) => i !== index));
-  };
+  const removeFilter = useCallback(
+    (index: number) => {
+      handelChangeParams({ filters: filters.filter((_a, i) => i !== index) });
+      // setFilters(filters.filter((_a, i) => i !== index));
+    },
+    [handelChangeParams, filters]
+  );
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     // setFilters([]);
     handelChangeParams({ filters: [] });
-  };
+  }, [handelChangeParams]);
 
   useEffect(() => {
     debounce(() => {
       handelChangeParams({ searchTerm: searchValue });
     }, 500);
   }, [handelChangeParams, searchValue]);
+
+  useEffect(() => {
+    const handleChange = () => {
+      fullScreenDialog.setValue(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleChange);
+    return () => document.removeEventListener('fullscreenchange', handleChange);
+  }, [fullScreenDialog]);
 
   const handleChangeRowsPerPage = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -433,10 +448,12 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
         : sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
     [serverSide, sortedData, page, rowsPerPage]
   );
-  const fullScreenDialog = useBoolean();
-  const handleChangeDense = (event: React.ChangeEvent<HTMLInputElement>) => {
-    handelChangeParams({ dense: event.target.checked });
-  };
+  const handleChangeDense = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      handelChangeParams({ dense: event.target.checked });
+    },
+    [handelChangeParams]
+  );
 
   // const clearFilter = () => {
   //   handelChangeParams({ filterColumn: '', filterType: 'contains', filterValue: '', page: 0 });
@@ -482,501 +499,557 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     setFilterAnchorEl({ element: event.currentTarget as HTMLElement, column });
   };
 
-  const handleApplyColumnFilter = (
-    columnId: string,
-    filterTypes: string,
-    value: any,
-    valueType: string
-  ) => {
-    const newFilter = { column: columnId, type: filterTypes, value, valueType };
+  const handleApplyColumnFilter = useCallback(
+    (columnId: string, filterTypes: string, value: any, valueType: string) => {
+      const newFilter = { column: columnId, type: filterTypes, value, valueType };
 
-    handelChangeParams({ filters: [...filters, newFilter], page: 0 });
-    setFilterAnchorEl(null);
-  };
-
-  return (
-    <Card
-      sx={{
-        boxShadow: 'var(--shadows-4)',
-        mt: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%', // or a parent-calculated height
-        minHeight: 0, // important for flex children with overflow
-      }}
-      ref={setTableRef}
-    >
-      <Box
-        sx={{ display: 'flex', alignItems: 'center', p: isSearch ? 1 : 0, gap: 1, flexShrink: 0 }}
+      handelChangeParams({ filters: [...filters, newFilter], page: 0 });
+      setFilterAnchorEl(null);
+    },
+    [filters, handelChangeParams]
+  );
+  const tableContent = useMemo(
+    () => (
+      <Card
+        sx={{
+          boxShadow: 'var(--shadows-4)',
+          mt: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%', // or a parent-calculated height
+          minHeight: 0, // important for flex children with overflow
+        }}
+        ref={setTableRef}
       >
-        {isSearch && (
-          <TextField
-            variant="outlined"
-            size="small"
-            value={searchValue}
-            onChange={handleSearch}
-            InputProps={{
-              endAdornment: (
-                <>
-                  {searchValue ? (
-                    <IconButton
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', p: isSearch ? 1 : 0, gap: 1, flexShrink: 0 }}
+        >
+          {isSearch && (
+            <TextField
+              variant="outlined"
+              size="small"
+              value={searchValue}
+              onChange={handleSearch}
+              InputProps={{
+                endAdornment: (
+                  <>
+                    {searchValue ? (
+                      <IconButton
+                        size="small"
+                        sx={{ mr: '-12px', p: 1 }}
+                        onClick={() => setSearchValue('')}
+                      >
+                        <ClearIcon />
+                      </IconButton>
+                    ) : (
+                      <IconButton size="small" sx={{ mr: '-12px', p: 1 }}>
+                        <SearchIcon />
+                      </IconButton>
+                    )}
+                  </>
+                ),
+              }}
+              label="Search in Table"
+              sx={{ maxWidth: '249.6px', width: '100%' }}
+              {...searchFieldProps}
+            />
+          )}
+
+          {isFilter && (
+            <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
+              <Box sx={{ ml: 2 }}>
+                <Button
+                  // variant="outlined"
+                  size="small"
+                  startIcon={<RemoveRedEyeIcon />}
+                  onClick={(event) => setColumnAnchorEl(event.currentTarget)}
+                >
+                  Columns
+                </Button>
+                <Popover
+                  open={Boolean(anchorColumnEl)}
+                  anchorEl={anchorColumnEl}
+                  onClose={() => setColumnAnchorEl(null)}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                >
+                  <Box
+                    sx={{
+                      p: 2,
+                      width: 250,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      height: '400px',
+                    }}
+                  >
+                    <TextField
+                      fullWidth
                       size="small"
-                      sx={{ mr: '-12px', p: 1 }}
-                      onClick={() => setSearchValue('')}
+                      label="Search columns"
+                      value={columnSearchTerm}
+                      onChange={(e) => handelChangeParams({ columnSearchTerm: e.target.value })}
+                      sx={{ mb: 2, flexShrink: '0', background: 'white', zIndex: '1' }}
+                    />
+                    <Box
+                      sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto' }}
                     >
-                      <ClearIcon />
-                    </IconButton>
-                  ) : (
-                    <IconButton size="small" sx={{ mr: '-12px', p: 1 }}>
-                      <SearchIcon />
-                    </IconButton>
-                  )}
-                </>
-              ),
-            }}
-            label="Search in Table"
-            sx={{ maxWidth: '249.6px', width: '100%' }}
-            {...searchFieldProps}
+                      {columns
+                        .filter((column) =>
+                          (() => {
+                            if (typeof column?.label !== 'string') return false;
+                            const lbl = column.label as string;
+                            return (
+                              lbl.trim() &&
+                              lbl.toLowerCase().includes(columnSearchTerm.toLowerCase())
+                            );
+                          })()
+                        )
+                        .map((column) => (
+                          <FormControlLabel
+                            key={column.id}
+                            sx={{ ml: 0 }}
+                            control={
+                              <Checkbox
+                                checked={columnVisibility[column.id]}
+                                onChange={(e) => {
+                                  handelChangeParams({
+                                    columnVisibility: {
+                                      ...columnVisibility,
+                                      [column.id]: e.target.checked,
+                                    },
+                                  });
+                                }}
+                              />
+                            }
+                            label={column.label}
+                          />
+                        ))}
+                    </Box>
+                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          handelChangeParams({
+                            columnSearchTerm: '',
+                            columnVisibility: Object.fromEntries(
+                              columns.map((column) => [column.id, true])
+                            ),
+                          });
+                        }}
+                      >
+                        Reset
+                      </Button>
+                    </Box>
+                  </Box>
+                </Popover>{' '}
+              </Box>
+
+              <Box>
+                <Button
+                  startIcon={<Iconify icon="solar:export-bold" />}
+                  size="small"
+                  onClick={(event) => setExportAnchorEl(event.currentTarget)}
+                >
+                  Export
+                </Button>
+                <Menu
+                  anchorEl={exportAnchorEl}
+                  open={Boolean(exportAnchorEl)}
+                  onClose={() => setExportAnchorEl(null)}
+                >
+                  <MenuItem onClick={() => handleExport('excel')}>
+                    <Iconify icon="solar:document-bold" />
+                    &nbsp; Export as Excel
+                  </MenuItem>
+
+                  <MenuItem onClick={() => handleExport('pdf')}>
+                    <Iconify icon="solar:document-bold" />
+                    &nbsp; Export as PDF
+                  </MenuItem>
+                </Menu>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', p: isSearch ? 1 : 0, gap: 1 }}>
+                <CustomTooltip
+                  arrow
+                  placement="bottom-end"
+                  title={fullScreenDialog.value ? 'Exit Fullscreen' : 'Fullscreen'}
+                >
+                  <IconButton
+                    onClick={async () => {
+                      fullScreenDialog.onToggle();
+                    }}
+                    sx={{ color: varAlpha(theme.vars.palette.grey['900Channel'], 1) }}
+                  >
+                    <Iconify
+                      icon={
+                        fullScreenDialog.value ? 'ic:sharp-fullscreen-exit' : 'ic:sharp-fullscreen'
+                      }
+                    />
+                  </IconButton>
+                </CustomTooltip>
+              </Box>
+            </Box>
+          )}
+        </Box>
+        {filters.length > 0 && (
+          <FilterChips
+            filters={filters}
+            removeFilter={removeFilter}
+            columns={columns}
+            clearAllFilters={clearAllFilters}
           />
         )}
 
-        {isFilter && (
-          <Box flexGrow={1} display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
-            <Box sx={{ ml: 2 }}>
-              <Button
-                // variant="outlined"
-                size="small"
-                startIcon={<RemoveRedEyeIcon />}
-                onClick={(event) => setColumnAnchorEl(event.currentTarget)}
-              >
-                Columns
-              </Button>
-              <Popover
-                open={Boolean(anchorColumnEl)}
-                anchorEl={anchorColumnEl}
-                onClose={() => setColumnAnchorEl(null)}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-              >
-                <Box
-                  sx={{
-                    p: 2,
-                    width: 250,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '400px',
-                  }}
-                >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Search columns"
-                    value={columnSearchTerm}
-                    onChange={(e) => handelChangeParams({ columnSearchTerm: e.target.value })}
-                    sx={{ mb: 2, flexShrink: '0', background: 'white', zIndex: '1' }}
-                  />
-                  <Box
-                    sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'auto' }}
-                  >
-                    {columns
-                      .filter((column) =>
-                        (() => {
-                          if (typeof column?.label !== 'string') return false;
-                          const lbl = column.label as string;
-                          return (
-                            lbl.trim() && lbl.toLowerCase().includes(columnSearchTerm.toLowerCase())
-                          );
-                        })()
-                      )
-                      .map((column) => (
-                        <FormControlLabel
-                          key={column.id}
-                          sx={{ ml: 0 }}
-                          control={
-                            <Checkbox
-                              checked={columnVisibility[column.id]}
-                              onChange={(e) => {
-                                handelChangeParams({
-                                  columnVisibility: {
-                                    ...columnVisibility,
-                                    [column.id]: e.target.checked,
-                                  },
-                                });
-                              }}
-                            />
-                          }
-                          label={column.label}
-                        />
-                      ))}
-                  </Box>
-                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button
-                      size="small"
-                      onClick={() => {
-                        handelChangeParams({
-                          columnSearchTerm: '',
-                          columnVisibility: Object.fromEntries(
-                            columns.map((column) => [column.id, true])
-                          ),
-                        });
-                      }}
-                    >
-                      Reset
-                    </Button>
-                  </Box>
-                </Box>
-              </Popover>{' '}
-            </Box>
-
-            <Box>
-              <Button
-                startIcon={<Iconify icon="solar:export-bold" />}
-                size="small"
-                onClick={(event) => setExportAnchorEl(event.currentTarget)}
-              >
-                Export
-              </Button>
-              <Menu
-                anchorEl={exportAnchorEl}
-                open={Boolean(exportAnchorEl)}
-                onClose={() => setExportAnchorEl(null)}
-              >
-                <MenuItem onClick={() => handleExport('excel')}>
-                  <Iconify icon="solar:document-bold" />
-                  &nbsp; Export as Excel
-                </MenuItem>
-
-                <MenuItem onClick={() => handleExport('pdf')}>
-                  <Iconify icon="solar:document-bold" />
-                  &nbsp; Export as PDF
-                </MenuItem>
-              </Menu>
-            </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'center', p: isSearch ? 1 : 0, gap: 1 }}>
-              <CustomTooltip
-                arrow
-                placement="bottom-end"
-                title={fullScreenDialog.value ? 'Exit Fullscreen' : 'Fullscreen'}
-              >
-                <IconButton
-                  onClick={fullScreenDialog.onToggle}
-                  sx={{ color: varAlpha(theme.vars.palette.grey['900Channel'], 1) }}
-                >
-                  <Iconify
-                    icon={
-                      fullScreenDialog.value ? 'ic:sharp-fullscreen-exit' : 'ic:sharp-fullscreen'
-                    }
-                  />
-                </IconButton>
-              </CustomTooltip>
-            </Box>
-          </Box>
-        )}
-      </Box>
-      {filters.length > 0 && (
-        <FilterChips
-          filters={filters}
-          removeFilter={removeFilter}
-          columns={columns}
-          clearAllFilters={clearAllFilters}
+        <ColumnFilterMenu
+          anchorEl={filterAnchorEl}
+          onClose={() => setFilterAnchorEl(null)}
+          onApplyFilter={handleApplyColumnFilter}
         />
-      )}
-
-      <ColumnFilterMenu
-        anchorEl={filterAnchorEl}
-        onClose={() => setFilterAnchorEl(null)}
-        onApplyFilter={handleApplyColumnFilter}
-      />
-      <ComponentBlock
-        sx={{
-          px: 0,
-          py: 0,
-          boxShadow: 'none',
-          gap: 0.5,
-          // display: 'flex',
-          // flexDirection: 'column',
-          // flex: 1,
-          // minHeight: 0,
-        }}
-      >
-        <TableContainer
-          component={Scrollbar}
+        <ComponentBlock
           sx={{
-            flex: 1,
-            // minHeight: 0, // ensures proper shrinking in flexbox
-            // height: '100%', // fills the parent
-            ...sx,
+            px: 0,
+            py: 0,
+            boxShadow: 'none',
+            gap: 0.5,
+            // display: 'flex',
+            // flexDirection: 'column',
+            // flex: 1,
+            // minHeight: 0,
           }}
-          {...other}
         >
-          <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
-            <TableHead>
-              <TableRow>
-                {columns.some((column) => column.children) && <TableCell />}
-                {columns.map(
-                  (column, index) =>
-                    columnVisibility[column.id] && (
-                      <TableCell
-                        key={column.id}
-                        align={column.align || 'center'}
-                        ref={(el) => {
-                          headerRefs.current[index] = el as HTMLTableCellElement;
-                        }}
-                        sx={{
-                          fontSize: '14px',
-                          width: column.minWidth,
-                          // @ts-ignore
-                          left: column.sticky ? stickyMap[column.id] : 'auto',
-                          right: column.sticky && columns.length === index + 1 ? 0 : 'auto',
-                          zIndex: column.sticky ? 99 : 10,
-                          backgroundColor: column.sticky ? 'background.paper' : 'transparent',
-                          boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
-
-                          ...(column.sticky ? { backgroundImage: 'none' } : {}),
-                          '& .column-filter-icon': { opacity: 0, transition: 'opacity 0.3s ease' },
-                          '&:hover .column-filter-icon': { opacity: 1 },
-                          '&::after': {
-                            borderRight: !column.sticky
-                              ? `1px solid ${theme.vars.palette.grey[400]}`
-                              : 'none',
-                            content: '""',
-                            position: 'absolute',
-                            right: '0',
-                            bottom: '0',
-                            height: '40%',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                          },
-                          '&:last-child::after': { borderRight: 'none' },
-                          ...getStickyStyle(column),
-                          position: 'sticky',
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            cursor: column.isSort !== false ? 'pointer' : 'default',
-                            userSelect: 'none',
-                            fontWeight: 'bold',
-                            width: 'inherit',
-                            gap: 0.5,
+          <TableContainer
+            component={Scrollbar}
+            sx={{
+              flex: 1,
+              // minHeight: 0, // ensures proper shrinking in flexbox
+              // height: '100%', // fills the parent
+              ...sx,
+            }}
+            {...other}
+          >
+            <Table stickyHeader aria-label="customizable table" size={dense ? 'small' : 'medium'}>
+              <TableHead>
+                <TableRow>
+                  {columns.some((column) => column.children) && <TableCell />}
+                  {columns.map(
+                    (column, index) =>
+                      columnVisibility[column.id] && (
+                        <TableCell
+                          key={column.id}
+                          align={column.align || 'center'}
+                          ref={(el) => {
+                            headerRefs.current[index] = el as HTMLTableCellElement;
                           }}
-                          onClick={() =>
-                            column.isSort !== false && handleSort(column.id, column?.originalId)
-                          }
+                          sx={{
+                            fontSize: '14px',
+                            width: column.minWidth,
+                            // @ts-ignore
+                            left: column.sticky ? stickyMap[column.id] : 'auto',
+                            right: column.sticky && columns.length === index + 1 ? 0 : 'auto',
+                            zIndex: column.sticky ? 99 : 10,
+                            backgroundColor: column.sticky ? 'background.paper' : 'transparent',
+                            boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+
+                            ...(column.sticky ? { backgroundImage: 'none' } : {}),
+                            '& .column-filter-icon': {
+                              opacity: 0,
+                              transition: 'opacity 0.3s ease',
+                            },
+                            '&:hover .column-filter-icon': { opacity: 1 },
+                            '&::after': {
+                              borderRight: !column.sticky
+                                ? `1px solid ${theme.vars.palette.grey[400]}`
+                                : 'none',
+                              content: '""',
+                              position: 'absolute',
+                              right: '0',
+                              bottom: '0',
+                              height: '40%',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                            },
+                            '&:last-child::after': { borderRight: 'none' },
+                            ...getStickyStyle(column),
+                            position: 'sticky',
+                          }}
                         >
                           <Box
-                            fontSize="14px"
-                            display="block"
-                            textAlign={column.align}
-                            gap={1}
-                            width="inherit"
-                            component="span"
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              cursor: column.isSort !== false ? 'pointer' : 'default',
+                              userSelect: 'none',
+                              fontWeight: 'bold',
+                              width: 'inherit',
+                              gap: 0.5,
+                            }}
+                            onClick={() =>
+                              column.isSort !== false && handleSort(column.id, column?.originalId)
+                            }
                           >
-                            {column.label} {column?.renderColumn?.(column)}
-                          </Box>
-
-                          {column.isFilter && (
-                            <>
-                              <Iconify
-                                icon="lucide:list-filter"
-                                sx={{
-                                  height: '16px',
-                                  width: '16px',
-                                  cursor: 'pointer',
-                                  position: 'absolute',
-                                  right: '4px',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                }}
-                                onClick={(e) => handleColumnFilterClick(e, column)}
-                              />
-                              {filters.some((f) => f.column === column.id) && (
-                                <Box
-                                  sx={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: '50%',
-                                    bgcolor: 'primary.main',
-                                    position: 'absolute',
-                                    top: 8,
-                                    right: 2,
-                                  }}
-                                />
-                              )}
-                            </>
-                          )}
-
-                          {column.isSort !== false && (
                             <Box
-                              width="50px"
-                              display="flex"
-                              justifyContent="center"
-                              alignItems="center"
+                              fontSize="14px"
+                              display="block"
+                              textAlign={column.align}
+                              gap={1}
+                              width="inherit"
+                              component="span"
                             >
-                              {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
-                                <Box component="span" sx={{ fontSize: '0.75em' }}>
-                                  {sorts.findIndex((sort) => sort.column === column.id) + 1}
-                                </Box>
-                              )}
-                              <IconButton
-                                size="small"
+                              {column.label} {column?.renderColumn?.(column)}
+                            </Box>
+
+                            {column.isFilter && (
+                              <>
+                                <Iconify
+                                  icon="lucide:list-filter"
+                                  sx={{
+                                    height: '16px',
+                                    width: '16px',
+                                    cursor: 'pointer',
+                                    position: 'absolute',
+                                    right: '4px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                  }}
+                                  onClick={(e) => handleColumnFilterClick(e, column)}
+                                />
+                                {filters.some((f) => f.column === column.id) && (
+                                  <Box
+                                    sx={{
+                                      width: 8,
+                                      height: 8,
+                                      borderRadius: '50%',
+                                      bgcolor: 'primary.main',
+                                      position: 'absolute',
+                                      top: 8,
+                                      right: 2,
+                                    }}
+                                  />
+                                )}
+                              </>
+                            )}
+
+                            {column.isSort !== false && (
+                              <Box
+                                width="50px"
+                                display="flex"
+                                justifyContent="center"
+                                alignItems="center"
+                              >
+                                {sorts.findIndex((sort) => sort.column === column.id) > -1 && (
+                                  <Box component="span" sx={{ fontSize: '0.75em' }}>
+                                    {sorts.findIndex((sort) => sort.column === column.id) + 1}
+                                  </Box>
+                                )}
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    opacity: sorts.find((sort) => sort.column === column.id)
+                                      ? 1
+                                      : 0,
+                                  }}
+                                >
+                                  {sorts.find((sort) => sort.column === column.id)?.direction ===
+                                  'asc' ? (
+                                    <ArrowUpwardIcon fontSize="inherit" />
+                                  ) : (
+                                    <ArrowDownwardIcon fontSize="inherit" />
+                                  )}
+                                </IconButton>
+                              </Box>
+                            )}
+                          </Box>
+                        </TableCell>
+                      )
+                  )}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell
+                      rowSpan={columns.length + 1}
+                      colSpan={columns.length + 1}
+                      sx={{ height: '50px' }}
+                    >
+                      <Box className="loader" height={24} />
+                    </TableCell>
+                  </TableRow>
+                ) : paginatedData.length > 0 ? (
+                  paginatedData.map((row, index) => (
+                    <React.Fragment key={index}>
+                      <TableRow
+                        hover
+                        tabIndex={-1}
+                        onClick={() => handleRowClick(row, index)}
+                        {...rowProps(row, index)}
+                      >
+                        {columns.some((column) => column.children) && (
+                          <TableCell sx={{ fontSize: '13px' }}>
+                            <IconButton size="small" onClick={() => handleExpandRow(index)}>
+                              {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                            </IconButton>
+                          </TableCell>
+                        )}
+                        {columns.map(
+                          (column, ind) =>
+                            columnVisibility[column.id] && (
+                              <TableCell
+                                key={column.id}
+                                align={column.align}
                                 sx={{
-                                  opacity: sorts.find((sort) => sort.column === column.id) ? 1 : 0,
+                                  alignItems: 'center',
+                                  fontSize: '13px',
+                                  position: column.sticky ? 'sticky' : 'static',
+                                  // @ts-ignore
+                                  left: column.sticky ? stickyMap[column.id] : 'auto',
+                                  right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
+                                  zIndex: column.sticky ? 10 : 2,
+                                  backgroundColor: column.sticky
+                                    ? 'background.paper'
+                                    : 'transparent',
+                                  boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+                                  ...getStickyStyle(column),
                                 }}
                               >
-                                {sorts.find((sort) => sort.column === column.id)?.direction ===
-                                'asc' ? (
-                                  <ArrowUpwardIcon fontSize="inherit" />
-                                ) : (
-                                  <ArrowDownwardIcon fontSize="inherit" />
-                                )}
-                              </IconButton>
-                            </Box>
-                          )}
-                        </Box>
-                      </TableCell>
-                    )
-                )}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    rowSpan={columns.length + 1}
-                    colSpan={columns.length + 1}
-                    sx={{ height: '50px' }}
-                  >
-                    <Box className="loader" height={24} />
-                  </TableCell>
-                </TableRow>
-              ) : paginatedData.length > 0 ? (
-                paginatedData.map((row, index) => (
-                  <React.Fragment key={index}>
-                    <TableRow
-                      hover
-                      tabIndex={-1}
-                      onClick={() => handleRowClick(row, index)}
-                      {...rowProps(row, index)}
-                    >
-                      {columns.some((column) => column.children) && (
-                        <TableCell sx={{ fontSize: '13px' }}>
-                          <IconButton size="small" onClick={() => handleExpandRow(index)}>
-                            {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                          </IconButton>
-                        </TableCell>
-                      )}
-                      {columns.map(
-                        (column, ind) =>
-                          columnVisibility[column.id] && (
-                            <TableCell
-                              key={column.id}
-                              align={column.align}
-                              sx={{
-                                alignItems: 'center',
-                                fontSize: '13px',
-                                position: column.sticky ? 'sticky' : 'static',
-                                // @ts-ignore
-                                left: column.sticky ? stickyMap[column.id] : 'auto',
-                                right: column.sticky && columns.length === ind + 1 ? 0 : 'auto',
-                                zIndex: column.sticky ? 10 : 2,
-                                backgroundColor: column.sticky ? 'background.paper' : 'transparent',
-                                boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
-                                ...getStickyStyle(column),
-                              }}
-                            >
-                              {column.render
-                                ? column.render(_.get(row, column.id, '-') ?? '-', row)
-                                : (_.get(row, column.id, '-') ?? '-')}
-                            </TableCell>
-                          )
-                      )}
-                    </TableRow>
-                    {columns.some((column) => column.children) && (
-                      <TableRow>
-                        <TableCell
-                          style={{ paddingBottom: 0, paddingTop: 0 }}
-                          colSpan={columns.length + 1}
-                        >
-                          <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
-                            <Box sx={{ margin: 1 }}>
-                              {columns.map((column) => column.children && column.children(row))}
-                            </Box>
-                          </Collapse>
-                        </TableCell>
+                                {column.render
+                                  ? column.render(_.get(row, column.id, '-') ?? '-', row)
+                                  : (_.get(row, column.id, '-') ?? '-')}
+                              </TableCell>
+                            )
+                        )}
                       </TableRow>
-                    )}
-                  </React.Fragment>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} sx={{ p: 0 }}>
-                    <EmptyContent
-                      title={noDataText}
-                      sx={{
-                        width: tableRef?.getBoundingClientRect?.()?.width,
-                        position: 'sticky',
-                        left: '0',
-                        padding: '0',
-                      }}
-                    />
-                  </TableCell>
-                </TableRow>
+                      {columns.some((column) => column.children) && (
+                        <TableRow>
+                          <TableCell
+                            style={{ paddingBottom: 0, paddingTop: 0 }}
+                            colSpan={columns.length + 1}
+                          >
+                            <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
+                              <Box sx={{ margin: 1 }}>
+                                {columns.map((column) => column.children && column.children(row))}
+                              </Box>
+                            </Collapse>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} sx={{ p: 0 }}>
+                      <EmptyContent
+                        title={noDataText}
+                        sx={{
+                          width: tableRef?.getBoundingClientRect?.()?.width,
+                          position: 'sticky',
+                          left: '0',
+                          padding: '0',
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          {isShowedDense && (
+            <Paper
+              elevation={0}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                p: 1,
+                width: '100%',
+              }}
+            >
+              {isShowedDense && (
+                <FormControlLabel
+                  control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
+                  label="Dense"
+                />
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {isShowedDense && (
-          <Paper
-            elevation={0}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              p: 1,
-              width: '100%',
-            }}
-          >
-            {isShowedDense && (
-              <FormControlLabel
-                control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
-                label="Dense"
-              />
-            )}
-            {isPagination && (
-              <TablePagination
-                rowsPerPageOptions={[10, 25, 100, { value: filteredData.length, label: 'All' }]}
-                component={Scrollbar}
-                count={serverSide ? totalCount || 0 : filteredData.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                size="small"
-                sx={{
-                  '& *': { fontSize: '14px !important' },
-                  '& svg': { fontSize: '18px !important' },
-                  '& .MuiToolbar-root': { minHeight: 'unset', height: 'auto' },
-                }}
-              />
-            )}
-          </Paper>
-        )}
-      </ComponentBlock>
-    </Card>
+              {isPagination && (
+                <TablePagination
+                  rowsPerPageOptions={[10, 25, 100, { value: filteredData.length, label: 'All' }]}
+                  component={Scrollbar}
+                  count={serverSide ? totalCount || 0 : filteredData.length}
+                  rowsPerPage={rowsPerPage}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  size="small"
+                  sx={{
+                    '& *': { fontSize: '14px !important' },
+                    '& svg': { fontSize: '18px !important' },
+                    '& .MuiToolbar-root': { minHeight: 'unset', height: 'auto' },
+                  }}
+                />
+              )}
+            </Paper>
+          )}
+        </ComponentBlock>
+      </Card>
+    ),
+    [
+      anchorColumnEl,
+      clearAllFilters,
+      columnSearchTerm,
+      columnVisibility,
+      columns,
+      dense,
+      expandedRows,
+      exportAnchorEl,
+      filterAnchorEl,
+      filteredData.length,
+      filters,
+      fullScreenDialog,
+      getStickyStyle,
+      handelChangeParams,
+      handleApplyColumnFilter,
+      handleChangeDense,
+      handleChangePage,
+      handleChangeRowsPerPage,
+      handleExport,
+      handleRowClick,
+      handleSearch,
+      handleSort,
+      isFilter,
+      isLoading,
+      isPagination,
+      isSearch,
+      isShowedDense,
+      noDataText,
+      other,
+      page,
+      paginatedData,
+      removeFilter,
+      rowProps,
+      rowsPerPage,
+      searchFieldProps,
+      searchValue,
+      serverSide,
+      sorts,
+      stickyMap,
+      sx,
+      tableRef,
+      theme.vars.palette.grey,
+      totalCount,
+    ]
   );
-
   return (
     <>
-      {!fullScreenDialog.value && tableContent}
+      {tableContent}
+
       <CustomDialog
-        title={tableId}
-        fullScreen
         open={fullScreenDialog.value}
-        handleClose={() => fullScreenDialog.onFalse()}
+        fullScreen
+        title="Table View"
+        handleClose={() => {
+          fullScreenDialog.onFalse();
+        }}
       >
         {tableContent}
       </CustomDialog>
