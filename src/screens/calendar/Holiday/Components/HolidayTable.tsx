@@ -130,7 +130,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
             { id: 'holidayType', label: 'Type', align: 'left' },
             {
               id: 'audience',
-              label: 'Target Group',
+              label: 'Audience',
               align: 'left',
               render: (value) => <Box>{value.join(', ')}</Box>,
             },

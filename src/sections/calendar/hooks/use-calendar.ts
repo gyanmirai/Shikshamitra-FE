@@ -31,6 +31,21 @@ export function useCalendar({
 
   const [view, setView] = useState<ICalendarView>(smUp ? 'dayGridMonth' : 'listWeek');
 
+  // Function to scroll to current time
+  const scrollToCurrentTime = () => {
+    const calendarApi = calendarRef.current?.getApi();
+    if (calendarApi) {
+      const now = new Date();
+      const currentTime = `${now.getHours()}:00:00`;
+      calendarApi.scrollToTime(currentTime);
+    }
+  };
+
+  // Scroll when the calendar initially loads
+  useEffect(() => {
+    scrollToCurrentTime();
+  }, [view]);
+
   useEffect(() => {
     if (initialDate) {
       setDate(initialDate);

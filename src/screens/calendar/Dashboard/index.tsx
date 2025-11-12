@@ -10,8 +10,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CommonCalender from 'src/components/calender';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import ViewDialog from './Components/ViewDialog';
 import FilterDialog from './Components/FilterDialog';
+import CalendarViewDialog from './Components/ViewDialog';
 
 import type { Filters } from './Components/FilterDialog';
 
@@ -318,7 +318,7 @@ const data = [
   },
 ];
 
-const CalendarDashboard = () => {
+const CalendarView = () => {
   const theme = useTheme();
   const [filters, setFilters] = useState<Filters>({
     eventType: [],
@@ -367,71 +367,65 @@ const CalendarDashboard = () => {
   const hasActiveFilters = Object.values(filters).some((filterArray) => filterArray.length > 0);
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', pb: 2 }}>
       <CustomBreadcrumbs
-        heading="Dashboard"
-        links={[{ name: 'Calendar' }, { name: 'Dashboard' }]}
+        heading="Calendar View"
+        links={[{ name: 'Calendar' }, { name: 'Calendar View' }]}
         sx={{ px: 1, mb: 2 }}
       />
 
-      {/* Display active filters */}
+      {/* Display active filters - grouped blocks */}
       {hasActiveFilters && (
         <Box
           sx={{
             display: 'flex',
-            flexWrap: 'wrap',
-            gap: 1,
+            // flexDirection: 'column',
+            gap: 1.5,
             mb: 2,
-            p: 1,
+            flexWrap: 'wrap',
             alignItems: 'center',
-            backgroundColor: theme.vars.palette.background.paper,
-            border: `1px solid ${theme.palette.divider}`,
-            borderRadius: '6px',
           }}
         >
-          {filters.eventType.length > 0 &&
-            filters.eventType.map((type) => (
-              <Chip
-                key={`event-${type}`}
-                label={`Event: ${type}`}
-                onDelete={() => handleRemoveFilter('eventType', type)}
-                variant="soft"
-                color="primary"
-                size="small"
-              />
-            ))}
-          {filters.holidayType.length > 0 &&
-            filters.holidayType.map((type) => (
-              <Chip
-                key={`holiday-${type}`}
-                label={`Holiday: ${type}`}
-                onDelete={() => handleRemoveFilter('holidayType', type)}
-                variant="soft"
-                color="error"
-                size="small"
-              />
-            ))}
-          {filters.status.length > 0 &&
-            filters.status.map((status) => (
-              <Chip
-                key={`status-${status}`}
-                label={`Status: ${status}`}
-                onDelete={() => handleRemoveFilter('status', status)}
-                color="info"
-                variant="soft"
-                size="small"
-              />
-            ))}
-          <Button
-            size="small"
-            color="error"
-            startIcon={
-              <Iconify icon="solar:trash-bin-trash-bold" sx={{ width: '20px', height: '20px' }} />
-            }
-            onClick={() => setFilters({ eventType: [], holidayType: [], status: [] })}
-          >
-            Clear ({filters.eventType.length + filters.holidayType.length + filters.status.length})
-          </Button>
+          {filters.eventType.length > 0 && (
+            <FilterGroupBlock
+              title="Events"
+              color="primary"
+              items={filters.eventType}
+              onDelete={(v) => handleRemoveFilter('eventType', v)}
+              chipColor="primary"
+            />
+          )}
+          {filters.holidayType.length > 0 && (
+            <FilterGroupBlock
+              title="Holidays"
+              color="error"
+              items={filters.holidayType}
+              onDelete={(v) => handleRemoveFilter('holidayType', v)}
+              chipColor="error"
+            />
+          )}
+          {filters.status.length > 0 && (
+            <FilterGroupBlock
+              title="Status"
+              color="info"
+              items={filters.status}
+              onDelete={(v) => handleRemoveFilter('status', v)}
+              chipColor="info"
+            />
+          )}
+          <Box>
+            <Button
+              size="small"
+              color="error"
+              startIcon={
+                <Iconify icon="solar:trash-bin-trash-bold" sx={{ width: '20px', height: '20px' }} />
+              }
+              onClick={() => setFilters({ eventType: [], holidayType: [], status: [] })}
+            >
+              Clear All (
+              {filters.eventType.length + filters.holidayType.length + filters.status.length})
+            </Button>
+          </Box>
         </Box>
       )}
 
@@ -450,12 +444,14 @@ const CalendarDashboard = () => {
         }}
         containerProps={{
           sx: {
-            minHeight: '50vh',
+            height: '100%',
           },
         }}
+        canReset={hasActiveFilters}
+        nowIndicator
       />
 
-      <ViewDialog
+      <CalendarViewDialog
         open={Boolean(currentDateClick)}
         onClose={() => setCurrentDateClick(null)}
         data={currentDateClick}
@@ -470,4 +466,62 @@ const CalendarDashboard = () => {
   );
 };
 
-export default CalendarDashboard;
+export default CalendarView;
+
+// Group block component for filters
+interface FilterGroupBlockProps {
+  title: string;
+  items: string[];
+  onDelete: (value: string) => void;
+  color: 'primary' | 'error' | 'info' | 'success' | 'warning' | 'secondary';
+  chipColor?: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+}
+
+const FilterGroupBlock = ({
+  title,
+  items,
+  onDelete,
+  color,
+  chipColor = 'primary',
+}: FilterGroupBlockProps) => {
+  const theme = useTheme();
+  if (!items.length) return null;
+  return (
+    <Box
+      sx={{
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 1.2,
+        p: 1,
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 1,
+        backgroundColor: theme.vars.palette.background.paper,
+      }}
+    >
+      <Box
+        sx={{
+          // minWidth: 90,
+          display: 'flex',
+          alignItems: 'center',
+          fontSize: 13,
+          fontWeight: 600,
+          // color: theme.palette[color].main,
+        }}
+      >
+        {title}
+      </Box>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        {items.map((item) => (
+          <Chip
+            key={`${title}-${item}`}
+            label={item}
+            onDelete={() => onDelete(item)}
+            color={chipColor}
+            variant="soft"
+            size="small"
+          />
+        ))}
+      </Box>
+    </Box>
+  );
+};

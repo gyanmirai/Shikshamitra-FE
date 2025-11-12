@@ -29,7 +29,8 @@ export const getEventInitialValues = (initialValues: IEventAnnouncement | null) 
   isRecurring: initialValues?.isRecurring || false,
   repeatFrequency: initialValues?.repeatFrequency || '',
   meetingDate: initialValues?.meetingDate ? dayjs(initialValues.meetingDate) : dayjs(),
-  meetingTime: initialValues?.meetingTime ? dayjs(initialValues.meetingTime) : null,
+  startTime: initialValues?.startTime ? dayjs(initialValues.startTime) : null,
+  endTime: initialValues?.endTime ? dayjs(initialValues.endTime) : null,
   repeatUntil: initialValues?.repeatUntil ? dayjs(initialValues.repeatUntil) : null,
   day: initialValues?.day || '',
 

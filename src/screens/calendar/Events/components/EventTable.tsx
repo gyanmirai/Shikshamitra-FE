@@ -11,11 +11,9 @@ import React, { useMemo, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Tab, Tabs, MenuList, MenuItem, Typography } from '@mui/material';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { EventStatus, EventStatusColor, EventStatusOptions } from 'src/enums/event-type';
 
 import type { IEventAnnouncement } from '../type';
-import type { IAudience } from '../../announcement/type';
 
 interface IEventAnnouncementTableProps {
   setOpen: (value: boolean) => void;
@@ -167,37 +165,18 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
           }
           data={tableData || []}
           columns={[
-            { id: 'title', label: 'Title', align: 'left', sticky: true },
+            { id: 'title', label: 'Title', align: 'left', sticky: true, minWidth: 150 },
             { id: 'type', label: 'Type', align: 'left' },
             {
               id: 'audience',
-              label: 'Audience',
+              label: 'Target Group',
               align: 'left',
-              render: (value, row) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {row.audience?.map((aud: IAudience) => (
-                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SubjectColorIndicator color={aud.color} />
-                      <Typography variant="caption" fontSize="13px">
-                        {aud.name}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              ),
+              minWidth: 150,
+              render(value, row) {
+                return value.join(', ');
+              },
             },
-            {
-              id: 'classes',
-              label: 'Classes',
-              align: 'left',
-              render: (val) => (val?.length ? val.join(',') : 'All'),
-            },
-            {
-              id: 'divisions',
-              label: 'Divisions',
-              align: 'left',
-              render: (val) => (val?.length ? val.join(',') : 'All'),
-            },
+
             {
               id: 'eventMode',
               label: 'Mode',
@@ -295,37 +274,18 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
           }
           data={tableData || []}
           columns={[
-            { id: 'title', label: 'Title', align: 'left', sticky: true },
+            { id: 'title', label: 'Title', align: 'left', sticky: true, minWidth: 150 },
             { id: 'type', label: 'Type', align: 'left' },
             {
               id: 'audience',
-              label: 'Audience',
+              label: 'Target Group',
               align: 'left',
-              render: (value, row) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {row.audience?.map((aud: IAudience) => (
-                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SubjectColorIndicator color={aud.color} />
-                      <Typography variant="caption" fontSize="13px">
-                        {aud.name}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              ),
+              minWidth: 150,
+              render(value, row) {
+                return value.join(', ');
+              },
             },
-            {
-              id: 'classes',
-              label: 'Classes',
-              align: 'left',
-              render: (val) => (val?.length ? val.join(',') : 'All'),
-            },
-            {
-              id: 'divisions',
-              label: 'Divisions',
-              align: 'left',
-              render: (val) => (val?.length ? val.join(',') : 'All'),
-            },
+
             {
               id: 'eventMode',
               label: 'Mode',

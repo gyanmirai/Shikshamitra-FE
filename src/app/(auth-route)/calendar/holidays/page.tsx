@@ -1,5 +1,5 @@
 import React from 'react';
-import HolidayManagement from 'src/screens/communication/Holiday';
+import HolidayManagement from 'src/screens/calendar/Holiday';
 
 const page = () => <HolidayManagement />;
 

@@ -4,11 +4,11 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -25,8 +25,6 @@ import {
   FormHelperText,
   FormControlLabel,
 } from '@mui/material';
-
-import { getRecurrenceSummary } from './getReccuringMessage';
 
 interface RecurringScheduleFormProps {
   initialValues: any;
@@ -231,7 +229,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
     onSubmit: (values) => onSubmit(values),
   });
 
-  const recurrenceMessage = useMemo(() => getRecurrenceSummary(formik.values), [formik.values]);
+  // const recurrenceMessage = useMemo(() => getRecurrenceSummary(formik.values), [formik.values]);
 
   useEffect(() => {
     formik.resetForm();
@@ -959,7 +957,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
       <DialogScrollContent sx={{ p: 2 }}>
         {renderRecurringFields()}
 
-        {recurrenceMessage && (
+        {/* {recurrenceMessage && (
           <Box
             sx={{
               borderRadius: 1,
@@ -971,7 +969,7 @@ const RecurringScheduleForm: React.FC<RecurringScheduleFormProps> = ({
           >
             {recurrenceMessage}
           </Box>
-        )}
+        )} */}
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button

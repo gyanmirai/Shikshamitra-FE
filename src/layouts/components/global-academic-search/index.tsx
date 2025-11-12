@@ -21,7 +21,6 @@ import {
 
 import type { GlobalAcademicSearchOption } from './types';
 
-// Pulse animation keyframes
 // Define keyframes using the theme
 const createPulseAnimation = (theme: Theme) => keyframes`
   0% {
@@ -112,7 +111,7 @@ const GlobalAcademicSearch = () => {
   useEffect(() => {
     if (currentYear?.id && currentBoard?.id && currentMedium?.id) {
       setSelectedDivision({
-        label: `${currentYear?.name} / ${currentBoard?.name} / ${currentMedium?.name}`,
+        label: `${currentYear?.name || ''} / ${currentBoard?.name || ''} / ${currentMedium?.name || ''}`,
         value: `${currentYear?.id}-${currentBoard?.id}-${currentMedium?.id}`,
         academicYear: currentYear,
         board: currentBoard,
@@ -144,7 +143,7 @@ const GlobalAcademicSearch = () => {
                 new Map(options.map((item) => [item.academicYear.name, item])).values()
               )}
               getOptionLabel={(option) => option.academicYear.name}
-              value={(selectedDivision ?? {}) as any}
+              value={(selectedDivision ?? undefined) as any}
               loading={isYearLoading || isBoardLoading}
               clearIcon={false}
               disableClearable
@@ -173,7 +172,7 @@ const GlobalAcademicSearch = () => {
             <Autocomplete
               options={options}
               getOptionLabel={(option) => option.label}
-              value={(selectedDivision ?? {}) as any}
+              value={(selectedDivision ?? undefined) as any}
               loading={isYearLoading || isBoardLoading}
               clearIcon={false}
               disableClearable

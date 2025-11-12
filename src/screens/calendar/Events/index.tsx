@@ -26,7 +26,7 @@ import EventDetailsComponent from './components/EventDetails/EventDetailsCompone
 
 import type { IEventAnnouncement } from './type';
 
-const UpcomingEvents = (props: TabComponentType) => {
+const Events = (props: TabComponentType) => {
   // State to store the selected event details
   const { data: eventTableData } = useQueryAndMutation({
     type: 'query',
@@ -209,29 +209,14 @@ const UpcomingEvents = (props: TabComponentType) => {
         }
       />
 
-      <CustomDialog
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">{editingEvent?.title}</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="View detailed information about this school-wide event, including schedule, venue, and target audience."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
+      <EventDetailsComponent
+        event={editingEvent}
         open={view_dialog.value}
-        handleClose={() => {
+        onClose={() => {
           setEditingEvent(null);
           view_dialog.onFalse();
         }}
-        maxWidth="md"
-      >
-        <EventDetailsComponent event={editingEvent} />
-      </CustomDialog>
+      />
 
       <CustomDialog
         title={
@@ -260,4 +245,4 @@ const UpcomingEvents = (props: TabComponentType) => {
   );
 };
 
-export default UpcomingEvents;
+export default Events;

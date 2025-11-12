@@ -22,7 +22,7 @@ type ViewDialogProps = {
   data: any;
 };
 
-export default function ViewDialog({ open, onClose, data }: ViewDialogProps) {
+export default function CalendarViewDialog({ open, onClose, data }: ViewDialogProps) {
   return (
     <Dialog
       open={open}
