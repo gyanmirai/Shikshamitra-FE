@@ -5,7 +5,6 @@ import type { Division } from 'src/types/school';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { Box, Grid, Chip, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
@@ -47,105 +46,90 @@ const ExamBasicReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) =
     <SectionCard title="Basic Details">
       {/* Left Column */}
       <Grid size={12}>
-        <Box display="flex" gap={3} alignItems="flex-start">
+        <Box display="flex" gap={10} alignItems="flex-start">
           {/* Exam Type */}
-          <Box display="flex" alignItems="flex-start" gap={1} minWidth={200}>
-            <Iconify icon="mdi:clipboard-text-outline" width={20} />
-            <Box display="flex" flexDirection="column">
-              <Typography variant="subtitle2" color="text.secondary">
-                Exam Type
-              </Typography>
-              <Typography variant="body2" fontWeight="500">
-                {values.examType}
-              </Typography>
-            </Box>
+
+          <Box display="flex" flexDirection="column">
+            <Typography variant="body2" color="text.secondary">
+              Exam Type
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
+              {values.examType || '-'}
+            </Typography>
           </Box>
 
           {/* Subjects */}
-          <Box display="flex" alignItems="flex-start" gap={1} minWidth={250}>
-            <Iconify icon="mdi:book-open-variant" width={20} />
-            <Box display="flex" flexDirection="column">
-              <Typography variant="subtitle2" color="text.secondary">
-                Subjects
-              </Typography>
-              <Box display="flex" flexWrap="wrap" gap={0.5}>
-                {values.selectedSubjects.map((subject) => (
-                  <Chip
-                    key={subject}
-                    label={subject}
-                    size="small"
-                    variant="soft"
-                    sx={{ fontSize: '0.75rem' }}
-                  />
-                ))}
-              </Box>
+
+          <Box display="flex" flexDirection="column">
+            <Typography variant="body2" color="text.secondary">
+              Subjects
+            </Typography>
+            <Box display="flex" flexWrap="wrap" gap={0.5}>
+              {values.selectedSubjects.map((subject) => (
+                <Chip
+                  key={subject}
+                  label={subject}
+                  size="small"
+                  variant="soft"
+                  sx={{ fontSize: '0.75rem' }}
+                />
+              ))}
             </Box>
           </Box>
 
           {/* Class */}
-          <Box display="flex" alignItems="flex-start" gap={1} minWidth={150}>
-            <Iconify icon="mdi:school-outline" width={20} />
-            <Box display="flex" flexDirection="column">
-              <Typography variant="subtitle2" color="text.secondary">
-                Class
-              </Typography>
-              <Typography variant="body2" fontWeight="500">
-                {className}
-              </Typography>
-            </Box>
+
+          <Box display="flex" flexDirection="column">
+            <Typography variant="body2" color="text.secondary">
+              Class
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
+              {className || '-'}
+            </Typography>
           </Box>
 
           {/* Exam Name */}
-          <Box display="flex" alignItems="flex-start" gap={1} minWidth={200}>
-            <Iconify icon="mdi:format-title" width={20} />
-            <Box display="flex" flexDirection="column">
-              <Typography variant="subtitle2" color="text.secondary">
-                Exam Name
-              </Typography>
-              <Typography variant="body2" fontWeight="500">
-                {values.examName}
-              </Typography>
-            </Box>
+
+          <Box display="flex" flexDirection="column">
+            <Typography variant="body2" color="text.secondary">
+              Exam Name
+            </Typography>
+            <Typography variant="body1" fontWeight="medium">
+              {values.examName || '-'}
+            </Typography>
           </Box>
 
           {/* Division */}
-          <Box display="flex" alignItems="flex-start" gap={1} minWidth={150}>
-            <Iconify icon="mdi:view-grid-outline" width={20} />
-            <Box display="flex" flexDirection="column">
-              <Typography variant="subtitle2" color="text.secondary">
-                Division
-              </Typography>
-              <Box display="flex" flexWrap="wrap" gap={0.5}>
-                {divisions.map((division: Division) => (
-                  <Chip
-                    key={division.id}
-                    label={division.name}
-                    size="small"
-                    variant="soft"
-                    sx={{ fontSize: '0.75rem' }}
-                  />
-                ))}
-              </Box>
+
+          <Box display="flex" flexDirection="column">
+            <Typography variant="body2" color="text.secondary">
+              Division
+            </Typography>
+            <Box display="flex" flexWrap="wrap" gap={0.5}>
+              {divisions.map((division: Division) => (
+                <Chip
+                  key={division.id}
+                  label={division.name}
+                  size="small"
+                  variant="soft"
+                  sx={{ fontSize: '0.75rem' }}
+                />
+              ))}
             </Box>
           </Box>
 
           {/* Status */}
           {values.status !== undefined && (
-            <Box display="flex" alignItems="flex-start" gap={1} minWidth={150}>
-              <Iconify icon="mdi:information-outline" width={20} />
-              <Box display="flex" flexDirection="column">
-                <Typography variant="subtitle2" color="text.secondary">
-                  Status
-                </Typography>
-                <Label
-                  color={
-                    values.status === 1 ? 'success' : values.status === 0 ? 'warning' : 'error'
-                  }
-                  variant="soft"
-                >
-                  {values.status === 1 ? 'Active' : values.status === 0 ? 'Draft' : 'Cancelled'}
-                </Label>
-              </Box>
+            <Box display="flex" flexDirection="column">
+              <Typography variant="body2" color="text.secondary">
+                Status
+              </Typography>
+              <Label
+                color={values.status === 1 ? 'success' : values.status === 0 ? 'warning' : 'error'}
+                variant="soft"
+              >
+                {values.status === 1 ? 'Active' : values.status === 0 ? 'Draft' : 'Cancelled'}
+              </Label>
             </Box>
           )}
         </Box>
@@ -153,13 +137,13 @@ const ExamBasicReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) =
         {/* Description - Full Width */}
         {values.description && (
           <Box display="flex" flexDirection="column" gap={1} mt={2}>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Iconify icon="mdi:text-box-outline" width={20} />
-              <Typography variant="subtitle2" color="text.secondary">
-                Description
-              </Typography>
-            </Box>
-            <Typography variant="body2">{values.description}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Description
+            </Typography>
+
+            <Typography variant="body1" fontWeight="medium">
+              {values.description || '-'}
+            </Typography>
           </Box>
         )}
       </Grid>

@@ -41,7 +41,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   // State to store currently selected assignment for edit/delete/publish
   const [selectedAssignment, setSelectedAssignment] = useState<IAssignment | null>(null);
   // State to store list of all assignments
-  const [assignmentData, setAssignmentData] = useState<IAssignment[]>(assignmentTableData);
+  const [assignmentData, setAssignmentData] = useState<any[]>(assignmentTableData);
   // Redux dispatch function
   const dispatch = useDispatch();
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);

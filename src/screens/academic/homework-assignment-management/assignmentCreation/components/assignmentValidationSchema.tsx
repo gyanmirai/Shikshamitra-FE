@@ -51,6 +51,14 @@ export const assignmentValidationSchema = (currentYear: any) =>
               (value) =>
                 value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
             )
+            .test('after-publish', 'Due Date must be on or after Publish Date', function (value) {
+              const { publishDate } = this.parent;
+              return (
+                !value ||
+                !publishDate ||
+                dayjs(value as any).isSameOrAfter(dayjs(publishDate), 'day')
+              );
+            })
             .required('Due Date is required'),
         })
       )

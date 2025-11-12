@@ -67,11 +67,13 @@ const tableData = [
 interface SeatAllocationTableProps {
   openSeatAllocation: UseBooleanReturn;
   examData?: IExamAllocation[];
+  onSeatAllocate: (className: string) => void;
 }
 
 const SeatAllocationTable = ({
   openSeatAllocation,
   examData = tableData,
+  onSeatAllocate,
 }: SeatAllocationTableProps) => {
   const [data, setData] = useState(examData);
 
@@ -80,6 +82,7 @@ const SeatAllocationTable = ({
       <MenuList>
         <MenuItem
           onClick={() => {
+            onSeatAllocate(row.className);
             openSeatAllocation.onTrue();
             pop.onClose();
           }}
@@ -94,7 +97,7 @@ const SeatAllocationTable = ({
         </MenuItem>
       </MenuList>
     ),
-    [openSeatAllocation]
+    [onSeatAllocate, openSeatAllocation]
   );
 
   return (
@@ -102,7 +105,7 @@ const SeatAllocationTable = ({
       tableId="schedule-exam-table"
       noDataText={<>Exam Data Not Found </>}
       columns={[
-        { id: 'examName', label: 'Exam Name', align: 'left', minWidth: 120 },
+        { id: 'examName', label: 'Exam Name', align: 'left', minWidth: 120, sticky: true },
         { id: 'examType', label: 'Exam Type', align: 'left', minWidth: 110 },
         {
           id: 'className',

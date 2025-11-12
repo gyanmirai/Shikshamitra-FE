@@ -95,7 +95,7 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
         </>
       }
       columns={[
-        { id: 'title', label: 'Title', align: 'left', filterType: 'string' },
+        { id: 'title', label: 'Title', align: 'left', filterType: 'string', sticky: true },
         { id: 'homeworkType', label: 'Type', align: 'left', filterType: 'string' },
         {
           id: 'createdAt',
