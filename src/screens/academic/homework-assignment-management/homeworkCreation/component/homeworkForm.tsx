@@ -355,8 +355,8 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           format="DD/MM/YYYY hh:mm"
                           minDate={dayjs(currentYear?.startDate)}
                           maxDate={dayjs(currentYear?.endDate)}
-                          // minDateTime={dayjs()}
-                          value={div.publishDate}
+                          minDateTime={dayjs()}
+                          value={div.publishDate ? dayjs(div.publishDate) : dayjs()}
                           onChange={(val) => {
                             formik.setFieldValue(`divisions[${idx}].publishDate`, val);
                             formik.validateField(`divisions[${idx}].publishDate`);
@@ -395,8 +395,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                           format="DD/MM/YYYY hh:mm"
                           minDate={dayjs(currentYear?.startDate)}
                           maxDate={dayjs(currentYear?.endDate)}
-                          // minTime={dayjs()}
-                          value={div.dueDate}
+                          value={div.dueDate ? dayjs(div.dueDate) : dayjs()}
                           onChange={(val) => formik.setFieldValue(`divisions[${idx}].dueDate`, val)}
                           disabled={!div.publishDate}
                           ampm={false}

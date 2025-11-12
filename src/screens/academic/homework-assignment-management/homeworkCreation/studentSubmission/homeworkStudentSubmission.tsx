@@ -13,8 +13,8 @@ import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, MenuList, MenuItem, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, MenuList, MenuItem, Checkbox, Typography } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
   ScheduleExamStatus,
@@ -28,12 +28,12 @@ import AssignMarksForText from '../component/assignMarksForText';
 import type { TStudentGrade, IStudentSubmissionsProps } from '../type';
 
 export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
-  selectedStudents,
   selectedHomework,
   handleBulkUpdate,
-  tableData,
-  setTableData,
 }) => {
+  // Local state for selected students
+  const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
+
   // State to track the currently selected student for individual grading
   const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>();
 
@@ -47,6 +47,75 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const dispatch = useDispatch();
   // Dialog control for viewing student submission details
   const viewSubmissionDialog = useBoolean();
+
+  // Dummy data for students
+  // Dummy data for students
+  const studentData = [
+    {
+      id: '1',
+      rollNumber: '1',
+      grNumber: 'GR0001',
+      studentName: 'Sharma Priya Rajesh',
+      homework: selectedHomework?.value || '',
+      homeworkType: 'Written Assignment',
+      submissionType: selectedHomework?.submissionType || 'online_text',
+      submissionDate: '20-05-2025',
+      dueDate: '25-05-2025',
+      marks: 45,
+      totalMarks: 50,
+      feedback: 'Excellent analysis!',
+      remarks: 'Well done on the assignment.',
+      status: ScheduleExamStatus.Reviewed,
+    },
+    {
+      id: '2',
+      rollNumber: '2',
+      grNumber: 'GR0002',
+      studentName: 'Kumar Arjun Dinesh',
+      homework: selectedHomework?.value || '',
+      homeworkType: 'Written Assignment',
+      submissionType: selectedHomework?.submissionType || 'online_text',
+      submissionDate: '21-05-2025',
+      dueDate: '25-05-2025',
+      marks: 28,
+      totalMarks: 30,
+      feedback: 'Great understanding of concepts',
+      remarks: 'Keep up the good work.',
+      status: ScheduleExamStatus.Reviewed,
+    },
+    {
+      id: '3',
+      rollNumber: '3',
+      grNumber: 'GR0003',
+      studentName: 'Gupta Ananya Suresh',
+      homework: selectedHomework?.value || '',
+      homeworkType: 'Written Assignment',
+      submissionType: selectedHomework?.submissionType || 'online_text',
+      submissionDate: '23-05-2025',
+      dueDate: '25-05-2025',
+      marks: 0,
+      totalMarks: 40,
+      feedback: '',
+      remarks: '',
+      status: ScheduleExamStatus['Needs Review'],
+    },
+    {
+      id: '4',
+      rollNumber: '4',
+      grNumber: 'GR0004',
+      studentName: 'Singh Rohan Vikram',
+      homework: selectedHomework?.value || '',
+      homeworkType: 'Written Assignment',
+      submissionType: selectedHomework?.submissionType || 'online_text',
+      submissionDate: '24-05-2025',
+      dueDate: '25-05-2025',
+      marks: 24,
+      totalMarks: 25,
+      feedback: 'Excellent analysis!',
+      remarks: 'Well done on the assignment.',
+      status: ScheduleExamStatus.Reviewed,
+    },
+  ];
 
   /**
    * Handles closing the view submission dialog and resetting the selected student
@@ -75,60 +144,49 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   };
 
   // Memoized callback that returns the action menu items for each row
-  // @param pop - Popover control object for menu visibility
-  // @param row - Current row data containing submission and marks status
-  // @returns JSX element containing conditional menu items
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          {/* Show 'Assign Grade' option only when marks are not assigned (marksStatus=0)
-              but submission is completed (submissionStatus!=0) */}
-          {row.status === ScheduleExamStatus['Needs Review'] && (
-            <MenuItem
-              onClick={() => {
-                setSelectedStudent(row);
-                viewSubmissionDialog.onTrue();
-                pop.onClose();
-              }}
-            >
-              {' '}
-              <Iconify icon="mdi:arrow-right-circle" />
-              Give Feedback
-            </MenuItem>
-          )}
-          {row.status === ScheduleExamStatus.Reviewed && (
-            <MenuItem
-              onClick={() => {
-                setSelectedStudent(row);
-                viewSubmissionDialog.onTrue();
-                pop.onClose();
-              }}
-            >
-              {' '}
-              <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
-              Edit Feedback
-            </MenuItem>
-          )}
+      <MenuList>
+        {/* Show 'Assign Grade' option only when marks are not assigned */}
+        {row.status === ScheduleExamStatus['Needs Review'] && (
+          <MenuItem
+            onClick={() => {
+              setSelectedStudent(row as TStudentGrade);
+              viewSubmissionDialog.onTrue();
+              pop.onClose();
+            }}
+          >
+            <Iconify icon="mdi:arrow-right-circle" />
+            Give Feedback
+          </MenuItem>
+        )}
+        {row.status === ScheduleExamStatus.Reviewed && (
+          <MenuItem
+            onClick={() => {
+              setSelectedStudent(row);
+              viewSubmissionDialog.onTrue();
+              pop.onClose();
+            }}
+          >
+            <Iconify icon={GlobalIcons.edit} sx={{ height: '16px', width: '16px' }} />
+            Edit Feedback
+          </MenuItem>
+        )}
 
-          {/* Show 'Send Reminder' option only when homework is published */}
-          {row.status === ScheduleExamStatus.Published && (
-            <MenuItem onClick={() => {}}>
-              {' '}
-              <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
-              Send Reminder
-            </MenuItem>
-          )}
-        </MenuList>
-      </>
+        {/* Show 'Send Reminder' option only when homework is published */}
+        {row.status === ScheduleExamStatus.Published && (
+          <MenuItem onClick={() => {}}>
+            <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
+            Send Reminder
+          </MenuItem>
+        )}
+      </MenuList>
     ),
-    [viewSubmissionDialog] // Re-create callback only when viewSubmissionDialog changes
+    [viewSubmissionDialog]
   );
 
   /**
    * Handler for sending notifications
-   * Opens the instant notification dialog if it's not already open
    */
   const handlerSendNotification = () => {
     if (!sendInstantNotificationDialogValue.value) {
@@ -140,16 +198,68 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     <Box>
       <CustomizableTable
         onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudents?.length !== 0}
+        showCheckbox={selectedStudents?.length > 0}
         tableId="student-submissions"
         noDataText="Homework Submission Data Not Found"
         columns={[
           {
+            id: 'checkBox',
+            align: 'center',
+            minWidth: '60px',
+            isSort: false,
+            sticky: true,
+            isFilter: false,
+            label: '',
+            renderColumn() {
+              return (
+                <Checkbox
+                  checked={
+                    studentData?.length > 0 && selectedStudents?.length === studentData?.length
+                  }
+                  indeterminate={
+                    selectedStudents?.length > 0 && selectedStudents?.length < studentData?.length
+                  }
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(studentData || []);
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                />
+              );
+            },
+            render(value, row) {
+              const isChecked = selectedStudents?.some((i: any) => i.id === row.id) || false;
+
+              return (
+                <Checkbox
+                  checked={isChecked}
+                  onChange={(e) => {
+                    e.stopPropagation();
+
+                    if (e.target.checked) {
+                      setSelectedStudents([...selectedStudents, row]);
+                    } else {
+                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                    }
+                  }}
+                />
+              );
+            },
+          },
+          {
             id: 'studentName',
-            label: 'Student Name',
+            label: 'Student Name/Gr No.',
             align: 'left',
             sticky: true,
-            minWidth: 170,
+            minWidth: 190,
+            render: (value, row) => (
+              <Box>
+                <Typography variant="body2">{value}</Typography>
+                <Typography variant="caption">({row.grNumber})</Typography>
+              </Box>
+            ),
           },
           {
             id: 'rollNumber',
@@ -177,7 +287,52 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             id: 'feedback',
             label: 'Feedback',
             render: (value, row) => (
-              <CustomTooltip title={value || '-'} arrow sx={{ textAlign: 'justify' }}>
+              <Box
+                onClick={() => {
+                  setSelectedStudent(row as TStudentGrade);
+                  viewSubmissionDialog.onTrue();
+                }}
+                sx={{
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                    borderRadius: 1,
+                  },
+                  p: 0.5,
+                }}
+              >
+                <CustomTooltip
+                  title={value || 'Click to add feedback'}
+                  arrow
+                  sx={{ textAlign: 'justify' }}
+                >
+                  <Typography
+                    variant="caption"
+                    fontSize="13px"
+                    noWrap
+                    sx={{
+                      maxWidth: 150,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      display: 'block',
+                      color: value ? 'text.primary' : 'text.secondary',
+                      fontStyle: value ? 'normal' : 'italic',
+                    }}
+                  >
+                    {value || 'Add feedback'}
+                  </Typography>
+                </CustomTooltip>
+              </Box>
+            ),
+          },
+          {
+            id: 'remarks',
+            label: 'Remarks',
+            align: 'left',
+            minWidth: 150,
+            render: (value, row) => (
+              <CustomTooltip title={value || 'No remarks'} arrow sx={{ textAlign: 'justify' }}>
                 <Typography
                   variant="caption"
                   fontSize="13px"
@@ -188,9 +343,11 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                     display: 'block',
+                    color: value ? 'text.primary' : 'text.secondary',
+                    fontStyle: value ? 'normal' : 'italic',
                   }}
                 >
-                  {value || '-'}
+                  {value || 'No remarks'}
                 </Typography>
               </CustomTooltip>
             ),
@@ -226,64 +383,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             },
           },
         ]}
-        data={[
-          {
-            id: '1',
-            rollNumber: '1',
-            studentName: 'Sharma Priya Rajesh',
-            homework: selectedHomework?.value || '',
-            homeworkType: 'Written Assignment',
-            submissionType: selectedHomework?.submissionType || 'online_text',
-            submissionDate: '20-05-2025',
-            dueDate: '25-05-2025',
-            marks: 45,
-            totalMarks: 50,
-            feedback: 'Excellent analysis!',
-            status: ScheduleExamStatus.Reviewed,
-          },
-          {
-            id: '2',
-            rollNumber: '2',
-            studentName: 'Kumar Arjun Dinesh',
-            homework: selectedHomework?.value || '',
-            homeworkType: 'Written Assignment',
-            submissionType: selectedHomework?.submissionType || 'online_text',
-            submissionDate: '21-05-2025',
-            dueDate: '25-05-2025',
-            marks: 28,
-            totalMarks: 30,
-            feedback: 'Great understanding of concepts',
-            status: ScheduleExamStatus.Reviewed,
-          },
-          {
-            id: '3',
-            rollNumber: '3',
-            studentName: 'Gupta Ananya Suresh',
-            homework: selectedHomework?.value || '',
-            homeworkType: 'Written Assignment',
-            submissionType: selectedHomework?.submissionType || 'online_text',
-            submissionDate: '23-05-2025',
-            dueDate: '25-05-2025',
-            marks: 0,
-            totalMarks: 40,
-            feedback: '',
-            status: ScheduleExamStatus['Needs Review'],
-          },
-          {
-            id: '4',
-            rollNumber: '4',
-            studentName: 'Singh Rohan Vikram',
-            homework: selectedHomework?.value || '',
-            homeworkType: 'Written Assignment',
-            submissionType: selectedHomework?.submissionType || 'online_text',
-            submissionDate: '24-05-2025',
-            dueDate: '25-05-2025',
-            marks: 24,
-            totalMarks: 25,
-            feedback: 'Excellent analysis!',
-            status: ScheduleExamStatus.Reviewed,
-          },
-        ]}
+        data={studentData}
       />
 
       {sendInstantNotificationDialogValue.value && (
@@ -325,7 +425,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               viewSubmissionDialog.onFalse();
               setTimeout(() => {
                 setSelectedStudent(null);
-              }, 300); // Adjust timing based on your dialog's transition (usually 200–300ms)
+              }, 300);
             }}
             isEdit
           />

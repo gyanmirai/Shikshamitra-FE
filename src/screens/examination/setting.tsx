@@ -83,13 +83,9 @@ const Setting = (props: TabComponentType) => {
   return (
     <Box>
       <CustomBreadcrumbs
-        heading="Setting"
+        heading="Settings"
         description={currentActiveComponent?.description}
-        links={[
-          { name: 'Academics', href: '/academic/dashboard' },
-          { name: 'Examination', href: '/academic/scheduleExam' },
-          { name: 'Setting' },
-        ]}
+        links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
         sx={{ px: 1, mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />

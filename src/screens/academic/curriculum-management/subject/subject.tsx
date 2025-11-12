@@ -149,7 +149,7 @@ const Subject = (props: TabComponentType) => {
       {/* Custom breadcrumbs component for navigation and page header */}
       {addSubjectDialog.value ? (
         <CustomBreadcrumbs
-          heading="Subject Assignment"
+          heading="Subjects Assignment"
           description={
             selectedSubject
               ? 'Update and modify existing subject assignments by revising key details, curriculum mappings, teacher assignments, and assessment criteria for improved academic delivery.'
@@ -163,14 +163,14 @@ const Subject = (props: TabComponentType) => {
             // Links when viewing subject list
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
-            { name: 'Subject Assignment', href: '/academic/curriculumSubjects' },
+            { name: 'Subjects Assignment', href: '/academic/curriculumSubjects' },
             // { name: selectedSubject ? 'Update Subject Assignment' : 'Subject Assignment Form' },
           ]}
           sx={{ px: 1, mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
-          heading="Subject Assignment"
+          heading="Subjects Assignment"
           description={
             showSubjectDialog.value
               ? 'Access detailed information on the selected subject, such as name, code, curriculum mapping, and assessment criteria to support structured academic planning.'
@@ -181,7 +181,7 @@ const Subject = (props: TabComponentType) => {
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
             {
-              name: 'Subject Assignment',
+              name: 'Subjects Assignment',
               href: showSubjectDialog.value ? '/academic/curriculumSubjects' : undefined,
             },
           ]}
@@ -245,7 +245,7 @@ const Subject = (props: TabComponentType) => {
                       }
                 }
               >
-                Subject Assignment
+                Subjects Assignment
               </Button>
             </Box>
           )}
@@ -285,7 +285,7 @@ const Subject = (props: TabComponentType) => {
         content={
           selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
             <>
-              Are you sure you want to Remove{' '}
+              Are you sure you want to remove the following subjects and groups from{' '}
               <strong>
                 {selectedSubject.subjectName
                   .map((name: any, index: any) => {
@@ -298,7 +298,7 @@ const Subject = (props: TabComponentType) => {
             </>
           ) : (
             <>
-              Are you sure you want to Remove{' '}
+              Are you sure you want to remove the following subjects and groups from{' '}
               <strong>
                 {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
               </strong>{' '}
