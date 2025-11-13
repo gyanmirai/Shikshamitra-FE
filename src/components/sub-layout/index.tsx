@@ -75,6 +75,7 @@ const SubLayout = ({ children }: any) => {
             pt: 2,
             pr: 2,
             pl: 0.5,
+            pb: 1,
           }}
         >
           {children}

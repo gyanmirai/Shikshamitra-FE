@@ -148,7 +148,9 @@ const RollNoGenerationScreen = ({
     }
   };
   return (
-    <Box>
+    <Box
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
+    >
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
         <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" mb={2}>
           <Box display="flex" gap={2} ml={1}>

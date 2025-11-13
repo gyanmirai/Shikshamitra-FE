@@ -69,7 +69,7 @@ const RoleScreen = () => {
   };
 
   return (
-    <Box p={1}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Role Management"
         description="Defines and controls user roles, permissions, and access levels within the system, ensuring users have appropriate privileges based on their responsibilities."
@@ -78,7 +78,7 @@ const RoleScreen = () => {
           { name: 'Role And Permission', href: '/security/role' },
           { name: 'Role Management' },
         ]}
-        sx={{ px: 1, mb: 3 }}
+        sx={{ mb: 1 }}
         action={
           <Button
             startIcon={<Add />}

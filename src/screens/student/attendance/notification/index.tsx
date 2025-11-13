@@ -38,11 +38,11 @@ const StudentAttendanceNotificationScreen = () => {
   ];
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Notifications"
         links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Notifications' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
       />
       <CustomizableTable
         tableId="student-attendance-notification-table"

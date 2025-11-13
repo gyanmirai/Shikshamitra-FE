@@ -58,7 +58,7 @@ const LeavingCertificate = () => {
     }
   };
   return (
-    <Box>
+    <Box sx={{ minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <Button
           sx={{ width: '180px' }}

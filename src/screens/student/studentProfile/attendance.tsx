@@ -20,7 +20,6 @@ import {
   Paper,
   Badge,
   Button,
-  Divider,
   Typography,
   ButtonGroup,
   CircularProgress,
@@ -66,7 +65,7 @@ const Attendance = (props: StudentTabsComponentType) => {
   const theme = useTheme();
 
   return (
-    <Box sx={{ mt: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', mt: 1 }}>
       {/* <Stack direction="row" spacing={2} alignItems="center">
         <Card
           elevation={3}
@@ -172,8 +171,8 @@ const Attendance = (props: StudentTabsComponentType) => {
           </CustomTooltip>
         </Box>
       </Paper>
-      <Divider sx={{ my: 2 }} />
-      <Grid container spacing={2} mb={2}>
+      {/* <Divider sx={{ my: 2 }} /> */}
+      <Grid container spacing={2} my={2}>
         <Grid size={{ xs: 12, sm: 6 }}>
           <Box flexGrow={1}>
             {activeButton === 'monthly' ? (

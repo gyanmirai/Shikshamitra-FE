@@ -289,7 +289,7 @@ const InquiryScreen = () => {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
       {ConfirmDialog}
       <CustomBreadcrumbs
         heading="Inquiry"
@@ -299,7 +299,7 @@ const InquiryScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
           { name: 'Inquiry' },
         ]}
-        sx={{ mb: 1 }}
+        // sx={{ mb: 1 }}
         isBack={inquiryDialog.value}
         onBack={() => handleClose(null, false)}
         action={

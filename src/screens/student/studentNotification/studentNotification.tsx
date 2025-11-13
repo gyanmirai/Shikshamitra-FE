@@ -107,7 +107,7 @@ const StudentNotificationScreen = () => {
   ];
 
   return (
-    <>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {open ? (
         <>
           <HeaderSection
@@ -236,7 +236,7 @@ const StudentNotificationScreen = () => {
           />
         </>
       )}
-    </>
+    </Box>
   );
 };
 

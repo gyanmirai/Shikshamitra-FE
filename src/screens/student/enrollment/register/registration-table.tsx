@@ -131,7 +131,7 @@ const RegistrationTable = ({
   };
 
   return (
-    <Box>
+    <>
       <CustomizableTable
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
@@ -409,7 +409,7 @@ const RegistrationTable = ({
           userList={selectedStudents}
         />
       )}
-    </Box>
+    </>
   );
 };
 
