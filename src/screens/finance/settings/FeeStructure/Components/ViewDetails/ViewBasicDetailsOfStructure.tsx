@@ -5,7 +5,7 @@ import { Grid, Paper, Typography } from '@mui/material';
 import type { IFeeStructure } from '../../type';
 
 const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStructure | null }) => (
-  <Paper sx={{ p: 2, mb: 3, position: 'relative' }} elevation={6}>
+  <Paper sx={{ p: 2, mb: 2, position: 'relative' }} elevation={6}>
     {/* Heading */}
     <Typography variant="h6" mb={2} color="primary.main">
       Fee Structure Information
@@ -13,7 +13,7 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
 
     <Grid container spacing={2}>
       {/* Fee Structure Name */}
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 2 }}>
         <Typography variant="body2" color="text.secondary">
           Fee Structure Name
         </Typography>
@@ -23,7 +23,7 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
       </Grid>
 
       {/* Academic Year */}
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 2 }}>
         <Typography variant="body2" color="text.secondary">
           Academic Year
         </Typography>
@@ -33,7 +33,7 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
       </Grid>
 
       {/* Board */}
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 2 }}>
         <Typography variant="body2" color="text.secondary">
           Board
         </Typography>
@@ -43,7 +43,7 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
       </Grid>
 
       {/* Medium */}
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 2 }}>
         <Typography variant="body2" color="text.secondary">
           Medium
         </Typography>
@@ -53,7 +53,7 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
       </Grid>
 
       {/* Status */}
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 2 }}>
         <Typography variant="body2" color="text.secondary">
           Status
         </Typography>
@@ -63,7 +63,7 @@ const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStruc
       </Grid>
 
       {/* Receipt Book */}
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 2 }}>
         <Typography variant="body2" color="text.secondary">
           Receipt Book
         </Typography>

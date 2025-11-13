@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import AddIcon from '@mui/icons-material/Add';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -7,7 +6,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Grid, Chip, Button, Switch, IconButton, Typography } from '@mui/material';
+import { Grid, Button, Switch, IconButton, Typography } from '@mui/material';
 
 import AddFeeHeadDialogContent from './AddFeeHeadForm';
 
@@ -18,9 +17,8 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
   feeItems,
   structureIndex,
   formik,
+  addFeeHeadDialog,
 }) => {
-  // Dialog state for adding new fee head
-  const addFeeHeadDialog = useBoolean();
   // State to track the index of fee head selected for deletion
   const [selectedFeeHead, setSelectedFeeHead] = useState<number>();
 
@@ -41,40 +39,17 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                 spacing: 3,
                 alignItems: 'center',
                 p: 1,
-                gap: 2,
                 mb: 2,
               }}
             >
               <Grid size={0.1}>
-                <Typography variant="h6">{index + 1}.</Typography>
+                <Typography variant="subtitle2">{index + 1}.</Typography>
+              </Grid>
+              <Grid size={2} pt={0} ml={2}>
+                <Typography variant="subtitle2">{item.feeCategory}</Typography>
               </Grid>
               <Grid size={2} pt={0}>
-                <Chip
-                  label={`Fee Category : ${item.feeCategory}`}
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    '& .MuiChip-label': {
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid size={2} pt={0}>
-                <Chip
-                  label={`Fee Head : ${item.feeHead}`}
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    '& .MuiChip-label': {
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    },
-                  }}
-                />
+                <Typography variant="subtitle2">{item.feeHead}</Typography>
               </Grid>
               <Grid size={2} pt={0}>
                 <NumericFormatCustom
@@ -121,7 +96,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   // }
                 />
               </Grid>
-              <Grid size={2} pt={0} display="flex" alignItems="center">
+              <Grid size={2} pt={0} display="flex" alignItems="center" ml={2}>
                 <Switch
                   checked={item.isOneTime}
                   onChange={(event) => {
@@ -130,6 +105,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                       event.target.checked
                     );
                   }}
+                  size="small"
                 />
                 <Typography variant="body2" sx={{ mr: 0.5 }}>
                   One Time Fee
@@ -164,27 +140,6 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
           ))}
         </Scrollbar>
       )}
-
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          borderRadius: 1,
-          p: 1,
-          mt: 2,
-        }}
-      >
-        <Button
-          onClick={() => {
-            addFeeHeadDialog.onTrue();
-          }}
-          startIcon={<AddIcon />}
-          variant="outlined"
-          size="small"
-        >
-          Fee Head
-        </Button>
-      </Box>
 
       <CustomDialog
         open={addFeeHeadDialog.value}

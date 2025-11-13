@@ -30,8 +30,8 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
   if (!feeStructureClasses || Object.keys(feeStructureClasses).length === 0) return null;
 
   return (
-    <SectionCard title="Selected Classes">
-      <Grid size={12}>
+    <Grid size={{ xs: 2 }}>
+      <SectionCard title="Classes">
         <Box display="flex" flexWrap="wrap" gap={1}>
           {classNames.map((className) => {
             const firstFeeStructure = feeStructureClasses[className]?.[0];
@@ -69,11 +69,10 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
             );
           })}
         </Box>
-      </Grid>
 
-      {/* Legend */}
+        {/* Legend */}
 
-      {/* <Grid size={12}>
+        {/* <Grid size={12}>
         <Box display="flex" alignItems="center" gap={3} mb={2}>
           {[
             FeeStructureClassStatusType.Current,
@@ -104,7 +103,8 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
           })}
         </Box>
       </Grid> */}
-    </SectionCard>
+      </SectionCard>
+    </Grid>
   );
 };
 

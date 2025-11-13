@@ -1,11 +1,12 @@
 import type { FormikProps } from 'formik';
-import type { Board } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+import type { Board, Medium } from 'src/types/school';
 
 import { capitalize } from 'lodash';
+import { useSelector } from 'react-redux';
 import { Grid, TextField } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -20,13 +21,13 @@ type Props = {
 
 const GeneralInfoStep = ({ formik, editData }: Props) => {
   console.log('formik--values---', formik?.values);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Queries
-  const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetYearQuery,
-  });
-  console.log('academicYear', academicYear);
+  // const { data: academicYear, isLoading: yearLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetYearQuery,
+  // });
   const [getClassByMedium, { data: classes }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
@@ -41,7 +42,14 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
   const [boards, setBoards] = useState<any[]>([]);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>();
 
-  // Handle edit case
+  useEffect(() => {
+    if (!editData && currentYear && board?.items) {
+      const filteredBoards = board.items.filter((b: any) => b.academicYearId === currentYear.id);
+      setBoards(filteredBoards);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editData, currentYear, board?.items]);
+
   useEffect(() => {
     if (editData) {
       const findBoards = board?.items?.filter(
@@ -49,14 +57,15 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
       );
       setBoards(findBoards);
 
-      const year = academicYear?.items?.find((item: any) => item.id === formik.values.academicYear);
-      setSelectedAcademicYear(year?.name || '');
-
+      setSelectedAcademicYear(editData.academicYearName || currentYear?.name || '');
+      // formik?.setFieldValue('academicYear', currentYear?.id);
+      // formik.setFieldValue('academicYearName', currentYear?.name);
       if (editData.medium) {
         getClassByMedium(editData.medium);
       }
     }
-  }, [academicYear?.items, board?.items, editData, formik?.values?.academicYear, getClassByMedium]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editData, board?.items, currentYear?.name, getClassByMedium]);
 
   //   Initialize class-wise fee structure if medium changes
   // Initialize class-wise fee structure if medium changes
@@ -100,27 +109,6 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
       </Grid>
 
       {/* Academic Year */}
-      <Grid size={{ xs: 12, md: 4 }}>
-        <ShakingTextField error={!!(formik?.touched?.academicYear && formik?.errors?.academicYear)}>
-          <CustomSelect
-            name="academicYear"
-            label="Academic Year *"
-            options={academicYear?.items || []}
-            value={formik?.values?.academicYear || ''}
-            labelKey="name"
-            valueKey="id"
-            onChange={(val) => {
-              formik?.setFieldValue('academicYear', val);
-              const filteredBoards =
-                board?.items?.filter((b: any) => b.academicYearId === val) || [];
-              setBoards(filteredBoards);
-            }}
-            // loading={yearLoading}
-            error={formik?.touched?.academicYear && Boolean(formik?.errors?.academicYear)}
-            helperText={(formik?.touched?.academicYear && formik?.errors?.academicYear) as string}
-          />
-        </ShakingTextField>
-      </Grid>
 
       {/* Board */}
       <Grid size={{ xs: 12, md: 4 }}>
@@ -132,7 +120,11 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
             valueKey="id"
             options={boards || []}
             value={formik?.values?.board || ''}
-            onChange={(val) => formik?.setFieldValue('board', val)}
+            onChange={(val) => {
+              const selectedBoard = boards?.find((item) => item.id === val);
+              formik?.setFieldValue('board', val);
+              formik.setFieldValue('boardName', selectedBoard?.name);
+            }}
             // loading={boardLoading}
             error={formik?.touched?.board && Boolean(formik?.errors?.board)}
             helperText={(formik?.touched?.board && formik?.errors?.board) as string}
@@ -146,6 +138,7 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
           <CustomSelect
             name="medium"
             label="Medium *"
+            disabled={!formik.values.board}
             options={
               board?.items?.find((item: Board) => item.id === formik?.values?.board)
                 ?.educationMediums || []
@@ -154,7 +147,11 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
             valueKey="id"
             value={formik?.values?.medium || ''}
             onChange={(val) => {
+              const selectedMedium = board?.items
+                ?.find((item: Board) => item.id === formik?.values?.board)
+                ?.educationMediums?.find((m: Medium) => m.id === val);
               formik.setFieldValue('medium', val);
+              formik.setFieldValue('mediumName', selectedMedium?.name);
               getClassByMedium(val);
             }}
             error={formik?.touched?.medium && Boolean(formik?.errors?.medium)}

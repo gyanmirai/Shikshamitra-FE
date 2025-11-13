@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Grid, Typography } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import ClassSelectionView from './ClassSelectionView';
@@ -23,34 +24,38 @@ const ViewFeeStructure = ({
   if (!feeStructure) return null;
 
   return (
-    <Scrollbar sx={{ height: '100%', p: 2 }}>
+    <Scrollbar sx={{ height: '100%', p: 1 }}>
       <ViewBasicDetailsOfStructure feeStructure={feeStructure} />
       {/* Class Selection */}
-      <ClassSelectionView
-        feeStructureClasses={feeStructure.feeStructureClasses}
-        selectedClass={selectedClass}
-        onSelectClass={setSelectedClass}
-      />
+      <Grid container spacing={2}>
+        <ClassSelectionView
+          feeStructureClasses={feeStructure.feeStructureClasses}
+          selectedClass={selectedClass}
+          onSelectClass={setSelectedClass}
+        />
 
-      {/* Fee Structure Details */}
-      {selectedClass &&
-        (feeStructure.feeStructureClasses[selectedClass] || []).map((structure, idx) => {
-          const totalFeeAmount =
-            structure.feeItems?.reduce((sum: number, item: any) => sum + (item.amount || 0), 0) ||
-            0;
-
-          return (
-            <FeeStructureViewCard
-              key={idx}
-              className={selectedClass}
-              feeStructure={structure}
-              index={idx}
-              expanded={expanded === idx} // ✅ pass boolean
-              onChange={() => setExpanded(expanded === idx ? false : idx)} // ✅ toggle
-              feeStructureMain={feeStructure}
-            />
-          );
-        })}
+        {/* Fee Structure Details */}
+        {selectedClass && (
+          <Grid size={{ xs: 10 }}>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="h6" color="primary.main" mb={expanded ? 0 : 1}>
+                Fee Structure For Class : {selectedClass}
+              </Typography>
+            </Grid>
+            {(feeStructure.feeStructureClasses[selectedClass] || []).map((structure, idx) => (
+              <FeeStructureViewCard
+                key={idx}
+                className={selectedClass}
+                feeStructure={structure}
+                index={idx}
+                expanded={expanded === idx}
+                onChange={() => setExpanded(expanded === idx ? false : idx)}
+                feeStructureMain={feeStructure}
+              />
+            ))}
+          </Grid>
+        )}
+      </Grid>
     </Scrollbar>
   );
 };

@@ -1,5 +1,8 @@
+import type { RootState } from 'src/redux/store';
+
 import { Box } from '@mui/material';
 import { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -12,10 +15,14 @@ import type { IFeeStructureFormProps } from '../type';
 
 const FeeStructureFormStepper: React.FC<IFeeStructureFormProps> = ({ onClose, editData }) => {
   const [activeStep, setActiveStep] = useState(0);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Define step components
   const allSteps = [GeneralInfoStep, FeeStructureStep];
-  const feeStructureInitialValues = useMemo(() => getInitialFeeStructureData(editData), [editData]);
+  const feeStructureInitialValues = useMemo(
+    () => getInitialFeeStructureData(currentYear, editData),
+    [currentYear, editData]
+  );
   return (
     <CustomStepperWithFormik
       scrollbarHeight="400px"

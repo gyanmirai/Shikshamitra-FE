@@ -170,7 +170,7 @@ const ChargesManagement = () => {
             editChargeDialog.onFalse();
             setSelectedChargeData(null);
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       ) : (
         <CustomBreadcrumbs

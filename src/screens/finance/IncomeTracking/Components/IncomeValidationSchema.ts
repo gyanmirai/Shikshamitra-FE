@@ -6,8 +6,11 @@ import paymentMethodsConfigData from './IncomeTrackingForm';
 export const getIncomeFormSchema = (currentYear: any) =>
   Yup.object().shape({
     incomeCategory: Yup.string().required('Income category is required'),
-    budget: Yup.string().required('Budget is required'),
     incomeName: Yup.string().required('Income name is required'),
+    incomeCategoryTags: Yup.array()
+      .of(Yup.string())
+      .min(1, 'At least one income category tag is required')
+      .required('Income category tags are required'),
     amount: Yup.number()
       .required('Amount is required')
       .typeError('Amount must be a number')

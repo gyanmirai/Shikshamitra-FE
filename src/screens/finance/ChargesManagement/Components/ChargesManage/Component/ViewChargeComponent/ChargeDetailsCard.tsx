@@ -30,7 +30,6 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
       sx={{
         borderRadius: 2,
         boxShadow: 'var(--shadows-8)',
-        height: '100%',
       }}
     >
       <CardContent sx={{ p: 2 }}>
