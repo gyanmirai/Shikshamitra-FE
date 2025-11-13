@@ -74,7 +74,7 @@ const AttendanceType = ({ dialog }: any) => {
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomizableTable
         tableId="attendance-type"
         noDataText={

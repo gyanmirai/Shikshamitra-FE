@@ -118,7 +118,9 @@ const GroupManagement = ({
   });
 
   return (
-    <Box>
+    <Box
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
+    >
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {

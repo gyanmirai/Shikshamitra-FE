@@ -93,7 +93,9 @@ const ChangeDivisionScreen = ({
     }
   };
   return (
-    <Box>
+    <Box
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
+    >
       <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 2 }}>
           <LoadingButton

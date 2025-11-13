@@ -70,7 +70,7 @@ const HolidayManagement = (props: TabComponentType) => {
             { name: 'Holidays' },
             { name: editingHoliday ? 'Update Holiday' : 'Add Holiday' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
           isBack
           onBack={() => handleCloseDialog(null, false)}
         />

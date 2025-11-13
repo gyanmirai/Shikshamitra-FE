@@ -83,7 +83,7 @@ const Events = (props: TabComponentType) => {
             { name: 'Events' },
             { name: editingEvent ? 'Update Event' : 'Add Event' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
           isBack
           onBack={() => {
             handleCloseDialog(null, false);

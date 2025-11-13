@@ -4,9 +4,8 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { Tab, Box, Card } from '@mui/material';
+import { Tab, Box, Paper } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import React, { useMemo, useState, useEffect } from 'react';
@@ -149,7 +148,7 @@ const StudentManagementScreen = () => {
   const [isBackClick, setIsBackClick] = useState(false);
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Student Management"
         description="Manage student records by class and division. Generate GR numbers manually or automatically, and perform actions like changing class, division, or house allocation."
@@ -158,9 +157,12 @@ const StudentManagementScreen = () => {
           { name: 'Student Records', href: '/student/overview/' },
           { name: 'Student Management' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
       />
-      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+      <Paper
+        elevation={2}
+        sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, py: 1, mb: 1 }}
+      >
         <CustomSelect
           options={allOrganization}
           label="Organization"
@@ -191,13 +193,8 @@ const StudentManagementScreen = () => {
           formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
           disabled={!classes}
         />
-      </Box>
-      <Card
-        sx={{
-          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-          mb: 1,
-        }}
-      >
+      </Paper>
+      <Paper>
         <CustomTabs
           value={searchParams.tab}
           onChange={(e, value) => {
@@ -214,7 +211,7 @@ const StudentManagementScreen = () => {
         >
           {TABS.map((tab) => (
             <Tab
-              // sx={{ fontSize: '12px' }}
+              sx={{ fontSize: '12px' }}
               key={tab.value}
               value={tab.value}
               icon={tab.icon}
@@ -223,7 +220,7 @@ const StudentManagementScreen = () => {
             />
           ))}
         </CustomTabs>
-      </Card>
+      </Paper>
       <FormSlider
         steps={TABS}
         isBackClick={isBackClick}
@@ -231,10 +228,11 @@ const StudentManagementScreen = () => {
         containerProps={{
           sx: {
             p: 0,
+            minHeight: 0,
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Box sx={{ p: 1, height: '100%' }}>
           {currentActiveComponent?.component && (
             <CurrentComponent
               tableData={tableData}
@@ -245,7 +243,7 @@ const StudentManagementScreen = () => {
               classes={classes}
             />
           )}
-        </Scrollbar>
+        </Box>
       </FormSlider>
     </Box>
   );

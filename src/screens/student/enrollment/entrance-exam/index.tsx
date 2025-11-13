@@ -246,7 +246,7 @@ const EntranceExamScreen = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         description="Manage students participation in entrance exams for the admission process."
         heading="Entrance Exam"
@@ -255,9 +255,9 @@ const EntranceExamScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/entrance-exam/?view=calender' },
           { name: 'Entrance Exam' },
         ]}
-        sx={{ mb: 2 }}
+        sx={{ mb: 1 }}
       />
-      <Box display="flex" gap={2} marginLeft={1} justifyContent="space-between" alignItems="center">
+      <Paper elevation={2} sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 1, py: 1 }}>
         <Box display="flex" gap={2}>
           <DatePicker
             label="Start Date"
@@ -280,160 +280,158 @@ const EntranceExamScreen = () => {
             }}
           />
         </Box>
-      </Box>
-      <Box mt={2}>
-        <CustomizableTable
-          onSendNotification={handlerSendNotification}
-          showCheckbox={selectedStudents.length !== 0}
-          tableId="entrance-exam-table"
-          noDataText={<>No Entrance Exam Data Found </>}
-          isLoading={isLoading}
-          columns={[
-            { id: 'name', label: 'Student Name', align: 'left', sticky: true, minWidth: 180 },
+      </Paper>
+      <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudents.length !== 0}
+        tableId="entrance-exam-table"
+        noDataText={<>No Entrance Exam Data Found </>}
+        isLoading={isLoading}
+        columns={[
+          { id: 'name', label: 'Student Name', align: 'left', sticky: true, minWidth: 180 },
 
-            { id: 'board', label: 'Board', align: 'left' },
-            { id: 'medium', label: 'Medium', align: 'left' },
-            { id: 'class', label: 'Class', align: 'left' },
-            { id: 'date', label: 'Date', filterType: 'date' },
-            { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
-            {
-              id: 'totalMarks',
-              label: 'Total Marks',
-              filterType: 'number',
-              align: 'left',
-              minWidth: 140,
-              render: (value) => value || '-',
-            },
-            {
-              id: 'passingMark',
-              label: 'Passing Marks',
-              filterType: 'number',
-              align: 'left',
-              minWidth: 140,
-              render: (value) => value || '-',
-            },
-            {
-              id: 'obtainMarks',
-              label: 'Obtained Marks',
-              filterType: 'number',
-              align: 'left',
-              minWidth: 150,
-            },
-            {
-              id: 'progress',
-              label: 'Progress',
-              align: 'left',
-              sticky: true,
-              filterType: 'number',
-              render(value, row) {
-                return (
-                  <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                    <CircularProgress
-                      variant="determinate"
-                      value={value}
-                      size={50}
-                      thickness={3}
-                      sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
-                    />
-                    <Box
-                      sx={{
-                        top: 0,
-                        left: 0,
-                        bottom: 0,
-                        right: 0,
-                        position: 'absolute',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
+          { id: 'board', label: 'Board', align: 'left' },
+          { id: 'medium', label: 'Medium', align: 'left' },
+          { id: 'class', label: 'Class', align: 'left' },
+          { id: 'date', label: 'Date', filterType: 'date' },
+          { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
+          {
+            id: 'totalMarks',
+            label: 'Total Marks',
+            filterType: 'number',
+            align: 'left',
+            minWidth: 140,
+            render: (value) => value || '-',
+          },
+          {
+            id: 'passingMark',
+            label: 'Passing Marks',
+            filterType: 'number',
+            align: 'left',
+            minWidth: 140,
+            render: (value) => value || '-',
+          },
+          {
+            id: 'obtainMarks',
+            label: 'Obtained Marks',
+            filterType: 'number',
+            align: 'left',
+            minWidth: 150,
+          },
+          {
+            id: 'progress',
+            label: 'Progress',
+            align: 'left',
+            sticky: true,
+            filterType: 'number',
+            render(value, row) {
+              return (
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <CircularProgress
+                    variant="determinate"
+                    value={value}
+                    size={50}
+                    thickness={3}
+                    sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
+                  />
+                  <Box
+                    sx={{
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      right: 0,
+                      position: 'absolute',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      component="small"
+                      color="text.secondary"
+                      sx={{ fontSize: '12px' }}
                     >
-                      <Typography
-                        variant="body2"
-                        component="small"
-                        color="text.secondary"
-                        sx={{ fontSize: '12px' }}
-                      >
-                        {value}%
-                      </Typography>
-                    </Box>
+                      {value}%
+                    </Typography>
                   </Box>
-                );
-              },
+                </Box>
+              );
             },
-            {
-              id: 'percentage',
-              label: 'Percentage',
-              filterType: 'number',
-              sticky: true,
-              align: 'left',
-              render(value, row) {
-                return (
-                  <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                    <CircularProgress
-                      variant="determinate"
-                      value={value}
-                      size={50}
-                      thickness={3}
-                      sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
-                    />
-                    <Box
-                      sx={{
-                        top: 0,
-                        left: 0,
-                        bottom: 0,
-                        right: 0,
-                        position: 'absolute',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
+          },
+          {
+            id: 'percentage',
+            label: 'Percentage',
+            filterType: 'number',
+            sticky: true,
+            align: 'left',
+            render(value, row) {
+              return (
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <CircularProgress
+                    variant="determinate"
+                    value={value}
+                    size={50}
+                    thickness={3}
+                    sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
+                  />
+                  <Box
+                    sx={{
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      right: 0,
+                      position: 'absolute',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      component="small"
+                      color="text.secondary"
+                      sx={{ fontSize: '12px' }}
                     >
-                      <Typography
-                        variant="body2"
-                        component="small"
-                        color="text.secondary"
-                        sx={{ fontSize: '12px' }}
-                      >
-                        {value}%
-                      </Typography>
-                    </Box>
+                      {value}%
+                    </Typography>
                   </Box>
-                );
-              },
+                </Box>
+              );
             },
-            {
-              id: 'status',
-              label: 'Status',
-              filterType: 'enum',
-              enumOptions: EntranceExamStatusOptions,
-              align: 'left',
-              sticky: true,
-              render(value, row) {
-                const color = EntranceExamStatusTypeColors[
-                  value as EntranceExamStatusType
-                ] as LabelColor;
-                return (
-                  <Label color={color}>
-                    {EntranceExamStatusType[value as EntranceExamStatusType]}
-                  </Label>
-                );
-              },
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            filterType: 'enum',
+            enumOptions: EntranceExamStatusOptions,
+            align: 'left',
+            sticky: true,
+            render(value, row) {
+              const color = EntranceExamStatusTypeColors[
+                value as EntranceExamStatusType
+              ] as LabelColor;
+              return (
+                <Label color={color}>
+                  {EntranceExamStatusType[value as EntranceExamStatusType]}
+                </Label>
+              );
             },
-            {
-              id: 'action',
-              label: 'Actions',
-              align: 'left',
-              isFilter: false,
-              sticky: true,
-              isSort: false,
-              render: (value, row) => (
-                <ThreeDotsActions placement="right-top" actions={(props) => actions(props, row)} />
-              ),
-            },
-          ]}
-          data={tableData || []}
-        />{' '}
-      </Box>
+          },
+          {
+            id: 'action',
+            label: 'Actions',
+            align: 'left',
+            isFilter: false,
+            sticky: true,
+            isSort: false,
+            render: (value, row) => (
+              <ThreeDotsActions placement="right-top" actions={(props) => actions(props, row)} />
+            ),
+          },
+        ]}
+        data={tableData || []}
+      />{' '}
       <CustomDialog
         open={resultDialog.value}
         handleClose={() => {
@@ -455,7 +453,6 @@ const EntranceExamScreen = () => {
       >
         <ResultForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
-
       <ConfirmDialog
         // title="Move"
         title={
@@ -510,7 +507,6 @@ const EntranceExamScreen = () => {
           setMoveId(null);
         }}
       />
-
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
           open={sendInstantNotificationDialogValue.value}

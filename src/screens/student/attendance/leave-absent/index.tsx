@@ -126,7 +126,7 @@ const LeaveAndAbsentScreen = () => {
   );
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Leave and Absent"
         links={[
