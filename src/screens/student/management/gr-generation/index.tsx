@@ -12,7 +12,6 @@ import { Save, Refresh, Grading } from '@mui/icons-material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
   useUpdateStudentGrNumberMutation,
   useLazyGetStudentForGrNumberQuery,
@@ -138,9 +137,11 @@ const GrNoGenerationScreen = ({ tableData: studentData }: { tableData: IInquiryD
     }
   };
   return (
-    <Box>
+    <Box
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
+    >
       <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
           <Button
             size="small"
             startIcon={<Grading />}
@@ -169,92 +170,41 @@ const GrNoGenerationScreen = ({ tableData: studentData }: { tableData: IInquiryD
             {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </Box>
-        <CustomizableTable
-          onSendNotification={handlerSendNotification}
-          showCheckbox={selectedStudents.length !== 0}
-          tableId="gr-no-generation-table"
-          noDataText={<>No GR No Data Found </>}
-          columns={[
-            // { id: 'srNo', label: 'Sr. No.' },
-            // {
-            //   id: 'checkBox',
-            //   align: 'left',
-            //   sticky: true,
-            //   minWidth: '60px',
-            //   isSort: false,
-            //   isFilter: false,
-            //   label: '',
-            //   renderColumn() {
-            //     return (
-            //       <Checkbox
-            //         checked={!!tableData?.length && selectedStudents?.length === tableData?.length}
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents(tableData || []);
-            //           } else {
-            //             setSelectedStudents([]);
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            //   render(value, row) {
-            //     return (
-            //       <Checkbox
-            //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-            //         onChange={(e) => {
-            //           if (e.target.checked) {
-            //             setSelectedStudents([...selectedStudents, row]);
-            //           } else {
-            //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-            //           }
-            //         }}
-            //       />
-            //     );
-            //   },
-            // },
-            // { id: 'tempGrNo', label: 'Current GR No.', align: 'left' },
-            { id: 'name', label: 'Name', align: 'left' },
-            {
-              id: 'grNoRecord',
-              label: 'New GR No.',
-              align: 'left',
-              isFilter: false,
-              isSort: false,
-              render(value, row) {
-                return isManual ? (
-                  <TextField
-                    size="small"
-                    variant="standard"
-                    // placeholder="Enter New GR No."
-                    type="number"
-                    inputProps={{ min: 0 }}
-                    value={row.grNoRecord}
-                    onChange={(e) =>
-                      handleGrNumberChange(
-                        row.id,
-                        row.name,
-                        e.target.value ? +e.target.value : null
-                      )
-                    }
-                  />
-                ) : (
-                  value
-                );
-              },
-            },
-          ]}
-          data={tableData}
-        />{' '}
       </BackPopUpChecked>
-      {sendInstantNotificationDialogValue.value && (
-        <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
-          data={[]}
-          userList={selectedStudents}
-        />
-      )}
+      <CustomizableTable
+        onSendNotification={handlerSendNotification}
+        showCheckbox={selectedStudents.length !== 0}
+        tableId="gr-no-generation-table"
+        noDataText={<>No GR No Data Found </>}
+        columns={[
+          { id: 'name', label: 'Name', align: 'left' },
+          {
+            id: 'grNoRecord',
+            label: 'New GR No.',
+            align: 'left',
+            isFilter: false,
+            isSort: false,
+            render(value, row) {
+              return isManual ? (
+                <TextField
+                  size="small"
+                  variant="standard"
+                  // placeholder="Enter New GR No."
+                  type="number"
+                  inputProps={{ min: 0 }}
+                  value={row.grNoRecord}
+                  onChange={(e) =>
+                    handleGrNumberChange(row.id, row.name, e.target.value ? +e.target.value : null)
+                  }
+                />
+              ) : (
+                value
+              );
+            },
+          },
+        ]}
+        data={tableData}
+      />{' '}
     </Box>
   );
 };

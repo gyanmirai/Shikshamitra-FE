@@ -1,9 +1,8 @@
 'use client';
 
-import { Box, Tab, Card } from '@mui/material';
+import { Box, Tab, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -56,7 +55,7 @@ const StudentCertificatesScreen = () => {
 
   // const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Certificates"
         links={[
@@ -67,7 +66,7 @@ const StudentCertificatesScreen = () => {
         sx={{ px: 1, mb: 2 }}
         description="Generate certificates like Bonafide, Leaving, and others here."
       />
-      <Card
+      <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
           mb: 1,
@@ -92,7 +91,7 @@ const StudentCertificatesScreen = () => {
             <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
-      </Card>
+      </Paper>
       <FormSlider
         steps={TABS}
         isBackClick={isBackClick}
@@ -100,10 +99,11 @@ const StudentCertificatesScreen = () => {
         containerProps={{
           sx: {
             p: 0,
+            minHeight: 0,
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Box sx={{ p: 1, height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
             // addSubjectDialog={addSubjectDialog}
@@ -112,7 +112,7 @@ const StudentCertificatesScreen = () => {
             // setSearchParams={setSearchParams}
             />
           )}{' '}
-        </Scrollbar>
+        </Box>
       </FormSlider>
     </Box>
   );

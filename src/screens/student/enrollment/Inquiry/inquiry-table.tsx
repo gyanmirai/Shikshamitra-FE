@@ -67,7 +67,7 @@ const InquiryTable = ({
     [inquiryData?.items]
   );
   return (
-    <Box>
+    <Box sx={{ minHeight: 0, flexGrow: 1 }}>
       <CustomizableTable
         showCheckbox
         isLoading={isLoading}

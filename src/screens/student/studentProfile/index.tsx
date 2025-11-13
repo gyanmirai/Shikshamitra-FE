@@ -242,13 +242,13 @@ export function StudentProfile() {
       >
         {currentStudent ? (
           <CustomBreadcrumbs
-            heading="Student List"
+            heading="Student Profile"
             links={[
               { name: 'Student', href: '/student/enrollment/dashboard' },
               { name: 'Student Records', href: '/student/overview/' },
-              { name: 'Student List' },
+              { name: 'Student Profile' },
             ]}
-            sx={{ mb: 2 }}
+            sx={{ mb: 1 }}
             isBack
             onBack={() => setSearchParams('student', '')}
             description="View and manage comprehensive student information including academics, attendance, finance and more."
@@ -261,188 +261,200 @@ export function StudentProfile() {
               { name: 'Student Records', href: '/student/overview/' },
               { name: 'Student List' },
             ]}
-            sx={{ mb: 2 }}
+            sx={{ mb: 1 }}
             description="Browse and search through the complete list of enrolled students. Select a student to view their detailed profile."
           />
         )}
       </Box>
 
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        {!currentStudent && (
-          <>
-            <Box display="flex" gap={2} flexWrap="wrap" mb={2} ml={1} mt={1}>
-              <CustomSelect
-                options={allOrganization}
-                label="Organization"
-                value={organization}
-                onChange={(val) => setOrganization(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-                disabled={!medium}
-              />
-              <CustomSelect
-                options={allClass}
-                label="Class"
-                value={classes}
-                onChange={(val) => setClass(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-                disabled={!organization}
-              />
-              <CustomSelect
-                options={allDivision}
-                label="Division"
-                value={division}
-                onChange={(val) => setDivision(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-                disabled={!classes}
-              />
-            </Box>
-            <CustomizableTable
-              onSendNotification={handlerSendNotification}
-              showCheckbox={selectedStudents.length !== 0}
-              tableId="student-list"
-              noDataText={<>No Student Data Found </>}
-              data={tableData}
-              isLoading={isLoading}
-              columns={[
-                // {
-                //   id: 'checkBox',
-                //   align: 'left',
-                //   minWidth: '60px',
-                //   sticky: true,
-                //   isSort: false,
-                //   isFilter: false,
-                //   label: '',
-                //   renderColumn() {
-                //     return (
-                //       <Checkbox
-                //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-                //         onChange={(e) => {
-                //           if (e.target.checked) {
-                //             setSelectedStudents(tableData || []);
-                //           } else {
-                //             setSelectedStudents([]);
-                //           }
-                //         }}
-                //       />
-                //     );
-                //   },
-                //   render(value, row) {
-                //     return (
-                //       <Checkbox
-                //         checked={selectedStudents.some((i: any) => i.id === row.id)}
-                //         onChange={(e) => {
-                //           if (e.target.checked) {
-                //             setSelectedStudents([...selectedStudents, row]);
-                //           } else {
-                //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                //           }
-                //         }}
-                //       />
-                //     );
-                //   },
-                // },
-                {
-                  id: 'name',
-                  label: 'Student Name',
-                  sticky: true,
-                  minWidth: '14vw',
-                  align: 'left',
-                  render: (value, row) => (
-                    <Box style={{ display: 'flex', alignItems: 'center' }}>
-                      <Avatar
-                        sx={{ width: 32, height: 32, mr: 1 }}
-                        src={convertBase64Format(row.profilePicture)}
-                        alt={value}
-                      />
-                      <Typography component="span" fontSize="12px">
-                        {value}
-                      </Typography>
-                    </Box>
-                  ),
-                },
-                {
-                  id: 'rollNo',
-                  label: 'Roll No.',
-                  minWidth: '6vw',
-                  align: 'left',
-                  render: (value, row) => value || '-',
-                },
-                {
-                  id: 'grNoRecord',
-                  label: 'Gr No.',
-                  minWidth: '6vw',
-                  align: 'left',
-                  render: (value, row) => value || '-',
-                },
-
-                {
-                  id: 'genderValue',
-                  label: 'Gender',
-                  minWidth: '6vw',
-                  align: 'left',
-                  filterType: 'enum',
-                  enumOptions: GenderOptions,
-                },
-                {
-                  id: 'dobValue',
-                  label: 'Date of Birth',
-                  minWidth: '10vw',
-                  align: 'left',
-                  filterType: 'date',
-                },
-                { id: 'age', label: 'Age', minWidth: '8vw', align: 'left' },
-                { id: 'address', label: 'Address', minWidth: '14vw', align: 'left' },
-                { id: 'email', label: 'Email', minWidth: '8vw', align: 'left' },
-                // { id: 'class', label: 'Class' },
-                // { id: 'division', label: 'Division' },
-                {
-                  id: 'parentContactNumber',
-                  label: 'Parent Contact No.',
-                  minWidth: '12vw',
-                  align: 'left',
-                },
-                {
-                  id: 'RTE',
-                  label: 'RTE',
-                  minWidth: '6vw',
-                  align: 'left',
-                  filterType: 'enum',
-                  enumOptions: [
-                    { label: 'Yes', value: 'Yes' },
-                    { label: 'No', value: 'No' },
-                  ],
-                },
-                {
-                  id: 'action',
-                  label: 'Action',
-                  isSort: false,
-                  isFilter: false,
-                  sticky: true,
-                  minWidth: 50,
-                  align: 'left',
-                  render: (value, row) => (
-                    <ThreeDotsActions
-                      showViewIcon
-                      showThreeDots={false}
-                      handleViewClick={() => {
-                        setSearchParams('student', row.id);
-                      }}
-                    />
-                  ),
-                },
-              ]}
+      {/* <Box sx={{ flex: 1, overflow: 'auto', height: '100%' }}> */}
+      {!currentStudent && (
+        <>
+          <Paper
+            elevation={2}
+            sx={{
+              display: 'flex',
+              gap: 1,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              px: 2,
+              py: 1,
+              mb: 1,
+            }}
+          >
+            <CustomSelect
+              options={allOrganization}
+              label="Organization"
+              value={organization}
+              onChange={(val) => setOrganization(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!medium}
             />
-          </>
-        )}
+            <CustomSelect
+              options={allClass}
+              label="Class"
+              value={classes}
+              onChange={(val) => setClass(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!organization}
+            />
+            <CustomSelect
+              options={allDivision}
+              label="Division"
+              value={division}
+              onChange={(val) => setDivision(val as string)}
+              labelKey="name"
+              valueKey="id"
+              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
+              disabled={!classes}
+            />
+          </Paper>
 
-        {currentStudent && <StudentProfileView />}
-      </Box>
+          <CustomizableTable
+            onSendNotification={handlerSendNotification}
+            showCheckbox={selectedStudents.length !== 0}
+            tableId="student-list"
+            noDataText={<>No Student Data Found </>}
+            data={tableData}
+            isLoading={isLoading}
+            columns={[
+              // {
+              //   id: 'checkBox',
+              //   align: 'left',
+              //   minWidth: '60px',
+              //   sticky: true,
+              //   isSort: false,
+              //   isFilter: false,
+              //   label: '',
+              //   renderColumn() {
+              //     return (
+              //       <Checkbox
+              //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
+              //         onChange={(e) => {
+              //           if (e.target.checked) {
+              //             setSelectedStudents(tableData || []);
+              //           } else {
+              //             setSelectedStudents([]);
+              //           }
+              //         }}
+              //       />
+              //     );
+              //   },
+              //   render(value, row) {
+              //     return (
+              //       <Checkbox
+              //         checked={selectedStudents.some((i: any) => i.id === row.id)}
+              //         onChange={(e) => {
+              //           if (e.target.checked) {
+              //             setSelectedStudents([...selectedStudents, row]);
+              //           } else {
+              //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+              //           }
+              //         }}
+              //       />
+              //     );
+              //   },
+              // },
+              {
+                id: 'name',
+                label: 'Student Name',
+                sticky: true,
+                minWidth: '14vw',
+                align: 'left',
+                render: (value, row) => (
+                  <Box style={{ display: 'flex', alignItems: 'center' }}>
+                    <Avatar
+                      sx={{ width: 32, height: 32, mr: 1 }}
+                      src={convertBase64Format(row.profilePicture)}
+                      alt={value}
+                    />
+                    <Typography component="span" fontSize="12px">
+                      {value}
+                    </Typography>
+                  </Box>
+                ),
+              },
+              {
+                id: 'rollNo',
+                label: 'Roll No.',
+                minWidth: '6vw',
+                align: 'left',
+                render: (value, row) => value || '-',
+              },
+              {
+                id: 'grNoRecord',
+                label: 'Gr No.',
+                minWidth: '6vw',
+                align: 'left',
+                render: (value, row) => value || '-',
+              },
+
+              {
+                id: 'genderValue',
+                label: 'Gender',
+                minWidth: '6vw',
+                align: 'left',
+                filterType: 'enum',
+                enumOptions: GenderOptions,
+              },
+              {
+                id: 'dobValue',
+                label: 'Date of Birth',
+                minWidth: '10vw',
+                align: 'left',
+                filterType: 'date',
+              },
+              { id: 'age', label: 'Age', minWidth: '8vw', align: 'left' },
+              { id: 'address', label: 'Address', minWidth: '14vw', align: 'left' },
+              { id: 'email', label: 'Email', minWidth: '8vw', align: 'left' },
+              // { id: 'class', label: 'Class' },
+              // { id: 'division', label: 'Division' },
+              {
+                id: 'parentContactNumber',
+                label: 'Parent Contact No.',
+                minWidth: '12vw',
+                align: 'left',
+              },
+              {
+                id: 'RTE',
+                label: 'RTE',
+                minWidth: '6vw',
+                align: 'left',
+                filterType: 'enum',
+                enumOptions: [
+                  { label: 'Yes', value: 'Yes' },
+                  { label: 'No', value: 'No' },
+                ],
+              },
+              {
+                id: 'action',
+                label: 'Action',
+                isSort: false,
+                isFilter: false,
+                sticky: true,
+                minWidth: 50,
+                align: 'left',
+                render: (value, row) => (
+                  <ThreeDotsActions
+                    showViewIcon
+                    showThreeDots={false}
+                    handleViewClick={() => {
+                      setSearchParams('student', row.id);
+                    }}
+                  />
+                ),
+              },
+            ]}
+          />
+        </>
+      )}
+
+      {currentStudent && <StudentProfileView />}
+      {/* </Box> */}
     </Box>
   );
 }

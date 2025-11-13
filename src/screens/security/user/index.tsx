@@ -37,7 +37,7 @@ const UserManagementScreen = () => {
     userName: `${item?.name} ${item?.surname || ''}`,
   }));
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="User Management"
         description="The process of creating, managing, and controlling user accounts, roles, and permissions within a system to ensure secure and efficient access to resources."
@@ -46,7 +46,7 @@ const UserManagementScreen = () => {
           { name: 'Role And Permission', href: '/security/role' },
           { name: 'User Management' },
         ]}
-        sx={{ px: 1, mb: 3 }}
+        sx={{ mb: 1 }}
       />
 
       <CustomizableTable

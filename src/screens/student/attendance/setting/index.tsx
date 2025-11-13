@@ -4,9 +4,8 @@ import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Add as AddIcon } from '@mui/icons-material';
-import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Tab, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { Box, Tab, Paper, Button } from '@mui/material';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
@@ -79,7 +78,7 @@ const HrAttendanceSettingScreen = () => {
   const [isBackClick, setIsBackClick] = useState(false);
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Setting"
         description="Define leave types like Sick or Casual under Leave Type"
@@ -92,7 +91,7 @@ const HrAttendanceSettingScreen = () => {
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />
 
-      <Card
+      <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
@@ -111,7 +110,7 @@ const HrAttendanceSettingScreen = () => {
             <Tab key={tab.value} value={tab.value} icon={tab.icon} label={tab.label} role="tab" />
           ))}
         </CustomTabs>
-      </Card>
+      </Paper>
 
       <FormSlider
         steps={TABS}
@@ -120,17 +119,18 @@ const HrAttendanceSettingScreen = () => {
         containerProps={{
           sx: {
             p: 0,
+            minHeight: 0,
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Box sx={{ p: 1, height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               dialog={addLeaveTypeDialog}
               // addAttendanceRuleDialog={addAttendanceRuleDialog}
             />
           )}
-        </Scrollbar>
+        </Box>
       </FormSlider>
     </Box>
   );
