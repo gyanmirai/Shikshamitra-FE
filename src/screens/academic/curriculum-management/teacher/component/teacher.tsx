@@ -229,7 +229,7 @@ const Teacher = ({
   const divisionList = ['A', 'B', 'C', 'D', 'E'];
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Teachers Assignment"
         description="Assign teachers to subjects for each division to ensure accurate and organized class management. Streamline the process by selecting the appropriate teacher for each subject and division."
@@ -237,7 +237,7 @@ const Teacher = ({
           { name: 'Class Management', href: '/classManagement/dashboard' },
           { name: 'Teachers Assignment' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Box sx={{ display: 'flex', gap: 1 }}>

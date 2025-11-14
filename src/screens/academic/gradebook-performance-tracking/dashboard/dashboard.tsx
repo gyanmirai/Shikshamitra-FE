@@ -80,7 +80,7 @@ const Dashboard = (props: TabComponentType) => {
           { name: 'Gradebook And Performace Tracking' },
           { name: 'Dashboard' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <DashBoardQuickAction
             actions={[

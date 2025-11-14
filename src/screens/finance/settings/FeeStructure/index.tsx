@@ -90,7 +90,7 @@ const FeeStructure = () => {
               name: selectedFeeStructure ? 'Edit Fee Structure' : 'Add Fee Structure',
             },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       ) : viewFeeStructureDialog.value ? (
         <CustomBreadcrumbs

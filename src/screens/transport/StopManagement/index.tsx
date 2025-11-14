@@ -62,7 +62,7 @@ const StopManagement = () => {
             },
             { name: selectedStop ? 'Update Stop' : 'Add Stop' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -82,7 +82,7 @@ const StopManagement = () => {
               Stop
             </Button>
           }
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       )}
 

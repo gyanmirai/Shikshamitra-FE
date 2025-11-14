@@ -57,7 +57,7 @@ const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
           { name: 'Examination' },
           { name: 'Dashboard' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <DashBoardQuickAction
             actions={[

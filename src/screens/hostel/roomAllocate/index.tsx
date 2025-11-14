@@ -70,7 +70,7 @@ const StudentRoomAllocate = () => {
         heading="Room Allocation to Students"
         description="Manage and track your hostel accommodation requests and assigned rooms."
         links={links}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
 
       <StudentTableData

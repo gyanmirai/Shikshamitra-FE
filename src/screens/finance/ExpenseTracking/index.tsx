@@ -89,7 +89,7 @@ const FinanceExpenseTracking = () => {
               href: '/finance/expense-tracking',
             },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs

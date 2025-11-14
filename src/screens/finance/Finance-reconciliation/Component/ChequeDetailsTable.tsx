@@ -32,205 +32,203 @@ const ChequeDetailsForm = () => {
   });
 
   return (
-    <Box>
-      <Box>
-        <CustomizableTable
-          isLoading={isLoading}
-          noDataText={<>No Cheque Data Found </>}
-          tableId="cheque-details-table"
-          columns={[
-            {
-              id: 'studentName',
-              label: 'Student Name',
-              minWidth: '150px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'string',
-              sticky: true,
+    <>
+      <CustomizableTable
+        isLoading={isLoading}
+        noDataText={<>No Cheque Data Found </>}
+        tableId="cheque-details-table"
+        columns={[
+          {
+            id: 'studentName',
+            label: 'Student Name',
+            minWidth: '150px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'string',
+            sticky: true,
+          },
+          {
+            id: 'medium',
+            label: 'Medium',
+            minWidth: '100px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'string',
+          },
+          {
+            id: 'class',
+            label: 'Class',
+            minWidth: '80px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'string',
+          },
+          {
+            id: 'division',
+            label: 'Division',
+            minWidth: '100px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'string',
+          },
+          {
+            id: 'grNumber',
+            label: 'GR No.',
+            minWidth: '120px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'number',
+          },
+          {
+            id: 'rollNumber',
+            label: 'Roll No.',
+            minWidth: '120px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'number',
+          },
+          {
+            id: 'chequeNo',
+            label: 'Cheque No.',
+            minWidth: '120px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'number',
+          },
+          {
+            id: 'bankName',
+            label: 'Bank Name',
+            minWidth: '130px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'string',
+          },
+          {
+            id: 'amount',
+            label: 'Amount',
+            minWidth: '80px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'string',
+            render(value) {
+              return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
             },
-            {
-              id: 'medium',
-              label: 'Medium',
-              minWidth: '100px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'string',
-            },
-            {
-              id: 'class',
-              label: 'Class',
-              minWidth: '80px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'string',
-            },
-            {
-              id: 'division',
-              label: 'Division',
-              minWidth: '100px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'string',
-            },
-            {
-              id: 'grNumber',
-              label: 'GR No.',
-              minWidth: '120px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'number',
-            },
-            {
-              id: 'rollNumber',
-              label: 'Roll No.',
-              minWidth: '120px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'number',
-            },
-            {
-              id: 'chequeNo',
-              label: 'Cheque No.',
-              minWidth: '120px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'number',
-            },
-            {
-              id: 'bankName',
-              label: 'Bank Name',
-              minWidth: '130px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'string',
-            },
-            {
-              id: 'amount',
-              label: 'Amount',
-              minWidth: '80px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'string',
-              render(value) {
-                return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>;
-              },
-            },
-            {
-              id: 'receivedChequeDate',
-              label: 'Cheque Date',
-              minWidth: '200px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'date',
-            },
-            {
-              id: 'remarks',
-              label: 'Remarks',
-              minWidth: '200px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'string',
-            },
+          },
+          {
+            id: 'receivedChequeDate',
+            label: 'Cheque Date',
+            minWidth: '200px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'date',
+          },
+          {
+            id: 'remarks',
+            label: 'Remarks',
+            minWidth: '200px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'string',
+          },
 
-            {
-              id: 'status',
-              sticky: true,
-              label: 'Status',
-              minWidth: '100px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'enum',
-              enumOptions: PaymentMethodsStatusOptions,
-              render(value, row) {
-                const color = PamentMethodsStatusColor[
-                  value as PaymentMethodsStatusType
-                ] as LabelColor;
-                return <Label color={color}>{PaymentMethodsStatusType[value]}</Label>;
-              },
+          {
+            id: 'status',
+            sticky: true,
+            label: 'Status',
+            minWidth: '100px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'enum',
+            enumOptions: PaymentMethodsStatusOptions,
+            render(value, row) {
+              const color = PamentMethodsStatusColor[
+                value as PaymentMethodsStatusType
+              ] as LabelColor;
+              return <Label color={color}>{PaymentMethodsStatusType[value]}</Label>;
             },
-            {
-              id: 'action',
-              label: 'Actions',
-              isSort: false,
-              isFilter: false,
-              sticky: true,
-              align: 'left',
-              render(value, row: any) {
-                return (
-                  <ThreeDotsActions
-                    placement="right-top"
-                    actions={({ popover }: any) => (
-                      <MenuList>
-                        {row.status !== PaymentMethodsStatusType.Approved && (
-                          <MenuItem
-                            onClick={() => {
-                              setIsClearCheck(false);
-                              setSelectedEntry({ ...row, type: 'approve' });
-                              isDialog.onTrue();
-                              popover.onClose();
-                            }}
-                          >
-                            <Iconify
-                              icon="mdi:check-decagram"
-                              sx={{ color: 'success.main', mr: 1 }}
-                            />
-                            <Typography fontWeight={500} color="success.main">
-                              Approve
-                            </Typography>
-                          </MenuItem>
-                        )}
-                        {row.status !== PaymentMethodsStatusType.Rejected && (
-                          <MenuItem
-                            onClick={() => {
-                              setIsClearCheck(true);
-                              setSelectedEntry({ ...row, type: 'reject' });
-                              isDialog.onTrue();
-                              popover.onClose();
-                            }}
-                          >
-                            <Iconify icon="mdi:close-circle" sx={{ color: 'error.main', mr: 1 }} />
-                            <Typography fontWeight={500} color="error.main">
-                              Reject
-                            </Typography>
-                          </MenuItem>
-                        )}
-                      </MenuList>
-                    )}
-                  />
-                );
-              },
+          },
+          {
+            id: 'action',
+            label: 'Actions',
+            isSort: false,
+            isFilter: false,
+            sticky: true,
+            align: 'left',
+            render(value, row: any) {
+              return (
+                <ThreeDotsActions
+                  placement="right-top"
+                  actions={({ popover }: any) => (
+                    <MenuList>
+                      {row.status !== PaymentMethodsStatusType.Approved && (
+                        <MenuItem
+                          onClick={() => {
+                            setIsClearCheck(false);
+                            setSelectedEntry({ ...row, type: 'approve' });
+                            isDialog.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify
+                            icon="mdi:check-decagram"
+                            sx={{ color: 'success.main', mr: 1 }}
+                          />
+                          <Typography fontWeight={500} color="success.main">
+                            Approve
+                          </Typography>
+                        </MenuItem>
+                      )}
+                      {row.status !== PaymentMethodsStatusType.Rejected && (
+                        <MenuItem
+                          onClick={() => {
+                            setIsClearCheck(true);
+                            setSelectedEntry({ ...row, type: 'reject' });
+                            isDialog.onTrue();
+                            popover.onClose();
+                          }}
+                        >
+                          <Iconify icon="mdi:close-circle" sx={{ color: 'error.main', mr: 1 }} />
+                          <Typography fontWeight={500} color="error.main">
+                            Reject
+                          </Typography>
+                        </MenuItem>
+                      )}
+                    </MenuList>
+                  )}
+                />
+              );
             },
-          ]}
-          data={data || []}
-        />
-        <CustomDialog
-          open={isDialog.value}
-          handleClose={isDialog.onFalse}
-          maxWidth="sm"
-          title={
-            <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-              <Typography variant="h5">
-                {isClearCheck ? 'Reject Cheque Entry' : 'Approve Cheque Entry'}
-              </Typography>
-              <CustomTooltip
-                arrow
-                placement="right"
-                sx={{ textAlign: 'justify' }}
-                title={
-                  isClearCheck
-                    ? 'Remarks are required to reject the cheque entry.'
-                    : 'Review the cheque entry and click Approve. Add remarks if you wish to include any additional info.'
-                }
-              >
-                <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-              </CustomTooltip>
-            </Box>
-          }
-        >
-          <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
-        </CustomDialog>
-      </Box>
-    </Box>
+          },
+        ]}
+        data={data || []}
+      />
+      <CustomDialog
+        open={isDialog.value}
+        handleClose={isDialog.onFalse}
+        maxWidth="sm"
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">
+              {isClearCheck ? 'Reject Cheque Entry' : 'Approve Cheque Entry'}
+            </Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title={
+                isClearCheck
+                  ? 'Remarks are required to reject the cheque entry.'
+                  : 'Review the cheque entry and click Approve. Add remarks if you wish to include any additional info.'
+              }
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+      >
+        <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
+      </CustomDialog>
+    </>
   );
 };
 

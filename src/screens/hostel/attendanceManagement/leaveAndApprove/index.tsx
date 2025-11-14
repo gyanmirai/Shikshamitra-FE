@@ -109,7 +109,7 @@ const LeaveAndApprove = () => {
             : 'View and manage student leave requests, including pending approvals, approved leaves, and rejected applications. Take action on leave requests as needed.'
         }
         links={links}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

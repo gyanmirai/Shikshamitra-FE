@@ -134,7 +134,7 @@ const LeaveAndAbsentScreen = () => {
           { name: 'Attendance', href: '/student/attendance/dashboard/' },
           { name: 'Leave and Absent' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <Button startIcon={<Add />} variant="contained" size="small" onClick={dialog.onTrue}>
             Leave Request

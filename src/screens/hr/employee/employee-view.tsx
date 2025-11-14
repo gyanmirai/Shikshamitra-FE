@@ -12,7 +12,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useLazyGetEmployeeByIdQuery } from 'src/redux/employee/employeeApi';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
-import { Tab, Box, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
+import { Tab, Box, Tabs, Paper, Avatar, Divider, Typography } from '@mui/material';
 
 import PayrollSummary from './payroll-summary';
 import EmployeeInformation from './information';
@@ -125,7 +125,7 @@ export function EmployeeCard({ employee }: any) {
   const [isBackClick, setIsBackClick] = React.useState(false);
   return (
     <>
-      <Card
+      <Paper
         sx={{
           mb: 2,
           borderTopLeftRadius: 0,
@@ -189,8 +189,8 @@ export function EmployeeCard({ employee }: any) {
             </Box>
           </Box>
         </Paper>
-      </Card>
-      <Card sx={{ mb: 2, p: 1 }}>
+      </Paper>
+      <Paper elevation={2} sx={{ mb: 2, p: 1 }}>
         <Tabs
           value={tabs.value}
           onChange={(...rest) => {
@@ -220,15 +220,15 @@ export function EmployeeCard({ employee }: any) {
             />
           ))}
         </Tabs>
-      </Card>
+      </Paper>
 
       <FormSlider
         steps={TABS}
         isBackClick={isBackClick}
         step={currentIndex}
-        containerProps={{ sx: { p: 0 } }}
+        containerProps={{ sx: { p: 0, minHeight: 0 } }}
       >
-        <Box>
+        <Box sx={{ height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component tabs={tabs} employee={employee} />
           )}
@@ -276,19 +276,6 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
             setSearchParams({ employee: '' });
           }
         }}
-        // sx={{ px: 1, pb: 1 }}
-        // action={
-        //   searchParams?.employee && (
-        //     <Button
-        //       size="small"
-        //       variant="soft"
-        //       onClick={() => setSearchParams({ employee: '' })}
-        //       startIcon={<Iconify icon="mingcute:back-2-fill" />}
-        //     >
-        //       Back To Employee list
-        //     </Button>
-        //   )
-        // }
       />
       <EmployeeCard employee={employee} />
       {/* </Scrollbar> */}

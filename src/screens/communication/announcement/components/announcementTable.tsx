@@ -12,7 +12,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import { Box, Tab, Tabs, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Paper, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 import {
   AnnouncementStatus,
   AnnouncementStatusColor,
@@ -26,7 +26,7 @@ import type {
   ISchoolWiseAnnouncementTableProps,
 } from '../type';
 
-const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
+const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
   setOpen,
   data,
   onEdit,
@@ -102,9 +102,20 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
   );
 
   return (
-    <Box>
+    <>
       {/* Tabs */}
-      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
+      <Paper
+        sx={{
+          mt: '4px',
+          mb: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          p: 2,
+          height: 50,
+        }}
+        elevation={2}
+      >
         <Tabs
           value={tabs.value}
           onChange={tabs.onChange}
@@ -127,7 +138,7 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
             />
           ))}
         </Tabs>
-      </Box>
+      </Paper>
 
       {/* Table */}
       {tabs.value === 'All' ? (
@@ -739,8 +750,8 @@ const SchoolWiseAnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> =
           data={tableData || []}
         />
       ) : null}
-    </Box>
+    </>
   );
 };
 
-export default SchoolWiseAnnouncementTable;
+export default AnnouncementTable;

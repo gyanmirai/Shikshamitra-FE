@@ -49,7 +49,7 @@ const SettingScreen = (props: TabComponentType) => {
         heading="Settings"
         description="Manage learning management system settings including courses, content, notifications, and integrations."
         links={[{ name: 'Academics' }, { name: 'Settings' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Card
         sx={{

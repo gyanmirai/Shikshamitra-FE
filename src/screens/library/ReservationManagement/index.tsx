@@ -93,7 +93,7 @@ const ReservationManagement = () => {
             Make Reservation
           </Button>
         }
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Box sx={{ display: 'flex', gap: 2, ml: 1 }}>
         {/* Book Title Autocomplete */}

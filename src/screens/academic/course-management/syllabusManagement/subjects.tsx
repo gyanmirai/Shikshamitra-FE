@@ -186,7 +186,7 @@ const Subjects = (props: TabComponentType) => {
           onBack={() => {
             handleClose(null, false);
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -197,7 +197,7 @@ const Subjects = (props: TabComponentType) => {
             { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
             { name: 'Chapters Management' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       )}
       {/* Conditional rendering based on form state */}

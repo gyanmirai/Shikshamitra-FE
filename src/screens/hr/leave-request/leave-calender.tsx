@@ -86,7 +86,7 @@ const LeaveCalender = (props: TabComponentType) => {
         variant="outlined"
         // startIcon={<Iconify icon={selectedItem.icon} />}
         endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
-        sx={{ display: { xs: 'none', sm: 'inline-flex', width: '150px' } }}
+        sx={{ display: { xs: 'none', sm: 'inline-flex' }, maxWidth: '170px', width: '100%', mb: 1 }}
       >
         {organization || 'Organization'}
       </Button>
@@ -98,6 +98,12 @@ const LeaveCalender = (props: TabComponentType) => {
         }}
         initialView="dayGridMonth"
         formate="MMM YYYY"
+        containerProps={{
+          sx: {
+            height: '100%',
+            minHeight: '0',
+          },
+        }}
         views={{
           timeGridWeek: {
             dayHeaderFormat: { weekday: 'short', day: '2-digit' }, // Sun, 01

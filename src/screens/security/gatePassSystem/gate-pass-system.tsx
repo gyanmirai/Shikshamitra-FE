@@ -94,7 +94,7 @@ const GatePassSystemScreen = () => {
             : 'View and manage all gate pass requests, track approval status, and update or cancel pending requests as needed.'
         }
         links={links}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

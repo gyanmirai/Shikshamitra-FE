@@ -117,7 +117,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
           { name: 'Income Tracking' },
           // { name: 'Income Tracking Form' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         description="The Income Tracking allows you to add and manage income records. Enter the income source, amount, date, and relevant details to keep the system updated with accurate financial data"
         isBack
         onBack={handleCloseDialog}

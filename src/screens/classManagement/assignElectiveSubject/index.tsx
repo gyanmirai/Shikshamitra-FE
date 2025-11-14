@@ -218,7 +218,7 @@ const AssignElectiveSubject = () => {
   const hasStudentSelections = Object.keys(studentSelections).length > 0;
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Student Elective Assignment"
         description="Assign elective subjects according to students preferences and academic needs. Also, manage selections through a centralized system. "
@@ -226,7 +226,7 @@ const AssignElectiveSubject = () => {
           { name: 'Class Management', href: '/classManagement/dashboard' },
           { name: 'Student Elective Assignment' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Box
         sx={{

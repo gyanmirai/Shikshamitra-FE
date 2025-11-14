@@ -1,10 +1,12 @@
+'use client';
+
 import type { BoxProps } from '@mui/material';
 
-import { m } from 'framer-motion';
 import { Box } from '@mui/material';
+import { motion } from 'framer-motion';
 
 export default function ShakingTextField({
-  error,
+  error = false,
   children,
   ...props
 }: {
@@ -13,7 +15,8 @@ export default function ShakingTextField({
 } & BoxProps) {
   return (
     <Box
-      component={m.div}
+      component={motion.div}
+      initial={{ x: 0 }}
       animate={error ? { x: [-5, 5, -5, 5, 0] } : { x: 0 }}
       transition={{ duration: 0.3 }}
       {...props}

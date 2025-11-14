@@ -60,7 +60,7 @@ const FinanceBounceScreen = () => {
           { name: 'Reconciliation', href: '/finance/reconciliation/bounce-cheque/' },
           { name: 'Bounced Cheque' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
 
       <CustomizableTable

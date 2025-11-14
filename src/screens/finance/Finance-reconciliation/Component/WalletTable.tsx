@@ -30,7 +30,7 @@ const WalletTable = () => {
   });
 
   return (
-    <Box>
+    <>
       <CustomizableTable
         tableId="wallet-table"
         columns={[
@@ -217,7 +217,7 @@ const WalletTable = () => {
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
-    </Box>
+    </>
   );
 };
 

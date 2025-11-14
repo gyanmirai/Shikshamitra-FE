@@ -68,7 +68,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
           overflowX: 'auto',
           scrollBehavior: 'smooth',
           gap: 2,
-          px: 2, // ✅ Increased to prevent shadow cut
+          p: 2,
           flexGrow: 1,
           scrollbarWidth: 'none',
           '&::-webkit-scrollbar': { display: 'none' },
@@ -83,8 +83,6 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
               sx={{
                 flex: '0 0 auto',
                 width: '220px', // Adjust width for consistent card size
-                mb: 2,
-                mt: 2,
               }}
             >
               <Card
@@ -100,6 +98,7 @@ export default function CourseCardsGrid({ courses, handleCardDetails }: ICourseC
                   zIndex: isSelected ? 2 : 1,
                   backgroundColor: 'transparent',
                   height: '100%',
+                  // p: 1,
                 }}
                 onClick={() => {
                   setSelectedCourseId(course.id);
@@ -154,17 +153,17 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
         <Typography variant="subtitle2" fontWeight={700} color="text.primary">
           {title}
         </Typography>
-        <Typography variant="subtitle2" color="text.secondary" mt={0.5}>
+        <Typography variant="caption" color="text.secondary">
           {completedChapter}/{totalChapter} Chapters
         </Typography>
       </Box>
 
-      <Box mt={2}>
+      <Box>
         <LinearProgress
           variant="determinate"
           value={progress}
           sx={{
-            height: 10,
+            height: 5,
             borderRadius: 5,
             backgroundColor: alpha('#000', 0.08),
             '& .MuiLinearProgress-bar': {
@@ -175,7 +174,7 @@ export const AppWidget: React.FC<IAppWidgetProps> = ({
           }}
         />
 
-        <Typography variant="body2" color="text.secondary" mt={1} textAlign="right">
+        <Typography variant="caption" component="p" color="text.secondary" mt={1} textAlign="right">
           {progress}% completed
         </Typography>
       </Box>

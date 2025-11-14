@@ -52,7 +52,7 @@ const BiometricIntegrationScreen = () => {
     }
   };
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Import Attendance"
         description="Configure Attendance Types, Leave Policies, and Late Arrival Rules for accurate tracking and enforcement."

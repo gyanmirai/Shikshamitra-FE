@@ -15,7 +15,7 @@ const TransportDashboardScreen = () => (
     <CustomBreadcrumbs
       heading="Dashboard"
       links={[{ name: 'Transport' }, { name: 'Dashboard' }]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
       description="This dashboard provides a daily overview of your transportation activity, including total stops, and more."
     />
     <Grid container spacing={3}>

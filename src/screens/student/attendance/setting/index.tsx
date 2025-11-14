@@ -87,7 +87,7 @@ const HrAttendanceSettingScreen = () => {
           { name: 'Attendance', href: '/student/attendance/dashboard/' },
           { name: 'Setting' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
       />
 

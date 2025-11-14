@@ -32,7 +32,7 @@ const CreditCardTable = () => {
   const isDialog = useBoolean(false);
 
   return (
-    <Box>
+    <>
       <CustomizableTable
         tableId="credit-card-table"
         isLoading={isLoading}
@@ -235,7 +235,7 @@ const CreditCardTable = () => {
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
-    </Box>
+    </>
   );
 };
 

@@ -107,7 +107,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   };
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box
         display="flex"
         sx={{
@@ -115,7 +115,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
           mt: 1,
-          mb: 2,
+
           p: 1,
           gap: 2,
         }}
@@ -335,7 +335,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           <StudentSubmissions selectedHomework={selectedHomework} />
         </Box>
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 

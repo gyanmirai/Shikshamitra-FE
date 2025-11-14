@@ -44,7 +44,7 @@ const LibraryDashboard = () => {
       <CustomBreadcrumbs
         heading="Dashboard"
         links={[{ name: 'Library' }, { name: 'Dashboard' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Grid container spacing={3} sx={{ marginBottom: 1, padding: 3 }}>
         <Box

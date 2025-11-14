@@ -67,7 +67,7 @@ const NewCreateRouteScreen = () => {
             <CustomBreadcrumbs
               heading="Routes and Schedules"
               links={[{ name: 'Transport' }, { name: 'Routes and Schedules' }, { name: 'Form' }]}
-              sx={{ px: 1, mb: 2 }}
+              sx={{ mb: 2 }}
             />
             <Box sx={{ mr: '15px', mb: '20px' }} gap={3} display="flex" justifyContent="flex-end">
               <Button
@@ -95,7 +95,7 @@ const NewCreateRouteScreen = () => {
             <CustomBreadcrumbs
               heading="Routes and Schedules"
               links={[{ name: 'Transport' }, { name: 'Routes and Schedules' }]}
-              sx={{ px: 1, mb: 2 }}
+              sx={{ mb: 2 }}
             />
             <Box display="flex" flexDirection="row" justifyContent="flex-end">
               <Button

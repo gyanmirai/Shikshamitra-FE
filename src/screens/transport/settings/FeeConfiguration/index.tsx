@@ -67,7 +67,7 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
             { name: 'Setting', href: '/transport/settings/vehicleType' },
             { name: 'Fee Configuration' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       )}
       <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>

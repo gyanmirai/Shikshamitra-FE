@@ -29,7 +29,7 @@ const MyAttendance = () => {
           { name: 'Attendance And Leave Management', href: '' },
           { name: 'My Attendance', href: '' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
         <CustomSelect

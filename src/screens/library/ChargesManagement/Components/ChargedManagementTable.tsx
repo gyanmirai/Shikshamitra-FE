@@ -3,7 +3,6 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -85,7 +84,7 @@ const LibraryChargesTable = ({
   );
   const isBackClick = false;
   return (
-    <Box>
+    <>
       <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ ml: 2, mt: 1 }}>
         <Tabs
           value={tabValue}
@@ -134,10 +133,11 @@ const LibraryChargesTable = ({
         containerProps={{
           sx: {
             p: 0,
+            minHeight: 0,
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Box sx={{ height: '100%' }}>
           <CustomizableTable
             tableId="library-charges-table"
             noDataText="No Charges Data Found"
@@ -207,9 +207,9 @@ const LibraryChargesTable = ({
             ]}
             data={tableData || []}
           />
-        </Scrollbar>
+        </Box>
       </FormSlider>
-    </Box>
+    </>
   );
 };
 

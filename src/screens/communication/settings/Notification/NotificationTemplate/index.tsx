@@ -71,7 +71,7 @@ const TemplatesManagement = (props: TabComponentType) => {
             },
             { name: editingTemplate ? 'Update Template' : 'Add Template' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           isBack
           onBack={() => {
             handleCloseDialog(null, false);

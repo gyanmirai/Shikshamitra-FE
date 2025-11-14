@@ -37,11 +37,11 @@ const SendNotification = () => {
               Sent Notification
             </Button>
           }
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       )}
 
-      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {!showForm ? (
           <SentNotificationTableView />
         ) : (
@@ -54,7 +54,7 @@ const SendNotification = () => {
                 { name: 'Notifications' },
                 { name: 'Sent Notification' },
               ]}
-              sx={{ px: 1, mb: 2 }}
+              sx={{ mb: 2 }}
               isBack
               onBack={handleCloseDialog}
             />

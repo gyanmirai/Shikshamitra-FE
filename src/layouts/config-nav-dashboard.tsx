@@ -530,13 +530,13 @@ const hrModule = (isDdvs: boolean) => ({
           disabled: !isDdvs,
           caption: 'Coming Soon',
         },
-        {
-          title: 'Events & Holidays',
-          _action: 'events-holidays',
-          path: '/hr/events-holidays',
-          shortcutKey: 'Alt+H+V',
-          shortcutKeyName: 'Alt+H+V',
-        },
+        // {
+        //   title: 'Events & Holidays',
+        //   _action: 'events-holidays',
+        //   path: '/hr/events-holidays',
+        //   shortcutKey: 'Alt+H+V',
+        //   shortcutKeyName: 'Alt+H+V',
+        // },
         {
           title: 'Notification',
           path: '/hr/hr-notification',

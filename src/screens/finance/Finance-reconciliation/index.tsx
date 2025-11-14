@@ -9,8 +9,7 @@ import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Tab, Card, Tabs } from '@mui/material';
+import { Box, Tab, Tabs, Paper } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -199,7 +198,7 @@ const FinanceReconciliation = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Reconciliation"
         description="This section helps you compare recorded transactions with bank statements to ensure financial records match, quickly identify matched, unmatched, and discrepant transactions."
@@ -208,13 +207,14 @@ const FinanceReconciliation = () => {
           { name: 'Reconciliation', href: '/finance/reconciliation' },
         ]}
       />
-      <Card
+      <Paper
         sx={{
           boxShadow: 0,
           borderRadius: 2,
           background: '#fff',
-          p: 1,
+          // p: 2,
         }}
+        elevation={2}
       >
         <Box
           display="flex"
@@ -265,9 +265,19 @@ const FinanceReconciliation = () => {
             ))}
           </Tabs>
         </Box>
-      </Card>
-      <FormSlider steps={TABS} isBackClick={isBack} step={currentIndex}>
-        <Scrollbar sx={{ p: 1, marginLeft: -3, marginTop: -3 }}>
+      </Paper>
+      <FormSlider
+        steps={TABS}
+        isBackClick={isBack}
+        step={currentIndex}
+        containerProps={{
+          sx: {
+            p: 0,
+            minHeight: 0,
+          },
+        }}
+      >
+        <Box sx={{ height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               addOverviewDialog={addOverviewDialog}
@@ -276,7 +286,7 @@ const FinanceReconciliation = () => {
               handleClose={handleClose}
             />
           )}
-        </Scrollbar>
+        </Box>
       </FormSlider>
     </Box>
   );

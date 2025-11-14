@@ -20,7 +20,7 @@ const ContentLibrary = (props: TabComponentType) => {
           { name: 'Learning Management System' },
           { name: 'Content Library' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <CustomizableTable
         tableId="content-library-table"

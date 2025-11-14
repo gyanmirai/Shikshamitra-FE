@@ -203,7 +203,7 @@ const CurriculumOverview = (props: TabComponentType) => {
               { name: 'Curriculum Overview' },
               { name: 'Curriculum Form' },
             ]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ mb: 2 }}
             action={
               <Button
                 variant="contained"
@@ -230,7 +230,7 @@ const CurriculumOverview = (props: TabComponentType) => {
           <CustomBreadcrumbs
             heading="Curriculum Overview"
             links={[{ name: 'Academics' }, { name: 'Curriculum' }, { name: 'Curriculum Overview' }]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ mb: 2 }}
             action={
               <Button
                 startIcon={<Add />}

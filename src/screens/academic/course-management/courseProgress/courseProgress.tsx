@@ -152,7 +152,7 @@ const CourseProgress = (props: TabComponentType) => {
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
           { name: 'Chapters Progress' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 1 }}
       />
       {/* Class and Division selection filters */}
       <Box sx={{ display: 'flex', gap: 2, mb: 1 }}>

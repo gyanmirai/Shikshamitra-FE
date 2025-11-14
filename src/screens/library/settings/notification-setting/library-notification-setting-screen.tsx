@@ -198,7 +198,7 @@ export default LibraryNotificationSettingScreen;
 //           //       : 'Fee-Structure-Overview',
 //           // },
 //         ]}
-//         sx={{ px: 1, mb: 2 }}
+//         sx={{ mb: 2 }}
 //       />
 
 //       <Box sx={{ padding: 3 }}>

@@ -28,7 +28,7 @@ const CommunicationDashboard = () => {
       <CustomBreadcrumbs
         heading="Communication Dashboard"
         links={[{ name: 'Communication' }, { name: 'Communication Dashboard' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <DashBoardQuickAction
             actions={[

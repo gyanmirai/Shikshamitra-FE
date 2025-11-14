@@ -180,8 +180,8 @@ const LeaveHistory = (props: any) => {
   }, [editData?.rejectionReason]);
 
   return (
-    <Box sx={{ height: '100%' }}>
-      <Box sx={{ display: 'flex', gap: 2, my: 2, pl: 1, justifyContent: 'space-between' }}>
+    <Box sx={{ height: '100%', minHeight: '0', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ display: 'flex', gap: 2, mt: 1.5, pl: 1, justifyContent: 'space-between' }}>
         <DatePicker
           label="Month-Year"
           format="MMM-YYYY"

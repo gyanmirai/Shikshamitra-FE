@@ -126,7 +126,7 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
             <CustomBreadcrumbs
               heading="Payment Method"
               links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Payment Method' }]}
-              sx={{ px: 1, mb: 2 }}
+              sx={{ mb: 2 }}
             />
             <Box gap={3} display="flex" flexDirection="row" justifyContent="flex-end" pb="20px">
               <Button

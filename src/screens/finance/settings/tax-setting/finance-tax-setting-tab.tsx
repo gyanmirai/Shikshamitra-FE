@@ -149,7 +149,7 @@ const FinanceTaxSettingTab = () => {
             <CustomBreadcrumbs
               heading="Tax Settings"
               links={[{ name: 'Finance' }, { name: 'Settings' }, { name: 'Tax Settings' }]}
-              sx={{ px: 1, mb: 2 }}
+              sx={{ mb: 2 }}
             />
 
             <Button

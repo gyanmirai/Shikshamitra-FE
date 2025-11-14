@@ -2,10 +2,9 @@
 
 import type { useSearchParamReturnType } from 'src/hooks/use-search-param';
 
-import { Box, Tab, Card } from '@mui/material';
+import { Box, Tab, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -50,7 +49,7 @@ const LeaveRequest = () => {
   );
   const [isBackClick, setIsBackClick] = useState(false);
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Leave Management"
         links={[
@@ -61,14 +60,14 @@ const LeaveRequest = () => {
           },
           { name: 'Leave Management' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
         description={
           currentActiveComponent?.value === 'leaveRequest'
             ? 'Create new leave requests and manage existing ones by approving or rejecting them.'
             : 'The Leave Calendar visually displays employees leave requests and their statuses—approved, pending, or rejected—on specific dates.'
         }
       />
-      <Card
+      <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
@@ -99,7 +98,7 @@ const LeaveRequest = () => {
             />
           ))}
         </CustomTabs>
-      </Card>
+      </Paper>
       <FormSlider
         steps={TABS}
         isBackClick={isBackClick}
@@ -107,10 +106,11 @@ const LeaveRequest = () => {
         containerProps={{
           sx: {
             p: 0,
+            minHeight: 0,
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Box sx={{ height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               searchParams={searchParams}
@@ -118,7 +118,7 @@ const LeaveRequest = () => {
               modal={modal}
             />
           )}
-        </Scrollbar>
+        </Box>
       </FormSlider>
     </Box>
   );

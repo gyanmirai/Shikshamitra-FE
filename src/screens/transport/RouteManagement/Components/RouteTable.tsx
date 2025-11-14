@@ -88,108 +88,106 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
 
   return (
     <>
-      <Box>
-        <CustomizableTable
-          tableId="route-management-table"
-          noDataText=" Not Routes Data Found"
-          isLoading={isLoading}
-          columns={[
-            {
-              id: 'routeName',
-              sticky: true,
-              label: 'Route Name',
-              align: 'left',
-              minWidth: 200,
+      <CustomizableTable
+        tableId="route-management-table"
+        noDataText=" Not Routes Data Found"
+        isLoading={isLoading}
+        columns={[
+          {
+            id: 'routeName',
+            sticky: true,
+            label: 'Route Name',
+            align: 'left',
+            minWidth: 200,
+          },
+          {
+            id: 'id',
+            label: 'Route Code',
+            align: 'left',
+            minWidth: 130,
+          },
+          {
+            id: 'startPoint',
+            label: 'Start Point',
+            align: 'left',
+            minWidth: 120,
+          },
+          {
+            id: 'endPoint',
+            label: 'End Point',
+            align: 'left',
+            minWidth: 120,
+          },
+          {
+            id: 'distance',
+            label: 'Distance',
+            align: 'left',
+            minWidth: 100,
+          },
+          {
+            id: 'stops',
+            label: 'Stops',
+            align: 'left',
+            filterType: 'number',
+            minWidth: 80,
+          },
+          {
+            id: 'capacity',
+            label: 'Capacity',
+            align: 'left',
+            filterType: 'number',
+            minWidth: 100,
+          },
+          {
+            id: 'students',
+            label: 'Members',
+            align: 'left',
+            filterType: 'number',
+            minWidth: 100,
+          },
+          {
+            id: 'status',
+            label: 'Status',
+            align: 'left',
+            sticky: true,
+            minWidth: 80,
+            filterType: 'enum',
+            enumOptions: RouteStatusOptions,
+            render: (value) => {
+              const color = RouteStatusTypeColor[value as RouteStatusType] as LabelColor;
+              return <Label color={color}>{RouteStatusType[value]}</Label>;
             },
-            {
-              id: 'id',
-              label: 'Route Code',
-              align: 'left',
-              minWidth: 130,
+          },
+          {
+            id: 'action',
+            label: 'Actions',
+            align: 'left',
+            isFilter: false,
+            isSort: false,
+            sticky: true,
+            minWidth: 60,
+            render(value, row) {
+              return (
+                <ThreeDotsActions
+                  actions={(prop) => actions({ ...prop, row })}
+                  showViewIcon
+                  showEditIcon
+                  showDeleteIcon={false}
+                  handleViewClick={() => {
+                    onViewDetail?.(row);
+                  }}
+                  handleEditClick={() => {
+                    setOpenDialog?.(true);
+                    setEditData?.(row);
+                  }}
+                  placement="right-center"
+                />
+              );
             },
-            {
-              id: 'startPoint',
-              label: 'Start Point',
-              align: 'left',
-              minWidth: 120,
-            },
-            {
-              id: 'endPoint',
-              label: 'End Point',
-              align: 'left',
-              minWidth: 120,
-            },
-            {
-              id: 'distance',
-              label: 'Distance',
-              align: 'left',
-              minWidth: 100,
-            },
-            {
-              id: 'stops',
-              label: 'Stops',
-              align: 'left',
-              filterType: 'number',
-              minWidth: 80,
-            },
-            {
-              id: 'capacity',
-              label: 'Capacity',
-              align: 'left',
-              filterType: 'number',
-              minWidth: 100,
-            },
-            {
-              id: 'students',
-              label: 'Members',
-              align: 'left',
-              filterType: 'number',
-              minWidth: 100,
-            },
-            {
-              id: 'status',
-              label: 'Status',
-              align: 'left',
-              sticky: true,
-              minWidth: 80,
-              filterType: 'enum',
-              enumOptions: RouteStatusOptions,
-              render: (value) => {
-                const color = RouteStatusTypeColor[value as RouteStatusType] as LabelColor;
-                return <Label color={color}>{RouteStatusType[value]}</Label>;
-              },
-            },
-            {
-              id: 'action',
-              label: 'Actions',
-              align: 'left',
-              isFilter: false,
-              isSort: false,
-              sticky: true,
-              minWidth: 60,
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    actions={(prop) => actions({ ...prop, row })}
-                    showViewIcon
-                    showEditIcon
-                    showDeleteIcon={false}
-                    handleViewClick={() => {
-                      onViewDetail?.(row);
-                    }}
-                    handleEditClick={() => {
-                      setOpenDialog?.(true);
-                      setEditData?.(row);
-                    }}
-                    placement="right-center"
-                  />
-                );
-              },
-            },
-          ]}
-          data={routeDta || []}
-        />
-      </Box>
+          },
+        ]}
+        data={routeDta || []}
+      />
 
       {/* Change Status Dialog */}
       <CustomDialog

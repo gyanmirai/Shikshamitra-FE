@@ -26,7 +26,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
     <CustomBreadcrumbs
       heading={heading}
       links={[{ name: 'Student' }, { name: 'Auto Notification Configuration' }]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
       description="In the Notification Settings, you can customize the message for each notification and enable or disable it as needed."
     />
     <Box

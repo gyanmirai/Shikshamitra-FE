@@ -35,7 +35,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Dashboard"
         links={[{ name: 'Academics' }, { name: 'Time Table' }, { name: 'Dashboard' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <DashBoardQuickAction
             actions={[

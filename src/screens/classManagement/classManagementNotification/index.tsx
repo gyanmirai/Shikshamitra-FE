@@ -1,9 +1,8 @@
 'use client';
 
-import { Box, Tab, Card } from '@mui/material';
+import { Box, Tab, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -57,7 +56,7 @@ const ClassManagementNotificationScreen = () => {
   const [isViewMode, setIsViewMode] = useState(false);
 
   return (
-    <Box sx={{ height: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {dialog?.value ? (
         <CustomBreadcrumbs
           heading={isViewMode ? 'View Notification' : 'Edit Notification'}
@@ -77,7 +76,7 @@ const ClassManagementNotificationScreen = () => {
           onBack={() => {
             dialog.onFalse();
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -87,11 +86,11 @@ const ClassManagementNotificationScreen = () => {
             { name: 'Class Management', href: '/classManagement/dashboard' },
             { name: 'Notification', href: '/classManagement/notification-management' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       )}
 
-      <Card
+      <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
@@ -116,7 +115,7 @@ const ClassManagementNotificationScreen = () => {
             ))}
           </CustomTabs>
         )}
-      </Card>
+      </Paper>
 
       <FormSlider
         steps={TABS}
@@ -125,14 +124,15 @@ const ClassManagementNotificationScreen = () => {
         containerProps={{
           sx: {
             p: 0,
+            minHeight: 0,
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Box sx={{ height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component dialog={dialog} setIsViewMode={setIsViewMode} />
           )}
-        </Scrollbar>
+        </Box>
       </FormSlider>
     </Box>
   );

@@ -38,7 +38,7 @@ const GradingAndAnalytics = (props: TabComponentType) => {
           { name: 'Examination' },
           { name: 'Student Performance And Analytics' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Box display="flex" gap={2} mt={2} mb={5}>
         <CustomSelect

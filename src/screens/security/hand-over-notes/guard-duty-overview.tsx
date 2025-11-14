@@ -14,7 +14,7 @@ const GuardDutyOverview = () => (
         { name: 'Security', href: '' },
         { name: 'Guard Duty Overview', href: '' },
       ]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     <HandOverNotesTable />
   </>

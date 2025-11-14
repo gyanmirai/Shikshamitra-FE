@@ -116,7 +116,7 @@ const LibraryReservationManagement = () => {
             { name: 'Circulation' },
             { name: 'Reservation Management' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
         <CommonCtaComponent
           bookHandler={() => handleDialogOpen('addNewBook')}

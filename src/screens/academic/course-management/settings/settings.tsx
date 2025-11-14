@@ -41,7 +41,7 @@ const SyllabusSetting = () => {
           { name: 'Setting' },
           { name: currentActiveComponent?.label },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 1 }}
       />
       <Card
         sx={{

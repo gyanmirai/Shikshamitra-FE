@@ -32,7 +32,7 @@ const UpiTable = () => {
   });
 
   return (
-    <Box>
+    <>
       <CustomizableTable
         tableId="upi-table"
         columns={[
@@ -227,7 +227,7 @@ const UpiTable = () => {
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
-    </Box>
+    </>
   );
 };
 
