@@ -106,17 +106,15 @@ const SubjectList: React.FC<SubjectListProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      width: '100%',
+                      gap: 1,
                     }}
                   >
+                    {/* Subject Names */}
                     <Box
                       sx={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        maxWidth: 150,
-                        lineHeight: 1.2,
+                        flex: 1,
+                        minWidth: 0,
+                        overflow: 'hidden',
                       }}
                     >
                       {subject.subjects.map((sub: Subject, index: number) => (
@@ -126,41 +124,50 @@ const SubjectList: React.FC<SubjectListProps> = ({
                             placement="top"
                           >
                             <Typography
+                              component="span"
                               variant="body2"
-                              noWrap={false}
                               sx={{
-                                wordBreak: 'break-word',
                                 color: isDraggable ? 'text.primary' : 'text.disabled',
-                                maxWidth: '100%',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 1,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
+                                fontSize: '0.875rem',
+                                lineHeight: 1.3,
                               }}
                             >
                               {sub.subject}
-                              {index < subject.subjects.length - 1 && ','}
+                              {index < subject.subjects.length - 1 && ', '}
                             </Typography>
                           </CustomTooltip>
                         </React.Fragment>
                       ))}
                     </Box>
 
-                    <Typography
-                      variant="body2"
+                    {/* Lecture Count */}
+                    <Box
                       sx={{
-                        color: isDraggable ? 'text.primary' : 'text.disabled',
-                        fontWeight: usedLectures >= subject.totalLectures ? 'bold' : 'normal',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        flexShrink: 0,
                       }}
                     >
-                      ({usedLectures} / {subject.totalLectures})
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: isDraggable ? 'text.secondary' : 'text.disabled',
+                          fontWeight: usedLectures >= subject.totalLectures ? 600 : 400,
+                          fontSize: '0.875rem',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        ({usedLectures}/{subject.totalLectures})
+                      </Typography>
                       {usedLectures >= subject.totalLectures && (
-                        <Typography variant="caption" color="success.main" sx={{ ml: 0.5 }}>
-                          ✓ Complete
-                        </Typography>
+                        <Iconify
+                          icon="mdi:check-circle"
+                          width={16}
+                          sx={{ color: 'success.main', flexShrink: 0 }}
+                        />
                       )}
-                    </Typography>
+                    </Box>
                   </Box>
                 </Paper>
               );

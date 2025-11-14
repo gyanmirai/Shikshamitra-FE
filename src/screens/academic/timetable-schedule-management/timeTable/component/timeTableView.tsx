@@ -66,7 +66,9 @@ const TimeTableView: React.FC<ITimeTableView> = ({
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ width: '15%', textAlign: 'center' }}>Time Slot</TableCell>
+                  <TableCell sx={{ width: '15%', textAlign: 'center', boxShadow: 2 }}>
+                    Time Slot
+                  </TableCell>
                   {weekDays.map((day) => (
                     <TableCell key={day} align="center">
                       {day}
@@ -77,7 +79,7 @@ const TimeTableView: React.FC<ITimeTableView> = ({
               <TableBody>
                 {timetable.map((timeTableItem, index) => (
                   <TableRow key={index}>
-                    <TableCell>
+                    <TableCell sx={{ boxShadow: 2 }}>
                       {timeTableItem.startTime}
                       <br />
                       {timeTableItem.endTime}
