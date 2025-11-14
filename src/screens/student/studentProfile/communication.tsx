@@ -219,7 +219,7 @@ const Communication = (props: StudentTabsComponentType) => {
       <Box sx={{ p: 2, pb: 1 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Box>
-            <Typography variant="h5" color="text.secondary">
+            <Typography variant="h6" fontWeight={600} color="text.primary">
               {announcements.length} announcement(s)
             </Typography>
           </Box>

@@ -2,13 +2,13 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import { Add } from '@mui/icons-material';
-import { varAlpha } from 'src/theme/styles';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CalendarView } from 'src/sections/calendar/view';
+import { EmptyContent } from 'src/components/empty-content';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { EventStatus, AnnouncementStatus } from 'src/enums/announcement-status';
@@ -18,168 +18,362 @@ import {
   Tab,
   Chip,
   Card,
-  Grid,
   Tabs,
+  Stack,
   Button,
+  Avatar,
   Divider,
   MenuList,
   MenuItem,
   Typography,
+  IconButton,
 } from '@mui/material';
 
-const EmployeeCommunication = ({ employee }: any) => (
-  <Box>
-    <Grid container spacing={2}>
-      <Grid size={{ xs: 12, sm: 12, md: 3 }}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 1,
-            width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
-          }}
-        >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box display="flex" gap={2}>
-              <Iconify icon="mdi:bell" width={20} height={20} sx={{ color: 'primary.main' }} />
-              <Typography variant="subtitle1">New Announcement</Typography>
-            </Box>
-            <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-              <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
-                {[
-                  'New Announcement',
-                  'New Announcement',
-                  'New Announcement',
-                  'New Announcement',
-                  'New Announcement',
-                  'New Announcement',
-                ].map((item, index) => (
-                  <Box component="li" key={index} sx={{ mb: 1 }}>
-                    <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                      {item}
-                    </Button>
-                  </Box>
-                ))}
-              </Box>
-            </Scrollbar>
-          </Box>
-        </Card>
-      </Grid>
+interface CommunicationItem {
+  // eslint-disable-next-line react/no-unused-prop-types
+  id: string;
+  title: string;
+  category?: string;
+  description?: string;
+  message?: string;
+  signature?: string;
+  createdBy: string;
+  createdOn: string;
+  isRead?: boolean;
+  type: 'announcement' | 'event';
+  date?: string;
+  time?: string;
+  venue?: string;
+}
 
-      <Grid size={{ xs: 12, sm: 12, md: 3 }}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 1,
-            width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
-          }}
-        >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box display="flex" gap={2}>
-              <Iconify
-                icon="mdi:event"
-                width={20}
-                height={20}
-                sx={{ color: 'secondary.main', mt: 0.3 }}
+interface CommunicationCardProps extends CommunicationItem {}
+
+const CommunicationCard = ({
+  title,
+  category,
+  description,
+  message,
+  signature,
+  createdBy,
+  createdOn,
+  isRead = false,
+  type,
+  date,
+  time,
+  venue,
+}: CommunicationCardProps) => {
+  const getTypeConfig = () => {
+    switch (type) {
+      case 'announcement':
+        return { icon: 'mdi:bell', color: 'primary.main' };
+      case 'event':
+        return { icon: 'mdi:event', color: 'secondary.main' };
+      default:
+        return { icon: 'mdi:bell', color: 'primary.main' };
+    }
+  };
+
+  const config = getTypeConfig();
+
+  return (
+    <Card
+      sx={{
+        position: 'relative',
+        overflow: 'hidden',
+        mb: 2,
+        transition: 'all 0.3s ease',
+        borderLeft: '4px solid',
+        borderLeftColor: config.color,
+        backgroundColor: isRead ? 'background.paper' : 'background.neutral', // Changed from grey.50
+        '&:hover': {
+          boxShadow: 8,
+          transform: 'translateY(-2px)',
+        },
+      }}
+    >
+      {/* Header Section */}
+      <Box
+        sx={{
+          p: 2,
+          pb: 1.5,
+          bgcolor: 'background.neutral', // Changed from grey.100
+        }}
+      >
+        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
+          <Box flex={1}>
+            <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+              <Iconify icon={config.icon} width={20} sx={{ color: config.color }} />
+              <Typography variant="h6" fontWeight={600} color="text.primary">
+                {title}
+              </Typography>
+              {!isRead && (
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    bgcolor: 'error.main',
+                  }}
+                />
+              )}
+            </Stack>
+            {category && (
+              <Chip
+                label={category}
+                size="small"
+                color="primary"
+                variant="soft"
+                sx={{
+                  height: 24,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                }}
               />
-              <Typography variant="subtitle1">Upcoming Events</Typography>
-            </Box>
-            <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-              <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
-                {['Upcoming Events', 'Upcoming Events'].map((item, index) => (
-                  <Box component="li" key={index} sx={{ mb: 1 }}>
-                    <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                      {item}
-                    </Button>
-                  </Box>
-                ))}
-              </Box>
-            </Scrollbar>
+            )}
           </Box>
-        </Card>
-      </Grid>
+          <IconButton size="small" sx={{ mt: -0.5 }}>
+            <Iconify icon="eva:more-vertical-fill" />
+          </IconButton>
+        </Stack>
+      </Box>
 
-      <Grid size={{ xs: 12, sm: 12, md: 3 }}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 1,
-            width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.vars.palette.info.mainChannel, 0.1),
-          }}
-        >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box display="flex" gap={2}>
-              <Iconify
-                icon="mdi:message-text"
-                width={20}
-                height={20}
-                sx={{ color: 'info.main', mt: 0.4 }}
-              />
-              <Typography variant="subtitle1">New Messages</Typography>
+      <Divider />
+
+      {/* Content Section - no changes needed */}
+      <Box sx={{ p: 2.5 }}>
+        {/* Description */}
+        {description && (
+          <Typography
+            variant="subtitle2"
+            color="text.secondary"
+            mb={2}
+            sx={{
+              fontStyle: 'italic',
+              pl: 2,
+              borderLeft: '3px solid',
+              borderLeftColor: config.color,
+            }}
+          >
+            {description}
+          </Typography>
+        )}
+
+        {/* Event Details */}
+        {type === 'event' && (
+          <Stack spacing={1} mb={2}>
+            {date && (
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Iconify
+                  icon="solar:calendar-outline"
+                  width={16}
+                  sx={{ color: 'text.secondary' }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  {dayjs(date).format('DD MMM YYYY')}
+                </Typography>
+              </Stack>
+            )}
+            {time && (
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Iconify
+                  icon="solar:clock-circle-outline"
+                  width={16}
+                  sx={{ color: 'text.secondary' }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  {time}
+                </Typography>
+              </Stack>
+            )}
+            {venue && (
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Iconify
+                  icon="solar:map-point-outline"
+                  width={16}
+                  sx={{ color: 'text.secondary' }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  {venue}
+                </Typography>
+              </Stack>
+            )}
+          </Stack>
+        )}
+
+        {/* Message Body */}
+        {message && (
+          <Typography
+            variant="body2"
+            color="text.primary"
+            sx={{
+              whiteSpace: 'pre-line',
+              lineHeight: 1.8,
+              mb: 2,
+            }}
+          >
+            {message}
+          </Typography>
+        )}
+
+        {/* Signature */}
+        {signature && (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              fontStyle: 'italic',
+              mt: 2,
+              pl: 2,
+            }}
+          >
+            {signature}
+          </Typography>
+        )}
+      </Box>
+
+      <Divider />
+
+      {/* Footer Section */}
+      <Box
+        sx={{
+          p: 1.5,
+          bgcolor: 'background.neutral', // Changed from grey.50
+        }}
+      >
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: config.color,
+                fontSize: '0.875rem',
+              }}
+            >
+              {createdBy.charAt(0).toUpperCase()}
+            </Avatar>
+            <Box>
+              <Typography variant="caption" fontWeight={600} color="text.primary" display="block">
+                {createdBy}
+              </Typography>
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <Iconify icon="solar:calendar-outline" width={14} />
+                <Typography variant="caption" color="text.secondary">
+                  {createdOn}
+                </Typography>
+              </Stack>
             </Box>
-            <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-              <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
-                {['New Messages', 'New Messages'].map((item, index) => (
-                  <Box component="li" key={index} sx={{ mb: 1 }}>
-                    <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                      {item}
-                    </Button>
-                  </Box>
-                ))}
-              </Box>
-            </Scrollbar>
-          </Box>
-        </Card>
-      </Grid>
+          </Stack>
 
-      <Grid size={{ xs: 12, sm: 12, md: 3 }}>
-        <Card
-          sx={{
-            display: 'flex',
-            p: 1,
-            width: '100%',
-            backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
-          }}
-        >
-          <Box sx={{ flexGrow: 1 }}>
-            <Box display="flex" gap={2}>
-              <Iconify
-                icon="ri:survey-line"
-                width={20}
-                height={20}
-                sx={{ color: 'warning.main' }}
-              />
-              <Typography variant="subtitle1">Scheduled Meetings</Typography>
+          <Stack direction="row" spacing={1}>
+            <IconButton
+              size="small"
+              sx={{
+                bgcolor: 'action.hover', // Changed from grey.200
+                '&:hover': {
+                  bgcolor: 'action.selected', // Changed from grey.300
+                },
+              }}
+            >
+              <Iconify icon="solar:bookmark-outline" width={18} />
+            </IconButton>
+            <IconButton
+              size="small"
+              sx={{
+                bgcolor: 'action.hover', // Changed from grey.200
+                '&:hover': {
+                  bgcolor: 'action.selected', // Changed from grey.300
+                },
+              }}
+            >
+              <Iconify icon="solar:share-outline" width={18} />
+            </IconButton>
+          </Stack>
+        </Stack>
+      </Box>
+    </Card>
+  );
+};
+
+const EmployeeCommunication = ({ employee }: any) => {
+  // Sample data - replace with actual API data
+  const communications: CommunicationItem[] = [
+    {
+      id: '1',
+      title: 'Important School Announcement',
+      category: 'General',
+      description: 'Please read this important update',
+      message:
+        'We are pleased to inform all staff members about the upcoming changes to our school policies. Please review the attached documents carefully.',
+      signature: 'Principal',
+      createdBy: 'John Doe',
+      createdOn: '10/12/2023',
+      isRead: false,
+      type: 'announcement',
+    },
+    {
+      id: '2',
+      title: 'Annual Day Celebration',
+      category: 'Event',
+      description: 'Join us for the annual day celebrations!',
+      message:
+        'We are excited to announce that the school annual day will be held on 25th December. All staff members are invited to participate.',
+      signature: 'Principal',
+      createdBy: 'Jane Smith',
+      createdOn: '09/12/2023',
+      isRead: true,
+      type: 'event',
+      date: '2023-12-25',
+      time: '5:00 PM',
+      venue: 'School Auditorium',
+    },
+  ];
+
+  const announcements = communications.filter((c) => c.type === 'announcement');
+  const events = communications.filter((c) => c.type === 'event');
+
+  return (
+    <Box>
+      {/* All Communications Section */}
+      <Box sx={{ mt: 3 }}>
+        <Box sx={{ p: 2, pb: 1 }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Typography variant="h5" fontWeight={600}>
+              All Communications
+              <Typography component="span" variant="h6" color="text.secondary" ml={1}>
+                ({communications.length})
+              </Typography>
+            </Typography>
+          </Stack>
+        </Box>
+
+        <Divider />
+
+        <Scrollbar sx={{ maxHeight: 800, p: 2 }}>
+          {communications.length > 0 ? (
+            communications.map((item) => <CommunicationCard key={item.id} {...item} />)
+          ) : (
+            <Box sx={{ mt: 5 }}>
+              <EmptyContent title="No Communication Data Found" />
             </Box>
-            <Scrollbar sx={{ mt: 1.5, mb: 1, height: '150px' }}>
-              <Box component="ul" sx={{ listStyle: 'none', width: '100%', padding: 0 }}>
-                {['Scheduled Meetings', 'Scheduled Meetings'].map((item, index) => (
-                  <Box component="li" key={index} sx={{ mb: 1 }}>
-                    <Button variant="outlined" fullWidth sx={{ justifyContent: 'start' }}>
-                      {item}
-                    </Button>
-                  </Box>
-                ))}
-              </Box>
-            </Scrollbar>
-          </Box>
-        </Card>
-      </Grid>
-    </Grid>
+          )}
+        </Scrollbar>
+      </Box>
 
-    <CalendarView />
-
-    <EmployeeAnnouncement />
-
-    <EmployeeEvent />
-    <EmployeeMeetings />
-  </Box>
-);
+      {/* Keep existing table sections if needed */}
+      <Box sx={{ display: 'none' }}>
+        <CalendarView />
+        <EmployeeAnnouncement />
+        <EmployeeEvent />
+        <EmployeeMeetings />
+      </Box>
+    </Box>
+  );
+};
 
 export default EmployeeCommunication;
 
+// Keep existing table components for reference...
 const EmployeeAnnouncement = () => {
   const tabs = useTabs(AnnouncementStatus.Active);
 
@@ -566,7 +760,6 @@ const EmployeeEvent = () => {
     </Box>
   );
 };
-
 const EmployeeMeetings = () => {
   const tabs = useTabs(EventStatus.Completed);
 

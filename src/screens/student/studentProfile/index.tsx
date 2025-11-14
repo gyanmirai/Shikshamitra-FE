@@ -14,6 +14,7 @@ import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import { convertBase64Format } from 'src/utils/base64Formate';
+import { LoadingScreen } from 'src/components/loading-screen';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
@@ -28,10 +29,10 @@ import Academic from './academic';
 import Document from './document';
 import Attendance from './attendance';
 import Communication from './communication';
+import StudentCalendar from './StudentCalendar';
 import StudentDashboard from './studentDashboard';
 import StudentTransportProfile from './transport';
 import { StudentInformation } from './information';
-import HostelRoomMate from './hostel/hostelRoomMate';
 
 import type { IInquiryData } from '../enrollment/Inquiry';
 
@@ -95,7 +96,6 @@ const TABS = [
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
       <Document {...props} />
     ),
-    disibled: true,
   },
   {
     value: 'communications',
@@ -122,14 +122,22 @@ const TABS = [
     ),
   },
   {
-    value: 'hostel',
-    label: 'Hostel',
-    icon: <Iconify icon="mdi:home-city-outline" width={20} />,
+    value: 'calender',
+    label: 'Calender',
+    icon: <Iconify icon="mdi:calendar-month-outline" width={20} />,
     component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
-      <HostelRoomMate {...props} />
+      <StudentCalendar {...props} />
     ),
-    disibled: true,
   },
+  // {
+  //   value: 'hostel',
+  //   label: 'Hostel',
+  //   icon: <Iconify icon="mdi:home-city-outline" width={20} />,
+  //   component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+  //     <HostelRoomMate {...props} />
+  //   ),
+  //   disibled: true,
+  // },
 ];
 
 export function StudentProfile() {
@@ -479,7 +487,7 @@ const StudentProfileView = () => {
   }, []);
 
   return isLoading ? (
-    'Loading ...'
+    <LoadingScreen />
   ) : (
     <>
       <Box
@@ -679,7 +687,6 @@ const StudentProfileView = () => {
                 icon={tab.icon}
                 label={tab.label}
                 role="tab"
-                disabled={tab.disibled}
               />
             ))}
           </Tabs>

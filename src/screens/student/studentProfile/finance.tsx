@@ -1,7 +1,6 @@
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
-import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -39,251 +38,65 @@ const Finance = (props: StudentTabsComponentType) => {
   const receiptDialog = useBoolean();
   const theme = useTheme();
 
+  const feeCards = [
+    {
+      title: 'Total Fees',
+      amount: '60,000',
+      icon: 'solar:bill-list-bold-duotone',
+      color: theme.palette.primary.main,
+    },
+    {
+      title: 'Paid Fees',
+      amount: '40,000',
+      icon: 'solar:check-circle-bold-duotone',
+      color: theme.palette.success.main,
+    },
+    {
+      title: 'Pending Fees',
+      amount: '20,000',
+      icon: 'solar:clock-circle-bold-duotone',
+      color: theme.palette.warning.main,
+    },
+    {
+      title: 'Overdue Fees',
+      amount: '20,000',
+      icon: 'solar:danger-circle-bold-duotone',
+      color: theme.palette.error.main,
+    },
+    {
+      title: 'Pending Refund',
+      amount: '0',
+      icon: 'solar:card-recive-bold-duotone',
+      color: theme.palette.info.main,
+    },
+    {
+      title: 'Pending Charges',
+      amount: '500',
+      icon: 'solar:ticket-sale-bold-duotone',
+      color: theme.palette.warning.main,
+    },
+  ];
+
   return (
     <>
-      <Grid container spacing={2.5}>
-        {/* Total Fees Card */}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card
-            elevation={0}
-            sx={{
-              p: 3,
-              height: '140px',
-              border: `1px solid ${varAlpha(theme.palette.primary.mainChannel, 0.12)}`,
-              borderRadius: 2,
-              background: `linear-gradient(135deg, ${varAlpha(theme.palette.primary.mainChannel, 0.05)} 0%, ${varAlpha(
-                theme.palette.primary.mainChannel,
-                0.01
-              )} 100%)`,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: `0 12px 24px ${varAlpha(theme.palette.primary.mainChannel, 0.15)}`,
-              },
-            }}
-          >
-            <Stack spacing={1} height="100%" justifyContent="center">
-              <Box display="flex" alignItems="center" gap={1}>
-                <Iconify icon="mdi:currency-inr" width={24} />
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ fontSize: '16px', fontWeight: 500 }}
-                >
-                  Total Fees
+      <Grid container spacing={2.5} sx={{ mt: 1 }}>
+        {feeCards.map((card, index) => (
+          <Grid key={index} size={{ xs: 12, sm: 6, md: 4 }}>
+            <Card sx={{ p: 3, boxShadow: 'var(--shadows-4)', height: '100%' }}>
+              <Stack spacing={2}>
+                <Typography variant="subtitle1" color="text.secondary">
+                  {card.title}
                 </Typography>
-              </Box>
-              <Typography variant="h4" fontWeight={700} sx={{ marginLeft: '5px' }}>
-                ₹ 60,000
-              </Typography>
-            </Stack>
-          </Card>
-        </Grid>
-
-        {/* Paid Fees Card */}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card
-            elevation={0}
-            sx={{
-              p: 3,
-              height: '140px',
-              border: `1px solid ${varAlpha(theme.palette.success.mainChannel, 0.12)}`,
-              borderRadius: 2,
-              background: `linear-gradient(135deg, ${varAlpha(theme.palette.success.mainChannel, 0.05)} 0%, ${varAlpha(
-                theme.palette.success.mainChannel,
-                0.01
-              )} 100%)`,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: `0 12px 24px ${varAlpha(theme.palette.success.mainChannel, 0.15)}`,
-              },
-            }}
-          >
-            <Stack spacing={1} height="100%" justifyContent="center">
-              <Box display="flex" alignItems="center" gap={1}>
-                <Iconify icon="mdi:check-circle" width={24} />
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ fontSize: '16px', fontWeight: 500 }}
-                >
-                  Paid Fees
-                </Typography>
-              </Box>
-              <Typography
-                variant="h4"
-                fontWeight={700}
-                sx={{ marginLeft: '5px' }}
-                color="success.main"
-              >
-                ₹ 40,000
-              </Typography>
-            </Stack>
-          </Card>
-        </Grid>
-
-        {/* Pending Fees Card */}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card
-            elevation={0}
-            sx={{
-              p: 3,
-              height: '140px',
-              border: `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.12)}`,
-              borderRadius: 2,
-              background: `linear-gradient(135deg, ${varAlpha(theme.palette.warning.mainChannel, 0.05)} 0%, ${varAlpha(
-                theme.palette.warning.mainChannel,
-                0.01
-              )} 100%)`,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: `0 12px 24px ${varAlpha(theme.palette.warning.mainChannel, 0.15)}`,
-              },
-            }}
-          >
-            <Stack spacing={1} height="100%" justifyContent="center">
-              <Box display="flex" alignItems="center" gap={1}>
-                <Iconify icon="mdi:clock-outline" width={24} />
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ fontSize: '16px', fontWeight: 500 }}
-                >
-                  Pending Fees
-                </Typography>
-              </Box>
-              <Typography
-                variant="h4"
-                fontWeight={700}
-                sx={{ marginLeft: '5px' }}
-                color="warning.main"
-              >
-                ₹ 20,000
-              </Typography>
-            </Stack>
-          </Card>
-        </Grid>
-
-        {/* Overdue Fees Card */}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card
-            elevation={0}
-            sx={{
-              p: 3,
-              height: '140px',
-              border: `1px solid ${varAlpha(theme.palette.error.mainChannel, 0.12)}`,
-              borderRadius: 2,
-              background: `linear-gradient(135deg, ${varAlpha(theme.palette.error.mainChannel, 0.05)} 0%, ${varAlpha(
-                theme.palette.error.mainChannel,
-                0.01
-              )} 100%)`,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: `0 12px 24px ${varAlpha(theme.palette.error.mainChannel, 0.15)}`,
-              },
-            }}
-          >
-            <Stack spacing={1} height="100%" justifyContent="center">
-              <Box display="flex" alignItems="center" gap={1}>
-                <Iconify icon="mdi:alert-circle" width={24} />
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ fontSize: '16px', fontWeight: 500 }}
-                >
-                  Overdue Fees
-                </Typography>
-              </Box>
-              <Typography
-                variant="h4"
-                fontWeight={700}
-                sx={{ marginLeft: '5px' }}
-                color="error.main"
-              >
-                ₹ 20,000
-              </Typography>
-            </Stack>
-          </Card>
-        </Grid>
-
-        {/* Pending Refund Card */}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card
-            elevation={0}
-            sx={{
-              p: 3,
-              height: '140px',
-              border: `1px solid ${varAlpha(theme.palette.info.mainChannel, 0.12)}`,
-              borderRadius: 2,
-              background: `linear-gradient(135deg, ${varAlpha(theme.palette.info.mainChannel, 0.05)} 0%, ${varAlpha(
-                theme.palette.info.mainChannel,
-                0.01
-              )} 100%)`,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: `0 12px 24px ${varAlpha(theme.palette.info.mainChannel, 0.15)}`,
-              },
-            }}
-          >
-            <Stack spacing={1} height="100%" justifyContent="center">
-              <Box display="flex" alignItems="center" gap={1}>
-                <Iconify icon="mdi:cash-refund" width={24} />
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ fontSize: '16px', fontWeight: 500 }}
-                >
-                  Pending Refund
-                </Typography>
-              </Box>
-              <Typography variant="h4" fontWeight={700} sx={{ marginLeft: '5px' }}>
-                ₹ 0
-              </Typography>
-            </Stack>
-          </Card>
-        </Grid>
-
-        {/* Pending Charges Card */}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card
-            elevation={0}
-            sx={{
-              p: 3,
-              height: '140px',
-              border: `1px solid ${varAlpha(theme.palette.warning.mainChannel, 0.12)}`,
-              borderRadius: 2,
-              background: `linear-gradient(135deg, ${varAlpha(theme.palette.warning.mainChannel, 0.05)} 0%, ${varAlpha(
-                theme.palette.warning.mainChannel,
-                0.01
-              )} 100%)`,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: `0 12px 24px ${varAlpha(theme.palette.warning.mainChannel, 0.15)}`,
-              },
-            }}
-          >
-            <Stack spacing={1} height="100%" justifyContent="center">
-              <Box display="flex" alignItems="center" gap={1}>
-                <Iconify icon="mdi:cash-plus" width={24} />
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ fontSize: '16px', fontWeight: 500 }}
-                >
-                  Pending Charges
-                </Typography>
-              </Box>
-              <Typography variant="h4" fontWeight={700} sx={{ marginLeft: '5px' }}>
-                ₹ 500
-              </Typography>
-            </Stack>
-          </Card>
-        </Grid>
+                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                  <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                    ₹{card.amount}
+                  </Typography>
+                  <Iconify icon={card.icon} width={48} sx={{ color: card.color }} />
+                </Stack>
+              </Stack>
+            </Card>
+          </Grid>
+        ))}
       </Grid>
 
       {/* Chart Section */}
