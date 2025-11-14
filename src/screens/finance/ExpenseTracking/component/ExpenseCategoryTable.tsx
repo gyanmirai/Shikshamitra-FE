@@ -69,9 +69,13 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         filterType: 'string',
       },
       {
-        id: 'budget',
-        label: 'Budget',
+        id: 'expenseCategoryTags',
+        label: 'Expense Category Tags',
+        minWidth: 200,
         align: 'left',
+        render(value) {
+          return Array.isArray(value) ? value.join(', ') : '-';
+        },
       },
       {
         id: 'amount',

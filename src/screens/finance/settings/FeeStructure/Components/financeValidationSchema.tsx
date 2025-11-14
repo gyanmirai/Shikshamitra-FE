@@ -4,7 +4,6 @@ export const finaceFeeStructureValidationSchema = [
   // Step 1: Fee Structure Basic Details
   yup.object().shape({
     feeStructureName: yup.string().required('Fee Structure Name is required'),
-    academicYear: yup.string().required('Academic Year is required'),
     board: yup.string().required('Board is required'),
     medium: yup.string().required('Medium is required'),
     receiptBook: yup.string().required('Receipt Book is required'),

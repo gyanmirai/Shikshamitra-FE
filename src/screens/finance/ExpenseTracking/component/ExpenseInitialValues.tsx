@@ -6,8 +6,7 @@ export const getInitialExpenseData = (
   editData: Partial<IExpenseFormValues> | null = null
 ): IExpenseFormValues => ({
   expenseCategory: editData?.expenseCategory ?? '',
-  budget: editData?.budget ?? '',
-  budgetSubCategory: editData?.budgetSubCategory ?? '',
+  expenseCategoryTags: editData?.expenseCategoryTags ?? [],
   expenseName: editData?.expenseName ?? '',
   amount: editData?.amount ?? null,
   paymentMethod: editData?.paymentMethod ?? '',

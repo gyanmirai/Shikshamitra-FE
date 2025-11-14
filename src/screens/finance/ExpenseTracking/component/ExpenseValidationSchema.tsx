@@ -4,7 +4,10 @@ import * as Yup from 'yup';
 export const getExpenseFormSchema = (currentYear: any) =>
   Yup.object().shape({
     expenseCategory: Yup.string().required('Expense Category is required'),
-    budget: Yup.string().required('Budget is required'),
+    expenseCategoryTags: Yup.array()
+      .of(Yup.string())
+      .min(1, 'At least one expense category tag is required')
+      .required('Expense category tags are required'),
     expenseName: Yup.string().required('Expense Name is required'),
     amount: Yup.number()
       .required('Amount is required')

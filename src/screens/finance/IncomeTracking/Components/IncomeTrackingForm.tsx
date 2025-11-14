@@ -58,11 +58,11 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
     onSubmit: (values) => {
       if (editData) {
         shikshaMitraToast.success({
-          message: `Income Tracking : ${values.incomeName} updated successfully!`,
+          message: `Income Tracking "${values.incomeName}" updated successfully!`,
         });
       } else {
         shikshaMitraToast.success({
-          message: `Income Tracking : ${values.incomeName} added successfully!`,
+          message: `Income Tracking "${values.incomeName}" added successfully!`,
         });
       }
       onClose(null, true);
@@ -256,10 +256,10 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                     value={formik.values.incomeCategory}
                     onChange={(val) => {
                       formik.setFieldValue('incomeCategory', val);
+                      formik.setFieldTouched('incomeCategory', false);
                       const selectedCategory = categoryOptions.find(
                         (cat: { value: string; budget?: string }) => cat.value === val
                       );
-                      formik.setFieldValue('budget', selectedCategory?.budget || '');
                     }}
                     error={!!(formik.touched.incomeCategory && formik.errors.incomeCategory)}
                     helperText={
@@ -271,21 +271,30 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
               </Grid>
 
               <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.budget && formik.errors.budget)}>
+                <ShakingTextField
+                  error={!!(formik.touched.incomeCategoryTags && formik.errors.incomeCategoryTags)}
+                >
                   <CustomSelect
-                    label="Budget Title *"
+                    label="Income Category Tags *"
                     options={[
-                      { value: 'FY2023-24Q1', label: 'FY 2023-24 Q1 Budget' },
-                      { value: 'FY2023-24Q2', label: 'FY 2023-24 Q2 Budget' },
-                      { value: 'FY2023-24Q3', label: 'FY 2023-24 Q3 Budget' },
-                      { value: 'FY2023-24Q4', label: 'FY 2023-24 Q4 Budget' },
-                      { value: 'AnnualBudget2024', label: 'Annual Budget 2024' },
+                      { value: 'Donation', label: 'Donation' },
+                      { value: 'Grant', label: 'Grant' },
+                      { value: 'Fee', label: 'Fee' },
+                      { value: 'Fundraiser', label: 'Fundraiser' },
+                      { value: 'Sponsorship', label: 'Sponsorship' },
+                      { value: 'Other', label: 'Other' },
                     ]}
-                    value={formik.values.budget}
-                    onChange={(val) => formik.setFieldValue('budget', val)}
-                    error={!!(formik.touched.budget && formik.errors.budget)}
-                    helperText={(formik.touched.budget && formik.errors.budget) as string}
+                    value={formik.values.incomeCategoryTags || []}
+                    onChange={(val) => formik.setFieldValue('incomeCategoryTags', val)}
+                    error={
+                      !!(formik.touched.incomeCategoryTags && formik.errors.incomeCategoryTags)
+                    }
+                    helperText={
+                      (formik.touched.incomeCategoryTags &&
+                        formik.errors.incomeCategoryTags) as string
+                    }
                     formControlProps={{ fullWidth: true }}
+                    multiple
                   />
                 </ShakingTextField>
               </Grid>
@@ -367,6 +376,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                     minDate={dayjs(currentYear?.startDate)}
                     maxDate={dayjs(currentYear?.endDate)}
                     format="DD/MM/YYYY"
+                    disableFuture
                     slotProps={{
                       textField: {
                         fullWidth: true,

@@ -6,8 +6,7 @@ export const getInitialIncomeData = (
   editData: Partial<IIncomeFormValues> | null = null
 ): IIncomeFormValues => ({
   incomeCategory: editData?.incomeCategory ?? '',
-  budget: editData?.budget ?? '',
-  budgetSubCategory: editData?.budgetSubCategory ?? '',
+  incomeCategoryTags: editData?.incomeCategoryTags ?? [],
   incomeName: editData?.incomeName ?? '',
   amount: editData?.amount ?? null,
   paymentMethod: editData?.paymentMethod ?? '',

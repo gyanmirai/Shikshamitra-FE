@@ -4,8 +4,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 export interface IExpenseFormValues {
   paymentDetails: any;
   expenseCategory: string;
-  budget: string;
-  budgetSubCategory: string;
+  expenseCategoryTags: string[];
   expenseName: string;
   amount: number | null;
   paymentMethod: string;

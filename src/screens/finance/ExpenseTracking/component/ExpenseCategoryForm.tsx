@@ -109,21 +109,32 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
               </Grid>
 
               <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={!!(formik.touched.budget && formik.errors.budget)}>
+                <ShakingTextField
+                  error={
+                    !!(formik.touched.expenseCategoryTags && formik.errors.expenseCategoryTags)
+                  }
+                >
                   <CustomSelect
-                    label="Budget Title *"
+                    label="Expense Category Tags *"
                     options={[
-                      { value: 'FY2023-24Q1', label: 'FY 2023-24 Q1 Budget' },
-                      { value: 'FY2023-24Q2', label: 'FY 2023-24 Q2 Budget' },
-                      { value: 'FY2023-24Q3', label: 'FY 2023-24 Q3 Budget' },
-                      { value: 'FY2023-24Q4', label: 'FY 2023-24 Q4 Budget' },
-                      { value: 'AnnualBudget2024', label: 'Annual Budget 2024' },
+                      { value: 'Donation', label: 'Donation' },
+                      { value: 'Grant', label: 'Grant' },
+                      { value: 'Fee', label: 'Fee' },
+                      { value: 'Fundraiser', label: 'Fundraiser' },
+                      { value: 'Sponsorship', label: 'Sponsorship' },
+                      { value: 'Other', label: 'Other' },
                     ]}
-                    value={formik.values.budget}
-                    onChange={(val) => formik.setFieldValue('budget', val)}
-                    error={!!(formik.touched.budget && formik.errors.budget)}
-                    helperText={(formik.touched.budget && formik.errors.budget) as string}
+                    value={formik.values.expenseCategoryTags || []}
+                    onChange={(val) => formik.setFieldValue('expenseCategoryTags', val)}
+                    error={
+                      !!(formik.touched.expenseCategoryTags && formik.errors.expenseCategoryTags)
+                    }
+                    helperText={
+                      (formik.touched.expenseCategoryTags &&
+                        formik.errors.expenseCategoryTags) as string
+                    }
                     formControlProps={{ fullWidth: true }}
+                    multiple
                   />
                 </ShakingTextField>
               </Grid>
@@ -212,6 +223,8 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                     value={formik.values.paymentMethod}
                     onChange={(val) => {
                       formik.setFieldValue('paymentMethod', val);
+                      formik.setFieldTouched('paymentMethod', false);
+
                       // Clear payment details when method changes
                       formik.setFieldValue('paymentDetails', {});
                       // Clear touched state for paymentDetails

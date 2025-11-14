@@ -19,7 +19,11 @@ export interface IClassWiseFeeData {
 export interface IFeeStructure {
   feeStructureName: string;
   academicYear?: string;
+  academicYearName?: string;
+
   board?: string;
+  boardName?: string;
+  mediumName?: string;
   medium?: string;
   status: number;
   receiptBook: string;
@@ -54,4 +58,5 @@ export interface FeeStructureCardProps {
   feeItems: IClassWiseFeeItem[];
   structureIndex: number;
   formik: FormikProps<IFeeStructure>;
+  addFeeHeadDialog: UseBooleanReturn;
 }

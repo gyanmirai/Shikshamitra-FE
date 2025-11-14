@@ -4,8 +4,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 export interface IIncomeFormValues {
   paymentDetails: any;
   incomeCategory: string;
-  budget: string;
-  budgetSubCategory: string;
+  incomeCategoryTags: string[];
   incomeName: string;
   amount: number | null;
   paymentMethod: string;

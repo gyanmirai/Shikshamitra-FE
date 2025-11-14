@@ -55,10 +55,10 @@ const ViewExpenseData = ({
 
             <Grid size={{ xs: 12, md: 4 }}>
               <Typography variant="body2" color="text.secondary">
-                Budget
+                Expense Category Tags
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {expenseData?.budget || '-'}
+                {expenseData?.expenseCategoryTags || '-'}
               </Typography>
             </Grid>
 

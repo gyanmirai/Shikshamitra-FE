@@ -61,10 +61,19 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
         minWidth: '160px',
       },
       {
-        id: 'budget',
-        label: 'Budget',
+        id: 'incomeCategoryTags',
+        label: 'Income Category Tags',
+        minWidth: 200,
         align: 'left',
+        render(value) {
+          return Array.isArray(value) ? value.join(', ') : '-';
+        },
       },
+      // {
+      //   id: 'budget',
+      //   label: 'Budget',
+      //   align: 'left',
+      // },
       {
         id: 'amount',
         label: 'Amount',

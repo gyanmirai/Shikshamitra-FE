@@ -58,7 +58,7 @@ const FeeStructure = () => {
       {/* Custom breadcrumbs component for navigation and page header */}
       {addFeeStructureDialog.value ? (
         <CustomBreadcrumbs
-          heading="Fee Structure"
+          heading={selectedFeeStructure ? 'Edit Fee Structure' : 'Add Fee Structure'}
           description={
             selectedFeeStructure
               ? 'Modify the selected fee structure by updating categories, amounts, schedules, and student groups. Your changes will affect how fees are calculated and collected.'
@@ -72,7 +72,23 @@ const FeeStructure = () => {
           }}
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Fee Structure', href: '/finance/fee-structure' },
+            {
+              name: 'Setting',
+              href: '/finance/settings/fee-category',
+              onClick(e) {
+                handleClose(null, false);
+              },
+            },
+            {
+              name: 'Fee Structure',
+              href: '/finance/settings/create-fee-structure',
+              onClick(e) {
+                handleClose(null, false);
+              },
+            },
+            {
+              name: selectedFeeStructure ? 'Edit Fee Structure' : 'Add Fee Structure',
+            },
           ]}
           sx={{ px: 1, mb: 2 }}
         />
@@ -88,15 +104,23 @@ const FeeStructure = () => {
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
+              name: 'Setting',
+              href: '/finance/settings/fee-category',
+              onClick(e) {
+                handleClose(null, false);
+              },
+            },
+            {
               name: 'Fee Structure',
               href: '/finance/settings/create-fee-structure',
               onClick(e) {
                 viewFeeStructureDialog.onFalse();
+                setSelectedFeeStructure(null);
               },
             },
             { name: 'View Fee Structure', href: '' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -104,7 +128,14 @@ const FeeStructure = () => {
           description="Define and organize fee structures by configuring categories, amounts and payment schedules to ensure effective fee management."
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Fee Structure', href: '/finance/fee-structure' },
+            {
+              name: 'Setting',
+              href: '/finance/settings/fee-category',
+              onClick(e) {
+                handleClose(null, false);
+              },
+            },
+            { name: 'Fee Structure' },
           ]}
           action={
             <Button
@@ -116,7 +147,7 @@ const FeeStructure = () => {
               Fee Structure
             </Button>
           }
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       )}
       <>
