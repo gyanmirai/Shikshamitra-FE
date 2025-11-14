@@ -258,7 +258,7 @@ const StudentReportsScreen = () => {
           { name: 'Student Records', href: '/student/overview/' },
           { name: 'Reports' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Card>
         <form onSubmit={formik.handleSubmit}>

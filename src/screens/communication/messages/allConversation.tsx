@@ -19,7 +19,7 @@ const AllConversation = (props: TabComponentType) => {
           { name: 'Messages', href: '/communication/messages' },
           { name: 'Conversation' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <CustomSelect
         options={[

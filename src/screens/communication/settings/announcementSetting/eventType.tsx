@@ -154,7 +154,7 @@ const EventType = (props: TabComponentType) => {
           { name: 'Settings' },
           { name: 'Event Type' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <Button
             startIcon={<Iconify icon="mdi:plus" />}

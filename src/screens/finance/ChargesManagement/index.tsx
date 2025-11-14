@@ -60,7 +60,7 @@ const ChargesManagement = () => {
         heading="Charges Management"
         description="This screen shows a list of all existing charges with an option to create a new one. charges including tuition fees, exam fees, and other miscellaneous charges."
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Charges Management' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={searchParams.tab === 'charge' && renderButton[searchParams.tab]}
       />
       <Card

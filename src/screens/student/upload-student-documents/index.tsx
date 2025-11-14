@@ -9,8 +9,16 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box , Grid, Select, Divider, MenuItem, InputLabel, IconButton, FormControl } from '@mui/material';
-
+import {
+  Box,
+  Grid,
+  Select,
+  Divider,
+  MenuItem,
+  InputLabel,
+  IconButton,
+  FormControl,
+} from '@mui/material';
 
 const UploadStudentDocumentsScreen = () => {
   const { data: classes, isLoading } = useQueryAndMutation({
@@ -49,7 +57,7 @@ const UploadStudentDocumentsScreen = () => {
           { name: 'Student Record' },
           { name: 'Upload Student Documents' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Divider sx={{ mb: 2 }} />
       <Grid container spacing={2}>

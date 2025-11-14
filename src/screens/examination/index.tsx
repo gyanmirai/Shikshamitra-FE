@@ -75,7 +75,7 @@ const ExaminationPageScreen = () => {
           { name: 'Examination' },
           { name: currentActiveComponent?.label },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Box
         sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}

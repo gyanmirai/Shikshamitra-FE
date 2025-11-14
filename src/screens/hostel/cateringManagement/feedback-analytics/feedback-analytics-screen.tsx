@@ -18,7 +18,7 @@ const FeedbackAnalyticsScreen = () => {
         heading="Feedback Analytics"
         description="This is the feedback analytics page"
         links={links}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <FeedbackAnalyticsTable />
     </Box>

@@ -91,7 +91,7 @@ const FinanceCreateReceiptSetting = () => {
         heading="Receipt Templates"
         description="Choose and manage different receipt templates for fees, charges, and refunds. Customize them as per your institution’s needs for consistent and professional documentation."
         links={links}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <Button
             variant="contained"

@@ -13,7 +13,7 @@ const MyDutyScreen = () => (
         { name: 'Security', href: '' },
         { name: 'My Duty Schedule', href: '' },
       ]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     <MyDutyTable />
   </>

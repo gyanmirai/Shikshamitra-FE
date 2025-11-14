@@ -40,7 +40,7 @@ const RunPayroll = () => {
           <CustomBreadcrumbs
             heading="Verify Payroll"
             links={[{ name: 'HR/Staff' }, { name: 'Payroll' }, { name: 'Verify Payroll' }]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ mb: 2 }}
             action={
               <Button
                 variant="contained"
@@ -68,7 +68,7 @@ const RunPayroll = () => {
         <CustomBreadcrumbs
           heading="Run Payroll"
           links={[{ name: 'HR/Staff' }, { name: 'Payroll' }, { name: 'Run Payroll' }]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           description="Run payroll by selecting a date and organization, and verify details before processing."
         />
         {/* <StepsForPayroll /> */}

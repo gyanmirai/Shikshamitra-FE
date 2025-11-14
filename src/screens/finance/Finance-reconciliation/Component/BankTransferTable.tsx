@@ -31,7 +31,7 @@ const BankTransferTable = () => {
   });
 
   return (
-    <Box>
+    <>
       <CustomizableTable
         tableId="bank-transfer-table"
         isLoading={isLoading}
@@ -226,7 +226,7 @@ const BankTransferTable = () => {
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
-    </Box>
+    </>
   );
 };
 

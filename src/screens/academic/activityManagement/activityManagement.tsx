@@ -203,7 +203,7 @@ const ActivityManagement = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Activity Management"
         links={[{ name: 'Academics' }, { name: 'Activity' }, { name: 'Activity Management' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
         action={
           <Button
             startIcon={<Add />}

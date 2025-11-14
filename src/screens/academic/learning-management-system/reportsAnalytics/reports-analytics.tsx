@@ -28,7 +28,7 @@ const ReportsAnalytics = (props: TabComponentType) => {
           { name: 'Learning Management System' },
           { name: 'Reports And Analytics' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Typography variant="h6" sx={{ mb: 3 }}>
         Course performance

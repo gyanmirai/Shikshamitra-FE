@@ -31,7 +31,7 @@ const Setting = (props: TabComponentType) => (
         { name: 'Homework & Assignment', href: 'academic/homeworkDashboard' },
         { name: 'Settings' },
       ]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Grid container spacing={2} alignItems="center">

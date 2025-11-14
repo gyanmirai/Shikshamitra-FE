@@ -87,7 +87,7 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
     [leavePolicyData?.items]
   );
   return (
-    <Box>
+    <>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -259,7 +259,7 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
       >
         <LeaveTypeForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
-    </Box>
+    </>
   );
 };
 export default LeaveType;

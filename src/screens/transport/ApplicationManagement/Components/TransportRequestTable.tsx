@@ -93,7 +93,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
   );
 
   return (
-    <Box>
+    <>
       {/* Tabs Header */}
       <Box display="flex" justifyContent="space-between" sx={{ mt: 1, mb: 2 }}>
         <Tabs
@@ -322,7 +322,7 @@ const TransportRequestTable: React.FC<ITransportRequestTableProps> = ({
           />
         )
       )}
-    </Box>
+    </>
   );
 };
 

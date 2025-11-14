@@ -117,7 +117,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   );
 
   return (
-    <Box>
+    <>
       <Box display="flex" justifyContent="space-between" sx={{ mb: 2, ml: 2 }}>
         <Tabs
           value={tabs.value}
@@ -236,7 +236,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
         ]}
         data={tableData || []}
       />
-    </Box>
+    </>
   );
 };
 

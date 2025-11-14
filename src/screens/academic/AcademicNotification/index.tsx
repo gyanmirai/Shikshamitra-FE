@@ -1,9 +1,8 @@
 'use client';
 
-import { Box, Tab, Card } from '@mui/material';
+import { Box, Tab, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -57,7 +56,7 @@ const AcademicNotificationScreen = () => {
 
   const [isBackClick, setIsBackClick] = useState(false);
   return (
-    <Box sx={{ height: '100%' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {dialog?.value ? (
         <CustomBreadcrumbs
           heading={isViewMode ? 'View Notification' : 'Edit Notification'}
@@ -77,7 +76,7 @@ const AcademicNotificationScreen = () => {
           onBack={() => {
             dialog.onFalse();
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -87,10 +86,10 @@ const AcademicNotificationScreen = () => {
             { name: 'Academics', href: '/academic/dashboard' },
             { name: 'Notification', href: '/academic/notification' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       )}
-      <Card
+      <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
@@ -115,7 +114,7 @@ const AcademicNotificationScreen = () => {
             ))}
           </CustomTabs>
         )}
-      </Card>
+      </Paper>
       <FormSlider
         steps={TABS}
         isBackClick={isBackClick}
@@ -123,10 +122,11 @@ const AcademicNotificationScreen = () => {
         containerProps={{
           sx: {
             p: 0,
+            minHeight: 0,
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Paper sx={{ height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               dialog={dialog}
@@ -135,7 +135,7 @@ const AcademicNotificationScreen = () => {
               // setSearchParams={setSearchParams}
             />
           )}{' '}
-        </Scrollbar>
+        </Paper>
       </FormSlider>
     </Box>
   );

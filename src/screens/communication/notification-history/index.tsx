@@ -26,7 +26,7 @@ const NotificationHistoryScreen = () => {
           { name: 'Notification' },
           { name: 'Notification History' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <CustomizableTable tableId="notification-history" data={data} columns={column} />
     </Box>

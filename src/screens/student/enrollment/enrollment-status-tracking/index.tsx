@@ -14,7 +14,7 @@ const EnrollmentStatusTrackingScreen = () => (
         { name: 'Student Enrollment' },
         { name: 'Enrollment Status Tracking' },
       ]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     <CustomizableTable
       tableId="enrollment-status-tracking"

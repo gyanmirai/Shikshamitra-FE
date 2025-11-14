@@ -79,7 +79,7 @@ const StudentNotificationTabScreen = () => {
           onBack={() => {
             dialog.onFalse();
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -89,7 +89,7 @@ const StudentNotificationTabScreen = () => {
             { name: 'Student', href: '/student/enrollment/dashboard/' },
             { name: 'Notification Settings' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       )}
 

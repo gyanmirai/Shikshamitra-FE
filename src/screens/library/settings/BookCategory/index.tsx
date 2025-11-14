@@ -79,7 +79,7 @@ const BookCategoryCreation = () => {
             Book Category
           </Button>
         }
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
 
       <BookCategoryTable

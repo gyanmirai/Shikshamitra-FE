@@ -165,7 +165,7 @@ const AllResources = (props: TabComponentType) => {
           { name: 'Resource Content Library' },
           { name: 'All Resources' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <Button
             startIcon={<Add />}

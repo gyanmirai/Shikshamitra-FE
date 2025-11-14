@@ -257,6 +257,8 @@ const InquiryForm = ({
     }
   }, [academicYear?.items, board?.items, editData, getClassByMedium, values.academicYear]);
 
+  console.log('formik errors', errors);
+
   return (
     <Card sx={{ height: '100%', boxShadow: 'none', background: 'transparent', mt: 1 }}>
       <BackPopUpChecked initialValues={initialValues} currentValues={values}>
@@ -529,23 +531,21 @@ const InquiryForm = ({
                 </ShakingTextField>
               </Grid>
               <Grid size={{ xs: 12, md: 4 }} mb={1}>
-                <ShakingTextField>
-                  <CustomSelect
-                    label="Inquiry Preference"
-                    name="inquiryPreferences"
-                    isLoading={inquiryPrefrenceLoading}
-                    options={inquiryPreference?.items || []}
-                    value={values.inquiryPreferences}
-                    labelKey="preferenceName"
-                    valueKey="id"
-                    onChange={(value) => {
-                      setFieldValue('inquiryPreferences', value);
-                      setFieldTouched('inquiryPreferences', true);
-                    }}
-                    formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                    addOtherItemOnClick={dialog.onTrue}
-                  />
-                </ShakingTextField>
+                <CustomSelect
+                  label="Inquiry Preference"
+                  name="inquiryPreferences"
+                  isLoading={inquiryPrefrenceLoading}
+                  options={inquiryPreference?.items || []}
+                  value={values.inquiryPreferences}
+                  labelKey="preferenceName"
+                  valueKey="id"
+                  onChange={(value) => {
+                    setFieldValue('inquiryPreferences', value);
+                    setFieldTouched('inquiryPreferences', true);
+                  }}
+                  formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+                  addOtherItemOnClick={dialog.onTrue}
+                />
               </Grid>
             </SectionCard>
 

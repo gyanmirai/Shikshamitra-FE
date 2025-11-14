@@ -67,7 +67,7 @@ const DriverManagementScreen = () => {
           { name: 'Transport', href: '/transport/dashboard' },
           { name: 'Transport Staff Management' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
 
       <DriverConductorTable

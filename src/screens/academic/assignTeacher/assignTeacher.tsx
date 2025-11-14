@@ -154,7 +154,7 @@ const AssignTeacher = () => {
     );
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Class Teacher Assignment"
         links={[
@@ -162,7 +162,7 @@ const AssignTeacher = () => {
           { name: 'Class Teacher Assignment' },
         ]}
         description="Assign teachers to specific classes and divisions, manage class teacher allocations."
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 1 }}
       />
       <Box
         sx={{

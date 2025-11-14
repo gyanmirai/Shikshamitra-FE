@@ -106,7 +106,7 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
   }, [allClass, classes]);
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box
         display="flex"
         sx={{
@@ -177,7 +177,7 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
         </CustomTooltip>
       </Box>
       {homeworkTitle && <StudentSubmissions selectedHomework={selectedHomework} />}
-    </>
+    </Box>
   );
 };
 

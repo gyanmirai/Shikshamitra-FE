@@ -33,7 +33,7 @@ const PayProcessPreviewScreen = () => {
       <CustomBreadcrumbs
         heading="Pay Process preview"
         links={[{ name: 'HR' }, { name: 'Payroll Management' }, { name: 'Pay Process preview' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
         <DatePicker

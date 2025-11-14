@@ -4,9 +4,8 @@ import { Add } from '@mui/icons-material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
-import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { Tab, Box, Paper, Button } from '@mui/material';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
@@ -77,7 +76,7 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
   const [isBackClick, setIsBackClick] = useState(false);
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {showBreadCumb && (
         <CustomBreadcrumbs
           heading="Learning Tasks"
@@ -91,11 +90,11 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
             { name: 'Homework & Assignment' },
             { name: 'Learning Tasks' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           action={renderButton[searchParams?.tab as keyof typeof renderButton]}
         />
       )}
-      <Card
+      <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
@@ -119,7 +118,7 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
             <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
-      </Card>
+      </Paper>
       <FormSlider
         steps={TABS}
         isBackClick={isBackClick}
@@ -127,17 +126,18 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
         containerProps={{
           sx: {
             p: 0,
+            minHeight: 0,
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Box sx={{ height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               addHomeworkDialog={addHomeworkDialog}
               addAssignmentDialog={addAssignmentDialog}
             />
           )}
-        </Scrollbar>
+        </Box>
       </FormSlider>
     </Box>
   );

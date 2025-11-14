@@ -195,7 +195,7 @@ const AssessmentManagement = (props: TabComponentType) => {
             : 'Manage all scheduled exams with complete details—subjects, timings. Add, edit, or delete exams as required.'
         }
         links={links}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

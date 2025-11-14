@@ -292,7 +292,7 @@ const FinanceStudentFeeManagement = () => {
           { name: 'Fee Management', href: '/finance/fee-management/student-fee-structure/' },
           { name: 'Student Fee Structure' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
 
       <Box display="flex" gap={2} flexWrap="wrap" mb={2}>

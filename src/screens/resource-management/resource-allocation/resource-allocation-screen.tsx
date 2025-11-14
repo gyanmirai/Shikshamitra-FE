@@ -22,7 +22,7 @@ const ResourceAllocationScreen = () => {
           <CustomBreadcrumbs
             heading="Resource Allocation"
             links={[{ name: 'Resource Management' }, { name: 'Resource Allocation' }]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ mb: 2 }}
           />
         </Box>
 

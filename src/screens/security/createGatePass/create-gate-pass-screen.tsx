@@ -92,7 +92,7 @@ const CreateGatePassScreen = () => {
         heading="Create Gate Pass"
         description="Admin can create emergency gate pass requests for both entry and exit, bypassing the standard approval process if needed."
         links={links}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

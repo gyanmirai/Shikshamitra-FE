@@ -105,7 +105,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   };
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box
         display="flex"
         sx={{
@@ -341,7 +341,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       >
         <ViewAssignmentDetails assignment={selectedAssignment} />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 

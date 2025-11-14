@@ -533,13 +533,13 @@ const TimeTableGrid = ({
   );
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {open ? (
         <CustomBreadcrumbs
           heading="Timetable"
           links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Timetable' }]}
           description="Create and manage class schedules by assigning subjects, teachers and rooms to specific time slots"
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           isBack
           onBack={() => {
             // handleCloseDialog(false);
@@ -554,7 +554,7 @@ const TimeTableGrid = ({
             { name: 'Timetable Management' },
           ]}
           description="View and manage timetables for different classes and divisions. Create new schedules or modify existing ones to organize academic activities"
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       )}
       <CustomDialog

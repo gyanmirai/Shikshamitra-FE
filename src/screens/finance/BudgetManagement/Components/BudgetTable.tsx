@@ -162,7 +162,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
   };
 
   return (
-    <Box>
+    <>
       <Box display="flex" justifyContent="flex-start" sx={{ mt: '4px', mb: 2 }}>
         <Tabs
           value={tabs.value}
@@ -476,7 +476,7 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
           </Button>
         }
       />
-    </Box>
+    </>
   );
 };
 

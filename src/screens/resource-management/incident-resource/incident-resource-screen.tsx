@@ -11,7 +11,7 @@ const IncidentResourceScreen = () => (
     <CustomBreadcrumbs
       heading="Incident Report"
       links={[{ name: 'Resource Management' }, { name: 'Incident Report' }]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     <IncidentReportTable />
   </Box>

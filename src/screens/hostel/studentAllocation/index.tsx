@@ -36,7 +36,7 @@ const HostelStudentAllocation = () => {
           { name: 'Student Allocation', href: '' },
           { name: 'Assign Students', href: '' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Box display="flex" alignItems="center" mb={2} gap={1}>
         <Autocomplete

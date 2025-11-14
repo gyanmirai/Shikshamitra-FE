@@ -88,7 +88,7 @@ const LogDisciplinaryManagement = () => {
             : 'View and manage all disciplinary incidents, including their details, status, and follow-up actions. Add new incident entries or update existing ones.'
         }
         links={links}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

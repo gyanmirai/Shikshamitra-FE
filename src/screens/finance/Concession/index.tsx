@@ -112,7 +112,7 @@ const Concession = () => {
           onBack={() => {
             handleClose(null, false);
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       ) : viewConcessionRequest.value ? (
         <CustomBreadcrumbs
@@ -134,7 +134,7 @@ const Concession = () => {
           onBack={() => {
             handleClose(null, false);
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -154,7 +154,7 @@ const Concession = () => {
               Request Concession
             </Button>
           }
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       )}
 

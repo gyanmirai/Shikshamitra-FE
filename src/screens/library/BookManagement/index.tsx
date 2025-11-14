@@ -103,7 +103,7 @@ const BookManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) =
               { name: 'Library', href: '/library/dashboard' },
               { name: 'All Books', href: '/library/book-management' },
             ]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ mb: 2 }}
             action={
               <Button
                 startIcon={<Add />}

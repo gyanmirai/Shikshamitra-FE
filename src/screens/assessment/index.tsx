@@ -48,11 +48,7 @@ const AssessmentScreen = () => {
 
   return (
     <Box>
-      <CustomBreadcrumbs
-        heading="Assessment"
-        links={[{ name: 'Assessment' }]}
-        sx={{ px: 1, mb: 2 }}
-      />
+      <CustomBreadcrumbs heading="Assessment" links={[{ name: 'Assessment' }]} sx={{ mb: 2 }} />
       <Box
         sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'flex-end', mb: 1 }}
       >

@@ -65,7 +65,7 @@ const FinanceIncomeTrackingScreen = () => {
             description="The Income Tracking screen provides an overview of all recorded income transactions. You can track income sources, view transaction details, and monitor financial records efficiently."
             heading="Income Tracking"
             links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Income Tracking' }]}
-            sx={{ px: 1, mb: 2 }}
+            sx={{ mb: 2 }}
             action={
               <Button
                 size="small"

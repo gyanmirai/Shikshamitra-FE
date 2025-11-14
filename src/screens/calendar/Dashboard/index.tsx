@@ -371,7 +371,7 @@ const CalendarView = () => {
       <CustomBreadcrumbs
         heading="Calendar View"
         links={[{ name: 'Calendar' }, { name: 'Calendar View' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
 
       {/* Display active filters - grouped blocks */}

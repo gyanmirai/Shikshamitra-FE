@@ -4,7 +4,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
-import { Tab, Box, Card } from '@mui/material';
+import { Tab, Box, Paper } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -40,7 +40,7 @@ const QuizManagement = (props: TabComponentType) => {
   // Find and get the current tab object containing label and description
   const currentTab = TABS.find((tab) => tab.value === tabs.value);
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Quiz Management"
         description={currentTab?.description}
@@ -50,9 +50,9 @@ const QuizManagement = (props: TabComponentType) => {
           { name: 'Quiz Management' },
           { name: currentTab?.label || '' },
         ]}
-        // sx={{ px: 1, mb: 2 }}
+        // sx={{ mb: 2 }}
       />
-      <Card
+      <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
@@ -67,8 +67,8 @@ const QuizManagement = (props: TabComponentType) => {
             <Tab key={tab.value} value={tab.value} label={tab.label} />
           ))}
         </CustomTabs>
-      </Card>
-      <Box px={1} pt={2}>
+      </Paper>
+      <Box px={1} pt={2} height="100%">
         {CurrentComponent?.()}
       </Box>
     </Box>

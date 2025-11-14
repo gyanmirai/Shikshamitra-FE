@@ -45,7 +45,7 @@ const LibraryPermissionSettingScreen = () => {
             //       : 'Fee-Structure-Overview',
             // },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
         <Box display="flex" flexDirection="row" justifyContent="flex-end">
           <Button

@@ -129,7 +129,7 @@ const FinanceExpenseCategory = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Expense Category"
         description="This screen displays all created expense categories and provides an option to create a new category."

@@ -61,7 +61,7 @@ const FeeCollection = () => {
             },
             { name: 'Fee Collection Form' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           isBack={studentDialog.value}
           onBack={() => {
             handleClose(null, false);
@@ -76,7 +76,7 @@ const FeeCollection = () => {
             { name: 'Fee Collection' },
             { name: 'Fee Details' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           isBack={viewDialog.value}
           onBack={() => {
             viewDialog.onFalse();
@@ -88,7 +88,7 @@ const FeeCollection = () => {
           heading="Fee Collection"
           description="Select class and division to view students. Click a student to see their fee details and collect fees or send reminders."
           links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Fee Collection' }]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       )}
       {!studentDialog.value && !viewDialog.value && (

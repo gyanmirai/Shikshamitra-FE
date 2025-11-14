@@ -103,7 +103,7 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
     [leavePolicyData?.items]
   );
   return (
-    <Box>
+    <>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -307,7 +307,7 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
       >
         <LeavePolicyForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
-    </Box>
+    </>
   );
 };
 export default LeavePolicy;

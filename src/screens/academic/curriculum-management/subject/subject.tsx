@@ -166,7 +166,7 @@ const Subject = (props: TabComponentType) => {
             { name: 'Subjects Assignment', href: '/academic/curriculumSubjects' },
             // { name: selectedSubject ? 'Update Subject Assignment' : 'Subject Assignment Form' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -190,7 +190,7 @@ const Subject = (props: TabComponentType) => {
             showSubjectDialog.onFalse();
             setSelectedSubject(null);
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       )}
       {/* Conditional rendering based on form state */}

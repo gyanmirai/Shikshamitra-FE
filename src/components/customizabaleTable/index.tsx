@@ -90,8 +90,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   onSendNotification = () => {},
   searchFieldProps = {},
   noDataText = <>No data available</>,
+  wrapperProps = {},
 }) => {
   const { sx, ...other } = tableContainerProps;
+  const { sx: boxSx, ...boxOther } = wrapperProps;
   columns = useMemo(
     () => columns.map((col) => ({ ...col, isFilter: col.isFilter ?? true })),
     [columns]
@@ -510,7 +512,17 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   );
   const tableContent = useMemo(
     () => (
-      <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      <Box
+        sx={{
+          pt: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          minHeight: 0,
+          ...boxSx,
+        }}
+        {...boxOther}
+      >
         <Card
           sx={{
             boxShadow: 'var(--shadows-4)',
@@ -1015,6 +1027,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     ),
     [
       anchorColumnEl,
+      boxOther,
+      boxSx,
       clearAllFilters,
       columnSearchTerm,
       columnVisibility,

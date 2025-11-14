@@ -16,7 +16,7 @@ const Dashboard = (props: TabComponentType) => (
     <CustomBreadcrumbs
       heading="Dashboard"
       links={[{ name: 'Academics' }, { name: 'Learning Management System' }, { name: 'Dashboard' }]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     <LmsDashboardCards />
     <DashboardCourseOverview />
