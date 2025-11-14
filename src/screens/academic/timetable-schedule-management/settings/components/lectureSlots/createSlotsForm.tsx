@@ -1,6 +1,5 @@
 'use client';
 
-import type { FormikErrors } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
@@ -8,22 +7,112 @@ import dayjs from 'dayjs';
 import { isNaN } from 'lodash';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
+import Slider from '@mui/material/Slider';
 import { GlobalIcons } from 'src/utils/icons';
+import AddIcon from '@mui/icons-material/Add';
+import { styled } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
+import DeleteIcon from '@mui/icons-material/Delete';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { DialogScrollContent } from 'src/components/customDialog';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Stack,
+  Button,
+  Divider,
+  TextField,
+  Accordion,
+  Typography,
+  IconButton,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 import { getInitialValues } from './initialValues';
 import { getValidationSchema } from './validationSchema';
 
 import type { ICreateSlotsFormProps } from './type';
+
+// Update the styled component with modern design
+const DayRangeSlider = styled(Slider)(({ theme }) => ({
+  maxWidth: 380,
+  height: 8,
+  padding: '13px 0',
+  '& .MuiSlider-track': {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.palette.primary.main,
+    border: 'none',
+  },
+  '& .MuiSlider-rail': {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+    opacity: 1,
+  },
+  '& .MuiSlider-thumb': {
+    height: 24,
+    width: 24,
+    backgroundColor: '#fff',
+    border: `3px solid ${theme.palette.primary.main}`,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+    '&:hover, &.Mui-focusVisible': {
+      boxShadow: `0 0 0 8px ${theme.palette.mode === 'dark' ? 'rgba(0,167,111,0.16)' : 'rgba(0,167,111,0.1)'}`,
+    },
+    '&.Mui-active': {
+      boxShadow: `0 0 0 14px ${theme.palette.mode === 'dark' ? 'rgba(0,167,111,0.2)' : 'rgba(0,167,111,0.12)'}`,
+    },
+    '&:before': {
+      display: 'none',
+    },
+  },
+  '& .MuiSlider-mark': {
+    height: 12,
+    width: 3,
+    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
+    borderRadius: 2,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    '&.MuiSlider-markActive': {
+      backgroundColor: theme.palette.common.white,
+      opacity: 1,
+    },
+  },
+  '& .MuiSlider-markLabel': {
+    fontSize: '0.75rem',
+    fontWeight: 500,
+    color: theme.palette.text.secondary,
+    top: 32,
+    '&.MuiSlider-markLabelActive': {
+      color: theme.palette.primary.main,
+      fontWeight: 600,
+    },
+  },
+  '&.Mui-disabled': {
+    '& .MuiSlider-track': {
+      backgroundColor: theme.palette.action.disabled,
+    },
+    '& .MuiSlider-thumb': {
+      borderColor: theme.palette.action.disabled,
+    },
+  },
+}));
+
+const dayMarks = [
+  { value: 0, label: 'Mon' },
+  { value: 1, label: 'Tue' },
+  { value: 2, label: 'Wed' },
+  { value: 3, label: 'Thu' },
+  { value: 4, label: 'Fri' },
+  { value: 5, label: 'Sat' },
+];
 
 const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
   open,
@@ -32,33 +121,17 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
   isEdit,
   data,
 }) => {
-  // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
 
-  // Get current board, medium and medium setter from global state for managing education settings
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
-  // Update classes when organization changes
   useEffect(() => {
-    // Flatten the list of standards from all stages
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
     setAllClass(allClasses);
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
-
-  useEffect(() => {
-    if ((isEdit || disabled) && data?.timeSlots?.length > 0) {
-      setShowTable(true);
-    }
-  }, [isEdit, disabled, data]);
 
   const formik = useFormik({
     initialValues: getInitialValues(classes, data),
@@ -66,81 +139,111 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: (values) => {
-      if (isEdit) {
-        shikshaMitraToast.success({
-          message: `Lecture slots have been successfully updated for ${values.className}.`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Lecture slots have been successfully created for ${values.className}.`,
-        });
-      }
+      console.log('Submitting data:', values);
+
+      shikshaMitraToast.success({
+        message: `Lecture slots have been successfully ${isEdit ? 'updated' : 'created'} for ${values.className}.`,
+      });
       handleClose?.(null, true);
     },
   });
 
-  // State for managing total number of slots
-  const [showTable, setShowTable] = useState(false);
+  const handleAddSlotConfiguration = () => {
+    const newConfig = {
+      id: Date.now().toString(),
+      totalSlots: '',
+      weekRange: [0, 5],
+      timeSlots: [],
+      expanded: true,
+    };
+    formik.setFieldValue('slotConfigurations', [...formik.values.slotConfigurations, newConfig]);
+  };
 
-  /**
-   * Creates empty time slots based on the total slots entered
-   * Initializes each slot with default values
-   */
-  const handleCreateSlots = (e: any) => {
-    console.log('e.target.value', e.target.value);
-    const inputValue = e.target.value;
-    const slotsCount = parseInt(inputValue, 10);
-
-    formik.setFieldValue('totalSlots', inputValue);
-    formik.setFieldTouched('totalSlots', false);
-
-    // Block invalid or empty input
-    if (!inputValue || isNaN(slotsCount) || slotsCount < 1 || slotsCount > 20) {
-      formik.setFieldValue('timeSlots', []);
-      setShowTable(false);
+  const handleRemoveSlotConfiguration = (index: number) => {
+    if (formik.values.slotConfigurations.length === 1) {
+      shikshaMitraToast.error({ message: 'At least one slot configuration is required' });
       return;
     }
+    const updated = formik.values.slotConfigurations.filter((_: any, i: number) => i !== index);
+    formik.setFieldValue('slotConfigurations', updated);
+  };
+
+  const handleTotalSlotsChange = (configIndex: number, value: string) => {
+    const slotsCount = parseInt(value, 10);
+
+    // Update totalSlots value
+    formik.setFieldValue(`slotConfigurations[${configIndex}].totalSlots`, value);
+
+    // Mark the field as touched to trigger validation
+    formik.setFieldTouched(`slotConfigurations[${configIndex}].totalSlots`, true, false);
+
+    // Validate the field immediately
+    setTimeout(() => {
+      formik.validateField(`slotConfigurations[${configIndex}].totalSlots`);
+    }, 0);
+
+    // If invalid, clear timeSlots
+    if (!value || isNaN(slotsCount) || slotsCount < 1 || slotsCount > 20) {
+      formik.setFieldValue(`slotConfigurations[${configIndex}].timeSlots`, []);
+      return;
+    }
+
+    // Auto-generate slots
+    let currentTime = dayjs().hour(7).minute(0).second(0).millisecond(0);
 
     const newSlots = Array(slotsCount)
       .fill(null)
       .map((_, index) => {
-        const startTime = index === 0 ? dayjs().hour(7).minute(0).second(0).millisecond(0) : null;
-        const endTime =
-          index === slotsCount - 1 ? dayjs().hour(12).minute(30).second(0).millisecond(0) : null;
-
+        const startTime = currentTime;
+        const endTime = currentTime.add(30, 'minute');
+        currentTime = endTime;
         return {
-          id: index,
-          startTime, // ensure it's explicitly null
+          id: `${configIndex}-${index}`,
+          startTime,
           endTime,
           slotType: 'period',
           breakType: '',
         };
       });
 
-    formik.setFieldValue('timeSlots', newSlots);
-    setShowTable(true);
+    formik.setFieldValue(`slotConfigurations[${configIndex}].timeSlots`, newSlots);
   };
 
-  // Helper function to check if it's the last row
-  const isLastRow = (rowIndex: number) => rowIndex === formik.values.timeSlots.length - 1;
+  const handleToggleAccordion = (configIndex: number) => {
+    const currentExpanded = formik.values.slotConfigurations[configIndex].expanded;
+    formik.setFieldValue(`slotConfigurations[${configIndex}].expanded`, !currentExpanded);
+  };
+
+  const getDayLabel = (v: number) => dayMarks.find((d) => d.value === v)?.label || '';
 
   return (
-    // <form onSubmit={formik.handleSubmit} noValidate>
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <DialogScrollContent>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: 'calc(100vh - 200px)',
+          position: 'relative',
+        }}
+      >
         <Box
           sx={{
-            flexGrow: 1,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
             p: 2,
-            minHeight: 0, // Allow shrinking
-            height: '100%', // Take full available height
+            pb: 10,
           }}
         >
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 3 }}>
+          {/* General Information */}
+          <Box sx={{ width: '100%', mb: 2 }}>
+            <Typography variant="h6" color="primary.main" mb={2}>
+              General Information
+            </Typography>
+          </Box>
+
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
                 <CustomSelect
                   options={allClass}
@@ -149,7 +252,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                   label="Class *"
                   labelKey="name"
                   valueKey="name"
-                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  formControlProps={{ fullWidth: true }}
                   error={formik.touched.className && Boolean(formik.errors.className)}
                   helperText={
                     formik.touched.className && typeof formik.errors.className === 'string'
@@ -161,13 +264,13 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid size={{ xs: 12, md: 3 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <ShakingTextField error={!!(formik.touched.schoolHours && formik.errors.schoolHours)}>
                 <TextField
                   fullWidth
                   label="School Hours *"
                   name="schoolHours"
-                  value={formik.values.schoolHours || '07:00 AM- 12:30 PM'}
+                  value={formik.values.schoolHours || '07:00 AM - 12:30 PM'}
                   onChange={formik.handleChange}
                   size="small"
                   disabled
@@ -175,7 +278,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid size={{ xs: 12, md: 3 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <ShakingTextField
                 error={!!(formik.touched.previousClassSlots && formik.errors.previousClassSlots)}
               >
@@ -186,7 +289,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                   label="Slots From Other Class"
                   labelKey="name"
                   valueKey="name"
-                  formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+                  formControlProps={{ fullWidth: true }}
                   error={
                     formik.touched.previousClassSlots && Boolean(formik.errors.previousClassSlots)
                   }
@@ -200,374 +303,547 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                 />
               </ShakingTextField>
             </Grid>
-
-            <Grid size={{ xs: 12, md: 3 }}>
-              <ShakingTextField error={!!(formik.touched.totalSlots && formik.errors.totalSlots)}>
-                <TextField
-                  fullWidth
-                  label="Total Slots *"
-                  name="totalSlots"
-                  type="number"
-                  inputProps={{ min: 0, max: 20 }}
-                  value={formik.values.totalSlots}
-                  onChange={(e) => handleCreateSlots(e)}
-                  onKeyDown={(e) => {
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
-                  }}
-                  error={formik.touched.totalSlots && Boolean(formik.errors.totalSlots)}
-                  helperText={(formik.touched.totalSlots && formik.errors.totalSlots) as string}
-                  size="small"
-                  disabled={disabled || (isEdit && !!data)}
-                />
-              </ShakingTextField>
-            </Grid>
           </Grid>
 
-          {showTable && formik.values.timeSlots.length > 0 && (
-            <>
-              <Typography variant="subtitle2" mt={2}>
-                Slot Times
-              </Typography>
-              <Box
+          {/* Add Slot Configuration Button */}
+          {!disabled && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2, mb: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={handleAddSlotConfiguration}
+              >
+                Slots
+              </Button>
+            </Box>
+          )}
+
+          {/* Slot Configurations */}
+          {formik.values.slotConfigurations.map(
+            (
+              config: {
+                id: React.Key | null | undefined;
+                expanded: boolean | undefined;
+                totalSlots: unknown;
+                weekRange: number | number[] | undefined;
+                timeSlots: any[];
+              },
+              configIndex: number
+            ) => (
+              <Accordion
+                key={config.id}
+                expanded={config.expanded}
+                onChange={() => handleToggleAccordion(configIndex)}
                 sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
+                  boxShadow: 1,
+                  borderRadius: '12px !important',
+                  '&:before': { display: 'none' },
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  mt: 2,
                 }}
               >
-                <CustomizableTable
-                  tableContainerProps={{ sx: { maxHeight: '300px' } }}
-                  tableId="time-schedule-management-setting"
-                  // noDataText={<>No Subject&apos;s weekly lectures Found </>}
-                  isSearch={false}
-                  // isShowedDense={false}
-                  isFilter={false}
-                  isPagination
-                  columns={[
-                    {
-                      id: 'startTime',
-                      label: 'Start Time',
-                      isFilter: false,
-                      isSort: false,
-                      render(value, row) {
-                        const rowIndex = row.id;
-                        const fieldPath = `timeSlots[${rowIndex}].startTime`;
-                        const isTouched =
-                          Array.isArray(formik.touched.timeSlots) &&
-                          formik.touched.timeSlots[rowIndex]?.startTime;
-
-                        const fieldError =
-                          Array.isArray(formik.errors.timeSlots) &&
-                          typeof formik.errors.timeSlots[rowIndex] === 'object'
-                            ? (formik.errors.timeSlots[rowIndex] as FormikErrors<any>)?.startTime
-                            : undefined;
-
-                        return (
-                          <ShakingTextField error={!!(isTouched && fieldError)}>
-                            <TimePicker
-                              value={dayjs(value) || null}
-                              format="hh:mm a"
-                              views={['hours', 'minutes']}
-                              disabled={disabled && !isEdit}
-                              ampm
-                              onChange={(newTime) => {
-                                const updated = [...formik.values.timeSlots];
-                                if (!updated[rowIndex]) {
-                                  updated[rowIndex] = {
-                                    id: rowIndex,
-                                    startTime: null,
-                                    endTime: null,
-                                    slotType: 'period',
-                                    breakType: '',
-                                  };
-                                }
-
-                                updated[rowIndex].startTime = newTime?.isValid?.()
-                                  ? dayjs(newTime)
-                                  : null;
-
-                                if (isLastRow(rowIndex)) {
-                                  // Set fixed endTime only for last row
-                                  updated[rowIndex].endTime = dayjs('12:30', 'HH:mm'); // or dayjs().hour(12).minute(30)
-                                }
-                                formik.setFieldValue('timeSlots', updated);
-                                // formik.setFieldTouched(fieldPath, true);
-                                // Trigger validation
-                                setTimeout(() => formik.validateForm(), 0);
-                              }}
-                              slotProps={{
-                                textField: {
-                                  size: 'small',
-                                  error: !!(isTouched && fieldError),
-                                  helperText: (isTouched && fieldError ? fieldError : '') as string,
-                                  FormHelperTextProps: {
-                                    sx: {
-                                      margin: 0,
-                                      marginTop: '4px',
-                                      lineHeight: '1.25rem',
-                                      whiteSpace: 'normal',
-                                    },
-                                  },
-                                  InputLabelProps: {
-                                    sx: { lineHeight: '1.2em' },
-                                  },
-                                  sx: { minWidth: '100px', width: '100%', mb: 1 },
-                                },
-                              }}
-                              viewRenderers={{
-                                hours: renderTimeViewClock,
-                                minutes: renderTimeViewClock,
-                                seconds: renderTimeViewClock,
-                              }}
-                              // disabled={disabled || isFirstRow(rowIndex)}
-                            />
-                          </ShakingTextField>
-                        );
-                      },
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    '& .MuiAccordionSummary-content': {
+                      my: 1.5,
+                      display: 'block',
                     },
-                    {
-                      id: 'endTime',
-                      label: 'End Time',
-                      isFilter: false,
-                      isSort: false,
-                      render(value, row) {
-                        const rowIndex = row.id;
-                        const fieldPath = `timeSlots[${rowIndex}].endTime`;
-                        const isTouched =
-                          Array.isArray(formik.touched.timeSlots) &&
-                          formik.touched.timeSlots[rowIndex]?.endTime;
+                  }}
+                >
+                  <Box
+                    sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    {formik.values.slotConfigurations.length > 1 && !disabled && (
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveSlotConfiguration(configIndex);
+                        }}
+                        sx={{ mr: 1 }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                  </Box>
 
-                        const fieldError =
-                          Array.isArray(formik.errors.timeSlots) &&
-                          typeof formik.errors.timeSlots[rowIndex] === 'object'
-                            ? (formik.errors.timeSlots[rowIndex] as FormikErrors<any>)?.endTime
-                            : undefined;
+                  {/* Preview when collapsed - Always show if totalSlots or weekRange exists */}
+                  {!config.expanded && (config.totalSlots || config.weekRange) && (
+                    <Grid container spacing={2} mt={0.5}>
+                      {config.totalSlots ? (
+                        <Grid
+                          size={{
+                            xs: 12,
+                            sm: config.timeSlots && config.timeSlots.length > 0 ? 4 : 6,
+                          }}
+                        >
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Iconify icon="mdi:clock-outline" width={18} color="text.secondary" />
+                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                display="block"
+                                sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                              >
+                                Total Slots:
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                fontWeight={600}
+                                color="text.primary"
+                                sx={{ fontSize: '0.75rem' }}
+                                noWrap
+                              >
+                                {String(config.totalSlots) || '—'}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </Grid>
+                      ) : null}
 
-                        return (
-                          <ShakingTextField error={!!(isTouched && fieldError)}>
-                            <TimePicker
-                              value={dayjs(value) || null}
-                              disabled={(disabled && !isEdit) || isLastRow(rowIndex)}
-                              viewRenderers={{
-                                hours: renderTimeViewClock,
-                                minutes: renderTimeViewClock,
-                                seconds: renderTimeViewClock,
-                              }}
-                              format="hh:mm a"
-                              views={['hours', 'minutes']}
-                              ampm
-                              onChange={(newTime) => {
-                                const updated = [...formik.values.timeSlots];
-                                if (!updated[rowIndex]) {
-                                  updated[rowIndex] = {
-                                    id: rowIndex,
-                                    startTime: null,
-                                    endTime: null,
-                                    slotType: 'period',
-                                    breakType: '',
-                                  };
-                                }
-                                updated[rowIndex].endTime = newTime?.isValid?.()
-                                  ? dayjs(newTime)
-                                  : null;
-
-                                formik.setFieldValue('timeSlots', updated);
-                                // formik.setFieldTouched(fieldPath, true);
-                                // Trigger validation
-                                setTimeout(() => formik.validateForm(), 0);
-                              }}
-                              slotProps={{
-                                textField: {
-                                  size: 'small',
-                                  error: !!(isTouched && fieldError),
-                                  helperText: (isTouched && fieldError ? fieldError : '') as string,
-                                  FormHelperTextProps: {
-                                    sx: {
-                                      margin: 0,
-                                      marginTop: '4px',
-                                      lineHeight: '1.25rem',
-                                      whiteSpace: 'normal',
-                                    },
-                                  },
-                                  InputLabelProps: {
-                                    sx: { lineHeight: '1.2em' },
-                                  },
-                                  sx: { minWidth: '100px', width: '100%', mb: 1 },
-                                },
-                              }}
-                            />
-                          </ShakingTextField>
-                        );
-                      },
-                    },
-                    {
-                      id: 'slotType',
-                      label: 'Slot Type',
-                      isFilter: false,
-                      isSort: false,
-                      render(value, row) {
-                        const rowIndex = row.id;
-                        const slotTypeFieldPath = `timeSlots[${rowIndex}].slotType`;
-                        const breakTypeFieldPath = `timeSlots[${rowIndex}].breakType`;
-
-                        const isSlotTypeTouched =
-                          Array.isArray(formik.touched.timeSlots) &&
-                          formik.touched.timeSlots[rowIndex]?.slotType;
-
-                        const isBreakTypeTouched =
-                          Array.isArray(formik.touched.timeSlots) &&
-                          formik.touched.timeSlots[rowIndex]?.breakType;
-
-                        const slotTypeError =
-                          Array.isArray(formik.errors.timeSlots) &&
-                          typeof formik.errors.timeSlots[rowIndex] === 'object'
-                            ? (formik.errors.timeSlots[rowIndex] as FormikErrors<any>)?.slotType
-                            : undefined;
-
-                        const breakTypeError =
-                          Array.isArray(formik.errors.timeSlots) &&
-                          typeof formik.errors.timeSlots[rowIndex] === 'object'
-                            ? (formik.errors.timeSlots[rowIndex] as FormikErrors<any>)?.breakType
-                            : undefined;
-
-                        return (
-                          <Box sx={{ display: 'flex', gap: 1, minWidth: '300px' }}>
-                            <ShakingTextField error={!!(isSlotTypeTouched && slotTypeError)}>
-                              <CustomSelect
-                                label="Slot *"
-                                options={[
-                                  { value: 'period', label: 'Period' },
-                                  { value: 'break', label: 'Break' },
-                                ]}
-                                disabled={disabled && !isEdit}
-                                value={value}
-                                onChange={(val: any) => {
-                                  const updated = [...formik.values.timeSlots];
-                                  if (!updated[rowIndex]) {
-                                    updated[rowIndex] = {
-                                      id: rowIndex,
-                                      startTime: null,
-                                      endTime: null,
-                                      slotType: 'period',
-                                      breakType: '',
-                                    };
-                                  }
-
-                                  updated[rowIndex].slotType = val;
-                                  // Reset breakType when changing from break to period
-                                  if (val !== 'break') {
-                                    updated[rowIndex].breakType = '';
-                                  }
-                                  formik.setFieldValue('timeSlots', updated);
-                                  // formik.setFieldTouched(slotTypeFieldPath, true);
-                                  // Trigger validation
-                                  setTimeout(() => formik.validateForm(), 0);
-                                }}
-                                error={!!(isSlotTypeTouched && slotTypeError)}
-                                helperText={
-                                  (isSlotTypeTouched && slotTypeError
-                                    ? slotTypeError
-                                    : '') as string
-                                }
-                                formControlProps={{
-                                  sx: {
-                                    minWidth: '150px',
-                                    width: '100%',
-                                    mb: 1,
-                                  },
-                                }}
+                      {/* Active Days */}
+                      {config.weekRange &&
+                        Array.isArray(config.weekRange) &&
+                        config.weekRange.length === 2 && (
+                          <Grid
+                            size={{
+                              xs: 12,
+                              sm: config.timeSlots && config.timeSlots.length > 0 ? 4 : 6,
+                            }}
+                          >
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              <Iconify
+                                icon="mdi:calendar-range"
+                                width={18}
+                                color="text.secondary"
                               />
-                            </ShakingTextField>
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  display="block"
+                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                >
+                                  Active Days:
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={600}
+                                  color="text.primary"
+                                  sx={{ fontSize: '0.75rem' }}
+                                  noWrap
+                                >
+                                  {getDayLabel(config.weekRange[0])} -{' '}
+                                  {getDayLabel(config.weekRange[1])}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          </Grid>
+                        )}
 
-                            {value === 'break' && (
-                              <ShakingTextField error={!!(isBreakTypeTouched && breakTypeError)}>
-                                <CustomSelect
-                                  label="Break Type *"
-                                  options={[
-                                    { value: 'lunch', label: 'Lunch Break' },
-                                    { value: 'short', label: 'Short Break' },
-                                    { value: 'recess', label: 'Recess' },
-                                    { value: 'prayer', label: 'Prayer Break' },
-                                  ]}
-                                  value={row.breakType || ''}
-                                  onChange={(val: any) => {
-                                    const updated = [...formik.values.timeSlots];
-                                    if (!updated[rowIndex]) {
-                                      updated[rowIndex] = {
-                                        id: rowIndex,
-                                        startTime: null,
-                                        endTime: null,
-                                        slotType: 'period',
-                                        breakType: '',
-                                      };
-                                    }
-                                    updated[rowIndex].breakType = val;
-                                    formik.setFieldValue('timeSlots', updated);
-                                    // formik.setFieldTouched(breakTypeFieldPath, true);
-                                    // Trigger validation
-                                    setTimeout(() => formik.validateForm(), 0);
-                                  }}
-                                  error={!!(isBreakTypeTouched && breakTypeError)}
-                                  helperText={
-                                    (isBreakTypeTouched && breakTypeError
-                                      ? breakTypeError
-                                      : '') as string
-                                  }
-                                  formControlProps={{
-                                    sx: {
-                                      minWidth: '150px',
-                                      width: '100%',
-                                      mb: 1,
-                                    },
-                                  }}
-                                  disabled={disabled}
-                                />
-                              </ShakingTextField>
-                            )}
+                      {/* Slots Created - Only show if slots exist */}
+                      {config.timeSlots && config.timeSlots.length > 0 && (
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                          <Stack direction="row" spacing={1.5} alignItems="center">
+                            <Iconify icon="mdi:timetable" width={18} color="text.secondary" />
+                            <Box sx={{ minWidth: 0, flex: 1 }}>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                display="block"
+                                sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                              >
+                                Slots Created:
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                fontWeight={600}
+                                color="text.primary"
+                                sx={{ fontSize: '0.75rem' }}
+                                noWrap
+                              >
+                                {config.timeSlots.length}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </Grid>
+                      )}
+                    </Grid>
+                  )}
+                </AccordionSummary>
+
+                <AccordionDetails sx={{ pt: 0 }}>
+                  <Box width="100%">
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Box
+                          sx={{
+                            px: 2,
+                            pt: 1,
+                            pb: 2,
+                            borderRadius: 2,
+                            backgroundColor: (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? 'rgba(255,255,255,0.02)'
+                                : 'rgba(0,0,0,0.02)',
+                            border: (theme) =>
+                              `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
+                            <Iconify icon="mdi:calendar-week" width={20} color="primary.main" />
+                            <Typography
+                              variant="subtitle2"
+                              color="primary.main"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              Active Days
+                            </Typography>
                           </Box>
-                        );
-                      },
-                    },
-                  ]}
-                  data={formik.values.timeSlots}
-                />
-              </Box>
-            </>
+
+                          <Box sx={{ px: 1 }}>
+                            <DayRangeSlider
+                              value={config.weekRange}
+                              marks={dayMarks}
+                              min={0}
+                              max={5}
+                              step={1}
+                              track="inverted"
+                              onChange={(_, newValue) =>
+                                formik.setFieldValue(
+                                  `slotConfigurations[${configIndex}].weekRange`,
+                                  newValue
+                                )
+                              }
+                              valueLabelDisplay="off"
+                              disableSwap
+                              disabled={disabled}
+                            />
+                          </Box>
+
+                          {/* Display selected range */}
+                          <Box
+                            sx={{
+                              mt: 2,
+                              pt: 2,
+                              borderTop: 1,
+                              borderColor: 'divider',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Typography variant="caption" color="text.secondary">
+                              Selected Range:
+                            </Typography>
+                            <Typography variant="body2" fontWeight={600} color="primary.main">
+                              {config.weekRange &&
+                              Array.isArray(config.weekRange) &&
+                              config.weekRange.length === 2
+                                ? `${getDayLabel(config.weekRange[0])} - ${getDayLabel(config.weekRange[1])}`
+                                : '—'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
+
+                      {/* Total Slots */}
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <TextField
+                          fullWidth
+                          label="Total Slots *"
+                          type="number"
+                          inputProps={{ min: 0, max: 20 }}
+                          value={config.totalSlots != null ? String(config.totalSlots) : ''}
+                          onChange={(e) => handleTotalSlotsChange(configIndex, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
+                          }}
+                          onWheel={(e) => {
+                            (e.target as HTMLElement).blur();
+                          }}
+                          size="small"
+                          disabled={disabled || (isEdit && !!data)}
+                          error={Boolean(
+                            formik.touched.slotConfigurations &&
+                              Array.isArray(formik.touched.slotConfigurations) &&
+                              formik.touched.slotConfigurations[configIndex] &&
+                              typeof formik.touched.slotConfigurations[configIndex] === 'object' &&
+                              (formik.touched.slotConfigurations[configIndex] as any)?.totalSlots &&
+                              formik.errors.slotConfigurations &&
+                              Array.isArray(formik.errors.slotConfigurations) &&
+                              formik.errors.slotConfigurations[configIndex] &&
+                              typeof formik.errors.slotConfigurations[configIndex] === 'object' &&
+                              (formik.errors.slotConfigurations[configIndex] as any)?.totalSlots
+                          )}
+                          helperText={
+                            formik.touched.slotConfigurations &&
+                            Array.isArray(formik.touched.slotConfigurations) &&
+                            formik.touched.slotConfigurations[configIndex] &&
+                            typeof formik.touched.slotConfigurations[configIndex] === 'object' &&
+                            (formik.touched.slotConfigurations[configIndex] as any)?.totalSlots &&
+                            formik.errors.slotConfigurations &&
+                            Array.isArray(formik.errors.slotConfigurations) &&
+                            formik.errors.slotConfigurations[configIndex] &&
+                            typeof formik.errors.slotConfigurations[configIndex] === 'object'
+                              ? ((formik.errors.slotConfigurations[configIndex] as any)
+                                  ?.totalSlots as string)
+                              : undefined
+                          }
+                        />
+                      </Grid>
+
+                      {/* Slot Times Table - Only show if slots exist */}
+                      {config.timeSlots && config.timeSlots.length > 0 && (
+                        <Grid size={{ xs: 12 }}>
+                          <Divider sx={{ my: 2 }} />
+                          <Typography variant="subtitle2" color="primary.main" gutterBottom>
+                            Slot Times
+                          </Typography>
+                          <Box sx={{ overflowX: 'auto', width: '100%' }}>
+                            <CustomizableTable
+                              tableContainerProps={{
+                                sx: { maxHeight: '300px', minWidth: '800px' },
+                              }}
+                              tableId={`time-schedule-${config.id}`}
+                              isSearch={false}
+                              isFilter={false}
+                              isPagination
+                              columns={[
+                                {
+                                  id: 'startTime',
+                                  label: 'Start Time',
+                                  minWidth: 150,
+                                  render(value, row) {
+                                    const rowIndex = config.timeSlots.findIndex(
+                                      (s) => s.id === row.id
+                                    );
+                                    return (
+                                      <TimePicker
+                                        value={dayjs(value) || null}
+                                        format="hh:mm a"
+                                        views={['hours', 'minutes']}
+                                        disabled={disabled && !isEdit}
+                                        ampm
+                                        onChange={(newTime) => {
+                                          const updated = [...config.timeSlots];
+                                          updated[rowIndex].startTime = newTime?.isValid?.()
+                                            ? dayjs(newTime)
+                                            : null;
+                                          formik.setFieldValue(
+                                            `slotConfigurations[${configIndex}].timeSlots`,
+                                            updated
+                                          );
+                                        }}
+                                        slotProps={{
+                                          textField: {
+                                            size: 'small',
+                                            sx: { width: '135px', mb: 1 },
+                                          },
+                                        }}
+                                        viewRenderers={{
+                                          hours: renderTimeViewClock,
+                                          minutes: renderTimeViewClock,
+                                          seconds: renderTimeViewClock,
+                                        }}
+                                      />
+                                    );
+                                  },
+                                },
+                                {
+                                  id: 'endTime',
+                                  label: 'End Time',
+                                  minWidth: 150,
+                                  render(value, row) {
+                                    const rowIndex = config.timeSlots.findIndex(
+                                      (s) => s.id === row.id
+                                    );
+                                    const isLast = rowIndex === config.timeSlots.length - 1;
+                                    return (
+                                      <TimePicker
+                                        value={dayjs(value) || null}
+                                        disabled={(disabled && !isEdit) || isLast}
+                                        format="hh:mm a"
+                                        views={['hours', 'minutes']}
+                                        ampm
+                                        onChange={(newTime) => {
+                                          const updated = [...config.timeSlots];
+                                          updated[rowIndex].endTime = newTime?.isValid?.()
+                                            ? dayjs(newTime)
+                                            : null;
+                                          formik.setFieldValue(
+                                            `slotConfigurations[${configIndex}].timeSlots`,
+                                            updated
+                                          );
+                                        }}
+                                        slotProps={{
+                                          textField: {
+                                            size: 'small',
+                                            sx: { width: '140px', mb: 1 },
+                                          },
+                                        }}
+                                        viewRenderers={{
+                                          hours: renderTimeViewClock,
+                                          minutes: renderTimeViewClock,
+                                          seconds: renderTimeViewClock,
+                                        }}
+                                      />
+                                    );
+                                  },
+                                },
+                                {
+                                  id: 'totalTime',
+                                  label: 'Total Time',
+                                  minWidth: 150,
+                                  render(_, row) {
+                                    const rowIndex = config.timeSlots.findIndex(
+                                      (s) => s.id === row.id
+                                    );
+                                    const startTime = config.timeSlots[rowIndex]?.startTime;
+                                    const endTime = config.timeSlots[rowIndex]?.endTime;
+                                    let duration = null;
+                                    if (startTime && endTime) {
+                                      const totalMinutes = dayjs(endTime).diff(
+                                        dayjs(startTime),
+                                        'minute'
+                                      );
+                                      duration = dayjs().hour(0).minute(totalMinutes);
+                                    }
+                                    return (
+                                      <TimePicker
+                                        value={duration}
+                                        format="HH:mm"
+                                        views={['hours', 'minutes']}
+                                        disabled
+                                        slotProps={{
+                                          textField: {
+                                            size: 'small',
+                                            sx: { width: '130px', mb: 1 },
+                                          },
+                                        }}
+                                      />
+                                    );
+                                  },
+                                },
+
+                                {
+                                  id: 'slotType',
+                                  label: 'Slot Type',
+                                  minWidth: 350,
+                                  align: 'left',
+                                  render(value, row) {
+                                    const rowIndex = config.timeSlots.findIndex(
+                                      (s) => s.id === row.id
+                                    );
+                                    return (
+                                      <Box sx={{ display: 'flex', gap: 1, minWidth: '320px' }}>
+                                        <CustomSelect
+                                          label="Slot *"
+                                          options={[
+                                            { value: 'period', label: 'Period' },
+                                            { value: 'break', label: 'Break' },
+                                          ]}
+                                          disabled={disabled && !isEdit}
+                                          value={value}
+                                          onChange={(val: any) => {
+                                            const updated = [...config.timeSlots];
+                                            updated[rowIndex].slotType = val;
+                                            if (val !== 'break') updated[rowIndex].breakType = '';
+                                            formik.setFieldValue(
+                                              `slotConfigurations[${configIndex}].timeSlots`,
+                                              updated
+                                            );
+                                          }}
+                                          formControlProps={{
+                                            sx: { minWidth: '150px' },
+                                            size: 'small',
+                                          }}
+                                        />
+                                        {config.timeSlots[rowIndex]?.slotType === 'break' && (
+                                          <CustomSelect
+                                            label="Break *"
+                                            options={[
+                                              { value: 'short', label: 'Short Break' },
+                                              { value: 'lunch', label: 'Lunch Break' },
+                                            ]}
+                                            disabled={disabled && !isEdit}
+                                            value={config.timeSlots[rowIndex]?.breakType}
+                                            onChange={(val: any) => {
+                                              const updated = [...config.timeSlots];
+                                              updated[rowIndex].breakType = val;
+                                              formik.setFieldValue(
+                                                `slotConfigurations[${configIndex}].timeSlots`,
+                                                updated
+                                              );
+                                            }}
+                                            formControlProps={{
+                                              sx: { minWidth: '150px' },
+                                              size: 'small',
+                                            }}
+                                          />
+                                        )}
+                                      </Box>
+                                    );
+                                  },
+                                },
+                              ]}
+                              data={config.timeSlots}
+                            />
+                          </Box>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            )
           )}
         </Box>
-      </DialogScrollContent>
-      {!disabled && (
-        <DialogActions>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            variant="outlined"
-            // disabled={disabled}
-            size="small"
-            onClick={() => {
-              handleClose?.(null, false);
+
+        {/* Sticky Footer with Buttons */}
+        {!disabled && (
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              bgcolor: 'background.paper',
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              px: 3,
+              py: 2,
+              display: 'flex',
+              gap: 1,
+              justifyContent: 'flex-end',
+              zIndex: 10,
+              boxShadow: '0 -2px 8px rgba(0,0,0,0.08)',
             }}
           >
-            Cancel
-          </Button>
-          <Button
-            startIcon={
-              <Iconify
-                icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit}
-                width={isEdit ? 16 : 20}
-                height={isEdit ? 16 : 20}
-              />
-            }
-            form="dialog-form"
-            onClick={() => formik.handleSubmit()}
-            size="small"
-            variant="contained"
-          >
-            {isEdit ? 'Update' : 'Submit'}
-            {/* {isEdit ? 'Update' : 'Submit'} */}
-          </Button>
-        </DialogActions>
-      )}
+            <Button
+              variant="text"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              onClick={() => handleClose?.(null, false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              onClick={() => formik.handleSubmit()}
+            >
+              Submit
+            </Button>
+          </Box>
+        )}
+      </Box>
     </BackPopUpChecked>
-    // </form>
   );
 };
 

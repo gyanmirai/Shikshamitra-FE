@@ -45,6 +45,7 @@ const TimetableSettingScreen = () => {
   const addWeeklyLectureDialog = useBoolean(false);
   const addLectureSlotDialog = useBoolean(false);
   const addRoomDialog = useBoolean(false);
+  const viewSlotsDialog = useBoolean();
 
   // Memoized index of current active tab from TABS array
   const currentIndex = useMemo(
@@ -114,39 +115,58 @@ const TimetableSettingScreen = () => {
       {/* Only show breadcrumbs and tabs when no dialog is open */}
       {!isAnyDialogOpen && (
         <>
-          <CustomBreadcrumbs
-            heading="Settings"
-            description="Configure timetable settings by defining weekly lectures, lecture slots, and room allocations."
-            links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
-            sx={{ px: 1, mb: 2 }}
-            action={renderButton[searchParams.tab as keyof typeof renderButton]}
-          />
-
-          <Card
-            sx={{
-              '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-            }}
-          >
-            <CustomTabs
-              value={searchParams.tab}
-              onChange={(e, value) => {
-                const newIndex = TABS.findIndex((tab) => tab.value === value);
-                if (currentIndex > newIndex) {
-                  setIsBackClick(true);
-                } else {
-                  setIsBackClick(false);
-                }
-
-                setSearchParams({ tab: value });
+          {viewSlotsDialog.value ? (
+            <CustomBreadcrumbs
+              heading="View Slots"
+              description="View the detailed lecture slots for the selected class."
+              links={[
+                { name: 'Academics', href: '/academic/dashboard' },
+                { name: 'Settings' },
+                { name: 'View Slots' },
+              ]}
+              sx={{ px: 1, mb: 2 }}
+              isBack
+              onBack={() => {
+                viewSlotsDialog.onFalse();
               }}
-              sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
-              role="tablist"
+            />
+          ) : (
+            <CustomBreadcrumbs
+              heading="Settings"
+              description="Configure timetable settings by defining weekly lectures, lecture slots, and room allocations."
+              links={[{ name: 'Academics', href: '/academic/dashboard' }, { name: 'Settings' }]}
+              sx={{ px: 1, mb: 2 }}
+              action={renderButton[searchParams.tab as keyof typeof renderButton]}
+            />
+          )}
+
+          {!viewSlotsDialog.value && (
+            <Card
+              sx={{
+                '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+              }}
             >
-              {TABS.map((tab) => (
-                <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
-              ))}
-            </CustomTabs>
-          </Card>
+              <CustomTabs
+                value={searchParams.tab}
+                onChange={(e, value) => {
+                  const newIndex = TABS.findIndex((tab) => tab.value === value);
+                  if (currentIndex > newIndex) {
+                    setIsBackClick(true);
+                  } else {
+                    setIsBackClick(false);
+                  }
+
+                  setSearchParams({ tab: value });
+                }}
+                sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+                role="tablist"
+              >
+                {TABS.map((tab) => (
+                  <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+                ))}
+              </CustomTabs>
+            </Card>
+          )}
         </>
       )}
 
@@ -169,6 +189,7 @@ const TimetableSettingScreen = () => {
               isEdit={isEdit}
               setIsEdit={setIsEdit}
               showBreadcrumb={isAnyDialogOpen}
+              viewSlotsDialog={viewSlotsDialog}
             />
           )}
         </Scrollbar>
