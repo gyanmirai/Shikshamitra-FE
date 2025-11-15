@@ -16,9 +16,12 @@ import { Tab, Box, Card, Tabs, Paper, Avatar, Divider, Typography } from '@mui/m
 
 import PayrollSummary from './payroll-summary';
 import EmployeeInformation from './information';
+import EmployeeLibrary from './EmployeeLibrary';
+import EmployeeCalendar from './EmployeeCalendar';
 import EmployeeAcademic from './employeeAcademic/academic';
 import EmployeeProfileDashboard from './employee-dashboard';
 import EmployeeCommunication from './employee-communication';
+import EmployeeTransportation from './EmployeeTransportation';
 import { convertBase64Format } from '../../../utils/base64Formate';
 import { EmployeeStatusType } from '../../../enums/employee-status-type';
 import QualificationAndCertification from './qualification-certification';
@@ -66,7 +69,9 @@ export const TABS = [
     value: 'transport',
     label: 'Transportation',
     icon: <Iconify icon="solar:bus-bold" width={20} />,
-    component: (props: { tabs: UseTabsReturn }) => <></>,
+    component: (props: { employee: unknown; tabs: UseTabsReturn }) => (
+      <EmployeeTransportation employee={props.employee} />
+    ),
   },
   {
     value: 'academic',
@@ -82,6 +87,22 @@ export const TABS = [
     icon: <Iconify icon="maki:communications-tower" width={20} />,
     component: (props: { tabs: UseTabsReturn; employee: any }) => (
       <EmployeeCommunication employee={props.employee} />
+    ),
+  },
+  {
+    value: 'library',
+    label: 'Library',
+    icon: <Iconify icon="mdi:library" width={20} />,
+    component: (props: { employee: any; tabs: UseTabsReturn }) => (
+      <EmployeeLibrary employee={props.employee} />
+    ),
+  },
+  {
+    value: 'calendar',
+    label: 'Calendar',
+    icon: <Iconify icon="mdi:calendar" width={20} />,
+    component: (props: { tabs: UseTabsReturn; employee: any }) => (
+      <EmployeeCalendar employee={props.employee} />
     ),
   },
 ];
