@@ -46,46 +46,24 @@ const CreditCardTable = () => {
             isFilter: true,
             filterType: 'string',
             sticky: true,
+            render: (value, row) => (
+              <Typography variant="caption" fontSize="13px">
+                {value || '-'} ({row.grNumber})
+              </Typography>
+            ),
           },
           {
-            id: 'class',
-            label: 'Class',
-            minWidth: '80px',
-            align: 'left',
-            isFilter: true,
-            filterType: 'string',
-          },
-          {
-            id: 'medium',
-            label: 'Medium',
-            minWidth: '100px',
-            align: 'left',
-            isFilter: true,
-            filterType: 'string',
-          },
-          {
-            id: 'division',
-            label: 'Division',
-            minWidth: '100px',
-            align: 'left',
-            isFilter: true,
-            filterType: 'string',
-          },
-          {
-            id: 'grNumber',
-            label: 'GR No.',
+            id: 'board',
+            label: 'Board/Medium',
             minWidth: '120px',
             align: 'left',
             isFilter: true,
-            filterType: 'number',
-          },
-          {
-            id: 'rollNumber',
-            label: 'Roll No.',
-            minWidth: '120px',
-            align: 'left',
-            isFilter: true,
-            filterType: 'number',
+            filterType: 'string',
+            render: (value, row) => (
+              <Typography variant="caption" fontSize="13px">
+                {value || '-'}-{row.medium}
+              </Typography>
+            ),
           },
           {
             id: 'amount',
@@ -129,6 +107,27 @@ const CreditCardTable = () => {
             align: 'left',
             isFilter: true,
             filterType: 'date',
+          },
+          {
+            id: 'class',
+            label: 'Class',
+            minWidth: '80px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'string',
+            render: (value, row) => (
+              <Typography variant="caption" fontSize="13px">
+                {value || '-'}-{row.division}
+              </Typography>
+            ),
+          },
+          {
+            id: 'rollNumber',
+            label: 'Roll No.',
+            minWidth: '120px',
+            align: 'left',
+            isFilter: true,
+            filterType: 'number',
           },
           {
             id: 'remarks',

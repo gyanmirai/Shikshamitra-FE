@@ -76,7 +76,7 @@ const FeeCollection = () => {
             { name: 'Fee Collection' },
             { name: 'Fee Details' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1 }}
           isBack={viewDialog.value}
           onBack={() => {
             viewDialog.onFalse();
