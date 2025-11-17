@@ -15,7 +15,7 @@ export const ReconciliationApi = createApi({
           return { data: reconciliationData.bankStatements };
         }
         if (url === '/cheueDetails') {
-          return { data: reconciliationData.cheueDetails };
+          return { data: reconciliationData.chequeDetails };
         }
 
         if (url === '/demandDraft') {
@@ -48,7 +48,7 @@ export const ReconciliationApi = createApi({
   endpoints: (builder) => ({
     getChequeDetails: builder.query({
       query: () => ({
-        url: '/cheueDetails',
+        url: '/chequeDetails',
         method: 'GET',
       }),
       providesTags: ['Reconciliation'],

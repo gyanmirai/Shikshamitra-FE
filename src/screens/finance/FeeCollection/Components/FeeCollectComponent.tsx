@@ -4,11 +4,10 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Button, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-import { FeeSummaryCard } from './StudentFeeDetail';
+import { StudentFeeSummaryCard } from './StudentFeesSummaryCard';
 import PaymentDetailsForm, {
   buildInitialValues,
   buildValidationSchema,
@@ -43,17 +42,18 @@ const FeeCollectComponent = ({
       }
     },
   });
-  console.log('formik----', formik.errors);
+  console.log('formik----', formik.values);
 
   return (
     <Box display="flex" flexDirection="column" height="100%">
-      <Scrollbar sx={{ p: 2, height: '100%' }}>
+      <Box p={2}>
+        {/* <Scrollbar sx={{ p: 2, height: '100%' }}> */}
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-          <FeeSummaryCard student={student} />
+          <StudentFeeSummaryCard student={student} />
           <PaymentDetailsForm formik={formik} />
         </BackPopUpChecked>
-      </Scrollbar>
-
+        {/* </Scrollbar> */}
+      </Box>
       <DialogActions>
         <Button
           variant="outlined"

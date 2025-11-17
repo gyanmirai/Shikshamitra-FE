@@ -100,7 +100,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
           </Grid>
 
           {/* Prefix Field */}
-          <Grid size={{ xs: 12, sm: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             {(() => {
               const field = 'prefix';
               const error = formik.touched[field] && Boolean(formik.errors[field]);
@@ -126,7 +126,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
           </Grid>
 
           {/* Suffix Field */}
-          <Grid size={{ xs: 12, sm: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             {(() => {
               const field = 'suffix';
               const error = formik.touched[field] && Boolean(formik.errors[field]);
@@ -152,7 +152,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
           </Grid>
 
           {/* Starting Number Field */}
-          <Grid size={{ xs: 12, sm: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             {(() => {
               const field = 'startingNumber';
               const error = formik.touched[field] && Boolean(formik.errors[field]);
@@ -178,7 +178,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
           </Grid>
 
           {/* Ending Number Field */}
-          <Grid size={{ xs: 12, sm: 12 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             {(() => {
               const field = 'endingNumber';
               const error = formik.touched[field] && Boolean(formik.errors[field]);

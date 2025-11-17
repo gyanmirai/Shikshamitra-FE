@@ -1,14 +1,15 @@
+import type { RootState } from 'src/redux/store';
+import type { Board, Medium } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 
-import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Avatar, MenuList, MenuItem, Typography } from '@mui/material';
-import { useGetAllBoardQuery, useGetAllMediumQuery } from 'src/redux/feeCollection/feeCollection';
+import { Box, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusOptions,
@@ -27,22 +28,23 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onCollectFee,
   onView,
 }) => {
-  const [board, setBoard] = useState('');
-  const [medium, setMedium] = useState('');
+  const [selectedBoard, setSelectedBoard] = useState('');
+  const [selectedMedium, setSelectedMedium] = useState('');
+  const [boards, setBoards] = useState([]);
+  const [mediums, setMediums] = useState<Medium[]>([]);
+  const {
+    currentYear,
+    currentBoard,
+    currentMedium: medium,
+    setCurrentMedium: setMedium,
+  } = useSelector((state: RootState) => state.globalState);
 
-  const { data: allBoardData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAllBoardQuery,
-  });
-
-  const { data: allMediumData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAllMediumQuery,
-  });
-
-  // Provide fallback empty arrays to prevent undefined errors
-  const allBoard = allBoardData || [];
-  const allMedium = allMediumData || [];
+  useEffect(() => {
+    // Filter boards based on academic year ID from edit data
+    setBoards(currentYear?.boards);
+    const board = boards?.find((item: any) => item.id === selectedBoard);
+    setMediums((board as unknown as Board)?.educationMediums || []);
+  }, [boards, currentYear?.boards, selectedBoard]);
 
   const actions = ({ row, popover }: any) => (
     <MenuList>
@@ -62,30 +64,28 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
       <Box sx={{ display: 'flex', gap: 2, ml: 1 }}>
         <CustomSelect
           label="Board"
-          name="board"
-          options={allBoard}
-          valueKey="name"
+          options={boards || []}
           labelKey="name"
-          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
-          value={board}
+          valueKey="id"
+          value={selectedBoard}
           onChange={(value) => {
-            setBoard(value as string);
+            setSelectedBoard(value as string);
+            setSelectedMedium('');
           }}
+          formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
         <CustomSelect
-          options={allMedium}
-          value={medium}
-          onChange={(val) => {
-            setMedium(val as string);
-          }}
-          disabled={!board}
           label="Medium"
-          valueKey="name"
+          options={mediums || []}
           labelKey="name"
+          disabled={!selectedBoard}
+          valueKey="id"
+          value={selectedMedium}
+          onChange={(value) => setSelectedMedium(value as string)}
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
       </Box>
-      {medium && (
+      {selectedMedium && (
         <CustomizableTable
           tableId="fee-collection-table"
           noDataText={
@@ -119,15 +119,23 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               minWidth: '200px',
               sticky: true,
               render: (value, row) => (
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Avatar src={row.avatarUrl} alt={row.name} sx={{ width: 32, height: 32 }} />
-                  <Typography variant="body2">{row.name}</Typography>
-                </Box>
+                <Typography variant="caption" fontSize="13px">
+                  {value || '-'} ({row.grNumber})
+                </Typography>
               ),
             },
-            { id: 'className', label: 'Class', isFilter: true, align: 'left', minWidth: '90px' },
-            { id: 'division', label: 'Division', isFilter: true, align: 'left', minWidth: '90px' },
-            { id: 'grNumber', label: 'GR No.', align: 'left', isFilter: true, minWidth: '90px' },
+            {
+              id: 'className',
+              label: 'Class/Div',
+              isFilter: true,
+              align: 'left',
+              minWidth: '90px',
+              render: (value, row) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value || '-'}-{row.division}
+                </Typography>
+              ),
+            },
             {
               id: 'rollNumber',
               label: 'Roll No.',
