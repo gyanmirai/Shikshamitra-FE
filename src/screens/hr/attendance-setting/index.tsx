@@ -4,9 +4,8 @@ import { Add } from '@mui/icons-material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
-import { Tab, Box, Card, Button } from '@mui/material';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { Tab, Box, Paper, Button } from '@mui/material';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
@@ -133,7 +132,7 @@ const HrAttendanceSettingScreen = () => {
   //   dialog.onFalse();
   // };
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Setting"
         links={[
@@ -141,11 +140,11 @@ const HrAttendanceSettingScreen = () => {
           { name: 'Attendance & Leave', href: `/hr/attendance-setting` },
           { name: 'Setting' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={renderButton[searchParams?.tab as keyof typeof renderButton]}
         description="Configure attendance settings including shift management, leave types, and leave policies for effective workforce management"
       />
-      <Card
+      <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
@@ -169,7 +168,7 @@ const HrAttendanceSettingScreen = () => {
             <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
-      </Card>
+      </Paper>
       <FormSlider
         steps={TABS}
         isBackClick={isBackClick}
@@ -177,10 +176,11 @@ const HrAttendanceSettingScreen = () => {
         containerProps={{
           sx: {
             p: 0,
+            minHeight: 0,
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Box sx={{ height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               attendanceRuleDialog={attendanceRuleDialog}
@@ -191,7 +191,7 @@ const HrAttendanceSettingScreen = () => {
               // setSearchParams={setSearchParams}
             />
           )}{' '}
-        </Scrollbar>
+        </Box>
       </FormSlider>
     </Box>
   );

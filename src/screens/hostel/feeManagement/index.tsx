@@ -45,7 +45,7 @@ const HostelfeeManagement = () => {
           { name: 'Fee Management', href: '' },
           { name: 'Fee Collection', href: '' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <Button
             onClick={() => {

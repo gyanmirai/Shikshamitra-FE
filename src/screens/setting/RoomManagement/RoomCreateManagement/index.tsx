@@ -99,7 +99,7 @@ const RoomCreateManagement = () => {
           { name: 'Rooms Management', href: '/academic/curriculumSubjects' },
           { name: 'Room Management' },
         ]}
-        sx={{ px: 1, mb: 1 }}
+        sx={{ mb: 1 }}
         action={
           <Button
             variant="contained"

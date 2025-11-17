@@ -188,7 +188,7 @@ const AdmissionScreen = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Admission"
         links={[
@@ -196,13 +196,10 @@ const AdmissionScreen = () => {
           { name: 'Student Enrollment', href: '/student/enrollment/admission/' },
           { name: 'Admission' },
         ]}
-        sx={{ mb: 2 }}
+        sx={{ mb: 1 }}
         description="Manage students admissions, review applications and approve or reject them as needed."
       />
-      <Paper
-        elevation={2}
-        sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, py: 1, mb: 2 }}
-      >
+      <Paper elevation={2} sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, py: 1 }}>
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}

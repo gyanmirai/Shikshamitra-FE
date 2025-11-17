@@ -22,21 +22,8 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import { Box, Chip, Stack, Avatar, Button, Divider, TextField, Typography } from '@mui/material';
 import { useGetAttendanceByFilterQuery } from 'src/redux/student/take-attendance/take-attendace-api';
-import {
-  Box,
-  Chip,
-  Grid,
-  Paper,
-  Stack,
-  Avatar,
-  Button,
-  Divider,
-  Tooltip,
-  TextField,
-  Typography,
-  IconButton,
-} from '@mui/material';
 
 const TakeAttendanceScreen = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -144,7 +131,7 @@ const TakeAttendanceScreen = () => {
   );
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Mark Attendance"
         links={[
@@ -152,7 +139,7 @@ const TakeAttendanceScreen = () => {
           { name: 'Attendance', href: '/student/attendance/dashboard/' },
           { name: 'Mark Attendance' },
         ]}
-        sx={{ px: 1, mb: 1 }}
+        sx={{ mb: 1 }}
         description="Quickly record student attendance: Choose the date, then simply mark each student as Present or Absent."
       />
       <Box display="flex" gap={2} flexWrap="wrap" sx={{ mb: 1, pt: 1 }}>
@@ -425,131 +412,16 @@ const TakeAttendanceScreen = () => {
         </Box>
       </Box>
 
-      <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {view === 'list' ? (
-          <ListView
-            isSaved={isSaved}
-            data={studentData}
-            setStudentData={setStudentData}
-            isLoading={isLoading}
-          />
-        ) : (
-          <Box sx={{ flex: 1, overflow: 'auto' }}>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              {studentData.map((student: any) => (
-                <AttendanceCard
-                  key={student.id}
-                  student={student}
-                  setStudentData={setStudentData}
-                />
-              ))}
-            </Grid>
-          </Box>
-        )}
-      </Box>
+      <ListView
+        isSaved={isSaved}
+        data={studentData}
+        setStudentData={setStudentData}
+        isLoading={isLoading}
+      />
     </Box>
   );
 };
 export default TakeAttendanceScreen;
-
-const AttendanceCard = ({ student: studentAttendanceData, setStudentData }: any) => (
-  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-    <Paper
-      elevation={3}
-      sx={{
-        width: '100%',
-
-        borderLeft: (theme) =>
-          `4px solid ${!studentAttendanceData.isPresent ? theme.palette.error.main : theme.vars.palette.success.main}`,
-        cursor: 'pointer',
-        background: (theme) =>
-          !studentAttendanceData.isPresent
-            ? varAlpha(theme.vars.palette.error.mainChannel, 0.05)
-            : varAlpha(theme.vars.palette.success.mainChannel, 0.05),
-      }}
-    >
-      <Box display="flex" gap={1} p={1.5} alignItems="center">
-        <Box
-          sx={{
-            width: '100px',
-            height: '100px',
-
-            '& img': { width: '100%', height: '100%', objectFit: 'cover' },
-          }}
-        >
-          <img
-            src={convertBase64Format(studentAttendanceData?.student?.profilePicture)}
-            alt="Student"
-            style={{ borderRadius: '50%' }}
-          />
-        </Box>
-        <Box flexGrow={1} ml={1} gap={0.5}>
-          <Typography variant="h6">{studentAttendanceData?.name}</Typography>
-          <Typography variant="body2">
-            <Label color="info" sx={{ fontSize: 15 }}>
-              Roll No :- {studentAttendanceData?.student?.rollNo}
-            </Label>
-          </Typography>
-          <Typography variant="body2">
-            Class: {studentAttendanceData?.student?.standard?.name}
-          </Typography>
-          <Typography variant="body2">
-            Division: {studentAttendanceData?.student?.division?.name}
-          </Typography>
-        </Box>
-        {/* <Box> */}
-        <Tooltip title="Present">
-          <IconButton
-            color="success"
-            aria-label="mark present"
-            onClick={() => {
-              setStudentData((studentData: any) =>
-                studentData.map((item: any) =>
-                  item.id === studentAttendanceData.id ? { ...item, isPresent: true } : item
-                )
-              );
-            }}
-          >
-            <CheckCircleOutlined />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Absent">
-          <IconButton
-            color="error"
-            aria-label="mark absent"
-            onClick={() => {
-              setStudentData((studentData: any) =>
-                studentData.map((item: any) =>
-                  item.id === studentAttendanceData.id ? { ...item, isPresent: false } : item
-                )
-              );
-            }}
-          >
-            <CancelOutlined />
-          </IconButton>
-        </Tooltip>{' '}
-        {/* </Box> */}
-      </Box>
-      <Box p={2} sx={{ transition: 'all 0.3s ease-in-out' }}>
-        <TextField
-          size="small"
-          label="Remarks"
-          fullWidth
-          multiline
-          rows={2}
-          value={studentAttendanceData?.remarks}
-          onChange={(e) => {
-            setStudentData((studentData: any) =>
-              studentData.map((item: any) =>
-                item.id === studentAttendanceData.id ? { ...item, remarks: e.target.value } : item
-              )
-            );
-          }}
-        />
-      </Box>
-    </Paper>
-  </Grid>
-);
 
 const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

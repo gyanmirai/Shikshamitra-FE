@@ -56,7 +56,7 @@ const Reports = (props: TabComponentType) => {
           { name: 'Syllabus', href: '/academic/courseSubjects' },
           { name: 'Reports' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 1 }}
       />
       {/* Formik form wrapper for handling form state and validation */}
       <Formik

@@ -113,7 +113,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   );
 
   return (
-    <Box>
+    <>
       <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
         <Tabs
           value={tabs.value}
@@ -312,7 +312,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           </Button>
         }
       />
-    </Box>
+    </>
   );
 };
 

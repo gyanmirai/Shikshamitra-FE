@@ -223,7 +223,7 @@ const LibraryMemberManagementScreen = () => {
             <CustomBreadcrumbs
               heading="Member Management"
               links={[{ name: 'Library' }, { name: 'Member Management' }]}
-              sx={{ px: 1, mb: 2 }}
+              sx={{ mb: 2 }}
             />
             <CommonCtaComponent
               bookHandler={() => setOpen(true)}

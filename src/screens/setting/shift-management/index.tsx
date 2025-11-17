@@ -88,7 +88,7 @@ const ShiftManageMentScreen = () => {
       <CustomBreadcrumbs
         heading="Shift Management"
         links={[{ name: 'Institute Setup' }, { name: 'Shift Management' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         isBack={open.value}
         onBack={() => {
           setEditData(null);

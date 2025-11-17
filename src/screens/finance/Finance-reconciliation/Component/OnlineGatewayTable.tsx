@@ -31,7 +31,7 @@ const OnlineGatewayTable = () => {
   });
 
   return (
-    <Box>
+    <>
       <CustomizableTable
         tableId="online-gateway-table"
         columns={[
@@ -245,7 +245,7 @@ const OnlineGatewayTable = () => {
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
-    </Box>
+    </>
   );
 };
 

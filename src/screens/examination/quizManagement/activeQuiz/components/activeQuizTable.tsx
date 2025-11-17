@@ -116,7 +116,7 @@ const QuizTable = ({
   );
 
   return (
-    <Box>
+    <>
       {/* Tabs Section */}
       <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
         <Tabs
@@ -450,7 +450,7 @@ const QuizTable = ({
       >
         <StudentSubmissions />
       </CustomDialog>
-    </Box>
+    </>
   );
 };
 

@@ -27,7 +27,7 @@ const SecurityReportsScreen = () => {
       <CustomBreadcrumbs
         heading="Reports"
         links={[{ name: 'Security' }, { name: 'Reports' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
 
       <form onSubmit={formik.handleSubmit}>

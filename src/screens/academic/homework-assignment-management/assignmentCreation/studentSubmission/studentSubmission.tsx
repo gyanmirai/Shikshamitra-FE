@@ -182,7 +182,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   };
 
   return (
-    <Box>
+    <>
       <CustomizableTable
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents?.length > 0}
@@ -419,6 +419,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           <AssignMarksForText data={selectedStudent} onClose={handleClose} isEdit />
         )}
       </CustomDialog>
-    </Box>
+    </>
   );
 };

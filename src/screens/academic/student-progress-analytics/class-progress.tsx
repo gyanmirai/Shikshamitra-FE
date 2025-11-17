@@ -68,7 +68,7 @@ const ClassProgress = (props: TabComponentType) => {
           { name: 'Student Progress Analytics' },
           { name: 'Class Progress' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Grid container spacing={3}>
         <Grid size={{ xs: 12 }}>

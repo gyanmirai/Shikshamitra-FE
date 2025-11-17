@@ -17,7 +17,7 @@ const NotificationSetting = (props: TabComponentType) => (
         { name: 'Settings' },
         { name: 'Notification Settings' },
       ]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
       <Grid container spacing={2}>

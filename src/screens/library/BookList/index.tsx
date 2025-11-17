@@ -171,7 +171,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
                   },
                 },
               ]}
-              sx={{ px: 1, mb: 2 }}
+              sx={{ mb: 2 }}
               action={
                 <Button
                   startIcon={<Add />}

@@ -1,9 +1,8 @@
 'use client';
 
-import { Box, Tab, Card } from '@mui/material';
+import { Box, Tab, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -66,7 +65,7 @@ const StudentNotificationTabScreen = () => {
   const [isBackClick, setIsBackClick] = useState(false);
 
   return (
-    <Box sx={{ height: '100%' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Breadcrumbs */}
       {dialog?.value ? (
         <CustomBreadcrumbs
@@ -80,7 +79,7 @@ const StudentNotificationTabScreen = () => {
           onBack={() => {
             dialog.onFalse();
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -90,12 +89,12 @@ const StudentNotificationTabScreen = () => {
             { name: 'Student', href: '/student/enrollment/dashboard/' },
             { name: 'Notification Settings' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
       )}
 
       {/* Tabs Card - Hide when dialog is open */}
-      <Card
+      <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
@@ -126,7 +125,7 @@ const StudentNotificationTabScreen = () => {
             ))}
           </CustomTabs>
         )}
-      </Card>
+      </Paper>
 
       {/* Tab Content with Slider Animation */}
       <FormSlider
@@ -136,14 +135,15 @@ const StudentNotificationTabScreen = () => {
         containerProps={{
           sx: {
             p: 0,
+            minHeight: 0,
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Box sx={{ p: 1, height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component dialog={dialog} />
           )}
-        </Scrollbar>
+        </Box>
       </FormSlider>
     </Box>
   );

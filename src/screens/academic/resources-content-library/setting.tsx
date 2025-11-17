@@ -95,7 +95,7 @@ const Setting = (props: TabComponentType) => {
       <CustomBreadcrumbs
         heading="Settings"
         links={[{ name: 'Academics' }, { name: 'Resource Content Library' }, { name: 'Settings' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Grid container spacing={2} marginTop={1}>
         <Grid size={{ xs: 12, md: 6 }}>

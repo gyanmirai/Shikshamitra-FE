@@ -2,10 +2,9 @@
 
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import { Tab, Box, Card } from '@mui/material';
+import { Tab, Box, Paper } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -43,7 +42,7 @@ const MarksFeedbackHomeworkAssignment = () => {
   );
   const [isBackClick, setIsBackClick] = useState(false);
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Assessment & Feedback"
         description={
@@ -56,9 +55,9 @@ const MarksFeedbackHomeworkAssignment = () => {
           { name: 'Homework And Assignment', href: '/academic/homeworkCreation' },
           { name: 'Assessment & Feedback' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
-      <Card
+      <Paper
         sx={{
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
@@ -82,7 +81,7 @@ const MarksFeedbackHomeworkAssignment = () => {
             <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
           ))}
         </CustomTabs>
-      </Card>
+      </Paper>
       <FormSlider
         steps={TABS}
         isBackClick={isBackClick}
@@ -90,17 +89,18 @@ const MarksFeedbackHomeworkAssignment = () => {
         containerProps={{
           sx: {
             p: 0,
+            minHeight: 0,
           },
         }}
       >
-        <Scrollbar sx={{ p: 1 }}>
+        <Box sx={{ height: '100%' }}>
           {currentActiveComponent?.component && (
             <currentActiveComponent.component
               searchParams={searchParams}
               setSearchParams={setSearchParams}
             />
           )}{' '}
-        </Scrollbar>
+        </Box>
       </FormSlider>
     </Box>
   );

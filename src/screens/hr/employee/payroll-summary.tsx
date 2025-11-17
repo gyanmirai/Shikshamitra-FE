@@ -14,7 +14,7 @@ const PayrollSummary = ({ employee }: any) => {
   const [monthYear, setMonthYear] = useState<null | Dayjs>(dayjs());
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
         <DatePicker
           value={monthYear}
@@ -100,8 +100,9 @@ const PayrollSummary = ({ employee }: any) => {
           Email Payslip
         </Button>
       </Box>
+
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
           <Typography variant="h5">Earning Section</Typography>
           <CustomizableTable
             noDataText={<>No Data Found For Earning Section </>}
@@ -131,10 +132,11 @@ const PayrollSummary = ({ employee }: any) => {
               { employeeType: 'Academic Performance Bonus', amount: 3000, total: 3000 },
               { employeeType: 'Extra-curricular Activities', amount: 2000, total: 2000 },
             ]}
+            // wrapperProps={{ sx: { height: 'unset' } }}
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column' }}>
           <Typography variant="h5">Deductions Section</Typography>
           <CustomizableTable
             noDataText={<>No Data Found For Deduction </>}
@@ -164,6 +166,14 @@ const PayrollSummary = ({ employee }: any) => {
               { deductionType: 'Professional Tax', amount: 1000, totalDeduction: 1000 },
               { deductionType: 'Insurance Premium', amount: 1000, totalDeduction: 1000 },
             ]}
+            // wrapperProps={{
+            //   sx: {
+            //     height: 'unset',
+            //     '& > .MuiPaper-root': {
+            //       height: 'unset',
+            //     },
+            //   },
+            // }}
           />
         </Grid>
 

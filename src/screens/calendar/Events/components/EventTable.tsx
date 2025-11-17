@@ -10,7 +10,7 @@ import { RemoveCircle } from '@mui/icons-material';
 import React, { useMemo, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Tab, Tabs, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Paper, MenuList, MenuItem, Typography } from '@mui/material';
 import { EventStatus, EventStatusColor, EventStatusOptions } from 'src/enums/event-type';
 
 import type { IEventAnnouncement } from '../type';
@@ -114,9 +114,12 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
   );
 
   return (
-    <Box>
+    <>
       {/* Tabs */}
-      <Box display="flex" justifyContent="space-between" sx={{ mt: 1, mb: 2 }}>
+      <Paper
+        elevation={2}
+        sx={{ mt: 1, mb: 1, display: 'flex', justifyContent: 'space-between', p: 1 }}
+      >
         <Tabs
           value={tabs.value}
           onChange={tabs.onChange}
@@ -136,7 +139,7 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
             />
           ))}
         </Tabs>
-      </Box>
+      </Paper>
 
       {/* Table */}
       {tabs.value === 'All' ? (
@@ -345,7 +348,7 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
           ]}
         />
       )}
-    </Box>
+    </>
   );
 };
 

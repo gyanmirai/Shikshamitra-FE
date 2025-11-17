@@ -44,7 +44,7 @@ const CourseProgress = () => {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes, setDivision]);
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Custom breadcrumbs navigation component */}
       <CustomBreadcrumbs
         heading="Chapters Progress"
@@ -53,7 +53,7 @@ const CourseProgress = () => {
           { name: 'Class Management', href: '/classManagement/dashboard' },
           { name: 'Chapters Progress' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
       />
       {/* Class and Division selection filters */}
       <Box sx={{ display: 'flex', gap: 2 }}>

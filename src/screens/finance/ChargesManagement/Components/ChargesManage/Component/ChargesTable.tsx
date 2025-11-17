@@ -119,7 +119,7 @@ const ChargesTable = ({
   );
 
   return (
-    <Box>
+    <>
       <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
         <Tabs
           value={tabs.value}
@@ -272,7 +272,7 @@ const ChargesTable = ({
         ]}
         data={tableData || []}
       />
-    </Box>
+    </>
   );
 };
 

@@ -2,7 +2,6 @@ import type { LabelColor } from 'src/components/label';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import React from 'react';
-import { Box } from '@mui/material';
 import { Label } from 'src/components/label';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { LibraryBookStatus, LibraryBookStatusColors } from 'src/enums/library-book-status'; // Make sure this import path is correct
@@ -67,7 +66,7 @@ const BookIssueReturnTable = ({
   const isBackClick = false;
 
   return (
-    <Box>
+    <>
       {/* <Box display="flex" justifyContent="space-between" sx={{ mb: 1 }}>
         <Tabs
           value={tabValue}
@@ -172,7 +171,7 @@ const BookIssueReturnTable = ({
       />
       {/* </Scrollbar>
       </FormSlider> */}
-    </Box>
+    </>
   );
 };
 

@@ -6,9 +6,9 @@ import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
-import { Box, Tab, Tabs, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Tab, Tabs, Paper, Typography } from '@mui/material';
 import {
   HolidayStatus,
   HolidayStatusColor,
@@ -73,9 +73,9 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
   );
 
   return (
-    <Box>
+    <>
       {/* Tabs */}
-      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
+      <Paper elevation={2} sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', p: 1 }}>
         <Tabs
           value={tabs.value}
           onChange={tabs.onChange}
@@ -98,7 +98,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
             />
           ))}
         </Tabs>
-      </Box>
+      </Paper>
 
       {/* Table */}
       {tabs.value === 'All' ? (
@@ -425,7 +425,7 @@ const HolidayTable: React.FC<IHolidayTableProps> = ({
           data={tableData || []}
         />
       ) : null}
-    </Box>
+    </>
   );
 };
 

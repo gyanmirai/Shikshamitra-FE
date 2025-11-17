@@ -15,7 +15,7 @@ const ManageProcurementRequestScreenAdmin = () => (
         { name: 'Procurement & Vendors' },
         { name: 'Request Review & Approval' },
       ]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     <AdminProcurementRequestTable />
   </>

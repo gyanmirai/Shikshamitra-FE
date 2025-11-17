@@ -141,7 +141,7 @@ const FinanceChargeCategory = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Charge Category"
         description="This screen displays all created charge Category, helping the school manage additional fees or penalties that can be applied to students"

@@ -18,7 +18,8 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Add, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box ,
+import {
+  Box,
   Chip,
   Stack,
   Button,
@@ -60,7 +61,7 @@ const HrSetting = () => {
     [documents?.items]
   );
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
@@ -96,7 +97,7 @@ const HrSetting = () => {
           { name: 'Employee', href: '/hr/employee/' },
           { name: 'Setting' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
         description="Add, update or delete documents associated with an employee."
         action={
           <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue} size="small">

@@ -21,7 +21,7 @@ const Dashboard = (props: TabComponentType) => {
           { name: 'Student Progress Analytics' },
           { name: 'Dashboard' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Grid container spacing={3}>
         <StudentProgressCards />

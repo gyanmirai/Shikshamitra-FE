@@ -71,7 +71,7 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
   const bulkGradeDialog = useBoolean();
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box
         display="flex"
         sx={{
@@ -164,7 +164,7 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
           setTableData={() => {}}
         />
       )}
-    </>
+    </Box>
   );
 };
 

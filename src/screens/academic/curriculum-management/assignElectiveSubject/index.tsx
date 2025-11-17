@@ -101,7 +101,7 @@ const AssignElectiveSubject = () => {
           { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
           { name: 'Student Elective Assignment' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         {/* Left side - Selects */}

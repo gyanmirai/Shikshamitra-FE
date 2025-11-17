@@ -1,3 +1,4 @@
+import type React from 'react';
 import type { ButtonBaseProps } from '@mui/material/ButtonBase';
 import type { Theme, SxProps, CSSObject } from '@mui/material/styles';
 
@@ -62,8 +63,8 @@ export type NavListProps = {
   render?: NavItemBaseProps['render'];
   enabledRootRedirect?: NavItemStateProps['enabledRootRedirect'];
   isSubLayout?: boolean;
-  currentOpenMenu?: string;
-  setCurrentOpenMenu?: (val: string) => void;
+  currentOpenMenu?: { action: string; depth: number }[];
+  setCurrentOpenMenu?: React.Dispatch<React.SetStateAction<{ action: string; depth: number }[]>>;
 };
 
 export type NavSubListProps = Omit<NavListProps, 'data'> & {
@@ -75,7 +76,10 @@ export type NavGroupProps = Omit<NavListProps, 'data' | 'depth'> & {
   items: NavItemBaseProps[];
 };
 
-export type NavSectionProps = Omit<NavListProps, 'data' | 'depth'> & {
+export type NavSectionProps = Omit<
+  NavListProps,
+  'data' | 'depth' | 'currentOpenMenu' | 'setCurrentOpenMenu'
+> & {
   sx?: SxProps<Theme>;
   data: {
     subheader?: string;

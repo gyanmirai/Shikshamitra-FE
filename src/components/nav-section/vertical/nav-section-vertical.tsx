@@ -27,7 +27,7 @@ export function NavSectionVertical({
     ...overridesVars,
   };
 
-  const [currentOpenMenu, setCurrentOpenMenu] = useState('');
+  const [currentOpenMenu, setCurrentOpenMenu] = useState<{ action: string; depth: number }[]>([]);
 
   return (
     <Stack component="nav" className={navSectionClasses.vertical.root} sx={{ ...cssVars, ...sx }}>
@@ -59,8 +59,8 @@ function Group({
   slotProps,
   enabledRootRedirect,
   isSubLayout = false,
-  currentOpenMenu = '',
-  setCurrentOpenMenu = (val: string) => {},
+  currentOpenMenu,
+  setCurrentOpenMenu,
 }: NavGroupProps) {
   const [open, setOpen] = useState(true);
 

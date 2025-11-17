@@ -3,7 +3,6 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { Add } from '@mui/icons-material';
 import { useTabs } from 'src/hooks/use-tabs';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -13,10 +12,10 @@ import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Tab, Tooltip, Typography } from '@mui/material';
 import budgetData from 'src/json/finance/budget/budgetData.json';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Tab, Button, Tooltip, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import budgetExpenseData from 'src/json/finance/budget/budgetIncomeData.json';
@@ -214,11 +213,11 @@ const FinanceNewBudgetingScreen = () => {
   };
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Budgeting"
         links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Budgeting' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         description="The Budget screen provides an overview of income and expenses based on the selected tab. Easily track financial allocations and monitor spending for better financial planning."
       />
 
@@ -237,11 +236,11 @@ const FinanceNewBudgetingScreen = () => {
         ))}
       </CustomTabs>
 
-      <Box mt={2} mb={2} display="flex" justifyContent="flex-end">
+      {/* <Box mt={2} mb={2} display="flex" justifyContent="flex-end">
         <Button startIcon={<Add />} onClick={handleNewEntry} variant="contained" size="small">
           Budget
         </Button>
-      </Box>
+      </Box> */}
 
       <CustomizableTable
         noDataText={
@@ -301,7 +300,7 @@ const FinanceNewBudgetingScreen = () => {
           activeTab={tabs.value as string}
         />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 

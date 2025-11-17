@@ -128,7 +128,7 @@ const NotificationScreen = () => {
             { name: 'Notification' },
             { name: breadcrumbTabName },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
         {breadcrumbTabName !== 'Send Notification' &&
           breadcrumbTabName !== 'Send Alert to Others' &&

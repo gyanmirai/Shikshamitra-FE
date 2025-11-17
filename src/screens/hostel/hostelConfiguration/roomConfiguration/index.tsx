@@ -77,7 +77,7 @@ const RoomConfiguration = () => {
             : 'View and manage all hostel rooms. Add new rooms, update details, or delete them.'
         }
         links={links}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
         action={
           <Button
             size="small"

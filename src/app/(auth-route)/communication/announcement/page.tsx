@@ -1,5 +1,5 @@
 import React from 'react';
-import AnnouncementScreen from 'src/screens/communication/announcement/schoolWiseAnnounsement';
+import AnnouncementScreen from 'src/screens/communication/announcement';
 
 const Announcement = () => <AnnouncementScreen />;
 

@@ -25,7 +25,7 @@ const HeaderSection: React.FC<HeaderSectionProps> = ({
     <CustomBreadcrumbs
       heading={heading}
       links={[{ name: 'Student' }, { name: 'Auto Notification Configuration' }]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     <Box
       sx={{ mr: '15px', mb: '20px' }}

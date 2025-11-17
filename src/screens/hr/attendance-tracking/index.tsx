@@ -32,8 +32,8 @@ import {
 import {
   Box,
   Tab,
-  Card,
   Tabs,
+  Paper,
   Select,
   MenuItem,
   Skeleton,
@@ -65,7 +65,7 @@ const AttendanceTrackingScreen = () => {
   const currentIndex = MAIN_TABS.findIndex((i) => i.value === searchParams.tab);
   const [isBackClick, setIsBackClick] = useState<boolean>(false);
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Attendance Tracking"
         links={[
@@ -73,14 +73,14 @@ const AttendanceTrackingScreen = () => {
           { name: 'Attendance & Leave', href: `/hr/attendance-tracking/?tab=${searchParams.tab}` },
           { name: 'Attendance Tracking' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
         description="On the Attendance Tracking screen, you can view the attendance status of all employees, including who is present and who is absent on a specific date."
       />
       {role === 'Teacher' ? (
         <TeacherAttendanceTracking searchParams={searchParams} setSearchParams={setSearchParams} />
       ) : (
         <>
-          <Card>
+          <Paper>
             <CustomTabs
               value={searchParams.tab}
               onChange={(e, value) => {
@@ -97,7 +97,7 @@ const AttendanceTrackingScreen = () => {
                 <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
               ))}
             </CustomTabs>
-          </Card>
+          </Paper>
           <FormSlider
             steps={MAIN_TABS}
             isBackClick={isBackClick}
@@ -105,10 +105,11 @@ const AttendanceTrackingScreen = () => {
             containerProps={{
               sx: {
                 p: 0,
+                minHeight: 0,
               },
             }}
           >
-            <Box>
+            <Box sx={{ height: '100%' }}>
               {searchParams.tab === 'dateWise' ? (
                 <DateWise searchParams={searchParams} setSearchParams={setSearchParams} />
               ) : (
@@ -370,7 +371,7 @@ const DateWise = ({
   }, [medium?.educationMediumStages]);
 
   return (
-    <>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {' '}
       <Box
         display="flex"
@@ -382,7 +383,7 @@ const DateWise = ({
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 2,
+          mt: 1,
         }}
       >
         <FormControl sx={{ maxWidth: '268px', width: '100%' }}>
@@ -614,7 +615,7 @@ const DateWise = ({
           userList={selectedStudents}
         />
       )}
-    </>
+    </Box>
   );
 };
 

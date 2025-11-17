@@ -44,7 +44,7 @@ const ReportsScreen = () => {
         heading="Reports"
         description="Generate and filter payroll and employee reports by department, role, status, and other criteria."
         links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Reports' }]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
       <CustomTabs
         value={searchParams.tab}

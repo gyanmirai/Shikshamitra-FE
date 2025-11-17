@@ -48,7 +48,7 @@ const GroupManagement = () => {
             },
             { name: editingGroup ? 'Update Group' : 'Add Group' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           isBack
           onBack={() => {
             handleCloseDialog();
@@ -67,7 +67,7 @@ const GroupManagement = () => {
             },
             { name: viewingGroup.groupName || 'Group Details' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           isBack
           onBack={handleCloseView}
         />

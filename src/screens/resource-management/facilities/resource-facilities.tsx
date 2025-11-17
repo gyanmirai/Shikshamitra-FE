@@ -15,7 +15,7 @@ const ResourceFacilities = () => (
     <CustomBreadcrumbs
       heading="Classroom & Facilities"
       links={[{ name: 'Resource Management' }, { name: 'Classroom & Facilities' }]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     <Box display="flex" flexDirection="column" gap={3}>
       <ResourceFacilitiesCardSection />

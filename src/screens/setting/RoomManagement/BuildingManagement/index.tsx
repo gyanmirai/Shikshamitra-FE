@@ -193,7 +193,7 @@ const BuildingManagement = () => {
             { name: 'Rooms Management', href: '/academic/curriculumSubjects' },
             { name: 'Building Management', href: '/academic/curriculumSubjects' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 1, mb: 1 }}
         />
       ) : (
         <CustomBreadcrumbs

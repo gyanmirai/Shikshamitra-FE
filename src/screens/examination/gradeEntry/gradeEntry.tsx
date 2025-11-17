@@ -284,7 +284,7 @@ const GradeEntry = (props: TabComponentType) => {
   );
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Record Marks"
         description="Enter and manage student examination marks and grades"
@@ -293,7 +293,7 @@ const GradeEntry = (props: TabComponentType) => {
           { name: 'Examination', href: '/academic/scheduleExam' },
           { name: 'Record Marks' },
         ]}
-        sx={{ px: 1, mb: 2 }}
+        sx={{ px: 1, mb: 1 }}
         action={
           <Button
             variant="contained"
@@ -315,7 +315,7 @@ const GradeEntry = (props: TabComponentType) => {
           borderRadius: '8px',
           bgcolor: 'background.paper',
           boxShadow: 'var(--shadows-3)',
-          my: 2,
+          my: 1,
           p: 1,
           gap: 2,
         }}

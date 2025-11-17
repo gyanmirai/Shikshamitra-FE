@@ -10,7 +10,7 @@ const AdminBookingScreen = () => (
     <CustomBreadcrumbs
       heading="Booking Approval"
       links={[{ name: 'Resource Management' }, { name: 'Booking Approval' }]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     <AdminResourceTable />
   </>

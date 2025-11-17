@@ -36,6 +36,37 @@ import ViewChapterLogs from './components/viewChapterLogs';
 
 import type { ICourse, ICourseDetail, IUpdateProgressProps } from './type';
 
+const EndToolTip = () => (
+  <CustomTooltip
+    sx={{ textAlign: 'left' }}
+    arrow
+    title={
+      <Box display="flex" flexDirection="column" gap={0.5}>
+        {/* Map through color indicators and their meanings */}
+        {[
+          { label: 'Red', color: 'error.main', text: 'Due within 7 days' },
+          { label: 'Yellow', color: 'warning.main', text: 'Due within 30 days' },
+          { label: 'Green', color: 'success.main', text: 'Due after 30 days' },
+          {
+            label: 'Black',
+            color: 'text.primary',
+            text: 'Completed Successfully',
+          },
+        ].map(({ label, color, text }) => (
+          <Box key={label} display="flex">
+            <Box component="span" sx={{ color, minWidth: 50, fontWeight: 500 }}>
+              {label} :
+            </Box>
+            <Typography variant="caption">{text}</Typography>
+          </Box>
+        ))}
+      </Box>
+    }
+  >
+    <Iconify icon="eva:info-outline" width={20} position="relative" sx={{ pt: 0.7 }} />
+  </CustomTooltip>
+);
+
 const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
   const [courses, setCourses] = useState<ICourse[]>(courseData);
 
@@ -118,39 +149,9 @@ const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
    * Renders a tooltip component showing color-coded deadline indicators
    * Used to explain the meaning of different colors in the timeline
    */
-  const EndToolTip = () => (
-    <CustomTooltip
-      sx={{ textAlign: 'left' }}
-      arrow
-      title={
-        <Box display="flex" flexDirection="column" gap={0.5}>
-          {/* Map through color indicators and their meanings */}
-          {[
-            { label: 'Red', color: 'error.main', text: 'Due within 7 days' },
-            { label: 'Yellow', color: 'warning.main', text: 'Due within 30 days' },
-            { label: 'Green', color: 'success.main', text: 'Due after 30 days' },
-            {
-              label: 'Black',
-              color: 'text.primary',
-              text: 'Completed Successfully',
-            },
-          ].map(({ label, color, text }) => (
-            <Box key={label} display="flex">
-              <Box component="span" sx={{ color, minWidth: 50, fontWeight: 500 }}>
-                {label} :
-              </Box>
-              <Typography variant="caption">{text}</Typography>
-            </Box>
-          ))}
-        </Box>
-      }
-    >
-      <Iconify icon="eva:info-outline" width={20} position="relative" sx={{ pt: 0.7 }} />
-    </CustomTooltip>
-  );
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '0' }}>
       {/* Grid of course cards showing progress */}
       <CourseCardsGrid courses={courses} handleCardDetails={handleCardDetails} />
 

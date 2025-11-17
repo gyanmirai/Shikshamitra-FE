@@ -69,7 +69,7 @@ const HouseSetting = () => {
     }
   };
   return (
-    <Box>
+    <Box sx={{ minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Setting"
         description="Student Inquiry: Captures and manages admission-related inquiries from prospective students or parents."
@@ -78,7 +78,7 @@ const HouseSetting = () => {
           { name: 'Student Records', href: '/student/overview/' },
           { name: 'Setting' },
         ]}
-        sx={{ mb: 2 }}
+        sx={{ mb: 1 }}
         action={
           <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
             House

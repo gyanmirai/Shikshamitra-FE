@@ -199,7 +199,7 @@ const LibraryTimingCreation = () => {
             Same as School Hours
           </Button>
         }
-        sx={{ px: 1, mb: 2 }}
+        sx={{ mb: 2 }}
       />
 
       <Box sx={{ px: 1, overflow: 'auto', flex: 1 }}>

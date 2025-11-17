@@ -103,7 +103,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
             },
             { name: editingAnnouncement ? 'Update Announcement' : 'Add Announcement' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           isBack
           onBack={() => {
             handleCloseDialog(null, false);
@@ -118,7 +118,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
             { name: 'Announcements' },
             { name: 'Class Announcement' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           action={
             <Button
               size="small"

@@ -19,7 +19,7 @@ const SettingAnnouncement = (props: TabComponentType) => (
         { name: 'Settings' },
         { name: 'Setting Announcement' },
       ]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
     />
     {/* Component for managing announcement categories */}
     <AnnouncementCategory />

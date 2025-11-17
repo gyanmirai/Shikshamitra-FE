@@ -50,7 +50,7 @@ const TransportNotificationScreen = () => {
         <CustomBreadcrumbs
           heading="Notification Settings"
           links={[{ name: 'HR' }, { name: 'Notification Settings' }]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
         />
         {/* <Button startIcon={<Iconify icon="eva:arrow-back-fill" />} size="small" variant='contained' onClick={closeHandler}>Back</Button> */}
       </Box>

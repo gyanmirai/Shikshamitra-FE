@@ -156,7 +156,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
             { name: 'Fee Structure' },
           ]}
           description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
-          sx={{ px: 1, mb: 2 }}
+          sx={{ mb: 2 }}
           isBack
           onBack={() => {
             onClose(null, false);

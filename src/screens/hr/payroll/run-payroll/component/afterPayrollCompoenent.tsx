@@ -12,7 +12,7 @@ const AfterPayrollComponent = () => (
     <CustomBreadcrumbs
       heading="Run Payroll"
       links={[{ name: 'HR/Staff' }, { name: 'Payroll' }, { name: 'Run Payroll' }]}
-      sx={{ px: 1, mb: 2 }}
+      sx={{ mb: 2 }}
       description="Use this section to process monthly payroll for employees. Select the year, month, and organization to view and verify payroll details, generate reports, and perform actions like sending salary slips, downloading bank formats, and marking payments as completed."
     />
     <Card sx={{ p: 2 }}>

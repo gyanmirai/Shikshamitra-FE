@@ -1,5 +1,5 @@
 import type { Dayjs } from 'dayjs';
-import type { TableRowProps, TextFieldProps, TableContainerProps } from '@mui/material';
+import type { BoxProps, TableRowProps, TextFieldProps, TableContainerProps } from '@mui/material';
 
 // Add this interface to your existing interfaces
 export interface IColumnFilterAnchor {
@@ -57,6 +57,7 @@ export interface ICustomizableTableProps {
   onSendNotification?: (data: any) => void;
   searchFieldProps?: TextFieldProps;
   noDataText?: React.ReactNode;
+  wrapperProps?: BoxProps;
 }
 
 export type IParams = {

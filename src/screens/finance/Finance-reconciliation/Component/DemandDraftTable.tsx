@@ -35,7 +35,7 @@ const DemandDraftTable = () => {
   });
 
   return (
-    <Box>
+    <>
       <CustomizableTable
         isLoading={isLoading}
         noDataText={<>No Demand Draft Data Available </>}
@@ -230,7 +230,7 @@ const DemandDraftTable = () => {
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>
-    </Box>
+    </>
   );
 };
 
