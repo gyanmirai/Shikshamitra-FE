@@ -1,13 +1,41 @@
-import { useRef, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
+import { Tooltip, IconButton } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
-const ZoomAndDrag = ({ children, maxScale = 3, minScale = 0.2, zoomFactor = 0.1 }: any) => {
+interface ZoomAndDragProps {
+  children: React.ReactNode;
+  maxScale?: number; // upper zoom bound
+  minScale?: number; // lower zoom bound
+  zoomFactor?: number; // delta per wheel notch
+  initialScale?: number; // starting scale (defaults 0.5)
+  showReset?: boolean; // show or hide reset control
+  onReset?: () => void; // callback after reset
+  enableKeyboardReset?: boolean; // press 'r' to reset
+  animatedReset?: boolean; // animate transform on reset
+}
+
+const ZoomAndDrag = ({
+  children,
+  maxScale = 3,
+  minScale = 0.2,
+  zoomFactor = 0.1,
+  initialScale: initialScaleProp = 0.5,
+  showReset = true,
+  onReset,
+  enableKeyboardReset = true,
+  animatedReset = true,
+}: ZoomAndDragProps) => {
   const containerRef = useRef(null);
-  const [scale, setScale] = useState(0.8);
+  // Sanitize initial scale within bounds
+  const sanitizedInitialScale = Math.min(Math.max(initialScaleProp, minScale), maxScale);
+  const initialScaleRef = useRef(sanitizedInitialScale);
+  const [scale, setScale] = useState(sanitizedInitialScale);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastMousePosition, setLastMousePosition] = useState({ x: 0, y: 0 });
   const theme = useTheme();
+  const [isResetting, setIsResetting] = useState(false);
 
   // Handle zoom on wheel
   const handleWheel = (event: any) => {
@@ -47,6 +75,33 @@ const ZoomAndDrag = ({ children, maxScale = 3, minScale = 0.2, zoomFactor = 0.1 
     setIsDragging(false);
   };
 
+  // Reset to default top-center position and initial scale
+  const handleReset = useCallback(() => {
+    setIsResetting(true);
+    setScale(initialScaleRef.current);
+    setPosition({ x: 0, y: 0 });
+    onReset?.();
+    // Allow transition to play then clear flag
+    setTimeout(() => setIsResetting(false), 220);
+  }, [onReset]);
+
+  // Key listener for 'r' reset when enabled
+  useEffect(() => {
+    if (!enableKeyboardReset) return;
+    const listener = (e: KeyboardEvent) => {
+      if (e.key === 'r' || e.key === 'R') {
+        handleReset();
+      } else if (e.key === 'Escape') {
+        setIsDragging(false);
+      }
+    };
+    window.addEventListener('keydown', listener);
+    // eslint-disable-next-line
+    return () => {
+      window.removeEventListener('keydown', listener);
+    };
+  }, [enableKeyboardReset, handleReset]);
+
   return (
     <div
       ref={containerRef}
@@ -56,8 +111,9 @@ const ZoomAndDrag = ({ children, maxScale = 3, minScale = 0.2, zoomFactor = 0.1 
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       role="presentation"
+      // Container keydown: only escape handling if keyboard reset disabled
       onKeyDown={(e) => {
-        if (e.key === 'Escape') {
+        if (!enableKeyboardReset && e.key === 'Escape') {
           setIsDragging(false);
         }
       }}
@@ -72,11 +128,40 @@ const ZoomAndDrag = ({ children, maxScale = 3, minScale = 0.2, zoomFactor = 0.1 
         justifyContent: 'center',
       }}
     >
+      {showReset && (
+        <div
+          role="presentation"
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            zIndex: 10,
+            display: 'flex',
+          }}
+          // Prevent initiating drag when clicking the button
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <Tooltip title="Reset view (R)" placement="left" arrow>
+            <IconButton size="small" onClick={handleReset} aria-label="reset view">
+              <RefreshIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </div>
+      )}
       <div
         style={{
-          transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-          transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+          // Position child at top-center by default; drag offsets adjust via position state
+          left: '50%',
+          top: 0,
           position: 'absolute',
+          transform: `translateX(-50%) translate(${position.x}px, ${position.y}px) scale(${scale})`,
+          transformOrigin: 'top center',
+          transition: isDragging
+            ? 'none'
+            : animatedReset || isResetting
+              ? 'transform 0.2s ease-out'
+              : 'transform 0.1s ease-out',
         }}
       >
         {children}

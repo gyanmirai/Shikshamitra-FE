@@ -60,7 +60,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   );
 
   return (
-    <Box>
+    <>
       <Box sx={{ display: 'flex', gap: 2, ml: 1 }}>
         <CustomSelect
           label="Board"
@@ -224,7 +224,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           data={data || []} // Add fallback for data as well
         />
       )}
-    </Box>
+    </>
   );
 };
 

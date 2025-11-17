@@ -16,7 +16,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Button, TextField, DialogActions } from '@mui/material';
+import { Box, Button, Divider, TextField, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetPermissionsQuery,
@@ -273,23 +273,31 @@ const RoleForm = ({ handleClose, editData }: any) => {
   });
   return (
     <>
-      <DialogScrollContent>
-        <Box sx={{ display: 'flex', gap: 2, mb: 1, height: '100%', alignItems: 'center' }}>
-          <ShakingTextField error={formik.touched.role && !!formik.errors.role}>
-            <TextField
-              label="Role"
-              name="role"
-              size="small"
-              disabled={isSuccess}
-              value={formik.values.role}
-              onChange={formik.handleChange}
-              error={formik.touched.role && !!formik.errors.role}
-              helperText={(formik.touched.role && formik.errors.role) || ''}
-              sx={{ maxWidth: 300, width: '100%' }}
-              onBlur={formik.handleBlur}
-            />
-          </ShakingTextField>
-        </Box>
+      <DialogScrollContent
+        sx={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        scrollBarProps={{
+          sx: {
+            '& .simplebar-content': {
+              height: '100%',
+            },
+          },
+        }}
+      >
+        <ShakingTextField error={formik.touched.role && !!formik.errors.role}>
+          <TextField
+            label="Role Name"
+            name="role"
+            size="small"
+            disabled={isSuccess}
+            value={formik.values.role}
+            onChange={formik.handleChange}
+            error={formik.touched.role && !!formik.errors.role}
+            helperText={(formik.touched.role && formik.errors.role) || ''}
+            sx={{ maxWidth: 300, width: '100%' }}
+            onBlur={formik.handleBlur}
+          />
+        </ShakingTextField>
+        <Divider sx={{ mt: 1 }} />
         <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} />
       </DialogScrollContent>
       <DialogActions>

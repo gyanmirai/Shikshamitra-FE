@@ -3,14 +3,14 @@
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
 import { useGetUsersQuery } from 'src/redux/user/userApi';
 import { convertBase64Format } from 'src/utils/base64Formate';
-import { Box, Avatar, MenuList, MenuItem } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Avatar, Button, MenuList, MenuItem, DialogActions } from '@mui/material';
 
 import AssignModule from '../role/modules';
 import { AccessControlForm } from '../accessControl';
@@ -113,15 +113,26 @@ const UserManagementScreen = () => {
         ]}
       />
       <CustomDialog fullScreen title="Permissions" open={dialog.value} handleClose={dialog.onFalse}>
-        <Box>
+        <DialogScrollContent
+          sx={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+          scrollBarProps={{
+            sx: {
+              '& .simplebar-content': {
+                height: '100%',
+              },
+            },
+          }}
+        >
           <AssignModule />
-          {/* <DialogActions sx={{ flexShrink: 0 }}>
-            <Button onClick={dialog.onFalse}>Cancel</Button>
-            <Button type="submit" variant="contained">
-              Submit
-            </Button>
-          </DialogActions> */}
-        </Box>
+        </DialogScrollContent>
+        <DialogActions sx={{ flexShrink: 0 }}>
+          <Button size="small" onClick={dialog.onFalse}>
+            Cancel
+          </Button>
+          <Button size="small" type="submit" variant="contained">
+            Submit
+          </Button>
+        </DialogActions>
       </CustomDialog>
       <CustomDialog
         maxWidth="md"
