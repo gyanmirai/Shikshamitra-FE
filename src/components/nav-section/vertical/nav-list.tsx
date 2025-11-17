@@ -17,8 +17,8 @@ export function NavList({
   slotProps,
   enabledRootRedirect,
   isSubLayout = false,
-  currentOpenMenu = '',
-  setCurrentOpenMenu = (val: string) => {},
+  currentOpenMenu,
+  setCurrentOpenMenu,
 }: NavListProps) {
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');
@@ -29,54 +29,61 @@ export function NavList({
 
   const [openMenu, setOpenMenu] = useState(false);
 
-  useEffect(() => {
-    const recur = (menuData: NavListProps['data'][]): NavListProps['data'] | undefined =>
+  const recur = useCallback(
+    (menuData: NavListProps['data'][]): NavListProps['data'] | undefined =>
       menuData?.find(
         (i) => i.path === removeTrailingSlash || (i?.children?.length && recur(i?.children))
-      );
-    if (recur(data.children)) {
-      setOpenMenu(true);
-      setCurrentOpenMenu(data._action as string);
-    }
-
-    return () => {
-      setOpenMenu(false);
-    };
-  }, [data, removeTrailingSlash, setCurrentOpenMenu]);
-
-  const handleToggleMenu = useCallback(
-    (e: any) => {
-      if (data.children) {
-        setCurrentOpenMenu(currentOpenMenu === data._action ? '' : (data._action as string)); // setOpenMenu((prev) => !prev);
-      }
-    },
-    [data.children, data._action, setCurrentOpenMenu, currentOpenMenu]
+      ),
+    [removeTrailingSlash]
   );
+
+  useEffect(() => {
+    if (data.children && recur(data.children) && setCurrentOpenMenu) {
+      // Auto-open this menu if one of its descendants matches current path
+      setCurrentOpenMenu((prev) => {
+        if (prev.some((m) => m.action === data._action)) return prev; // already tracked
+        return [
+          ...prev.filter((m) => m.depth !== depth),
+          { action: data._action as string, depth },
+        ];
+      });
+    }
+  }, [data._action, data.children, recur, removeTrailingSlash, setCurrentOpenMenu, depth]);
+
+  const handleToggleMenu = () => {
+    if (!data.children || !setCurrentOpenMenu) return;
+    const isOpen = (currentOpenMenu || []).some((m) => m.action === data._action);
+    if (isOpen) {
+      setCurrentOpenMenu((prev) => prev.filter((m) => m.action !== data._action));
+    } else {
+      setCurrentOpenMenu((prev) => [
+        ...prev.filter((m) => m.depth !== depth),
+        { action: data._action as string, depth },
+      ]);
+    }
+  };
 
   // const handleCloseMenu = useCallback(() => {
   //   setOpenMenu(false);
   // }, []);
 
+  const isOpen = (currentOpenMenu || []).some((m) => m.action === data._action);
   const renderNavItem = (
     <NavItem
       render={render}
-      // slots
       path={data.path}
       icon={data.icon}
       info={data.info}
       title={data.title}
       caption={data.caption}
-      // state
-      depth={currentOpenMenu === data._action && !openMenu ? 2 : depth}
-      active={active || currentOpenMenu === data._action || openMenu}
+      depth={depth}
+      active={active || isOpen}
       disabled={data.disabled}
       hasChild={!!data.children}
-      open={data.children && currentOpenMenu === data._action}
+      open={isOpen}
       externalLink={isExternalLink(data?.path || '')}
       enabledRootRedirect={enabledRootRedirect}
-      // styles
-      slotProps={depth === 1 ? slotProps?.rootItem : slotProps?.subItem}
-      // actions
+      slotProps={data?.children ? slotProps?.rootItem : slotProps?.subItem}
       onClick={handleToggleMenu}
     />
   );
@@ -102,13 +109,7 @@ export function NavList({
       >
         {renderNavItem}
 
-        <NavCollapse
-          data-group={data.title}
-          in={currentOpenMenu === data._action}
-          depth={depth}
-          unmountOnExit
-          mountOnEnter
-        >
+        <NavCollapse data-group={data.title} in={isOpen} depth={depth} unmountOnExit mountOnEnter>
           <NavSubList
             data={data.children}
             render={render}
@@ -116,6 +117,8 @@ export function NavList({
             slotProps={slotProps}
             enabledRootRedirect={enabledRootRedirect}
             isSubLayout={isSubLayout}
+            currentOpenMenu={currentOpenMenu}
+            setCurrentOpenMenu={setCurrentOpenMenu}
           />
         </NavCollapse>
       </NavLi>
@@ -135,6 +138,8 @@ function NavSubList({
   slotProps,
   enabledRootRedirect,
   isSubLayout,
+  currentOpenMenu,
+  setCurrentOpenMenu,
 }: NavSubListProps) {
   return (
     <NavUl sx={{ gap: 'var(--nav-item-gap)' }}>
@@ -147,6 +152,8 @@ function NavSubList({
           slotProps={slotProps}
           enabledRootRedirect={enabledRootRedirect}
           isSubLayout={isSubLayout}
+          currentOpenMenu={currentOpenMenu}
+          setCurrentOpenMenu={setCurrentOpenMenu}
         />
       ))}
     </NavUl>

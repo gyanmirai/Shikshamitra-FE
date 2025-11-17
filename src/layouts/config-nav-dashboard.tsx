@@ -679,6 +679,22 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+A+C+3',
               disabled: !isDdvs,
             },
+            {
+              title: 'Settings',
+              path: '',
+              _action: 'academic-curriculum-settings',
+              shortcutKey: 'Alt+A+C+3',
+              shortcutKeyName: 'Alt+A+C+3',
+              children: [
+                {
+                  title: 'Academic Categories',
+                  path: '/academic/curriculum/settings/academic-categories',
+                  _action: 'academic-curriculum-settings-academic-categories',
+                  shortcutKey: 'Alt+A+C+4',
+                  shortcutKeyName: 'Alt+A+C+4',
+                },
+              ],
+            },
           ],
         },
         {
@@ -691,14 +707,14 @@ const academicModule = (isDdvs: boolean) => ({
             {
               title: 'Timetable Management',
               path: '/academic/newTimetable',
-              _action: 'timetable-schedule-management',
+              _action: 'New-timetable--management',
               shortcutKey: 'Alt+A+T+2',
               shortcutKeyName: 'Alt+A+T+2',
             },
             {
               title: 'Reports',
               path: '/academic/timetableReports',
-              _action: 'timetable-schedule-management',
+              _action: 'timetable-reports',
               shortcutKey: 'Alt+A+T+3',
               shortcutKeyName: 'Alt+A+T+3',
               disabled: !isDdvs,
