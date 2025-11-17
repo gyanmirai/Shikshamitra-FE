@@ -1,3 +1,5 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
@@ -5,6 +7,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -18,6 +21,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -31,13 +35,15 @@ import {
 
 import type { ISlot } from './type';
 
-const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
+const EntranceExamSlots = () => {
   // Dialog state for opening/closing modal
   // const dialog = useBoolean();
   // Dialog state for confirmation modal
   const confirm = useBoolean();
   // State to store data being edited
   const [editData, setEditData] = useState<ISlot | null>(null);
+  const entranceExamSlotsDialog = useBoolean();
+
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Redux dispatch
@@ -83,7 +89,28 @@ const EntranceExamSlots = ({ entranceExamSlotsDialog }: any) => {
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Entrance Exam Slots"
+        description="Manage entrance exam time slots by configuring student limits, room numbers, and schedules."
+        links={[
+          { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
+          { name: 'Settings' },
+          { name: 'Entrance Exam Slots' },
+        ]}
+        sx={{ mb: 2 }}
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Add />}
+            onClick={entranceExamSlotsDialog.onTrue}
+            variant="contained"
+            size="small"
+          >
+            Slot
+          </Button>
+        }
+      />
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {

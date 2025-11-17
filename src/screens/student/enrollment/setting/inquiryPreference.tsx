@@ -1,9 +1,12 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -15,6 +18,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -28,7 +32,7 @@ import {
 
 import type { IInquiryPreference } from './type';
 
-const InquiryPreference = ({ inquiryPreferenceDialog }: any) => {
+const InquiryPreference = () => {
   // Dialog state for add/edit inquiry preference form
   // const dialog = useBoolean();
   // Dialog state for delete confirmation
@@ -38,6 +42,7 @@ const InquiryPreference = ({ inquiryPreferenceDialog }: any) => {
   // Get the dispatch function from the Redux store
   const dispatch = useDispatch();
   const [editData, setEditData] = useState<null | IInquiryPreference>(null);
+  const inquiryPreferenceDialog = useBoolean();
 
   const { data: inquiryPreference, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -62,7 +67,28 @@ const InquiryPreference = ({ inquiryPreferenceDialog }: any) => {
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Inquiry Preference"
+        links={[
+          { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
+          { name: 'Settings' },
+          { name: 'Inquiry Preference' },
+        ]}
+        description="Manage how inquiries are received to optimize student admissions tracking."
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Add />}
+            onClick={inquiryPreferenceDialog.onTrue}
+            variant="contained"
+            size="small"
+          >
+            Inquiry Preference
+          </Button>
+        }
+        sx={{ mb: 2 }}
+      />
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
