@@ -1,6 +1,6 @@
 import React from 'react';
-import HRStaticNotificationScreen from 'src/screens/hr/hr-notification/hr-notification-screen';
+import HRNotificationScreen from 'src/screens/hr/hrNotification';
 
-const HrNotification = () => <HRStaticNotificationScreen />;
+const HrNotification = () => <HRNotificationScreen />;
 
 export default HrNotification;
