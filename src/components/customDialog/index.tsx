@@ -10,6 +10,8 @@ import { Box, Dialog, Divider, IconButton, Typography, DialogContent } from '@mu
 
 import { Scrollbar } from '../scrollbar';
 
+import type { ScrollbarProps } from '../scrollbar';
+
 type CustomDialogProps = Omit<DialogProps, 'title'> & {
   handleClose: (event?: {}, reason?: 'backdropClick' | 'escapeKeyDown') => void;
   title: React.ReactNode | string;
@@ -82,11 +84,12 @@ export default CustomDialog;
 
 export const DialogScrollContent = ({
   children,
+  scrollBarProps = {},
   ...props
-}: { children: React.ReactNode } & DialogContentProps) => {
+}: { children: React.ReactNode; scrollBarProps?: ScrollbarProps } & DialogContentProps) => {
   const ref = useRef<HTMLDivElement>(null);
   return (
-    <Scrollbar ref={ref}>
+    <Scrollbar ref={ref} {...scrollBarProps}>
       <DialogContent ref={ref} sx={{ p: 2 }} {...props}>
         {children}
       </DialogContent>

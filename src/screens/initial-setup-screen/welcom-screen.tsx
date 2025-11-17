@@ -1,5 +1,5 @@
 import React from 'react';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useTheme } from '@mui/material/styles';
 import { Box, Grid, List, ListItem, Typography, ListItemText } from '@mui/material';
 
@@ -59,17 +59,17 @@ const WelcomeScreen = ({ formik }: any) => {
         }}
       >
         <Box
-          component={m.div}
+          component={motion.div}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Typography variant="h3" component={m.h1} gutterBottom>
+          <Typography variant="h3" component={motion.h1} gutterBottom>
             Welcome to Gyanmirai
           </Typography>
 
           <Typography
-            component={m.div}
+            component={motion.div}
             variant="h5"
             sx={{ color: 'text.secondary', mb: 3 }}
             initial={{ opacity: 0, y: 20 }}
@@ -80,7 +80,7 @@ const WelcomeScreen = ({ formik }: any) => {
           </Typography>
 
           <List
-            component={m.div}
+            component={motion.div}
             sx={{ width: '100%' }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -114,39 +114,6 @@ const WelcomeScreen = ({ formik }: any) => {
                     </Box>{' '}
                     provide real-time insights into academic performance and institutional
                     efficiency.
-                  </Typography>
-                }
-              />
-            </ListItem>
-
-            <ListItem>
-              <ListItemText
-                primary={
-                  <Typography variant="body1">
-                    From{' '}
-                    <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>
-                      automated administrative tasks
-                    </Box>{' '}
-                    to{' '}
-                    <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>
-                      personalized learning paths
-                    </Box>
-                    , Gyanmirai combines cutting-edge technology with educational excellence.
-                  </Typography>
-                }
-              />
-            </ListItem>
-
-            <ListItem>
-              <ListItemText
-                primary={
-                  <Typography variant="body1">
-                    Get started by completing the initial setup process. Our{' '}
-                    <Box component="span" sx={{ color: 'primary.main', fontWeight: 700 }}>
-                      smart setup wizard
-                    </Box>{' '}
-                    will guide you through configuring your school&apos;s essential information and
-                    settings.
                   </Typography>
                 }
               />

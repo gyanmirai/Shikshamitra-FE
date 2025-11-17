@@ -1,6 +1,7 @@
 'use client';
 
 import type { StepIconProps } from '@mui/material';
+import type { LoadingButtonProps } from '@mui/lab';
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -67,6 +68,9 @@ interface CustomStepperWithFormikProps {
   onStepClick?: (index: number, label: string, formik: any) => void;
   errors?: boolean[];
   isDisabledLabel?: boolean;
+  showSaveButton?: boolean;
+  saveButtonProps?: LoadingButtonProps;
+  saveAndNextButtonProps?: LoadingButtonProps;
 }
 
 const CustomStepLabel = styled(StepLabel)(({ theme, error, isdisabledlabel }: any) => {
@@ -143,9 +147,13 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   validateOnChange = false,
   onSave = () => {},
   isDisabledLabel = false,
+  showSaveButton = true,
+  saveButtonProps = {},
+  saveAndNextButtonProps = {},
 }) => {
   const [isBackClick, setIsBackClick] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const formRef = React.useRef<HTMLFormElement>(null);
   const isSaveLoading = useBoolean();
   const formik = useFormik({
     initialValues,
@@ -201,15 +209,25 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           flex: 1,
           minHeight: 0, // Important for proper flex behavior
           position: 'relative',
+          height: '100%',
         }}
         onSubmit={formik.handleSubmit}
       >
         <Scrollbar
           sx={{
+            // Auto height behavior: when scrollbarHeight is 'auto' (default), we let flexbox
+            // consume all remaining space between the stepper header and the sticky action bar.
+            // If a specific height is provided, we honor it.
             flex: 1,
-            height: scrollbarHeight,
+            minHeight: 0, // ensures the Scrollbar can shrink properly inside flex container
             overflow: 'auto',
-            '& .simplebar-content': { height: '100%', display: 'flex', flexDirection: 'column' },
+            ...(scrollbarHeight !== 'auto' && scrollbarHeight ? { height: scrollbarHeight } : {}),
+            '& .simplebar-content': {
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '100%',
+              height: '100%',
+            },
           }}
         >
           {formik && renderItem({ formik, activeStep, isBackClick })}
@@ -219,7 +237,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
-            mt: 2,
+            // mt: 2,
             position: 'sticky',
             bottom: 0,
             backgroundColor: 'background.paper',
@@ -241,29 +259,32 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             Back
           </Button>
           <Box display="flex" gap={2}>
-            <LoadingButton
-              variant="outlined"
-              size="small"
-              loading={isSaveLoading.value}
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              onClick={async () => {
-                const error = await formik.validateForm();
-                formik.setTouched({});
+            {showSaveButton && (
+              <LoadingButton
+                variant="outlined"
+                size="small"
+                loading={isSaveLoading.value}
+                startIcon={<Iconify icon={GlobalIcons.submit} />}
+                onClick={async () => {
+                  const error = await formik.validateForm();
+                  formik.setTouched({});
 
-                if (Object.keys(error).length <= 0) {
-                  onSave?.(
-                    activeStep === steps.length - 1,
-                    formik.values,
-                    formik,
-                    isSaveLoading.setValue
-                  );
-                } else {
-                  formik.handleSubmit();
-                }
-              }}
-            >
-              Save
-            </LoadingButton>
+                  if (Object.keys(error).length <= 0) {
+                    onSave?.(
+                      activeStep === steps.length - 1,
+                      formik.values,
+                      formik,
+                      isSaveLoading.setValue
+                    );
+                  } else {
+                    formik.handleSubmit();
+                  }
+                }}
+                {...saveButtonProps}
+              >
+                Save
+              </LoadingButton>
+            )}
             <LoadingButton
               variant="contained"
               type="submit"
@@ -277,6 +298,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
                   <Iconify icon="ic:round-arrow-forward" width={20} />
                 ) : null
               }
+              {...saveAndNextButtonProps}
             >
               {activeStep === steps.length - 1 ? 'Submit' : 'Save & Next'}
             </LoadingButton>

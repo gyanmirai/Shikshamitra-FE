@@ -43,7 +43,15 @@ import { basicInformationvalidationSchema } from './validationSchema';
 
 import type { IFormValues, IImageSliderProps } from './type';
 
-const BasicInformationForm: React.FC<any> = ({ editData, handleClose }) => {
+interface IBasicinformatioFormProps {
+  editData?: any;
+  handleClose?: () => void;
+}
+
+export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
+  editData,
+  handleClose,
+}) => {
   const [addTenant, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddTenantMutation,

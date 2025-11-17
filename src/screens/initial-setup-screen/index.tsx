@@ -3,17 +3,16 @@
 import 'driver.js/dist/driver.css';
 
 import React from 'react';
-import { driver } from 'driver.js';
 import { styled } from '@mui/material/styles';
 import { Box, Paper, Container } from '@mui/material';
+import YearSetup from 'src/components/academic-setup/year-setup';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useUpdateTenantMutation } from 'src/redux/tenant/tenantApi';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import WelcomeScreen from './welcom-screen';
-import LogoSignature from './logo-signature';
-import InstituteSetup from './institute-setup';
 import { validationSchema } from './validation-schema';
+import { BasicInformationForm } from '../setting/basicInformationForm';
 import { FormSlider } from '../student/enrollment/register/register-form';
 
 /**
@@ -105,10 +104,10 @@ const CurrentComponent = (props: any): any => {
     return <WelcomeScreen {...props} />;
   }
   if (activeStep === 1) {
-    return <LogoSignature {...props} />;
+    return <BasicInformationForm />;
   }
   if (activeStep === 2) {
-    return <InstituteSetup {...props} />;
+    return <YearSetup />;
   }
   return null;
 };
@@ -170,32 +169,32 @@ const InitialSetupScreen = () => {
     2: {},
   };
 
-  React.useEffect(() => {
-    const driverConfig = driver({
-      allowClose: false,
-      showProgress: true,
-      animate: true,
-      showButtons: ['next', 'previous', 'close'],
-      popoverClass: 'driver-popover',
-      steps: stepToDriverConfig[activeStep as keyof typeof stepToDriverConfig],
-      // onNext: (step) => {
-      //   if (step.options.onNext) {
-      //     step.options.onNext();
-      //   }
-      // },
-      // onPrevious: (step) => {
-      //   if (step.options.onPrevious) {
-      //     step.options.onPrevious();
-      //   }
-      // },
-    });
+  // React.useEffect(() => {
+  //   const driverConfig = driver({
+  //     allowClose: false,
+  //     showProgress: true,
+  //     animate: true,
+  //     showButtons: ['next', 'previous', 'close'],
+  //     popoverClass: 'driver-popover',
+  //     steps: stepToDriverConfig[activeStep as keyof typeof stepToDriverConfig],
+  //     // onNext: (step) => {
+  //     //   if (step.options.onNext) {
+  //     //     step.options.onNext();
+  //     //   }
+  //     // },
+  //     // onPrevious: (step) => {
+  //     //   if (step.options.onPrevious) {
+  //     //     step.options.onPrevious();
+  //     //   }
+  //     // },
+  //   });
 
-    driverConfig.drive();
+  //   driverConfig.drive();
 
-    return () => {
-      driverConfig.destroy();
-    };
-  }, [activeStep]);
+  //   return () => {
+  //     driverConfig.destroy();
+  //   };
+  // }, [activeStep]);
 
   return (
     <Box sx={{ bgcolor: 'background.neutral' }}>
@@ -215,7 +214,8 @@ const InitialSetupScreen = () => {
             //   setActiveStep(index);
             // }
           }}
-          scrollbarHeight="90%"
+          showSaveButton={false}
+          scrollbarHeight="100%"
           initialValues={initialvalues[activeStep]}
           steps={steps}
           activeStep={activeStep}
@@ -234,7 +234,7 @@ const InitialSetupScreen = () => {
             }
           }}
           renderItem={({ activeStep: step, formik, isBackClick }: any) => (
-            <Box p={2} height="90%" width="100%">
+            <Box height="100%" width="100%">
               <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
                 <Paper
                   elevation={6}
