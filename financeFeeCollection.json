@@ -11,9 +11,9 @@
       "className": "10",
       "division": "A",
       "paybleFees": 300,
-      "totalFees": 50000,
-      "paidFees": 50000,
-      "pendingFees": 0,
+      "totalFees": 30000,
+      "paidFees": 4000,
+      "pendingFees": 26000,
       "overdueFees": 0,
       "status": 1,
       "terms": [
@@ -208,47 +208,99 @@
   "terms": [
     {
       "id": "1",
-      "name": "January 2025",
+      "name": "April 2025",
       "dueDate": "30-01-2025",
       "paid": 4000,
       "total": 10000,
+      "status": 1,
       "feeHeads": [
-        { "name": "Tuition Fee", "paid": 4000, "total": 4000, "status": 0 },
-        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 1 },
-        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 1 }
+        { "name": "Tuition Fee", "category": "Academic", "paid": 2667, "total": 2667, "status": 0 },
+        { "name": "Library Fee", "category": "Library", "paid": 0, "total": 2000, "status": 1 },
+        { "name": "Lab Fee", "category": "Laboratory", "paid": 0, "total": 2000, "status": 1 }
       ],
       "charges": [
-        { "name": "Late Fee", "paid": 500, "dueDate": "30-01-2025", "total": 500, "status": 0 },
-        { "name": "Sports Fee", "paid": 0, "dueDate": "30-01-2025", "total": 2000, "status": 1 },
-        { "name": "Technology Fee", "paid": 1000, "dueDate": "30-01-2025", "total": 1000, "status": 0 },
-        { "name": "Development Fee", "paid": 0, "dueDate": "30-01-2025", "total": 1500, "status": 1 }
+        { "name": "Late Fee", "category": "Penalty", "paid": 333, "dueDate": "30-01-2025", "total": 333, "status": 0 },
+        { "name": "Sports Fee", "category": "Sports", "paid": 333, "dueDate": "30-01-2025", "total": 1333, "status": 1 },
+        { "name": "Technology Fee", "category": "Technology", "paid": 667, "dueDate": "30-01-2025", "total": 667, "status": 0 },
+        { "name": "Development Fee", "category": "Development", "paid": 0, "dueDate": "30-01-2025", "total": 1000, "status": 1 }
       ]
     },
     {
       "id": "2",
-      "name": "February 2025",
+      "name": "May 2025",
       "dueDate": "28-02-2025",
       "paid": 0,
       "total": 10000,
+      "status": 1,
       "feeHeads": [
-        { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 1 },
-        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 1 },
-        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 1 }
+        { "name": "Tuition Fee", "category": "Academic", "paid": 0, "total": 4000, "status": 1 },
+        { "name": "Library Fee", "category": "Library", "paid": 0, "total": 3000, "status": 1 },
+        { "name": "Lab Fee", "category": "Laboratory", "paid": 0, "total": 3000, "status": 1 }
       ]
     },
     {
       "id": "3",
-      "name": "March 2025",
+      "name": "June 2025",
       "dueDate": "30-03-2025",
       "paid": 0,
       "total": 10000,
+      "status": 1,
       "feeHeads": [
-        { "name": "Tuition Fee", "paid": 0, "total": 4000, "status": 1 },
-        { "name": "Library Fee", "paid": 0, "total": 3000, "status": 1 },
-        { "name": "Lab Fee", "paid": 0, "total": 3000, "status": 1 }
+        { "name": "Tuition Fee", "category": "Academic", "paid": 0, "total": 4000, "status": 1 },
+        { "name": "Library Fee", "category": "Library", "paid": 0, "total": 3000, "status": 1 },
+        { "name": "Lab Fee", "category": "Laboratory", "paid": 0, "total": 3000, "status": 1 }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "March 2025",
+      "dueDate": "30-03-2025",
+      "paid": 10000,
+      "total": 10000,
+      "status": 0,
+      "feeHeads": [
+        { "name": "Tuition Fee", "category": "Academic", "paid": 4000, "total": 4000, "status": 0 },
+        { "name": "Library Fee", "category": "Library", "paid": 3000, "total": 3000, "status": 0 },
+        { "name": "Lab Fee", "category": "Laboratory", "paid": 3000, "total": 3000, "status": 0 }
+      ],
+      "charges": [
+        { "name": "Tech Fee", "category": "Technology", "paid": 500, "total": 500, "status": 0 }
+      ]
+    },
+    {
+      "id": "5",
+      "name": "February 2025",
+      "dueDate": "28-02-2025",
+      "paid": 10000,
+      "total": 10000,
+      "status": 0,
+      "feeHeads": [
+        { "name": "Tuition Fee", "category": "Academic", "paid": 4000, "total": 4000, "status": 0 },
+        { "name": "Library Fee", "category": "Library", "paid": 3000, "total": 3000, "status": 0 },
+        { "name": "Lab Fee", "category": "Laboratory", "paid": 3000, "total": 3000, "status": 0 }
+      ],
+      "charges": [
+        { "name": "Sports Fee", "category": "Sports", "paid": 1000, "total": 1000, "status": 0 }
+      ]
+    },
+     {
+      "id": "4",
+      "name": "January 2025",
+      "dueDate": "30-01-2025",
+      "paid": 10000,
+      "total": 10000,
+      "status": 0,
+      "feeHeads": [
+        { "name": "Tuition Fee", "category": "Academic", "paid": 4000, "total": 4000, "status": 0 },
+        { "name": "Library Fee", "category": "Library", "paid": 3000, "total": 3000, "status": 0 },
+        { "name": "Lab Fee", "category": "Laboratory", "paid": 3000, "total": 3000, "status": 0 }
+      ],
+      "charges": [
+        { "name": "Late Fee", "category": "Penalty", "paid": 500, "total": 500, "status": 0 }
       ]
     }
-  ],
+  ]
+,
   "paymentHistory": [
     {
       "receiptNo": "REC-2025-100",

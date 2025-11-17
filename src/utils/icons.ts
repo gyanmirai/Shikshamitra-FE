@@ -50,6 +50,7 @@ export const GlobalIcons = {
   lockIcon: 'mdi:lock-outline',
   archive: 'mdi:archive',
   printer: 'mdi:printer',
+  question: 'mdi:question-mark-circle-outline',
 };
 
 export const GlobalIconColors = {

@@ -1,9 +1,13 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import { Box } from '@mui/material';
+import { Box, Grid } from '@mui/material';
+import { Scrollbar } from 'src/components/scrollbar';
 
-import StudentInfoCard from './ViewStudentFeeDetails';
-import FinanceStudentDetailedFeeComponent from './FinanceStudentDetailedFeeComponent';
+import PaymentHistory from './ViewDetailsComponent/PaymentHistory';
+import FeeOverview from './ViewDetailsComponent/FeeOverviewDetails';
+import ConcessionsCard from './ViewDetailsComponent/concessionDetails';
+import { FeeTermAccordion } from './ViewDetailsComponent/FeeTermsViewDetails';
+import { StudentFeesSummaryView } from './ViewDetailsComponent/StudentFeesSummaryView';
 
 import type { IStudentFee } from './type';
 
@@ -16,40 +20,44 @@ const ViewFeeDetails = ({
   collectFeesDialog: UseBooleanReturn;
   viewDialog: UseBooleanReturn;
 }) => (
-  <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-    {student ? (
-      <Box>
-        <StudentInfoCard student={student} />
-        <FinanceStudentDetailedFeeComponent
-          studentId="12"
-          student={{
-            id: 1,
-            name: 'Dharmik Jinjala',
-            profileImage: '',
-            rollNumber: '01',
-            board: 'CBSE',
-            medium: 'English',
-            className: '10',
-            division: 'A',
-            totalFees: 50000,
-            paidFees: 30000,
-            pendingFees: 20000,
-            overdueFees: 5000,
-            status: 'Pending',
-            terms: [],
-            contactNumber: '+91 6355030866',
-            admissionDate: '01-04-2025',
-            grNumber: 'GR0036',
-            parentName: 'Laljibhai Jinjala',
-            email: 'dharmikjinjala2486@gmail.com',
-          }}
-          collectFeesDialog={collectFeesDialog}
-          viewDialog={viewDialog}
-        />
-      </Box>
-    ) : (
-      <Box data-testid="student-empty-state">No student selected</Box>
-    )}
+  <Box display="flex" flexDirection="column" height="100%">
+    <Scrollbar sx={{ height: '100%', p: 1.5 }}>
+      <Grid container spacing={2} mb={2}>
+        {/* Row 1 */}
+        {/* Left Side */}
+        <Grid size={{ xs: 12, md: 9 }}>
+          <Grid container direction="column" spacing={2}>
+            <Grid size={{ xs: 12 }}>
+              <StudentFeesSummaryView student={student} />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <FeeTermAccordion />
+            </Grid>
+          </Grid>
+        </Grid>
+
+        {/* Right Side */}
+        <Grid size={{ xs: 12, md: 3 }}>
+          <FeeOverview
+            total={50000}
+            paid={30000}
+            pending={15000}
+            overdue={5000}
+            concession={2000}
+          />
+        </Grid>
+
+        {/* Row 2 */}
+        <Grid size={{ xs: 12, md: 9 }}>
+          <PaymentHistory student={student} />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 3 }}>
+          <ConcessionsCard />
+        </Grid>
+      </Grid>
+    </Scrollbar>
   </Box>
 );
 export default ViewFeeDetails;

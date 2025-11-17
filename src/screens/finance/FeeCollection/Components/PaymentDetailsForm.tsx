@@ -7,11 +7,12 @@ import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { formatNumber } from 'src/utils/formate_number';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeTermsQuery } from 'src/redux/feeCollection/feeTerms';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Box, Card, Grid, MenuItem, TextField, Typography } from '@mui/material';
+import { Box, Card, Grid, Divider, MenuItem, TextField, Typography } from '@mui/material';
 
 import FeeTermsComponent from './FeeTermsComponent';
 import { paymentMethodsConfig } from './paymentConfigMethods';
@@ -22,6 +23,7 @@ export const buildInitialValues = () => {
   const initialValues: Record<string, any> = {
     selectedMethods: [],
     selectedTerms: [],
+    includeCharges: true,
     totalAmount: '',
     receivedAmount: '',
     notes: '',
@@ -228,24 +230,38 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
   });
 
   useEffect(() => {
-    if (formik.values.selectedTerms.length === 0) {
+    const { selectedTerms, includeCharges } = formik.values;
+
+    if (selectedTerms.length === 0) {
       formik.setFieldValue('totalAmount', '');
-    } else {
-      const amount = formik.values.selectedTerms.reduce(
-        (pre: number, items: any) => pre + (items.total - items.paid),
+      return;
+    }
+
+    const amount = selectedTerms.reduce((pre: number, term: any) => {
+      if (includeCharges) {
+        return pre + (term.total - (term.paid || 0));
+      }
+      // Only feeHeads when charges excluded
+      const feeHeadsTotal = term.feeHeads?.reduce(
+        (s: number, fh: any) => s + (fh.total - (fh.paid || 0)),
         0
       );
+      return pre + feeHeadsTotal;
+    }, 0);
 
-      formik.setFieldValue('totalAmount', amount === 0 ? '' : amount.toString());
-    }
+    formik.setFieldValue('totalAmount', amount === 0 ? '' : amount.toString());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.selectedTerms]);
+  }, [JSON.stringify(formik.values.selectedTerms), formik.values.includeCharges]);
 
   return (
     <Box display="flex" flexDirection="column">
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 6 }} mt={2} mb={2}>
+      <Grid container spacing={1}>
+        <Grid size={{ xs: 12 }} mt={1}>
+          <Divider />
+        </Grid>
+        <Grid size={{ xs: 4 }}>
           <FeeTermsComponent
+            formik={formik}
             terms={feeTermsData}
             selectedTerms={formik.values.selectedTerms}
             onTermSelect={(selectedTerms) => formik.setFieldValue('selectedTerms', selectedTerms)}
@@ -254,40 +270,36 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
           />
         </Grid>
 
-        <Grid size={{ xs: 6 }} mt={2} mb={2}>
+        <Grid size={{ xs: 8 }}>
           <Card
             sx={{
               p: 2,
-              borderRadius: 2,
-              boxShadow: 2,
+              borderRadius: 1,
+              boxShadow: 'var(--shadows-4)',
               bgcolor: theme.vars.palette.background.paper,
               height: '100%',
             }}
           >
-            <Scrollbar
-              sx={{
-                maxHeight: 'calc(100vh - 300px)', // adjust offset according to your header/footer
-                minHeight: 'auto',
-              }}
-            >
-              <Typography variant="h6" color="primary.main" fontWeight={600} mb={2}>
-                Payment Details
-              </Typography>
-
-              <Grid container spacing={3}>
+            <Typography variant="h6" color="primary.main">
+              Payment Details
+            </Typography>
+            <Scrollbar sx={{ height: '300px', p: 1 }}>
+              <Grid container spacing={3} pt={1}>
                 {/* Terms Selection Section */}
 
-                <Grid size={{ xs: 12 }}>
-                  <NumericFormatCustom
-                    fullWidth
-                    label="Total Payable Amount *"
-                    value={`₹${formik.values.totalAmount}`}
-                    disabled
-                    size="small"
-                  />
-                </Grid>
+                {formik.values.totalAmount && (
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.primary"
+                      sx={{ fontWeight: 500, lineHeight: 1.5 }}
+                    >
+                      Total Amount : <strong>₹ {formatNumber(formik.values.totalAmount)}</strong>
+                    </Typography>
+                  </Grid>
+                )}
 
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 8 }}>
                   <ShakingTextField
                     error={formik.touched.selectedMethods && Boolean(formik.errors.selectedMethods)}
                   >
@@ -296,6 +308,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                         value: method,
                         label: method.charAt(0).toUpperCase() + method.slice(1),
                       }))}
+                      disabled={!formik.values.totalAmount}
                       label="Payment Methods *"
                       value={formik.values.selectedMethods}
                       onChange={(value) => formik.setFieldValue('selectedMethods', value)}
@@ -317,11 +330,8 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                     <Box
                       key={method}
                       sx={{
-                        border: '1px solid #ddd',
-                        borderRadius: 2,
-                        mb: 0.5,
-                        p: 2,
                         overflow: 'hidden',
+                        mt: -2,
                       }}
                     >
                       <Typography variant="h6" color="primary.main">
@@ -500,6 +510,12 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                           )
                         )}
                       </Grid>
+                      <Divider
+                        sx={{
+                          mt: 2,
+                          borderWidth: 1,
+                        }}
+                      />
                     </Box>
                   </Grid>
                 ))}

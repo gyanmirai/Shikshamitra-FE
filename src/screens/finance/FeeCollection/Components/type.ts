@@ -94,11 +94,13 @@ export interface ITerm {
   dueDate: string;
   paid: number;
   total: number;
+  status: number;
   feeHeads: IFeeHead[];
   charges?: IFeeCharge[];
 }
 
 export interface ITermsToCollectProps {
+  formik: any;
   terms: ITerm[] | null; // Optional terms data
   selectedTerms: any[];
   onTermSelect: (selectedTerms: any[]) => void;
