@@ -2,10 +2,22 @@
 
 import React from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Grid, Card, Switch, Checkbox, TextField, Typography } from '@mui/material';
 
 const GeneralSettings = () => (
   <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <CustomBreadcrumbs
+      heading="General"
+      description="Configure general settings for the learning management system."
+      links={[
+        { name: 'Academics', href: '/academic/dashboard' },
+        { name: 'Learning Management System', href: '/academic/lmsDashboard/' },
+        { name: 'Settings' },
+        { name: 'General' },
+      ]}
+      sx={{ mb: 2 }}
+    />
     <Card sx={{ p: 2 }}>
       <Grid container spacing={2} alignItems="center">
         <Grid size={{ xs: 12, md: 4 }}>

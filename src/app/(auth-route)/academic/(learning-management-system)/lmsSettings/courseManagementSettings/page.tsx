@@ -1,0 +1,5 @@
+import React from 'react';
+import CourseManagementSetting from 'src/screens/academic/learning-management-system/settingScreen/courseManagement';
+
+const CourseManagementSettingsPage = () => <CourseManagementSetting />;
+export default CourseManagementSettingsPage;

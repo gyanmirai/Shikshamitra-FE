@@ -5,12 +5,24 @@ import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Grid, Card, Button, Switch, Typography } from '@mui/material';
 
 const CourseManagementSetting = () => {
   const [isCourseVisible, setIsCourseVisible] = useState(false);
   return (
     <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <CustomBreadcrumbs
+        heading="Course Management"
+        description="Manage your course settings for the learning management system."
+        links={[
+          { name: 'Academics', href: '/academic/dashboard' },
+          { name: 'Learning Management System', href: '/academic/lmsDashboard/' },
+          { name: 'Settings' },
+          { name: 'Course Management' },
+        ]}
+        sx={{ mb: 2 }}
+      />
       <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end">
         <Button variant="contained" size="small">
           Manage Archieved Courses
