@@ -1,7 +1,7 @@
 import { Box } from '@mui/system';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Card, IconButton, Typography } from '@mui/material';
+import { Paper, IconButton, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetPaymentHistoryQuery } from 'src/redux/feeCollection/paymentHistory';
@@ -14,7 +14,17 @@ const PaymentHistory = ({ student }: { student: IStudentFee | null }) => {
     currentQueryAndMutation: useGetPaymentHistoryQuery,
   });
   return (
-    <Card sx={{ borderRadius: 1, boxShadow: 3, height: '100%', p: 2 }}>
+    <Paper
+      elevation={3}
+      sx={{
+        borderRadius: 1,
+        height: '450px',
+        p: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        mb: 2,
+      }}
+    >
       <Typography variant="h6" sx={{ color: 'primary.main' }}>
         Payment History
       </Typography>
@@ -55,7 +65,7 @@ const PaymentHistory = ({ student }: { student: IStudentFee | null }) => {
         ]}
         data={feeHistoryData || []}
       />
-    </Card>
+    </Paper>
   );
 };
 

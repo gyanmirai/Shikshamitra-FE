@@ -108,7 +108,7 @@ export const FeeTermAccordion = () => {
                     </Box>
                     <Divider orientation="vertical" flexItem />
                     <Box>
-                      <Typography variant="body2" color="error.main">
+                      <Typography variant="body2" color="warning.main">
                         Pending : <strong>₹ {pending.toLocaleString()}</strong>
                       </Typography>
                     </Box>
