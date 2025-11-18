@@ -1,3 +1,5 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -56,7 +58,7 @@ const ExamType = ({ inquiryPreference }: any) => {
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
