@@ -1044,6 +1044,13 @@ const communicationModule = {
               shortcutKey: 'Alt+C+T',
               shortcutKeyName: 'Alt+C+T',
             },
+            {
+              title: 'Notification Setting',
+              path: '/communication/notification/notificationSetting',
+              _action: 'notification-setting',
+              shortcutKey: 'Alt+C+N+3',
+              shortcutKeyName: 'Alt+C+N+3',
+            },
           ],
         },
         {
@@ -1578,6 +1585,13 @@ const libraryModule = {
           caption: 'Coming Soon',
         },
         {
+          title: 'Notification',
+          path: '/library/notification',
+          _action: 'library-notification',
+          shortcutKey: 'Alt+L+N',
+          shortcutKeyName: 'Alt+L+N',
+        },
+        {
           title: 'Setting',
           path: '',
           _action: 'library-settings',
@@ -1591,13 +1605,13 @@ const libraryModule = {
             //   shortcutKey: 'Alt+L+S+1',
             //   shortcutKeyName: 'Alt+L+S+1',
             // },
-            // {
-            //   title: 'Notification Setting',
-            //   path: '/library/settings/notification-setting',
-            //   _action: 'notification-setting',
-            //   shortcutKey: 'Alt+L+S+2',
-            //   shortcutKeyName: 'Alt+L+S+2',
-            // },
+            {
+              title: 'Notification Setting',
+              path: '/library/settings/notification-setting',
+              _action: 'notification-setting',
+              shortcutKey: 'Alt+L+S+2',
+              shortcutKeyName: 'Alt+L+S+2',
+            },
             {
               title: 'Book Categories',
               path: '/library/settings/book-category',
@@ -1713,7 +1727,6 @@ const transportModule = {
           title: 'Notification',
           path: '/transport/transport-notification',
           _action: 'transport-notification',
-          caption: 'Coming Soon',
         },
         {
           title: 'Settings',
