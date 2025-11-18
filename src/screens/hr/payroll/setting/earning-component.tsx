@@ -1,16 +1,20 @@
+'use client';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useDeletePayElementMutation } from 'src/redux/payElement/payElementApi';
 import {
@@ -45,22 +49,39 @@ interface PayElement {
   isVisibleInPaySlip: boolean;
 }
 
-const EarningComponent = ({
-  isEarningComponentOpen,
-}: {
-  isEarningComponentOpen: UseBooleanReturn;
-}) => {
+const EarningComponent = () => {
   const confirm = useBoolean();
 
   const [editData, setEditData] = useState<any>(null);
   const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
+  const isEarningComponentOpen = useBoolean();
 
   const [deletePayElement] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeletePayElementMutation,
   });
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Earning Component"
+        description="Manage the various earning components that make up employee salaries, including fixed and variable pay elements."
+        links={[
+          { name: 'HR/Staff', href: '/hr/dashboard/' },
+          { name: 'Payroll Management', href: '/hr/payroll/dashboard/' },
+          { name: 'Settings' },
+          { name: 'Earning Component' },
+        ]}
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            size="small"
+            onClick={isEarningComponentOpen.onTrue}
+          >
+            Earning Component
+          </Button>
+        }
+      />
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}

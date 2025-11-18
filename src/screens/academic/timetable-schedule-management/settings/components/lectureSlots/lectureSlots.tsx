@@ -263,7 +263,7 @@ const LectureSlots = () => {
   ];
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Conditional Breadcrumbs */}
       {viewSlotsDialog.value ? (
         <CustomBreadcrumbs

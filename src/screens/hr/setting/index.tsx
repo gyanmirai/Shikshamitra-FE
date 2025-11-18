@@ -91,7 +91,7 @@ const HrSetting = () => {
         }
       />
       <CustomBreadcrumbs
-        heading="Setting"
+        heading="Document Types"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
           { name: 'Employee', href: '/hr/employee/' },
@@ -133,7 +133,7 @@ const HrSetting = () => {
         isFilter={false}
         columns={[
           { id: 'documentName', label: 'Document Name' },
-          { id: 'documentSize', label: 'Document Size (MB)', minWidth: '10vw', align: 'left' },
+          { id: 'documentSize', label: 'Document Size (MB)', minWidth: '200px', align: 'left' },
           {
             id: 'documentTypesString',
             label: 'Accepted Format',

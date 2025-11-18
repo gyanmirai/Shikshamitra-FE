@@ -1,10 +1,12 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -18,6 +20,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -56,11 +59,12 @@ interface ILeavePolicy {
   color: string;
 }
 
-const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBooleanReturn }) => {
+const LeavePolicy = () => {
   // const dialog = useBoolean(false);
   const confirm = useBoolean(false);
   const [editData, setEditData] = useState<any>(null);
   const dispatch = useDispatch();
+  const leavePolicyDialog = useBoolean(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { data: leavePolicyData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -81,10 +85,10 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
     };
 
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dialog.onFalse();
+      leavePolicyDialog.onFalse();
       resetState();
     } else if (!isChanges) {
-      dialog.onFalse();
+      leavePolicyDialog.onFalse();
       setTimeout(() => {
         setEditData(null);
       }, 200);
@@ -103,7 +107,28 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
     [leavePolicyData?.items]
   );
   return (
-    <>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Leave Policy"
+        description="Define and manage leave policies for your organization to ensure smooth attendance and leave management."
+        links={[
+          { name: 'Hr', href: '/hr/dashboard/' },
+          { name: 'Attendance & Leave Management' },
+          { name: 'Setting' },
+          { name: 'Leave Policy' },
+        ]}
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Add />}
+            onClick={leavePolicyDialog.onTrue}
+            variant="contained"
+            size="small"
+          >
+            Leave Policy
+          </Button>
+        }
+      />
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -135,7 +160,7 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
         <Button
           sx={{ width: '160px' }}
           startIcon={<Add />}
-          onClick={dialog.onTrue}
+          onClick={leavePolicyDialog.onTrue}
           variant="contained"
           size="small"
         >
@@ -148,7 +173,7 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
             No Leave Policy Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                leavePolicyDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -224,7 +249,7 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
                   }}
                   handleEditClick={() => {
                     setEditData(row);
-                    dialog.onTrue();
+                    leavePolicyDialog.onTrue();
                   }}
                 />
               );
@@ -297,9 +322,9 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
             </CustomTooltip>
           </Box>
         }
-        open={dialog.value}
+        open={leavePolicyDialog.value}
         handleClose={() => {
-          dialog.onFalse();
+          leavePolicyDialog.onFalse();
           setTimeout(() => {
             setEditData(null);
           }, 200); // Adjust timing to match your dialog close animation
@@ -307,7 +332,7 @@ const LeavePolicy = ({ leavePolicyDialog: dialog }: { leavePolicyDialog: UseBool
       >
         <LeavePolicyForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 export default LeavePolicy;
