@@ -1348,9 +1348,7 @@ const financeModule = {
           path: '/finance/finance-notification',
           _action: 'finance-notification',
           shortcutKey: 'Alt+F+N',
-          disabled: 'true',
           shortcutKeyName: 'Alt+F+N',
-          caption: 'Coming Soon',
         },
         {
           title: 'Setting',

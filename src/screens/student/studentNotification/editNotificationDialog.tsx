@@ -51,7 +51,7 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
 
   return (
     <BackPopUpChecked initialValues={data} currentValues={notification}>
-      <Box display="flex" flexDirection="column" gap={2}>
+      <Box display="flex" flexDirection="column" gap={2} height="100%">
         <Scrollbar sx={{ p: 2, height: '100%' }}>
           <Box display="flex" gap={2} alignItems="center" justifyContent="space-between">
             <Box display="flex" flexDirection="column" mt={1}>
