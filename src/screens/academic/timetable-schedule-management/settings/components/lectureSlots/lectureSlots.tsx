@@ -3,13 +3,14 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Box, Card, MenuList, MenuItem } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Card, Button, MenuList, MenuItem } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
@@ -17,15 +18,12 @@ import CreateSlotsForm from './createSlotsForm';
 import ViewCreateSlots from './ViewCreateSlots';
 import AssignSlots from './assignSlotsComponent';
 
-const LectureSlots = ({
-  addLectureSlotDialog,
-  isEdit,
-  setIsEdit,
-  showBreadcrumb = true,
-  viewSlotsDialog,
-}: any) => {
+const LectureSlots = () => {
   const [editData, setEditData] = useState<any>(null);
   const [disabled, setDisabled] = useState(false);
+  const addLectureSlotDialog = useBoolean(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const viewSlotsDialog = useBoolean();
 
   const assignSlotsDialog = useBoolean();
 
@@ -267,90 +265,70 @@ const LectureSlots = ({
   return (
     <Box>
       {/* Conditional Breadcrumbs */}
-      {showBreadcrumb &&
-        (addLectureSlotDialog.value ? (
-          <CustomBreadcrumbs
-            heading={isEdit ? 'Update Lecture Slots' : 'Add Lecture Slots'}
-            description={
-              isEdit
-                ? 'Update existing lecture slots configuration including period and break timings.'
-                : 'Create new lecture slots by defining period and break timings for a class.'
-            }
-            isBack
-            onBack={() => handleClose(null, false)}
-            links={[
-              { name: 'Academic', href: '/academic/dashboard' },
-
-              {
-                name: 'Settings',
-                href: '/academic/timetableSettings',
-                onClick: () => {
-                  addLectureSlotDialog.onFalse();
-                  setEditData(null);
-                  setIsEdit(false);
-                },
-              },
-              {
-                name: isEdit ? 'Update Lecture Slots' : 'Add Lecture Slots',
-              },
-            ]}
-            sx={{ px: 1, mb: 1 }}
-          />
-        ) : viewSlotsDialog.value ? (
-          <CustomBreadcrumbs
-            heading="View Lecture Slots"
-            description="View detailed lecture slots configuration including all period and break timings."
-            isBack
-            onBack={() => {
-              viewSlotsDialog.onFalse();
-              setTimeout(() => {
-                setEditData(null);
-                setDisabled(false);
+      {viewSlotsDialog.value ? (
+        <CustomBreadcrumbs
+          heading="View Slots"
+          description="View the detailed lecture slots for the selected class."
+          links={[
+            { name: 'Academics', href: '/academic/dashboard' },
+            { name: 'Timetable', href: '/academic/newTimetable' },
+            { name: 'Settings' },
+            { name: 'View Slots' },
+          ]}
+          sx={{ mb: 2 }}
+          isBack
+          onBack={() => {
+            viewSlotsDialog.onFalse();
+          }}
+        />
+      ) : addLectureSlotDialog.value ? (
+        <CustomBreadcrumbs
+          heading="Add Lecture Slot"
+          description="Add a new lecture slot for a class."
+          links={[
+            { name: 'Academics', href: '/academic/dashboard' },
+            { name: 'Timetable', href: '/academic/newTimetable' },
+            { name: 'Settings' },
+            { name: 'Lecture Slots' },
+            { name: 'Add Lecture Slot' },
+          ]}
+          sx={{ mb: 2 }}
+          isBack
+          onBack={() => {
+            addLectureSlotDialog.onFalse();
+          }}
+        />
+      ) : (
+        <CustomBreadcrumbs
+          heading="Lecture Slots"
+          description="Configure and manage lecture slots for each class, including periods and breaks."
+          links={[
+            { name: 'Academics', href: '/academic/dashboard' },
+            { name: 'Timetable', href: '/academic/newTimetable' },
+            { name: 'Settings' },
+            { name: 'Lecture Slots' },
+          ]}
+          action={
+            <Button
+              sx={{ width: '160px' }}
+              startIcon={<Add />}
+              onClick={() => {
+                addLectureSlotDialog.onTrue();
                 setIsEdit(false);
-              }, 200);
-            }}
-            links={[
-              { name: 'Academic', href: '/academic/dashboard' },
+              }}
+              variant="contained"
+              size="small"
+            >
+              Lecture Slot
+            </Button>
+          }
+          sx={{ mb: 2 }}
+        />
+      )}
 
-              {
-                name: 'Settings',
-                href: '/academic/timetableSettings',
-                onClick: () => {
-                  viewSlotsDialog.onFalse();
-                  setEditData(null);
-                },
-              },
-              {
-                name: 'View Lecture Slots',
-              },
-            ]}
-            sx={{ px: 1, mb: 1 }}
-          />
-        ) : assignSlotsDialog.value ? (
-          <CustomBreadcrumbs
-            heading="Assign to Other Classes"
-            description="Assign existing lecture slots configuration to other classes in the system."
-            isBack
-            onBack={() => assignSlotsDialog.onFalse()}
-            links={[
-              { name: 'Academic', href: '/academic/dashboard' },
-
-              {
-                name: 'Settings',
-                href: '/academic/timetableSettings',
-                onClick: () => assignSlotsDialog.onFalse(),
-              },
-              {
-                name: 'Assign Slots',
-              },
-            ]}
-            sx={{ px: 1, mb: 1 }}
-          />
-        ) : null)}
-
-      {/* Conditional Card Rendering */}
+      {/* Conditional Card/Table Rendering */}
       {addLectureSlotDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: showBreadcrumb ? 2 : 0 }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
           <CreateSlotsForm
             disabled={disabled}
             handleClose={handleClose}
@@ -359,11 +337,11 @@ const LectureSlots = ({
           />
         </Card>
       ) : viewSlotsDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: showBreadcrumb ? 2 : 0 }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
           <ViewCreateSlots data={editData} />
         </Card>
       ) : assignSlotsDialog.value ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: showBreadcrumb ? 2 : 0 }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)', mt: 2 }}>
           <AssignSlots onClose={handleClose} />
         </Card>
       ) : (

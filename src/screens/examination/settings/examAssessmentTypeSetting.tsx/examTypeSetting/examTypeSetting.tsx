@@ -1,3 +1,5 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
@@ -11,6 +13,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
 
@@ -18,11 +21,12 @@ import ExamTypeForm from './examTypeForm';
 
 import type { IExamType } from '../type';
 
-const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
+const ExamTypeSettings = () => {
   // Dialog state for managing the create/edit exam type form.
   // const dialog = useBoolean();
   // State for storing and managing the exam type table data.
   const [examTypeTable, setExamTypeTable] = useState<IExamType[]>(examTypeTableData);
+  const addExamTypeDialog = useBoolean(false);
 
   // Dialog state for confirming the deletion of an exam type.
   const confirmDeleteDialog = useBoolean();
@@ -86,7 +90,31 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
   };
 
   return (
-    <Box>
+    <Box height="100%" display="flex" flexDirection="column">
+      <CustomBreadcrumbs
+        heading="Exam Types "
+        description="Manage the different types of exams conducted in your institution. Add, edit, or delete exam types as needed."
+        links={[
+          { name: 'Academics', href: '/academic/dashboard' },
+          { name: 'Examination' },
+          {
+            name: 'Settings',
+          },
+          { name: 'Exam Types' },
+        ]}
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Iconify icon="mdi:plus" />}
+            onClick={addExamTypeDialog.onTrue}
+            variant="contained"
+            size="small"
+          >
+            Exam Types
+          </Button>
+        }
+        sx={{ mb: 2 }}
+      />
       <CustomizableTable
         tableId="examTypeTable"
         noDataText={
@@ -111,7 +139,7 @@ const ExamTypeSettings = ({ addExamTypeDialog }: any) => {
           </>
         }
         columns={[
-          { id: 'examType', label: 'Exam Type' },
+          { id: 'examType', label: 'Exam Types' },
           { id: 'description', label: 'Description' },
           {
             id: 'actions',

@@ -2,15 +2,16 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { Box, Typography } from '@mui/material';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Button, Typography } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
@@ -110,21 +111,8 @@ const data = [
     ],
   },
 ];
-interface WeeklyLecturesProps {
-  addWeeklyLectureDialog: {
-    value: boolean;
-    onTrue: () => void;
-    onFalse: () => void;
-  };
-  isEdit: boolean;
-  setIsEdit: (value: boolean) => void;
-}
 
-const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({
-  addWeeklyLectureDialog,
-  isEdit,
-  setIsEdit,
-}) => {
+const WeeklyLectures = () => {
   const [selectedWeeklyLecture, setSelectedWeeklyLecture] = useState<ISubjectFormValues | null>(
     null
   );
@@ -132,12 +120,13 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Redux dispatch hook for dispatching actions
   const dispatch = useDispatch();
-  // const [isEdit, setIsEdit] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
   // Custom boolean hook to control create lecture number dialog visibility
   // const addWeeklyLectureDialog = useBoolean();
 
   // State to control form field disabled status
   const [disabled, setDisabled] = React.useState(false);
+  const addWeeklyLectureDialog = useBoolean(false);
 
   // Custom boolean hook to control view weekly lectures dialog visibility
   const viewWeeklyLecturesDialog = useBoolean();
@@ -178,17 +167,30 @@ const WeeklyLectures: React.FC<WeeklyLecturesProps> = ({
   );
 
   return (
-    <Box>
-      {/* <Box display="flex" gap={2} alignItems="center" justifyContent="flex-end" sx={{ mb: 2 }}>
-        <Button
-          startIcon={<Iconify icon="mdi:plus" />}
-          variant="contained"
-          size="small"
-          onClick={addWeeklyLectureDialog.onTrue}
-        >
-          Weekly Lectures
-        </Button>
-      </Box> */}
+    <Box height="100%" display="flex" flexDirection="column">
+      {/* Weekly Lectures Slots Breadcrumb */}
+      <CustomBreadcrumbs
+        heading="Weekly Lectures Slots"
+        description="Configure and manage weekly lecture slots for each class."
+        links={[
+          { name: 'Academics', href: '/academic/dashboard' },
+          { name: 'Timetable', href: '/academic/newTimetable' },
+          { name: 'Settings' },
+          { name: 'Weekly Lectures Slots' },
+        ]}
+        action={
+          <Button
+            startIcon={<Iconify icon="mdi:plus" />}
+            variant="contained"
+            size="small"
+            onClick={addWeeklyLectureDialog.onTrue}
+          >
+            Weekly Lectures
+          </Button>
+        }
+        sx={{ mb: 2 }}
+      />
+
       <CustomizableTable
         tableId="time-schedule-management-setting-table"
         noDataText={

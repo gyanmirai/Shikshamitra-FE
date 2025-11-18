@@ -1,6 +1,9 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,6 +12,7 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import settingSubjectTableData from 'src/json/academic/curriculum/settingSubjectTableData.json';
 
@@ -17,12 +21,14 @@ import SettingSubjectTable from './settingSubjectTable';
 
 import type { ISubject } from './type';
 
-const SubjectCreation = ({ addSubjectDialog }: any) => {
+const SubjectCreation = () => {
   // Dialog state for adding disciplinary incidents
   // const addSubjectDialog = useBoolean();
   const deleteSubjectDialog = useBoolean();
   // Controls form visibility
   const [open, setOpen] = useState(false);
+  const addSubjectDialog = useBoolean(false);
+
   // Breadcrumb navigation links based on form state
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -53,19 +59,29 @@ const SubjectCreation = ({ addSubjectDialog }: any) => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      {/* <Box display="flex" justifyContent="flex-end" mb={1}>
-        <Button
-          variant="contained"
-          onClick={addSubjectDialog.onTrue}
-          startIcon={<Add />}
-          size="small"
-          sx={{
-            width: '130px',
-          }}
-        >
-          Subject
-        </Button>
-      </Box> */}
+      {/* Add separate breadcrumbs for Subject Creation */}
+      <CustomBreadcrumbs
+        heading="Subject Creation"
+        description="Create and manage subjects for your curriculum. Add, edit, or delete subjects as needed."
+        links={[
+          { name: 'Academics', href: '/academic/dashboard' },
+          { name: 'Curriculum Management', href: '/academic/curriculumSubjects' },
+          { name: 'Settings' },
+          { name: 'Subject Creation' },
+        ]}
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Add />}
+            variant="contained"
+            onClick={addSubjectDialog.onTrue}
+            size="small"
+          >
+            Subject
+          </Button>
+        }
+        sx={{ mb: 2 }}
+      />
 
       <SettingSubjectTable
         onDelete={(data) => {

@@ -1,3 +1,5 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
@@ -9,6 +11,7 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import HomeworkTypeForm from './homeworkTypeForm';
@@ -16,9 +19,9 @@ import HomeworkTypeTable from './homeworkTypeTable';
 
 import type { IHomeworkType } from './type';
 
-const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
+const HomeworkTypeCreation = () => {
   // Dialog control for add/Update Homework Type
-  // const addHomeworkTypeDialog = useBoolean();
+  const addHomeworkTypeDialog = useBoolean();
 
   // Dialog control for delete confirmation
   const deleteDialog = useBoolean();
@@ -63,19 +66,27 @@ const HomeworkTypeCreation = ({ addHomeworkTypeDialog }: any) => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      {/* <Box display="flex" justifyContent="flex-end">
-        <Button
-          variant="contained"
-          onClick={addHomeworkTypeDialog.onTrue}
-          startIcon={<Add />}
-          size="small"
-          sx={{
-            width: '147px',
-          }}
-        >
-          Homework Type
-        </Button>
-      </Box> */}
+      <CustomBreadcrumbs
+        heading="Homework Type"
+        links={[
+          { name: 'Academics', href: '/academic/dashboard' },
+          { name: 'Homework & Assignment' },
+          { name: 'Settings' },
+          { name: 'Homework Type' },
+        ]}
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="mdi:plus" />}
+            onClick={addHomeworkTypeDialog.onTrue}
+            size="small"
+            sx={{ width: '160px' }}
+          >
+            Homework Type
+          </Button>
+        }
+        sx={{ mb: 2 }}
+      />
 
       <HomeworkTypeTable
         data={tableData}

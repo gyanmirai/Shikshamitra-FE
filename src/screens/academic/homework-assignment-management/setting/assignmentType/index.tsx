@@ -11,6 +11,7 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import AssignmentTypeForm from './assignmentTypeForm';
@@ -18,9 +19,9 @@ import AssignmentTypeTable from './assignmentTypeTable';
 
 import type { IAssignmentType } from './type';
 
-const AssignmentTypeCreation = ({ addAssignmentTypeDialog }: any) => {
+const AssignmentTypeCreation = () => {
   // Dialog control for add/edit form
-  // const addAssignmentTypeDialog = useBoolean();
+  const addAssignmentTypeDialog = useBoolean();
   // Dialog control for delete confirmation
   const deleteDialog = useBoolean();
   // State to control modal visibility (unused)
@@ -61,11 +62,28 @@ const AssignmentTypeCreation = ({ addAssignmentTypeDialog }: any) => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      {/* <Box display="flex" justifyContent="flex-end">
-        <Button variant="contained" onClick={addAssignmentTypeDialog.onTrue} startIcon={<Add />} size="small">
-          Assignment Type
-        </Button>
-      </Box> */}
+      <CustomBreadcrumbs
+        links={[
+          { name: 'Academics', href: '/academic/dashboard' },
+          { name: 'Homework & Assignment' },
+          { name: 'Settings' },
+          { name: 'Assignment Type' },
+        ]}
+        heading="Assignment Type"
+        description="Create and manage assignment types for homework and assignments. Add, edit, or delete assignment types as needed."
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Iconify icon="eva:plus-fill" />}
+            variant="contained"
+            onClick={addAssignmentTypeDialog.onTrue}
+            size="small"
+          >
+            Assignment Type
+          </Button>
+        }
+        sx={{ mb: 3 }}
+      />
 
       <AssignmentTypeTable
         data={tableData}

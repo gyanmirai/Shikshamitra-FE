@@ -82,7 +82,13 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
   };
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box
+      sx={{
+        p: 2,
+        maxHeight: 'calc(100vh - 220px)',
+        overflowY: 'auto',
+      }}
+    >
       {/* General Information - Simple Card */}
       <Paper
         sx={{
@@ -130,10 +136,6 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
       {/* Slot Configurations */}
       {data?.slotConfigurations && data.slotConfigurations.length > 0 && (
         <Box>
-          <Typography variant="h6" color="primary.main" mb={2}>
-            Slot Configurations
-          </Typography>
-
           {data.slotConfigurations.map((config, index) => (
             <Accordion
               key={config.id}
@@ -157,14 +159,6 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                   },
                 }}
               >
-                <Typography
-                  variant="h6"
-                  color="primary.main"
-                  mb={expandedConfigs[config.id] ? 0 : 1}
-                >
-                  Configuration {index + 1}
-                </Typography>
-
                 {/* Preview when collapsed */}
                 {!expandedConfigs[config.id] && (
                   <Grid container spacing={2} mt={0.5}>
