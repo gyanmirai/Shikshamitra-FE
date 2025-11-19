@@ -131,7 +131,7 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true }) => {
     (names: string[], nodes: PathNode[]): PathRow => {
       const users = collectUsers(nodes);
       return {
-        display: names.join(' > '),
+        display: names.join(' → '),
         users,
         selectedCount: users.filter((u) => u.selected).length,
         totalCount: users.length,
