@@ -1,6 +1,9 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,6 +12,7 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import ElectiveSubjectTable from './components/electiveSubjectTable';
@@ -16,7 +20,7 @@ import SettingElectiveSubjectForm from './components/electiveSubjectForm';
 
 import type { IElectiveSubject } from './type';
 
-const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
+const ElectiveSubjectSetting = () => {
   // Dialog control hooks
   // Controls visibility of add/edit elective subject dialog
   // const addElectiveGroupDialog = useBoolean();
@@ -24,6 +28,7 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
   const deleteDialog = useBoolean();
   // Controls visibility of main dialog window
   const [open, setOpen] = useState(false);
+  const addElectiveGroupDialog = useBoolean(false);
 
   // Redux state and dispatch
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -60,16 +65,32 @@ const ElectiveSubjectSetting = ({ addElectiveGroupDialog }: any) => {
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
-      {/* <Box display="flex" justifyContent="flex-end" mb={1}>
-        <Button
-          variant="contained"
-          onClick={addElectiveGroupDialog.onTrue}
-          startIcon={<Add />}
-          size="small"
-        >
-          Elective Group
-        </Button>
-      </Box> */}
+      {/* Separate breadcrumbs for Elective Group Creation */}
+      <CustomBreadcrumbs
+        heading="Elective Group Creation"
+        description="Create and manage elective subject groups for your curriculum. Add, edit, or delete groups as needed."
+        links={[
+          { name: 'Academics', href: '/academic/dashboard' },
+          {
+            name: 'Curriculum Management',
+            href: '/academic/curriculumSubjects',
+          },
+          { name: 'Settings' },
+          { name: 'Elective Group Creation' },
+        ]}
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Add />}
+            onClick={addElectiveGroupDialog.onTrue}
+            variant="contained"
+            size="small"
+          >
+            Elective Group
+          </Button>
+        }
+        sx={{ mb: 2 }}
+      />
 
       <ElectiveSubjectTable
         onDelete={(data) => {

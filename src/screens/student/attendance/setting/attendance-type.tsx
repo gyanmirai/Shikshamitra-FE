@@ -1,3 +1,5 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -15,6 +17,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -30,9 +33,9 @@ import {
 
 import type { IAttendanceRule } from './type';
 
-const AttendanceType = ({ dialog }: any) => {
+const AttendanceType = () => {
   // Dialog state for add/edit form
-  // const dialog = useBoolean();
+  const dialog = useBoolean();
   // Dialog state for delete confirmation
   const confirm = useBoolean();
 
@@ -75,6 +78,28 @@ const AttendanceType = ({ dialog }: any) => {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Leave Type"
+        description="Define Leave types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
+        links={[
+          { name: 'Student', href: '/student/attendance/dashboard/' },
+          { name: 'Attendance', href: '/student/attendance/dashboard/' },
+          { name: 'Setting' },
+          { name: 'Leave Type' },
+        ]}
+        action={
+          <Button
+            variant="contained"
+            size="small"
+            onClick={dialog.onTrue}
+            startIcon={<Iconify icon="eva:plus-fill" />}
+            sx={{ textTransform: 'capitalize', width: '160px' }}
+          >
+            Leave Type
+          </Button>
+        }
+        sx={{ mb: 2 }}
+      />
       <CustomizableTable
         tableId="attendance-type"
         noDataText={

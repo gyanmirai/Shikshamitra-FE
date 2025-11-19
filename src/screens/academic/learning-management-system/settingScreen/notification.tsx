@@ -3,9 +3,24 @@
 import React from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Switch, Typography } from '@mui/material';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 const NotificationSetting = () => (
   <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <CustomBreadcrumbs
+      heading="Notification "
+      description="Configure notification settings for the learning management system."
+      links={[
+        { name: 'Academics', href: '/academic/dashboard' },
+        {
+          name: 'Learning Management System',
+          href: '/academic/lmsDashboard/',
+        },
+        { name: 'Settings' },
+        { name: 'Notification' },
+      ]}
+      sx={{ mb: 2 }}
+    />
     <Grid container spacing={2} alignItems="flex-start" sx={{ mt: 2 }}>
       <Grid size={{ xs: 12, md: 4 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>

@@ -2,12 +2,27 @@
 
 import React, { useState } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Grid, Switch, TextField, Typography } from '@mui/material';
 
 const ContentManagementSetting = () => {
   const [isContentModerateVisible, setIsContentModerateVisible] = useState<boolean>(false);
   return (
     <Box sx={{ p: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <CustomBreadcrumbs
+        heading="Content Management"
+        description="Manage your content settings for the learning management system."
+        links={[
+          { name: 'Academics', href: '/academic/dashboard' },
+          { name: 'Learning Management System', href: '/academic/lmsDashboard/' },
+          { name: 'Settings' },
+          {
+            name: 'Content Management',
+          },
+        ]}
+        sx={{ mb: 2 }}
+      />
+
       <Grid container spacing={4}>
         <Grid size={{ xs: 12, md: 4 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

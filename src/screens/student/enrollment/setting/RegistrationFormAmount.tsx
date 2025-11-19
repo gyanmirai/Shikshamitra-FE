@@ -1,3 +1,5 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -16,6 +18,7 @@ import { Box, Stack, Button, Typography, DialogActions } from '@mui/material';
 //   useUpdateAmountPreferenceMutation,
 // } from 'src/redux/student/amount-preference/amount-preference-api';
 
+import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -23,19 +26,20 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import type { IRegistrationAmount } from './type';
 
-const RegistrationAmount = ({ registrationAmountDialog }: any) => {
+const RegistrationAmount = () => {
   // Hook for managing confirm dialog state (open/close)
   const confirm = useBoolean();
 
   // Get the current state of unsaved changes from Redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-
+  const registrationAmountDialog = useBoolean();
   // Redux dispatch function for updating state
   const dispatch = useDispatch();
 
@@ -63,7 +67,28 @@ const RegistrationAmount = ({ registrationAmountDialog }: any) => {
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Registration Form Amount"
+        description="Manage registration form amount settings for student enrollment."
+        links={[
+          { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
+          { name: 'Settings' },
+          { name: 'Registration Form Amount' },
+        ]}
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Add />}
+            onClick={registrationAmountDialog.onTrue}
+            variant="contained"
+            size="small"
+          >
+            Amount
+          </Button>
+        }
+        sx={{ mb: 2 }}
+      />
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {

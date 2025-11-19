@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Card, Switch, FormGroup, FormControlLabel } from '@mui/material';
 

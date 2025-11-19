@@ -1,3 +1,5 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
@@ -11,6 +13,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import gradeScalingData from 'src/json/academic/examination/gradeScalingData.json';
 
@@ -18,7 +21,7 @@ import GradeForm from './gradeScaleForm';
 
 import type { IGrade } from './type';
 
-const GradingScale = ({ addGradeScalingDialog }: any) => {
+const GradingScale = () => {
   // State for tracking edit mode
   const [isEdit, setIsEdit] = useState(false);
   // State for storing currently selected grade
@@ -32,6 +35,7 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+  const addGradeScalingDialog = useBoolean(false);
 
   /**
    * Handles closing of all dialogs and resetting related states
@@ -91,22 +95,33 @@ const GradingScale = ({ addGradeScalingDialog }: any) => {
   const handleSubmit = (values: any) => {};
 
   return (
-    <Box>
-      {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', mb: 2 }}>
-        <Button
-          startIcon={<Add />}
-          onClick={() => {
-            addGradeScalingDialog.onTrue();
-          }}
-          size="small"
-          variant="contained"
-          sx={{
-            width: '150px',
-          }}
-        >
-          Grade Scale
-        </Button>
-      </Box> */}
+    <Box height="100%" display="flex" flexDirection="column">
+      <CustomBreadcrumbs
+        heading="Grade Scaling"
+        description="Define and manage grade scales for assessments. Create, edit, or delete grade scales as needed."
+        links={[
+          { name: 'Academics', href: '/academic/dashboard' },
+
+          { name: 'Examination ' },
+          {
+            name: 'Settings',
+          },
+          { name: 'Grade Scaling' },
+        ]}
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Iconify icon="mdi:plus" />}
+            variant="contained"
+            onClick={addGradeScalingDialog.onTrue}
+            size="small"
+          >
+            Grade Scale
+          </Button>
+        }
+        sx={{ mb: 2 }}
+      />
+
       <CustomizableTable
         tableId="gradesTable"
         noDataText={

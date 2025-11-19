@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Grid, Typography } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
+import { EmptyContent } from 'src/components/empty-content';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import ClassSelectionView from './ClassSelectionView';
 import FeeStructureViewCard from './FeeStructureViewCard';
@@ -24,7 +26,7 @@ const ViewFeeStructure = ({
   if (!feeStructure) return null;
 
   return (
-    <Scrollbar sx={{ height: '100%', p: 1 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ViewBasicDetailsOfStructure feeStructure={feeStructure} />
       {/* Class Selection */}
       <Grid container spacing={2}>
@@ -36,27 +38,30 @@ const ViewFeeStructure = ({
 
         {/* Fee Structure Details */}
         {selectedClass && (
-          <Grid size={{ xs: 10 }}>
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="h6" color="primary.main" mb={expanded ? 0 : 1}>
-                Fee Structure For Class : {selectedClass}
-              </Typography>
-            </Grid>
-            {(feeStructure.feeStructureClasses[selectedClass] || []).map((structure, idx) => (
-              <FeeStructureViewCard
-                key={idx}
-                className={selectedClass}
-                feeStructure={structure}
-                index={idx}
-                expanded={expanded === idx}
-                onChange={() => setExpanded(expanded === idx ? false : idx)}
-                feeStructureMain={feeStructure}
-              />
-            ))}
+          <Grid size={{ xs: 10.6 }} mb={2}>
+            <SectionCard title={`Fee Structure For Class : ${selectedClass}`}>
+              <Scrollbar sx={{ maxHeight: '290px' }}>
+                {feeStructure.feeStructureClasses[selectedClass]?.length ? (
+                  feeStructure.feeStructureClasses[selectedClass].map((structure, idx) => (
+                    <FeeStructureViewCard
+                      key={idx}
+                      className={selectedClass}
+                      feeStructure={structure}
+                      index={idx}
+                      expanded={expanded === idx}
+                      onChange={() => setExpanded(expanded === idx ? false : idx)}
+                      feeStructureMain={feeStructure}
+                    />
+                  ))
+                ) : (
+                  <EmptyContent title="No Fee Structure Created" />
+                )}
+              </Scrollbar>
+            </SectionCard>
           </Grid>
         )}
       </Grid>
-    </Scrollbar>
+    </Box>
   );
 };
 

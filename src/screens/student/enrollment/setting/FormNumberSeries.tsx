@@ -1,19 +1,21 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -24,13 +26,10 @@ interface IFormNumberSeries {
   formNumberSeries: number;
 }
 
-const FormNumberSeries = ({
-  formNumberSeriesDialog,
-}: {
-  formNumberSeriesDialog: UseBooleanReturn;
-}) => {
+const FormNumberSeries = () => {
   // State to control confirm dialog visibility
   const confirm = useBoolean();
+  const formNumberSeriesDialog = useBoolean();
 
   // Get isChanges state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -58,38 +57,24 @@ const FormNumberSeries = ({
   };
 
   return (
-    <Box>
-      <ConfirmDialog
-        open={confirm.value}
-        onClose={() => {
-          confirm.onFalse();
-          setEditData(null);
-        }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to delete{' '}
-            <Box component="span" fontWeight="bold" color="text.primary">
-              {editData?.formNumberSeries}
-            </Box>
-            ?
-          </>
-        }
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Form Number Series"
+        description="Define and manage the form number series used in student registrations."
+        links={[
+          { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
+          { name: 'Settings' },
+          { name: 'Form Number Series' },
+        ]}
         action={
-          <LoadingButton
+          <Button
+            startIcon={<Add />}
+            onClick={formNumberSeriesDialog.onTrue}
             variant="contained"
-            color="error"
             size="small"
-            onClick={async () => {
-              shikshaMitraToast.success({
-                message: `${editData?.formNumberSeries} deleted successfully`,
-              });
-              confirm.onFalse();
-              setEditData(null);
-            }}
           >
-            Yes
-          </LoadingButton>
+            Form Number Series
+          </Button>
         }
       />
 

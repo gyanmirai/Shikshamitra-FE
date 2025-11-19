@@ -20,9 +20,9 @@ const ViewFeeDetails = ({
   collectFeesDialog: UseBooleanReturn;
   viewDialog: UseBooleanReturn;
 }) => (
-  <Box display="flex" flexDirection="column" height="100%">
+  <Box display="flex" flexDirection="column" height="100%" pb={2}>
     <Scrollbar sx={{ height: '100%', p: 1.5 }}>
-      <Grid container spacing={2} mb={2}>
+      <Grid container spacing={2}>
         {/* Row 1 */}
         {/* Left Side */}
         <Grid size={{ xs: 12, md: 9 }}>
@@ -49,11 +49,17 @@ const ViewFeeDetails = ({
         </Grid>
 
         {/* Row 2 */}
-        <Grid size={{ xs: 12, md: 9 }}>
+        <Grid
+          size={{ xs: 12, md: 9 }}
+          // sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+        >
           <PaymentHistory student={student} />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid
+          size={{ xs: 12, md: 3 }}
+          // sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+        >
           <ConcessionsCard />
         </Grid>
       </Grid>

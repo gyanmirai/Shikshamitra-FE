@@ -1,10 +1,12 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -18,6 +20,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { DocumentType, DocumentTypeArray } from 'src/enums/documnet-type';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
@@ -43,15 +46,14 @@ import {
 
 import type { IStudentDocument } from './type';
 
-const StudentDocumentType = ({
-  defaultDocumentTypes,
-}: {
-  defaultDocumentTypes: UseBooleanReturn;
-}) => {
+const StudentDocumentType = () => {
   // Dialog state for add/edit form
   // const dialog = useBoolean();
   // Dialog state for delete confirmation
   const confirm = useBoolean();
+
+  const defaultDocumentTypes = useBoolean();
+
   // State to store document being edited
   const [editData, setEditData] = useState<null | IStudentDocument>(null);
   // Get the isChanges state from the Redux store
@@ -90,7 +92,28 @@ const StudentDocumentType = ({
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Document Types"
+        links={[
+          { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
+          { name: 'Settings' },
+          { name: 'Document Types' },
+        ]}
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Add />}
+            variant="contained"
+            onClick={defaultDocumentTypes.onTrue}
+            size="small"
+          >
+            Document
+          </Button>
+        }
+        sx={{ mb: 2 }}
+        description="Manage the types of documents required for student enrollment, including accepted formats and size limits."
+      />
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {

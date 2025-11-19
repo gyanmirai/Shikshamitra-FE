@@ -1,6 +1,6 @@
 import React from 'react';
-import BasicInformationForm from 'src/screens/setting/basicInformationForm';
+import BasicInformation from 'src/screens/setting/basicInformationForm';
 
-const BasicInfo = () => <BasicInformationForm />;
+const BasicInfo = () => <BasicInformation />;
 
 export default BasicInfo;
