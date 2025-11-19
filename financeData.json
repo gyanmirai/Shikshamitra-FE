@@ -1,11 +1,11 @@
   {
 "feeStructure": [
   {
-    "feeStructureName": "Class 1 Structure",
+    "feeStructureName": "English Medium Fee Structure",
     "academicYear": "2025-2026",
     "board": "GSEB",
     "medium": "English",
-    "receiptBook": "GSEB",
+    "receiptBook": "Receipt Book 1",
     "paymentTerm": "Monthly",
     "paymentMethod": [
       "Online",
@@ -215,10 +215,11 @@
     "status": 1
   },
   {
-    "feeStructureName": "General Structure",
+    "feeStructureName": "Gujarati Medium Fee Structure",
     "academicYear": "2025-2026",
     "board": "GSEB",
-    "receiptBook": "CBSE",
+    "medium": "Gujarati",
+    "receiptBook": "Receipt Book 2",
     "paymentTerm": "Quarterly",
     "paymentMethod": [
       "Cheque",

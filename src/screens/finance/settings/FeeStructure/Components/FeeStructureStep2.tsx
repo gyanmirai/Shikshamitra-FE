@@ -8,9 +8,9 @@ import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Box,
   Grid,
@@ -19,8 +19,10 @@ import {
   Tooltip,
   Divider,
   Accordion,
+  TextField,
   IconButton,
   Typography,
+  Autocomplete,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -52,255 +54,255 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
         <Grid size={{ xs: 12 }}>
           <FeeGeneralInfoCard feeStructure={formik.values} />
         </Grid>
-        {Object.keys(formik.values.feeStructureClasses).length > 0 && (
+        {/* {Object.keys(formik.values.feeStructureClasses).length > 0 && (
           <Grid size={{ xs: 1.3 }} sx={{ height: '100%' }}>
             <SectionCard title="Classes">
               <Grid container>
                 <Grid size={{ xs: 12 }}>
-                  <Box display="flex" flexDirection="column" gap={1}>
-                    {Object.keys(formik.values.feeStructureClasses).map((className) => {
-                      const firstFeeStructure = formik.values.feeStructureClasses[className]?.[0];
-
-                      const hasData =
-                        firstFeeStructure?.feeItems && firstFeeStructure.feeItems.length > 0;
-
-                      let status;
-                      if (currentClickableClass === className) {
-                        status = FeeStructureClassStatusType.Current;
-                      } else if (hasData) {
-                        status = FeeStructureClassStatusType.Completed;
-                      } else {
-                        status = FeeStructureClassStatusType.Remaining;
-                      }
-
-                      return (
-                        <Box key={className} textAlign="center">
-                          <Button
-                            variant={currentClickableClass === className ? 'contained' : 'outlined'}
-                            color={currentClickableClass === className ? 'primary' : undefined}
-                            onClick={() => {
-                              if (hasData || currentClickableClass !== className) {
-                                setCurrentClickableClass(className);
-
-                                const updatedStatus = {
-                                  ...formik.values.feeStructureClasses,
-                                };
-
-                                Object.keys(updatedStatus).forEach((cls) => {
-                                  updatedStatus[cls] = updatedStatus[cls].map(
-                                    (fs: any, idx: number) => {
-                                      const clsHasData = fs.feeItems && fs.feeItems.length > 0;
-
-                                      if (cls === className && idx === 0) {
-                                        return {
-                                          ...fs,
-                                          status: FeeStructureClassStatusType.Current,
-                                        };
-                                      }
-
-                                      if (clsHasData) {
-                                        return {
-                                          ...fs,
-                                          status: FeeStructureClassStatusType.Completed,
-                                        };
-                                      }
-
-                                      return {
-                                        ...fs,
-                                        status: FeeStructureClassStatusType.Remaining,
-                                      };
-                                    }
-                                  );
-                                });
-
-                                formik.setFieldValue('feeStructureClasses', updatedStatus);
-                              }
-                              setSelectedClass(className);
-                            }}
-                            sx={{ minWidth: 80, textTransform: 'none', fontWeight: 500 }}
-                          >
-                            {className.replace('Class ', '')}
-                          </Button>
-                        </Box>
-                      );
-                    })}
-                  </Box>
+                  
                 </Grid>
               </Grid>
             </SectionCard>
           </Grid>
-        )}
+        )} */}
 
         {/* 🔹 Global Add Fee Structure Button */}
 
         {/* 🔹 Active Class Fee Structures */}
-        <Grid size={{ xs: 10.5 }}>
-          {selectedClass && (
-            <Box
-              display="flex"
-              justifyContent={selectedClass ? 'space-between' : 'end'}
-              alignItems="center"
-              pb={selectedClass ? 2 : 0}
-            >
-              <Typography variant="h6" color="primary.main">
-                Fee Structure For Class : {selectedClass}
-              </Typography>
+        <Grid size={{ xs: 12 }} mt={1}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            pb={selectedClass ? 2 : 0}
+          >
+            <Autocomplete
+              size="small"
+              fullWidth
+              options={Object.keys(formik.values.feeStructureClasses)}
+              value={selectedClass || null}
+              onChange={(event, className) => {
+                if (className === null) {
+                  setSelectedClass('');
+                  setCurrentClickableClass(null);
+                  return;
+                }
 
-              <Box display="flex" justifyContent="flex-end">
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<Iconify icon="lucide:plus" />}
-                  onClick={() => addNewFeeStructureDialog.onTrue()}
-                >
-                  Fee Structure
-                </Button>
-              </Box>
-            </Box>
-          )}
-          {Object.entries(formik.values.feeStructureClasses)
-            .filter(([_, feeStructures]: any) =>
-              feeStructures.some((fs: any) => fs.status === FeeStructureClassStatusType.Current)
-            )
-            .map(([className, feeStructures]: any) => (
-              <Box key={className}>
-                {feeStructures.length > 0 &&
-                  feeStructures.map((structure: any, idx: number) => {
-                    const totalFeeAmount =
-                      structure.feeItems?.reduce(
-                        (sum: number, item: any) => sum + (item.amount || 0),
-                        0
-                      ) || 0;
+                setSelectedClass(className);
+                setCurrentClickableClass(className);
 
-                    return (
-                      <Accordion
-                        key={idx}
-                        defaultExpanded
-                        sx={{
-                          borderRadius: 2,
-                          '&:before': { display: 'none' },
-                          mb: 2,
-                        }}
-                        elevation={6}
-                        // sx={{
-                        //   border: '1px solid #ccc',
-                        //   boxShadow: 'none',
-                        //   borderRadius: 1,
-                        //   mb: 2,
-                        //   '&:before': { display: 'none' },
-                        // }}
-                      >
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                            <Typography sx={{ fontWeight: 600, mr: 1 }}>
-                              {structure.feeStructureName || `Fee Structure ${idx + 1}`}
-                            </Typography>
+                const updatedStatus = { ...formik.values.feeStructureClasses };
 
-                            <Chip
-                              label={`Total : ${formatNumber(totalFeeAmount, 'INR')}`}
-                              color="success"
-                              size="small"
-                              variant="outlined"
-                            />
-                          </Box>
+                Object.keys(updatedStatus).forEach((cls) => {
+                  updatedStatus[cls] = updatedStatus[cls].map((fs: any, idx: any) => {
+                    const clsHasData = fs.feeItems?.length > 0;
 
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Tooltip title="Add Fee Head">
-                              <IconButton
-                                onClick={(e) => {
-                                  addFeeHeadDialog.onTrue();
-                                  e.stopPropagation();
-                                }}
-                                color="primary"
-                                size="small"
-                              >
-                                <Add />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Edit Fee Structure">
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditFeeStructure({ className, index: idx });
-                                }}
-                              >
-                                <Iconify icon={GlobalIcons.edit} />
-                              </IconButton>
-                            </Tooltip>
+                    if (cls === className && idx === 0) {
+                      return { ...fs, status: FeeStructureClassStatusType.Current };
+                    }
 
-                            <Tooltip title="Delete Fee Structure">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteFeeStructureDialog.onTrue();
-                                  setSelectedFeeStrcture(structure);
-                                }}
-                              >
-                                <Iconify icon={GlobalIcons.delete} color="error" />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </AccordionSummary>
+                    if (clsHasData) {
+                      return { ...fs, status: FeeStructureClassStatusType.Completed };
+                    }
 
-                        <AccordionDetails sx={{ padding: 0, pr: 3 }}>
-                          <Grid container spacing={2}>
-                            <Grid size={{ xs: 12 }} sx={{ ml: 6 }}>
-                              <Grid container spacing={2} sx={{ alignItems: 'center' }}>
-                                <Grid size={{ xs: 2 }}>
-                                  <Typography variant="subtitle2" fontWeight={600}>
-                                    Category
+                    return { ...fs, status: FeeStructureClassStatusType.Remaining };
+                  });
+                });
+
+                formik.setFieldValue('feeStructureClasses', updatedStatus);
+              }}
+              renderInput={(params) => <TextField {...params} label="Class" />}
+              getOptionLabel={(option) => option.replace('Class ', '')}
+              sx={{ width: '250px' }}
+            />
+
+            {/* <Box display="flex" justifyContent="flex-end"> */}
+            {selectedClass && (
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<Iconify icon="lucide:plus" />}
+                onClick={() => addNewFeeStructureDialog.onTrue()}
+              >
+                Fee Structure
+              </Button>
+            )}
+            {/* </Box> */}
+          </Box>
+
+          <>
+            {selectedClass && (
+              <>
+                {(() => {
+                  const filtered = Object.entries(formik.values.feeStructureClasses).filter(
+                    ([className, feeStructures]: any) =>
+                      className === selectedClass &&
+                      feeStructures.some(
+                        (fs: any) => fs.status === FeeStructureClassStatusType.Current
+                      )
+                  );
+
+                  // CASE 2: No fee structures match → show EmptyContent
+                  if (filtered.length === 0) {
+                    return <EmptyContent title="No Fee Structure Created" sx={{ mt: 2 }} />;
+                  }
+
+                  // CASE 1: Render actual fee structures
+                  return filtered.map(([className, feeStructures]: any) => (
+                    <Box key={className}>
+                      {feeStructures.length > 0 ? (
+                        feeStructures.map((structure: any, idx: number) => {
+                          const totalFeeAmount =
+                            structure.feeItems?.reduce(
+                              (sum: number, item: any) => sum + (item.amount || 0),
+                              0
+                            ) || 0;
+
+                          return (
+                            <Accordion
+                              key={idx}
+                              defaultExpanded
+                              sx={{
+                                borderRadius: 2,
+                                '&:before': { display: 'none' },
+                                mb: 2,
+                              }}
+                              elevation={6}
+                            >
+                              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                                  <Typography sx={{ fontWeight: 600, mr: 1 }}>
+                                    {structure.feeStructureName || `Fee Structure ${idx + 1}`}
                                   </Typography>
-                                </Grid>
 
-                                <Grid size={{ xs: 2 }}>
-                                  <Typography variant="subtitle2" fontWeight={600}>
-                                    Name
-                                  </Typography>
-                                </Grid>
+                                  <Chip
+                                    label={`Total : ${formatNumber(totalFeeAmount, 'INR')}`}
+                                    color="success"
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                </Box>
 
-                                <Grid size={{ xs: 2 }} pl={2}>
-                                  <Typography variant="subtitle2" fontWeight={600}>
-                                    Amount
-                                  </Typography>
-                                </Grid>
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                  <Tooltip title="Add Fee Head">
+                                    <IconButton
+                                      onClick={(e) => {
+                                        addFeeHeadDialog.onTrue();
+                                        e.stopPropagation();
+                                      }}
+                                      size="small"
+                                    >
+                                      <Add />
+                                    </IconButton>
+                                  </Tooltip>
 
-                                <Grid size={{ xs: 2 }} pl={4}>
-                                  <Typography variant="subtitle2" fontWeight={600}>
-                                    Payment Type
-                                  </Typography>
-                                </Grid>
+                                  <Tooltip title="Edit Fee Structure">
+                                    <IconButton
+                                      size="small"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditFeeStructure({ className, index: idx });
+                                      }}
+                                    >
+                                      <Iconify icon={GlobalIcons.edit} />
+                                    </IconButton>
+                                  </Tooltip>
 
-                                <Grid size={{ xs: 2 }} pl={6}>
-                                  <Typography variant="subtitle2" fontWeight={600}>
-                                    Optional
-                                  </Typography>
-                                </Grid>
+                                  <Tooltip title="Delete Fee Structure">
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteFeeStructureDialog.onTrue();
+                                        setSelectedFeeStrcture(structure);
+                                      }}
+                                    >
+                                      <Iconify icon={GlobalIcons.delete} color="error" />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Box>
+                              </AccordionSummary>
 
-                                <Grid size={{ xs: 2 }} pl={4}>
-                                  <Typography variant="subtitle2" fontWeight={600}>
-                                    Action
-                                  </Typography>
+                              <AccordionDetails sx={{ padding: 0, pr: 3 }}>
+                                <Grid container spacing={2}>
+                                  {structure.feeItems?.length > 0 ? (
+                                    <Grid size={{ xs: 12 }} sx={{ ml: 6 }}>
+                                      <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+                                        <Grid size={{ xs: 2 }}>
+                                          <Typography variant="subtitle2" fontWeight={600}>
+                                            Category
+                                          </Typography>
+                                        </Grid>
+                                        <Grid size={{ xs: 2 }}>
+                                          <Typography variant="subtitle2" fontWeight={600}>
+                                            Name
+                                          </Typography>
+                                        </Grid>
+                                        <Grid size={{ xs: 2 }} pl={2}>
+                                          <Typography variant="subtitle2" fontWeight={600}>
+                                            Amount
+                                          </Typography>
+                                        </Grid>
+                                        <Grid size={{ xs: 2 }} pl={4}>
+                                          <Typography variant="subtitle2" fontWeight={600}>
+                                            Payment Type
+                                          </Typography>
+                                        </Grid>
+                                        <Grid size={{ xs: 2 }} pl={6}>
+                                          <Typography variant="subtitle2" fontWeight={600}>
+                                            Optional
+                                          </Typography>
+                                        </Grid>
+                                        <Grid size={{ xs: 2 }} pl={4}>
+                                          <Typography variant="subtitle2" fontWeight={600}>
+                                            Action
+                                          </Typography>
+                                        </Grid>
+                                      </Grid>
+                                    </Grid>
+                                  ) : (
+                                    <Box
+                                      display="flex"
+                                      alignItems="center"
+                                      justifyContent="center"
+                                      width="100%"
+                                    >
+                                      <EmptyContent
+                                        title="No Fee Heads Added"
+                                        sx={{
+                                          width: 'fullWidth',
+                                          position: 'sticky',
+                                          left: 0,
+                                          padding: 0,
+                                        }}
+                                      />
+                                    </Box>
+                                  )}
+
+                                  <Divider />
+
+                                  <FeeStructureCard
+                                    className={className}
+                                    feeItems={structure.feeItems || []}
+                                    structureIndex={idx}
+                                    formik={formik}
+                                    addFeeHeadDialog={addFeeHeadDialog}
+                                  />
                                 </Grid>
-                              </Grid>
-                            </Grid>
-                            <Divider />
-                            <FeeStructureCard
-                              className={className}
-                              feeItems={structure.feeItems || []}
-                              structureIndex={idx}
-                              formik={formik}
-                              addFeeHeadDialog={addFeeHeadDialog}
-                            />
-                          </Grid>
-                        </AccordionDetails>
-                      </Accordion>
-                    );
-                  })}
-              </Box>
-            ))}
+                              </AccordionDetails>
+                            </Accordion>
+                          );
+                        })
+                      ) : (
+                        <EmptyContent title="No Fee Structure Created" />
+                      )}
+                    </Box>
+                  ));
+                })()}
+              </>
+            )}
+          </>
         </Grid>
       </Grid>
 

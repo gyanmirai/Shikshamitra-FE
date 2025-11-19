@@ -1,6 +1,6 @@
 import React from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Card, Stack, Typography, CardContent } from '@mui/material';
+import { Box, Paper, Stack, Typography, CardContent } from '@mui/material';
 
 const concessions = [
   {
@@ -24,7 +24,16 @@ export default function ConcessionsCard() {
   const total = concessions.reduce((acc, c) => acc + c.amount, 0);
 
   return (
-    <Card sx={{ borderRadius: 1, boxShadow: 3, height: '100%' }}>
+    <Paper
+      elevation={3}
+      sx={{
+        borderRadius: 1,
+        height: '450px',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {' '}
       <CardContent sx={{ p: 2 }}>
         {/* Header */}
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
@@ -35,7 +44,7 @@ export default function ConcessionsCard() {
             Saving : ₹ {total.toLocaleString('en-IN')}
           </Typography>
         </Box>
-        <Scrollbar sx={{ height: '300px' }}>
+        <Scrollbar sx={{ height: '350px' }}>
           <Stack spacing={1.5}>
             {concessions.map((item, index) => (
               <Box
@@ -66,6 +75,6 @@ export default function ConcessionsCard() {
           </Stack>
         </Scrollbar>
       </CardContent>
-    </Card>
+    </Paper>
   );
 }

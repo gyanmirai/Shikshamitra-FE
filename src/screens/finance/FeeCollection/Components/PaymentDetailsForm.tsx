@@ -287,17 +287,15 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
               <Grid container spacing={3} pt={1}>
                 {/* Terms Selection Section */}
 
-                {formik.values.totalAmount && (
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <Typography
-                      variant="body2"
-                      color="text.primary"
-                      sx={{ fontWeight: 500, lineHeight: 1.5 }}
-                    >
-                      Total Amount : <strong>₹ {formatNumber(formik.values.totalAmount)}</strong>
-                    </Typography>
-                  </Grid>
-                )}
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.primary"
+                    sx={{ fontWeight: 500, lineHeight: 1.5 }}
+                  >
+                    Total Amount : <strong>₹ {formatNumber(formik.values.totalAmount)}</strong>
+                  </Typography>
+                </Grid>
 
                 <Grid size={{ xs: 12, md: 8 }}>
                   <ShakingTextField

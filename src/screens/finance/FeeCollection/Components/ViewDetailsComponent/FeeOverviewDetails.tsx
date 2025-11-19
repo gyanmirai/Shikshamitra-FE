@@ -1,11 +1,10 @@
 import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import ErrorIcon from '@mui/icons-material/Error';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Card, Typography } from '@mui/material';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
 
 type FeeOverviewProps = {
   total: number;
@@ -72,7 +71,7 @@ export default function FeeOverview({
       <Scrollbar sx={{ height: '380px', p: 1 }}>
         {/* Total Fee */}
         <RowCard
-          icon={<MonetizationOnIcon color="warning" />}
+          icon={<Iconify icon="streamline:bag-dollar" />}
           label="Total Fee"
           value={total}
           bgcolor={`${theme.palette.secondary.light}33`}
@@ -89,7 +88,7 @@ export default function FeeOverview({
 
         {/* Pending Fee */}
         <RowCard
-          icon={<AccessTimeFilledIcon color="warning" />}
+          icon={<Iconify icon="game-icons:sands-of-time" sx={{ color: 'warning.main' }} />}
           label="Pending Fee"
           value={pending}
           bgcolor={`${theme.palette.warning.light}33`}
