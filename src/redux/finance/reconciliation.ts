@@ -14,10 +14,9 @@ export const ReconciliationApi = createApi({
         if (url === '/bankStatements') {
           return { data: reconciliationData.bankStatements };
         }
-        if (url === '/cheueDetails') {
+        if (url === '/chequeDetails') {
           return { data: reconciliationData.chequeDetails };
         }
-
         if (url === '/demandDraft') {
           return { data: reconciliationData.demandDraft };
         }

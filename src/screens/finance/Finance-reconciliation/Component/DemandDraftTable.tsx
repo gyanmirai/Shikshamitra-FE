@@ -11,12 +11,11 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetDemandDraftQuery } from 'src/redux/finance/reconciliation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Button, MenuList, MenuItem, TextField, Typography, DialogActions } from '@mui/material';
+import { Button, MenuList, TextField, IconButton, Typography, DialogActions } from '@mui/material';
 import {
   PamentMethodsStatusColor,
   PaymentMethodsStatusType,
@@ -157,46 +156,43 @@ const DemandDraftTable = () => {
             align: 'left',
             render(value, row: any) {
               return (
-                <ThreeDotsActions
-                  placement="right-top"
-                  actions={({ popover }: any) => (
-                    <MenuList>
-                      {row.status !== PaymentMethodsStatusType.Approved && (
-                        <MenuItem
-                          onClick={() => {
-                            setIsClearCheck(false);
-                            setSelectedEntry({ ...row, type: 'approve' });
-                            isDialog.onTrue();
-                            popover.onClose();
-                          }}
-                        >
-                          <Iconify
-                            icon="mdi:check-decagram"
-                            sx={{ color: 'success.main', mr: 1 }}
-                          />
-                          <Typography fontWeight={500} color="success.main">
-                            Approve
-                          </Typography>
-                        </MenuItem>
-                      )}
-                      {row.status !== PaymentMethodsStatusType.Rejected && (
-                        <MenuItem
-                          onClick={() => {
-                            setIsClearCheck(true);
-                            setSelectedEntry({ ...row, type: 'reject' });
-                            isDialog.onTrue();
-                            popover.onClose();
-                          }}
-                        >
-                          <Iconify icon="mdi:close-circle" sx={{ color: 'error.main', mr: 1 }} />
-                          <Typography fontWeight={500} color="error.main">
-                            Reject
-                          </Typography>
-                        </MenuItem>
-                      )}
-                    </MenuList>
-                  )}
-                />
+                <MenuList>
+                  <Box sx={{ display: 'flex' }}>
+                    {row.status !== PaymentMethodsStatusType.Approved && (
+                      <IconButton
+                        onClick={() => {
+                          setIsClearCheck(false);
+                          setSelectedEntry({ ...row, type: 'approve' });
+                          isDialog.onTrue();
+                        }}
+                        sx={{
+                          width: 36,
+                          height: 36,
+                          p: 0,
+                        }}
+                      >
+                        <Iconify icon="mdi:check-decagram" sx={{ color: 'success.main' }} />
+                      </IconButton>
+                    )}
+
+                    {row.status !== PaymentMethodsStatusType.Rejected && (
+                      <IconButton
+                        onClick={() => {
+                          setIsClearCheck(true);
+                          setSelectedEntry({ ...row, type: 'reject' });
+                          isDialog.onTrue();
+                        }}
+                        sx={{
+                          width: 36,
+                          height: 36,
+                          p: 0,
+                        }}
+                      >
+                        <Iconify icon="mdi:close-circle" sx={{ color: 'error.main' }} />
+                      </IconButton>
+                    )}
+                  </Box>
+                </MenuList>
               );
             },
           },
@@ -225,7 +221,6 @@ const DemandDraftTable = () => {
             </CustomTooltip>
           </Box>
         }
-        maxWidth="sm"
       >
         <ApproveRejectForm handleClose={isDialog.onFalse} editData={selectedEntry} />
       </CustomDialog>

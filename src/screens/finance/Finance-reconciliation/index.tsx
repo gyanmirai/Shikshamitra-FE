@@ -161,6 +161,7 @@ const FinanceReconciliation = () => {
   // Redux state for unsaved changes
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
 
   /**
@@ -206,6 +207,7 @@ const FinanceReconciliation = () => {
           { name: 'Finance', href: '/finance/dashboard/' },
           { name: 'Reconciliation', href: '/finance/reconciliation' },
         ]}
+        sx={{ mb: 2 }}
       />
       <Paper
         sx={{

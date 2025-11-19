@@ -1608,7 +1608,20 @@ const financeModule = {
               shortcutKey: 'Alt+F+7',
               shortcutKeyName: 'Alt+F+7',
             },
-
+            {
+              title: 'Income Category',
+              path: '/finance/settings/incomeCategories',
+              _action: 'expense-category',
+              shortcutKey: 'Alt+F+7',
+              shortcutKeyName: 'Alt+F+7',
+            },
+            {
+              title: 'Bank Accounts',
+              path: '/finance/settings/bank-account-management',
+              _action: 'bank-account-management',
+              shortcutKey: 'Alt+F+8',
+              shortcutKeyName: 'Alt+F+8',
+            },
             // {
             //   title: 'Tax Setting',
             //   path: '/finance/settings/tax-setting',
