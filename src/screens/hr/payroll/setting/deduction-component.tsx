@@ -1,15 +1,19 @@
+'use client';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { useDeletePayElementMutation } from 'src/redux/payElement/payElementApi';
 import {
@@ -44,14 +48,11 @@ interface PayElement {
   isVisibleInPaySlip: boolean;
 }
 
-const DeductionComponent = ({
-  isDeductionComponentOpen,
-}: {
-  isDeductionComponentOpen: UseBooleanReturn;
-}) => {
+const DeductionComponent = () => {
   const confirm = useBoolean();
   const [editData, setEditData] = useState<any>(null);
   const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
+  const isDeductionComponentOpen = useBoolean();
 
   const [deletePayElement] = useQueryAndMutation({
     type: 'mutation',
@@ -59,7 +60,29 @@ const DeductionComponent = ({
   });
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Deduction Component"
+        links={[
+          { name: 'HR/Staff', href: '/hr/dashboard/' },
+          {
+            name: 'Payroll Management',
+            href: '/hr/payroll/dashboard/',
+          },
+          { name: ' Settings' },
+          { name: 'Deduction Component' },
+        ]}
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            size="small"
+            onClick={isDeductionComponentOpen.onTrue}
+          >
+            Deduction Component
+          </Button>
+        }
+      />
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}

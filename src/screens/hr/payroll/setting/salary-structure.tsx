@@ -1,11 +1,10 @@
 'use client';
 
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
-
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -17,6 +16,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetPayElementsQuery,
@@ -55,14 +55,11 @@ interface PayElement {
   isVisibleInPaySlip: boolean;
 }
 
-const SalaryStructure = ({
-  isSalaryStructureOpen: dialog,
-}: {
-  isSalaryStructureOpen: UseBooleanReturn;
-}) => {
+const SalaryStructure = () => {
   const confirm = useBoolean();
   const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
   const [editData, setEditData] = useState<PayElement | null>(null);
+  const isSalaryStructureOpen = useBoolean();
 
   const { data: payElements, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -75,10 +72,34 @@ const SalaryStructure = ({
 
   const handleClose = () => {
     setEditData(null);
-    dialog.onFalse();
+    isSalaryStructureOpen.onFalse();
   };
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Salary Structure"
+        links={[
+          { name: 'HR/Staff', href: '/hr/dashboard/' },
+          {
+            name: 'Payroll Management',
+            href: '/hr/payroll/dashboard/',
+          },
+          { name: ' Settings' },
+          { name: 'Salary Structure' },
+        ]}
+        action={
+          <Button
+            sx={{ minWidth: '200px', width: '100%' }}
+            variant="contained"
+            startIcon={<Add />}
+            size="small"
+            onClick={isSalaryStructureOpen.onTrue}
+          >
+            Salary Structure
+          </Button>
+        }
+      />
+
       <ConfirmDialog
         open={confirm.value}
         onClose={confirm.onFalse}
@@ -104,7 +125,7 @@ const SalaryStructure = ({
             No Pay-element Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                isSalaryStructureOpen.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -171,7 +192,7 @@ const SalaryStructure = ({
                   }}
                   handleEditClick={() => {
                     setEditData(row as PayElement);
-                    dialog.onTrue();
+                    isSalaryStructureOpen.onTrue();
                   }}
                   placement="right-top"
                 />
@@ -196,7 +217,7 @@ const SalaryStructure = ({
           </Box>
         }
         handleClose={handleClose}
-        open={dialog.value}
+        open={isSalaryStructureOpen.value}
       >
         <CTCPreviewForm handleClose={handleClose} editData={editData} />
       </CustomDialog>

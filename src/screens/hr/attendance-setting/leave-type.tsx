@@ -1,10 +1,12 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -18,6 +20,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -44,11 +47,12 @@ interface ILeavePolicy {
   color: string;
 }
 
-const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanReturn }) => {
+const LeaveType = () => {
   // const dialog = useBoolean(false);
   const confirm = useBoolean(false);
   const [editData, setEditData] = useState<any>(null);
   const dispatch = useDispatch();
+  const leaveTypeDialog = useBoolean(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { data: leavePolicyData, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -67,10 +71,10 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
     };
 
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dialog.onFalse();
+      leaveTypeDialog.onFalse();
       resetState();
     } else if (!isChanges) {
-      dialog.onFalse();
+      leaveTypeDialog.onFalse();
       setEditData(null);
     }
   };
@@ -87,7 +91,28 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
     [leavePolicyData?.items]
   );
   return (
-    <>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Leave Type"
+        links={[
+          { name: 'Hr', href: '/hr/dashboard/' },
+          { name: 'Attendance & Leave Management', href: '' },
+          { name: 'Setting' },
+          { name: 'Leave Type', href: '' },
+        ]}
+        description="Define and manage various leave types available to employees, such as sick leave, casual leave, and paid time off."
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Add />}
+            variant="contained"
+            size="small"
+            onClick={leaveTypeDialog.onTrue}
+          >
+            Leave Type
+          </Button>
+        }
+      />
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -123,7 +148,7 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
         <Button
           sx={{ width: '160px' }}
           startIcon={<Add />}
-          onClick={dialog.onTrue}
+          onClick={leaveTypeDialog.onTrue}
           variant="contained"
           size="small"
         >
@@ -136,7 +161,7 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
             No Leave Type Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                leaveTypeDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -224,7 +249,7 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
                   }}
                   handleEditClick={() => {
                     setEditData(row);
-                    dialog.onTrue();
+                    leaveTypeDialog.onTrue();
                   }}
                 />
               );
@@ -251,15 +276,15 @@ const LeaveType = ({ leaveTypeDialog: dialog }: { leaveTypeDialog: UseBooleanRet
             </CustomTooltip>
           </Box>
         }
-        open={dialog.value}
+        open={leaveTypeDialog.value}
         handleClose={() => {
-          dialog.onFalse();
+          leaveTypeDialog.onFalse();
           setEditData(null);
         }}
       >
         <LeaveTypeForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 export default LeaveType;

@@ -1,3 +1,5 @@
+'use client';
+
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
@@ -5,8 +7,10 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -16,8 +20,8 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetShiftsQuery } from 'src/redux/shiftManagement/shift-management-api';
@@ -37,14 +41,11 @@ import {
 
 import { SectionCard } from '../employee/employee-form-fields/InformationFields';
 
-const ShiftManagement = ({
-  shiftManagementDialog: dialog,
-}: {
-  shiftManagementDialog: UseBooleanReturn;
-}) => {
+const ShiftManagement = () => {
   const confirm = useBoolean();
   const [editData, setEditData] = useState(null);
   const [deleteInformation, setDeleteInformation] = useState<any>(null);
+  const shiftManagementDialog = useBoolean();
 
   // const [deleteRule] = useQueryAndMutation({
   //   type: 'mutation',
@@ -62,10 +63,10 @@ const ShiftManagement = ({
     };
 
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
-      dialog.onFalse();
+      shiftManagementDialog.onFalse();
       resetState();
     } else if (!isChanges) {
-      dialog.onFalse();
+      shiftManagementDialog.onFalse();
       setTimeout(() => {
         setEditData(null);
       }, 200);
@@ -73,14 +74,37 @@ const ShiftManagement = ({
   };
 
   return (
-    <>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CustomBreadcrumbs
+        heading="Shift Management"
+        description="
+        Configure and manage shift rules to optimize workforce scheduling and ensure efficient attendance tracking."
+        links={[
+          { name: 'Hr', href: '/hr/dashboard/' },
+          { name: 'Attendance & Leave' },
+          { name: 'Setting' },
+          { name: 'Shift Management' },
+        ]}
+        action={
+          <Button
+            sx={{ width: '160px' }}
+            startIcon={<Add />}
+            variant="contained"
+            size="small"
+            onClick={shiftManagementDialog.onTrue}
+          >
+            Shift Rule
+          </Button>
+        }
+      />
+
       <CustomizableTable
         noDataText={
           <>
             No Shift Management Data Found{' '}
             <Box
               onClick={() => {
-                dialog.onTrue();
+                shiftManagementDialog.onTrue();
               }}
               color="primary.main"
               fontWeight={600}
@@ -118,7 +142,7 @@ const ShiftManagement = ({
                   showDeleteIcon
                   handleEditClick={() => {
                     setEditData(row as any);
-                    dialog.onTrue();
+                    shiftManagementDialog.onTrue();
                   }}
                   handleDeleteClick={() => {
                     setDeleteInformation(row);
@@ -211,16 +235,16 @@ const ShiftManagement = ({
           </Box>
         }
         handleClose={() => {
-          dialog.onFalse();
+          shiftManagementDialog.onFalse();
           setTimeout(() => {
             setEditData(null);
           }, 200);
         }}
-        open={dialog.value}
+        open={shiftManagementDialog.value}
       >
         <ShiftManagementForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 
