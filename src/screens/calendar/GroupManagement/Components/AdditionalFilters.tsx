@@ -292,13 +292,13 @@ const AdditionalFilters: React.FC = () => {
     <Grid container spacing={2}>
       <Grid size={{ xs: 12 }}>
         <Typography variant="subtitle1" color="primary">
-          Additional Filters
+          Additional Selections
         </Typography>
       </Grid>
 
       <Grid size={{ xs: 6 }} sx={{ borderRight: '2px solid', borderColor: 'primary.main', pr: 2 }}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle2">Students Filter</Typography>
+          <Typography variant="subtitle2">Students Selections</Typography>
           <IconButton
             size="small"
             color="primary"
@@ -312,7 +312,7 @@ const AdditionalFilters: React.FC = () => {
       </Grid>
       <Grid size={{ xs: 6 }} pl={2}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle2">Employee Filters</Typography>
+          <Typography variant="subtitle2">Employee Selections</Typography>
           <IconButton
             size="small"
             color="primary"

@@ -713,82 +713,76 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     </SectionCard>
   );
 
-  const renderPreview = () => {
-    const selectedIds: string[] = formik.values.selections || [];
-
-    const MAX_LIST = 6; // show up to this many names per section
-
-    return (
-      <SectionCard title="Final Preview" paperProps={{ sx: { mb: 2 } }}>
-        <Grid size={{ xs: 12 }}>
-          <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              General Information
-            </Typography>
-            <Divider sx={{ my: 1 }} />
-            <Typography variant="subtitle2">Name: {formik.values.groupName || '—'}</Typography>
-            <Typography variant="subtitle2" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>
-              Description:{' '}
-              {formik.values.description ? (
-                <Typography
-                  component="small"
-                  variant="subtitle2"
-                  sx={{
+  const renderPreview = () => (
+    <SectionCard title="Final Preview" paperProps={{ sx: { mb: 2 } }}>
+      <Grid size={{ xs: 12 }}>
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            General Information
+          </Typography>
+          <Divider sx={{ my: 1 }} />
+          <Typography variant="subtitle2">Name: {formik.values.groupName || '—'}</Typography>
+          <Typography variant="subtitle2" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>
+            Description:{' '}
+            {formik.values.description ? (
+              <Typography
+                component="small"
+                variant="subtitle2"
+                sx={{
+                  m: 0,
+                  '& *': {
                     m: 0,
-                    '& *': {
-                      m: 0,
-                    },
-                  }}
-                  dangerouslySetInnerHTML={{ __html: formik.values.description }}
-                />
-              ) : (
-                '—'
-              )}
-            </Typography>
-          </Paper>
-          <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              Filters & Selection Summary
-            </Typography>
-            <Divider sx={{ my: 1 }} />
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 5 }}>
-                <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
-                    Total User
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
-                    50
-                  </Typography>
-                </Paper>
-              </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
-                    Students
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
-                    30
-                  </Typography>
-                </Paper>
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
-                    Employees
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
-                    20
-                  </Typography>
-                </Paper>
-              </Grid>
+                  },
+                }}
+                dangerouslySetInnerHTML={{ __html: formik.values.description }}
+              />
+            ) : (
+              '—'
+            )}
+          </Typography>
+        </Paper>
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Filters & Selection Summary
+          </Typography>
+          <Divider sx={{ my: 1 }} />
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 5 }}>
+              <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
+                  Total User
+                </Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
+                  50
+                </Typography>
+              </Paper>
             </Grid>
-          </Paper>
-        </Grid>
-        {/* <Chip label={`Total Users : ${selectedUsers.length}`} /> */}
-      </SectionCard>
-    );
-  };
+            <Grid size={{ xs: 12, md: 3 }}>
+              <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
+                  Students
+                </Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
+                  30
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
+                  Employees
+                </Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
+                  20
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Grid>
+      {/* <Chip label={`Total Users : ${selectedUsers.length}`} /> */}
+    </SectionCard>
+  );
 
   const steps = [
     { label: 'General Information', content: renderGeneralInformation() },
@@ -799,7 +793,24 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" height="100%">
+        <Box
+          display="flex"
+          flexDirection="column"
+          height="100%"
+          // Handle Enter key to advance steps (except last) without submitting prematurely
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              const isLast = activeStep === steps.length - 1;
+              const target = e.target as HTMLElement;
+              const { isContentEditable, tagName } = target;
+              const isTextArea = tagName === 'TEXTAREA';
+              if (!isLast && !isContentEditable && !isTextArea) {
+                e.preventDefault();
+                gotoNext();
+              }
+            }
+          }}
+        >
           <Box sx={{ flexGrow: 1, overflow: 'auto', p: 2 }}>
             <Stepper activeStep={activeStep} orientation="vertical">
               {steps.map((step, index) => (

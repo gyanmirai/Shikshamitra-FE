@@ -5,13 +5,16 @@ import type { EventClickArg } from '@fullcalendar/core';
 import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Button } from '@mui/material';
-import { useBoolean } from 'src/hooks/use-boolean';
 import CommonCalender from 'src/components/calender';
+import { Box, Chip, Button, Divider } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import FilterDialog from './Components/FilterDialog';
 import CalendarViewDialog from './Components/ViewDialog';
+import FilterControls, {
+  statusOptions,
+  eventTypesOptions,
+  holidayTypesOptions,
+} from './Components/FilterControls';
 
 import type { Filters } from './Components/FilterDialog';
 
@@ -321,12 +324,11 @@ const data = [
 const CalendarView = () => {
   const theme = useTheme();
   const [filters, setFilters] = useState<Filters>({
-    eventType: [],
-    holidayType: [],
-    status: [],
+    eventType: eventTypesOptions,
+    holidayType: holidayTypesOptions,
+    status: statusOptions,
   });
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
-  const filterDialog = useBoolean();
 
   const calendarData = useMemo(
     () =>
@@ -350,21 +352,27 @@ const CalendarView = () => {
   };
 
   const handleApply = (currentFilters: Filters) => {
-    console.log('Applied filters:', currentFilters);
-    filterDialog.onFalse();
+    // Applied directly from inline autocomplete controls
     setFilters(currentFilters);
   };
 
-  // Function to handle removing a filter
+  // Helpers for ALL logic (if 'ALL' is present we treat as no filtering regardless of other items)
+  const isAllSelected = (arr: string[]) => arr.includes('ALL');
+
+  // Function to handle removing a filter (ignores when ALL is selected)
   const handleRemoveFilter = (type: keyof Filters, value: string) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [type]: prevFilters[type].filter((item) => item !== value),
-    }));
+    setFilters((prevFilters) => {
+      const current = prevFilters[type];
+      if (isAllSelected(current)) return prevFilters; // nothing to remove
+      const next = current.filter((item) => item !== value);
+      return { ...prevFilters, [type]: next.length ? next : ['ALL'] };
+    });
   };
 
-  // Check if any filters are applied
-  const hasActiveFilters = Object.values(filters).some((filterArray) => filterArray.length > 0);
+  // Check if any filters are applied (ALL means not active)
+  const hasActiveFilters = Object.values(filters).some(
+    (filterArray) => filterArray.length > 0 && !isAllSelected(filterArray)
+  );
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', pb: 2 }}>
@@ -373,6 +381,11 @@ const CalendarView = () => {
         links={[{ name: 'Calendar' }, { name: 'Calendar View' }]}
         sx={{ mb: 2 }}
       />
+
+      {/* Inline filter controls */}
+      <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+        <FilterControls filters={filters} onChange={handleApply} />
+      </Box>
 
       {/* Display active filters - grouped blocks */}
       {hasActiveFilters && (
@@ -386,7 +399,7 @@ const CalendarView = () => {
             alignItems: 'center',
           }}
         >
-          {filters.eventType.length > 0 && (
+          {filters.eventType.length > 0 && !isAllSelected(filters.eventType) && (
             <FilterGroupBlock
               title="Events"
               color="primary"
@@ -395,7 +408,7 @@ const CalendarView = () => {
               chipColor="primary"
             />
           )}
-          {filters.holidayType.length > 0 && (
+          {filters.holidayType.length > 0 && !isAllSelected(filters.holidayType) && (
             <FilterGroupBlock
               title="Holidays"
               color="error"
@@ -404,7 +417,7 @@ const CalendarView = () => {
               chipColor="error"
             />
           )}
-          {filters.status.length > 0 && (
+          {filters.status.length > 0 && !isAllSelected(filters.status) && (
             <FilterGroupBlock
               title="Status"
               color="info"
@@ -420,7 +433,9 @@ const CalendarView = () => {
               startIcon={
                 <Iconify icon="solar:trash-bin-trash-bold" sx={{ width: '20px', height: '20px' }} />
               }
-              onClick={() => setFilters({ eventType: [], holidayType: [], status: [] })}
+              onClick={() =>
+                setFilters({ eventType: ['ALL'], holidayType: ['ALL'], status: ['ALL'] })
+              }
             >
               Clear All (
               {filters.eventType.length + filters.holidayType.length + filters.status.length})
@@ -429,19 +444,16 @@ const CalendarView = () => {
         </Box>
       )}
 
+      <Divider sx={{ mb: 2 }} />
+
       <CommonCalender
         data={calendarData}
         showCalendarToolbar
         onDateClick={(e) => {
-          console.log(e);
           handleEventClick(e);
         }}
-        // onDateClick={handleEventClick}
-        showCalendarFilter
-        onOPenFiler={() => {
-          console.log('open filter');
-          filterDialog.onTrue();
-        }}
+        // Drawer filter removed; inline controls used instead
+        showCalendarFilter={false}
         containerProps={{
           sx: {
             height: '100%',
@@ -456,12 +468,7 @@ const CalendarView = () => {
         onClose={() => setCurrentDateClick(null)}
         data={currentDateClick}
       />
-      <FilterDialog
-        open={filterDialog.value}
-        onClose={() => filterDialog.onFalse()}
-        handleApply={handleApply}
-        filters={filters}
-      />
+      {/* Removed FilterDialog drawer; replaced by inline FilterControls */}
     </Box>
   );
 };
