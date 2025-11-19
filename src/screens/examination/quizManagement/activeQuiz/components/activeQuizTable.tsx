@@ -35,7 +35,6 @@ const QuizTable = ({
   const viewSubmissionDialog = useBoolean();
 
   // Boolean state to control view analytics dialog visibility
-  const viewAnalyticsDialog = useBoolean();
   const actions = ({ row, popover }: any) => (
     <Box>
       <MenuList>

@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Box, Grid } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
 import { EcommerceYearlySales } from 'src/sections/overview/e-commerce/ecommerce-yearly-sales';
 import { BankingBalanceStatistics } from 'src/sections/overview/banking/banking-balance-statistics';
@@ -10,7 +9,6 @@ import { BankingBalanceStatistics } from 'src/sections/overview/banking/banking-
 import FinanceFeeTrackingComponent from '../fee-management/Tabs/finance-fee-structure-overview/component/finance-fee-tracking';
 
 const FinanceDashboardScreen = () => {
-  const theme = useTheme();
   const [selectedSeries, setSelectedSeries] = useState<any>('Income');
 
   return (

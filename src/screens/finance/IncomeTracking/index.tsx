@@ -33,11 +33,11 @@ const IncomeTracking = () => {
   const addIncomeDialog = useBoolean();
   const deleteIncomeDialog = useBoolean();
   const viewIncomeDialog = useBoolean();
-  const { data: incomeData, isLoading: incomeLoading } = useQueryAndMutation({
+  const { data: incomeData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomesQuery,
   });
-  const { data: incomeDetailedData, isLoading } = useQueryAndMutation({
+  const { data: incomeDetailedData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeDetailsQuery,
   });

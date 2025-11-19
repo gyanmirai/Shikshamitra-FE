@@ -31,7 +31,7 @@ const validationSchema = Yup.object().shape({
 });
 
 const FinanceNewReportsScreen = (props: TabComponentType) => {
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

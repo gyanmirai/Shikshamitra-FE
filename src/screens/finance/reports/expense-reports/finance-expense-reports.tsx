@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { exportGraphData } from 'src/utils/exportGraph';
 import CustomSelect from 'src/components/custom-select';
@@ -10,7 +9,6 @@ import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytic
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 const FinanceExpenseReports = () => {
-  const theme = useTheme();
   const [anchorElTrend, setAnchorElTrend] = useState<null | HTMLElement>(null);
   const [anchorElCategory, setAnchorElCategory] = useState<null | HTMLElement>(null);
 

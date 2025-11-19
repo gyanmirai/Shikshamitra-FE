@@ -15,7 +15,7 @@ const ReceivedAmountWarning: React.FC<ReceivedAmountWarningDialogProps> = ({
   onClose,
   title,
 }) => {
-  const [isConfirmEnabled, setConfirmEnabled] = useState(false);
+  const [, setConfirmEnabled] = useState(false);
   // eslint-disable-next-line consistent-return
   useEffect(() => {
     if (open) {

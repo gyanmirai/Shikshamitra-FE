@@ -2,7 +2,6 @@ import type { LabelColor } from 'src/components/label';
 
 import Link from 'next/link';
 import { Label } from 'src/components/label';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Paper, Divider, Typography } from '@mui/material';
@@ -17,93 +16,90 @@ export const StudentFeeSummaryCard = ({
   showHeader?: boolean;
 }) => {
   // Get the current theme for consistent styling across the component
-  const theme = useTheme();
 
-  return (
-    <Box display="flex" gap={2} alignItems="center">
-      {/* Avatar */}
+  <Box display="flex" gap={2} alignItems="center">
+    {/* Avatar */}
 
-      {/* Student Info + Fees */}
-      <Box flex={1} display="flex" flexDirection="column" gap={2}>
-        {/* Top Row: Name + Status */}
-        {showHeader && (
-          <Box display="flex" alignItems="center" justifyContent="space-between">
-            <Box display="flex" alignItems="center" gap={2}>
-              <Box>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  {student?.name}({student?.grNumber})
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {student?.className && student?.division
-                    ? `${student.className} - ${student.division}`
-                    : 'N/A'}{' '}
-                  | Roll No : {student?.rollNumber ?? 'N/A'}
-                </Typography>
-              </Box>
+    {/* Student Info + Fees */}
+    <Box flex={1} display="flex" flexDirection="column" gap={2}>
+      {/* Top Row: Name + Status */}
+      {showHeader && (
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {student?.name}({student?.grNumber})
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {student?.className && student?.division
+                  ? `${student.className} - ${student.division}`
+                  : 'N/A'}{' '}
+                | Roll No : {student?.rollNumber ?? 'N/A'}
+              </Typography>
             </Box>
-            <Paper
-              elevation={3}
-              sx={{
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                display: 'flex',
-                borderRadius: 2,
-                p: 1,
-                // boxShadow: 'var(--shadows-4)',
-              }}
-            >
-              {/* ITEM */}
-              <Box textAlign="center" minWidth={120}>
-                <Typography variant="body2" color="text.secondary">
-                  Total Fee
-                </Typography>
-                <Typography variant="subtitle1" fontWeight={600} color="text.primary">
-                  {formatNumber(student?.totalFees ?? 0, 'INR')}
-                </Typography>
-              </Box>
-
-              {/* DIVIDER */}
-              <Divider orientation="vertical" flexItem />
-
-              {/* ITEM */}
-              <Box textAlign="center" minWidth={120}>
-                <Typography variant="body2" color="text.secondary">
-                  Paid
-                </Typography>
-                <Typography variant="subtitle1" fontWeight={600} color="success.main">
-                  {formatNumber(student?.paidFees ?? 0, 'INR')}
-                </Typography>
-              </Box>
-
-              <Divider orientation="vertical" flexItem />
-
-              {/* ITEM */}
-              <Box textAlign="center" minWidth={120}>
-                <Typography variant="body2" color="text.secondary">
-                  Pending
-                </Typography>
-                <Typography variant="subtitle1" fontWeight={600} color="warning.main">
-                  {formatNumber(student?.pendingFees ?? 0, 'INR')}
-                </Typography>
-              </Box>
-
-              <Divider orientation="vertical" flexItem />
-
-              {/* ITEM */}
-              <Box textAlign="center" minWidth={120}>
-                <Typography variant="body2" color="text.secondary">
-                  Overdue
-                </Typography>
-                <Typography variant="subtitle1" fontWeight={600} color="error.main">
-                  {formatNumber(student?.overdueFees ?? 0, 'INR')}
-                </Typography>
-              </Box>
-            </Paper>
           </Box>
-        )}
-      </Box>
+          <Paper
+            elevation={3}
+            sx={{
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              display: 'flex',
+              borderRadius: 2,
+              p: 1,
+              // boxShadow: 'var(--shadows-4)',
+            }}
+          >
+            {/* ITEM */}
+            <Box textAlign="center" minWidth={120}>
+              <Typography variant="body2" color="text.secondary">
+                Total Fee
+              </Typography>
+              <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+                {formatNumber(student?.totalFees ?? 0, 'INR')}
+              </Typography>
+            </Box>
+
+            {/* DIVIDER */}
+            <Divider orientation="vertical" flexItem />
+
+            {/* ITEM */}
+            <Box textAlign="center" minWidth={120}>
+              <Typography variant="body2" color="text.secondary">
+                Paid
+              </Typography>
+              <Typography variant="subtitle1" fontWeight={600} color="success.main">
+                {formatNumber(student?.paidFees ?? 0, 'INR')}
+              </Typography>
+            </Box>
+
+            <Divider orientation="vertical" flexItem />
+
+            {/* ITEM */}
+            <Box textAlign="center" minWidth={120}>
+              <Typography variant="body2" color="text.secondary">
+                Pending
+              </Typography>
+              <Typography variant="subtitle1" fontWeight={600} color="warning.main">
+                {formatNumber(student?.pendingFees ?? 0, 'INR')}
+              </Typography>
+            </Box>
+
+            <Divider orientation="vertical" flexItem />
+
+            {/* ITEM */}
+            <Box textAlign="center" minWidth={120}>
+              <Typography variant="body2" color="text.secondary">
+                Overdue
+              </Typography>
+              <Typography variant="subtitle1" fontWeight={600} color="error.main">
+                {formatNumber(student?.overdueFees ?? 0, 'INR')}
+              </Typography>
+            </Box>
+          </Paper>
+        </Box>
+      )}
     </Box>
-  );
+  </Box>;
 };
 
 interface ILabel {

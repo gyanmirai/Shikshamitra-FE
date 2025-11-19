@@ -3,7 +3,6 @@ import type { LabelColor } from 'src/components/label';
 import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
 import React, { useState, useEffect } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
 import studentChargesData from 'src/json/finance/fee-collection/studentChargesData.json';
@@ -15,20 +14,14 @@ import {
 
 const FinanceFeeCollectionCharges = () => {
   // Dialog state for charge collection modal
-  const dialog = useBoolean();
   // Dialog state for viewing charge details
-  const dialogForViewCharges = useBoolean();
 
   // State to store the currently selected charge entry
-  const [selectedEntry, setSelectedEntry] = useState<any>();
+  const [selectedEntry] = useState<any>();
 
   // Handler to close the charge collection dialog
-  const closeDialog = () => {
-    dialog.onFalse();
-  };
 
   // Handler for saving charge collection data
-  const handleSave = () => {};
 
   // Effect to handle changes when selected entry updates
   useEffect(() => {}, [selectedEntry]);
@@ -57,7 +50,7 @@ const FinanceFeeCollectionCharges = () => {
             label: 'Days Overview', // changed to meaningful label
             filterType: 'number',
             align: 'left',
-            render(value, row) {
+            render(value) {
               return <Typography fontSize="12px">{value}</Typography>; // fixed to render value
             },
           },
@@ -66,7 +59,7 @@ const FinanceFeeCollectionCharges = () => {
             label: 'Charges Per Day', // fixed label
             filterType: 'formattedNumber',
             align: 'left',
-            render(value, row) {
+            render(value) {
               return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>; // fixed to render value
             },
           },
@@ -75,7 +68,7 @@ const FinanceFeeCollectionCharges = () => {
             label: 'Total Charges Amount', // fixed label
             filterType: 'formattedNumber',
             align: 'left',
-            render(value, row) {
+            render(value) {
               return <Typography fontSize="12px">{formatNumber(value, 'INR')}</Typography>; // fixed to render value
             },
           },
@@ -88,7 +81,7 @@ const FinanceFeeCollectionCharges = () => {
             align: 'left',
             isSort: false,
             sticky: true,
-            render(value, row) {
+            render(value) {
               const color = FinancePaymentHistoryStatusTypeColors[
                 value as FinancePaymentHistoryStatusType
               ] as LabelColor;

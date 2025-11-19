@@ -308,7 +308,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
     description: Yup.string().optional(),
   });
 
-  const { data, isLoading: roleLoading } = useQueryAndMutation({
+  const { data } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRolesQuery,
   });

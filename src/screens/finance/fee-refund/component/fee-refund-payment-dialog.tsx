@@ -61,10 +61,7 @@ const FeeRefundPaymentDialog: React.FC<IFeeRefundPaymentDialogProps> = ({
   });
 
   const [chequeAmountState, setChequeAmountState] = useState<string>('');
-  const [bankAmountState, setBankAmountState] = useState<string>('');
   const [cardAmountState, setCardAmountState] = useState<string>('');
-  const [, setOnlineAmountState] = useState<string>('');
-  const [, setCashAmountState] = useState<string>('');
 
   return (
     <Box>

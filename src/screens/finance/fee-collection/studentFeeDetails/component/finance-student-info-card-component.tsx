@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { CONFIG } from 'src/config-global';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
 import calculateAge from 'src/utils/calculate-age';
 import { Box, Card, Avatar, Typography } from '@mui/material';
 import { convertBase64Format } from 'src/utils/base64Formate';
@@ -21,46 +19,17 @@ export type IUserCard = {
   totalFollowing: number;
 };
 
-type Props = {
-  user: IUserCard;
-};
-const { assetURL } = CONFIG.site;
-
-const dummyUser: IUserCard = {
-  id: '12345',
-  name: 'John Doe',
-  role: '10-B',
-  coverUrl: 'https://example.com/cover.jpg',
-  avatarUrl: 'https://example.com/avatar.jpg',
-  totalPosts: 120,
-  totalFollowers: 4500,
-  totalFollowing: 300,
-};
-
 const FinanceStudentInfoCardComponent = ({ user }: any) => {
   // Dialog state management using useBoolean hook
-  const dialog = useBoolean();
-  const feeRefundDialog = useBoolean();
-  const financeStudentAdditionalDiscountDialog = useBoolean();
-  const collectChargesDialog = useBoolean();
 
   // State to track the currently selected student, initialized with first student
   const [selectedStudent, setSelectedStudent] = useState<Student>(students[0]);
 
   // Handler to close the main fee collection dialog
-  const closeDialog = () => {
-    dialog.onFalse();
-  };
 
   // Handler to close the fee refund dialog
-  const feeRefundCloseDialog = () => {
-    feeRefundDialog.onFalse();
-  };
 
   // Handler to close the additional discount dialog
-  const additionalDiscountCloseDialog = () => {
-    financeStudentAdditionalDiscountDialog.onFalse();
-  };
   return (
     <>
       <Card

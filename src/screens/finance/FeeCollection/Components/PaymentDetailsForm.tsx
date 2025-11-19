@@ -224,6 +224,7 @@ export const buildCollectionFieldValidation = (field: IPaymentFieldConfig, curre
 
 export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps) {
   const theme = useTheme();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: feeTermsData, isLoading: yearLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeTermsQuery,

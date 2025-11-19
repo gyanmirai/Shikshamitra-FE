@@ -29,7 +29,6 @@ const ActiveSurvey = (props: TabComponentType) => {
   // State to store all survey data
   const [surveyTableData, setSurveyTableData] = useState<ISurvey[]>(scheduledSurveyData);
   // Modal state for adding new survey
-  const addNewSurveyDialog = useBoolean();
   // Modal state for viewing survey details
   const viewDetailsDialog = useBoolean();
   // State to store survey being viewed
@@ -37,7 +36,7 @@ const ActiveSurvey = (props: TabComponentType) => {
   // Modal state for viewing survey responses
   const viewResponseDialog = useBoolean();
   // State to store survey whose responses are being viewed
-  const [responseSurvey, setResponseSurvey] = useState<ISurvey | null>(null);
+  const [, setResponseSurvey] = useState<ISurvey | null>(null);
 
   /**
    * Handles closing of all modals and resets related state variables

@@ -290,7 +290,7 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
   const onSubmit = async () => {
     try {
       if (editData) {
-        const res = await updateMedium({
+        await updateMedium({
           id: editData.id,
           body: {
             name: formik.values.medium,
@@ -298,7 +298,7 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
           },
         }).unwrap();
       } else {
-        const res = await addMedium({
+        await addMedium({
           name: formik.values.medium,
           educationBoardId: boardId,
         }).unwrap();

@@ -3,11 +3,10 @@
 /* eslint-disable react/no-unescaped-entities */
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import { Iconify } from 'src/components/iconify';
+import { Box } from '@mui/material';
+import React, { useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
 import CustomDialog from 'src/components/customDialog';
-import { Box, MenuList, MenuItem } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import scheduledSurveyData from 'src/json/communication/feedback/scheduledSurveyData.json';
 
@@ -17,7 +16,7 @@ import { ViewSurveyDetail } from '../activeSurvey/components/viewDetails';
 
 const PastSurvey = (props: TabComponentType) => {
   // State to store and manage survey table data
-  const [surveyTableData, setSurveyTableData] = useState<any | null>(scheduledSurveyData);
+  const [surveyTableData] = useState<any | null>(scheduledSurveyData);
   // Controls the visibility state of the survey details dialog/modal
   const viewDetailsDialog = useBoolean();
   // Controls the visibility state of the survey summary statistics dialog/modal
@@ -35,25 +34,6 @@ const PastSurvey = (props: TabComponentType) => {
     viewDetailsDialog.onFalse();
     viewSummaryDialog.onFalse();
   };
-
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          <MenuItem
-            onClick={() => {
-              viewSummaryDialog.onTrue();
-            }}
-          >
-            <Iconify icon="mdi:eye" sx={{ mr: 1 }} />
-            View Summary
-          </MenuItem>
-        </MenuList>
-      </>
-    ),
-    [viewSummaryDialog]
-  );
 
   return (
     <Box>

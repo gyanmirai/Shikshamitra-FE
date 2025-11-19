@@ -24,7 +24,7 @@ const SendCustomAlert = () => {
 
   const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
-  const [selectedMethods, setSelectedMethods] = useState<any>({
+  const [selectedMethods] = useState<any>({
     email: false,
     sms: false,
     whatsapp: false,
@@ -77,12 +77,6 @@ const SendCustomAlert = () => {
   };
 
   // Handle checkbox toggle for communication channels
-  const handleCheckboxChange = (method: any) => {
-    setSelectedMethods((prev: any) => ({
-      ...prev,
-      [method]: !prev[method],
-    }));
-  };
 
   const [whatsappMedia, setWhatsappMedia] = useState<any>(null);
   const [openBox, setOpenBox] = useState(false);

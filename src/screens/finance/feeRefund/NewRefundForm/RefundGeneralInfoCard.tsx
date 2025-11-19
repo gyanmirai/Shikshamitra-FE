@@ -12,16 +12,11 @@ import { Chip, Grid, TextField, Autocomplete } from '@mui/material';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-const RefundGeneralInfoCard: React.FC<any> = ({ student, formik }) => {
+const RefundGeneralInfoCard: React.FC<any> = ({ formik }) => {
   //   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const {
-    currentYear,
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Lazy query hook to fetch classes by medium
-  const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
+  const [getClassByMedium, { data: classes }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });

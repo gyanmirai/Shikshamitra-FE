@@ -26,21 +26,15 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
   const dialog = useBoolean();
 
   // State to store selected payment entries
-  const [selectedEntry, setSelectedEntry] = useState<StudentPayment[]>(studentPayment);
+  const [selectedEntry] = useState<StudentPayment[]>(studentPayment);
 
   // State to track edit mode
-  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [isEdit] = useState<boolean>(false);
 
   // State to store payment history data
-  const [paymentHistoryData, setPaymentHistoryData] = useState<StudentPayment[]>(studentPayment);
+  const [paymentHistoryData] = useState<StudentPayment[]>(studentPayment);
 
   // Handler to update refund amount for a specific payment entry
-  const handleRefundChange = (index: string, value: string) => {
-    const newData = [...paymentHistoryData];
-    const existingIndex = newData.findIndex((val) => val.paymentId === index);
-    newData[existingIndex].refundAmount = value;
-    setPaymentHistoryData(newData);
-  };
 
   // Calculate total refund amount from all payment entries
   const totalRefundAmount: number = paymentHistoryData.reduce(
@@ -57,15 +51,10 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
   };
 
   // Open payment dialog and set edit mode
-  const handleDilog = () => {
-    setIsEdit(true);
-    setSelectedEntry(paymentHistoryData);
-    dialog.onTrue();
-  };
 
   // States for different fee refund amounts
-  const [tuitionFeeRefundAmount, setTuitionFeeRefundAmount] = useState<string>('');
-  const [libraryFeeRefundAmount, setlibraryFeeRefundAmount] = useState<string>('');
+  const [tuitionFeeRefundAmount] = useState<string>('');
+  const [libraryFeeRefundAmount] = useState<string>('');
   const [totalFeeRefundAmount, setTotalFeeRefundAmount] = useState<number>(0);
 
   // Helper function to parse numeric value from formatted string
@@ -80,14 +69,8 @@ const FinanceFeeRefundAllocationDialog: React.FC<IFinanceFeeRefundAllocationDial
   }, [tuitionFeeRefundAmount, libraryFeeRefundAmount]);
 
   // Handler for tuition fee refund amount change
-  const handleChangeForTuition = (formattedValue: string, numericValue: number) => {
-    setTuitionFeeRefundAmount(formattedValue);
-  };
 
   // Handler for library fee refund amount change
-  const handleChangeForLibrary = (formattedValue: string, numericValue: number) => {
-    setlibraryFeeRefundAmount(formattedValue);
-  };
 
   // Dialog state for fee refund receipt
   const feeRefundReceiptDialog = useBoolean();

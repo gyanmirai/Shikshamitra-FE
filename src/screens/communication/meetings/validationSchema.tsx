@@ -41,6 +41,7 @@ export const meetingValidationSchema = (currentYear: any) =>
         'End Date must be a valid date',
         (value) => value && dayjs(value as any).isValid()
       )
+      // eslint-disable-next-line func-names
       .test('is-after-start-date', 'End Date cannot be before Start Date', function (value) {
         const { startDate } = this.parent;
         if (!value || !startDate) return true;

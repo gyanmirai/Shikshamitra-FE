@@ -88,53 +88,15 @@ const studentTableInitialData = [
 ];
 export const StudentSubmissions = () => {
   // State to track the currently selected student for individual actions
-  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [, setSelectedStudent] = useState<any | null>(null);
 
   // State to store and update the table data, initialized with dummy student data
-  const [tableData, setTableData] = useState<any[]>(studentTableInitialData);
-
-  // State to track multiple selected students for bulk actions
-  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-
-  // Dialog control for general purpose modal
-  const dialog = useBoolean();
+  const [tableData] = useState<any[]>(studentTableInitialData);
 
   // Dialog control for viewing student answers modal
   const viewAnsweresDialog = useBoolean();
 
   // Dialog control for bulk grading modal
-  const bulkGradeDialog = useBoolean();
-
-  const handleSelectStudent = (studentId: string) => {
-    setSelectedStudents((prev) => {
-      if (prev.includes(studentId)) {
-        return prev.filter((id) => id !== studentId);
-      }
-      return [...prev, studentId];
-    });
-  };
-
-  const handleBulkGradeAssignment = (values: { grade: string }) => {
-    setTableData((prevData) =>
-      prevData.map((student) =>
-        selectedStudents.includes(student.id) ? { ...student, grade: values.grade } : student
-      )
-    );
-    bulkGradeDialog.onFalse();
-    setSelectedStudents([]);
-  };
-
-  const handleSingleGradeAssignment = (values: { grade: string; feedback: string }) => {
-    setTableData((prevData) =>
-      prevData.map((student) =>
-        student.id === selectedStudent?.id
-          ? { ...student, grade: values.grade, feedback: values.feedback }
-          : student
-      )
-    );
-    dialog.onFalse();
-    setSelectedStudent(null);
-  };
 
   const handleCloseDialog = () => {
     setSelectedStudent(null);

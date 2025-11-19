@@ -35,10 +35,6 @@ const AddNewBounceCheckChargesDialog: React.FC<AddNewBounceCheckChargesDialogPro
     setRange(newValue as number[]);
   };
 
-  const handleSave = () => {
-    console.log('Selected Amount Range:', range);
-  };
-
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   const dispatch = useDispatch();

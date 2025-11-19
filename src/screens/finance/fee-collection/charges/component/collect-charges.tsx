@@ -46,9 +46,6 @@ const FinanceCollectCharges: React.FC<IFinanceCollectChargesProps> = ({
   });
 
   const [charges] = useState(chargesData);
-  const filteredChargesData = charges.filter((charge) =>
-    formik.values.feeType.includes(charge.chargeType)
-  );
 
   const filteredDetails = charges
     .map((charge) => charge.details) // Get the 'details' array from each charge

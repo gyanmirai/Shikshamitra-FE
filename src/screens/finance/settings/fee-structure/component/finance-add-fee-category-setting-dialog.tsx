@@ -42,7 +42,7 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
   setSelectedEntry,
 }) => {
   const dispatch = useDispatch();
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  useSelector((state: RootState) => state.confirmPopup);
 
   // State to store the list of fee structures
   const [feeHeadListForFeeStructure, setFeeHeadListForFeeStructure] = useState<IFeeStructure[]>([]);
@@ -124,10 +124,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
   }, [dispatch, formik.values, initialValues]);
 
   // Handler to clear form and enable fields
-  const handleClear = () => {
-    formik.resetForm();
-    setIsFieldsDisabled(false);
-  };
 
   // Handler to remove fee structure from list
   const handleDelete = (index: number) => {
@@ -140,7 +136,6 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
   const handleEdit = (row: any) => {
     formik.setValues(row);
   };
-  const handleSubmit = () => {};
 
   const receiptBookDialog = useBoolean();
   const feeHeadDialog = useBoolean();
@@ -466,20 +461,3 @@ const FinanceAddFeeCategorySettingDialog: React.FC<IFinanceAddFeeCategorySetting
 };
 
 export default FinanceAddFeeCategorySettingDialog;
-function resetForm(arg0: {
-  values: {
-    feeHead: string;
-    grossFee: string;
-    discountAmount: string;
-    discountRemark: string;
-    payableFee: string;
-    paymentMethod: never[];
-    lateFeeChargesAmount: string;
-    lateFeeChargesType: string;
-    // Keep these fields unchanged
-    applicableGrade: string;
-    bookRecipt: string;
-  };
-}) {
-  throw new Error('Function not implemented.');
-}

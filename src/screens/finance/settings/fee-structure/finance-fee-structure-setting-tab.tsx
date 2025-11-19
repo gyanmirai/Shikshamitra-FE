@@ -117,7 +117,6 @@ const FinanceFeeStructureSettingTab = () => {
       id,
       paymentDueDate,
       multipleApplicableGrade,
-      feeName,
       amount,
       applicableGrade,
       bookRecipt,
@@ -248,22 +247,6 @@ const FinanceFeeStructureSettingTab = () => {
     dialog.onFalse();
   };
 
-  const handleSwitchChange = (rowId: number, index: number) => {
-    const updatedSwitchState = { ...switchStates };
-    updatedSwitchState[rowId][index] = !updatedSwitchState[rowId][index];
-    setSwitchStates(updatedSwitchState);
-  };
-
-  const closeDialog = () => {
-    setIsEdit(false);
-    dialog.onFalse();
-  };
-
-  const handleDelete = (rowData: any) => {
-    const updatedData = tableData.filter((val) => val.id !== rowData.id);
-    setTableData(updatedData);
-  };
-  const [data, setData] = useState(initialData);
   const [open, setOpen] = useState(false);
 
   const closeHandler = () => {
@@ -322,7 +305,7 @@ const FinanceFeeStructureSettingTab = () => {
               {
                 id: 'grossFee',
                 label: 'Gross Fees',
-                render(value, row) {
+                render(value) {
                   return (
                     <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
                   );
@@ -331,7 +314,7 @@ const FinanceFeeStructureSettingTab = () => {
               {
                 id: 'totaldiscountAmount',
                 label: 'General Discount',
-                render(value, row) {
+                render(value) {
                   return (
                     <Typography sx={{ fontSize: '12px' }}>{formatNumber(value, 'INR')}</Typography>
                   );
@@ -340,7 +323,7 @@ const FinanceFeeStructureSettingTab = () => {
               {
                 id: 'amount',
                 label: 'Payable Fees',
-                render(value, row) {
+                render(row) {
                   const totalAmount = row.feeSubCategoryList.reduce(
                     (total: any, val: any, index: any) =>
                       switchStates[row.id] && switchStates[row.id][index]
@@ -371,7 +354,7 @@ const FinanceFeeStructureSettingTab = () => {
               {
                 id: 'action',
                 label: 'Action',
-                render(value, row: any) {
+                render(row: any) {
                   return (
                     <ThreeDotsActions
                       showThreeDots={false}

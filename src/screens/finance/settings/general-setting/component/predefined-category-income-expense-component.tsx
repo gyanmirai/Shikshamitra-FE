@@ -15,7 +15,6 @@ const PredefinedCategoryIncomeExpenseComponent = () => {
   // Selected budget category ID/value from dropdown
   const [selectedBudgetCategory, setSelectedBudgetCategory] = useState<any | null>(null);
   // New sub-category name entered by user
-  const [newSubCategory, setNewSubCategory] = useState('');
   // Dialog open/close state for edit/add form
   const editDialog = useBoolean();
   const deleteDialog = useBoolean();

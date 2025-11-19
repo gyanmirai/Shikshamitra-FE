@@ -18,15 +18,14 @@ import AddNewQuiz from './components/quizFormComponent';
 
 const ActiveQuiz = () => {
   // State to store and manage quiz table data
-  const [tableData, setTableData] = useState(activeQuizTableData);
+  const [tableData] = useState(activeQuizTableData);
   // Dialog state for adding new quiz
   const addQuizDialog = useBoolean();
   const deleteQuizDialog = useBoolean();
-  const [selectedQuizData, setSelectedQuizData] = useState('');
+  const [, setSelectedQuizData] = useState('');
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   // Dialog state for attempting quiz
-  const attemptQuizDialog = useBoolean();
   // State to control quiz portal visibility
   const [open, setOpen] = useState(false);
   const handleTogglePublish = (row: any) => {};
@@ -34,8 +33,6 @@ const ActiveQuiz = () => {
   const handleAttemptClick = (row: any) => {
     setOpen(true);
   };
-  const viewSubmissionDialog = useBoolean();
-  const viewAnalyticsDialog = useBoolean();
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
@@ -94,7 +91,7 @@ const ActiveQuiz = () => {
       <CustomDialog
         maxWidth="lg"
         open={addQuizDialog.value}
-        handleClose={addQuizDialog.onFalse}
+        handleClose={() => addQuizDialog.onFalse()}
         title="New Quiz"
       >
         <AddNewQuiz dialog={addQuizDialog} onClose={handleClose} />

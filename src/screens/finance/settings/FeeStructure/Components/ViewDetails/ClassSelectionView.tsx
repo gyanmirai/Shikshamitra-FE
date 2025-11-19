@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useTheme } from '@mui/material/styles';
 import { Box, Grid, Button } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
@@ -18,8 +17,6 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
   selectedClass,
   onSelectClass,
 }) => {
-  const theme = useTheme();
-  console.log('feeStructureClassesfeeStructureClasses---', feeStructureClasses);
   const classNames = Object.keys(feeStructureClasses);
 
   // Ensure the first class is selected by default

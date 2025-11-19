@@ -26,7 +26,7 @@ const PaymentTerm = () => {
   const addPaymentTermDialog = useBoolean();
   const deletePaymentTermDialog = useBoolean();
 
-  const { data: paymentTerms, isLoading: paymentTermsLoading } = useQueryAndMutation({
+  const { data: paymentTerms } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPaymentTermQuery,
   });

@@ -12,7 +12,6 @@ import {
 } from 'src/enums/fee-collection-type';
 import {
   Box,
-  Chip,
   Card,
   Paper,
   Table,
@@ -27,13 +26,6 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-
-const getStatusChip = (paid: number, total: number) => {
-  if (paid === 0) return <Chip label="Pending" color="warning" size="small" />;
-  if (paid < total) return <Chip label="Partially Paid" color="warning" size="small" />;
-  if (paid === total) return <Chip label="Paid" color="success" size="small" />;
-  return null;
-};
 
 export const FeeTermAccordion = () => {
   const { data: terms, isLoading } = useQueryAndMutation({
@@ -195,7 +187,7 @@ export const FeeTermAccordion = () => {
                             <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
                           </TableRow>
                         </TableHead>
-                        {term.charges.map((cha: any, idx: number) => (
+                        {term.charges.map((cha: any) => (
                           <TableBody>
                             <TableRow key={cha.id}>
                               <TableCell>{cha.name}</TableCell>

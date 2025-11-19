@@ -2,7 +2,6 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import React from 'react';
 import { Box, Card } from '@mui/material';
-import { useTabs } from 'src/hooks/use-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { feestructureDummyData } from '../data/fee-structure-data';
@@ -20,38 +19,28 @@ const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSett
   onClose,
   data,
   setSelectedEntry,
-}) => {
-  // Define tab options
-  const TABS = [
-    { value: 'reference', label: 'For View' },
-    { value: 'editable', label: 'For Edit' },
-  ];
-
-  const tabs = useTabs('editable'); // Initialize tabs with default value
-
-  return (
-    <Box>
-      <CustomBreadcrumbs
-        heading="Fee Structure"
-        links={[
-          { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Setting', href: '/finance/settings/create-fee-structure/' },
-          { name: 'Fee Structure' },
-        ]}
-        description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
-        sx={{ mb: 2 }}
-        isBack
-        onBack={() => {
-          dialogValue.onFalse();
-          setSelectedEntry(null);
-        }}
-      />
-      <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-        <EditableFeeStructureTable data={feestructureDummyData} onClose={onClose} />
-      </Card>
-    </Box>
-  );
-};
+}) => (
+  <Box>
+    <CustomBreadcrumbs
+      heading="Fee Structure"
+      links={[
+        { name: 'Finance', href: '/finance/dashboard' },
+        { name: 'Setting', href: '/finance/settings/create-fee-structure/' },
+        { name: 'Fee Structure' },
+      ]}
+      description="This is the Fee Structure section, where you can create, enable, or disable fee structures as needed."
+      sx={{ mb: 2 }}
+      isBack
+      onBack={() => {
+        dialogValue.onFalse();
+        setSelectedEntry(null);
+      }}
+    />
+    <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+      <EditableFeeStructureTable data={feestructureDummyData} onClose={onClose} />
+    </Card>
+  </Box>
+);
 
 export default FinanceEditFeeStructureSettingDialog;
 

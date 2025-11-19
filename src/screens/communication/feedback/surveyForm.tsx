@@ -619,7 +619,7 @@ const AddNewQuestion = ({ onSave }: any) => {
 // Component for previewing and publishing the survey
 const PreviewAndPublish = ({ formik }: any) => {
   // State for managing question table data
-  const [questionTableData, setQuestionTableData] = useState(formik.values.questions);
+  const [questionTableData] = useState(formik.values.questions);
   return (
     <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
       <Typography variant="h6">{formik.values.surveyTitle}</Typography>{' '}

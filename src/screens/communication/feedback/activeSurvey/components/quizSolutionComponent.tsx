@@ -6,7 +6,7 @@ import responseSurveyData from 'src/json/communication/feedback/responseSurveyDa
 
 const QuizSolutionComponent = () => {
   // Initialize table data state with esponse data - setTableData is currently unused
-  const [tableData, setTableData] = useState(responseSurveyData);
+  const [tableData] = useState(responseSurveyData);
 
   return (
     <CustomizableTable

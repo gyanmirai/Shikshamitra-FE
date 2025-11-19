@@ -16,6 +16,7 @@ import {
 import type { IStudentFee } from '../type';
 
 const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: feeConcessionData, isLoading: yearLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeConcessionsQuery,

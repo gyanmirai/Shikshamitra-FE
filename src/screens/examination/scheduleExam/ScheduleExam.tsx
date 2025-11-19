@@ -25,7 +25,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
   // State to store currently selected exam for editing
   const [selectedExam, setSelectedExam] = useState<IExamFormValues | null>(null);
   // State to store all exam data, initialized with data from JSON
-  const [examData, setExamData] = useState<IExamFormValues[]>(examTableData);
+  const [examData] = useState<IExamFormValues[]>(examTableData);
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Boolean hook to control delete confirmation dialog
@@ -34,17 +34,6 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
   const dispatch = useDispatch();
   // Boolean hook to control time view dialog
   const viewTimeDialog = useBoolean(); // Dynamic breadcrumb navigation links based on current view (form or list)
-
-  /**
-   * Handles the deletion of an exam from the exam data
-   * @param id - The unique identifier of the exam to be deleted
-   */
-  const handleDelete = (id: string | undefined) => {
-    const updatedExamData = examData.filter((exam) => exam.id !== id);
-    setExamData(updatedExamData);
-    deleteDialog.onFalse();
-    setSelectedExam(null);
-  };
 
   /**
    * Handles closing the exam form with confirmation if there are unsaved changes

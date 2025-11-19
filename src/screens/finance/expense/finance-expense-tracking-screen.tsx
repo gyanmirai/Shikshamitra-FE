@@ -27,15 +27,11 @@ const FinanceExpenseTrackingScreen = () => {
   // Flag to determine if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
   // State to store all expense data for the table
-  const [tableData, setTableData] = useState(expenseData);
+  const [tableData] = useState(expenseData);
   // Control visibility of the add/edit expense dialog
   const [open, setOpen] = useState(false);
 
   // Reset edit mode and close the dialog
-  const closeDialog = () => {
-    setIsEdit(false);
-    dialog.onFalse();
-  };
 
   // Close the expense details dialog
   const closeDialogForDetailsInExpense = () => {

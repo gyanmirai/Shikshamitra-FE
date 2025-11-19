@@ -28,7 +28,6 @@ const ConcessionType = () => {
   const [selectedConcessionType, setSelectedConcessionType] = useState<IConcessionTypeForm | null>(
     null
   );
-  console.log('selectedConcessionType---', selectedConcessionType);
 
   // Custom hook to manage dialog open/close state
   const addConcessionTypeDialog = useBoolean();
@@ -36,7 +35,7 @@ const ConcessionType = () => {
   const viewConcessionTypeDialog = useBoolean();
 
   // Fetch concession type data
-  const { data: concessionTypes, isLoading: concessionTypesLoading } = useQueryAndMutation({
+  const { data: concessionTypes } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypeQuery,
   });

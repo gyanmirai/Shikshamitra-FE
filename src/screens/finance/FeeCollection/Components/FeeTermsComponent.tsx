@@ -27,16 +27,16 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
   errorMessage,
 }) => {
   // State to track which term is currently expanded (only one at a time)
-  const [expanded, setExpanded] = useState<string | null>(null);
+  // const [expanded, setExpanded] = useState<string | null>(null);
   const openTermDialog = useBoolean();
   const [selectedTerm, setSelectedTerm] = useState<ITerm | null>(null);
   // Get the current theme for styling
   const theme = useTheme();
 
   // Toggle expansion of a term's details (collapse if already expanded, expand if collapsed)
-  const toggleExpand = (id: string) => {
-    setExpanded(expanded === id ? null : id);
-  };
+  // const toggleExpand = (id: string) => {
+  //   setExpanded(expanded === id ? null : id);
+  // };
 
   // Handle term selection/deselection for fee collection
   const toggleSelect = (term: ITerm | IFeeCharge) => {

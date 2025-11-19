@@ -297,7 +297,7 @@ export const BoardForm = ({
   const onSubmit = async () => {
     try {
       if (editData) {
-        const res = await updateBoard({
+        await updateBoard({
           id: editData.id,
           body: {
             type: +formik.values.board,
@@ -305,7 +305,7 @@ export const BoardForm = ({
           },
         }).unwrap();
       } else {
-        const res = await addBoard({
+        await addBoard({
           type: +formik.values.board,
           academicYearId,
         }).unwrap();

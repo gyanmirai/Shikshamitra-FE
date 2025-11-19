@@ -33,7 +33,7 @@ const EventTypeCreation = () => {
   // Dialog control states
   const deleteEventTypeDialog = useBoolean();
   const addEventTypeDialog = useBoolean();
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
 
   // State management
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);

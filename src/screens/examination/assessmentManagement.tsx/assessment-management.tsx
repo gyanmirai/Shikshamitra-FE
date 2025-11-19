@@ -52,7 +52,7 @@ const AssessmentManagement = (props: TabComponentType) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
   // Query hook for fetching class data
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

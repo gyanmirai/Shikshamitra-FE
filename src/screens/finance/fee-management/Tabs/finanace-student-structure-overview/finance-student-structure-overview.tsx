@@ -3,7 +3,6 @@
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/type';
 import type { Division, Standards, Organization } from 'src/types/school';
-import type { IFeeItem } from 'src/screens/finance/settings/fee-structure/fee-structure-interface';
 
 import { useSelector } from 'react-redux';
 import { Box, Typography } from '@mui/material';
@@ -38,7 +37,7 @@ const FinanceStudentFeeManagement = () => {
   const [selectedStudent, setSelectedStudent] = useState<StudentForFeeStructure | null>(null);
 
   // State to store multiple selected students for bulk actions like notifications
-  const [selectedStudents, setSelectedStudents] = useState<StudentForFeeStructure[]>([]);
+  const [selectedStudents] = useState<StudentForFeeStructure[]>([]);
 
   // Dialog state for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
@@ -61,17 +60,8 @@ const FinanceStudentFeeManagement = () => {
   };
 
   // Handlers for student selection in the table
-  const handleStudentSelection = (student: StudentForFeeStructure, checked: boolean) => {
-    setSelectedStudents(
-      checked
-        ? [...selectedStudents, student]
-        : selectedStudents.filter((s) => s.studentId !== student.studentId)
-    );
-  };
 
-  const handleSelectAllStudents = (checked: boolean) => {
-    setSelectedStudents(checked ? studentFeeStructureData : []);
-  };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
   // Table column configuration with rendering logic for each column
   const tableColumns = [
@@ -239,7 +229,7 @@ const FinanceStudentFeeManagement = () => {
   ];
 
   // State to store the selected fee structure items when a row is clicked/selected
-  const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeItem[]>();
+  // const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeItem[]>();
 
   // States for managing organization/stage selection
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -252,11 +242,7 @@ const FinanceStudentFeeManagement = () => {
   // States for managing division selection
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Effect to update organizations when medium changes
   useEffect(() => {
@@ -277,6 +263,7 @@ const FinanceStudentFeeManagement = () => {
     setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [searchParams, setSearchParams] = useSearchParam({
     isSearch: '',
     student: '',
@@ -374,7 +361,7 @@ const FinanceStudentFeeManagement = () => {
 
       {dialog.value && selectedStudent && (
         <FinanceEditFeeStructureForStudent
-          onSave={(data) => {}}
+          onSave={() => {}}
           dialogValue={dialog.value}
           onClose={dialog.onFalse}
           data={selectedStudent}

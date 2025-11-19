@@ -71,30 +71,26 @@ const FeeInstallmentDialog = ({ open, onClose, selectedTerm }: any) => {
               </TableHead>
 
               <TableBody>
-                {selectedTerm?.feeHeads?.map((head: any) => {
-                  const isPaid = head.status === 0 || head.paid >= head.total;
+                {selectedTerm?.feeHeads?.map((head: any) => (
+                  <TableRow key={head.name}>
+                    <TableCell>{head.name}</TableCell>
+                    <TableCell>{head.category}</TableCell>
+                    <TableCell>₹ {(head.total - head.paid).toLocaleString()}</TableCell>
+                    <TableCell> {head.paid?.toLocaleString()}</TableCell>
 
-                  return (
-                    <TableRow key={head.name}>
-                      <TableCell>{head.name}</TableCell>
-                      <TableCell>{head.category}</TableCell>
-                      <TableCell>₹ {(head.total - head.paid).toLocaleString()}</TableCell>
-                      <TableCell>₹ {head.paid?.toLocaleString()}</TableCell>
-
-                      <TableCell>
-                        <Label
-                          color={
-                            FeeCollectionStatusTypeColors[
-                              head.status as FeeCollectionStatusType
-                            ] as LabelColor
-                          }
-                        >
-                          {FeeCollectionStatusType[head.status as FeeCollectionStatusType]}
-                        </Label>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                    <TableCell>
+                      <Label
+                        color={
+                          FeeCollectionStatusTypeColors[
+                            head.status as FeeCollectionStatusType
+                          ] as LabelColor
+                        }
+                      >
+                        {FeeCollectionStatusType[head.status as FeeCollectionStatusType]}
+                      </Label>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </TableContainer>

@@ -21,7 +21,7 @@ export default function InvoiceTableView({
 }: {
   selectedStudent: InvoiceData | null;
 }) {
-  const { data: invoiceData, isLoading: boardLoading } = useQueryAndMutation({
+  const { data: invoiceData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentInvoiceDataQuery,
   });

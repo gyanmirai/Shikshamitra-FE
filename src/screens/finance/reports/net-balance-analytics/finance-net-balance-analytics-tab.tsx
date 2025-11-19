@@ -1,6 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import React, { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { exportGraphData } from 'src/utils/exportGraph';
 import CustomSelect from 'src/components/custom-select';
@@ -8,7 +7,6 @@ import { Box, Card, Grid, Chip, Menu, Button, Tooltip, MenuItem, Typography } fr
 import { PerformanceOverTime } from 'src/screens/academic/gradebook-performance-tracking/progress-report';
 
 const FinanceNetbalanceAnalyticsTab = () => {
-  const theme = useTheme();
   const [anchorElTrend, setAnchorElTrend] = useState<null | HTMLElement>(null);
 
   const categoriesTrend = [

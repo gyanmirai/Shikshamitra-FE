@@ -1,5 +1,4 @@
 import type { RootState } from 'src/redux/store';
-import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import type { Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
@@ -9,6 +8,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useEffect } from 'react';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
@@ -17,7 +17,6 @@ import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import React, { useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
@@ -53,15 +52,11 @@ const QuizInformation = ({ formik }: any) => {
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
-  const [classes, setClasses] = useState<string>('');
+  const [, setClasses] = useState<string>('');
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {
@@ -566,7 +561,6 @@ const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => 
   const currentTime = Number(formState.questionTime);
   // Convert quiz duration from formik values to a number
   // This represents the total allowed time for the quiz in minutes
-  const totalDuration = Number(formik.values.quizDuration);
   // Calculate total time taken by all questions in minutes
   const totalQuestionTimeInMinutes = formik.values.questions.reduce(
     (acc: number, question: any) => acc + Number(question.questionTime || 0),
@@ -955,9 +949,6 @@ const QuizBuilder = ({ formik }: any) => {
   };
 
   // Handler to remove a single file attachment
-  const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
-    setFieldValue('rubric', '');
-  }, []);
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -1111,13 +1102,12 @@ const QuizBuilder = ({ formik }: any) => {
 
 const allSurveySteps = [QuizInformation, QuizBuilder];
 
-const AddNewQuiz = ({
-  onClose,
-  dialog,
-}: {
-  dialog: UseBooleanReturn;
-  onClose: (e: any, isSubmit: boolean) => void;
-}) => {
+interface AddNewQuizProps {
+  dialog: ReturnType<typeof useBoolean>;
+  onClose: (_e?: any, isSubmit?: boolean) => void;
+}
+
+const AddNewQuiz: React.FC<AddNewQuizProps> = ({ dialog, onClose }) => {
   // State to track the current active step in the quiz creation stepper
   const [activeStep, setActiveStep] = useState(0);
   const { currentYear } = useSelector((state: RootState) => state.globalState);

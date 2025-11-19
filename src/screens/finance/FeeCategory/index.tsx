@@ -24,7 +24,7 @@ import type { IFeeCategory } from './Components/type';
 
 const FeeCategoryCreation = () => {
   // Custom hook to fetch fee category data
-  const { data: feeCategoryData, isLoading: paymentTermsLoading } = useQueryAndMutation({
+  const { data: feeCategoryData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeCategoriesQuery,
   });

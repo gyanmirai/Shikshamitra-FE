@@ -23,8 +23,7 @@ export default function FeeOverview({
 }: FeeOverviewProps) {
   const theme = useTheme();
 
-  const progress = total ? Math.round((paid / total) * 100) : 0;
-
+  // eslint-disable-next-line react/no-unstable-nested-components
   const RowCard = ({
     icon,
     label,

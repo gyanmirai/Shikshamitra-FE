@@ -161,7 +161,7 @@ const FinanceReconciliation = () => {
   // Redux state for unsaved changes
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  const [, setSelectedEntry] = useState<any>(null);
 
   /**
    * Handles closing of the dialog (for add/edit/check actions)
