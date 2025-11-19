@@ -8,27 +8,37 @@ import EditNotificationDialog from 'src/screens/student/studentNotification/edit
 
 import { notificationData } from '../data/transport-route-notification-data';
 
-const TransportRouteNotificationManagementScreen = () => {
-  const [open, setOpen] = useState<boolean>(false);
+const TransportRouteNotificationManagementScreen = ({ dialog, setIsViewMode }: any) => {
   const [selectedData, setSelectedData] = useState<any>(null);
   const [view, setView] = useState(false);
+  const [notifications, setNotifications] = useState(notificationData);
 
-  const closeHandler = () => {
-    setOpen(false);
-    setSelectedData(null);
-    setView(false);
+  const handleToggleActive = (id: string, checked: boolean) => {
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        String(notification.id) === id ? { ...notification, isActive: checked } : notification
+      )
+    );
   };
 
   return (
-    <>
-      {open ? (
+    <Box sx={{ height: '100%' }}>
+      {dialog.value ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <EditNotificationDialog data={selectedData} onClose={closeHandler} isFromView={view} />
+          <EditNotificationDialog
+            data={selectedData}
+            onClose={() => {
+              dialog.onFalse();
+              setSelectedData(null);
+              setView(false);
+            }}
+            isFromView={view}
+          />
         </Card>
       ) : (
         <CustomizableTable
-          tableId="student-auto-notification-configuration"
-          data={notificationData}
+          tableId="route-auto-notification-configuration"
+          data={notifications}
           columns={[
             {
               id: 'event',
@@ -36,7 +46,6 @@ const TransportRouteNotificationManagementScreen = () => {
             },
             {
               id: 'triggerCondition',
-
               label: 'Trigger Condition',
             },
             {
@@ -50,20 +59,17 @@ const TransportRouteNotificationManagementScreen = () => {
                 ));
               },
             },
-
             {
               id: 'isActive',
               label: 'Active',
               render(value, row) {
                 return (
-                  <Box>
-                    <Switch
-                      checked={row.isActive}
-                      onChange={(event) => {
-                        console.log(event.target.checked);
-                      }}
-                    />
-                  </Box>
+                  <Switch
+                    checked={row.isActive}
+                    onChange={(event) => {
+                      handleToggleActive(row.id, event.target.checked);
+                    }}
+                  />
                 );
               },
             },
@@ -77,14 +83,16 @@ const TransportRouteNotificationManagementScreen = () => {
                     showEditIcon
                     handleEditClick={() => {
                       setSelectedData(row);
-                      setOpen(true);
+                      dialog.onTrue();
                       setView(false);
+                      setIsViewMode(false);
                     }}
                     showViewIcon
                     handleViewClick={() => {
                       setSelectedData(row);
                       setView(true);
-                      setOpen(true);
+                      dialog.onTrue();
+                      setIsViewMode(true);
                     }}
                   />
                 );
@@ -93,7 +101,7 @@ const TransportRouteNotificationManagementScreen = () => {
           ]}
         />
       )}
-    </>
+    </Box>
   );
 };
 

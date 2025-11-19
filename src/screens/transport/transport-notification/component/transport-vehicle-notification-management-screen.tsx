@@ -6,11 +6,12 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import EditNotificationDialog from 'src/screens/student/studentNotification/editNotificationDialog';
 
-const TransportVehicleNotificationManagementScreen = () => {
+const TransportVehicleNotificationManagementScreen = ({ dialog, setIsViewMode }: any) => {
   const notificationData = [
     {
       event: 'New Maintenance Record Added For Vehicle',
       triggerCondition: 'When a new maintenance record is added for a vehicle.',
+      isActive: true,
       recipient: [
         {
           name: 'Admin',
@@ -38,6 +39,7 @@ const TransportVehicleNotificationManagementScreen = () => {
     {
       event: 'Modification in Maintenance Record Vehicle',
       triggerCondition: 'When a maintenance record is updated for a vehicle.',
+      isActive: true,
       recipient: [
         {
           name: 'Admin',
@@ -65,6 +67,7 @@ const TransportVehicleNotificationManagementScreen = () => {
     {
       event: 'Daily Logbook Entry Added For Vehicle',
       triggerCondition: 'When a daily logbook entry is recorded.',
+      isActive: false,
       recipient: [
         {
           name: 'Admin',
@@ -89,6 +92,7 @@ const TransportVehicleNotificationManagementScreen = () => {
     {
       event: 'New Driver Added',
       triggerCondition: 'When a new driver is added to the system.',
+      isActive: true,
       recipient: [
         {
           name: 'Admin',
@@ -117,6 +121,7 @@ const TransportVehicleNotificationManagementScreen = () => {
     {
       event: 'New Vehicle Added',
       triggerCondition: 'When a new vehicle is added to the fleet.',
+      isActive: false,
       recipient: [
         {
           name: 'Admin',
@@ -140,26 +145,37 @@ const TransportVehicleNotificationManagementScreen = () => {
       ],
     },
   ];
-  const [open, setOpen] = useState(false);
+
   const [selectedData, setSelectedData] = useState<any>(null);
   const [view, setView] = useState(false);
+  const [notifications, setNotifications] = useState(notificationData);
 
-  const closeHandler = () => {
-    setOpen(false);
-    setSelectedData(null);
-    setView(false);
+  const handleToggleActive = (eventId: string, checked: boolean) => {
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.event === eventId ? { ...notification, isActive: checked } : notification
+      )
+    );
   };
 
   return (
-    <>
-      {open ? (
+    <Box sx={{ height: '100%' }}>
+      {dialog?.value ? (
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <EditNotificationDialog data={selectedData} onClose={closeHandler} isFromView={view} />
+          <EditNotificationDialog
+            data={selectedData}
+            onClose={() => {
+              dialog.onFalse();
+              setSelectedData(null);
+              setView(false);
+            }}
+            isFromView={view}
+          />
         </Card>
       ) : (
         <CustomizableTable
-          tableId="student-auto-notification-configuration"
-          data={notificationData}
+          tableId="vehicle-auto-notification-configuration"
+          data={notifications}
           columns={[
             {
               id: 'event',
@@ -167,7 +183,6 @@ const TransportVehicleNotificationManagementScreen = () => {
             },
             {
               id: 'triggerCondition',
-
               label: 'Trigger Condition',
             },
             {
@@ -181,20 +196,17 @@ const TransportVehicleNotificationManagementScreen = () => {
                 ));
               },
             },
-
             {
               id: 'isActive',
               label: 'Active',
               render(value, row) {
                 return (
-                  <Box>
-                    <Switch
-                      checked={row.isActive}
-                      onChange={(event) => {
-                        console.log(event.target.checked);
-                      }}
-                    />
-                  </Box>
+                  <Switch
+                    checked={row.isActive}
+                    onChange={(event) => {
+                      handleToggleActive(row.event, event.target.checked);
+                    }}
+                  />
                 );
               },
             },
@@ -208,14 +220,16 @@ const TransportVehicleNotificationManagementScreen = () => {
                     showEditIcon
                     handleEditClick={() => {
                       setSelectedData(row);
-                      setOpen(true);
+                      dialog.onTrue();
                       setView(false);
+                      setIsViewMode(false);
                     }}
                     showViewIcon
                     handleViewClick={() => {
                       setSelectedData(row);
                       setView(true);
-                      setOpen(true);
+                      dialog.onTrue();
+                      setIsViewMode(true);
                     }}
                   />
                 );
@@ -224,7 +238,7 @@ const TransportVehicleNotificationManagementScreen = () => {
           ]}
         />
       )}
-    </>
+    </Box>
   );
 };
 
