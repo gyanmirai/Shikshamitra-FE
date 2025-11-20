@@ -108,7 +108,7 @@ const Events = (props: TabComponentType) => {
         />
       )}
       {open ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-10)', minHeight: 0 }}>
           <AddEvent
             initialValues={editingEvent}
             onClose={handleCloseDialog}

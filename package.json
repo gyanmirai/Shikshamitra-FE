@@ -126,7 +126,7 @@
     "stylis-plugin-rtl": "^2.1.1",
     "swr": "^2.3.6",
     "use-local-storage": "^3.0.0",
-    "xlsx": "^0.18.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "yet-another-react-lightbox": "^3.25.0",
     "yup": "^1.7.0",
     "zod": "^4.1.5"
