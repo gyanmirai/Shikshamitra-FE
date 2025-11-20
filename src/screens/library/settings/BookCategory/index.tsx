@@ -24,7 +24,7 @@ import type { IBookCategory } from './Components/type';
 
 const BookCategoryCreation = () => {
   // Custom hook to fetch book category data
-  const { data: bookCategoryData, isLoading } = useQueryAndMutation({
+  const { data: bookCategoryData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBookCategoriesQuery,
   });

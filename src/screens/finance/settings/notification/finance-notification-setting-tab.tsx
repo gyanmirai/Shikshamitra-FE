@@ -59,11 +59,11 @@ const FinanceNotificationTable = () => {
     // },
   ];
 
-  const handleOpenDialog = (row: any) => {
-    setCurrentRow(row);
-    setDetails(row.textFieldLabel);
-    setOpen(true);
-  };
+  // const handleOpenDialog = (row: any) => {
+  //   setCurrentRow(row);
+  //   setDetails(row.textFieldLabel);
+  //   setOpen(true);
+  // };
 
   const handleCloseDialog = () => {
     setOpen(false);

@@ -16,7 +16,7 @@ import {
 
 const HostelPendingFeeTab = () => {
   // State to store the selected amount
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const [, setSelectedAmount] = useState<number | null>(null);
   return (
     <CustomizableTable
       noDataText={

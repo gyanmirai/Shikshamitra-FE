@@ -38,7 +38,7 @@ const LibraryBookManagementScreen = () => {
   // State to store the currently selected entry (book) for editing or other operations
   const [selectedEntry, setSelectedEntry] = useState<Book | null>(null);
   // State to store the book selected for viewing details
-  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [, setSelectedBook] = useState<Book | null>(null);
   // Boolean state to track whether we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
 

@@ -72,6 +72,8 @@ export const buildValidationSchema = (currentYear: any) =>
     .test(
       'individual-payment-amounts',
       'Individual payment amount cannot exceed total amount',
+
+      // eslint-disable-next-line func-names
       function (values: any) {
         if (!values) return true;
 
@@ -107,6 +109,7 @@ export const buildValidationSchema = (currentYear: any) =>
     .test(
       'sum-of-payment-amounts',
       'Sum of all payment amounts should not be greater than Total Amount',
+      // eslint-disable-next-line func-names
       function (values: any) {
         if (!values) return true;
 

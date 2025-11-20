@@ -241,11 +241,11 @@ export function EmployeeCard({ employee }: any) {
 const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-  const tabs = useTabs('personalInformation');
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === tabs.value),
-    [tabs.value]
-  );
+  // const tabs = useTabs('personalInformation');
+  // const currentActiveComponent = useMemo(
+  //   () => TABS.find((tab) => tab.value === tabs.value),
+  //   [tabs.value]
+  // );
   const [getEmployById, { data: employee, isLoading, isError }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetEmployeeByIdQuery,

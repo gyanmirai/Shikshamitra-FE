@@ -5,12 +5,10 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import { Card } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const ElectiveSubjectPopularity = () => {
-  const theme = useTheme();
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -21,11 +19,7 @@ const ElectiveSubjectPopularity = () => {
   const [division, setDivision] = useState<string>('');
   // Query hook to fetch class data from the API
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {

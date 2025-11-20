@@ -35,7 +35,7 @@ const StudentHostelRequest = () => {
   // State to control form visibility
   const [openForm, setOpenForm] = useState(false);
   // State to store list of hostel requests
-  const [requestList, setRequestList] = useState<IHostelRequestFormType[]>(hostelRequestData);
+  const [requestList] = useState<IHostelRequestFormType[]>(hostelRequestData);
 
   // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);

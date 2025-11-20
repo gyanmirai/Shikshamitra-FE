@@ -26,7 +26,7 @@ const MemberForm: React.FC<IMemberFormProps> = ({ open, onClose }) => {
 
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClasses] = useState<string>('');
+  const [, setClasses] = useState<string>('');
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
 

@@ -35,6 +35,7 @@ export type SearchbarProps = BoxProps & {
   data?: NavSectionProps['data'];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const useBindShortcutKey = (items: NavSectionProps['data']) => {
   const router = useRouter();
   const navData = useMemo(() => {
@@ -89,7 +90,7 @@ export function Searchbar({ data: navItems = [], sx, ...other }: SearchbarProps)
     setSearchQuery('');
   });
 
-  const handleClick = useCallback(
+  useCallback(
     (path: string) => {
       if (isExternalLink(path)) {
         window.open(path);

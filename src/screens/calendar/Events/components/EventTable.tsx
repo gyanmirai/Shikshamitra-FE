@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { RemoveCircle } from '@mui/icons-material';
 import React, { useMemo, useCallback } from 'react';
@@ -36,8 +35,6 @@ const EventAnnouncementTable: React.FC<IEventAnnouncementTableProps> = ({
   onUploadPhotoVideo,
   onViewGallery,
 }) => {
-  const theme = useTheme();
-
   // tab counts
   const announcementCounts = useMemo(
     () => ({

@@ -1,15 +1,12 @@
 'use client';
 
-import type { Division } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { fNumber } from 'src/utils/format-number';
 import { Chart, useChart } from 'src/components/chart';
 import { Box, Card, Grid, CardHeader } from '@mui/material';
-import { useGetClassQuery } from 'src/redux/class/classApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ClassPerformance from './performanceAnalytics/classPerformance';
@@ -18,43 +15,23 @@ import StudentGroupCompare from './performanceAnalytics/studentGroupCompare';
 import GradeDistributionChart from './performanceAnalytics/gradeDistribution';
 
 const PerformanceAnalytics = (props: TabComponentType) => {
-  const [classes1, setClasses1] = useState<string>('');
-  const [classes2, setClasses2] = useState<string>('');
-  const [classes3, setClasses3] = useState<string>('');
-  const [classes4, setClasses4] = useState<string>('');
-
-  const [division1, setDivision1] = useState<string>('');
-  const [division2, setDivision2] = useState<string>('');
-  const [division3, setDivision3] = useState<string>('');
-  const [division4, setDivision4] = useState<string>('');
-
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
-
-  const theme = useTheme();
-  return (
-    <Box>
-      <CustomBreadcrumbs
-        heading="Performace Analytics"
-        links={[
-          { name: 'Academics' },
-          { name: 'Gradebook And Performace Tracking' },
-          { name: 'Performace Analytics' },
-        ]}
-        sx={{ mb: 2 }}
-      />
-      <Grid container spacing={2}>
-        <ClassPerformance />
-        <GradeDistributionChart />
-        <SubjectAnalytics />
-        <StudentGroupCompare />
-      </Grid>
-    </Box>
-  );
+  <Box>
+    <CustomBreadcrumbs
+      heading="Performace Analytics"
+      links={[
+        { name: 'Academics' },
+        { name: 'Gradebook And Performace Tracking' },
+        { name: 'Performace Analytics' },
+      ]}
+      sx={{ mb: 2 }}
+    />
+    <Grid container spacing={2}>
+      <ClassPerformance />
+      <GradeDistributionChart />
+      <SubjectAnalytics />
+      <StudentGroupCompare />
+    </Grid>
+  </Box>;
 };
 
 export default PerformanceAnalytics;

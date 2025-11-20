@@ -469,6 +469,7 @@ const StandardActions = (data: Standards & { parentsData: OrgChartListProps['par
 };
 
 const DivisionActions = (data: Division & { parentsData: OrgChartListProps['parentsData'] }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const modal = useBoolean();
   const confirm = useBoolean();
   const edit = useBoolean();
@@ -1069,6 +1070,7 @@ const YearForm = ({ handleClose, handleSetTeb, editData }: IYearForm) => {
   const onSubmit = async () => {
     try {
       if (editData) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const res = await updateYear({
           id: editData.id,
           body: {
@@ -1078,6 +1080,7 @@ const YearForm = ({ handleClose, handleSetTeb, editData }: IYearForm) => {
           },
         }).unwrap();
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const res = await addYear({
           name: `${formik.values.startDate.format('YYYY')}-${formik.values.endDate.format('YYYY')}`,
           startDate: dateConvertor(formik.values.startDate.format(dateFormat)),

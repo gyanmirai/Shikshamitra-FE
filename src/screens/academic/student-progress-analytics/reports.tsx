@@ -36,7 +36,7 @@ const Reports = (props: TabComponentType) => {
   const [division, setDivision] = useState<string>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

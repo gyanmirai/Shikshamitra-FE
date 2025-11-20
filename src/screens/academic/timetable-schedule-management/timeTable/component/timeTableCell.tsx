@@ -41,11 +41,6 @@ const TimeTableCell = ({
    * Dialog state hooks for managing teacher and room assignment dialogs
    */
 
-  console.log('item----', item);
-  console.log('isClassVisible---', isClassVisible);
-  console.log('isDivisionVisible---', isDivisionVisible);
-  console.log('slotData---', slotData);
-
   const teacherDialog = useBoolean();
   const roomDialog = useBoolean();
   const deleteDialog = useBoolean();
@@ -56,6 +51,7 @@ const TimeTableCell = ({
    * Unique key for identifying the time slot based on time and day
    * @type {string}
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const slotKey = `${timeSlot}-${day}`;
 
   /**

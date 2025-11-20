@@ -3,7 +3,6 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Card, Grid, Typography } from '@mui/material';
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -15,11 +14,10 @@ const ClassPerformance = () => {
   const [classes1, setClasses1] = useState<string>('');
   const [division1, setDivision1] = useState<string>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  const theme = useTheme();
   return (
     <Grid size={{ xs: 12, md: 6 }}>
       <Card sx={{ height: '100%', p: 2, boxShadow: 'var(--shadows-2)' }}>
@@ -49,6 +47,7 @@ const ClassPerformance = () => {
             options={divisionOptions}
             value={division1}
             onChange={(val) => {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const selectedDivision = divisionOptions.find((i: Division) =>
                 (val as string).includes(i.id)
               );

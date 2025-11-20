@@ -1,6 +1,5 @@
 import { Box } from '@mui/material';
 import React, { useState } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import data from 'src/json/ResourceManagement/resourceSettings/vendor/resource-vendor-data.json';
@@ -11,9 +10,7 @@ import type {
 } from '../resource-vendor-config-interface';
 
 const ResourceVendorTable: React.FC<IReportVendorTableProps> = ({ onClick }) => {
-  const addResourceLossDamagedDialog = useBoolean();
-
-  const [selectedRow, setSelectedRow] = useState<IResourceVendorFormValues>();
+  const [, setSelectedRow] = useState<IResourceVendorFormValues>();
 
   return (
     <>

@@ -29,7 +29,6 @@ const AddPaymentTermDialog: React.FC<IFinanceAddPaymentTermDialogProps> = ({
     errors, // Validation errors for each field
     touched, // Tracks which fields have been touched/visited
     handleSubmit, // Form submission handler
-    handleChange, // Input change handler
     handleBlur, // Input blur handler
     isSubmitting, // Flag indicating if form is currently submitting
     setSubmitting, // Function to update submission state

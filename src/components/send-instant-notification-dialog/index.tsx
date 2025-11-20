@@ -47,12 +47,6 @@ const SendInstantNotificationDialog: React.FC<ISendInstantNotificationDialogProp
     { value: 'template1', label: 'Template 1' },
     { value: 'template2', label: 'Template 2' },
   ];
-
-  const templateMessage = [
-    { value: 'template1', label: 'Template 1' },
-    { value: 'template2', label: 'Template 2' },
-  ];
-
   return (
     <CustomDialog maxWidth="md" title="Send Instant Notification" handleClose={onClose} open={open}>
       <Scrollbar sx={{ bgcolor: 'background.neutral', p: 3, height: '400px' }}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box , Grid } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import RecentActivities from 'src/app/(auth-route)/student/overview/recent-activities';
 
 import EmployeeProfileOverview from './profileDashboardComponent/ProfileOverview';

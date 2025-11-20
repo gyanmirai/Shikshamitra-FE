@@ -24,7 +24,7 @@ import { getValidationSchemaByModel } from './Components/FeeConfigurationValidat
 const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-  const { data: stopBasedFeeData, isLoading } = useQueryAndMutation({
+  const { data: stopBasedFeeData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStopBasedFeeDataQuery,
   });
@@ -38,7 +38,7 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [selectedModel, setSelectedModel] = useState('distance-based');
-  const [editData, setEditData] = useState(null); // for edit mode, set an object
+  const [editData] = useState(null); // for edit mode, set an object
 
   const initialValues = React.useMemo(
     () => getInitialValuesByModel(selectedModel, editData, stopBasedFeeData),

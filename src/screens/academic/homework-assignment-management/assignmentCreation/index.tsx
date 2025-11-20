@@ -41,10 +41,10 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   // State to store currently selected assignment for edit/delete/publish
   const [selectedAssignment, setSelectedAssignment] = useState<IAssignment | null>(null);
   // State to store list of all assignments
-  const [assignmentData, setAssignmentData] = useState<any[]>(assignmentTableData);
+  const [assignmentData] = useState<any[]>(assignmentTableData);
   // Redux dispatch function
   const dispatch = useDispatch();
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  // const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [subject, setSubject] = useState('');
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -58,11 +58,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {

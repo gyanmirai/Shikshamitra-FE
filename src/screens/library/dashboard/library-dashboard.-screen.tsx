@@ -16,8 +16,8 @@ import { PopularBooks } from './popular-books-carousel';
 
 const LibraryDashboard = () => {
   // State to manage selected class and category in the dashboard
-  const [selectedClass, setSelectedClass] = useState<string>('borrowingTrend');
-  const [selectedCategory, setSelectedCategory] = useState<string>('booksByCategory');
+  // const [selectedClass, setSelectedClass] = useState<string>('borrowingTrend');
+  const [selectedCategory] = useState<string>('booksByCategory');
 
   // Sample data representing different book categories and their quantities
   const bookCategoryData = [

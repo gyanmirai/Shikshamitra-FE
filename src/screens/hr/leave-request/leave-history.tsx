@@ -23,10 +23,6 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
-  useGetEmployeeLeaveQuery,
-  useEmployeeLeaveRequestStatusMutation,
-} from 'src/redux/employee/employeeApi';
-import {
   Box,
   Button,
   MenuItem,
@@ -35,6 +31,10 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
+import {
+  useGetEmployeeLeaveQuery,
+  useEmployeeLeaveRequestStatusMutation,
+} from 'src/redux/employee/employeeApi';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
@@ -164,7 +164,7 @@ const LeaveHistory = (props: any) => {
     }
   };
 
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [selectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
   const handlerSendNotification = () => {
@@ -173,6 +173,7 @@ const LeaveHistory = (props: any) => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [rejectionReason, setRejectionReason] = useState('');
 
   useEffect(() => {

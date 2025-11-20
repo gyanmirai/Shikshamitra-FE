@@ -50,7 +50,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [selectedBook, setSelectedBook] = useState<IBookCopyWithBook | null>(null);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
-  const [reservationList, setReservationList] = useState([]);
+  const [reservationList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expandedBook, setExpandedBook] = useState(true);
   const [expandedMemberAccordion, setExpandedMemberAccordion] = useState(true);

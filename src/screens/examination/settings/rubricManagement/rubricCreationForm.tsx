@@ -15,8 +15,8 @@ const RubricCreationForm = ({ onClose }: { onClose?: () => void }) => {
     currentQueryAndMutation: useGetClassQuery,
   });
   const [classes, setClasses] = useState<string>('');
-  const [division, setDivision] = useState<string>('');
-  const [divisionOptions, setDivisionOptions] = useState<any[]>([]);
+  // const [division, setDivision] = useState<string>('');
+  const [, setDivisionOptions] = useState<any[]>([]);
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>

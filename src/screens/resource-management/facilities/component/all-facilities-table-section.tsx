@@ -2,11 +2,11 @@
 
 import type { LabelColor } from 'src/components/label';
 
+import React, { useMemo } from 'react';
 import { Add } from '@mui/icons-material';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -18,10 +18,10 @@ import {
   FacilityStatusTypeOptions,
 } from 'src/enums/facility-statusType';
 
-import type { IFacility } from '../facilities-interface';
+// import type { IFacility } from '../facilities-interface';
 
 const AllFacilitiesTableSection = () => {
-  const [selectedItem, setSelectedItem] = useState<IFacility>();
+  // const [selectedItem, setSelectedItem] = useState<IFacility>();
   const TABS = [
     {
       label: 'All', // Displays all items in the inventory

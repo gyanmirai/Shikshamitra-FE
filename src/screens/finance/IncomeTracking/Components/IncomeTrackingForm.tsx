@@ -69,13 +69,13 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
     },
   });
 
-  const selectedPaymentMethod = formik.values.paymentMethod;
+  // const selectedPaymentMethod = formik.values.paymentMethod;
 
   // Get payment fields from API data or fallback to local config
-  const paymentFields =
-    paymentMethodsConfigToUse[selectedPaymentMethod as keyof typeof paymentMethodsConfigToUse] ||
-    [];
-
+  // const paymentFields =
+  //   paymentMethodsConfigToUse[selectedPaymentMethod as keyof typeof paymentMethodsConfigToUse] ||
+  //   [];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const renderDynamicField = (field: any) => {
     const fieldName = `paymentDetails.${field.name}`;
     const fieldValue = formik.values.paymentDetails?.[field.name] || '';
@@ -257,6 +257,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
                     onChange={(val) => {
                       formik.setFieldValue('incomeCategory', val);
                       formik.setFieldTouched('incomeCategory', false);
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
                       const selectedCategory = categoryOptions.find(
                         (cat: { value: string; budget?: string }) => cat.value === val
                       );

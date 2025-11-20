@@ -39,9 +39,7 @@ const FinanceStudentFeeTab: React.FC<FinanceStudentFeeTabProps> = ({ studentId =
   // States for managing division selection
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
-  const { currentMedium: medium, setCurrentMedium: setMedium } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Effect to update organizations when medium changes
   useEffect(() => {

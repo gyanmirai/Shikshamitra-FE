@@ -29,7 +29,7 @@ const BookIssueReturnTable = ({
   addDialog: UseBooleanReturn;
   data: ILibraryBookData[];
   onReturnBook: (row: ILibraryBookData) => void;
-}) => {
+}) => (
   // const [tabValue, setTabValue] = useState(LibraryBookStatus.Issued);
   // const currentIndex = TABS.findIndex((tab) => tab.value === tabValue);
 
@@ -63,11 +63,10 @@ const BookIssueReturnTable = ({
   // );
 
   // For FormSlider navigation (optional: add back click logic if needed)
-  const isBackClick = false;
+  // const isBackClick = false;
 
-  return (
-    <>
-      {/* <Box display="flex" justifyContent="space-between" sx={{ mb: 1 }}>
+  <>
+    {/* <Box display="flex" justifyContent="space-between" sx={{ mb: 1 }}>
         <Tabs
           value={tabValue}
           onChange={(_, newValue) => setTabValue(newValue)}
@@ -95,7 +94,7 @@ const BookIssueReturnTable = ({
           ))}
         </Tabs>
       </Box> */}
-      {/* <FormSlider
+    {/* <FormSlider
         steps={TABS}
         isBackClick={isBackClick}
         step={currentIndex}
@@ -105,74 +104,72 @@ const BookIssueReturnTable = ({
           },
         }}
       > */}
-      {/* <Scrollbar sx={{ p: 1 }}> */}
-      <CustomizableTable
-        tableId="library-book-table"
-        noDataText="No Issue Book Data Found "
-        columns={[
-          {
-            id: 'memberName',
-            label: 'Member Name',
-            align: 'left',
-            minWidth: '140px',
-            sticky: true,
+    {/* <Scrollbar sx={{ p: 1 }}> */}
+    <CustomizableTable
+      tableId="library-book-table"
+      noDataText="No Issue Book Data Found "
+      columns={[
+        {
+          id: 'memberName',
+          label: 'Member Name',
+          align: 'left',
+          minWidth: '140px',
+          sticky: true,
+        },
+        { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
+        { id: 'role', label: 'Role', align: 'left', minWidth: '100px' },
+        { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '120px' },
+        { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '150px' },
+        {
+          id: 'classDivision',
+          label: 'Class/Division',
+          align: 'left',
+          minWidth: '130px',
+          render: (_value, row) => (
+            <span>
+              {row.classNo}
+              {row.division ? `-${row.division}` : ''}
+            </span>
+          ),
+        },
+        { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
+        { id: 'grNo', label: 'GR No.', align: 'left', minWidth: '120px' },
+        { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '120px' },
+        { id: 'bookCategory', label: 'Book Category', align: 'left', minWidth: '140px' },
+        {
+          id: 'requestedDate',
+          label: 'Issue Date',
+          align: 'left',
+          filterType: 'date',
+          minWidth: '120px',
+        },
+        {
+          id: 'dueDate',
+          label: 'Due Date',
+          align: 'left',
+          filterType: 'date',
+          minWidth: '120px',
+        },
+        {
+          id: 'status',
+          label: 'Status',
+          filterType: 'enum',
+          sticky: true,
+          enumOptions: [
+            { label: 'Issued', value: LibraryBookStatus.Issued },
+            { label: 'Overdue', value: LibraryBookStatus.Overdue },
+          ],
+          align: 'left',
+          render(value, row) {
+            const color = LibraryBookStatusColors[value as LibraryBookStatus] as LabelColor;
+            return <Label color={color}>{LibraryBookStatus[value]}</Label>;
           },
-          { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '120px' },
-          { id: 'role', label: 'Role', align: 'left', minWidth: '100px' },
-          { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '120px' },
-          { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '150px' },
-          {
-            id: 'classDivision',
-            label: 'Class/Division',
-            align: 'left',
-            minWidth: '130px',
-            render: (_value, row) => (
-              <span>
-                {row.classNo}
-                {row.division ? `-${row.division}` : ''}
-              </span>
-            ),
-          },
-          { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
-          { id: 'grNo', label: 'GR No.', align: 'left', minWidth: '120px' },
-          { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '120px' },
-          { id: 'bookCategory', label: 'Book Category', align: 'left', minWidth: '140px' },
-          {
-            id: 'requestedDate',
-            label: 'Issue Date',
-            align: 'left',
-            filterType: 'date',
-            minWidth: '120px',
-          },
-          {
-            id: 'dueDate',
-            label: 'Due Date',
-            align: 'left',
-            filterType: 'date',
-            minWidth: '120px',
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            filterType: 'enum',
-            sticky: true,
-            enumOptions: [
-              { label: 'Issued', value: LibraryBookStatus.Issued },
-              { label: 'Overdue', value: LibraryBookStatus.Overdue },
-            ],
-            align: 'left',
-            render(value, row) {
-              const color = LibraryBookStatusColors[value as LibraryBookStatus] as LabelColor;
-              return <Label color={color}>{LibraryBookStatus[value]}</Label>;
-            },
-          },
-        ]}
-        data={data || []}
-      />
-      {/* </Scrollbar>
+        },
+      ]}
+      data={data || []}
+    />
+    {/* </Scrollbar>
       </FormSlider> */}
-    </>
-  );
-};
-
+  </>
+);
 export default BookIssueReturnTable;

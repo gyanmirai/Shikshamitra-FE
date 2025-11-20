@@ -47,7 +47,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
   const [selectedBook, setSelectedBook] = useState<IBookCopyWithBook | null>(editData);
   const [selectedMember, setSelectedMember] = useState<any | null>(editData?.memberId || null);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [books, setBooks] = useState(libraryDummyData.books);
+  const [books] = useState(libraryDummyData.books);
   const [loading, setLoading] = useState(false);
   const [loadingMember, setLoadingMember] = useState(false);
   const [expandedBook, setExpandedBook] = useState(false);

@@ -17,12 +17,10 @@ const ManageProcurementRequestScreenTeacher = () => {
   const [open, setOpen] = useState(false);
 
   // Tracks whether the dialog is in Edit mode (true) or Add mode (false)
-  const [isEdit, setEdit] = useState(false);
+  const [, setEdit] = useState(false);
 
   // Holds the visitor data selected for editing; null when adding a new visitor
-  const [selectedVisitor, setSelectedVisitor] = useState<IProcurementAndVendorFromValues | null>(
-    null
-  );
+  const [, setSelectedVisitor] = useState<IProcurementAndVendorFromValues | null>(null);
 
   // Manages the open/close state of the delete confirmation dialog
   const deleteDialog = useBoolean(false);
@@ -85,7 +83,7 @@ const ManageProcurementRequestScreenTeacher = () => {
     setEdit(false);
     setOpen(true);
   };
-  const addNewProcurementRequest = useBoolean();
+  // const addNewProcurementRequest = useBoolean();
   return (
     <>
       <CustomBreadcrumbs

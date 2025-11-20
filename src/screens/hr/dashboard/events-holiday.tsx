@@ -13,7 +13,7 @@ import { HrEventsAndHolidaysForm } from '../events-holidays';
 const EventsHoliday = () => {
   const theme = useTheme();
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
-  const { data: eventHolidayData, isLoading } = useQueryAndMutation({
+  const { data: eventHolidayData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEventHolidayByDateQuery,
     params: dayjs()?.format('YYYY-MM-DD'),

@@ -34,6 +34,7 @@ export const getReserveBookSchema = (currentYear: any) =>
       .test(
         'is-after-issue-date',
         'Reserve due date cannot be before Requested date',
+        // eslint-disable-next-line func-names
         function (value) {
           const { requestedDate } = this.parent;
           if (!value || !requestedDate) return true;

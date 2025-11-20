@@ -26,14 +26,10 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
   const [inputValue, setInputValue] = useState('');
   const [debouncedInputValue, setDebouncedInputValue] = useState('');
   const [loadingBookDetails, setLoadingBookDetails] = useState(false);
-  const [bookFound, setBookFound] = useState(false);
+  const [, setBookFound] = useState(false);
   const [fieldsEnabled, setFieldsEnabled] = useState(false);
 
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -47,7 +43,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
     skip: !debouncedInputValue,
   });
 
-  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [, setAllClass] = useState<Standards[]>([]);
 
   useEffect(() => {
     // If medium or its stages are missing, clear classes
@@ -108,7 +104,7 @@ const BookGeneralStep = ({ formik }: BookGeneralStepProps) => {
               fullWidth
               value={formik.values.title}
               inputValue={inputValue}
-              onInputChange={(event, newInputValue, reason) => {
+              onInputChange={(event, newInputValue) => {
                 const cleanValue = newInputValue
                   .replace(/[^a-zA-Z0-9\s]/g, '')
                   .split(' ')

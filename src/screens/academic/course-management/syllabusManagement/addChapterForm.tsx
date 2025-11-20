@@ -41,18 +41,9 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   // State for tracking files that have been uploaded but not yet processed
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  console.log('currentYear--', currentYear);
 
-  const [uploadedDocs, setUploadedDocs] = useState<File[]>([]);
-  // State for managing rich text editor content
-  const [editorContent, setEditorContent] = useState('');
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const previewDialog = useBoolean();
-
-  const handleView = (file: File | string) => {
-    setPreviewFile(file);
-    previewDialog.onTrue();
-  };
 
   // Initialize formik for form handling
   const formik = useFormik<IChapterFormValues>({

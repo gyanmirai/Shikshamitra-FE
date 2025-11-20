@@ -38,12 +38,12 @@ const FinanceIncomeSettingTab = () => {
   const dialog = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState(data);
   const [isEdit, setIsEdit] = useState(false);
-  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+  const [, setShowDuplicateDialog] = useState(false);
   const [tableData, setTableData] = useState(data);
 
-  const handleCloseDuplicateDialog = () => {
-    setShowDuplicateDialog(false);
-  };
+  // const handleCloseDuplicateDialog = () => {
+  //   setShowDuplicateDialog(false);
+  // };
 
   const closeDialog = () => {
     setIsEdit(false);
@@ -53,7 +53,7 @@ const FinanceIncomeSettingTab = () => {
   useEffect(() => {}, [selectedEntry, isEdit]);
 
   const handleSave = (dataFromDialog: any) => {
-    const { categoryName, description, incomeType, effectiveDate, amount } = dataFromDialog;
+    const { categoryName, description, incomeType, amount } = dataFromDialog;
 
     if (dataFromDialog) {
       const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();

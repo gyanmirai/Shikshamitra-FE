@@ -54,7 +54,6 @@ const HostelFeeStructure = (props: TabComponentType) => {
       id,
       paymentDueDate,
       multipleApplicableGrade,
-      feeName,
       amount,
       applicableGrade,
       bookRecipt,

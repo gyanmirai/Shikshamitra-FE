@@ -210,7 +210,8 @@ const FinanceBudgetCategorySettings = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete budget category <b>{selectedItem?.categoryName}</b>?{' '}
+            Are you sure you want to delete budget category <b>{selectedItem?.categoryName}</b>
+            ?{' '}
           </>
         }
         action={

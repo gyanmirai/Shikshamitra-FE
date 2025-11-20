@@ -5,7 +5,6 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -21,7 +20,7 @@ interface ResourceFormProps {
 
 const ResourceForm: React.FC<ResourceFormProps> = ({ onSubmit, onClose, data, isEdit }) => {
   const [isDraft, setIsDraft] = useState(!isEdit || (data && data.status === 'draft'));
-  const dialog = useBoolean();
+  // const dialog = useBoolean();
   const formik = useFormik<TResource>({
     initialValues: {
       id: isEdit && data ? data.id : Date.now(),

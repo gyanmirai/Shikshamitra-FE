@@ -25,14 +25,14 @@ const AssignmentTypeCreation = () => {
   // Dialog control for delete confirmation
   const deleteDialog = useBoolean();
   // State to control modal visibility (unused)
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
   // Get changes status from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // Selected assignment type data for edit/delete operations
   const [selectedData, setSelectedData] = useState<IAssignmentType | null>(null);
   // Table data containing list of assignment types
-  const [tableData, setTableData] = useState<IAssignmentType[]>([]);
+  const [tableData] = useState<IAssignmentType[]>([]);
 
   // Redux dispatch function
   const dispatch = useDispatch();

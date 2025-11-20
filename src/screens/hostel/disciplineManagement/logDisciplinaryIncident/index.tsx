@@ -41,7 +41,7 @@ const LogDisciplinaryManagement = () => {
   const dispatch = useDispatch();
 
   // Disciplinary incidents data
-  const [incidentData, setIncidentData] = useState<IHostelIncident[]>(disciplineData);
+  const [incidentData] = useState<IHostelIncident[]>(disciplineData);
 
   // Breadcrumb navigation links based on form state
   const links = open

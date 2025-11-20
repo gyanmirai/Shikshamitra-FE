@@ -8,7 +8,7 @@ import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
 import { Dot } from 'src/screens/student/studentProfile/attendance';
 
 const ProfileDashboardAttendance = () => {
-  const [date, setDate] = useState<Dayjs | null>(dayjs());
+  const [date] = useState<Dayjs | null>(dayjs());
 
   return (
     <Paper
@@ -42,7 +42,7 @@ const ProfileDashboardAttendance = () => {
         }}
         slots={{
           day: (prop: any) => {
-            const { day, today } = prop;
+            const { day } = prop;
 
             const absent = day.format('DD-MM-YYYY') === '10-06-2025';
             const isSunday = day.day() === 0;

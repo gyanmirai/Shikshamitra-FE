@@ -53,12 +53,9 @@ const curriculumInitialData = [
 ];
 
 const CarriculumListDashboardComponent = (props: TabComponentType) => {
-  const modal = useBoolean();
-  const uploadModal = useBoolean();
-  const gradeScalingModal = useBoolean();
   const theme = useTheme();
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

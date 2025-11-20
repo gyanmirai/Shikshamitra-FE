@@ -25,7 +25,7 @@ const HostelTypeSetting = (props: TabComponentType) => {
   // Dialog state for managing the delete confirmation dialog visibility
   const dialogForDeleteConfirmation = useBoolean();
   // State to control the overall dialog open/close state
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
   // State to store the selected hostel type entry for editing
   const [selectedEntry, setSelectedEntry] = useState<IHostelType | null>(null);
   // useDispatch hook to dispatch actions

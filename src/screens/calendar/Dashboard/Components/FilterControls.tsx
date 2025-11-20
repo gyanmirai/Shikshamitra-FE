@@ -69,6 +69,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
   const DROPDOWN_WIDTH = 300;
 
   // Track search input text separately so we can show counts when not searching
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [search, setSearch] = useState({ eventType: '', holidayType: '', status: '' });
 
   const makeDisplayValue = (selected: string[], options: string[]) => {

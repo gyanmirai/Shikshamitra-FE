@@ -24,7 +24,7 @@ interface Data {
   action?: string;
 }
 
-let initialData: Data[] = [
+const initialData: Data[] = [
   {
     id: 1,
     paymentMethodName: 'Stripe',
@@ -58,11 +58,10 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
     dialog.onFalse();
   };
 
-  const handleDelete = (item: any) => {
-    console.log('hiren xyz', item.id);
-    initialData = initialData.filter((val) => val.id !== item.id);
-    setTableData([...initialData]);
-  };
+  // const handleDelete = (item: any) => {
+  //   initialData = initialData.filter((val) => val.id !== item.id);
+  //   setTableData([...initialData]);
+  // };
 
   const handleSave = (dataFromDialog: Data) => {
     const { serviceProviderDetail, paymentMethodName, id } = dataFromDialog;

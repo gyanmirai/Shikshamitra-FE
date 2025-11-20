@@ -27,7 +27,7 @@ const HomeworkTypeCreation = () => {
   const deleteDialog = useBoolean();
 
   // Modal open/close state
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
 
   // Track unsaved changes from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -36,7 +36,7 @@ const HomeworkTypeCreation = () => {
   const [selectedData, setSelectedData] = useState<IHomeworkType | null>(null);
 
   // Table data state containing list of homework types
-  const [tableData, setTableData] = useState<IHomeworkType[]>([]);
+  const [tableData] = useState<IHomeworkType[]>([]);
 
   // Redux dispatch function
   const dispatch = useDispatch();

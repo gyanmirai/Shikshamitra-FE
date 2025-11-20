@@ -36,7 +36,7 @@ const validationSchema = Yup.object().shape({
 
 const Reports = (props: TabComponentType) => {
   // Custom hook to fetch class data using RTK Query
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

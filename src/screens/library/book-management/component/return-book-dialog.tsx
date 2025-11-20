@@ -58,22 +58,22 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
   });
 
   // Handling member and book selection based on passed data
-  const handleBookSelect = (bookID: string) => {
-    const selectedBook = bookData.find((book) => book.id === bookID);
-    formik.setFieldValue('bookTitle', selectedBook?.title || '');
-    formik.setFieldValue('bookAuthor', selectedBook?.author || '');
-  };
+  // const handleBookSelect = (bookID: string) => {
+  //   const selectedBook = bookData.find((book) => book.id === bookID);
+  //   formik.setFieldValue('bookTitle', selectedBook?.title || '');
+  //   formik.setFieldValue('bookAuthor', selectedBook?.author || '');
+  // };
 
-  const handleMemberSelect = (memberID: string) => {
-    const selectedMember = memberData.find((member) => member.id === memberID);
-    formik.setFieldValue('memberName', selectedMember?.name || '');
-  };
+  // const handleMemberSelect = (memberID: string) => {
+  //   const selectedMember = memberData.find((member) => member.id === memberID);
+  //   formik.setFieldValue('memberName', selectedMember?.name || '');
+  // };
 
   const [receivedFineAmount, setReceivedFineAmount] = useState('0');
   const [selectedPaymentMode, setSelectedPaymentMode] = useState('cash');
 
-  const parseNumericValue = (formattedValue: string) =>
-    parseFloat(formattedValue.replace(/,/g, '')) || 0;
+  // const parseNumericValue = (formattedValue: string) =>
+  //   parseFloat(formattedValue.replace(/,/g, '')) || 0;
 
   const handleChangeForLibrary = (formattedValue: string, numericValue: number) => {
     setReceivedFineAmount(formattedValue);

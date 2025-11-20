@@ -1,8 +1,8 @@
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
 
+import React, { useMemo } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Box, Typography } from '@mui/material';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -31,20 +31,12 @@ const HOMEWORK_TABS = [
 ];
 
 const ViewHomeworkDetails = ({ homework }: { homework: IHomework | null }) => {
-  console.log('homework---', homework);
-
   // Custom hook to manage tab state with 'overview' as the default selected tab
   const tabs = useTabs('overview');
 
-  // State to track whether the subject accordion section is expanded or collapsed
-  const [isSubjectExpanded, setIsSubjectExpanded] = useState<boolean>(true);
-
   // Memoized value that finds and returns the currently active tab component
   // Updates only when the selected tab value changes
-  const currentActiveComponent = useMemo(
-    () => HOMEWORK_TABS.find((tab) => tab.value === tabs.value),
-    [tabs.value]
-  );
+  useMemo(() => HOMEWORK_TABS.find((tab) => tab.value === tabs.value), [tabs.value]);
 
   return (
     <Box sx={{ p: 2, height: '100%' }}>

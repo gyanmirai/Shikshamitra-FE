@@ -25,7 +25,7 @@ import type { ILibraryBookData } from './Components/type';
 
 const IssueReturnBook = () => {
   // State for selected record
-  const [selectedRecord, setSelectedRecord] = useState<ILibraryBookData | null>(null);
+  const [, setSelectedRecord] = useState<ILibraryBookData | null>(null);
   const [reservedRecordToDelete, setReservedRecordToDelete] = useState<any>(null);
 
   // Dialog states

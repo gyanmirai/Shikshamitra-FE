@@ -16,10 +16,8 @@ const SelectStudentStep = ({ formik }: { formik: FormikProps<ITransportApplicati
     type: 'query',
     currentQueryAndMutation: useGetTransportMembersQuery,
   });
-  console.log('formik values---', formik.values);
-  console.log('formik erroe---', formik.errors);
 
-  const [selectedRow, setSelectedRow] = useState<number>();
+  const [, setSelectedRow] = useState<number>();
 
   const theme = useTheme();
   const [searchInput, setSearchInput] = useState(''); // typed text

@@ -9,10 +9,10 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -50,12 +50,12 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
     currentQueryAndMutation: useGetReservationRequestDataQuery,
   });
 
-  const { data: reservedBooks } = useQueryAndMutation({
+  useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReservationBooksQuery,
   });
 
-  const [bookSelected, setBookSelected] = useState(false);
+  const [, setBookSelected] = useState(false);
   const [showReservation, setShowReservation] = useState(false);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -138,14 +138,14 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
   }, [medium]);
 
   //   Transform student data to include full name
-  const tableData = useMemo(
-    () =>
-      StudentsData?.items?.map((item: any) => ({
-        ...item,
-        name: `${item.firstName} ${item.lastName} ${item.middleName}`,
-      })) || [],
-    [StudentsData?.items]
-  );
+  // const tableData = useMemo(
+  //   () =>
+  //     StudentsData?.items?.map((item: any) => ({
+  //       ...item,
+  //       name: `${item.firstName} ${item.lastName} ${item.middleName}`,
+  //     })) || [],
+  //   [StudentsData?.items]
+  // );
 
   const formik = useFormik({
     initialValues: getInitialValues(editData),
@@ -176,9 +176,9 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
 
   const accessionNumberOptions = selectedBooks?.accessionNumberOptions || [];
 
-  const selectedCategory = bookCategoryOptions?.find(
-    (cat: IBookCategoryOption) => cat.value === formik.values.bookTitle
-  );
+  // const selectedCategory = bookCategoryOptions?.find(
+  //   (cat: IBookCategoryOption) => cat.value === formik.values.bookTitle
+  // );
 
   const selectedBook = bookCategoryOptions?.find(
     (item: IBookCategoryOption) => item.value === formik.values.bookTitle

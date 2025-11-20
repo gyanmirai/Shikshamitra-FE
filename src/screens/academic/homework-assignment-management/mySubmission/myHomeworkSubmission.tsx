@@ -60,7 +60,7 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
   );
 
   // Memoized tab configuration array with status counts and styling
-  const TABS = useMemo(
+  useMemo(
     () => [
       {
         label: 'Pending',
@@ -79,7 +79,7 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
   );
 
   // Callback for rendering action menu items based on homework status
-  const actions = useCallback(
+  useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
         {tabs.value === 0 ? (
@@ -115,9 +115,9 @@ const MyHomeworkSubmission = (props: TabComponentType) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // Event handler for tab changes
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
-    tabs.onChange(event, newValue);
-  };
+  // const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
+  //   tabs.onChange(event, newValue);
+  // };
 
   // State for managing selected date with dayjs
   const [date, setDate] = useState<Dayjs | null>(dayjs());

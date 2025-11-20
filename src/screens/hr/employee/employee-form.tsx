@@ -193,7 +193,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     currentQueryAndMutation: useAddBasicInformationMutation,
     isThrowError: true,
   });
-  const [addUser] = useQueryAndMutation({
+  useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddUserMutation,
     isThrowError: true,

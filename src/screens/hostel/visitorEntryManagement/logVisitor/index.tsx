@@ -27,7 +27,7 @@ const LogVisitor = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const deleteDialog = useBoolean();
   const dispatch = useDispatch();
-  const [visitorData, setVisitorData] = useState<IVisitorData[]>(visitorLogData);
+  const [visitorData] = useState<IVisitorData[]>(visitorLogData);
 
   const links = open
     ? [

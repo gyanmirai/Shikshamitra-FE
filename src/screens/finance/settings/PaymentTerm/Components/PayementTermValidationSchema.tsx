@@ -72,6 +72,7 @@ export const paymentTermValidationSchema = (currentYear: any) =>
               'Reminder Date must be a valid date',
               (value) => value && dayjs(value as any).isValid()
             )
+            // eslint-disable-next-line func-names
             .test('reminder-before-due', 'Reminder date must be before due date', function (value) {
               const { dueDate } = this.parent;
               if (!value || !dueDate) return true;

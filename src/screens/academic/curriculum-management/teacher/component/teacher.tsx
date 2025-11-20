@@ -12,10 +12,10 @@ import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
-import { useGetClassQuery } from 'src/redux/class/classApi';
+// import { useGetClassQuery } from 'src/redux/class/classApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+// import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
@@ -76,21 +76,17 @@ const Teacher = ({
     },
   ];
 
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const [focusedCells, setFocusedCells] = useState<{ division: string; subject: string }[]>([]);
 
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [classes, setClasses] = useState<string>('');
 
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // const { data: classData, isLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetClassQuery,
+  // });
 
   const initialTableData = [
     {

@@ -67,9 +67,9 @@ const initialStudentGroups: TStudentGroup[] = [
 ];
 
 const StudentGroup = (props: TabComponentType) => {
-  const [studentGroups, setStudentGroups] = useState<TStudentGroup[]>(initialStudentGroups);
+  const [studentGroups] = useState<TStudentGroup[]>(initialStudentGroups);
   const [isEdit, setIsEdit] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<TStudentGroup | null>(null);
+  const [, setSelectedGroup] = useState<TStudentGroup | null>(null);
 
   // const dialog = useBoolean();
   const [open, setOpen] = useState(false);

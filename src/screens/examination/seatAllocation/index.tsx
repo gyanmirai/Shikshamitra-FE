@@ -27,6 +27,7 @@ const SeatAllocation = () => {
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
   const [selectedClass, setSelectedClass] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [rooms, setRooms] = useState([
     { id: '1', name: 'Room 101' },
     { id: '2', name: 'Room 102' },
@@ -34,11 +35,7 @@ const SeatAllocation = () => {
     { id: '4', name: 'Room 104' },
     { id: '5', name: 'Room 105' },
   ]);
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {

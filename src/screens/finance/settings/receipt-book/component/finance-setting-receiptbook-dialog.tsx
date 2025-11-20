@@ -1,10 +1,10 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { useDispatch, useSelector } from 'react-redux';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
@@ -21,11 +21,10 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
   onClose,
   allData,
 }) => {
-  // Redux dispatch hook for dispatching actions
-  const dispatch = useDispatch();
   // Get isChanges state from Redux store
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  useSelector((state: RootState) => state.confirmPopup);
   // State to track and display duplicate receipt book name error
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showErrorMessage, setShowErrorMessage] = useState(false);
 
   // Memoized initial values for the form based on whether editing existing or creating new

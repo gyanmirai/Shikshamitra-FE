@@ -119,7 +119,7 @@ const HrEmployee = () => {
     // employeeType: EmployeeGroupType[item?.employeeGroup],
     organization: item?.educationMediumStage?.name,
   }));
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [selectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
   const handlerSendNotification = () => {

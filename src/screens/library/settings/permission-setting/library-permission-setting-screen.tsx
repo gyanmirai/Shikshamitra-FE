@@ -27,7 +27,7 @@ const LibraryPermissionSettingScreen = () => {
   ];
 
   const addRoleAndPermissionDialog = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState<any>();
+  const [, setSelectedEntry] = useState<any>();
   const [isEdit, setIsEdit] = useState<any>(false);
   return (
     <>

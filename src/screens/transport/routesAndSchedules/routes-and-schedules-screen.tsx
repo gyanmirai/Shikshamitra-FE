@@ -1,6 +1,6 @@
 'use client';
 
-import 'leaflet/dist/leaflet.css';
+// import 'leaflet/dist/leaflet.css';
 
 import * as yup from 'yup';
 import { Iconify } from 'src/components/iconify';
@@ -671,11 +671,11 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose, addNewRouteHan
   //   coordinates: [number, number];
   // }
 
-  const [allRouteDetails] = useState<any>({
-    startPoint: null,
-    endPoint: null,
-    stops: [],
-  });
+  // const [allRouteDetails] = useState<any>({
+  //   startPoint: null,
+  //   endPoint: null,
+  //   stops: [],
+  // });
 
   const allRouteSteps = [
     // <LocationPicker onLocationSelect={handleLocationData}/>,

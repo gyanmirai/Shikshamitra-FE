@@ -34,12 +34,9 @@ const StopsStep = ({ formik }: StopsStepProps) => {
   const theme = useTheme();
 
   const [searchInput, setSearchInput] = useState('');
-  console.log('formik000values----', formik.values);
-  console.log('formik erroes---', formik.errors);
-  console.log('availableStops====', availableStops);
   const [draggedStop, setDraggedStop] = useState<IStopPayload | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const { data: zoneAreaData, isLoading: zoneAreaLoading } = useQueryAndMutation({
+  const { data: zoneAreaData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetZoneAreaOptionsQuery,
   });

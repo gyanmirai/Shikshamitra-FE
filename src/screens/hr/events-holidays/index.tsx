@@ -72,7 +72,7 @@ const HrEventsAndHolidaysScreen = () => {
   // Confirmation dialog state
   const confirm = useBoolean(false);
   // Toggle between list and calendar view
-  const [view, setView] = React.useState('list');
+  const [view] = React.useState('list');
   // Current selected date in date picker
   const [date, setDate] = React.useState<Dayjs | null>(dayjs);
   // State to store event/holiday data for editing

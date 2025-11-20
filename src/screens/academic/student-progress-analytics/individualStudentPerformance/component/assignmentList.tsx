@@ -1,18 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Card, Tooltip, Typography, CardContent } from '@mui/material';
 
-type AssignmentStatus = 'pending' | 'submitted' | 'overdue' | 'in-progress';
+// type AssignmentStatus = 'pending' | 'submitted' | 'overdue' | 'in-progress';
 
-interface Assignment {
-  name: string;
-  subject: string;
-  status: AssignmentStatus;
-  dueDate: string;
-}
+// interface Assignment {
+//   name: string;
+//   subject: string;
+//   status: AssignmentStatus;
+//   dueDate: string;
+// }
 
 const subjects = [
   {
@@ -69,7 +69,7 @@ const getAssignmentColor = (status: string) => {
 };
 
 const AssignmentsList = () => {
-  const [hoveredAssignment, setHoveredAssignment] = useState<Assignment | null>(null);
+  // const [hoveredAssignment, setHoveredAssignment] = useState<Assignment | null>(null);
   const theme = useTheme();
 
   return (

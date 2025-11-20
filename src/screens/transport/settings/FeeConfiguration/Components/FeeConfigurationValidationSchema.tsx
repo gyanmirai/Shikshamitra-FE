@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
 export const getValidationSchemaByModel = (model: string, currentYear: any) => {
-  const baseDateValidation = Yup.date().required('Effective from date is required');
+  // const baseDateValidation = Yup.date().required('Effective from date is required');
 
   switch (model) {
     case 'flat-rate':

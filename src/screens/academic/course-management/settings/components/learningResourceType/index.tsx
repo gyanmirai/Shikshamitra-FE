@@ -32,7 +32,7 @@ const ResourceTypeCreation = () => {
   // State to store the currently selected resource type for edit/delete
   const [selected, setSelected] = useState<IResourceType | null>(null);
   // State to store the list of resource types
-  const [resourceTypes, setResourceTypes] = useState<IResourceType[]>(learningResourceData);
+  const [resourceTypes] = useState<IResourceType[]>(learningResourceData);
   // Redux dispatch function for dispatching actions
   const dispatch = useDispatch();
 

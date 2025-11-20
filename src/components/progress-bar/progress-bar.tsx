@@ -1,5 +1,6 @@
 'use client';
 
+// @ts-ignore
 import './styles.css';
 
 import type { RootState } from 'src/redux/store';
@@ -19,59 +20,9 @@ export function ProgressBar() {
   // const [point, setPoint] = useState(0);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-  const router = useRouter();
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const handelNavigation = () => {
-    const originalPushState = window.history.pushState.bind(window.history);
-    let currentPoint = 0;
-    let point = 0;
-    window.history.pushState = function (state, title, url) {
-      // setPoint(point + 1);
-      point += 1;
-      state.point = point + 1;
-      // setCurrentPoint(point + 1);
-      currentPoint = point + 1;
-      originalPushState(state, title, url);
-    };
-    const originalReplaceState = window.history.replaceState.bind(window.history);
-    window.history.replaceState = function (state, title, url) {
-      state.point = currentPoint;
-      originalReplaceState(state, title, url);
-    };
-    window.addEventListener('popstate', (event) => {
-      const { state: nextState } = event;
-      const isback = currentPoint > nextState.point;
-      // setCurrentPoint(nextState.point);
-      currentPoint = nextState.point;
-
-      const script = document.getElementById('proxy-script');
-      if (!script || window.location.href === script.dataset.href) return;
-
-      // @ts-ignore
-      const confirm = !window?.isChanges ? true : window.confirm('111111111111111111?');
-      if (!confirm) {
-        event.stopImmediatePropagation();
-        if (isback) {
-          router.push(window.location.href);
-        } else {
-          router.back();
-        }
-      }
-      // @ts-ignore
-      window.isChanges = false;
-      dispatch(setIsChanges(false));
-    });
-  };
+  // const router = useRouter();
 
   useEffect(() => {
-    // const script = document.getElementById('proxy-script');
-    // if (script) {
-    //   script.dataset.href = window.location.href;
-    // }
-    // if (isChanges) {
-    //   handelNavigation();
-    // }
     NProgress.configure({ showSpinner: false });
 
     const handleAnchorClick = (event: MouseEvent) => {

@@ -9,13 +9,12 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
+import React, { useState, useEffect } from 'react';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -56,17 +55,12 @@ export const allStudentIds = [
 
 const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editData, onClose }) => {
   // State to control assignment type dialog visibility
-  const assignmentTypeDialog = useBoolean();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   // Update classes when organization changes
   useEffect(() => {
     // Flatten the list of standards from all stages
@@ -91,39 +85,38 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
         message: `Assignment Added successfully for ${values.subjects}!`,
       });
       // Submit logic would go here
-      console.log('Submitted values:', values);
     },
   });
 
-  const handleDrop = (acceptedFiles: File[]) => {
-    formik.setFieldValue('attachments', [...(formik.values.attachments || []), ...acceptedFiles]);
-  };
+  // const handleDrop = (acceptedFiles: File[]) => {
+  //   formik.setFieldValue('attachments', [...(formik.values.attachments || []), ...acceptedFiles]);
+  // };
 
-  const handleRemove = (fileToRemove: string | File) => {
-    const updatedDocuments = (formik.values.attachments || []).filter((file) => {
-      if (typeof fileToRemove === 'string') {
-        return file.name !== fileToRemove;
-      }
-      return file !== fileToRemove;
-    });
-    formik.setFieldValue('attachments', updatedDocuments);
-  };
+  // const handleRemove = (fileToRemove: string | File) => {
+  //   const updatedDocuments = (formik.values.attachments || []).filter((file) => {
+  //     if (typeof fileToRemove === 'string') {
+  //       return file.name !== fileToRemove;
+  //     }
+  //     return file !== fileToRemove;
+  //   });
+  //   formik.setFieldValue('attachments', updatedDocuments);
+  // };
 
   // Configuration for file upload component
-  const uploadProps = {
-    multiple: true,
-    accept: { 'application/pdf': [] },
-  };
+  // const uploadProps = {
+  //   multiple: true,
+  //   accept: { 'application/pdf': [] },
+  // };
 
   // Handler to remove a single file attachment
-  const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
-    setFieldValue('rubric', '');
-  }, []);
+  // const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
+  //   setFieldValue('rubric', '');
+  // }, []);
 
   // Handler to remove all file attachments
-  const handleRemoveAllFiles = useCallback((setFieldValue: (field: string, value: any) => void) => {
-    setFieldValue('rubric', '');
-  }, []);
+  // const handleRemoveAllFiles = useCallback((setFieldValue: (field: string, value: any) => void) => {
+  //   setFieldValue('rubric', '');
+  // }, []);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

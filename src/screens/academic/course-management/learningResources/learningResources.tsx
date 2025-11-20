@@ -21,25 +21,20 @@ import CreateNewResource from './components/addResourceForm';
 
 const LearningResources = (props: TabComponentType) => {
   // Get search parameters from props
-  const { searchParams } = props;
+  // const { searchParams } = props;
   // Dialog state for adding/editing learning resources
   const addLearningResourceDialog = useBoolean();
 
   // Get class value from URL parameters, default to empty string if not present
-  const classFromUrl = searchParams?.class || '';
 
   // Get subject value from URL parameters, default to empty string if not present
-  const subjectFromUrl = searchParams?.subject || '';
+  // const subjectFromUrl = searchParams?.subject || '';
 
   // State to store all classes/standards for the selected organization
-  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [, setAllClass] = useState<Standards[]>([]);
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   // State to store selected class, initialized from URL parameter
   // Update classes when organization changes
   useEffect(() => {
@@ -63,18 +58,17 @@ const LearningResources = (props: TabComponentType) => {
   const dispatch = useDispatch();
 
   // Dialog state for general confirmations
-  const confirm_dialog = useBoolean();
 
   // Dialog state specifically for delete confirmations
   const deleteDialog = useBoolean();
 
   // State to store selected subject, initialized from URL parameter
-  const [subject, setSubject] = useState(subjectFromUrl);
+  // const [subject, setSubject] = useState(subjectFromUrl);
   // State to track pending status changes for publish/unpublish actions
-  const [pendingStatusChange, setPendingStatusChange] = useState<{
-    id: number;
-    newStatus: string;
-  } | null>(null);
+  // const [pendingStatusChange, setPendingStatusChange] = useState<{
+  //   id: number;
+  //   newStatus: string;
+  // } | null>(null);
 
   const editResourceDialog = useBoolean();
 

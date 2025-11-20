@@ -1,7 +1,7 @@
 'use client';
 
+import React from 'react';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { Close } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -24,7 +24,7 @@ const RoomCreationForm: React.FC<IRoomCreationFormProps> = ({
   allData,
 }) => {
   // State to track and display message when a duplicate room entry is attempted
-  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
+  // const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
 
   const formik = useFormik<IRoomCreationFormikValue>({
     initialValues: {

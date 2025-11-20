@@ -66,28 +66,28 @@ type CarouselItemProps = CardProps & {
 function CarouselItem({ item, ...other }: CarouselItemProps) {
   const theme = useTheme();
 
-  const renderImage = (
-    <Box sx={{ px: 1, pt: 1 }}>
-      <Image alt={item.title} src={item.coverImage} ratio="5/4" sx={{ borderRadius: 1.5 }} />
-    </Box>
-  );
+  // const renderImage = (
+  //   <Box sx={{ px: 1, pt: 1 }}>
+  //     <Image alt={item.title} src={item.coverImage} ratio="5/4" sx={{ borderRadius: 1.5 }} />
+  //   </Box>
+  // );
 
-  const renderLabels = (
-    <Box
-      sx={{
-        gap: 1,
-        mb: 1.5,
-        display: 'flex',
-        flexWrap: 'wrap',
-        [`& .${labelClasses.root}`]: {
-          typography: 'caption',
-          color: 'text.secondary',
-        },
-      }}
-    >
-      <Label>{`Borrower Time : ${fShortenNumber(item.borrowCount)}`}</Label>
-    </Box>
-  );
+  // const renderLabels = (
+  //   <Box
+  //     sx={{
+  //       gap: 1,
+  //       mb: 1.5,
+  //       display: 'flex',
+  //       flexWrap: 'wrap',
+  //       [`& .${labelClasses.root}`]: {
+  //         typography: 'caption',
+  //         color: 'text.secondary',
+  //       },
+  //     }}
+  //   >
+  //     <Label>{`Borrower Time : ${fShortenNumber(item.borrowCount)}`}</Label>
+  //   </Box>
+  // );
 
   //   const renderFooter = (
   //     <Box

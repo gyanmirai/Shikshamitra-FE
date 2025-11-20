@@ -13,7 +13,7 @@ const CompletedAssessment = () => {
   const modal = useBoolean();
 
   // State to track the selected row data when opening the dialog
-  const [selectedRow, setSelectedRow] = useState<any>(null);
+  const [, setSelectedRow] = useState<any>(null);
 
   const formik = useFormik({
     initialValues: {

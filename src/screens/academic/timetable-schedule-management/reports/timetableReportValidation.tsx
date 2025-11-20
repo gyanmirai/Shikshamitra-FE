@@ -74,6 +74,7 @@ export const getTimetableValidationSchema = (showField: string[], currentYear: a
         'To Date is required',
         (value) => value && dayjs(value as any).isValid()
       )
+      // eslint-disable-next-line func-names
       .test('is-after-from-date', 'To Date cannot be before From Date', function (value) {
         const { fromDate } = this.parent;
         if (!value || !fromDate) return true;

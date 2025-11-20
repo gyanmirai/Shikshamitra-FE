@@ -91,6 +91,7 @@ export const makeReservationValidationSchema = (currentYear: any) =>
       .test(
         'is-after-requested-date',
         'Due date must be after the requested date',
+        // eslint-disable-next-line func-names
         function (value) {
           const { requestedDate } = this.parent;
           if (!value || !requestedDate) return true;

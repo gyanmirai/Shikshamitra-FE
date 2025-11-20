@@ -24,8 +24,8 @@ import type {
 const TeacherProcurementRequestTable: React.FC<IProcurementTeacherTableProps> = ({ onClick }) => {
   const viewProcurementRequest = useBoolean();
 
-  const [selectedRow, setSelectedRow] = useState<IProcurementAndVendorFromValues>();
-  const [isEdit, setIsEdit] = useState(false);
+  const [, setSelectedRow] = useState<IProcurementAndVendorFromValues>();
+  // const [isEdit, setIsEdit] = useState(false);
   return (
     <>
       <CustomizableTable

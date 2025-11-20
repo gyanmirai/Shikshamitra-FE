@@ -2,7 +2,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Box , Grid, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytics-current-visits';
 

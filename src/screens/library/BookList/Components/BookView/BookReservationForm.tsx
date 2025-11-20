@@ -33,13 +33,13 @@ export interface ReservationBookModalProps {
 }
 
 const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, editData }) => {
-  const [searchMember, setSearchMember] = useState('');
+  // const [searchMember, setSearchMember] = useState('');
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [loadingMember, setLoadingMember] = useState(false);
   const { currentYear } = useSelector((state: any) => state.globalState);
   const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetAllMembersQuery, // ✅ just pass the hook reference
+    currentQueryAndMutation: useGetAllMembersQuery,
   });
 
   const formik = useFormik({

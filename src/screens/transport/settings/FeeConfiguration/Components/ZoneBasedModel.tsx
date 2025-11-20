@@ -40,7 +40,7 @@ const ZoneBasedModel: React.FC<ZoneBasedModelProps> = ({ formik }) => {
   const [editData, setEditData] = useState<IZoneData | null>(null);
   const [selectedZone, setSelectedZone] = useState<IZoneData | null>(null);
 
-  const { data: zoneBasedFeeData, isLoading } = useQueryAndMutation({
+  const { isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetZoneBasedFeeDataQuery,
   });

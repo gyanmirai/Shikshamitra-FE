@@ -1,46 +1,46 @@
 import React from 'react';
+import { Box, Typography } from '@mui/material';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Card, Chip, Typography, CardContent } from '@mui/material';
 import data from 'src/json/finance/fee-details-student/fee-breakdown.json';
 
-interface PaymentStatus {
-  title: string;
-  status: string;
-}
+// interface PaymentStatus {
+//   title: string;
+//   status: string;
+// }
 
-interface FeeCardProps {
-  feeHead: string;
-  paymentTerm: string;
-  paymentStatus: PaymentStatus[];
-}
-const FeeCard: React.FC<FeeCardProps> = ({ feeHead, paymentTerm, paymentStatus }) => {
-  const unpaidStatuses = paymentStatus.filter((status) => status.status === 'Unpaid');
+// interface FeeCardProps {
+//   feeHead: string;
+//   paymentTerm: string;
+//   paymentStatus: PaymentStatus[];
+// }
+// const FeeCard: React.FC<FeeCardProps> = ({ feeHead, paymentTerm, paymentStatus }) => {
+//   const unpaidStatuses = paymentStatus.filter((status) => status.status === 'Unpaid');
 
-  return (
-    <Card style={{ margin: '10px', padding: '10px' }}>
-      <CardContent>
-        <Typography variant="h6" style={{ fontWeight: 'bold' }}>
-          {feeHead}
-        </Typography>
-        <Typography variant="body2" color="textSecondary">
-          Payment Term: {paymentTerm}
-        </Typography>
+//   return (
+//     <Card style={{ margin: '10px', padding: '10px' }}>
+//       <CardContent>
+//         <Typography variant="h6" style={{ fontWeight: 'bold' }}>
+//           {feeHead}
+//         </Typography>
+//         <Typography variant="body2" color="textSecondary">
+//           Payment Term: {paymentTerm}
+//         </Typography>
 
-        <Typography variant="subtitle1">Payment Status:</Typography>
-        <Chip label={`Unpaid: ${unpaidStatuses.length}`} color="error" />
+//         <Typography variant="subtitle1">Payment Status:</Typography>
+//         <Chip label={`Unpaid: ${unpaidStatuses.length}`} color="error" />
 
-        <Box mt={1}>
-          {paymentStatus.map((status, index) => (
-            <Typography key={index} style={{ color: status.status === 'Paid' ? 'green' : 'red' }}>
-              {status.title}: <strong>{status.status}</strong>
-            </Typography>
-          ))}
-        </Box>
-      </CardContent>
-    </Card>
-  );
-};
+//         <Box mt={1}>
+//           {paymentStatus.map((status, index) => (
+//             <Typography key={index} style={{ color: status.status === 'Paid' ? 'green' : 'red' }}>
+//               {status.title}: <strong>{status.status}</strong>
+//             </Typography>
+//           ))}
+//         </Box>
+//       </CardContent>
+//     </Card>
+//   );
+// };
 
 const FinanceStudentFeeBreakdownTab = () => {
   // Calculate total values by reducing over the data array

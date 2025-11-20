@@ -43,6 +43,7 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
               } else if (hasData) {
                 status = FeeStructureClassStatusType.Completed;
               } else {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 status = FeeStructureClassStatusType.Remaining;
               }
 

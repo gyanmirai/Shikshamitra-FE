@@ -26,9 +26,9 @@ import type { IChargeData, IStudentChargeData } from '../ChargesManage/Component
 const ChargesList = () => {
   const {
     currentYear,
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
+    // currentBoard,
+    // currentMedium: medium,
+    // setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
 
   const [boards, setBoards] = useState([]);
@@ -38,7 +38,7 @@ const ChargesList = () => {
 
   const onViewAllCharges = useBoolean();
 
-  const { data: chargesData, isLoading: boardLoading } = useQueryAndMutation({
+  const { data: chargesData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentChargesQuery,
   });

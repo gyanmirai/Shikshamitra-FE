@@ -3,7 +3,6 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React from 'react';
-import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Box, Grid, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
@@ -17,44 +16,41 @@ import StudentProgressTable from './component/studentProgressTable';
 import DownloadReportsSection from './component/downloadReportsSection';
 import AverageCoursePerformace from './component/averageCoursePerformace';
 
-const ReportsAnalytics = (props: TabComponentType) => {
-  const theme = useTheme();
-  return (
-    <Box>
-      <CustomBreadcrumbs
-        heading="Reports And Analytics"
-        links={[
-          { name: 'Academics' },
-          { name: 'Learning Management System' },
-          { name: 'Reports And Analytics' },
-        ]}
-        sx={{ mb: 2 }}
+const ReportsAnalytics = (props: TabComponentType) => (
+  <Box>
+    <CustomBreadcrumbs
+      heading="Reports And Analytics"
+      links={[
+        { name: 'Academics' },
+        { name: 'Learning Management System' },
+        { name: 'Reports And Analytics' },
+      ]}
+      sx={{ mb: 2 }}
+    />
+    <Typography variant="h6" sx={{ mb: 3 }}>
+      Course performance
+    </Typography>
+    <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+      <CustomSelect
+        options={[]}
+        value=""
+        label="Course"
+        onChange={() => {}}
+        formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
       />
-      <Typography variant="h6" sx={{ mb: 3 }}>
-        Course performance
-      </Typography>
-      <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
-        <CustomSelect
-          options={[]}
-          value=""
-          label="Course"
-          onChange={() => {}}
-          formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
-        />
-        <DatePicker label="Start Date" slotProps={{ textField: { size: 'small' } }} />
-        <DatePicker label="End Date" slotProps={{ textField: { size: 'small' } }} />
-      </Box>
-      <Grid container spacing={3}>
-        <AverageCoursePerformace />
-        <TotalAssignments />
-        <AssignmentAnalytics />
-        <AssignmentTable />
-        <IndividualReport />
-        <StudentProgressTable />
-        <DownloadReportsSection />
-      </Grid>
+      <DatePicker label="Start Date" slotProps={{ textField: { size: 'small' } }} />
+      <DatePicker label="End Date" slotProps={{ textField: { size: 'small' } }} />
     </Box>
-  );
-};
+    <Grid container spacing={3}>
+      <AverageCoursePerformace />
+      <TotalAssignments />
+      <AssignmentAnalytics />
+      <AssignmentTable />
+      <IndividualReport />
+      <StudentProgressTable />
+      <DownloadReportsSection />
+    </Grid>
+  </Box>
+);
 
 export default ReportsAnalytics;

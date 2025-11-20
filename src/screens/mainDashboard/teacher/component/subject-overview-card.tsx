@@ -3,7 +3,6 @@ import type { LabelColor } from 'src/components/label';
 
 import Link from 'next/link';
 import React, { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { Scrollbar } from 'src/components/scrollbar/scrollbar';
 import { Box, Card, Chip, ListItem, Typography, ListItemText } from '@mui/material';
@@ -41,7 +40,6 @@ export function SubjectOverviewCard({
   dropdownLabel = '',
   studentList,
 }: ISubjectOverviewCardProps) {
-  const theme = useTheme();
   const [selectedSubject, setSelectedSubject] = useState<string>(
     selectedValue || (selectOptions.length > 0 ? selectOptions[0].value : '')
   );

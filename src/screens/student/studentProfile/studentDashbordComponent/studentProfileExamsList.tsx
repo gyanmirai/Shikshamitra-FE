@@ -21,7 +21,11 @@ const StudentExamsList = () => (
       </Button>
     </Box>
 
-    <Stack spacing={1.5}>{exams?.map((exam, index) => <ExamCard key={index} {...exam} />)}</Stack>
+    <Stack spacing={1.5}>
+      {exams?.map((exam, index) => (
+        <ExamCard key={index} {...exam} />
+      ))}
+    </Stack>
   </Card>
 );
 

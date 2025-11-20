@@ -20,7 +20,7 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [open, setOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
-  const [viewVehicle, setViewVehicle] = useState<IVehicleData | null>(null);
+  const [, setViewVehicle] = useState<IVehicleData | null>(null);
   const viewDialog = useBoolean();
   const dispatch = useDispatch();
 

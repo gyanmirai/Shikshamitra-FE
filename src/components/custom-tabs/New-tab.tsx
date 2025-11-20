@@ -7,33 +7,6 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 
 import { StyledTab, StyledTabs, StyledMainDiv } from './styled';
 
-interface TabPanelProps {
-  children: React.ReactNode;
-  value: number | string;
-  index: number | string;
-  [key: string]: any;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`full-width-tabpanel-${index}`}
-      aria-labelledby={`full-width-tab-${index}`}
-      style={{
-        marginTop: '48px',
-        height: 'calc(100% - 48px)',
-      }}
-      {...other}
-    >
-      {value === index && <>{children}</>}
-    </div>
-  );
-}
-
 interface TabItem {
   value: string | number;
   label: string;

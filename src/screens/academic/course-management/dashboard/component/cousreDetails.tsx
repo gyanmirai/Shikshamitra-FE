@@ -3,7 +3,7 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-import { Box , Grid } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 import { Label } from 'src/components/label';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -15,9 +15,8 @@ const CousreDetails = () => {
   const [division, setDivision] = useState('');
   const [subject, setSubject] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const [hoveredResource, setHoveredResource] = useState<string | null>(null);
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

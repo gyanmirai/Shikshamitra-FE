@@ -71,7 +71,7 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
   const [allClass, setAllClass] = useState<Standards[]>([]);
 
   // State to store list of all divisions
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [, setAllDivision] = useState<Division[]>([]);
   const handleCloseDialog = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
       setTimeout(() => {

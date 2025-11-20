@@ -95,7 +95,7 @@ const LeavePolicy = () => {
     }
   };
 
-  const tableData = useMemo(
+  useMemo(
     () =>
       leavePolicyData?.items.map((item: ILeavePolicy) => ({
         ...item,
@@ -379,6 +379,7 @@ const validationSchema = Yup.object({
       'Accrual end date must be a valid date',
       (value) => value && dayjs(value as any).isValid()
     )
+    // eslint-disable-next-line func-names
     .test('is-after-start', 'End date must be after start date', function (endDate) {
       const startDate = this.parent.accrualStartDate;
       return (

@@ -24,9 +24,9 @@ const ConcessionList = () => {
   //   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const {
     currentYear,
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
+    // currentBoard,
+    // currentMedium: medium,
+    // setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
 
   // Local state to store filtered boards based on academic year
@@ -37,7 +37,7 @@ const ConcessionList = () => {
 
   const onViewAllConcession = useBoolean();
 
-  const { data: concessionData, isLoading: boardLoading } = useQueryAndMutation({
+  const { data: concessionData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionsQuery,
   });

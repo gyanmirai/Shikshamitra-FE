@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import { Box, Grid } from '@mui/material';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
-import subjectDocumentsData from 'src/json/academic/curriculum/subjectsDocuments.json';
 
 import type { ISubjectDetail } from '../type';
 
@@ -44,24 +42,22 @@ export const documentsList = [
   },
 ];
 // Documents panel content
-const SubjectDocument = ({ subject }: { subject: ISubjectDetail | null }) => {
+const SubjectDocument = ({ subject }: { subject: ISubjectDetail | null }) => (
   // State to manage subject documents data
-  const [subjectDocuments, setSubjectDocuments] = useState(subjectDocumentsData);
-  return (
-    // <Card sx={{ height: '100%' }}>
-    //   <CardContent sx={{ p: 2 }}>
-    <Box>
-      <Grid container spacing={2}>
-        {documentsList.map((doc: any, index: number) => (
-          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
-            <DocumentCard file={doc} />
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
-    //   </CardContent>
-    // </Card>
-  );
-};
 
+  // const [] = useState(subjectDocumentsData);
+  // <Card sx={{ height: '100%' }}>
+  //   <CardContent sx={{ p: 2 }}>
+  <Box>
+    <Grid container spacing={2}>
+      {documentsList.map((doc: any, index: number) => (
+        <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
+          <DocumentCard file={doc} />
+        </Grid>
+      ))}
+    </Grid>
+  </Box>
+  //   </CardContent>
+  // </Card>
+);
 export default SubjectDocument;

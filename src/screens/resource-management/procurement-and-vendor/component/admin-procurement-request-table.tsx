@@ -25,9 +25,9 @@ import type { IProcurementAndVendorFromValues } from '../procurement-and-vendor-
 
 const AdminProcurementRequestTable = () => {
   // State to store the selected procurement request row data
-  const [selectedRow, setSelectedRow] = useState<IProcurementAndVendorFromValues | null>(null);
+  const [, setSelectedRow] = useState<IProcurementAndVendorFromValues | null>(null);
   // State to track if the procurement request is in edit mode
-  const [isEdit, setIsEdit] = useState(false);
+  // const [isEdit, setIsEdit] = useState(false);
   // Boolean state to control the visibility of view procurement request dialog
   const viewProcurementRequest = useBoolean();
   // Boolean state to control the visibility of assign to purchase dialog

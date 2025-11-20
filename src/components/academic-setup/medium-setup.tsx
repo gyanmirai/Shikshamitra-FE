@@ -85,6 +85,7 @@ const MediumSetup = ({ boardId }: MediumSetupProps) => {
     modal.onTrue();
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSetTeb = (value: Record<string, any>) => {
     tabs.setValue(value?.data?.id);
   };

@@ -39,10 +39,8 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
   const [selectedFeeStructure, setSelectedFeeStrcture] = useState<any>(null);
   const addNewFeeStructureDialog = useBoolean();
   const [selectedClass, setSelectedClass] = useState('');
-  console.log('formik erroesss====', formik.errors);
-  console.log('formik values======', formik.values);
 
-  const [currentClickableClass, setCurrentClickableClass] = useState<string | null>(null);
+  const [, setCurrentClickableClass] = useState<string | null>(null);
   const addFeeHeadDialog = useBoolean();
 
   return (

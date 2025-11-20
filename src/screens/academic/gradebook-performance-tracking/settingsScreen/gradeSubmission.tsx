@@ -2,7 +2,7 @@ import type { Dayjs } from 'dayjs';
 import type { Division, Standards } from 'src/types/school';
 
 import dayjs from 'dayjs';
-import * as Yup from 'yup';
+// import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
@@ -229,14 +229,14 @@ const GradeDeadlineForm: React.FC<{
     currentQueryAndMutation: useGetClassQuery,
   });
 
-  const validationSchema = Yup.object().shape({
-    className: Yup.string().required('Class Name is Required'),
-    division: Yup.string().required('Division is Required'),
-    subject: Yup.string().required('Subject is Required'),
-    assignmentType: Yup.string().required('Assignment Type is Required'),
-    assignmentTitle: Yup.string().required('Assignment Title is Required'),
-    deadline: Yup.date().nullable().required('Deadline is Required'),
-  });
+  // const validationSchema = Yup.object().shape({
+  //   className: Yup.string().required('Class Name is Required'),
+  //   division: Yup.string().required('Division is Required'),
+  //   subject: Yup.string().required('Subject is Required'),
+  //   assignmentType: Yup.string().required('Assignment Type is Required'),
+  //   assignmentTitle: Yup.string().required('Assignment Title is Required'),
+  //   deadline: Yup.date().nullable().required('Deadline is Required'),
+  // });
 
   const formik = useFormik({
     initialValues: {

@@ -21,10 +21,10 @@ const HostelTable: React.FC<IHostelDataTableProps> = ({
   onAddRoomDialog,
   onAddRoom,
 }) => {
-  const [searchParams, setSearchParams] = useSearchParam({ tab: 'dateWise' });
+  const [, setSearchParams] = useSearchParam({ tab: 'dateWise' });
 
   // State to manage the hostel data
-  const [hostelData, setHostelData] = useState<IHostelData[]>(hostelTableData);
+  const [hostelData] = useState<IHostelData[]>(hostelTableData);
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (

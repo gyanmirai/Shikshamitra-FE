@@ -7,7 +7,6 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { isNaN, parseInt, cloneDeep } from 'lodash';
@@ -219,7 +218,7 @@ const TimeTableGrid = ({
   timeTableData,
 }: any) => {
   // Dialog state for creating time slots modal
-  const createSlotsDialog = useBoolean();
+  // const createSlotsDialog = useBoolean();
   const [subjectsGroups, setSubjectsGroups] = useState<any>(subjectGroupsData);
   // Dialog state for publishing marks modal (currently unused)
   const publishTimetableDialog = useBoolean();
@@ -234,11 +233,7 @@ const TimeTableGrid = ({
   const [division, setDivision] = useState<string>('');
   // Query hook to fetch class data from the API
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {
@@ -257,28 +252,27 @@ const TimeTableGrid = ({
   }, [allClass, classes, setDivision]);
 
   // State for managing classroom selection
-  const [classroom, setClassroom] = useState<string>('');
+  // const [classroom, setClassroom] = useState<string>('');
 
   // State for managing modal/dialog open state
   const [open, setOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
 
   // Theme object from Material-UI
-  const theme = useTheme();
   const [initialTimetableData, setInitialTimetableData] = useState<TimetableSlot[]>([]);
   const [initialSubjectsGroups, setInitialSubjectsGroups] = useState<any>([]);
 
   // Initialize remaining lectures count for each subject
 
   // Define time slots for the timetable
-  const timeSlots = [
-    '8:00 - 8:45', // First period
-    '8:45 - 9:30', // Second period
-    '9:30 - 10:15', // Third period
-    '10:15 - 10:30', // Break time
-    '10:30 - 11:15', // Fourth period
-    '11:15 - 12:00', // Fifth period
-  ];
+  // const timeSlots = [
+  //   '8:00 - 8:45', // First period
+  //   '8:45 - 9:30', // Second period
+  //   '9:30 - 10:15', // Third period
+  //   '10:15 - 10:30', // Break time
+  //   '10:30 - 11:15', // Fourth period
+  //   '11:15 - 12:00', // Fifth period
+  // ];
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Initialize timetable as an array of arrays
@@ -494,7 +488,7 @@ const TimeTableGrid = ({
   };
 
   // Checks if the given time slot is a break period
-  const isBreak = (timeSlot: string) => timeSlot === '10:15 - 10:30';
+  // const isBreak = (timeSlot: string) => timeSlot === '10:15 - 10:30';
 
   // Defines action menu items for different timetable statuses
   const actions = useCallback(

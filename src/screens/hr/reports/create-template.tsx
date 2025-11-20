@@ -1013,47 +1013,44 @@ interface IAccordionProps {
   }[];
 }
 
-const AccordingComp = ({ accordionDetails = [], handleChangeTab, activeTab }: IAccordionProps) => {
-  const a = null;
-  return (
-    <Stack spacing={5} direction="row" alignItems="flex-start">
-      <Stack
-        component="section"
-        spacing={2}
-        flex="1 1 auto"
-        sx={{
-          minWidth: 0,
-          borderRadius: 2,
-          p: 2,
-          bgcolor: 'background.neutral',
-        }}
-      >
-        <Card className="scroll__to__view">
-          <CardContent sx={{ p: 2 }}>
-            <ComponentBlock sx={{ p: 2 }}>
-              <Box sx={{ width: '100%' }}>
-                {accordionDetails.map((item, index) => (
-                  <Accordion
-                    key={item.title}
-                    expanded={activeTab === index}
-                    onChange={() => handleChangeTab(index)}
-                  >
-                    <AccordionSummary expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}>
-                      <Typography variant="subtitle1" fontSize="14px">
-                        {item.title}
-                      </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>{item.content}</AccordionDetails>
-                  </Accordion>
-                ))}
-              </Box>
-            </ComponentBlock>
-          </CardContent>
-        </Card>
-      </Stack>
+const AccordingComp = ({ accordionDetails = [], handleChangeTab, activeTab }: IAccordionProps) => (
+  <Stack spacing={5} direction="row" alignItems="flex-start">
+    <Stack
+      component="section"
+      spacing={2}
+      flex="1 1 auto"
+      sx={{
+        minWidth: 0,
+        borderRadius: 2,
+        p: 2,
+        bgcolor: 'background.neutral',
+      }}
+    >
+      <Card className="scroll__to__view">
+        <CardContent sx={{ p: 2 }}>
+          <ComponentBlock sx={{ p: 2 }}>
+            <Box sx={{ width: '100%' }}>
+              {accordionDetails.map((item, index) => (
+                <Accordion
+                  key={item.title}
+                  expanded={activeTab === index}
+                  onChange={() => handleChangeTab(index)}
+                >
+                  <AccordionSummary expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}>
+                    <Typography variant="subtitle1" fontSize="14px">
+                      {item.title}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>{item.content}</AccordionDetails>
+                </Accordion>
+              ))}
+            </Box>
+          </ComponentBlock>
+        </CardContent>
+      </Card>
     </Stack>
-  );
-};
+  </Stack>
+);
 
 const PdfHeader = ({ formik }: any) => {
   const dialog = useBoolean();

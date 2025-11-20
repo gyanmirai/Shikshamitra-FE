@@ -22,7 +22,6 @@ const InventoryManagementDetailsView: React.FC<IInventoryManagementDetailsViewpP
     resourceConditionStatus,
     resourceMeasurementUnit,
     quantity,
-    available,
     location,
     campusName,
     buildingName,
@@ -30,12 +29,9 @@ const InventoryManagementDetailsView: React.FC<IInventoryManagementDetailsViewpP
     floorNumber,
     termAndCondition,
     warrantyExpiryDate,
-    resourceImage,
     resourceBill,
     purchasedVendorName,
     resourcePurchaseDate,
-    lastUpdatedDate,
-    status,
   } = data;
 
   return (

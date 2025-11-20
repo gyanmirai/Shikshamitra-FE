@@ -41,12 +41,6 @@ export const useSearchParam = (
   return [state, setParam];
 };
 
-function isFunction<T>(
-  value: T | Partial<T> | ((params: T) => T) | (T & Function)
-): value is (params: T) => T {
-  return typeof value === 'function';
-}
-
 // Helper: Parse search params into an object
 function parseSearchParams<T>(params: URLSearchParams): T {
   const obj = {} as Record<string, string>;

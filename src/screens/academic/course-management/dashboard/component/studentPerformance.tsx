@@ -8,7 +8,7 @@ import { SvgColor } from 'src/components/svg-color';
 import { varAlpha, bgGradient } from 'src/theme/styles';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
-import { Box , Grid, Card, Typography } from '@mui/material';
+import { Box, Grid, Card, Typography } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 const StudentPerformance = () => {
@@ -16,7 +16,7 @@ const StudentPerformance = () => {
   const [classes1, setClasses1] = useState<string>('All');
   const [classes2, setClasses2] = useState<string>('All');
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

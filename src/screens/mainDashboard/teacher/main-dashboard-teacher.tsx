@@ -1,8 +1,8 @@
 'use client';
 
+import React, { useState } from 'react';
 import { CONFIG } from 'src/config-global';
 import { SvgColor } from 'src/components/svg-color';
-import React, { useState, useCallback } from 'react';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { AppWelcome } from 'src/sections/overview/app/app-welcome';
@@ -16,29 +16,16 @@ import UpcomingAssignmentCard from '../student/component/upcoming-assignment-car
 import { PrincipalDashboardCard } from '../principal/component/principal-dashboard-card';
 import WhatsNewInMonthComponent from '../principal/component/whats-new-in-month-component';
 
-const upcomingExams = [
-  { subject: 'Science', date: '16-02-2025', status: 'Completed', class: '10th-A', room: '101' },
-  { subject: 'English', date: '20-02-2025', status: 'Pending', class: '10th-A', room: '102' },
-  { subject: 'Maths', date: '20-02-2025', status: 'Pending', class: '10th-A', room: '103' },
-  { subject: 'Maths', date: '20-05-2025', status: 'Scheduled', class: '10th-A', room: '104' },
-];
-
-const studentAssignments = [
-  { name: 'John', subject: 'Math', status: 'Submitted' },
-  { name: 'Emma', subject: 'Science', status: 'Pending' },
-  { name: 'Liam', subject: 'English', status: 'Late' },
-];
-
 const MainDashboardTeacher = () => {
   const [timeTable, setTimeTable] = useState('my');
-  const handleChangeView = useCallback(
-    (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
-      if (newView !== null) {
-        setTimeTable(newView);
-      }
-    },
-    []
-  );
+  // const handleChangeView = useCallback(
+  //   (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
+  //     if (newView !== null) {
+  //       setTimeTable(newView);
+  //     }
+  //   },
+  //   []
+  // );
 
   const icon = (name: string) => (
     <SvgColor src={`${CONFIG.site.basePath}/assets/icons/navbar/${name}.svg`} />

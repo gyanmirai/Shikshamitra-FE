@@ -61,10 +61,10 @@ const SectionManagementScreen = () => {
   /**
    * Handles closing of view shelf dialog
    */
-  const handleViewDialogClose = () => {
-    setSelectedSection(null);
-    viewShelfDialog.onFalse();
-  };
+  // const handleViewDialogClose = () => {
+  //   setSelectedSection(null);
+  //   viewShelfDialog.onFalse();
+  // };
 
   return (
     <Box height="100%" display="flex" flexDirection="column">

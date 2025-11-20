@@ -40,7 +40,7 @@ const FinanceReceiptBookSetting = () => {
   const [isEdit, setIsEdit] = useState(false);
 
   // State to store all receipt book entries for the table
-  const [tableData, setTableData] = useState(initialData);
+  const [tableData] = useState(initialData);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 

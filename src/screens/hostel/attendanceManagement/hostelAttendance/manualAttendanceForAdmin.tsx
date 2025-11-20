@@ -7,7 +7,6 @@ import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
-import { useBoolean } from 'src/hooks/use-boolean';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Stack, TextField, Autocomplete } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -22,20 +21,19 @@ import type { IStudentHostelManualAttendance } from './type';
 
 const ManualHostelAttendanceForAdmin = () => {
   // State for storing the selected date
-  const [_date, setDate] = useState<Dayjs | null>(dayjs());
+  // const [_date, setDate] = useState<Dayjs | null>(dayjs());
   // State for storing the selected block
-  const [_rollCall, setRollCall] = useState<string>();
+  const [, setRollCall] = useState<string>();
   // State for storing the selected hostel
-  const [_hostel, setHostel] = useState<string>('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_setHostel, setHostel] = useState<string>('');
   // State for storing the selected room
-  const [_floor, setFloor] = useState<string>('');
+  const [, setFloor] = useState<string>('');
   // Dialog state for sending instant notifications
-  const sendInstantNotificationDialogValue = useBoolean();
   // State for storing the selected student data
-  const [_selectedStudent, setSelectedStudent] = useState<IStudentHostelManualAttendance[]>([]);
+  // const [_selectedStudent, ] = useState<IStudentHostelManualAttendance[]>([]);
   // State for storing the students data
-  const [studentsData, setStudentsData] =
-    useState<IStudentHostelManualAttendance[]>(hostelManualAttendance);
+  const [studentsData] = useState<IStudentHostelManualAttendance[]>(hostelManualAttendance);
   // State to track the start date of attendance period, defaults to start of current month
   const [startDate, setStartDate] = useState<null | Dayjs>(dayjs().startOf('month'));
   // State to track the end date of attendance period, defaults to end of current month

@@ -42,11 +42,10 @@ import ViewChapterLogs from './components/viewChapterLogs';
 import type { ICourse, ICourseDetail, IUpdateProgressProps } from './type';
 
 const CourseProgress = (props: TabComponentType) => {
-  const [courses, setCourses] = useState<ICourse[]>(courseProgressTableData);
+  const [courses] = useState<ICourse[]>(courseProgressTableData);
   // State to store the selected course details
   const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
   // Props destructuring for search parameters
-  const { searchParams, setSearchParams } = props;
   // Dialog state for updating progress
   const updateProgressDialog = useBoolean();
   // Handler for when a course card is selected
@@ -70,11 +69,7 @@ const CourseProgress = (props: TabComponentType) => {
   const viewLogsDialog = useBoolean();
   // Query hook to fetch class data from the API
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {

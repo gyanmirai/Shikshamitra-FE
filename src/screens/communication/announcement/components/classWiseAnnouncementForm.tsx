@@ -59,11 +59,7 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
   const previewDialog = useBoolean();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
 

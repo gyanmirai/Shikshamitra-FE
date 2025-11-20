@@ -1,10 +1,10 @@
 import { usePathname } from 'src/routes/hooks';
+import { useEffect, useCallback } from 'react';
 import { isExternalLink } from 'src/routes/utils';
-import { useState, useEffect, useCallback } from 'react';
 
 import { NavItem } from './nav-item';
 import { navSectionClasses } from '../classes';
-import { NavUl, NavLi, NavCollapse } from '../styles';
+import { NavUl, NavLi, NavCollapse, stateClasses } from '../styles';
 
 import type { NavListProps, NavSubListProps } from '../types';
 
@@ -27,7 +27,7 @@ export function NavList({
   // const active = useActiveLink(data.path, !!data.children);
   const active = isSubLayout ? removeTrailingSlash === data.path : currentModule === data._action;
 
-  const [openMenu, setOpenMenu] = useState(false);
+  // const [openMenu, setOpenMenu] = useState(false);
 
   const recur = useCallback(
     (menuData: NavListProps['data'][]): NavListProps['data'] | undefined =>
@@ -105,7 +105,7 @@ export function NavList({
             '&:first-of-type': { mt: 'var(--nav-item-gap)' },
           },
         }}
-        // className={stateClasses({ active: currentOpenMenu === data._action && !openMenu })}
+        className={stateClasses({ active: currentOpenMenu === data._action })}
       >
         {renderNavItem}
 

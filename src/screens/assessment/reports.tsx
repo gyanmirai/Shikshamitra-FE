@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box , Grid, Button, Typography } from '@mui/material';
+import { Box, Grid, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 

@@ -55,7 +55,7 @@ const HostelRequestForm: React.FC<{
   const [facilities, setFacilities] = useState<string[]>([]);
 
   // Fetch class data using custom query hook
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

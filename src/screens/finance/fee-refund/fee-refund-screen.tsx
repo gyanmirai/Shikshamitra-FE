@@ -88,6 +88,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
   // States for managing division selection
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { currentMedium: medium, setCurrentMedium: setMedium } = useSelector(
     (state: RootState) => state.globalState
   );

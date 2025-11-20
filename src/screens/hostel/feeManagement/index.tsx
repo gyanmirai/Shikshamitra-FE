@@ -1,7 +1,5 @@
 'use client';
 
-import type { Division } from 'src/types/school';
-
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -19,19 +17,12 @@ const HostelfeeManagement = () => {
   const [hostelType, setHostelType] = useState('');
   const [hostelName, setHostelName] = useState('');
 
-  // State for selected class
-  const [classes, setClasses] = useState<string>('');
-  // State for selected division
-  const [division, setDivision] = useState<string>('');
-  // State for division options based on selected class
   const [student, setStudent] = useState<string>('');
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   // State to control visibility of student list
-  const [showStudents, setShowStudents] = useState(false);
   const collectFeeDialog = useBoolean();
 
   // Query to fetch class data
-  const { data: classData, isLoading } = useQueryAndMutation({
+  useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

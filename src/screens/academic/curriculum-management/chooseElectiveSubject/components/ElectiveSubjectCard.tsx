@@ -1,4 +1,4 @@
-import { alpha , styled } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import {
   Box,
   Card,
@@ -20,17 +20,6 @@ interface ElectiveSubjectCardProps {
   selectedSubject: string;
   onSubjectChange: (subject: string) => void;
 }
-
-const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  transition: 'all 0.3s ease-in-out',
-  '&:hover': {
-    transform: 'translateY(-4px)',
-    boxShadow: theme.shadows[4],
-  },
-}));
 
 const ElectiveSubjectCard = ({
   title,

@@ -5,7 +5,6 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useCallback } from 'react';
 import { Cancel, CheckCircle } from '@mui/icons-material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -39,13 +38,11 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   onViewConcession,
   onViewAllConcession,
 }) => {
-  const theme = useTheme();
   const { data: concessionData = [], isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionRequestsQuery,
   });
   const tabs = useTabs(ConcessionStatusType.Pending);
-  console.log('data-----', concessionData);
   const concessionCounts = useMemo(
     () => ({
       pending:

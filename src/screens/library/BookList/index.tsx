@@ -33,7 +33,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
 
   // State to store currently selected book for editing
   const [selectedBook, setSelectedBook] = useState<IBook | null>(null);
-  const [selectedReservation, setSelectedReservation] = useState<any>(null);
+  const [, setSelectedReservation] = useState<any>(null);
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedCopy, setSelectedCopy] = useState<IBookCopyWithBook | null>(null);

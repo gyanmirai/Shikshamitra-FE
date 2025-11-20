@@ -49,6 +49,7 @@ export const validationSchema = [
             .test(
               'no-time-conflict',
               'Time conflicts with another subject on the same date',
+              // eslint-disable-next-line func-names
               function (value) {
                 const { examDate } = this.parent;
                 const allSubjects = (this.options as any).from?.[1]?.value?.subjects || []; // Get all subjects from the form root with type assertion
@@ -90,6 +91,7 @@ export const validationSchema = [
               (value) => value && dayjs(value as any).isValid()
             )
             .required('End time is required')
+            // eslint-disable-next-line func-names
             .test('is-after-start', 'End time must be after start time', function (value) {
               const { startTime } = this.parent;
               if (!value || !startTime) return true;
@@ -102,6 +104,7 @@ export const validationSchema = [
             .test(
               'minimum-duration',
               'Exam duration must be at least 30 minutes',
+              // eslint-disable-next-line func-names
               function (value) {
                 const { startTime } = this.parent;
                 if (!value || !startTime) return true;
@@ -126,6 +129,7 @@ export const validationSchema = [
             .min(1, 'Passing marks must be at least 1')
             .integer('Passing marks must be a whole number')
             .typeError('Must be a number')
+            // eslint-disable-next-line func-names
             .test('not-exceed-total', 'Passing marks cannot exceed total marks', function (value) {
               const { totalMarks } = this.parent;
               if (!value || !totalMarks) return true;

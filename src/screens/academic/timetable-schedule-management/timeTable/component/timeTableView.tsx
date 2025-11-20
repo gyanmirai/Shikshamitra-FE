@@ -49,7 +49,7 @@ const TimeTableView: React.FC<ITimeTableView> = ({
 
   // Extract weekdays from the first slot that has `dayData` (i.e., non-break slot)
   // Create array of formatted time slot strings for display purposes
-  const timeSlots = timetable.map((slot) => `${slot.startTime} - ${slot.endTime}`);
+  // const timeSlots = timetable.map((slot) => `${slot.startTime} - ${slot.endTime}`);
 
   // Find the first non-break slot that contains day data to extract weekday structure
   // This ensures we get the proper day layout even if some slots are breaks

@@ -80,6 +80,7 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
                       );
                     }
                   )
+                  // eslint-disable-next-line func-names
                   .test('after-start', 'End time must be after start time', function (endTime) {
                     const { startTime } = this.parent;
                     if (!startTime || !endTime) return true;
@@ -103,6 +104,7 @@ export const getValidationSchema = (schoolStartTimeStr: string, schoolEndTimeStr
             .test(
               'sequential-slots',
               'Time slots must be sequential without gaps or overlap',
+              // eslint-disable-next-line func-names
               function (slots) {
                 if (!slots || slots.length <= 1) return true;
 

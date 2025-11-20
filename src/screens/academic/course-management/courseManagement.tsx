@@ -101,12 +101,6 @@ interface ChapterData {
   division: string;
 }
 
-interface AccordionItem {
-  chapter: string;
-  content: string;
-  progress: number;
-}
-
 const sampleChapterData: ChapterData[] = [
   {
     id: 1,
@@ -149,7 +143,7 @@ const sampleChapterData: ChapterData[] = [
 const CourseManagement = (props: TabComponentType) => {
   const [courseData, setCourseData] = useState<CourseData[]>(initialCourseData);
   const [selectedCourse, setSelectedCourse] = useState<CourseData | null>(null);
-  const [chapterData, setChapterData] = useState<ChapterData[]>(sampleChapterData);
+  const [chapterData] = useState<ChapterData[]>(sampleChapterData);
   const dialog = useBoolean();
   const confirm_dialog = useBoolean();
   const chapterDialog = useBoolean();
@@ -488,8 +482,6 @@ interface ChapterTabsViewProps {
 
 const ChapterTabsView: React.FC<ChapterTabsViewProps> = ({ chapters }) => {
   const tabs = useTabs(chapters[0]?.id.toString());
-
-  const currentChapter = chapters.find((chapter) => chapter.id.toString() === tabs.value);
 
   const CHAPTER_TABS = chapters.map((chapter) => ({
     value: chapter.id.toString(),

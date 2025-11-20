@@ -21,7 +21,7 @@ import { Box, Stack, Button, Divider, Checkbox, Typography } from '@mui/material
 const ImportAttendanceScreen = () => {
   const dialog = useBoolean();
 
-  const [viewData, setViewData] = useState<any>(null);
+  const [viewData] = useState<any>(null);
   const [year, setYear] = useState<null | Dayjs>(dayjs(new Date()));
   const [month, setMonth] = useState<null | Dayjs>(dayjs(new Date()));
   // const [allMediums, setAllMediums] = useState<Medium[]>([]);
@@ -29,9 +29,7 @@ const ImportAttendanceScreen = () => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [organization, setOrganization] = useState<string>('');
 
-  const { currentMedium: medium, setCurrentMedium: setMedium } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);

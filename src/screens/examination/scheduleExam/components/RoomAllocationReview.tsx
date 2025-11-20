@@ -13,11 +13,7 @@ import type { IRoomDetails, IExamFormValues, ISubjectRoomDetail } from '../type'
 const RoomAllocationReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) => {
   const { roomDetails } = formik.values;
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Flatten all standards/classes from education medium stages into a single array
   // This creates a comprehensive list of all available classes across different stages

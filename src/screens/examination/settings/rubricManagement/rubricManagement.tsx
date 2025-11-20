@@ -13,6 +13,7 @@ import RubricCreationForm from './rubricCreationForm';
 const RubricManagement = () => {
   const dialog = useBoolean();
   const deleteDialog = useBoolean();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [rubricData, setRubricData] = useState(rubricTableData);
   return (
     <Box>

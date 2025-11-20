@@ -13,6 +13,7 @@ import { Box, Grid, Card, Typography, CardContent } from '@mui/material';
 import DashBoardQuickAction from 'src/components/dashboard-quick-action';
 
 const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { setSearchParams } = props;
 
   const [classes, setClasses] = useState<string>('');
@@ -25,6 +26,7 @@ const TimeScheduleManagementDashboardTab = (props: TabComponentType) => {
     currentQueryAndMutation: useGetClassQuery,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const UpcomingScheduleAlerts: string[] = [
     '10-10-2024 9:00 PM , Teacher - John Doe , Room No.- 101',
     '10-10-2024 9:00 PM , Teacher - John Doe , Room No.- 101',

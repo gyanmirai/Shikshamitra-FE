@@ -149,7 +149,7 @@ const Gradebook = (props: TabComponentType) => {
   const viewResultDialog = useBoolean();
   const viewProfile = useBoolean();
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

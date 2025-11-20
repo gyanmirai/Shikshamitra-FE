@@ -28,7 +28,7 @@ const CurrentVehicleCard = () => {
   const dispatch = useDispatch();
 
   const changeVehicleDialog = useBoolean();
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+  const [, setSelectedVehicle] = useState<any>(null);
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {

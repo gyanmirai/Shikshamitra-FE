@@ -40,7 +40,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   // Dialog control for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
   // Dialog control for single student grade assignment
-  const dialog = useBoolean();
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Redux dispatch

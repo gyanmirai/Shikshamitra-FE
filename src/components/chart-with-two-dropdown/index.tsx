@@ -39,6 +39,7 @@ export function ChartWithTwoDropDown({
   ...other
 }: Props) {
   const theme = useTheme();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [year, setYear] = useState<number>(2025);
 
   const monthsWithDays = useMemo(() => {
@@ -69,6 +70,7 @@ export function ChartWithTwoDropDown({
   // State for dropdown options
   const [listOfSeriesOption, setListOfSeriesOption] = useState<string[]>([]);
   const [listOfDataOption, setListOfDataOption] = useState<string[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [listOfLegend, setListOfLegend] = useState<string[]>([]);
   const [listOfMonth, setListOfMonth] = useState<{ month: string; days: number }[]>([]);
 

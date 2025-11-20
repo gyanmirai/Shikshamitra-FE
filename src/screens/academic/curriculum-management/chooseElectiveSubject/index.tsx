@@ -13,7 +13,7 @@ const ChooseElectiveSubject = () => {
   const [selectedSubjects, setSelectedSubjects] = useState<Record<string, string>>({});
 
   // State to store elective subjects data from JSON
-  const [electiveSubjects, setElectiveSubjects] = useState(eleciveSubjectsData);
+  const [electiveSubjects] = useState(eleciveSubjectsData);
 
   /**
    * Handles the selection of a subject for a specific category

@@ -23,9 +23,8 @@ const CourseProgress = () => {
   const [division, setDivision] = useState<string>('');
 
   const {
-    currentBoard,
     currentMedium: medium,
-    setCurrentMedium: setMedium,
+    // setCurrentMedium: setMedium,
   } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes

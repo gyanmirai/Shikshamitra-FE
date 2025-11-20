@@ -24,7 +24,7 @@ import type { IChargeType } from './Components/type';
 
 const ChargeTypeCreation = () => {
   // Custom hook to fetch charge type data
-  const { data: chargeTypeData, isLoading } = useQueryAndMutation({
+  const { data: chargeTypeData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLibrarySettingsQuery,
   });

@@ -153,7 +153,6 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
 }) => {
   const [isBackClick, setIsBackClick] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const formRef = React.useRef<HTMLFormElement>(null);
   const isSaveLoading = useBoolean();
   const formik = useFormik({
     initialValues,

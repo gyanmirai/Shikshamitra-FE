@@ -20,11 +20,10 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 const AssignTeacher = () => {
-  const assignTeacherDialog = useBoolean();
   const resetConfirmDialog = useBoolean();
   const saveConfirmDialog = useBoolean();
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
@@ -32,16 +31,16 @@ const AssignTeacher = () => {
   const [classes, setClasses] = useState('');
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
 
-  const [division, setDivision] = useState('');
+  const [, setDivision] = useState('');
   const [organization, setOrganization] = useState<string>('');
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const [selectedStudents, setSelectedStudents] = useState<any>([]);
+  const [, setDivisionOptions] = useState<Division[]>([]);
+  const [selectedStudents] = useState<any>([]);
   const [originalTeacherAssignments, setOriginalTeacherAssignments] = useState<{
     [key: number]: string;
   }>({});
   const [focusedCells, setFocusedCells] = useState<number[]>([]);
   const sendInstantNotificationDialogValue = useBoolean();
-  const [isEdit, setIsEdit] = useState(false);
+  // const [isEdit, setIsEdit] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   const [availableTeachers] = useState([
@@ -55,11 +54,7 @@ const AssignTeacher = () => {
     'Joshi Vikram Shyam',
   ]);
 
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
     if (classData?.items?.length) {
