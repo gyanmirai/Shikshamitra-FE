@@ -348,5 +348,55 @@
     "documents": [],
     "description": "₹2000 concession for students who pay fees before due date."
   }
+],
+"bankAccountData" : [
+  {
+    "id": "1",
+    "bankName": "State Bank of India",
+    "branchName": "Paldi Branch",
+    "branchAddress": "Near Jain Derasar, Paldi, Ahmedabad, Gujarat",
+    "accountName": "Shiksha Mitra School",
+    "accountType": "Current",
+    "accountNumber": "123456789012",
+    "accountPurpose": "General School Transactions",
+    "ifscCode": "SBIN0001234",
+    "upiId": "shikshamitra@sbi"
+  },
+  {
+    "id": "2",
+    "bankName": "HDFC Bank",
+    "branchName": "SG Highway Branch",
+    "branchAddress": "SG Highway, Ahmedabad, Gujarat",
+    "accountName": "Shiksha Mitra Transport",
+    "accountType": "Current",
+    "accountNumber": "987654321098",
+    "accountPurpose": "Transport Fee Collection",
+    "ifscCode": "HDFC0005678",
+    "upiId": "smtransport@hdfcbank"
+  },
+  {
+    "id": "3",
+    "bankName": "ICICI Bank",
+    "branchName": "Vastrapur Branch",
+    "branchAddress": "Vastrapur, Ahmedabad, Gujarat",
+    "accountName": "Shiksha Mitra Hostel",
+    "accountType": "Savings",
+    "accountNumber": "456789123456",
+    "accountPurpose": "Hostel Fee & Expenses",
+    "ifscCode": "ICIC0002456",
+    "upiId": "smhostel@icici"
+  },
+  {
+    "id": "4",
+    "bankName": "Bank of Baroda",
+    "branchName": "Maninagar Branch",
+    "branchAddress": "Maninagar East, Ahmedabad",
+    "accountName": "Shiksha Mitra Events",
+    "accountType": "Current",
+    "accountNumber": "555666777888",
+    "accountPurpose": "Events & Cultural Fund",
+    "ifscCode": "BARB0MANINA",
+    "upiId": "smevents@barodampay"
+  }
 ]
 }

@@ -72,6 +72,7 @@ export const buildValidationSchema = (currentYear: any) =>
     .test(
       'individual-payment-amounts',
       'Individual payment amount cannot exceed total amount',
+      // eslint-disable-next-line func-names
       function (values: any) {
         if (!values) return true;
 
@@ -107,6 +108,7 @@ export const buildValidationSchema = (currentYear: any) =>
     .test(
       'sum-of-payment-amounts',
       'Sum of all payment amounts should not be greater than Total Amount',
+      // eslint-disable-next-line func-names
       function (values: any) {
         if (!values) return true;
 
@@ -207,6 +209,13 @@ export const buildCollectionFieldValidation = (field: IPaymentFieldConfig, curre
       .min(field.min ?? 0, `${field.label} must be greater than ${field.min ?? 0}`);
 
     if (field.required) schema = schema.required(`${field.label} is required`);
+  } else if (field.type === 'select') {
+    schema = Yup.string();
+
+    if (field.required) schema = schema.required(`${field.label} is required`);
+
+    if (field?.options && field.options.length > 0)
+      schema = schema.oneOf(field?.options, field.patternMessage || `${field.label} is invalid`);
   } else {
     schema = Yup.string();
     if (field.required) schema = schema.required(`${field.label} is required`);
@@ -224,7 +233,7 @@ export const buildCollectionFieldValidation = (field: IPaymentFieldConfig, curre
 
 export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps) {
   const theme = useTheme();
-  const { data: feeTermsData, isLoading: yearLoading } = useQueryAndMutation({
+  const { data: feeTermsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeTermsQuery,
   });

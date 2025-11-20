@@ -10,7 +10,7 @@ export const PaymentMethodsStatusOptions = [
     value: PaymentMethodsStatusType.Pending,
   },
   {
-    label: 'CleaApproveded',
+    label: 'Approved',
     value: PaymentMethodsStatusType.Approved,
   },
   {

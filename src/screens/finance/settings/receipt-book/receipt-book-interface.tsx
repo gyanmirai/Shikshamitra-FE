@@ -8,6 +8,9 @@ export interface IReceiptBook {
   description?: string; // From "Description"
   toggle?: boolean; // Optional toggle
   action?: string; // Optional action
+  medium: string;
+  board: string;
+  organization: string;
 }
 
 export interface IProps {

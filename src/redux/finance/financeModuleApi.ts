@@ -4,8 +4,9 @@ import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 import chargesData from '../../../chargesData.json';
 import financeData from '../../../feeRefundData.json';
 import concessionData from '../../../concession.json';
-import incomeDetailsData from '../../../financeIncomeData.json'; // your mock JSON
-
+import financeModuleData from '../../../financeData.json';
+import incomeDetailsData from '../../../financeIncomeData.json';
+// your mock JSON
 const isDev = process.env.NODE_ENV === 'development';
 
 export const financeModuleApi = createApi({
@@ -26,6 +27,8 @@ export const financeModuleApi = createApi({
             return { data: concessionData.concessionData };
           case '/concessionRequestData':
             return { data: concessionData.concessionRequestData };
+          case '/bankAccountData':
+            return { data: financeModuleData.bankAccountData };
           default:
             return {
               error: {
@@ -42,6 +45,7 @@ export const financeModuleApi = createApi({
     'Concession',
     'ConcessionRequest',
     'IncomeCategories',
+    'BankAccounts',
   ],
   endpoints: () => ({}), // inject later
 });
