@@ -5,7 +5,6 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { Box, Grid } from '@mui/material';
-// import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import RecentActivities from 'src/app/(auth-route)/student/overview/recent-activities';
@@ -85,7 +84,6 @@ const AcademicDashboardScreen = () => {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes, setDivision]);
 
-  // const router = useRouter();
   return (
     <Box>
       <Grid container spacing={2} sx={{ mb: 2 }}>

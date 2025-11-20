@@ -96,7 +96,16 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={2} height="100%">
-          <Scrollbar sx={{ p: 2, height: '100%' }}>
+          <Scrollbar
+            sx={{
+              p: 2,
+              height: '100%',
+              '& .simplebar-wrapper': {
+                display: 'flex',
+                flexDirection: 'column',
+              },
+            }}
+          >
             {/* Basic Info */}
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Basic Information">

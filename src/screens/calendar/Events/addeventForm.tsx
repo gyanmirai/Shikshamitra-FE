@@ -211,8 +211,17 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
-          <Scrollbar sx={{ p: 2, height: '100%' }}>
+        <Box display="flex" flexDirection="column" height="100%">
+          <Scrollbar
+            sx={{
+              p: 2,
+              height: '100%',
+              '& .simplebar-wrapper': {
+                display: 'flex',
+                flexDirection: 'column',
+              },
+            }}
+          >
             <Grid size={{ xs: 12 }}>
               <SectionCard title="Basic Information">
                 <Grid size={{ xs: 12, md: 6, sm: 3 }}>
@@ -629,8 +638,15 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                 )}
               </SectionCard>
             </Grid>
-            <Grid size={{ xs: 12 }} mb={2}>
-              <SectionCard title="Event Mode">
+            <Grid size={{ xs: 12 }}>
+              <SectionCard
+                title="Event Mode"
+                paperProps={{
+                  sx: {
+                    m: 0,
+                  },
+                }}
+              >
                 <Grid size={{ xs: 12 }}>
                   <Box display="flex" alignItems="center" gap={2}>
                     <span>Offline</span>
