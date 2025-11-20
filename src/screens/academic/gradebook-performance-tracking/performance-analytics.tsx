@@ -1,7 +1,5 @@
 'use client';
 
-import type { TabComponentType } from 'src/screens/hr/leave-request';
-
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { fNumber } from 'src/utils/format-number';
@@ -14,7 +12,7 @@ import SubjectAnalytics from './performanceAnalytics/subjectAnalytics';
 import StudentGroupCompare from './performanceAnalytics/studentGroupCompare';
 import GradeDistributionChart from './performanceAnalytics/gradeDistribution';
 
-const PerformanceAnalytics = (props: TabComponentType) => {
+const PerformanceAnalytics: React.FC = () => {
   <Box>
     <CustomBreadcrumbs
       heading="Performace Analytics"
