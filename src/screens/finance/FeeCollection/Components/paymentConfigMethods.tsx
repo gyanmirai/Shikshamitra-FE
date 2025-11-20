@@ -29,6 +29,18 @@ export const paymentMethodsConfig = {
       pattern: '^(?=.*[a-zA-Z0-9])[a-zA-Z0-9 ]+$',
       // patternMessage: 'Cheque Holder Name can include letters, numbers, spaces and . , & ( ) -',
     },
+    {
+      name: 'bankAccount',
+      label: 'Bank Account',
+      type: 'select',
+
+      options: [
+        'HDFC Bank (HDFC0001234)',
+        'ICICI Bank (ICIC0005678)',
+        'SBI Bank (SBIN0003344)',
+        'Kotak Bank (KKBK0007788)',
+      ],
+    },
   ],
 
   'Demand Draft (DD)': [
@@ -78,6 +90,18 @@ export const paymentMethodsConfig = {
       // patternMessage: 'Payee Name can include letters, numbers, spaces and . , & ( ) -',
     },
     { name: 'remarks', label: 'Remarks', type: 'multiline', required: false },
+    {
+      name: 'bankAccount',
+      label: 'Bank Account',
+      type: 'select',
+      // required: true,
+      options: [
+        'HDFC Bank (HDFC0001234)',
+        'ICICI Bank (ICIC0005678)',
+        'SBI Bank (SBIN0003344)',
+        'Kotak Bank (KKBK0007788)',
+      ],
+    },
   ],
 
   'Bank Transfer (NEFT/RTGS/IMPS)': [
@@ -97,6 +121,18 @@ export const paymentMethodsConfig = {
       pattern: '^(?=.*[a-zA-Z0-9])[a-zA-Z0-9 ]+$',
 
       // patternMessage: 'Bank Name can include letters, numbers, spaces and . , & ( ) -',
+    },
+    {
+      name: 'bankAccount',
+      label: 'Bank Account',
+      type: 'select',
+      // required: true,
+      options: [
+        'HDFC Bank (HDFC0001234)',
+        'ICICI Bank (ICIC0005678)',
+        'SBI Bank (SBIN0003344)',
+        'Kotak Bank (KKBK0007788)',
+      ],
     },
   ],
 
@@ -125,6 +161,18 @@ export const paymentMethodsConfig = {
       required: true,
     },
     { name: 'paymentDate', label: 'Payment Date', type: 'date', required: false },
+    {
+      name: 'bankAccount',
+      label: 'Bank Account',
+      type: 'select',
+      // required: true,
+      options: [
+        'HDFC Bank (HDFC0001234)',
+        'ICICI Bank (ICIC0005678)',
+        'SBI Bank (SBIN0003344)',
+        'Kotak Bank (KKBK0007788)',
+      ],
+    },
   ],
 
   UPI: [
@@ -137,6 +185,18 @@ export const paymentMethodsConfig = {
       required: true,
     },
     { name: 'paymentDate', label: 'Payment Date', type: 'date', required: true },
+    {
+      name: 'bankAccount',
+      label: 'Bank Account',
+      type: 'select',
+      // required: true,
+      options: [
+        'HDFC Bank (HDFC0001234)',
+        'ICICI Bank (ICIC0005678)',
+        'SBI Bank (SBIN0003344)',
+        'Kotak Bank (KKBK0007788)',
+      ],
+    },
   ],
 
   'Online Payment Gateway': [
@@ -165,6 +225,18 @@ export const paymentMethodsConfig = {
       // patternMessage: 'Payment Gateway Name can include letters, numbers, spaces and . , & ( ) -',
     },
     { name: 'remarks', label: 'Remarks', type: 'multiline', required: false },
+    {
+      name: 'bankAccount',
+      label: 'Bank Account',
+      type: 'select',
+      // required: true,
+      options: [
+        'HDFC Bank (HDFC0001234)',
+        'ICICI Bank (ICIC0005678)',
+        'SBI Bank (SBIN0003344)',
+        'Kotak Bank (KKBK0007788)',
+      ],
+    },
   ],
 
   'Wallet / Prepaid Card': [
@@ -184,5 +256,16 @@ export const paymentMethodsConfig = {
       required: true,
     },
     { name: 'remarks', label: 'Remarks', type: 'multiline', required: false },
+    {
+      name: 'bankAccount',
+      label: 'Bank Account',
+      type: 'select',
+      options: [
+        'HDFC Bank (HDFC0001234)',
+        'ICICI Bank (ICIC0005678)',
+        'SBI Bank (SBIN0003344)',
+        'Kotak Bank (KKBK0007788)',
+      ],
+    },
   ],
 };

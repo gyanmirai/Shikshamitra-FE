@@ -20,6 +20,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
 
+// eslint-disable-next-line import/no-named-as-default
 import FinanceSettingReceiptbookDialog from './component/finance-setting-receiptbook-dialog';
 
 import type { IReceiptBook } from './receipt-book-interface';
@@ -75,7 +76,7 @@ const FinanceReceiptBookSetting = () => {
           { name: 'Setting', href: '/finance/settings/receipt-book/' },
           { name: 'Receipt Book' },
         ]}
-        sx={{ mb: 2 }}
+        sx={{ mb: 1 }}
         action={
           <Button
             size="small"
@@ -118,12 +119,22 @@ const FinanceReceiptBookSetting = () => {
         }
         tableId="finance-receipt-book-setting-table"
         columns={[
-          { id: 'receiptBookName', label: 'Name', align: 'left' },
-
+          { id: 'receiptBookName', label: 'Name', align: 'left', sticky: true },
           { id: 'prefix', label: 'Prefix', align: 'left' },
           { id: 'suffix', label: 'Suffix', align: 'left' },
-          { id: 'startingNumber', label: 'Starting No.', align: 'left' },
-          { id: 'endingNumber', label: 'Ending No.', align: 'left' },
+          {
+            id: 'board',
+            label: 'Board/Medium',
+            align: 'left',
+            render: (value, row) => (
+              <Typography variant="caption" fontSize="13px">
+                {value}/{row.medium}
+              </Typography>
+            ),
+          },
+          { id: 'organization', label: 'Organization', align: 'left' },
+          { id: 'startingNumber', label: 'Starting No.', align: 'left', minWidth: 130 },
+          { id: 'endingNumber', label: 'Ending No.', align: 'left', minWidth: 130 },
           { id: 'description', label: 'Description', align: 'left' },
           {
             id: 'toggle',
@@ -224,8 +235,8 @@ const FinanceReceiptBookSetting = () => {
                 placement="right"
                 title={
                   isEdit
-                    ? 'Update receipt book details to manage financial records and transactions.'
-                    : 'This screen displays all the created receipt books in the system, providing an organized view for tracking financial receipts. It also allows admins to create new receipt books when needed, helping maintain systematic records and ensuring transparency in financial documentation.'
+                    ? 'Update the board, medium, organization, prefix, suffix, or number range to keep your receipt sequence accurate. Example: Existing State-GUJ-Org2-RB200, updated range to 500 → continues as State-GUJ-Org2-RB401…RB500'
+                    : 'Create a new receipt book by selecting the Board, Medium, and Organization, and defining the prefix, suffix, and number range. Example: CBSE-ENG-Org1-GR0012025, CBSE-ENG-Org1-GR0022025… (Board + Medium + Organization + Prefix + Number + Suffix)'
                 }
               >
                 <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />

@@ -6,7 +6,11 @@ export const receiptBookValidationSchema = Yup.object().shape({
     .required('Receipt Book Name is required')
     .min(2, 'Must be at least 2 characters')
     .max(50, 'Cannot exceed 50 characters'),
+  board: Yup.string().trim().required('Board is required'),
 
+  medium: Yup.string().trim().required('Medium is required'),
+
+  organization: Yup.string().trim().required('Organization is required'),
   prefix: Yup.string()
     .trim()
     .nullable()
