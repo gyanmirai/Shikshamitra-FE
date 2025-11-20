@@ -18,6 +18,7 @@ export const navSectionClasses = {
     title: 'mnl__nav__item__title',
     arrow: 'mnl__nav__item__arrow',
     caption: 'mnl__nav__item__caption',
+    indicator: 'mnl__nav__item__indicator',
   },
   li: 'mnl__nav__li',
   ul: 'mnl__nav__ul',

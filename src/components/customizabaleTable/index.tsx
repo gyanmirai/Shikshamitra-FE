@@ -206,7 +206,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     leftSticky.forEach(({ col, idx }) => {
       const width = headerRefs.current[idx]?.offsetWidth ?? 100;
       leftOffsets[col.id as string] = left;
-      left += width - 1;
+      left += width; // Adding 15px for border and padding
     });
 
     const rightOffsets: Record<string, number> = {};
@@ -214,7 +214,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     [...rightSticky].reverse().forEach(({ col, idx }) => {
       const width = headerRefs.current[idx]?.offsetWidth ?? 100;
       rightOffsets[col.id as string] = right;
-      right += width - 1;
+      right += width; // Adding 15px for border and padding
     });
 
     setStickyMap({ left: leftOffsets, right: rightOffsets });

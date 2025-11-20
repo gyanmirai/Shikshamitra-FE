@@ -263,7 +263,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
               id: 'active',
               label: 'Publish',
               align: 'left',
-              minWidth: 50,
+              minWidth: 80,
               isFilter: false,
               sticky: true,
               isSort: false,
@@ -313,6 +313,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
               label: 'Status',
               align: 'left',
               filterType: 'enum',
+              minWidth: 100,
               enumOptions: AnnouncementStatusOptions,
               sticky: true,
               render: (value, row) => (
@@ -329,6 +330,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
               label: 'Actions',
               isSort: false,
               isFilter: false,
+              minWidth: '50px',
               sticky: true,
               render: (_, row) => (
                 <ThreeDotsActions
