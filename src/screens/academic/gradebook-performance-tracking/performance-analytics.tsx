@@ -1,5 +1,7 @@
 'use client';
 
+import type { TabComponentType } from 'src/screens/hr/leave-request';
+
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { fNumber } from 'src/utils/format-number';
@@ -12,7 +14,7 @@ import SubjectAnalytics from './performanceAnalytics/subjectAnalytics';
 import StudentGroupCompare from './performanceAnalytics/studentGroupCompare';
 import GradeDistributionChart from './performanceAnalytics/gradeDistribution';
 
-const PerformanceAnalytics: React.FC = () => {
+const PerformanceAnalytics = (props: TabComponentType) => (
   <Box>
     <CustomBreadcrumbs
       heading="Performace Analytics"
@@ -29,8 +31,8 @@ const PerformanceAnalytics: React.FC = () => {
       <SubjectAnalytics />
       <StudentGroupCompare />
     </Grid>
-  </Box>;
-};
+  </Box>
+);
 
 export default PerformanceAnalytics;
 

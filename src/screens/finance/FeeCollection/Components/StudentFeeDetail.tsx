@@ -18,7 +18,7 @@ export const FeeSummaryCard = ({
 }: {
   student: IStudentFee | null;
   showHeader?: boolean;
-}) => {
+}) => (
   // Get the current theme for consistent styling across the component
 
   <Box display="flex" gap={2} alignItems="center">
@@ -120,8 +120,8 @@ export const FeeSummaryCard = ({
         </Grid>
       </Grid>
     </Box>
-  </Box>;
-};
+  </Box>
+);
 
 interface ILabel {
   name: string;

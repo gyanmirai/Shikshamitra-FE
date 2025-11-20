@@ -33,7 +33,7 @@ const TABS = [
   {
     value: 'performanceAnalysis',
     label: 'Performance Analysis',
-    component: () => <PerformanceAnalytics />,
+    component: (props: TabComponentType) => <PerformanceAnalytics {...props} />,
   },
   {
     value: 'reports',
