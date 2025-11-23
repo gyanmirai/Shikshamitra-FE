@@ -46,6 +46,12 @@ export function ResponsiveMultiSelect<T>({
     }
   }, [value]);
 
+  const handleDelete = (optionToDelete: T) => {
+    const valueToDelete = getOptionValue(optionToDelete);
+    const newValues = (value as string[]).filter((v) => v !== valueToDelete);
+    onChange(newValues);
+  };
+
   return (
     <Box ref={containerRef}>
       <Autocomplete
@@ -103,6 +109,7 @@ export function ResponsiveMultiSelect<T>({
               <Chip
                 key={getOptionValue(item)}
                 label={getOptionLabel(item)}
+                onDelete={disabled ? undefined : () => handleDelete(item)}
                 sx={{ ml: 0.5, whiteSpace: 'nowrap' }}
                 size="small"
                 variant="soft"
@@ -115,6 +122,7 @@ export function ResponsiveMultiSelect<T>({
                 count={hiddenTags.length}
                 getLabel={getOptionLabel}
                 getKey={getOptionValue}
+                onDelete={disabled ? undefined : handleDelete}
               />
             ),
           ];
@@ -163,8 +171,7 @@ export function ResponsiveMultiSelect<T>({
               '& .MuiFormHelperText-root': {
                 marginLeft: 0,
                 marginTop: '2px',
-                color: error ? 'error' : undefined, // <-- Force red when error
-                // Remove any color override here
+                color: error ? 'error' : undefined,
               },
             }}
           />
@@ -179,6 +186,7 @@ type OverflowChipPopoverProps<T> = {
   count: number;
   getLabel: (item: T) => string;
   getKey?: (item: T) => string | number;
+  onDelete?: (item: T) => void;
 };
 
 export const OverflowChipPopover = <T,>({
@@ -186,6 +194,7 @@ export const OverflowChipPopover = <T,>({
   count,
   getLabel,
   getKey = (item: T) => String(item),
+  onDelete,
 }: OverflowChipPopoverProps<T>) => (
   <CustomTooltip
     title={
@@ -202,6 +211,7 @@ export const OverflowChipPopover = <T,>({
           <Chip
             key={getKey(item)}
             label={getLabel(item)}
+            onDelete={onDelete ? () => onDelete(item) : undefined}
             size="small"
             variant="soft"
             sx={{ mb: 1 }}
