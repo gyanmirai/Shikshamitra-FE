@@ -851,6 +851,13 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+A+H+3',
             },
             {
+              title: 'Reports',
+              path: '/academic/homeworkAssignmentReports',
+              _action: 'homework-assignment-reports',
+              shortcutKey: 'Alt+A+H+R',
+              shortcutKeyName: 'Alt+A+H+R',
+            },
+            {
               title: ' Settings',
               path: '/academic/homeworkSettings',
               _action: 'homework-assignment-management-settings',
@@ -923,6 +930,13 @@ const academicModule = (isDdvs: boolean) => ({
               _action: 'academic-quizManagement',
               shortcutKey: 'Alt+E+1+5',
               shortcutKeyName: 'Alt+E+1+5',
+            },
+            {
+              title: 'Reports',
+              path: '/academic/examinationReports',
+              _action: 'examination-reports',
+              shortcutKey: 'Alt+E+R',
+              shortcutKeyName: 'Alt+E+R',
             },
             {
               title: 'Settigs',
