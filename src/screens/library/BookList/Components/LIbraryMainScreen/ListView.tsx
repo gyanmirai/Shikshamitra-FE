@@ -32,7 +32,8 @@ const ListView = ({
     ({ popover: pop, row }: any) => (
       <MenuList>
         <MenuItem
-          onClick={async () => {
+          onClick={async (e) => {
+            e.stopPropagation();
             const book = row as IBook;
             const copies = await fetchCopies(book.id).unwrap();
             onReserveBook?.({ ...book, copies });
@@ -44,7 +45,8 @@ const ListView = ({
         </MenuItem>
 
         <MenuItem
-          onClick={async () => {
+          onClick={async (e) => {
+            e.stopPropagation();
             const book = row as IBook;
             const copies = await fetchCopies(book.id).unwrap();
             onViewAllReservationBook?.({ ...book, copies });
@@ -118,28 +120,30 @@ const ListView = ({
             </Box>
 
             {/* Right section - Three Dots */}
-            <ThreeDotsActions
-              placement="right-center"
-              showDeleteIcon
-              showEditIcon
-              showViewIcon
-              actions={(prop) => actions({ ...prop, row: book })}
-              handleViewClick={async () => {
-                const selectedBook = book as IBook;
-                const copies = await fetchCopies(selectedBook.id).unwrap();
-                onView?.({ ...selectedBook, copies });
-              }}
-              handleDeleteClick={async () => {
-                const selectedBook = book as IBook;
-                const copies = await fetchCopies(selectedBook.id).unwrap();
-                onDelete?.({ ...selectedBook, copies });
-              }}
-              handleEditClick={async () => {
-                const selectedBook = book as IBook;
-                const copies = await fetchCopies(selectedBook.id).unwrap();
-                onEdit?.({ ...selectedBook, copies });
-              }}
-            />
+            <Box onClick={(e) => e.stopPropagation()}>
+              <ThreeDotsActions
+                placement="right-center"
+                showDeleteIcon
+                showEditIcon
+                showViewIcon
+                actions={(prop) => actions({ ...prop, row: book })}
+                handleViewClick={async () => {
+                  const selectedBook = book as IBook;
+                  const copies = await fetchCopies(selectedBook.id).unwrap();
+                  onView?.({ ...selectedBook, copies });
+                }}
+                handleDeleteClick={async () => {
+                  const selectedBook = book as IBook;
+                  const copies = await fetchCopies(selectedBook.id).unwrap();
+                  onDelete?.({ ...selectedBook, copies });
+                }}
+                handleEditClick={async () => {
+                  const selectedBook = book as IBook;
+                  const copies = await fetchCopies(selectedBook.id).unwrap();
+                  onEdit?.({ ...selectedBook, copies });
+                }}
+              />
+            </Box>
           </Box>
 
           {/* Divider between list items */}

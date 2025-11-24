@@ -4,6 +4,7 @@ export interface ISection {
   numberOfColumns: number;
   createdBy?: string;
   createdOn?: string;
+  shelfNames: string[];
 }
 
 export interface ISectionTableProps {

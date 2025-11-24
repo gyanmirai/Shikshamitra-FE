@@ -1769,13 +1769,13 @@ const libraryModule = {
             //   shortcutKey: 'Alt+L+S+1',
             //   shortcutKeyName: 'Alt+L+S+1',
             // },
-            {
-              title: 'Notification Setting',
-              path: '/library/settings/notification-setting',
-              _action: 'notification-setting',
-              shortcutKey: 'Alt+L+S+2',
-              shortcutKeyName: 'Alt+L+S+2',
-            },
+            // {
+            //   title: 'Notification Setting',
+            //   path: '/library/settings/notification-setting',
+            //   _action: 'notification-setting',
+            //   shortcutKey: 'Alt+L+S+2',
+            //   shortcutKeyName: 'Alt+L+S+2',
+            // },
             {
               title: 'Book Categories',
               path: '/library/settings/book-category',

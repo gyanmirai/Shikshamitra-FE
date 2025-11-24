@@ -103,7 +103,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
                     variant="caption"
                     color="text.secondary"
                     display="block"
-                    sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                    sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                   >
                     Title:
                   </Typography>
@@ -111,7 +111,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
                     variant="body2"
                     fontWeight={600}
                     color="text.primary"
-                    sx={{ fontSize: '0.75rem' }}
+                    sx={{ fontSize: '0.9rem' }}
                     noWrap
                   >
                     {book?.title || '—'}
@@ -127,7 +127,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
                     variant="caption"
                     color="text.secondary"
                     display="block"
-                    sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                    sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                   >
                     Author:
                   </Typography>
@@ -135,7 +135,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
                     variant="body2"
                     fontWeight={600}
                     color="text.primary"
-                    sx={{ fontSize: '0.75rem' }}
+                    sx={{ fontSize: '0.9rem' }}
                     noWrap
                   >
                     {book?.author || '—'}
@@ -151,7 +151,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
                     variant="caption"
                     color="text.secondary"
                     display="block"
-                    sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                    sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                   >
                     ISBN:
                   </Typography>
@@ -159,7 +159,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
                     variant="body2"
                     fontWeight={600}
                     color="text.primary"
-                    sx={{ fontSize: '0.75rem' }}
+                    sx={{ fontSize: '0.9rem' }}
                     noWrap
                   >
                     {book?.isbn || '—'}

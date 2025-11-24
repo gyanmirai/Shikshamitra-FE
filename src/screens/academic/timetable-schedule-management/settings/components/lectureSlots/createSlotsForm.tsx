@@ -43,65 +43,63 @@ import type { ICreateSlotsFormProps } from './type';
 // Update the styled component with modern design
 const DayRangeSlider = styled(Slider)(({ theme }) => ({
   maxWidth: 380,
-  height: 8,
-  padding: '13px 0',
+  height: 6,
+  padding: '10px 0',
   '& .MuiSlider-track': {
-    height: 8,
-    borderRadius: 4,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: theme.palette.primary.main,
     border: 'none',
   },
   '& .MuiSlider-rail': {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+    height: 6,
+    borderRadius: 3,
+    backgroundColor:
+      theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : theme.palette.grey[300],
     opacity: 1,
   },
   '& .MuiSlider-thumb': {
-    height: 24,
-    width: 24,
-    backgroundColor: '#fff',
-    border: `3px solid ${theme.palette.primary.main}`,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+    height: 18,
+    width: 18,
+    backgroundColor: theme.palette.grey[100],
+    border: `2px solid ${theme.palette.grey[400]}`,
+    boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
     '&:hover, &.Mui-focusVisible': {
-      boxShadow: `0 0 0 8px ${theme.palette.mode === 'dark' ? 'rgba(0,167,111,0.16)' : 'rgba(0,167,111,0.1)'}`,
+      boxShadow: `0 0 0 6px ${
+        theme.palette.mode === 'dark' ? 'rgba(160,160,160,0.25)' : 'rgba(0,0,0,0.08)'
+      }`,
     },
     '&.Mui-active': {
-      boxShadow: `0 0 0 14px ${theme.palette.mode === 'dark' ? 'rgba(0,167,111,0.2)' : 'rgba(0,167,111,0.12)'}`,
+      boxShadow: `0 0 0 8px ${
+        theme.palette.mode === 'dark' ? 'rgba(160,160,160,0.30)' : 'rgba(0,0,0,0.10)'
+      }`,
     },
-    '&:before': {
-      display: 'none',
-    },
+    '&:before': { display: 'none' },
   },
   '& .MuiSlider-mark': {
-    height: 12,
+    height: 10,
     width: 3,
-    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
     borderRadius: 2,
+    backgroundColor: theme.palette.grey[400],
     top: '50%',
     transform: 'translateY(-50%)',
     '&.MuiSlider-markActive': {
-      backgroundColor: theme.palette.common.white,
-      opacity: 1,
+      backgroundColor: theme.palette.grey[500],
     },
   },
   '& .MuiSlider-markLabel': {
-    fontSize: '0.75rem',
+    fontSize: '0.7rem',
     fontWeight: 500,
     color: theme.palette.text.secondary,
-    top: 32,
+    top: 28,
     '&.MuiSlider-markLabelActive': {
-      color: theme.palette.primary.main,
+      color: theme.palette.text.primary,
       fontWeight: 600,
     },
   },
   '&.Mui-disabled': {
-    '& .MuiSlider-track': {
-      backgroundColor: theme.palette.action.disabled,
-    },
-    '& .MuiSlider-thumb': {
-      borderColor: theme.palette.action.disabled,
-    },
+    '& .MuiSlider-track': { backgroundColor: theme.palette.action.disabled },
+    '& .MuiSlider-thumb': { borderColor: theme.palette.action.disabled },
   },
 }));
 
@@ -148,12 +146,59 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
     },
   });
 
+  // Ensure at least one slot configuration + one slot on mount
+  useEffect(() => {
+    if (formik.values.slotConfigurations.length === 0) {
+      const start = dayjs().hour(7).minute(0).second(0).millisecond(0);
+      const firstSlot = {
+        id: `0-0`,
+        startTime: start,
+        endTime: start.add(30, 'minute'),
+        slotType: 'period',
+        breakType: '',
+      };
+      formik.setFieldValue('slotConfigurations', [
+        {
+          id: Date.now().toString(),
+          totalSlots: '1',
+          weekRange: [0, 5],
+          timeSlots: [firstSlot],
+          expanded: true,
+        },
+      ]);
+    } else if (
+      formik.values.slotConfigurations[0].timeSlots.length === 0 &&
+      !formik.values.slotConfigurations[0].totalSlots
+    ) {
+      // Populate first config with one slot if empty
+      const start = dayjs().hour(7).minute(0).second(0).millisecond(0);
+      const firstSlot = {
+        id: `0-0`,
+        startTime: start,
+        endTime: start.add(30, 'minute'),
+        slotType: 'period',
+        breakType: '',
+      };
+      formik.setFieldValue('slotConfigurations[0].totalSlots', '1');
+      formik.setFieldValue('slotConfigurations[0].timeSlots', [firstSlot]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleAddSlotConfiguration = () => {
+    const start = dayjs().hour(7).minute(0).second(0).millisecond(0);
+    const firstSlot = {
+      id: `${Date.now()}-0`,
+      startTime: start,
+      endTime: start.add(30, 'minute'),
+      slotType: 'period',
+      breakType: '',
+    };
     const newConfig = {
       id: Date.now().toString(),
-      totalSlots: '',
+      totalSlots: '1',
       weekRange: [0, 5],
-      timeSlots: [],
+      timeSlots: [firstSlot],
       expanded: true,
     };
     formik.setFieldValue('slotConfigurations', [...formik.values.slotConfigurations, newConfig]);
@@ -349,130 +394,52 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                   sx={{
                     '& .MuiAccordionSummary-content': {
                       my: 1.5,
-                      display: 'block',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      gap: 1,
                     },
                   }}
                 >
-                  <Box
-                    sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    alignItems="center"
+                    sx={{ flexWrap: 'wrap', width: '100%' }}
                   >
-                    {formik.values.slotConfigurations.length > 1 && !disabled && (
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveSlotConfiguration(configIndex);
-                        }}
-                        sx={{ mr: 1 }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                    <Typography variant="subtitle2" fontWeight={600}>
+                      {String(config.totalSlots || 0)} slot
+                      {String(config.totalSlots) === '1' ? '' : 's'}
+                    </Typography>
+
+                    {Array.isArray(config.weekRange) && config.weekRange.length === 2 && (
+                      <Typography variant="caption" color="text.secondary">
+                        Days: {getDayLabel(config.weekRange[0])} -{' '}
+                        {getDayLabel(config.weekRange[1])}
+                      </Typography>
                     )}
-                  </Box>
 
-                  {/* Preview when collapsed - Always show if totalSlots or weekRange exists */}
-                  {!config.expanded && (config.totalSlots || config.weekRange) && (
-                    <Grid container spacing={2} mt={0.5}>
-                      {config.totalSlots ? (
-                        <Grid
-                          size={{
-                            xs: 12,
-                            sm: config.timeSlots && config.timeSlots.length > 0 ? 4 : 6,
-                          }}
-                        >
-                          <Stack direction="row" spacing={1.5} alignItems="center">
-                            <Iconify icon="mdi:clock-outline" width={18} color="text.secondary" />
-                            <Box sx={{ minWidth: 0, flex: 1 }}>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                display="block"
-                                sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
-                              >
-                                Total Slots:
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                fontWeight={600}
-                                color="text.primary"
-                                sx={{ fontSize: '0.75rem' }}
-                                noWrap
-                              >
-                                {String(config.totalSlots) || '—'}
-                              </Typography>
-                            </Box>
-                          </Stack>
-                        </Grid>
-                      ) : null}
-
-                      {/* Active Days */}
-                      {config.weekRange &&
-                        Array.isArray(config.weekRange) &&
-                        config.weekRange.length === 2 && (
-                          <Grid
-                            size={{
-                              xs: 12,
-                              sm: config.timeSlots && config.timeSlots.length > 0 ? 4 : 6,
-                            }}
-                          >
-                            <Stack direction="row" spacing={1.5} alignItems="center">
-                              <Iconify
-                                icon="mdi:calendar-range"
-                                width={18}
-                                color="text.secondary"
-                              />
-                              <Box sx={{ minWidth: 0, flex: 1 }}>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
-                                >
-                                  Active Days:
-                                </Typography>
-                                <Typography
-                                  variant="body2"
-                                  fontWeight={600}
-                                  color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
-                                  noWrap
-                                >
-                                  {getDayLabel(config.weekRange[0])} -{' '}
-                                  {getDayLabel(config.weekRange[1])}
-                                </Typography>
-                              </Box>
-                            </Stack>
-                          </Grid>
+                    {config.timeSlots?.length > 0 && (
+                      <Typography variant="caption" color="text.secondary">
+                        {dayjs(config.timeSlots[0].startTime).format('hh:mm A')} -{' '}
+                        {dayjs(config.timeSlots[config.timeSlots.length - 1].endTime).format(
+                          'hh:mm A'
                         )}
+                      </Typography>
+                    )}
+                  </Stack>
 
-                      {/* Slots Created - Only show if slots exist */}
-                      {config.timeSlots && config.timeSlots.length > 0 && (
-                        <Grid size={{ xs: 12, sm: 4 }}>
-                          <Stack direction="row" spacing={1.5} alignItems="center">
-                            <Iconify icon="mdi:timetable" width={18} color="text.secondary" />
-                            <Box sx={{ minWidth: 0, flex: 1 }}>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                display="block"
-                                sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
-                              >
-                                Slots Created:
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                fontWeight={600}
-                                color="text.primary"
-                                sx={{ fontSize: '0.75rem' }}
-                                noWrap
-                              >
-                                {config.timeSlots.length}
-                              </Typography>
-                            </Box>
-                          </Stack>
-                        </Grid>
-                      )}
-                    </Grid>
+                  {formik.values.slotConfigurations.length > 1 && !disabled && (
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveSlotConfiguration(configIndex);
+                      }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
                   )}
                 </AccordionSummary>
 
@@ -523,30 +490,6 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                               disableSwap
                               disabled={disabled}
                             />
-                          </Box>
-
-                          {/* Display selected range */}
-                          <Box
-                            sx={{
-                              mt: 2,
-                              pt: 2,
-                              borderTop: 1,
-                              borderColor: 'divider',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <Typography variant="caption" color="text.secondary">
-                              Selected Range:
-                            </Typography>
-                            <Typography variant="body2" fontWeight={600} color="primary.main">
-                              {config.weekRange &&
-                              Array.isArray(config.weekRange) &&
-                              config.weekRange.length === 2
-                                ? `${getDayLabel(config.weekRange[0])} - ${getDayLabel(config.weekRange[1])}`
-                                : '—'}
-                            </Typography>
                           </Box>
                         </Box>
                       </Grid>
@@ -809,7 +752,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
           <Box
             sx={{
               position: 'absolute',
-              bottom: 0,
+              bottom: 10,
               left: 0,
               right: 0,
               bgcolor: 'background.paper',

@@ -474,7 +474,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {selectedCopy?.book?.title}-{selectedCopy?.accessionNo} History
+              {selectedCopy?.book?.title} ({selectedCopy?.accessionNo}) History
             </Typography>
             <CustomTooltip
               arrow

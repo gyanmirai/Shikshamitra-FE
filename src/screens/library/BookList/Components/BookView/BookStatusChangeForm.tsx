@@ -56,7 +56,7 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
           <Grid size={{ xs: 12 }}>
             <Autocomplete
               options={options}
-              value={options.find((o) => o.value === formik.values.status) ?? undefined} // use undefined, not null
+              value={options.find((o) => o.value === formik.values.status) ?? undefined}
               onChange={(_, newValue) => formik.setFieldValue('status', newValue?.value)}
               size="small"
               disableClearable
@@ -74,7 +74,7 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
                     {option.label}
                     <Box sx={{ marginLeft: 'auto' }}>
                       <CustomTooltip title={option.description} placement="right">
-                        <Iconify icon="mdi:information" width={20} />
+                        <Iconify icon="mdi:information" width={20} color="gray" />
                       </CustomTooltip>
                     </Box>
                   </Box>
