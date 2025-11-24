@@ -20,9 +20,16 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
   const shelfInputRef = useRef<HTMLInputElement>(null);
 
   const formik = useFormik({
-    initialValues: getSectionInitialValues(editData),
+    initialValues: {
+      ...getSectionInitialValues(editData),
+      shelfNames: editData?.shelfNames || [],
+    },
     validationSchema: sectionManagementValidationSchema,
     onSubmit: (values) => {
+      const payload = {
+        ...values,
+        shelfNames,
+      };
       if (editData) {
         shikshaMitraToast.success({
           message: `${values.sectionName} Section updated successfully`,
@@ -36,35 +43,49 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
     },
   });
 
-  // Update shelf display when number of columns changes
+  // Update shelf display only when numberOfColumns changes (avoid resetting during edit)
   useEffect(() => {
-    if (formik.values.numberOfColumns && !Number.isNaN(Number(formik.values.numberOfColumns))) {
-      const newCount = Number(formik.values.numberOfColumns);
+    const raw = formik.values.numberOfColumns;
+    const newCount = Number(raw);
+    if (raw && !Number.isNaN(newCount)) {
       setShelfCount(newCount);
-
-      // Preserve existing shelf names or create default names
-      const newShelfNames = Array.from(
-        { length: newCount },
-        (_, index) => shelfNames[index] || `Shelf ${index + 1}`
+      setShelfNames((prev) =>
+        Array.from({ length: newCount }, (_, i) =>
+          prev[i] !== undefined
+            ? prev[i]
+            : formik.values.shelfNames[i] !== undefined
+              ? formik.values.shelfNames[i]
+              : `Shelf ${i + 1}`
+        )
       );
-      setShelfNames(newShelfNames);
     } else {
       setShelfCount(0);
       setShelfNames([]);
     }
-  }, [formik.values.numberOfColumns, shelfNames]);
+  }, [formik.values.numberOfColumns, formik.values.shelfNames]); // removed shelfNames from deps
 
   // Handle shelf name editing
   const handleShelfClick = (index: number) => {
     setEditingShelfIndex(index);
+    // select all text on next tick
+    setTimeout(() => {
+      shelfInputRef.current?.select();
+    }, 0);
   };
 
   const handleShelfNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (editingShelfIndex === null) return;
-
-    const newShelfNames = [...shelfNames];
-    newShelfNames[editingShelfIndex] = event.target.value;
-    setShelfNames(newShelfNames);
+    const { value } = event.target;
+    setShelfNames((prev) => {
+      const copy = [...prev];
+      copy[editingShelfIndex] = value; // allow empty string
+      return copy;
+    });
+    formik.setFieldValue('shelfNames', (prevFormik: string[]) => {
+      const copy = [...(prevFormik || shelfNames)];
+      copy[editingShelfIndex] = value;
+      return copy;
+    });
   };
 
   const saveShelfName = () => {
@@ -142,7 +163,7 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
         {/* Shelves List - Simple Cards */}
         {shelfCount > 0 && (
           <Box sx={{ mt: 3 }}>
-            <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
               Shelves ({shelfCount})
             </Typography>
             <Grid container spacing={2}>
@@ -150,15 +171,17 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
                 <Grid key={`shelf-${index}`} size={{ xs: 12, sm: 6, md: 4 }}>
                   <Box
                     sx={{
-                      p: 2,
+                      p: 1.5,
                       border: '1px solid',
                       borderColor: 'divider',
-                      borderRadius: 2,
-                      backgroundColor: 'background.paper',
-                      '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.02)',
-                        borderColor: 'primary.main',
-                      },
+                      borderRadius: 1,
+                      backgroundColor: 'transparent',
+                      transition: 'border-color 0.2s',
+                      minHeight: 48,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      '&:hover': { borderColor: 'text.disabled' },
                     }}
                   >
                     {editingShelfIndex === index ? (
@@ -166,30 +189,43 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
                         inputRef={shelfInputRef}
                         size="small"
                         fullWidth
-                        value={shelfNames[index] || `Shelf ${index + 1}`}
+                        value={
+                          shelfNames[index] !== undefined ? shelfNames[index] : `Shelf ${index + 1}`
+                        }
                         onChange={handleShelfNameChange}
                         onBlur={saveShelfName}
                         onKeyDown={handleShelfNameKeyDown}
                         autoFocus
-                        variant="outlined"
-                        InputProps={{
-                          sx: {
-                            color: 'primary.main',
+                        variant="standard"
+                        InputProps={{ disableUnderline: false }}
+                        sx={{
+                          maxWidth: 160,
+                          '& .MuiInputBase-root': {
                             fontWeight: 600,
+                            lineHeight: 1.2,
+                            py: 0,
+                          },
+                          '& input': {
+                            textAlign: 'center',
+                            p: 0,
                           },
                         }}
                       />
                     ) : (
                       <Typography
-                        color="primary"
-                        fontWeight="600"
+                        fontWeight={600}
                         sx={{
                           cursor: 'pointer',
                           textAlign: 'center',
+                          userSelect: 'none',
+                          m: 0,
+                          lineHeight: 1.2,
+                          fontSize: '0.9rem',
+                          width: '100%',
                         }}
                         onDoubleClick={() => handleShelfClick(index)}
                       >
-                        {shelfNames[index] || `Shelf ${index + 1}`}
+                        {shelfNames[index] !== undefined ? shelfNames[index] : `Shelf ${index + 1}`}
                       </Typography>
                     )}
                   </Box>

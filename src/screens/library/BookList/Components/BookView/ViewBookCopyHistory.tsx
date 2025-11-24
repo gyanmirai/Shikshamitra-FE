@@ -23,7 +23,7 @@ const ViewBookCopyHistoryTable: React.FC<ViewBookCopyHistoryTableProps> = ({
   });
 
   return (
-    <Box p={2}>
+    <Box p={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Grid container spacing={3}>
         <Grid size={12}>
           {memberData?.length ? (

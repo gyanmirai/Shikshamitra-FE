@@ -52,8 +52,8 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [reservationList] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [expandedBook, setExpandedBook] = useState(true);
-  const [expandedMemberAccordion, setExpandedMemberAccordion] = useState(true);
+  const [expandedBook, setExpandedBook] = useState(false);
+  const [expandedMemberAccordion, setExpandedMemberAccordion] = useState(false);
 
   const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
     type: 'query',
@@ -306,7 +306,6 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                     '&:before': { display: 'none' },
                     border: '1px solid',
                     borderColor: 'divider',
-                    mb: 2,
                   }}
                 >
                   <AccordionSummary
@@ -337,7 +336,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                 variant="caption"
                                 color="text.secondary"
                                 display="block"
-                                sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                               >
                                 Book Title:
                               </Typography>
@@ -345,7 +344,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                 variant="body2"
                                 fontWeight={600}
                                 color="text.primary"
-                                sx={{ fontSize: '0.75rem' }}
+                                sx={{ fontSize: '0.9rem' }}
                                 noWrap
                                 title={selectedBook.book.title}
                               >
@@ -362,7 +361,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                 variant="caption"
                                 color="text.secondary"
                                 display="block"
-                                sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                               >
                                 Accession No.:
                               </Typography>
@@ -370,7 +369,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                 variant="body2"
                                 fontWeight={600}
                                 color="text.primary"
-                                sx={{ fontSize: '0.75rem' }}
+                                sx={{ fontSize: '0.9rem' }}
                                 noWrap
                               >
                                 {selectedBook.accessionNo || '—'}
@@ -386,7 +385,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                 variant="caption"
                                 color="text.secondary"
                                 display="block"
-                                sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                               >
                                 Author:
                               </Typography>
@@ -394,7 +393,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                 variant="body2"
                                 fontWeight={600}
                                 color="text.primary"
-                                sx={{ fontSize: '0.75rem' }}
+                                sx={{ fontSize: '0.9rem' }}
                                 noWrap
                                 title={selectedBook.book.author}
                               >
@@ -504,7 +503,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Member Name:
                                 </Typography>
@@ -512,7 +511,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                   title={selectedMember.name}
                                 >
@@ -533,7 +532,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Member ID:
                                 </Typography>
@@ -541,7 +540,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
                                   {selectedMember.memberId || '—'}
@@ -557,7 +556,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Role:
                                 </Typography>
@@ -565,7 +564,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
                                   {selectedMember.role || '—'}
@@ -838,7 +837,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                           style={{
                             padding: '12px',
                             borderRadius: '4px',
-                            border: '1px solid #2196f3',
+                            backgroundColor: '#e3f2fd',
                             color: '#2196f3',
                             textAlign: 'center',
                           }}
@@ -860,7 +859,8 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
           variant="outlined"
           size="small"
           onClick={() => onClose(null, false)}
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          startIcon={<Iconify icon={GlobalIcons.cancel} width={16} height={10} />}
+          sx={{ minWidth: 120, px: 3 }}
         >
           Cancel
         </Button>
@@ -869,6 +869,7 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
           startIcon={<Iconify icon="mdi:arrow-u-left-top" width={16} height={16} />}
+          sx={{ minWidth: 120, px: 3 }}
         >
           Return
         </Button>

@@ -378,7 +378,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
       <DialogScrollContent>
         <Grid container spacing={3}>
           {/* Member ID */}
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(formik.touched.memberId && formik.errors.memberId)}>
               <TextField
                 label="Member ID *"
@@ -448,7 +448,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Member Name:
                                 </Typography>
@@ -456,7 +456,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
                                   {selectedMember.name || '—'}
@@ -476,7 +476,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Member ID:
                                 </Typography>
@@ -484,7 +484,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
                                   {selectedMember.memberId || '—'}
@@ -500,7 +500,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Role:
                                 </Typography>
@@ -508,7 +508,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
                                   {selectedMember.role || '—'}
@@ -599,7 +599,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
           })()}
 
           {/* Book Number */}
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField error={!!(formik.touched.bookNumber && formik.errors.bookNumber)}>
               <TextField
                 label="Accession no *"
@@ -673,7 +673,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Book Title:
                                 </Typography>
@@ -681,7 +681,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
                                   {selectedBook.title || '—'}
@@ -697,7 +697,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Accession No.:
                                 </Typography>
@@ -705,7 +705,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
                                   {selectedBook.bookNumber || '—'}
@@ -721,7 +721,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Author:
                                 </Typography>
@@ -729,7 +729,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
                                   {selectedBook.author || '—'}
@@ -913,19 +913,27 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          startIcon={<Iconify icon={GlobalIcons.cancel} width={16} height={10} />}
           onClick={() => onClose(null, false)}
           variant="outlined"
           size="small"
+          sx={{ minWidth: 120, px: 3 }}
         >
           Cancel
         </Button>
         <Button
-          startIcon={<Iconify icon={editData ? GlobalIcons.edit : GlobalIcons.submit} />}
+          startIcon={
+            <Iconify
+              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              width={16}
+              height={10}
+            />
+          }
           type="submit"
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          sx={{ minWidth: 120, px: 3 }}
         >
           {editData ? 'Update' : 'Submit'}
         </Button>

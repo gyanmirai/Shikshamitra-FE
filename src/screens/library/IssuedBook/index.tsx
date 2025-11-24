@@ -78,7 +78,8 @@ const IssueReturnBook = () => {
               onClick={() => issueDialog.onTrue()}
               size="small"
               startIcon={<Iconify icon="octicon:issue-closed-16" width={16} height={10} />}
-              variant="contained"
+              variant="outlined"
+              sx={{ minWidth: 120, px: 3 }}
             >
               Issue
             </Button>
@@ -87,6 +88,7 @@ const IssueReturnBook = () => {
               size="small"
               startIcon={<Iconify icon="mdi:arrow-u-left-top" width={16} height={10} />}
               variant="contained"
+              sx={{ minWidth: 120, px: 3 }}
             >
               Return
             </Button>

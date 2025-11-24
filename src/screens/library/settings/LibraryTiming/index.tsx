@@ -32,6 +32,7 @@ const LibraryTimingCreation = () => {
   const [timingData, setTimingData] = useState<any[]>([]);
   const [originalTimingData, setOriginalTimingData] = useState<any[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [sameAsSchoolApplied, setSameAsSchoolApplied] = useState(false);
 
   // Dialog control states
   const resetDialog = useBoolean();
@@ -64,6 +65,8 @@ const LibraryTimingCreation = () => {
           : timing
       )
     );
+    // Any manual change invalidates the applied flag
+    setSameAsSchoolApplied(false);
 
     // Validation for End Time when changed
     if (field === 'endTime') {
@@ -110,6 +113,7 @@ const LibraryTimingCreation = () => {
           : timing
       )
     );
+    setSameAsSchoolApplied(false);
     // Clear errors for this row
     setErrors((prev) => ({
       ...prev,
@@ -122,6 +126,7 @@ const LibraryTimingCreation = () => {
   const handleReset = () => {
     setTimingData(originalTimingData);
     setErrors({});
+    setSameAsSchoolApplied(false);
     resetDialog.onFalse();
     shikshaMitraToast.success({
       message: 'Library timing settings have been reset successfully',
@@ -167,10 +172,8 @@ const LibraryTimingCreation = () => {
         status: 'On',
       }))
     );
-
-    // Clear all errors
     setErrors({});
-
+    setSameAsSchoolApplied(true);
     shikshaMitraToast.success({
       message: 'Library hours set same as school hours',
     });
@@ -195,6 +198,7 @@ const LibraryTimingCreation = () => {
             startIcon={<Iconify icon="mdi:clock-outline" />}
             size="small"
             onClick={() => sameAsSchoolDialog.onTrue()}
+            disabled={sameAsSchoolApplied}
           >
             Same as School Hours
           </Button>
@@ -416,6 +420,7 @@ const LibraryTimingCreation = () => {
               handleSameAsSchoolHours();
               sameAsSchoolDialog.onFalse();
             }}
+            disabled={sameAsSchoolApplied}
           >
             Confirm
           </Button>

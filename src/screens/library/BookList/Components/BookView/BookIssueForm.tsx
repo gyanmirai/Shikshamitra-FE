@@ -293,7 +293,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Book Title:
                                 </Typography>
@@ -301,7 +301,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                   title={selectedBook.book.title}
                                 >
@@ -318,7 +318,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Accession No.:
                                 </Typography>
@@ -326,7 +326,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
                                   {selectedBook.accessionNo || '—'}
@@ -342,7 +342,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Author:
                                 </Typography>
@@ -350,7 +350,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                   title={selectedBook.book.author}
                                 >
@@ -513,7 +513,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Member Name:
                                 </Typography>
@@ -521,7 +521,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                   title={selectedMember.name}
                                 >
@@ -542,7 +542,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Member ID:
                                 </Typography>
@@ -550,7 +550,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
                                   {selectedMember.memberId || '—'}
@@ -566,7 +566,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="caption"
                                   color="text.secondary"
                                   display="block"
-                                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                  sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}
                                 >
                                   Role:
                                 </Typography>
@@ -574,7 +574,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                                   variant="body2"
                                   fontWeight={600}
                                   color="text.primary"
-                                  sx={{ fontSize: '0.75rem' }}
+                                  sx={{ fontSize: '0.9rem' }}
                                   noWrap
                                 >
                                   {selectedMember.role || '—'}
@@ -724,7 +724,8 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
           variant="outlined"
           size="small"
           onClick={() => onClose(null, false)}
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          startIcon={<Iconify icon={GlobalIcons.cancel} width={16} height={10} />}
+          sx={{ minWidth: 120, px: 3 }}
         >
           Cancel
         </Button>
@@ -735,6 +736,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
           }}
           size="small"
           variant="contained"
+          sx={{ minWidth: 120, px: 3 }}
         >
           Issue
         </Button>

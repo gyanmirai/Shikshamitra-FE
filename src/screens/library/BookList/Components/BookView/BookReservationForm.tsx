@@ -94,7 +94,7 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
               value={formik.values.memberId}
               onChange={(e) => handleMemberSearch(e.target.value)}
               label="Search Member Id"
-              placeholder="Enter Member Id"
+              placeholder="Enter Member Id(M001, M002...)"
               fullWidth
             />
           </Grid>
@@ -304,7 +304,8 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
           variant="outlined"
           size="small"
           onClick={() => onClose(null, false)}
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          startIcon={<Iconify icon={GlobalIcons.cancel} width={16} height={10} />}
+          sx={{ minWidth: 120, px: 3 }}
         >
           Cancel
         </Button>
@@ -312,7 +313,8 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
           variant="contained"
           size="small"
           onClick={() => formik.handleSubmit()}
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          startIcon={<Iconify icon={GlobalIcons.submit} width={16} height={10} />}
+          sx={{ minWidth: 120, px: 3 }}
         >
           Submit
         </Button>

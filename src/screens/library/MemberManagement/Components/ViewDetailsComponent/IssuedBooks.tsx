@@ -17,7 +17,7 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
   });
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomizableTable
         tableId="issued-books-table"
         noDataText="No Borrowed Books Data Found"
