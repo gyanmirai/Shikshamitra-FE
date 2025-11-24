@@ -24,7 +24,7 @@ import {
 
 import type { RootState } from 'src/redux/store';
 
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import { infoValidations } from './employee-form-validation';
 //   WorkExperienceFields,
@@ -72,8 +72,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   );
   // State to control edit mode
   const [isEdit, setIsEdit] = useState(false);
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-  const dispatch = useDispatch();
+  useSelector((state: RootState) => state.confirmPopup);
 
   const [isBackClick, setIsBackClick] = useState(false);
 

@@ -3,7 +3,6 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useCallback } from 'react';
 import { Cancel, CheckCircle } from '@mui/icons-material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -30,8 +29,6 @@ const ChargesTable = ({
   onReject: (data: IChargeData) => void;
   onRemove: (data: IChargeData) => void;
 }) => {
-  const theme = useTheme();
-
   // 🔹 Tab Counts
   const chargeCounts = useMemo(
     () => ({
@@ -90,6 +87,7 @@ const ChargesTable = ({
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const isPending = row.status === ChargesPaymentStatus.Pending;
       return (
         <MenuList>

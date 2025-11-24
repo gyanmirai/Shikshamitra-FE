@@ -121,23 +121,6 @@ const FeeCollectionTable = () => {
     receiptViewDialog.onTrue();
   };
 
-  const isFormValid = selectedFees.every((id) => {
-    const method = paymentMethods[id];
-    const details = paymentDetailsById[id];
-
-    if (!method) return false;
-
-    if (method === 'cheque') {
-      return details?.chequeNumber && details?.chequeDate && details?.bankName;
-    }
-
-    if (method === 'online') {
-      return details?.transactionId;
-    }
-
-    return true;
-  });
-
   return (
     <>
       <Scrollbar sx={{ p: 2, height: '100%' }}>

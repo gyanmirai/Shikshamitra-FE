@@ -9,17 +9,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Button, Typography, DialogActions } from '@mui/material';
 import { useGetAvailableRoutesQuery } from 'src/redux/transport/vehicle-management/route-management-api';
 
-interface Student {
-  grNo: string;
-  name: string;
-  class: string;
-  division: string;
-  stop: string;
-  pickupTime: string;
-  contactNo: string;
-  status: 'Active' | 'Inactive';
-}
-
 interface ViewStudentsProps {
   open: boolean;
   onClose: () => void;

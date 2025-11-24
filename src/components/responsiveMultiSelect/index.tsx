@@ -31,7 +31,7 @@ export function ResponsiveMultiSelect<T>({
   helperText,
 }: ResponsiveMultiSelectProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [maxVisibleChips, setMaxVisibleChips] = useState(1);
+  const [, setMaxVisibleChips] = useState(1);
 
   const selectedOptions = options.filter((opt) =>
     (value as string[]).includes(getOptionValue(opt))
@@ -79,7 +79,6 @@ export function ResponsiveMultiSelect<T>({
 
           const CHIP_MARGIN = 8;
           const CHIP_PADDING = 16;
-          const ESTIMATED_CHIP_HEIGHT = 32;
 
           // Estimate total width used by chips
           let usedWidth = 0;

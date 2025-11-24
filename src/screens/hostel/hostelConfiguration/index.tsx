@@ -30,11 +30,10 @@ const HostelConfiguration = () => {
   // State for managing the visibility of the delete confirmation dialog.
   const deleteDialog = useBoolean();
   const addRoomDialog = useBoolean();
-  const roomDetailsDialog = useBoolean();
   // Redux dispatch function for dispatching actions.
   const dispatch = useDispatch();
   // State for storing the hostel data.
-  const [hostelData, setHostelData] = useState<IHostelData[]>(hostelTableData);
+  const [hostelData] = useState<IHostelData[]>(hostelTableData);
   // Dynamically generated links for the breadcrumbs based on the 'open' state.
   const links = open
     ? [

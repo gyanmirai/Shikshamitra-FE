@@ -3,8 +3,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import React from 'react';
 import { FiberManualRecord } from '@mui/icons-material';
 import { CalendarView } from 'src/sections/calendar/view';
-import { Box , Grid, List, ListItem, Typography, ListItemText, ListItemIcon } from '@mui/material';
-
+import { Box, Grid, List, ListItem, Typography, ListItemText, ListItemIcon } from '@mui/material';
 
 const RoomAllocation = (props: TabComponentType) => (
   <Box>

@@ -73,7 +73,7 @@ interface FeeCollectionFormProps {
 }
 
 const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onClose }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery] = useState('');
 
   const filteredFees = pendingFees.filter(
     (fee) =>

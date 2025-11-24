@@ -50,22 +50,22 @@ const FinanceTaxSettingTab = () => {
   // State to control dialog open/close
   const [open, setOpen] = useState(false);
   // State to store selected region data
-  const [selectedRegion, setSelectedRegion] = useState([]);
+  // const [, setSelectedRegion] = useState([]);
   // State for delete confirmation dialog
   const dialogForDeleteConfirmation = useBoolean();
   // State for duplicate entry dialog (currently disabled)
   // const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
 
   // Handler to view categories for a specific region
-  const handleViewCategories = (region: any) => {
-    setSelectedRegion(region);
-    setOpen(true);
-  };
+  // const handleViewCategories = (region: any) => {
+  //   setSelectedRegion(region);
+  //   setOpen(true);
+  // };
 
   // Handler to close the main dialog
-  const handleClose = () => {
-    setOpen(false);
-  };
+  // const handleClose = () => {
+  //   setOpen(false);
+  // };
 
   // Handler to close dialog and reset edit mode
   const closeDialog = () => {

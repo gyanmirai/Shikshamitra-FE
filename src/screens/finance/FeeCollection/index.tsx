@@ -21,7 +21,7 @@ const FeeCollection = () => {
   /**
    * Hook to fetch academic year data
    */
-  const { data: feeCollectionData, isLoading: yearLoading } = useQueryAndMutation({
+  const { data: feeCollectionData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFinanceFeeCollectionQuery,
   });

@@ -22,15 +22,11 @@ interface FinanceStudentFeeTabProps {
 const FinanceStudentFeeTab: React.FC<FinanceStudentFeeTabProps> = ({ studentId = '' }) => {
   // Get and set search params (studentId, class, division)
 
-  const { getParam, getAllParams, setParam } = useCustomSearchParams({ studentId });
+  const { getAllParams, setParam } = useCustomSearchParams({ studentId });
 
   const searchParams = getAllParams();
 
   // Update studentId in the URL
-  const handleStudentChange = (newStudentId: string) => {
-    setParam('studentId', newStudentId);
-    // setSearchParams({ studentId: newStudentId });
-  };
 
   // States for managing organization/stage selection
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -43,11 +39,7 @@ const FinanceStudentFeeTab: React.FC<FinanceStudentFeeTabProps> = ({ studentId =
   // States for managing division selection
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Effect to update organizations when medium changes
   useEffect(() => {

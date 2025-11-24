@@ -2,11 +2,7 @@
 
 import React from 'react';
 import DataTable from 'src/components/commonTable';
-import {
-  Box,
-  Grid,
-  Typography,
-} from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 
 import { StudentEnrollmentCard } from '../enrollment/dashboard/overview';
 

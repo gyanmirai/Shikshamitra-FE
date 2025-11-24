@@ -47,7 +47,7 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 
   // const pathname = usePathname();
 
-  const { user, employee } = useSelector((state: any) => state.auth);
+  const { employee } = useSelector((state: any) => state.auth);
 
   const [open, setOpen] = useState(false);
 

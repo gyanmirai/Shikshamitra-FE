@@ -31,9 +31,8 @@ const HolidayManagement = (props: TabComponentType) => {
   });
 
   const [editingHoliday, setEditingHoliday] = useState<IHoliday | null>(null);
-  const [viewHoliday, setViewHoliday] = useState<IHoliday | null>(null);
-  const view_dialog = useBoolean();
-  const [deleteHoliday, setDeleteHoliday] = useState('');
+  // const [viewHoliday, setViewHoliday] = useState<IHoliday | null>(null);
+  const [, setDeleteHoliday] = useState('');
   const confirm_dialog = useBoolean();
   const publish_modal = useBoolean();
   const [publishingHoliday, setPublishingHoliday] = useState<IHoliday | null>(null);

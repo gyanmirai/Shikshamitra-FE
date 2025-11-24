@@ -15,7 +15,7 @@ const ActivityDashboardGroup = () => {
   const [division1, setDivision1] = useState<string>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

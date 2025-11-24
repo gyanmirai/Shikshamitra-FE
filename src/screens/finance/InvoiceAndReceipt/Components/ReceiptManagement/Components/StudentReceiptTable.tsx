@@ -13,7 +13,7 @@ export default function StudentTableView({
 }: {
   selectedStudent: IFeeReceipt | null;
 }) {
-  const { data: receiptData, isLoading: boardLoading } = useQueryAndMutation({
+  const { data: receiptData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentReceiptDataQuery,
   });

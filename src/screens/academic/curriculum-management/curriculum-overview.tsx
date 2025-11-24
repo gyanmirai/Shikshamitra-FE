@@ -104,20 +104,20 @@ const CurriculumData: TCurriculum[] = [
   },
 ];
 
-const subjectData = {
-  id: 1,
-  subjectName: 'Mathematics',
-  subjectCode: 'Math01',
-  scheduleDate: dayjs('2024-10-28'),
-  description: '',
-  subjectColor: '',
-  className: '1',
-  primaryTeacher: 'Ms. Johnson',
-  secondaryTeacher: ['Mr. Smith'],
-  prerequisites: 'Basic counting skills',
-  learningGoal: 'Develop understanding of numbers, addition, and subtraction.',
-  status: 'Publish',
-};
+// const subjectData = {
+//   id: 1,
+//   subjectName: 'Mathematics',
+//   subjectCode: 'Math01',
+//   scheduleDate: dayjs('2024-10-28'),
+//   description: '',
+//   subjectColor: '',
+//   className: '1',
+//   primaryTeacher: 'Ms. Johnson',
+//   secondaryTeacher: ['Mr. Smith'],
+//   prerequisites: 'Basic counting skills',
+//   learningGoal: 'Develop understanding of numbers, addition, and subtraction.',
+//   status: 'Publish',
+// };
 
 const CurriculumOverview = (props: TabComponentType) => {
   const { setSearchParams } = props;
@@ -126,7 +126,6 @@ const CurriculumOverview = (props: TabComponentType) => {
   const [isEdit, setIsEdit] = useState(false);
   // const dialog = useBoolean();
   const [open, setOpen] = useState(false);
-  const showDialog = useBoolean();
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     id: number;
     newValue: string;
@@ -189,7 +188,7 @@ const CurriculumOverview = (props: TabComponentType) => {
     confirmPublishDialog.onTrue();
   };
 
-  const handleSubjectClick = () => {};
+  // const handleSubjectClick = () => {};
 
   return (
     <Box>

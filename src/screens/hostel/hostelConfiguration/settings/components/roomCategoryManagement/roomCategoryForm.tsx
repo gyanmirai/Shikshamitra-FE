@@ -8,7 +8,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
-const facilitiesOptions = ['AC', 'Wi-Fi', 'Study Table', 'Attached Bathroom'];
+// const facilitiesOptions = ['AC', 'Wi-Fi', 'Study Table', 'Attached Bathroom'];
 
 const AddRoomCategoryForm = ({ dialog, onClose, editData }: any) => {
   // Initialize formik form with validation and submission handling

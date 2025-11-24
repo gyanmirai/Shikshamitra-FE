@@ -15,7 +15,7 @@ import { EmployeeDashboardCard } from 'src/screens/hr/dashboard/dashboard';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const ExaminationDashboardOverviewComponent = (props: TabComponentType) => {
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

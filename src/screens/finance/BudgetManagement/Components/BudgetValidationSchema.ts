@@ -47,6 +47,7 @@ export const budgetValidationSchema = (currentYear: any) => [
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       )
       .required('End Date is required')
+      // eslint-disable-next-line func-names
       .test('is-after-start', 'End date must be after Start date', function (value) {
         const { startDate } = this.parent;
         return dayjs(value as any).isAfter(dayjs(startDate));
@@ -75,6 +76,7 @@ export const budgetValidationSchema = (currentYear: any) => [
           amount: Yup.number()
             .min(1, 'Amount must be greater than 0')
             .required('Amount is required')
+            // eslint-disable-next-line func-names
             .test('budget-limit', function (value) {
               const { path, createError, from } = this;
               const allValues = from && from.length > 0 ? from[from.length - 1]?.value : undefined;

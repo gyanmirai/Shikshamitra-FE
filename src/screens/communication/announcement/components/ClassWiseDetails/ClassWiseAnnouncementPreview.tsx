@@ -11,8 +11,7 @@ interface Props {
 }
 
 export default function ClassWiseAnnouncementCard({ formikValues }: Props) {
-  const { title, description, createdBy, cratedOn, type, importance_level, startDate } =
-    formikValues;
+  const { title, description, createdBy, type, importance_level, startDate } = formikValues;
 
   return (
     <Card

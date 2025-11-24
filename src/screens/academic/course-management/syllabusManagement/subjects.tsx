@@ -5,7 +5,7 @@
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 // Import necessary types
-import type { TabComponentType } from 'src/screens/hr/leave-request';
+// import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 // Import Material-UI icons and components
 import { Add } from '@mui/icons-material';
@@ -37,23 +37,18 @@ import ChapterDocuments from './components/chapterDocuments';
 
 import type { IChapter } from './type';
 
-const Subjects = (props: TabComponentType) => {
+const Subjects = () => {
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // State for managing selected subject
   const [subject, setSubject] = useState<string>('');
   // State for managing dialog open/close
-  const [open, setOpen] = useState(false);
   // Custom hook for chapter dialog visibility
   const chapterDialog = useBoolean();
   const viewDocumentDialog = useBoolean();
@@ -61,17 +56,17 @@ const Subjects = (props: TabComponentType) => {
   // Custom hook for add chapter dialog visibility
   const addChapterDialog = useBoolean();
   // State for storing subject data with initial temp data
-  const [subjectData, setSubjectData] = useState<any>(subjectTempData);
+  const [subjectData] = useState<any>(subjectTempData);
   // State for storing subject table data
   const [chapterData, setChapterData] = useState<IChapter[]>(chapterTableData);
   // State for storing dialog data
-  const [dialogData, setDialogData] = useState<any>([]);
+  const [, setDialogData] = useState<any>([]);
   // State for managing selected chapter
   const [selectedChapter, setSelectedChapter] = useState<IChapter | null>(null);
   // State for tracking edit mode
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   // Query hook for fetching class data
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
@@ -101,7 +96,7 @@ const Subjects = (props: TabComponentType) => {
 
   // Menu actions for table rows
   const actions = useCallback(
-    ({ popover: pop, row }: any) => (
+    ({ popover: pop }: any) => (
       <>
         {' '}
         <MenuList>

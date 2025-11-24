@@ -12,9 +12,9 @@ import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytic
 
 const SubjectPerformanceComparison = () => {
   const [classes1, setClasses1] = useState('');
-  const [division, setDivision] = useState('');
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const [, setDivision] = useState('');
+  const [, setDivisionOptions] = useState<Division[]>([]);
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

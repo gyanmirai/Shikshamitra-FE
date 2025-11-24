@@ -7,7 +7,6 @@ import { useSelector } from 'react-redux';
 import { Save } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -107,7 +106,6 @@ const studentData = {
 
 const AssignElectiveSubject = () => {
   // Theme hook for Material-UI styling
-  const theme = useTheme();
 
   // State for managing class data
   const [allClass, setAllClass] = useState<Standards[]>([]); // Stores all available classes
@@ -128,11 +126,7 @@ const AssignElectiveSubject = () => {
   const saveDialog = useBoolean(); // Controls visibility of save confirmation dialog
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Effect to initialize classes when medium changes
   // Flattens education medium stages to get all available classes

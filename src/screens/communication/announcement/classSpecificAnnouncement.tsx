@@ -36,7 +36,7 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
   // State to store the announcement being published
   const [publishingAnnouncement, setPublishingAnnouncement] =
     useState<IClassWiseAnnouncement | null>(null);
-  const [removeAnnouncement, setRemoveAnnouncement] = useState<IClassWiseAnnouncement | null>(null);
+  const [, setRemoveAnnouncement] = useState<IClassWiseAnnouncement | null>(null);
   // State to store the ID of announcement to be deleted
   const [deleteAnnouncement, setDeleteAnnouncement] = useState<IClassWiseAnnouncement | null>(null);
   // State to store the announcement being edited

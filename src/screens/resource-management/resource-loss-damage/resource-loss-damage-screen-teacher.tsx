@@ -13,7 +13,7 @@ import ResourceLossDamageTableTeacher from './component/resource-loss-damage-tab
 import type { IResourceIncidentFormValues } from './resource-loss-damage-interface';
 
 const ResourceLossDamageScreenTeacher = () => {
-  const addResourceLossDamagedDialog = useBoolean();
+  // const addResourceLossDamagedDialog = useBoolean();
 
   // Controls the visibility of the Add/Edit visitor dialog
   const [open, setOpen] = useState(false);
@@ -22,6 +22,7 @@ const ResourceLossDamageScreenTeacher = () => {
   const [isEdit, setEdit] = useState(false);
 
   // Holds the visitor data selected for editing; null when adding a new visitor
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedVisitor, setSelectedVisitor] = useState<IResourceIncidentFormValues | null>(null);
 
   // Manages the open/close state of the delete confirmation dialog

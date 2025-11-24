@@ -1,6 +1,5 @@
 import { Box, Typography } from '@mui/material';
 import React, { useState, useEffect } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
@@ -16,40 +15,12 @@ const FinanceFeeRefundedViewDialog: React.FC<IFinanceFeeRefundedViewDialogProps>
   selectedData,
   onClose,
 }) => {
-  const dialog = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState(data);
-  const [isEdit, setIsEdit] = useState(false);
   // const [tableData, setTableData] = useState(data);
-  const [paymentHistoryData, setPaymentHistoryData] = useState(data);
+  const [paymentHistoryData] = useState(data);
 
-  const handleRefundChange = (index: any, value: any) => {
-    const newData = [...paymentHistoryData];
-    const existingIndex = newData.findIndex((val) => val.paymentId === index);
-    newData[existingIndex].refundAmount = value;
-    setPaymentHistoryData(newData);
-  };
-
-  const totalRefundAmount: number = paymentHistoryData.reduce(
-    (total: any, item: any) => total + Number(item.refundAmount),
-    0
-  );
-
-  const handleSave = () => {};
-
-  const closeDialog = () => {
-    dialog.onFalse();
-  };
-
-  const handleDilog = () => {
-    setIsEdit(true);
-    setSelectedEntry(paymentHistoryData);
-
-    dialog.onTrue();
-  };
-
-  const [tuitionFeeRefundAmount, setTuitionFeeRefundAmount] = useState('');
-  const [libraryFeeRefundAmount, setlibraryFeeRefundAmount] = useState('');
-  const [totalFeeRefundAmount, setTotalFeeRefundAmount] = useState(0);
+  const [tuitionFeeRefundAmount] = useState('');
+  const [libraryFeeRefundAmount] = useState('');
+  const [, setTotalFeeRefundAmount] = useState(0);
 
   const parseNumericValue = (formattedValue: string) =>
     parseFloat(formattedValue.replace(/,/g, '')) || 0;
@@ -59,14 +30,6 @@ const FinanceFeeRefundedViewDialog: React.FC<IFinanceFeeRefundedViewDialogProps>
     const b = parseNumericValue(libraryFeeRefundAmount);
     setTotalFeeRefundAmount(a + b);
   }, [tuitionFeeRefundAmount, libraryFeeRefundAmount]);
-
-  const handleChangeForTuition = (formattedValue: string, numericValue: number) => {
-    setTuitionFeeRefundAmount(formattedValue);
-  };
-
-  const handleChangeForLibrary = (formattedValue: string, numericValue: number) => {
-    setlibraryFeeRefundAmount(formattedValue);
-  };
 
   return (
     <CustomDialog

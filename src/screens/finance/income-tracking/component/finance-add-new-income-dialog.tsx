@@ -36,7 +36,7 @@ const FinanceAddNewIncomeDialog: React.FC<IFinanceAddNewIncomeDialogProps> = ({
   allData,
 }) => {
   // State to track and show message when an entry already exists
-  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState<boolean>(false);
+  const [, setShowExistingEntryMessage] = useState<boolean>(false);
 
   // Get changes state from redux store to track form modifications
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);

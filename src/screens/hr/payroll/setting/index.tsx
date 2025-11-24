@@ -50,7 +50,6 @@ const PayrollSettingScreen = () => {
   const isEarningComponentOpen = useBoolean();
   const isDeductionComponentOpen = useBoolean();
   const isSalaryStructureOpen = useBoolean();
-  const isPFOpen = useBoolean();
 
   const { getAllParams, setParam } = useCustomSearchParams({ tab: 'earningComponent' });
 

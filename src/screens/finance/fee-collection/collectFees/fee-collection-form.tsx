@@ -236,7 +236,7 @@ const FeeNewCollectionForm: React.FC<FeeNewCollectionFormProps> = ({
     },
   });
   const [selectedFees, setSelectedFees] = useState<any[]>([]);
-  const [selectedStudent, setSelectedStudent] = useState<any>(students[0]);
+  const [selectedStudent] = useState<any>(students[0]);
 
   // Extract fee types dynamically from selected student
   const feeOptions = isFromStudentAdmissionFlow
@@ -299,10 +299,6 @@ const FeeNewCollectionForm: React.FC<FeeNewCollectionFormProps> = ({
   };
 
   // Handle Deleting a Fee Entry
-  const handleDeleteFee = (index: number) => {
-    const updatedFees = selectedFees.filter((_, i) => i !== index);
-    setSelectedFees(updatedFees);
-  };
 
   return (
     <CustomDialog maxWidth="lg" title="Fee Collection" open={dialogValue} handleClose={onClose}>

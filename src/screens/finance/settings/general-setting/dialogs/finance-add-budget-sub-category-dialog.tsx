@@ -32,7 +32,6 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
     errors, // Validation errors
     touched, // Fields that have been touched/visited
     handleSubmit, // Form submission handler
-    handleChange, // Input change handler
     handleBlur, // Input blur handler
     isSubmitting, // Form submission status
     setSubmitting, // Function to update submission status
@@ -47,7 +46,6 @@ const AddBudgetSubcategoryDialog: React.FC<IFinanceAddBudgetSubcategoryDialogPro
   });
 
   // Track validation states for specific fields
-  const isCategoryError = touched.budgetCategoryId && Boolean(errors.budgetCategoryId);
   const isSubcategoryNameError =
     touched.budgetSubcategoryName && Boolean(errors.budgetSubcategoryName);
   return (

@@ -9,7 +9,7 @@ import { useGetPaymentHistoryQuery } from 'src/redux/feeCollection/paymentHistor
 import type { IStudentFee } from '../type';
 
 const PaymentHistory = ({ student }: { student: IStudentFee | null }) => {
-  const { data: feeHistoryData, isLoading: yearLoading } = useQueryAndMutation({
+  const { data: feeHistoryData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPaymentHistoryQuery,
   });

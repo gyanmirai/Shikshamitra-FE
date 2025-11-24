@@ -30,7 +30,7 @@ const initialHomeworkType: IHomeworkAssignmentType[] = [
 ];
 const HomeworkTypeSettingCard = () => {
   // State for managing homework type data - stores array of homework types (Practice, Reading Material, etc.)
-  const [homeworkTypeData, setHomeworkTypeData] = useState(initialHomeworkType);
+  const [homeworkTypeData] = useState(initialHomeworkType);
   // Boolean state to track whether we are in edit mode or create mode
   const [isEdit, setIsEdit] = useState(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);

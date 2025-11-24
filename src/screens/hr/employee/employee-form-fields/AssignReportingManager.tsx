@@ -10,7 +10,7 @@ import { CardActions } from './InformationFields';
 import type { FieldsType } from './types';
 
 const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: any) => {
-  const { values, errors, touched, handleChange, handleBlur, setFieldValue } = formik;
+  const { values, errors, touched, setFieldValue } = formik;
 
   const { data: employees, isLoading } = useQueryAndMutation({
     type: 'query',

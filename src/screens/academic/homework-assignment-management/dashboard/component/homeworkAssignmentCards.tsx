@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 
 const HomeworkAssignmentCards = () => {
-  const [hoveredResource, setHoveredResource] = useState<string | null>(null);
+  // const [hoveredResource, setHoveredResource] = useState<string | null>(null);
   const [view, setView] = useState('assignment');
 
   const actions = useCallback(

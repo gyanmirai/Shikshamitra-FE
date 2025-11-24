@@ -14,7 +14,7 @@ import { AnalyticsCurrentVisits } from 'src/sections/overview/analytics/analytic
 const StudentCoursePerfoemance = () => {
   const [classes3, setClasses3] = useState<string>('');
   const [classes4, setClasses4] = useState<string>('');
-  const [classes5, setClasses5] = useState<string>('All');
+  // const [classes5, setClasses5] = useState<string>('All');
   const [division, setDivision] = useState<any>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const { data: classData, isLoading } = useQueryAndMutation({

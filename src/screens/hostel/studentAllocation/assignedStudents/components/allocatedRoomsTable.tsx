@@ -20,7 +20,7 @@ import type { IHostelAllocationRoom } from '../../type';
 
 const AllocatedRoomsTable = () => {
   // Initialize room data with data from hostelRoomData.json
-  const [roomData, setRoomData] = useState<IHostelAllocationRoom[]>(hostelRoomData);
+  const [roomData] = useState<IHostelAllocationRoom[]>(hostelRoomData);
   const [selectedRoom, setSelectedRoom] = useState<IHostelAllocationRoom | null>(null);
   const viewDetailsDialog = useBoolean();
   return (

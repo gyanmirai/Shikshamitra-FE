@@ -45,18 +45,6 @@ const QuizManagement = (props: TabComponentType) => {
   const viewResultDialog = useBoolean();
 
   // Dynamic breadcrumb navigation links based on current view (form or list)
-  const links = open
-    ? [
-        { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Examination', href: '/academic/scheduleExam' },
-        { name: 'Quiz Management' },
-        { name: 'Quiz Form' },
-      ]
-    : [
-        { name: 'Academics', href: '/academic/dashboard' },
-        { name: 'Examination', href: '/academic/scheduleExam' },
-        { name: 'Quiz Management' },
-      ];
 
   /**
    * Handles the deletion of a quiz from the quiz data

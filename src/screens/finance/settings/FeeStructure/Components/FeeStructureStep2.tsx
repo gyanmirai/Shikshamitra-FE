@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
@@ -32,7 +31,6 @@ import FeeGeneralInfoCard from './GeneralFeeInfoCard';
 import AddFeeStructureDialog from './FeeStructureDialog';
 
 const FeeStructureStep = ({ formik }: { formik: any }) => {
-  const theme = useTheme();
   const [editFeeStructure, setEditFeeStructure] = useState<{
     className: string;
     index: number;
@@ -41,10 +39,8 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
   const [selectedFeeStructure, setSelectedFeeStrcture] = useState<any>(null);
   const addNewFeeStructureDialog = useBoolean();
   const [selectedClass, setSelectedClass] = useState('');
-  console.log('formik erroesss====', formik.errors);
-  console.log('formik values======', formik.values);
 
-  const [currentClickableClass, setCurrentClickableClass] = useState<string | null>(null);
+  const [, setCurrentClickableClass] = useState<string | null>(null);
   const addFeeHeadDialog = useBoolean();
 
   return (

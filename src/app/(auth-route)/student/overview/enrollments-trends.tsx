@@ -9,9 +9,9 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 
 const EnrollmentsTrends = () => {
   const [selectedClass, setSelectedClass] = useState('1');
-  const [divisionOptions, setDivisionOptions] = useState([]);
+  // const [divisionOptions, setDivisionOptions] = useState([]);
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
@@ -100,9 +100,9 @@ export function AttendanceGraph({
 }: Props3) {
   const theme = useTheme();
 
-  const [selectedClass, setSelectedClass] = useState('');
+  // const [selectedClass, setSelectedClass] = useState('');
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

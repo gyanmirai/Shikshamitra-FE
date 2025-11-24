@@ -30,7 +30,6 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
     },
   });
   console.log('ree refund data', data);
-  const isDisabled = data !== null && isEdit === false;
   return (
     <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

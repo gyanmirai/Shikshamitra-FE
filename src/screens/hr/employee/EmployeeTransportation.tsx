@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify/iconify';
 import { Box, Grid, Card, Stack, Button, Typography, CardContent } from '@mui/material';
 
@@ -8,8 +7,6 @@ interface EmployeeTransportationProps {
 }
 
 const EmployeeTransportation = ({ employee }: EmployeeTransportationProps) => {
-  const theme = useTheme();
-
   // Mock transport data (replace with real employee transport data from API)
   const transport = {
     routeName: 'Route A-1',

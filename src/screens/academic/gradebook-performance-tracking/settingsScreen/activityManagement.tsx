@@ -503,12 +503,12 @@ const dummyStudentData = [
 
 const AssignStudents = () => {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [studentData, setStudentData] = useState(dummyStudentData);
+  const [studentData] = useState(dummyStudentData);
   const [classes, setClasses] = useState<string>('');
-  const [division, setDivision] = useState<string>('');
+  const [division] = useState<string>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   const [showStudents, setShowStudents] = useState(false);
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
@@ -552,8 +552,8 @@ const AssignStudents = () => {
             options={divisionOptions}
             value={division}
             onChange={(val) => {
-              const selectedDivision = divisionOptions.find((i: Division) => val === i.id);
-              setDivision(val as string);
+              // const selectedDivision = divisionOptions.find((i: Division) => val === i.id);
+              // setDivision(val as string);
             }}
             formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
           />

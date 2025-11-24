@@ -19,7 +19,7 @@ import StudentTableView from './Components/StudentReceiptTable';
 
 import type { IFeeReceipt } from './type';
 
-const ReceiptManagement = ({ addInvoiceDialog }: any) => {
+const ReceiptManagement = () => {
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
@@ -35,16 +35,12 @@ const ReceiptManagement = ({ addInvoiceDialog }: any) => {
 
   // Query hook to fetch invoice data from the API
   // Returns invoice data and loading state
-  const { data: receiptData, isLoading: boardLoading } = useQueryAndMutation({
+  const { data: receiptData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReceiptDataQuery,
   });
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {

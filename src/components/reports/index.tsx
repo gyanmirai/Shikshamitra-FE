@@ -137,7 +137,6 @@ export const ReportHeader = memo(
     </View>
   )
 );
-const ReportFooter = () => <div>ReportFooter</div>;
 
 const tableStyles = StyleSheet.create({
   page: {

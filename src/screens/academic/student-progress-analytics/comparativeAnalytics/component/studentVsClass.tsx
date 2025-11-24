@@ -2,7 +2,6 @@
 
 import type { Division, Standards } from 'src/types/school';
 
-import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
 import { Box, Grid, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
@@ -14,11 +13,10 @@ const StudentVsClass = () => {
   const [selectedStudent, setSelectedStudent] = useState('');
   const [division, setDivision] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  const theme = useTheme();
 
   useEffect(() => {
     if (classData?.items?.length) {

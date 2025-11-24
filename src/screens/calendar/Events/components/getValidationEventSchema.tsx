@@ -61,6 +61,7 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
       .test(
         'is-after-start-date',
         'End Date-Time cannot be before Start Date-Time',
+        // eslint-disable-next-line func-names
         function (value) {
           const { startDate } = this.parent;
           if (!value || !startDate) return true;
@@ -136,6 +137,7 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
     startTime: Yup.mixed()
       .nullable()
 
+      // eslint-disable-next-line func-names
       .test('start-before-end', 'Start Time must be before End Time', function (value) {
         const { endTime, type } = this.parent;
         if (type === 'meeting' && !value) {
@@ -148,6 +150,7 @@ export const eventAnnouncementValidationSchema = (currentYear: any) =>
     endTime: Yup.mixed()
       .nullable()
 
+      // eslint-disable-next-line func-names
       .test('end-after-start', 'End Time must be after Start Time', function (value) {
         const { startTime, type } = this.parent;
         if (type === 'meeting' && !value) {

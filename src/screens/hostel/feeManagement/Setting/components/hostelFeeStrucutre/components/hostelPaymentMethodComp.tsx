@@ -18,7 +18,7 @@ const HostelPaymentMethodComponent = (props: TabComponentType) => {
   // State to store the ID of the payment method being edited
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null);
   // State to store the name of the payment method being deleted
-  const [selectedPaymentMethodName, setSelectedPaymentMethodName] = useState<string | null>(null);
+  const [, setSelectedPaymentMethodName] = useState<string | null>(null);
   // State to store all payment methods
   const [data, setData] = useState<{ id: string; paymentMethodName: string }[]>([]);
   // Hook to manage delete confirmation dialog visibility

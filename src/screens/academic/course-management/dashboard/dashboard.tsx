@@ -3,7 +3,6 @@
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { Box } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -15,20 +14,13 @@ import StudentPerformance from './component/studentPerformance';
 import StudentCoursePerfoemance from './component/studentCoursePerfoemance';
 
 const Dashboard = (props: TabComponentType) => {
-  const theme = useTheme();
   const [classes3, setClasses3] = useState<string>('');
   const [classes4, setClasses4] = useState<string>('');
-  const [classes5, setClasses5] = useState<string>('All');
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-
-  const classOptions = React.useMemo(() => {
-    const allOption = { name: 'All', value: 'all' };
-    return [allOption, ...(classData?.items || [])];
-  }, [classData]);
 
   useEffect(() => {
     if (classData?.items?.length) {

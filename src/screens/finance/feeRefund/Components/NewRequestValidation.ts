@@ -20,6 +20,7 @@ export const refundValidationSchema = Yup.object().shape({
     .test(
       'refund-less-than-amountApplicable',
       'Refund Amount cannot exceed Amount Applicable',
+      // eslint-disable-next-line func-names
       function (value) {
         const { amountApplicable } = this.parent;
         if (!value || !amountApplicable) return true;

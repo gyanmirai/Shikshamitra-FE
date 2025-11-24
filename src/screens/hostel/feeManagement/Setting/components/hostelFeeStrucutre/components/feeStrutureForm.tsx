@@ -21,7 +21,7 @@ import HostelPaymentMethodDialog from './hostelPaymentMethod';
 import { hostelFeeStrctureValidationSchema } from './validationSchema';
 
 import type {
-  IFeeStructure,
+  // IFeeStructure,
   IHostelFormikValue,
   IHostelFinanceAddFeeCategorySettingDialogProps,
 } from '../hostelFeeInterface';
@@ -38,9 +38,9 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // State to store the list of fee structures
-  const [feeHeadListForFeeStructure, setFeeHeadListForFeeStructure] = useState<IFeeStructure[]>([]);
+  // const [feeHeadListForFeeStructure, setFeeHeadListForFeeStructure] = useState<IFeeStructure[]>([]);
   // State to control whether receipt book & grade fields should be disabled
-  const [isFieldsDisabled, setIsFieldsDisabled] = useState(false);
+  const [isFieldsDisabled] = useState(false);
 
   // Initial form values with default/empty values
   const initialValues = useMemo<IHostelFormikValue>(
@@ -85,15 +85,14 @@ const HostelFeeCategorySettingDialog: React.FC<IHostelFinanceAddFeeCategorySetti
   };
 
   // Handler to remove fee structure from list
-  const handleDelete = (index: number) => {
-    const updatedFeeHeadList = [...feeHeadListForFeeStructure];
-    updatedFeeHeadList.splice(index, 1);
-    setFeeHeadListForFeeStructure(updatedFeeHeadList);
-  };
+  // const handleDelete = (index: number) => {
+  //   const updatedFeeHeadList = [...feeHeadListForFeeStructure];
+  //   updatedFeeHeadList.splice(index, 1);
+  //   setFeeHeadListForFeeStructure(updatedFeeHeadList);
+  // };
 
   const handleSubmit = () => {};
 
-  const receiptBookDialog = useBoolean();
   const feeHeadDialog = useBoolean();
   const paymentMethodDialog = useBoolean();
   return (

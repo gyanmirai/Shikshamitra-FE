@@ -22,6 +22,7 @@ import type { ILeaveType } from './type';
 const LeaveTypeSetting = (props: TabComponentType) => {
   const dialog = useBoolean();
   const dialogForDeleteConfirmation = useBoolean();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_open, setOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<ILeaveType | null>(null);
 

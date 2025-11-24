@@ -33,7 +33,7 @@ const ClassProgress = (props: TabComponentType) => {
   const [division, setDivision] = useState('');
   const [subject, setSubject] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

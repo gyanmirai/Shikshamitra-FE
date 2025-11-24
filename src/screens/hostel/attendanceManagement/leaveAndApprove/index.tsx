@@ -36,6 +36,7 @@ const LeaveAndApprove = () => {
   const [selectedEntry, setSelectedEntry] = useState<IStudentAttendanceLeave | null>(null);
   // State to store the ending date of the leave request, initialized with current date
   const [toDate, setToDate] = useState<Dayjs | null>(dayjs()); // State for storing the selected hostel
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_hostel, setHostel] = useState<string>('');
   // Dialog state for confirming rejection of leave requests
   // const confirmRejectDialog = useBoolean();
@@ -47,6 +48,7 @@ const LeaveAndApprove = () => {
   // Dialog state for managing leave request form visibility
   const leaveRequestDialog = useBoolean();
   // State for division options based on selected class
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_student, setStudent] = useState<string>('');
   // State for managing the visibility of the hostel form.
   const [open, setOpen] = useState(false);

@@ -76,6 +76,7 @@ export const getCurriculumValidationSchema = (showField: string[], currentYear: 
         'To Date is required',
         (value) => value && dayjs(value as any).isValid()
       )
+      // eslint-disable-next-line func-names
       .test('is-after-start-date', 'To Date cannot be before From Date', function (value) {
         const { fromDate } = this.parent;
         if (!value || !fromDate) return true;

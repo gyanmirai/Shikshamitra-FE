@@ -63,6 +63,7 @@ const FileUploader = <T extends boolean = true>({
 }: FileUploaderProps<T>) => {
   const { sx: parentSx = {}, ...remainingProps } = parentsProps;
   const { sx = {}, ...dragRemainingProps } = dragProps;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const viewDialog = useBoolean();
   const [previewFile, setPreviewFile] = useState<File | FileData | null>(null);
   const [showAllDialog, setShowAllDialog] = useState<boolean>(false);
@@ -99,6 +100,7 @@ const FileUploader = <T extends boolean = true>({
       let size = 0;
 
       if (newFile instanceof File) {
+        // eslint-disable-next-line prefer-destructuring
         size = newFile.size;
       } else if (typeof newFile === 'object' && 'size' in newFile) {
         size = (newFile as FileData).size ?? 0;
@@ -125,6 +127,7 @@ const FileUploader = <T extends boolean = true>({
     } else if (file.base64) {
       url = file.base64;
     } else if (file.url) {
+      // eslint-disable-next-line prefer-destructuring
       url = file.url;
     } else {
       console.error('Invalid file format for download');
@@ -219,6 +222,7 @@ const FileUploader = <T extends boolean = true>({
     </Card>
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const hasFiles = Array.isArray(value) ? value.length > 0 : !!value;
 
   return (
@@ -376,10 +380,3 @@ const FileUploader = <T extends boolean = true>({
 };
 
 export default FileUploader;
-
-function normalizeFileForThumbnail(file: File | FileData): string | File {
-  if (file instanceof File) return file;
-  if (file.url) return file.url;
-  if (file.base64) return file.base64;
-  return '';
-}

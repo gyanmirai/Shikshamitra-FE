@@ -191,6 +191,7 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true }) => {
     );
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const tableColumns = (kind: 'student' | 'employee') => [
     {
       id: 'name',
@@ -221,6 +222,7 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true }) => {
     },
   ];
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const current = viewIndex != null ? paths[viewIndex] : null;
   // Dummy data for students and employees if current is null
   // Use original names from the current path if available, otherwise fallback to dummy data

@@ -44,9 +44,9 @@ const LeaveCalender = (props: TabComponentType) => {
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
   });
 
-  const handleChange = (event: any) => {
-    setOrganization(event?.target?.value);
-  };
+  // const handleChange = (event: any) => {
+  //   setOrganization(event?.target?.value);
+  // };
 
   const calendarData = useMemo(
     () =>

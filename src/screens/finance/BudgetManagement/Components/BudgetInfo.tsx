@@ -19,10 +19,8 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
   const formik = props;
 
   // Redux state selectors for current academic selections
-  const { currentYear, currentBoard, currentMedium } = useSelector(
-    (state: RootState) => state.globalState
-  );
-  const { data: board, isLoading: boardLoading } = useQueryAndMutation({
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { isLoading: boardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
@@ -61,11 +59,6 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
         : [];
 
   // Department options
-  const departmentOptions = [
-    { value: 'Science Department', label: 'Science Department' },
-    { value: 'Math Department', label: 'Math Department' },
-    { value: 'English Department', label: 'English Department' },
-  ];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

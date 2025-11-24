@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { varAlpha } from 'src/theme/styles';
 import { Search } from '@mui/icons-material';
 import { Label } from 'src/components/label';
@@ -21,7 +20,6 @@ import {
 const GlobalSearch = () => {
   const theme = useTheme();
   const popover = usePopover();
-  const router = useRouter();
   const ref = useRef<any>(null);
   const isMac =
     typeof window !== 'undefined' &&

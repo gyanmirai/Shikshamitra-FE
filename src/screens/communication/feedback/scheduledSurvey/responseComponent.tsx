@@ -6,7 +6,7 @@ import responseSurveyData from 'src/json/communication/feedback/responseSurveyDa
 
 export const ResponseComponent = () => {
   // State to store and manage response table data
-  const [tableData, setTableData] = useState<any>(responseSurveyData);
+  const [tableData] = useState<any>(responseSurveyData);
   return (
     <CustomizableTable
       tableId="response-table"

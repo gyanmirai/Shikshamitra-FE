@@ -19,6 +19,7 @@ export const collectChargeValidationSchema = Yup.object({
         })
         .required('Payment amount is required')
         .min(1, 'Payment amount must be greater than 0')
+        // eslint-disable-next-line func-names
         .test('max-amount', 'Payment cannot exceed assigned charge', function (value) {
           const { assignedAmount } = this.parent;
           // If assignedAmount is not a number, skip the test

@@ -21,7 +21,7 @@ const FinanceFeeStructureOverviewComponent = () => {
   const detaiFeeStructure = useBoolean();
 
   // State to store and manage the fee structure table data, initialized with dummy data
-  const [tableData, setTableData] = useState<IFeeStructure[]>(feeStructureData);
+  const [tableData] = useState<IFeeStructure[]>(feeStructureData);
 
   // State to store the selected fee structure items when a row is clicked/selected
   const [selectedFeeStructure, setSelectedFeeStructure] = useState<IFeeItem[]>();

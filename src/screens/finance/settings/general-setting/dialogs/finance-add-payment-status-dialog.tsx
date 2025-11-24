@@ -29,7 +29,6 @@ const AddPaymentStatusDialog: React.FC<IFinanceAddPaymentStatusDialogProps> = ({
     errors, // Validation errors
     touched, // Fields that have been touched/visited
     handleSubmit, // Form submission handler
-    handleChange, // Input change handler
     handleBlur, // Input blur handler
     isSubmitting, // Form submission status
     setSubmitting, // Function to update submission status

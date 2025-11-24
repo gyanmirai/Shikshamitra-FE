@@ -6,7 +6,7 @@ import { useGetOutstandingFeesQuery } from 'src/redux/feeCollection/outstandingF
 import type { IStudentFee } from '../type';
 
 const OutstandingFee = ({ student }: { student: IStudentFee | null }) => {
-  const { data: outstandingFeeData, isLoading: yearLoading } = useQueryAndMutation({
+  const { data: outstandingFeeData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetOutstandingFeesQuery,
   });

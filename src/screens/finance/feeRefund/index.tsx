@@ -26,12 +26,7 @@ import FeeRefundReasonApprovalForm from './Components/FeeRefuncRejectApproveForm
 import type { IStudentFeeData } from './type';
 
 const FeeRefund = () => {
-  const {
-    currentYear,
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Local state to store filtered boards based on academic year
   const [boards, setBoards] = useState([]);
@@ -50,7 +45,7 @@ const FeeRefund = () => {
   const dispatch = useDispatch();
 
   // Fetch fee refund data using custom query hook
-  const { data: feeRefundData, isLoading: feeRefundLoading } = useQueryAndMutation({
+  const { data: feeRefundData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeRefundQuery,
   });
@@ -106,7 +101,7 @@ const FeeRefund = () => {
             {
               name: 'Fee Refund',
               href: '/finance/fee-refund',
-              onClick(e) {
+              onClick() {
                 addRefundRequest.onFalse();
               },
             },

@@ -28,7 +28,7 @@ const AddReportLossForm: React.FC<IAddReportLossFormProps> = ({ isEdit, data, on
     },
   });
 
-  const isDisabled = data !== null && isEdit === false;
+  // const isDisabled = data !== null && isEdit === false;
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit}>

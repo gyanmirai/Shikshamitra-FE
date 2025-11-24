@@ -23,7 +23,7 @@ import type { ISurveyType } from './type';
 const SurveyTypeCreation = () => {
   const deleteSurveyTypeDialog = useBoolean();
   const addSurveyTypeDialog = useBoolean();
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedSurveyType, setSelectedSurveyType] = useState<ISurveyType | null>(null);

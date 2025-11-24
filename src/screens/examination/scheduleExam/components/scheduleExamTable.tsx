@@ -34,7 +34,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   // Initialize tabs with default value of 'Pending'
   const tabs = useTabs(ScheduleExamStatus.Pending);
   // Add this outside your component
-  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+  // const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [selectedTimetableName, setSelectedTimetableName] = useState<string | null>(null);
 
   // Calculate counts of exams by status

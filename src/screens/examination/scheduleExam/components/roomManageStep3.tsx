@@ -49,11 +49,7 @@ export default RoomDetails;
 
 const RoomAssignmentCard = ({ key, subjectName, subjectData, formik }: any) => {
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Flatten all standards/classes from education medium stages into a single array
   // This creates a comprehensive list of all available classes across different stages

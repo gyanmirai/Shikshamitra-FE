@@ -4,7 +4,6 @@ import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { Box, Grid } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -36,22 +35,21 @@ const dummyStudent: TStudent = {
 };
 
 const IndividualStudentProgress = (props: TabComponentType) => {
-  const theme = useTheme(); // Get the current theme
   const { searchParams, setSearchParams } = props;
   const classes = searchParams?.classId ? searchParams?.classId : '';
   const [division, setDivision] = useState('');
   const [selectedStudent, setSelectedStudent] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  const cardBgColor =
-    theme.palette.mode === 'dark' ? theme.vars.palette.grey[800] : theme.vars.palette.grey[100];
-  const textColor =
-    theme.palette.mode === 'dark'
-      ? theme.vars.palette.common.white
-      : theme.vars.palette.text.primary;
+  // const cardBgColor =
+  //   theme.palette.mode === 'dark' ? theme.vars.palette.grey[800] : theme.vars.palette.grey[100];
+  // const textColor =
+  //   theme.palette.mode === 'dark'
+  //     ? theme.vars.palette.common.white
+  //     : theme.vars.palette.text.primary;
 
   useEffect(() => {
     if (classData?.items?.length) {

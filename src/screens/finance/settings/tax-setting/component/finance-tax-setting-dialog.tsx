@@ -38,6 +38,7 @@ const FinanceTaxSettingDialog: React.FC<FinanceTaxSettingDialogProps> = ({
   allData,
 }) => {
   // State to track and display message when a tax entry already exists
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
 
   // Get isChanges state from Redux store to track form modifications

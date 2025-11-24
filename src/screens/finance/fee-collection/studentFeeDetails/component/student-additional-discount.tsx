@@ -171,7 +171,6 @@ const AdditionalDiscountDialog: React.FC<Props> = ({ dialogValue, onClose, stude
 
                 const feeHeadKey = row.feeHead;
                 const rawValue = discountValues[feeHeadKey] || '';
-                const numericValue = Number(rawValue);
                 const exceeds = discountErrors[feeHeadKey];
 
                 return (

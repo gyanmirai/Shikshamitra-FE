@@ -15,7 +15,7 @@ const AttendanceType = () => {
   const dialog = useBoolean();
   const confirm = useBoolean();
 
-  const actions = useCallback(
+  useCallback(
     ({ popover }: any, row: any) => (
       <MenuList>
         <MenuItem

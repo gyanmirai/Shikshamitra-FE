@@ -1,10 +1,8 @@
 import { Card } from '@mui/material';
 import React, { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const AcademicDashboardChapterProgress = () => {
-  const theme = useTheme();
   const [selectedSubject, setSelectedSubject] = useState('mathematics');
   return (
     <Card sx={{ height: '100%' }}>

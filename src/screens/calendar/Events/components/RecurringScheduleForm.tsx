@@ -61,6 +61,7 @@ const getValidationSchema = (currentYear: any) =>
       then: (schema) =>
         schema
           .required('End time is required')
+          // eslint-disable-next-line func-names
           .test('is-after-start-time', 'End time must be after start time', function (value) {
             const { meetingTime } = this.parent;
             if (!value || !meetingTime) return true;
@@ -94,6 +95,7 @@ const getValidationSchema = (currentYear: any) =>
         'Last Date must be a valid date',
         (value) => value && dayjs(value as Dayjs).isValid()
       )
+      // eslint-disable-next-line func-names
       .test('is-after-start-date', 'Last Date cannot be before Start Date', function (value) {
         const { startDate } = this.parent;
         if (!value || !startDate) return true;

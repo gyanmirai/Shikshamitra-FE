@@ -1,13 +1,10 @@
 import React from 'react';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify/iconify';
 import { Box, Grid, Card, Stack, Button, Typography, CardContent } from '@mui/material';
 
 import type { StudentTabsComponentType } from '.';
 
 const StudentTransportProfile = (props: StudentTabsComponentType) => {
-  const theme = useTheme();
-
   // Mock transport data (replace with real props.student values)
   const transport = {
     routeName: 'Route A-1',

@@ -3,23 +3,14 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import Table from '@mui/material/Table';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { useState, useEffect } from 'react';
 import TableRow from '@mui/material/TableRow';
 import TableHead from '@mui/material/TableHead';
 import TableCell from '@mui/material/TableCell';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import { useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  Paper,
-  Button,
-  MenuList,
-  MenuItem,
-  Collapse,
-  TableBody,
-  IconButton,
-  CircularProgress,
-} from '@mui/material';
+import { Paper, Button, Collapse, TableBody, IconButton, CircularProgress } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import CustomDialog from '../customDialog';
@@ -277,44 +268,6 @@ function CollapsibleTableRow({
   });
   const childModal = useBoolean(false);
 
-  const actions = useCallback(
-    ({ popover }: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            confirm.onTrue();
-            popover.onClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          <Iconify icon="solar:trash-bin-trash-bold" sx={{ height: '16px', width: '16px' }} />
-          Delete
-        </MenuItem>
-
-        <MenuItem
-          onClick={() => {
-            modal.onTrue();
-            popover.onClose();
-          }}
-        >
-          <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-          Edit
-        </MenuItem>
-        {/* {children && (
-          <MenuItem
-            onClick={() => {
-              childModal.onTrue();
-              popover.onClose();
-            }}
-          >
-            <Iconify icon="ic:baseline-add" sx={{ height: '16px', width: '16px' }} />
-            Create {childEditData?.name}
-          </MenuItem>
-        )} */}
-      </MenuList>
-    ),
-    [confirm, modal]
-  );
   const onCloseDialog = () => {
     setChildEditData(undefined);
     // await getData(id);

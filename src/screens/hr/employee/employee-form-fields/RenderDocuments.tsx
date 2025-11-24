@@ -122,6 +122,7 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
             enumOptions: DocumentStatusOptions,
             filterType: 'enum',
             render(value, row) {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const color = DocumentStatusTypeColors[
                 row.statusVal as keyof typeof DocumentStatusTypeColors
               ] as LabelColor;

@@ -33,7 +33,7 @@ const SubjectCreation = () => {
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedSubject, setSelectedSubject] = useState<ISubject | null>(null);
-  const [subjectData, setSubjectData] = useState<ISubject[]>(settingSubjectTableData);
+  const [subjectData] = useState<ISubject[]>(settingSubjectTableData);
   // Redux dispatch
   const dispatch = useDispatch();
 

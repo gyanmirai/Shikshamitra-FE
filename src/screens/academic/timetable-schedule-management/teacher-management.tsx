@@ -4,8 +4,7 @@ import React, { useState } from 'react';
 import { FiberManualRecord } from '@mui/icons-material';
 import CustomSelect from 'src/components/custom-select';
 import { CalendarView } from 'src/sections/calendar/view';
-import { Box , Grid, List, ListItem, Typography, ListItemText, ListItemIcon } from '@mui/material';
-
+import { Box, Grid, List, ListItem, Typography, ListItemText, ListItemIcon } from '@mui/material';
 
 const TeacherManagement = (props: TabComponentType) => {
   const [reassigedTeacher, setReassigedTeacher] = useState<string>('');

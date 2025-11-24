@@ -32,7 +32,7 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
   const [searchValue, setSearchValue] = useState('');
-  const { data: invoiceData, isLoading: boardLoading } = useQueryAndMutation({
+  const { data: invoiceData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetInvoiceDataQuery,
   });
@@ -41,11 +41,7 @@ const InvoiceManagement = ({ addInvoiceDialog }: any) => {
   const dispatch = useDispatch();
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {

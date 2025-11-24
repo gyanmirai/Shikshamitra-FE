@@ -26,10 +26,10 @@ const StudentIcardScreen = () => {
   const dialog = useBoolean();
   const previewDialog = useBoolean();
 
-  const [cardDimensions, setCardDimensions] = useState();
+  const [cardDimensions] = useState();
 
-  const [cardBackgroundColor, setCardBackgroundColor] = useState();
-  const [cardBackground, setCardBackground] = useState();
+  const [cardBackgroundColor] = useState();
+  const [cardBackground] = useState();
   return (
     <Box>
       {dialog.value ? (
@@ -142,14 +142,14 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
   const isLoading = useBoolean();
   const Template = useRef<any>(null);
 
-  const handelClick = async (template: number) => {
-    setSelectedTemplate(template);
-    isLoading.onTrue();
-    const temp = await import(`src/templates/icard/template${template}.tsx`);
-    const currentTemplate = temp.default;
-    Template.current = currentTemplate;
-    isLoading.onFalse();
-  };
+  // const handelClick = async (template: number) => {
+  //   setSelectedTemplate(template);
+  //   isLoading.onTrue();
+  //   const temp = await import(`src/templates/icard/template${template}.tsx`);
+  //   const currentTemplate = temp.default;
+  //   Template.current = currentTemplate;
+  //   isLoading.onFalse();
+  // };
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);

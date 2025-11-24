@@ -55,11 +55,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   const homeworkTypeDialog = useBoolean();
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // State to store all available divisions for the selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
@@ -79,7 +75,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
   }, [allClass, classes]);
   // State to store available division options for selected class
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
+  // const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
   // Initialize formik form with validation and submission handling
   const formik = useFormik({

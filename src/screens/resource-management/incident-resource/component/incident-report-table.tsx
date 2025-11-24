@@ -19,7 +19,7 @@ import type { IIncidentResourceStatusFormValues } from '../incident-resource-int
 
 const IncidentReportTable = () => {
   const viewIncidentReportDialog = useBoolean();
-  const [selectedItem, setSelectedItem] = useState<IIncidentResourceStatusFormValues>();
+  const [, setSelectedItem] = useState<IIncidentResourceStatusFormValues>();
   return (
     <>
       <CustomizableTable

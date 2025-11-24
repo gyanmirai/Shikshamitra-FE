@@ -70,6 +70,7 @@ const personalInformationValidationSchema = Yup.object({
     .test(
       'unique',
       'Secondary Contact No. cannot be same as primary contact no.',
+      // eslint-disable-next-line func-names
       function (value) {
         return !value || value !== this.parent.mobileNo;
       }
@@ -214,6 +215,7 @@ export const workExperienceValidationSchema = Yup.object({
         .test('is-valid-dayjs', 'End Date is required', (value) =>
           value ? dayjs(value as any).isValid() : false
         )
+        // eslint-disable-next-line func-names
         .test('toDate', 'End Date must be greater than start date', function () {
           const { fromDate, toDate } = this.parent as any;
           if (fromDate && toDate) {

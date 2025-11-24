@@ -51,6 +51,7 @@ export const stepValidationSchemas = (currentYear: any) => [
         (value) => value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
       )
       .required('End Date/Time is required')
+      // eslint-disable-next-line func-names
       .test('is-after-start', 'End date must be after start date', function (value) {
         const startDate = this.parent.quizStartDateTime;
         return dayjs(value as any).isAfter(dayjs(startDate));

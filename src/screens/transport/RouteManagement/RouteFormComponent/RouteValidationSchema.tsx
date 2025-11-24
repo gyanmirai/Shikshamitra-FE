@@ -55,6 +55,7 @@ export const routeValidationSchema = [
               'End Time must be a valid time',
               (value) => value && dayjs(value as Dayjs).isValid()
             )
+            // eslint-disable-next-line func-names
             .test('is-after-start-time', 'End Time must be after Start Time', function (value) {
               const { startTime } = this.parent;
               if (!value || !startTime) return true;
@@ -84,6 +85,7 @@ export const routeValidationSchema = [
               'End Time must be a valid time',
               (value) => value && dayjs(value as Dayjs).isValid()
             )
+            // eslint-disable-next-line func-names
             .test('is-after-start-time', 'End Time must be after Start Time', function (value) {
               const { startTime } = this.parent;
               if (!value || !startTime) return true;
@@ -127,6 +129,7 @@ export const routeValidationSchema = [
             .test(
               'is-after-arrival',
               'Departure Time must be after Arrival Time',
+              // eslint-disable-next-line func-names
               function (value) {
                 const { expectedArrivalTime } = this.parent;
                 if (!value || !expectedArrivalTime) return true;

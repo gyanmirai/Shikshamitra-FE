@@ -259,13 +259,13 @@ const DateWise = ({
     currentQueryAndMutation: useLazyGetEmployeeAttendanceByDateQuery,
   });
 
-  const tableData = useMemo(
-    () =>
-      tabs.value === 'All'
-        ? attendanceData?.items || []
-        : attendanceData?.items?.filter((i: EmployeeAttendance) => i.status === tabs.value),
-    [attendanceData?.items, tabs.value]
-  );
+  // const tableData = useMemo(
+  //   () =>
+  //     tabs.value === 'All'
+  //       ? attendanceData?.items || []
+  //       : attendanceData?.items?.filter((i: EmployeeAttendance) => i.status === tabs.value),
+  //   [attendanceData?.items, tabs.value]
+  // );
 
   useEffect(() => {
     if (searchParams.date) {
@@ -782,7 +782,7 @@ const EmployeeWise = ({
     currentQueryAndMutation: useLazyGetAttendanceByEmployeeIdQuery,
   });
 
-  const counts = useMemo(
+  useMemo(
     () => ({
       all: data?.items?.length || 24,
       Present:
@@ -831,7 +831,7 @@ const EmployeeWise = ({
     }
   };
 
-  const [tableData, setTableData] = useState(
+  useState(
     data?.[0]?.employeeAttendances?.items?.map((i: any) => ({
       ...i,
       status: EmployeeLeaveStatusType[i.statusType],

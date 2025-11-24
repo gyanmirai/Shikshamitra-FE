@@ -2,7 +2,8 @@ import React from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { CalendarView } from 'src/sections/calendar/view';
 import ScrollableCard from 'src/screens/examination/dashboard/component/custom-scrollable-card';
-import { Box ,
+import {
+  Box,
   Grid,
   Card,
   List,
@@ -12,7 +13,6 @@ import { Box ,
   ListItemText,
   CircularProgress,
 } from '@mui/material';
-
 
 const AssessmentDashboardOverviewComponent = () => {
   const completedAssessments: string[] = ['one', 'two', 'three'];

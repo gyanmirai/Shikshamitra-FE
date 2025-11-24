@@ -73,9 +73,6 @@ const FinanceStudentDetailedFeeComponent: React.FC<FinanceStudentDetailedFeeComp
   const [selectedStudent, setSelectedStudent] = useState<Student>(students[0]);
 
   // Handler to close the main fee collection dialog
-  const closeDialog = () => {
-    dialog.onFalse();
-  };
 
   // Handler to close the fee refund dialog
   const feeRefundCloseDialog = () => {

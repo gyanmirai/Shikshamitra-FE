@@ -12,29 +12,29 @@ import SubjectsTeachersStudentDashboard from './studentDashbordComponent/subject
 import type { StudentTabsComponentType } from '.';
 
 const StudentDashboard = (props: StudentTabsComponentType) => (
-    <Grid container spacing={2} sx={{ mb: 2 }}>
-      <Grid size={12}>
-        <Overview />
-      </Grid>
-      <Grid size={12}>
-        <AttendanceTrend />
-      </Grid>
-      <Grid size={12}>
-        <AcademicTimetable />
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <StudentExamsList />
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <StudentHomeworkAssignments />
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <SubjectPerformanceCards />
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <SubjectsTeachersStudentDashboard />
-      </Grid>
+  <Grid container spacing={2} sx={{ mb: 2 }}>
+    <Grid size={12}>
+      <Overview />
     </Grid>
-  );
+    <Grid size={12}>
+      <AttendanceTrend />
+    </Grid>
+    <Grid size={12}>
+      <AcademicTimetable />
+    </Grid>
+    <Grid size={{ xs: 12, md: 6 }}>
+      <StudentExamsList />
+    </Grid>
+    <Grid size={{ xs: 12, md: 6 }}>
+      <StudentHomeworkAssignments />
+    </Grid>
+    <Grid size={{ xs: 12, md: 6 }}>
+      <SubjectPerformanceCards />
+    </Grid>
+    <Grid size={{ xs: 12, md: 6 }}>
+      <SubjectsTeachersStudentDashboard />
+    </Grid>
+  </Grid>
+);
 
 export default StudentDashboard;

@@ -39,7 +39,7 @@ const ReservationManagement = () => {
     currentQueryAndMutation: useGetBooksQuery,
   });
 
-  const { data: bookCategoryOptions } = useQueryAndMutation({
+  useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBookCategoryOptionsQuery,
   });

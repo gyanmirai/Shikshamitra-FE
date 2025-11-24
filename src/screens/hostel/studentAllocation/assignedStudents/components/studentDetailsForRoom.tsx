@@ -21,7 +21,7 @@ const StudentDetailsForRoom = ({
 }: {
   selectedRoom: IHostelAllocationRoom | null;
 }) => {
-  const [roomData, setRoomData] = useState<IHostelRoomStudent[]>(hostelRoomData);
+  const [roomData] = useState<IHostelRoomStudent[]>(hostelRoomData);
   const [student, setStudent] = useState<IStudentRoomAssignFormValues | null>(null);
   const assignRoomDialog = useBoolean();
   // Redux dispatch function for dispatching actions.

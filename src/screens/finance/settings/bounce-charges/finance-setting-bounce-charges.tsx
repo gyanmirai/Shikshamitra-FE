@@ -29,9 +29,9 @@ const FinanceSettingBounceCharges = () => {
   ];
 
   const dialog = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState(bounceBankChargesData);
+  const [selectedEntry] = useState(bounceBankChargesData);
   const [isEdit, setIsEdit] = useState(false);
-  const [tableData, setTableData] = useState(bounceBankChargesData);
+  const [tableData] = useState(bounceBankChargesData);
 
   const closeDialog = () => {
     setIsEdit(false);
@@ -39,7 +39,6 @@ const FinanceSettingBounceCharges = () => {
     dialog.onFalse();
   };
 
-  const handleDelete = (item: any) => {};
   useEffect(() => {}, [selectedEntry, isEdit]);
 
   const handleSave = (dataFromDialog: any) => {

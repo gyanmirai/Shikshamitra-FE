@@ -2,45 +2,27 @@
 
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
-import type {
-  ICourse,
-  ICourseDetail,
-  IUpdateProgressProps,
-} from 'src/screens/classManagement/courseProgress/type';
 
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
+import { Box } from '@mui/material';
+import { useSelector } from 'react-redux';
 import React, { useState, useEffect } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { sliderClasses } from '@mui/material/Slider';
-import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
-import CancelButton from 'src/components/cancel-button';
-import SubmitButton from 'src/components/submit-button';
-import { ComponentBlock } from 'src/components/component-block';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Slider, TextField, DialogActions } from '@mui/material';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import courseProgressTableData from 'src/json/academic/syllabus/employee-course-data.json';
 import CourseProgressComponent from 'src/screens/classManagement/courseProgress/courseProgress';
 
 const CourseProgress = () => {
-  const [courses, setCourses] = useState<any[]>(courseProgressTableData);
+  const [courses] = useState<any[]>(courseProgressTableData);
   // State to store the selected course details
-  const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
+  // const [, setSelectedCourse] = useState<ICourse | null>(null);
   // Dialog state for updating progress
-  const updateProgressDialog = useBoolean();
-  console.log('CourseProgressComponent---', CourseProgressComponent);
 
   // Handler for when a course card is selected
-  const handleCardDetails = (course: ICourse) => {
-    setSelectedCourse(course);
-  };
-  const [selectedChapter, setSelectedChapter] = useState<ICourseDetail | null>(null);
+  // const handleCardDetails = (course: ICourse) => {
+  //   setSelectedCourse(course);
+  // };
   // Get isChanges state from Redux store to track if there are unsaved changes
-  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  useSelector((state: RootState) => state.confirmPopup);
   // Get dispatch function to dispatch Redux actions
-  const dispatch = useDispatch();
 
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -50,14 +32,9 @@ const CourseProgress = () => {
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
-  const viewLogsDialog = useBoolean();
   // Query hook to fetch class data from the API
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {
@@ -106,73 +83,66 @@ const CourseProgress = () => {
 
 export default CourseProgress;
 
-const marks = [
-  { value: 0, label: '0' },
-  { value: 20, label: '20' },
-  { value: 37, label: '40' },
-  { value: 100, label: '100' },
-];
+// const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProgressProps) => {
+//   const formik = useFormik({
+//     initialValues: {
+//       completePercentage: 0, // Adjusted field name to match the input ID
+//       description: '',
+//     },
+//     validationSchema: Yup.object({
+//       completePercentage: Yup.number()
+//         .min(0, 'Percentage cannot be negative')
+//         .max(100, 'Percentage cannot exceed 100')
+//         .required('Complete Percentage is required'),
+//     }),
+//     onSubmit: (values) => {
+//       // Add submission logic here
+//     },
+//   });
 
-const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProgressProps) => {
-  const formik = useFormik({
-    initialValues: {
-      completePercentage: 0, // Adjusted field name to match the input ID
-      description: '',
-    },
-    validationSchema: Yup.object({
-      completePercentage: Yup.number()
-        .min(0, 'Percentage cannot be negative')
-        .max(100, 'Percentage cannot exceed 100')
-        .required('Complete Percentage is required'),
-    }),
-    onSubmit: (values) => {
-      // Add submission logic here
-    },
-  });
+//   return (
+//     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+//       <Box component="form" flexDirection="column" onSubmit={formik.handleSubmit} p={2} gap={3}>
+//         <ShakingTextField
+//           error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
+//         >
+//           <ComponentBlock>
+//             <Slider
+//               defaultValue={20}
+//               onChange={(event, value) => {
+//                 formik.setFieldValue('completePercentage', value);
+//               }}
+//               getAriaValueText={(value) => `${value}%`}
+//               step={1}
+//               valueLabelDisplay="auto"
+//               marks={marks}
+//               sx={{ [`& .${sliderClasses.mark}[data-index="3"]`]: { display: 'none' } }}
+//             />
+//           </ComponentBlock>
+//         </ShakingTextField>
 
-  return (
-    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box component="form" flexDirection="column" onSubmit={formik.handleSubmit} p={2} gap={3}>
-        <ShakingTextField
-          error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
-        >
-          <ComponentBlock>
-            <Slider
-              defaultValue={20}
-              onChange={(event, value) => {
-                formik.setFieldValue('completePercentage', value);
-              }}
-              getAriaValueText={(value) => `${value}%`}
-              step={1}
-              valueLabelDisplay="auto"
-              marks={marks}
-              sx={{ [`& .${sliderClasses.mark}[data-index="3"]`]: { display: 'none' } }}
-            />
-          </ComponentBlock>
-        </ShakingTextField>
-
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          name="description"
-          label="Description"
-          placeholder="Enter description"
-          value={formik.values.description}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          error={!!(formik.touched.description && formik.errors.description)}
-          helperText={formik.touched.description && formik.errors.description}
-        />
-      </Box>
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-        <CancelButton
-          onClick={() => {
-            onClose(null, false);
-          }}
-        />
-        <SubmitButton onClick={() => {}} />
-      </DialogActions>
-    </BackPopUpChecked>
-  );
-};
+//         <TextField
+//           fullWidth
+//           multiline
+//           rows={4}
+//           name="description"
+//           label="Description"
+//           placeholder="Enter description"
+//           value={formik.values.description}
+//           onChange={formik.handleChange}
+//           onBlur={formik.handleBlur}
+//           error={!!(formik.touched.description && formik.errors.description)}
+//           helperText={formik.touched.description && formik.errors.description}
+//         />
+//       </Box>
+//       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+//         <CancelButton
+//           onClick={() => {
+//             onClose(null, false);
+//           }}
+//         />
+//         <SubmitButton onClick={() => {}} />
+//       </DialogActions>
+//     </BackPopUpChecked>
+//   );
+// };

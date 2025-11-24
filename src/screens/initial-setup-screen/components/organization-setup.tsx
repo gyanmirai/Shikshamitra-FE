@@ -1,24 +1,23 @@
 import type { Organization } from 'src/types/school';
 
 import React from 'react';
-import * as Yup from 'yup';
 import { Box, Grid, TextField } from '@mui/material';
 
-interface OrganizationValues {
-  name: string;
-  address: string;
-  phone: string;
-  email: string;
-  website?: string;
-}
+// interface OrganizationValues {
+//   name: string;
+//   address: string;
+//   phone: string;
+//   email: string;
+//   website?: string;
+// }
 
-const validationSchema = Yup.object().shape({
-  name: Yup.string().required('Organization name is required'),
-  address: Yup.string().required('Address is required'),
-  phone: Yup.string().required('Phone number is required'),
-  email: Yup.string().email('Invalid email').required('Email is required'),
-  website: Yup.string().url('Invalid URL'),
-});
+// const validationSchema = Yup.object().shape({
+//   name: Yup.string().required('Organization name is required'),
+//   address: Yup.string().required('Address is required'),
+//   phone: Yup.string().required('Phone number is required'),
+//   email: Yup.string().email('Invalid email').required('Email is required'),
+//   website: Yup.string().url('Invalid URL'),
+// });
 
 interface IOrganizationSetupProps {
   values: {
@@ -28,11 +27,12 @@ interface IOrganizationSetupProps {
   touched: any;
   handleChange: (e: React.ChangeEvent<any>) => void;
   handleBlur: (e: React.FocusEvent<any>) => void;
+  // eslint-disable-next-line react/no-unused-prop-types
   setFieldValue: (field: string, value: any) => void;
 }
 
 const OrganizationSetup: React.FC<IOrganizationSetupProps> = (props: IOrganizationSetupProps) => {
-  const { values, errors, touched, handleChange, handleBlur, setFieldValue } = props;
+  const { values, errors, touched, handleChange, handleBlur } = props;
 
   return (
     <Box sx={{ mt: 2, width: '100%' }}>

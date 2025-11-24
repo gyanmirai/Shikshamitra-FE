@@ -23,8 +23,6 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   onAddFee,
   setOpenDialog,
   setEditData,
-  onDelete,
-  onEdit,
   onCollectFee,
   onView,
 }) => {
@@ -32,12 +30,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   const [selectedMedium, setSelectedMedium] = useState('');
   const [boards, setBoards] = useState([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
-  const {
-    currentYear,
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
     // Filter boards based on academic year ID from edit data
@@ -46,7 +39,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     setMediums((board as unknown as Board)?.educationMediums || []);
   }, [boards, currentYear?.boards, selectedBoard]);
 
-  const actions = ({ row, popover }: any) => (
+  const actions = ({ row }: any) => (
     <MenuList>
       <MenuItem
         onClick={() => {
@@ -188,7 +181,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               enumOptions: FeeCollectionStatusOptions,
               sticky: true,
               minWidth: '90px',
-              render(value, row) {
+              render(value) {
                 const color = FeeCollectionStatusTypeColors[
                   value as FeeCollectionStatusType
                 ] as LabelColor;
@@ -207,7 +200,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               isSort: false,
               sticky: true,
               isFilter: false,
-              render(value, row) {
+              render(row) {
                 return (
                   <ThreeDotsActions
                     actions={(props) => actions({ ...props, row })}
@@ -221,7 +214,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               },
             },
           ]}
-          data={data || []} // Add fallback for data as well
+          data={data || []}
         />
       )}
     </>

@@ -41,12 +41,6 @@ const FinanceNewBudgetingScreen = () => {
     null
   );
 
-  const handleNewEntry = () => {
-    setIsEdit(false);
-    setSelectedEntry(null);
-    budgetDialog.onTrue();
-  };
-
   const handleEditEntry = (entry: IIncomeCategory | IExpenseCategory) => {
     setIsEdit(true);
     setSelectedEntry(entry);

@@ -102,7 +102,7 @@ const dummyData: TResource[] = [
 ];
 
 const AllResources = (props: TabComponentType) => {
-  const [tableData, setTableData] = useState(dummyData);
+  // const [tableData, setTableData] = useState(dummyData);
   const [view, setView] = useState('list');
   const [selectedResource, setSelectedResource] = useState<any | null>(null);
   const [isEdit, setIsEdit] = useState(false);

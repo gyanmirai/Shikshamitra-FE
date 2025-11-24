@@ -4,8 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { Box , Grid } from '@mui/material';
-import { useRouter } from 'next/navigation';
+import { Box, Grid } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import BirthdaySection from 'src/app/(auth-route)/student/overview/student-birthdate';
 
@@ -16,6 +15,7 @@ import EmployeeRecentActivities from './components/HRDashboardRecentActivities';
 import HRDashboardAttendanceTrend from './components/HRDashboardAttendanceTrend';
 import HRDashboardRecentPayrollRunsCard from './components/HRDashboardRecentPayrollRunsCard';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const activities = [
   {
     color: 'success',
@@ -70,16 +70,12 @@ const HRDashboardScreen = () => {
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
   // State to store all divisions for the selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [, setAllDivision] = useState<Division[]>([]);
   // State to store selected division ID
-  const [division, setDivision] = useState<string>('');
+  const [, setDivision] = useState<string>('');
   // Query hook to fetch class data from the API
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {
@@ -97,7 +93,7 @@ const HRDashboardScreen = () => {
     setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
   }, [allClass, classes, setDivision]);
 
-  const router = useRouter();
+  // const router = useRouter();
   return (
     <Box>
       <Grid container spacing={2} sx={{ mb: 2 }}>

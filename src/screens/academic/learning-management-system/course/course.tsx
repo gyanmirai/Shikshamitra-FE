@@ -3,7 +3,6 @@
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
@@ -36,30 +35,20 @@ interface TableRow {
   };
 }
 
-interface AssignmentRow {
-  title: string;
-  dueDate: string;
-  status: string;
-}
-
 const Course = (props: TabComponentType) => {
   const { searchParams, setSearchParams } = props;
   const classes = searchParams?.classId ? searchParams?.classId : '';
   const [division, setDivision] = useState('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const [hoveredResource, setHoveredResource] = useState<string | null>(null);
-  const chapterDialog = useBoolean();
   const addChapterDialog = useBoolean();
   const viewAssignmentDialog = useBoolean();
-  const theme = useTheme();
-  const [subjectData, setSubjectData] = useState<any>(subjectTempData);
-  const [selectedSubject, setSelectedSubject] = useState<string>('');
+  const [subjectData] = useState<any>(subjectTempData);
+  const [, setSelectedSubject] = useState<string>('');
   const [subjectTableData, setSubjectTableData] = useState<TableRow[]>([]);
-  const [dialogData, setDialogData] = useState<any>([]);
   const [selectedChapter, setSelectedChapter] = useState<any>(null);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
@@ -127,6 +116,7 @@ const Course = (props: TabComponentType) => {
     }
   }, [classData, classes, setSearchParams, subjectData.classes]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDocumentUpload = async (files: File[]): Promise<IDocument[]> =>
     files.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
@@ -137,6 +127,7 @@ const Course = (props: TabComponentType) => {
 
   const handleChapterSubmit = async (values: IChapterFormValues) => {
     const updatedSubjectData = { ...subjectData };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const selectedClass = updatedSubjectData.classes.find(
       (cls: { name: string }) => cls.name === classes
     );

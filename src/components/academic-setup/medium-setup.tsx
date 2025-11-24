@@ -85,6 +85,7 @@ const MediumSetup = ({ boardId }: MediumSetupProps) => {
     modal.onTrue();
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSetTeb = (value: Record<string, any>) => {
     tabs.setValue(value?.data?.id);
   };
@@ -290,7 +291,7 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
   const onSubmit = async () => {
     try {
       if (editData) {
-        const res = await updateMedium({
+        await updateMedium({
           id: editData.id,
           body: {
             name: formik.values.medium,
@@ -298,7 +299,7 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
           },
         }).unwrap();
       } else {
-        const res = await addMedium({
+        await addMedium({
           name: formik.values.medium,
           educationBoardId: boardId,
         }).unwrap();

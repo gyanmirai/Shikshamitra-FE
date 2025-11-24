@@ -61,7 +61,7 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
   //   currentQueryAndMutation: useGetAllBooksQuery, // no params needed
   // });
   // const { data: books, isLoading, error } = useGetAllBooksQuery(undefined);
-  const [books, setBooks] = useState(libraryDummyData.books);
+  const [books] = useState(libraryDummyData.books);
   // console.log({ books, isLoading, error });
   const filteredBooks = useMemo(() => {
     if (!debouncedSearch) return books;

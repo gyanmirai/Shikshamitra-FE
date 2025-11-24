@@ -50,6 +50,7 @@ export const schoolWiseValidationSchema = (currentYear: any) =>
         'End Date-Time must be a valid date',
         (value) => value && dayjs(value as any).isValid()
       )
+      // eslint-disable-next-line func-names
       .test('is-after-start-date', 'End Date-Time cannot be before Start Date', function (value) {
         const { startDate } = this.parent;
         if (!value || !startDate) return true;
@@ -116,6 +117,7 @@ export const classWiseValidationSchema = (currentYear: any) =>
         'End Date-Time must be a valid date',
         (value) => value && dayjs(value as any).isValid()
       )
+      // eslint-disable-next-line func-names
       .test('is-after-start-date', 'End Date-Time cannot be before Start Date', function (value) {
         const { startDate } = this.parent;
         if (!value || !startDate) return true;

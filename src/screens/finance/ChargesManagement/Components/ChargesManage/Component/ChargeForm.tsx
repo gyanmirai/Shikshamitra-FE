@@ -27,7 +27,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
 
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [, setAllDivision] = useState<Division[]>([]);
 
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -35,11 +35,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   });
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   // Memoize initial values to prevent re-creation on every render
   const initialValues = useMemo(() => {
     if (isEdit && editData) {

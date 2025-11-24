@@ -20,6 +20,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
 
+// eslint-disable-next-line import/no-named-as-default
 import FinanceSettingReceiptbookDialog from './component/finance-setting-receiptbook-dialog';
 
 import type { IReceiptBook } from './receipt-book-interface';
@@ -40,8 +41,7 @@ const FinanceReceiptBookSetting = () => {
   const [isEdit, setIsEdit] = useState(false);
 
   // State to store all receipt book entries for the table
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [tableData, setTableData] = useState(initialData);
+  const [tableData] = useState(initialData);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 

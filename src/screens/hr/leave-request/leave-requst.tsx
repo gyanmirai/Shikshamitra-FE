@@ -3,11 +3,11 @@ import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import React, { useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
@@ -91,9 +91,9 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   });
 
   // Handler to remove a single file attachment
-  const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
-    setFieldValue('docs', '');
-  }, []);
+  // const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
+  //   setFieldValue('docs', '');
+  // }, []);
 
   const { initialValues, errors, touched, setFieldValue, values, handleSubmit, handleBlur } =
     useFormik({
@@ -132,6 +132,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   return dayjs(value as any).isValid();
                 })
                 .required('End Date is required')
+                // eslint-disable-next-line func-names
                 .test('endDate', 'End Date must be after or equal to start date', function (value) {
                   const { startDate } = this.parent;
                   if (startDate && value) {
@@ -141,6 +142,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   }
                   return true;
                 })
+                // eslint-disable-next-line func-names
                 .test('endDate-before', 'End Date cannot be before start date', function (value) {
                   const { startDate } = this.parent;
                   if (startDate && value) {
@@ -156,6 +158,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         rejectionReason: Yup.string().test(
           'rejectionReason',
           'Rejection reason is required',
+          // eslint-disable-next-line func-names
           function (value) {
             const { status } = this.parent;
             if (editData && status === EmployeeLeaveStatusType.Rejected) {

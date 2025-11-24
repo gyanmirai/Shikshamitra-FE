@@ -30,32 +30,6 @@ interface FinanceNewCollectFeeDialogProps {
   isFromStudentAdmission: boolean;
 }
 
-interface FormikValues {
-  selectStudent: string;
-  feeType: string;
-  amount: number;
-  paymentMode: string[];
-  transactionId: string;
-  transactionIdOnline: string;
-  note: string;
-  selectedTerms: string[];
-  receiptNumber: string;
-  chequeDate: any;
-  bankName: string;
-  receivedPayment: 0;
-  chequeNumber: string;
-
-  charges: number;
-  chargesDetails: string;
-
-  amountDue: string;
-  receivedAmount: string;
-  cashAmount: string;
-  onlineAmount: string;
-  cardAmount: string;
-  chequeAmount: string;
-}
-
 const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
   dialogValue,
   data,
@@ -64,7 +38,7 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
 
   isFromStudentAdmission,
 }) => {
-  const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
+  const [showExistingEntryMessage] = useState(false);
   const [feeOptions, setFeeOptions] = useState<any[]>([]);
   const [termOptions, setTermOptions] = useState<any[]>([]);
 
@@ -206,13 +180,6 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
       receivedAmount: '',
     },
   ]);
-  const [currentSelection, setCurrentSelection] = useState({
-    feeType: '',
-    pendingTerm: '',
-    paymentMode: [],
-    amountDue: '',
-    receivedAmount: '',
-  });
 
   const handleAddFee = () => {
     console.log('handleAddFee called');

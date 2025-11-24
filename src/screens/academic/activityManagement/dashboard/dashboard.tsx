@@ -1,10 +1,10 @@
 'use client';
 
-import type { Division } from 'src/types/school';
+// ...existing code...
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
+// ...existing code...
 import { Iconify } from 'src/components/iconify';
 import { fNumber } from 'src/utils/format-number';
 import CustomSelect from 'src/components/custom-select';
@@ -19,55 +19,43 @@ import ActivityDashboardCards from './component/activityDashboardCards';
 import ActivityDashboardGroup from './component/activityDashboardGroup';
 import ActivityStudentEnrollment from './component/activityStudentEnrollment';
 
-const Dashboard = (props: TabComponentType) => {
-  const theme = useTheme();
-  const [classes1, setClasses1] = useState<string>('');
-
-  const [division1, setDivision1] = useState<string>('');
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
-
-  return (
-    <Box>
-      <CustomBreadcrumbs
-        heading="Dashboard"
-        links={[{ name: 'Academics' }, { name: 'Activity' }, { name: 'Dashboard' }]}
-        sx={{ mb: 1 }}
-        action={
-          <DashBoardQuickAction
-            actions={[
-              {
-                icon: 'mdi:plus',
-                label: 'Dynamic Group',
-                href: '/academic/activityManagement/dynamicGroup',
-                color: 'primary',
-              },
-              {
-                icon: 'mdi:plus',
-                label: 'Activity',
-                href: '/academic/activityManagement/activityManagement',
-                color: 'warning',
-              },
-              {
-                icon: 'mdi:plus',
-                label: 'Student Group',
-                href: '/academic/activityManagement/studentGroup',
-                color: 'secondary',
-              },
-            ]}
-          />
-        }
-      />
-      <ActivityDashboardCards />
-      <ActivityStudentEnrollment />
-      <ActivityDashboardGroup />
-    </Box>
-  );
-};
+const Dashboard = (props: TabComponentType) => (
+  <Box>
+    <CustomBreadcrumbs
+      heading="Dashboard"
+      links={[{ name: 'Academics' }, { name: 'Activity' }, { name: 'Dashboard' }]}
+      sx={{ mb: 1 }}
+      action={
+        <DashBoardQuickAction
+          actions={[
+            {
+              icon: 'mdi:plus',
+              label: 'Dynamic Group',
+              href: '/academic/activityManagement/dynamicGroup',
+              color: 'primary',
+            },
+            {
+              icon: 'mdi:plus',
+              label: 'Activity',
+              href: '/academic/activityManagement/activityManagement',
+              color: 'warning',
+            },
+            {
+              icon: 'mdi:plus',
+              label: 'Student Group',
+              href: '/academic/activityManagement/studentGroup',
+              color: 'secondary',
+            },
+          ]}
+        />
+      }
+    />
+    <ActivityDashboardCards />
+    <ActivityStudentEnrollment />
+    <ActivityDashboardGroup />
+  </Box>
+);
+// ...existing code...
 
 export default Dashboard;
 

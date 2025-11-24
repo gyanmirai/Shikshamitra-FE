@@ -3,7 +3,6 @@
 import type { Division, Standards } from 'src/types/school';
 
 import React, { useState } from 'react';
-import { useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
 import { Box, Card, Grid, Typography } from '@mui/material';
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -16,12 +15,10 @@ const StudentGroupCompare = () => {
 
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
 
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-
-  const theme = useTheme();
 
   return (
     <Grid size={{ xs: 12, md: 6 }}>

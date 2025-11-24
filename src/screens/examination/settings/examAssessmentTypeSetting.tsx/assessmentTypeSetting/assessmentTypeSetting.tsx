@@ -48,12 +48,14 @@ const AssessmentTypeSettings = () => {
   } | null>(null);
 
   // Method to handle changes in the status of an assessment type
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleStatusChange = (id: number, value: string) => {
     setPendingStatusChange({ id, newValue: value === 'Publish' ? 'Unpublish' : 'Publish' });
     confirmPublishDialog.onTrue();
   };
 
   // Method to confirm the status change of an assessment type
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const confirmStatusChange = () => {
     if (pendingStatusChange) {
       const { id, newValue } = pendingStatusChange;

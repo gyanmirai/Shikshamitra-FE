@@ -38,6 +38,7 @@ const RoomConfiguration = () => {
   const dispatch = useDispatch();
 
   // State to store all hostel room data
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [roomData, setRoomData] = useState<IHostelRoom[]>(hostelRoomData);
   const links = open
     ? [

@@ -547,8 +547,6 @@ const FamilyMemberSection = ({
   isMainForm: boolean;
   editData: any;
 }) => {
-  const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
-
   const isEditable = useBoolean(!!isMainForm);
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();

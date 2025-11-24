@@ -32,7 +32,7 @@ const FinanceExpenseTracking = () => {
   const addExpenseDialog = useBoolean();
   const deleteExpenseDialog = useBoolean();
   const viewExpenseDialog = useBoolean();
-  const { data: expenseData, isLoading: expenseLoading } = useQueryAndMutation({
+  const { isLoading: expenseLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpensesQuery,
   });

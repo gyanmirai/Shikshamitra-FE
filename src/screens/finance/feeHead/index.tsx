@@ -25,7 +25,7 @@ import type { IFeeHead } from './Components/type';
 
 const FeeHeadCreation = () => {
   // Custom hook to fetch fee head data
-  const { data: feeHeadData, isLoading: paymentTermsLoading } = useQueryAndMutation({
+  const { data: feeHeadData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeHeadsQuery,
   });

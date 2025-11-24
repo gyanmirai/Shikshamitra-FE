@@ -17,12 +17,11 @@ const HostelStudentAllocation = () => {
   // State for selected division
   const [division, setDivision] = useState<string>('');
   // State for division options based on selected class
-  const [student, setStudent] = useState<string>('');
+  const [, setStudent] = useState<string>('');
   const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
   // State to control visibility of student list
-  const [showStudents, setShowStudents] = useState(false);
   // Query to fetch class data
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

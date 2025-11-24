@@ -49,6 +49,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
   const paymentMethodsConfigToUse = paymentMethodsConfigData || [];
 
   // Generate payment method options from the config
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const paymentMethodOptions =
     expenseOptionsData?.paymentMethodOptions ||
     Object.keys(paymentMethodsConfigToUse).map((method) => ({
@@ -77,6 +78,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
   const selectedPaymentMethod = formik.values.paymentMethod;
 
   // Get payment fields from API data or fallback to local config
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const paymentFields =
     paymentMethodsConfigToUse[selectedPaymentMethod as keyof typeof paymentMethodsConfigToUse] ||
     [];

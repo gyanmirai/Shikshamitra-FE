@@ -23,7 +23,7 @@ import type { IMeetingType } from './type';
 const MeetingTypeCreation = () => {
   const deleteMeetingTypeDialog = useBoolean();
   const addMeetingTypeDialog = useBoolean();
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedMeetingType, setSelectedMeetingType] = useState<IMeetingType | null>(null);

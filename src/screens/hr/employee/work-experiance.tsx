@@ -15,7 +15,7 @@ import { CardActions } from './employee-form-fields/InformationFields';
 const WorkExperiences = (props: any) => {
   const deleteExperienceDialog = useBoolean();
   const [selectedExperience, setSelectedExperience] = useState<number | null>();
-  const { formik, isMainForm, editData } = props;
+  const { formik, isMainForm } = props;
   const { values, setFieldValue } = formik;
   const isEditable = useBoolean(isMainForm);
   const handleSave = async (): Promise<void | false | undefined> => {

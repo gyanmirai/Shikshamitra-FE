@@ -68,6 +68,7 @@ const EndToolTip = () => (
 );
 
 const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [courses, setCourses] = useState<ICourse[]>(courseData);
 
   // State to store the selected course details

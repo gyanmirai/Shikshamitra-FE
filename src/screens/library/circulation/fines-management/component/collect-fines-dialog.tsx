@@ -63,9 +63,9 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
   const [penaltyAmountState, setPenaltyAmountState] = useState('');
   const [fineAmountState, setFineAmountState] = useState('');
 
-  function parseNumber(value: string): number {
-    return parseFloat(value.replace(/,/g, ''));
-  }
+  // function parseNumber(value: string): number {
+  //   return parseFloat(value.replace(/,/g, ''));
+  // }
 
   const handlePenaltyAmountChange = (formattedValue: string, numericValue: number) => {
     setPenaltyAmountState(formattedValue);

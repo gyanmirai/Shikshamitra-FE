@@ -15,7 +15,8 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import { fNumber, fShortenNumber } from 'src/utils/format-number';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { AppCurrentDownload } from 'src/screens/hr/dashboard/app-current-download';
-import { Box ,
+import {
+  Box,
   Grid,
   Card,
   Button,
@@ -26,7 +27,6 @@ import { Box ,
   CardHeader,
   DialogActions,
 } from '@mui/material';
-
 
 export const ResultForm = () => (
   <Box>

@@ -42,25 +42,24 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   index,
 }: ISubjectCardProps) => {
   const theme = useTheme();
-  console.log('subject---', subject);
 
   // State to control accordion expansion, initialized with subject's isSubjectOpen or false
   const [isExpanded, setIsExpanded] = useState(subject.isSubjectOpen || false);
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const previewDialog = useBoolean();
 
-  const uploadProps = {
-    multiple: true,
-    accept: {
-      'image/*': [],
-      'application/pdf': [],
-      'video/*': [], // Added video file support
-      'application/vnd.ms-powerpoint': [], // PPT
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation': [], // PPTX
-      'application/msword': [], // DOC
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [], // DOCX
-    },
-  };
+  // const uploadProps = {
+  //   multiple: true,
+  //   accept: {
+  //     'image/*': [],
+  //     'application/pdf': [],
+  //     'video/*': [], // Added video file support
+  //     'application/vnd.ms-powerpoint': [], // PPT
+  //     'application/vnd.openxmlformats-officedocument.presentationml.presentation': [], // PPTX
+  //     'application/msword': [], // DOC
+  //     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [], // DOCX
+  //   },
+  // };
   // Handler for updating subject fields
   // @param field - The field name to update
   // @param value - The new value to set
@@ -79,24 +78,24 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     getIn(formik.touched, `subjects[${index}].${field}`) &&
     getIn(formik.errors, `subjects[${index}].${field}`);
 
-  const handleDrop = (acceptedFiles: File[]) => {
-    handleChange('documents', [...(subject.documents || []), ...acceptedFiles]);
-  };
+  // const handleDrop = (acceptedFiles: File[]) => {
+  //   handleChange('documents', [...(subject.documents || []), ...acceptedFiles]);
+  // };
 
-  const handleRemove = (fileToRemove: string | File) => {
-    const updatedDocuments = (subject.documents || []).filter((file) => {
-      if (typeof fileToRemove === 'string') {
-        return file.name !== fileToRemove;
-      }
-      return file !== fileToRemove;
-    });
-    handleChange('documents', updatedDocuments);
-  };
+  // const handleRemove = (fileToRemove: string | File) => {
+  //   const updatedDocuments = (subject.documents || []).filter((file) => {
+  //     if (typeof fileToRemove === 'string') {
+  //       return file.name !== fileToRemove;
+  //     }
+  //     return file !== fileToRemove;
+  //   });
+  //   handleChange('documents', updatedDocuments);
+  // };
 
-  const handleView = (file: File | string) => {
-    setPreviewFile(file);
-    previewDialog.onTrue();
-  };
+  // const handleView = (file: File | string) => {
+  //   setPreviewFile(file);
+  //   previewDialog.onTrue();
+  // };
 
   return (
     <>

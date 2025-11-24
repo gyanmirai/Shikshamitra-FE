@@ -55,22 +55,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
     return dayjs(issueDate).add(daysToAdd, 'day');
   };
 
-  const reservationData = [
-    { memberName: 'Tom Brown', status: 'Notified', dueDate: '5-11-2024' },
-    { memberName: 'John Doe', status: 'Notified', dueDate: '11-11-2024' },
-    { memberName: 'Michael Johnson', status: 'Notified', dueDate: '12-11-2024' },
-    { memberName: 'Lucy Green', status: 'Waiting', dueDate: '' },
-    { memberName: 'Michael Johnson', status: 'Waiting', dueDate: '' },
-  ];
-
-  const [grNumber, setGrNumber] = useState<any>('');
   const [addedBooks, setAddedBooks] = useState<any[]>([]);
-  const grOptions = [
-    { label: 'Hiral', value: 'Hiral' },
-    { label: 'Hiren', value: 'Hiren' },
-    { label: 'HirMoise', value: 'HirMoise' },
-    { label: 'Vishal', value: 'Vishal' },
-  ];
 
   const handleAddBook = () => {
     if (

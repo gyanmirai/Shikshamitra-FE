@@ -8,27 +8,19 @@ import { Box, Grid, Chip, TextField, Typography, IconButton } from '@mui/materia
 
 import type { IBudgetFormValues } from './type';
 
-interface ISubCategory {
-  category: string;
-  subCategory: string;
-  amount: number | string;
-  notes: string;
-}
-
 const Step2Allocation = (formik: FormikProps<IBudgetFormValues>) => {
   const { values, setFieldValue, touched, setFieldTouched, errors } = formik;
-  console.log('values[-----------', values);
 
   // Calculate total allocated amount
-  const totalAllocated = values.subCategories.reduce((sum, item) => {
-    const amount =
-      typeof item.amount === 'string' ? parseFloat(item.amount) || 0 : item.amount || 0;
-    return sum + amount;
-  }, 0);
+  // const totalAllocated = values.subCategories.reduce((sum, item) => {
+  //   const amount =
+  //     typeof item.amount === 'string' ? parseFloat(item.amount) || 0 : item.amount || 0;
+  //   return sum + amount;
+  // }, 0);
 
   // Calculate remaining budget
-  const remainingBudget = Number(values.totalBudgetAmount) - totalAllocated;
-  const isOverBudget = remainingBudget < 0;
+  // const remainingBudget = Number(values.totalBudgetAmount) - totalAllocated;
+  // const isOverBudget = remainingBudget < 0;
 
   const handleRemove = (index: number) => {
     const updated = [...values.subCategories];

@@ -37,21 +37,19 @@ export function Upload({
   onView,
   ...other
 }: UploadProps) {
-  const { getRootProps, getInputProps, isDragActive, isDragReject, fileRejections, open } =
-    useDropzone({
-      multiple,
-      disabled,
-      ...other,
-    });
+  const { getInputProps, fileRejections, open } = useDropzone({
+    multiple,
+    disabled,
+    ...other,
+  });
 
   const isArray = Array.isArray(value) && multiple;
-  const [visibleCount, setVisibleCount] = useState(2);
+  const [visibleCount] = useState(2);
 
   const hasFile = !isArray && !!value;
   const dialog = useBoolean();
 
   const hasFiles = isArray && value.length > 0;
-  const hasError = !!error;
   const remainingFiles = value?.slice(visibleCount);
 
   return (

@@ -22,7 +22,7 @@ import type { IIncidentType } from './type';
 const IncidentTypeSetting = (props: TabComponentType) => {
   const dialog = useBoolean();
   const dialogForDeleteConfirmation = useBoolean();
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<IIncidentType | null>(null);
 
   const dispatch = useDispatch();

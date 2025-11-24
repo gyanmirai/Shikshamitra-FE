@@ -25,7 +25,7 @@ const BedNumberSetting = (props: TabComponentType) => {
   // Dialog state for delete confirmation modal
   const dialogForDeleteConfirmation = useBoolean();
   // State to manage modal open/close
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
   // State to store the selected bed entry
   const [selectedEntry, setSelectedEntry] = useState<IHostelBed | null>(null);
 

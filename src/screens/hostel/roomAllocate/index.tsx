@@ -31,6 +31,7 @@ const StudentRoomAllocate = () => {
   const assignRoom = useBoolean();
   const leftStudentDialog = useBoolean();
   // State for managing form disable status
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [disabled, setDisabled] = useState(false);
   // State for storing selected hostel request
   const [selectedRequest, setSelectedRequest] = useState<IHostelRequestFormType | null>(null);

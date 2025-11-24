@@ -25,7 +25,7 @@ const TagSetting = (props: TabComponentType) => {
   // Dialog state for delete confirmation popup
   const dialogForDeleteConfirmation = useBoolean();
   // State to manage form open/close status
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
   // State to store the currently selected tag entry
   const [selectedEntry, setSelectedEntry] = useState<ITag | null>(null);
 

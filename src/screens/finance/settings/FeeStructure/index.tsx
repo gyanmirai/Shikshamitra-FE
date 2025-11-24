@@ -29,7 +29,7 @@ const FeeStructure = () => {
   const confirmDialog = useBoolean();
   const viewFeeStructureDialog = useBoolean();
 
-  const { data: feeStructure, isLoading: feeStructureLoading } = useQueryAndMutation({
+  const { data: feeStructure } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFinanceFeeStructureQuery,
   });

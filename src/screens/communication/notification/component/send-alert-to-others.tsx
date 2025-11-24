@@ -14,7 +14,7 @@ import {
 
 const SendAlertToOthers = () => {
   const [whatsappMedia, setWhatsappMedia] = useState<any>(null);
-  const [isSendAlertCtadisabled, setSendAlertCtadisabled] = useState<any>(true);
+  const [, setSendAlertCtadisabled] = useState<any>(true);
 
   const handleMediaUpload = (files: any) => {
     if (files.length > 0) {
@@ -66,10 +66,6 @@ const SendAlertToOthers = () => {
 
   const handleInputChange = (event: any) => {
     setFormData({ ...formData, [event.target.name]: event.target.value });
-  };
-
-  const handleFileChange = (event: any) => {
-    setFormData({ ...formData, whatsappMedia: event.target.files[0] });
   };
 
   return (

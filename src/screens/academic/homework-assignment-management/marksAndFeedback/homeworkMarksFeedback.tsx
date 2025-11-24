@@ -78,17 +78,13 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
   // State to store selected division
   const [division, setDivision] = useState<string>('');
   // State to store selected homework type (daily/weekly/project)
-  const [homeworkType, setHomeworkType] = useState('');
+  // const [homeworkType, setHomeworkType] = useState('');
   // State to store homework title
   const [homeworkTitle, setHomeworkTitle] = useState('');
   const [selectedHomework, setSelectedHomework] = useState<any>(null);
 
   // Get current board and medium from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Effect to update available classes when medium changes
   useEffect(() => {

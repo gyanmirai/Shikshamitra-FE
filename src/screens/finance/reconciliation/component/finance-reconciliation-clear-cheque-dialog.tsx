@@ -263,7 +263,3 @@ const FinanceReconciliationClearAndBounceChequeDialog: React.FC<
 };
 
 export default FinanceReconciliationClearAndBounceChequeDialog;
-
-function dayJs(chequeDate: any, arg1: string) {
-  throw new Error('Function not implemented.');
-}

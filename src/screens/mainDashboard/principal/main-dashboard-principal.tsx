@@ -1,10 +1,9 @@
 'use client';
 
-import { useFormik } from 'formik';
+// import { useFormik } from 'formik';
+import React, { useState } from 'react';
 import { CONFIG } from 'src/config-global';
-import { useTheme } from '@mui/material/styles';
 import { SvgColor } from 'src/components/svg-color';
-import React, { useState, useCallback } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import { AppWelcome } from 'src/sections/overview/app/app-welcome';
@@ -27,16 +26,16 @@ import ExamOverviewForPrincipal from './component/exam-overview';
 import { PrincipalDashboardCard } from './component/principal-dashboard-card';
 import WhatsNewInMonthComponent from './component/whats-new-in-month-component';
 
-const _ExamSalesOverview = [
-  'Ongoing Exams',
-  'Upcoming Exams',
-  'Completed Exams',
-  'Pending Grading',
-].map((label, index) => ({
-  label,
-  totalAmount: (19 + index) * 100,
-  value: 10 + index,
-}));
+// const _ExamSalesOverview = [
+//   'Ongoing Exams',
+//   'Upcoming Exams',
+//   'Completed Exams',
+//   'Pending Grading',
+// ].map((label, index) => ({
+//   label,
+//   totalAmount: (19 + index) * 100,
+//   value: 10 + index,
+// }));
 
 const studentList = [
   { id: 1, name: 'John Doe', value: '1', totalMarks: 95, avatarUrl: '/path/to/avatar1.jpg' },
@@ -79,22 +78,21 @@ const subjectOptions = [
 
 const MainDashboardPrincipal = () => {
   const [timeTable, setTimeTable] = useState('student');
-  const handleChangeView = useCallback(
-    (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
-      if (newView !== null) {
-        setTimeTable(newView);
-      }
-    },
-    []
-  );
-  const theme = useTheme();
-  const formik = useFormik({
-    initialValues: {
-      selectedClassForStudent: '',
-    },
+  // const handleChangeView = useCallback(
+  //   (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
+  //     if (newView !== null) {
+  //       setTimeTable(newView);
+  //     }
+  //   },
+  //   []
+  // );
+  // const formik = useFormik({
+  //   initialValues: {
+  //     selectedClassForStudent: '',
+  //   },
 
-    onSubmit: async (values) => {},
-  });
+  //   onSubmit: async (values) => {},
+  // });
   const icon = (name: string) => (
     <SvgColor src={`${CONFIG.site.basePath}/assets/icons/navbar/${name}.svg`} />
   );

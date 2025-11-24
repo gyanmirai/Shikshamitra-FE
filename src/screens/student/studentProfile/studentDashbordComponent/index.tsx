@@ -1,4 +1,4 @@
-import type { JSX} from 'react';
+import type { JSX } from 'react';
 
 import React, { useState } from 'react';
 import { fNumber } from 'src/utils/format-number';

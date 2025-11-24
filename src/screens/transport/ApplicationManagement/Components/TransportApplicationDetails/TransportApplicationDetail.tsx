@@ -28,11 +28,10 @@ const TransportApplicationDetail = ({
   onReject?: () => void;
   onHold?: () => void;
 }) => {
-  const { data: routeData, isLoading } = useQueryAndMutation({
+  const { data: routeData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRouteStopDataQuery,
   });
-  console.log('routeData---', routeData);
   const initialValues = getTransportApplicationInitialValues(selectedApplication, routeData);
 
   const formik = useFormik({

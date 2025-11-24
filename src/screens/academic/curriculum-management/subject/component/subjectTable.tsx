@@ -285,7 +285,7 @@ const SubjectTable = ({
           isFilter: false,
           isSort: false,
           render(value, row) {
-            const subject = subjectTableData.find((s) => s.id === row.id);
+            // const subject = subjectTableData.find((s) => s.id === row.id);
             return (
               <ThreeDotsActions
                 placement="right-top"

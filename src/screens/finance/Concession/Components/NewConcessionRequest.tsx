@@ -56,12 +56,11 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const [mediums, setMediums] = useState<any[]>([]);
   const [allDivision, setAllDivision] = useState<any[]>([]);
   // Fetch concession type data
-  const { data: concessionTypes, isLoading: concessionTypesLoading } = useQueryAndMutation({
+  const { data: concessionTypes } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypeQuery,
   });
 
-  console.log('concessionTypes====', concessionTypes);
   // queries
   const [getClassByMedium, { data: classes }] = useQueryAndMutation({
     type: 'mutation',

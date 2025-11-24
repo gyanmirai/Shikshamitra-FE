@@ -198,7 +198,7 @@ const StudentIDCardCreator = () => {
       backgroundColor: '#ffffff',
     },
   });
-  const [studentData, setStudentData] = useState({});
+  // const [studentData, setStudentData] = useState({});
   const printRef = useRef<HTMLDivElement>(null);
 
   const handleAddField = () => {

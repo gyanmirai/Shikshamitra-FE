@@ -17,7 +17,7 @@ const ArchievedIncidents = () => {
   // Selected incident for editing/viewing
   const [selectedIncident, setSelectedIncident] = useState<IHostelIncident | null>(null);
   // Disciplinary incidents data
-  const [incidentData, setIncidentData] = useState<IHostelIncident[]>(disciplineData);
+  const [incidentData] = useState<IHostelIncident[]>(disciplineData);
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs

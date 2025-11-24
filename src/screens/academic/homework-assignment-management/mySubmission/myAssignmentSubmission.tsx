@@ -64,7 +64,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
   );
 
   // Memoized tab configuration based on exam counts
-  const TABS = useMemo(
+  useMemo(
     () => [
       {
         label: 'Pending',
@@ -83,7 +83,7 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
   );
 
   // Callback for handling menu actions (upload/view submission)
-  const actions = useCallback(
+  useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
         {tabs.value === 0 ? (
@@ -117,11 +117,6 @@ const MyAssignmentSubmission = (props: TabComponentType) => {
   // Redux dispatch and state
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
-
-  // Handler for tab change events
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
-    tabs.onChange(event, newValue);
-  };
 
   // Memoized filtered table data based on active tab
   const tableData = useMemo(

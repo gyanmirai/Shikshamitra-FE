@@ -46,7 +46,7 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State to store list of all classes/standards
-  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [, setAllClass] = useState<Standards[]>([]);
   // Redux state for current board, medium and medium setter
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 

@@ -28,7 +28,7 @@ const SetPaymentMethodComponent = () => {
   // States to manage selected payment method details
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<any | null>(null);
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null);
-  const [selectedPaymentMethodName, setSelectedPaymentMethodName] = useState<string | null>(null);
+  const [, setSelectedPaymentMethodName] = useState<string | null>(null);
 
   // Loading state for delete operation
   const isDeleteLoading = false;

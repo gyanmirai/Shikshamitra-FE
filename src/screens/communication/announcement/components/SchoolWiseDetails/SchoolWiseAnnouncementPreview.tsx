@@ -1,7 +1,6 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Divider, Typography } from '@mui/material';
 
@@ -12,9 +11,7 @@ interface Props {
 }
 
 export default function SchoolWiseAnnouncementCard({ formikValues }: Props) {
-  const { title, description, createdBy, cratedOn, type, importance_level, startDate } =
-    formikValues;
-  const theme = useTheme();
+  const { title, description, createdBy, type, importance_level, startDate } = formikValues;
 
   return (
     <Card

@@ -65,9 +65,9 @@ const initialStudentGroups: TStudentGroup[] = [
 ];
 
 const StudentGroup = () => {
-  const [studentGroups, setStudentGroups] = useState<TStudentGroup[]>(initialStudentGroups);
+  const [studentGroups] = useState<TStudentGroup[]>(initialStudentGroups);
   const [isEdit, setIsEdit] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<TStudentGroup | null>(null);
+  const [, setSelectedGroup] = useState<TStudentGroup | null>(null);
 
   const dialog = useBoolean();
   const deleteConfirmDialog = useBoolean();

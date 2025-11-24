@@ -54,7 +54,7 @@ const TABS = [
 ];
 
 export const ViewSubject = ({ subject }: IViewSubjectProps) => {
-  const [tabValue, setTabValue] = useState(0);
+  // const [tabValue, setTabValue] = useState(0);
   const tabs = useTabs('overview');
 
   // Find the currently active tab component based on selected tab value
@@ -71,10 +71,10 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
     }
   }, [subject]);
 
-  const handleAccordionChange =
-    (subjectCode: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
-      setExpandedSubject(isExpanded ? subjectCode : null);
-    };
+  // const handleAccordionChange =
+  //   (subjectCode: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
+  //     setExpandedSubject(isExpanded ? subjectCode : null);
+  //   };
 
   return (
     <Grid container spacing={1} height="calc(100vh - 225px)">

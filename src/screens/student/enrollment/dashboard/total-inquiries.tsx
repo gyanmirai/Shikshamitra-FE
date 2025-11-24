@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box , Grid, Card, Typography } from '@mui/material';
+import { Box, Grid, Card, Typography } from '@mui/material';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
 const TotalInquiries = () => (

@@ -1,6 +1,5 @@
 'use client';
 
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -18,7 +17,7 @@ interface Data {
   action?: string;
 }
 
-let data: Data[] = [
+const data: Data[] = [
   {
     id: 1,
     departmentName: 'IT',
@@ -36,8 +35,6 @@ let data: Data[] = [
 ];
 
 const FinanceBudgetSettingTab = () => {
-  const theme = useTheme();
-
   const dialog = useBoolean();
   const [selectedEntry, setSelectedEntry] = useState(data);
   const [isEdit, setIsEdit] = useState(false);
@@ -51,14 +48,8 @@ const FinanceBudgetSettingTab = () => {
 
   useEffect(() => {}, [selectedEntry, isEdit, tableData]);
 
-  const handleDelete = (item: any) => {
-    data = data.filter((val) => val.id !== item.id || val.id !== item.id);
-
-    setTableData([...data]);
-  };
-
   const handleSave = (dataFromDialog: any) => {
-    const { id, departmentName, allocatedAmount, startDate, endDate } = dataFromDialog;
+    const { id, departmentName, allocatedAmount } = dataFromDialog;
 
     if (dataFromDialog) {
       const existingEntryIndex = data.findIndex((val) => departmentName === val.departmentName);

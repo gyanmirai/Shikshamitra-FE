@@ -20,7 +20,6 @@ type Props = {
 };
 
 const GeneralInfoStep = ({ formik, editData }: Props) => {
-  console.log('formik--values---', formik?.values);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Queries
@@ -33,14 +32,14 @@ const GeneralInfoStep = ({ formik, editData }: Props) => {
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
 
-  const { data: board, isLoading: boardLoading } = useQueryAndMutation({
+  const { data: board } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
 
   // Local state
   const [boards, setBoards] = useState<any[]>([]);
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>();
+  const [, setSelectedAcademicYear] = useState<string>();
 
   useEffect(() => {
     if (!editData && currentYear && board?.items) {

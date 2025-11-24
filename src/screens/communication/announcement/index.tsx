@@ -53,9 +53,7 @@ const Announcement = (props: TabComponentType) => {
   const [deleteAnnouncement, setDeleteAnnouncement] = useState<ISchoolWiseAnnouncement | null>(
     null
   );
-  const [removeAnnouncement, setRemoveAnnouncement] = useState<ISchoolWiseAnnouncement | null>(
-    null
-  );
+  const [, setRemoveAnnouncement] = useState<ISchoolWiseAnnouncement | null>(null);
   // Controls the visibility of delete confirmation dialog
   const confirm_dialog = useBoolean();
   // Controls the visibility of publish modal

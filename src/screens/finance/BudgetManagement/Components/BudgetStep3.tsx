@@ -8,7 +8,7 @@ import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
 import type { IBudgetFormValues } from './type';
 
 const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
-  const { values, setFieldValue, touched, setFieldTouched, errors } = formik;
+  const { values } = formik;
 
   return (
     <Box>

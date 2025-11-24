@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Button, MenuItem, MenuList } from '@mui/material';
@@ -13,7 +13,7 @@ import TransportAddingStopDialog from './transport-adding-stop-dialog';
 const TransportStopsSettingScreen = () => {
   const addingStopDialog = useBoolean();
   const viewStopDialog = useBoolean();
-  const [, setSelectedEntry] = useState<any>();
+  // const [, setSelectedEntry] = useState<any>();
 
   const stopData = [
     {

@@ -37,9 +37,7 @@ const PaySlipGenerationScreen = () => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [organization, setOrganization] = useState<string>('');
 
-  const { currentMedium: medium, setCurrentMedium: setMedium } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);

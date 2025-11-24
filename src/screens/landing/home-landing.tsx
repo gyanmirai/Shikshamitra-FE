@@ -4,10 +4,8 @@ import { m } from 'framer-motion';
 import Box from '@mui/material/Box';
 import { Grid } from '@mui/material';
 import Stack from '@mui/material/Stack';
-import { CONFIG } from 'src/config-global';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
-import { varAlpha, stylesMode } from 'src/theme/styles';
 import { ICONS } from 'src/layouts/config-nav-dashboard';
 import { navSectionClasses } from 'src/components/nav-section';
 import { varFade, MotionViewport } from 'src/components/animate';
@@ -92,38 +90,38 @@ export function HomeMinimal({ sx, ...other }: StackProps) {
     </>
   );
 
-  const renderImg = (
-    <Stack
-      component={m.div}
-      variants={varFade({ distance: 24 }).inRight}
-      alignItems="center"
-      justifyContent="center"
-      sx={{ height: 1, position: 'relative' }}
-    >
-      <Box
-        sx={{
-          left: 0,
-          width: 720,
-          borderRadius: 2,
-          position: 'absolute',
-          bgcolor: 'background.default',
-          boxShadow: (theme) =>
-            `-40px 40px 80px 0px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.16)}`,
-          [stylesMode.dark]: {
-            boxShadow: (theme) =>
-              `-40px 40px 80px 0px ${varAlpha(theme.vars.palette.common.blackChannel, 0.16)}`,
-          },
-        }}
-      >
-        <Box
-          component="img"
-          alt="Home Chart"
-          src={`${CONFIG.site.basePath}/assets/images/home/home-chart.webp`}
-          sx={{ width: 720 }}
-        />
-      </Box>
-    </Stack>
-  );
+  // const renderImg = (
+  //   <Stack
+  //     component={m.div}
+  //     variants={varFade({ distance: 24 }).inRight}
+  //     alignItems="center"
+  //     justifyContent="center"
+  //     sx={{ height: 1, position: 'relative' }}
+  //   >
+  //     <Box
+  //       sx={{
+  //         left: 0,
+  //         width: 720,
+  //         borderRadius: 2,
+  //         position: 'absolute',
+  //         bgcolor: 'background.default',
+  //         boxShadow: (theme) =>
+  //           `-40px 40px 80px 0px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.16)}`,
+  //         [stylesMode.dark]: {
+  //           boxShadow: (theme) =>
+  //             `-40px 40px 80px 0px ${varAlpha(theme.vars.palette.common.blackChannel, 0.16)}`,
+  //         },
+  //       }}
+  //     >
+  //       <Box
+  //         component="img"
+  //         alt="Home Chart"
+  //         src={`${CONFIG.site.basePath}/assets/images/home/home-chart.webp`}
+  //         sx={{ width: 720 }}
+  //       />
+  //     </Box>
+  //   </Stack>
+  // );
 
   return (
     <Stack

@@ -40,19 +40,9 @@ const FinanceNewFeeStructureSetting = () => {
 
   const [selectedEntry, setSelectedEntry] = useState<IFeeStructure | null>(null);
   const [isEdit, setIsEdit] = useState(false);
-  const [tableData, setTableData] = useState<IFeeStructure[]>(initialData);
+  const [tableData] = useState<IFeeStructure[]>(initialData);
 
-  const [open, setOpen] = useState(false);
-
-  const closeHandler = () => {
-    setIsEdit(false);
-    setOpen(false);
-  };
-
-  const newEntryHandler = () => {
-    setIsEdit(false);
-    setOpen(true);
-  };
+  const [, setOpen] = useState(false);
 
   // Handles closing the incident form
   const handleClose = (_e: any, isSubmit?: boolean) => {

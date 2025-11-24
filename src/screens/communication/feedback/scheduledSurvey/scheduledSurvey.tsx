@@ -19,12 +19,12 @@ import type { ISurvey } from '../type';
 const ScheduledSurvey = (props: TabComponentType) => {
   // Modal state for publishing survey
   const publish_modal = useBoolean();
-  const [publishingSurvey, setPublishingSurvey] = useState<ISurvey | null>(null);
+  const [, setPublishingSurvey] = useState<ISurvey | null>(null);
   // Table data state for surveys
   const [surveyTableData, setSurveyTableData] = useState<ISurvey[]>(scheduledSurveyData);
   // Dialog state for viewing survey details
   const viewDetailsDialog = useBoolean();
-  const [viewSurvey, setViewSurvey] = useState<ISurvey | null>(null);
+  const [, setViewSurvey] = useState<ISurvey | null>(null);
   const [params, setParams] = useSearchParam({ isForm: 'false' });
 
   // Dialog state for viewing survey responses

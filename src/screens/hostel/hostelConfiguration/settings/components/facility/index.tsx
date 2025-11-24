@@ -25,7 +25,7 @@ const FacilitySetting = (props: TabComponentType) => {
   // Dialog state for delete confirmation
   const dialogForDeleteConfirmation = useBoolean();
   // State to manage form open/close
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
   // State to store selected facility entry
   const [selectedEntry, setSelectedEntry] = useState<IFacility | null>(null);
   const dispatch = useDispatch();

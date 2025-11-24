@@ -1,6 +1,6 @@
 'use client';
 
-import type { JSX} from 'react';
+import type { JSX } from 'react';
 import type { ICardItem } from 'src/screens/student/enrollment/entrollment-interface';
 
 import { useState } from 'react';

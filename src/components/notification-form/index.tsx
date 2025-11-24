@@ -15,6 +15,7 @@ import CustomSelect from '../custom-select';
 const NotificationForm = () => {
   const [notificationType, setNotificationType] = useState('daily');
   const [time, setTime] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [date, setDate] = useState<any>(null);
   const [dayOfWeek, setDayOfWeek] = useState<any>('');
   const [dayOfMonth, setDayOfMonth] = useState<any>('');
@@ -33,6 +34,7 @@ const NotificationForm = () => {
     setNotificationType(event.target.value);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSubmit = () => {
     alert(
       `Notification type: ${notificationType}, Time: ${time}, Date: ${

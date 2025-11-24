@@ -3,10 +3,10 @@
 import type { RootState } from 'src/redux/store';
 
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Paper, Stack, Typography } from '@mui/material';
@@ -29,7 +29,7 @@ const SubjectList: React.FC<SubjectListProps> = ({
   timetable,
 }) => {
   const weeklyLecturesDialog = useBoolean();
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 

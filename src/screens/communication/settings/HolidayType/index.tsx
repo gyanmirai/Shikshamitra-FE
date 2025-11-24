@@ -33,7 +33,7 @@ const HolidayTypeCreation = () => {
   // Dialog control states
   const deleteHolidayTypeDialog = useBoolean();
   const addHolidayTypeDialog = useBoolean();
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
 
   // State management
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);

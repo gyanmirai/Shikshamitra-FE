@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { Box } from '@mui/material';
 import React, { useState } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
+// import { useBoolean } from 'src/hooks/use-boolean';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import data from 'src/json/ResourceManagement/lossDamaged/lossDamagedData.json';
@@ -12,9 +12,9 @@ import type {
 } from '../resource-loss-damage-interface';
 
 const ResourceLossDamageTableTeacher: React.FC<IReportLossTableProps> = ({ onClick }) => {
-  const addResourceLossDamagedDialog = useBoolean();
+  // const addResourceLossDamagedDialog = useBoolean();
 
-  const [selectedRow, setSelectedRow] = useState<IResourceIncidentFormValues>();
+  const [, setSelectedRow] = useState<IResourceIncidentFormValues>();
 
   return (
     <>

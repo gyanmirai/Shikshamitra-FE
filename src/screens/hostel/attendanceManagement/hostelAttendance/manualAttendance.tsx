@@ -22,10 +22,13 @@ const ManualHostelAttendance = () => {
   // State for storing the selected date
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   // State for storing the selected block
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_rollCall, setRollCall] = useState<string>();
   // State for storing the selected hostel
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_hostel, setHostel] = useState<string>('');
   // State for storing the selected room
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_floor, setFloor] = useState<string>('');
   // Dialog state for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();

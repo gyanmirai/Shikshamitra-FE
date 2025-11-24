@@ -35,21 +35,16 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik<ISubjectFormValues>({
     initialValues: getNoOfLectureInitialValues(editData, selectedClass || classes),
     enableReinitialize: true, // important when using useMemo
     validationSchema: noOfLectureValidationSchema,
     onSubmit: (values) => {
-      console.log('handle submit calll---s');
-
       // Calculate total lectures
       const totalLectures = values.subjects.reduce((sum, subject) => sum + subject.noOfLecture, 0);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const submitData = {
         ...values,
         totalLectures,

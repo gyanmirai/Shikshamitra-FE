@@ -27,6 +27,7 @@ const RollCallSetting = (props: TabComponentType) => {
   const dialogForDeleteConfirmation = useBoolean();
 
   // State to control form open/close
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_open, setOpen] = useState(false);
 
   // State to store the selected roll call setting for editing

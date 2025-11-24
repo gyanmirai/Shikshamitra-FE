@@ -32,7 +32,7 @@ const AddSubCategoryDialog: React.FC<IAddResourceSubCategoryDialogProps> = ({ da
     },
   });
 
-  const isDisabled = !isEdit && data !== null;
+  // const isDisabled = !isEdit && data !== null;
 
   return (
     <form onSubmit={formik.handleSubmit}>

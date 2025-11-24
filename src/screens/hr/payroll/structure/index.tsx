@@ -44,9 +44,7 @@ const EmployeeSalaryStructureScreen = () => {
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [organization, setOrganization] = useState<string>('');
 
-  const { currentMedium: medium, setCurrentMedium: setMedium } = useSelector(
-    (state: RootState) => state.globalState
-  );
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
@@ -139,6 +137,7 @@ export const Sections = ({
     currentQueryAndMutation: useDeletePayrollStructureMutation,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const actions = useCallback(
     // eslint-disable-next-line react/no-unused-prop-types
     ({ popover }: { popover: UsePopoverReturn }, row: any) => (

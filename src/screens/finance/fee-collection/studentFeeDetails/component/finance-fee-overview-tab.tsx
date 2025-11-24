@@ -228,16 +228,7 @@ interface FinanceFeeOverviewTabProps {
 }
 
 const FinanceFeeOverviewTab: React.FC<FinanceFeeOverviewTabProps> = ({ onClose, dialogValue }) => {
-  const [selectedStudent, setSelectedStudent] = useState<any>(students[0]);
-
-  const headerCellStyle = {
-    border: '1px solid #ccc',
-    padding: '10px',
-    position: 'sticky',
-    top: 0,
-    background: '#f4f6f8',
-    zIndex: 1,
-  };
+  const [selectedStudent] = useState<any>(students[0]);
 
   const cellStyle: React.CSSProperties = {
     border: '1px solid #ccc',

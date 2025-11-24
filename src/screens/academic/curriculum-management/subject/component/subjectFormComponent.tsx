@@ -288,11 +288,6 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
     // Handle form submission
     onSubmit: (values) => {
       // Prepare the complete submission data
-      const submitData = {
-        ...values,
-        id: data?.id || Date.now(),
-        status: isDraft ? 'Draft' : 'Publish',
-      };
       if (data) {
         shikshaMitraToast.success({
           message: `${values.subjectName} updated successfully for class ${values.className}`,
@@ -318,11 +313,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
   const [allClass, setAllClass] = useState<Standards[]>([]);
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {

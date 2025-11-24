@@ -54,7 +54,7 @@ const ChangeStatusForm = ({
     },
     onSubmit: async (values) => {
       try {
-        const res = await updateStatus({
+        await updateStatus({
           id: employeeId,
           employeeStatusType: values.status.value,
         }).unwrap();

@@ -34,7 +34,7 @@ const AddResourceCategoryDialog: React.FC<IAddResourceCategoryDialogProps> = ({ 
       // Add logic here to handle form submission (e.g., API call or state update)
     },
   });
-  const isDisabled = !isEdit && data !== null;
+  // const isDisabled = !isEdit && data !== null;
   return (
     <form onSubmit={formik.handleSubmit}>
       <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '100%' }}>

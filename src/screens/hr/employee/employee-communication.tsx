@@ -329,8 +329,8 @@ const EmployeeCommunication = ({ employee }: any) => {
     },
   ];
 
-  const announcements = communications.filter((c) => c.type === 'announcement');
-  const events = communications.filter((c) => c.type === 'event');
+  // const announcements = communications.filter((c) => c.type === 'announcement');
+  // const events = communications.filter((c) => c.type === 'event');
 
   return (
     <Box>

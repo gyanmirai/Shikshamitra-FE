@@ -19,8 +19,8 @@ interface FeeStructureViewCardProps {
   className: string;
   feeStructure: IClassWiseFeeData;
   index: number;
-  expanded: boolean; // ✅ new prop
-  onChange: () => void; // ✅ new prop
+  expanded: boolean;
+  onChange: () => void;
   feeStructureMain: IFeeStructure;
 }
 
@@ -32,7 +32,7 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({
   onChange,
   feeStructureMain,
 }) => {
-  const [feeItems, setFeeItems] = useState(feeStructure.feeItems);
+  const [feeItems] = useState(feeStructure.feeItems);
 
   if (!feeItems || feeItems.length === 0) {
     return <EmptyContent title="No Fee Structure Available" />;
@@ -43,7 +43,7 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({
   return (
     <Accordion
       expanded={expanded}
-      onChange={onChange} // ✅ allow toggle
+      onChange={onChange}
       sx={{
         border: '1px solid #ccc',
         boxShadow: 'none',

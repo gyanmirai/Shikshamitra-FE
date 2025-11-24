@@ -22,7 +22,7 @@ const RouteManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) 
   const [selectedRoute, setSelectedRoute] = useState<any | null>(null);
 
   // State for view route details
-  const [viewRoute, setViewRoute] = useState<any | null>(null);
+  const [, setViewRoute] = useState<any | null>(null);
 
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);

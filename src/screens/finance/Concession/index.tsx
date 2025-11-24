@@ -29,12 +29,7 @@ import type { IViewConcessionRequestProps } from '../ConcessionAdmin/type';
 
 const Concession = () => {
   //   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const {
-    currentYear,
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Local state to store filtered boards based on academic year
   const [boards, setBoards] = useState([]);
@@ -54,6 +49,7 @@ const Concession = () => {
   const onConfirmDialg = useBoolean();
   const [selectedMode, setSelectedMode] = useState('');
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: concessionData, isLoading: boardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionRequestsQuery,

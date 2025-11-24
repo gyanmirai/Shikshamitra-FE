@@ -37,7 +37,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   // Dialog state for viewing homework submissions from students
   const viewHomeworkSubmissionDialog = useBoolean();
   // State to store all organizations/stages from the selected medium
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
+  // const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const [subject, setSubject] = useState('');
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -51,11 +51,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {
@@ -74,16 +70,16 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   }, [allClass, classes]);
 
   // Controls form visibility
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
   // Breadcrumb navigation links based on form state
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // State to track the currently selected homework assignment for editing
   const [selectedHomework, setSelectedHomework] = useState<IHomework | null>(null);
-  const [viewHomework, setViewHomework] = useState<IHomeworkDetail | null>(null);
+  const [, setViewHomework] = useState<IHomeworkDetail | null>(null);
 
   // State to store the list of homework/subject assignments
-  const [homeworkData, setHomeworkData] = useState<any[]>(homeworkTableData);
+  const [homeworkData] = useState<any[]>(homeworkTableData);
   // Redux dispatch
   const dispatch = useDispatch();
 

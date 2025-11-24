@@ -16,18 +16,17 @@ import {
 
 const LibraryNotificationSettingScreen = () => {
   const [frequency, setFrequency] = useState<any>('');
-  const [userGroup, setUserGroup] = useState<any>([]);
   const [isReminderEnabled, setIsReminderEnabled] = useState(false);
-  const [roles, setRoles] = useState({
-    staff: false,
-    sms: false,
-    email: false,
-    whatsapp: false, // Added WhatsApp communication preference
-  });
+  // const [, setRoles] = useState({
+  //   staff: false,
+  //   sms: false,
+  //   email: false,
+  //   whatsapp: false, // Added WhatsApp communication preference
+  // });
 
-  const handleRoleChange = (role: string, checked: boolean) => {
-    setRoles((prev) => ({ ...prev, [role]: checked }));
-  };
+  // const handleRoleChange = (role: string, checked: boolean) => {
+  //   setRoles((prev) => ({ ...prev, [role]: checked }));
+  // };
 
   // Communication data for the table
   const communicationData = [

@@ -25,6 +25,8 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
   onClose,
   allData,
 }) => {
+  // Get isChanges state from Redux store
+  useSelector((state: RootState) => state.confirmPopup);
   // State to track and display duplicate receipt book name error
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showErrorMessage, setShowErrorMessage] = useState(false);

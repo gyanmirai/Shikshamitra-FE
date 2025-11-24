@@ -75,7 +75,7 @@ const SeatAllocationTable = ({
   examData = tableData,
   onSeatAllocate,
 }: SeatAllocationTableProps) => {
-  const [data, setData] = useState(examData);
+  const [data] = useState(examData);
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (

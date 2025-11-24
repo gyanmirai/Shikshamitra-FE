@@ -10,6 +10,7 @@ const leaveValidationSchema = (editData: any) =>
     startDate: Yup.date().required('Start date is required'),
     endDate: Yup.string()
       .nullable()
+      // eslint-disable-next-line func-names
       .test('endDate', '', function (value) {
         const { isHalfDay, startDate } = this.parent;
         if (isHalfDay) return true;
@@ -30,6 +31,7 @@ const leaveValidationSchema = (editData: any) =>
     rejectionReason: Yup.string().test(
       'rejectionReason',
       'Rejection reason is required',
+      // eslint-disable-next-line func-names
       function (value) {
         const { status } = this.parent;
         if (editData && status === EmployeeLeaveStatusType.Rejected) {

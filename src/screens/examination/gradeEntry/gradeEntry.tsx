@@ -10,10 +10,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { useGetClassQuery } from 'src/redux/class/classApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import React, { useState, useEffect, useCallback } from 'react';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
@@ -108,12 +106,12 @@ const GradeEntry = (props: TabComponentType) => {
   // Dialog control for showing/hiding modal
   const dialog = useBoolean();
   // Search parameters from URL and function to update them
-  const { searchParams, setSearchParams } = props;
+  const { searchParams } = props;
 
   // Selected subject for grade entry
   const [subject, setSubject] = useState(searchParams?.subject ? searchParams?.subject : '');
   // Type of assignment (quiz, test, homework etc)
-  const [assignmentType, setAssignmentType] = useState(
+  const [assignmentType] = useState(
     searchParams?.assignmentType ? searchParams?.assignmentType : ''
   );
   // Title of the selected assignment
@@ -121,10 +119,10 @@ const GradeEntry = (props: TabComponentType) => {
     searchParams?.assigngmentTitle ? searchParams?.assigngmentTitle : ''
   );
   // Query to fetch class data
-  const { data: classData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // const { data: classData, isLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetClassQuery,
+  // });
 
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
@@ -136,11 +134,7 @@ const GradeEntry = (props: TabComponentType) => {
   const [division, setDivision] = useState<string>('');
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {
@@ -161,7 +155,7 @@ const GradeEntry = (props: TabComponentType) => {
   // Currently selected student for grade entry
   const [selectedStudent, setSelectedStudent] = useState<IStudentExamGradeEntry | null>(null);
   // Table data containing student grades and information
-  const [tableData, setTableData] = useState<IStudentExamGradeEntry[]>(studentExamGradeEntries);
+  const [tableData] = useState<IStudentExamGradeEntry[]>(studentExamGradeEntries);
   // Array of selected student IDs for bulk grade assignment
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
@@ -190,34 +184,6 @@ const GradeEntry = (props: TabComponentType) => {
 
   // Redux dispatch function for triggering actions
   const dispatch = useDispatch();
-
-  /**
-   * Assigns the same grade to multiple selected students
-   * @param values - Object containing the grade to assign
-   */
-  const handleBulkGradeAssignment = (values: { grade: string }) => {
-    setTableData((prevData) =>
-      prevData.map((student) =>
-        selectedStudents.includes(student.id) ? { ...student, grade: values.grade } : student
-      )
-    );
-    bulkGradeDialog.onFalse();
-    setSelectedStudents([]);
-  };
-
-  /**
-   * Assigns grade and feedback to a single selected student
-   * @param values - Object containing grade and feedback to assign
-   */
-  const handleSingleGradeAssignment = (values: { grade: string; feedback: string }) => {
-    setTableData((prevData) =>
-      prevData.map((student) =>
-        student.id === selectedStudent?.id
-          ? { ...student, grade: values.grade, feedback: values.feedback }
-          : student
-      )
-    );
-  };
 
   /**
    * Closes all dialogs and resets selected student state

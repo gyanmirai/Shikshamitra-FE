@@ -11,14 +11,9 @@ import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/Inform
 import type { IExamFormValues } from '../type';
 
 const ExamBasicReview = ({ formik }: { formik: FormikProps<IExamFormValues> }) => {
-  console.log('formik values---', formik.values);
   // Get current board, medium and medium setter from global state
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Extract values from formik for easier access
   const { values } = formik;

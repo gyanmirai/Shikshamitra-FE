@@ -57,6 +57,7 @@ const CommonCalender = ({
   canReset,
   ...props
 }: CommonCalenderProps) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const theme = useTheme();
   const {
     calendarRef,
@@ -75,6 +76,7 @@ const CommonCalender = ({
     onInitialView,
     //
     setDate,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     selectedRange,
     //
     // onClickEventInFilters,

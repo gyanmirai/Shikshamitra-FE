@@ -31,7 +31,7 @@ const PackageManagement = (props: TabComponentType) => {
   const dialogForDeleteConfirmation = useBoolean();
   const publishDialog = useBoolean();
   // State to manage form open/close
-  const [open, setOpen] = useState(false);
+  const [, setOpen] = useState(false);
   // State to store selected facility entry
   const [selectedEntry, setSelectedEntry] = useState<IHostelPackageType | null>(null);
   const dispatch = useDispatch();

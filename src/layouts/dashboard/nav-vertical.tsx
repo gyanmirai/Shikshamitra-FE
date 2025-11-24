@@ -34,6 +34,7 @@ export function NavVertical({
 }: NavVerticalProps) {
   const theme = useTheme();
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const renderNavVertical = (
     <>
       {slots?.topArea ?? (

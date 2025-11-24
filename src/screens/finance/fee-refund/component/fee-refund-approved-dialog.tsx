@@ -1,6 +1,5 @@
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import capitalizeWords from 'src/utils/capitalizeText';
 import CustomDialog from 'src/components/customDialog';
@@ -21,24 +20,15 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
   onClose,
 }) => {
   // Dialog state management using custom boolean hook
-  const dialog = useBoolean();
 
   // State to store selected entry from student payment data
-  const [, setSelectedEntry] = useState<StudentPayment[]>(studentPayment);
 
   // State to track edit mode
-  const [, setIsEdit] = useState(false);
 
   // State to manage payment history data with initial student payment data
-  const [paymentHistoryData, setPaymentHistoryData] = useState<StudentPayment[]>(studentPayment);
+  const [paymentHistoryData] = useState<StudentPayment[]>(studentPayment);
 
   // Handler to update refund amount for specific payment entry
-  const handleRefundChange = (index: string, value: string) => {
-    const newData = [...paymentHistoryData];
-    const existingIndex = newData.findIndex((val) => val.paymentId === index);
-    newData[existingIndex].refundAmount = value;
-    setPaymentHistoryData(newData);
-  };
 
   // Calculate total refund amount from all payment history entries
   const totalRefundAmount: number = paymentHistoryData.reduce(
@@ -57,11 +47,11 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
   };
 
   // State to store tuition fee refund amount as string
-  const [tuitionFeeRefundAmount, setTuitionFeeRefundAmount] = useState<string>('');
+  const [tuitionFeeRefundAmount] = useState<string>('');
   // State to store library fee refund amount as string
-  const [libraryFeeRefundAmount, setlibraryFeeRefundAmount] = useState<string>('');
+  const [libraryFeeRefundAmount] = useState<string>('');
   // State to store total fee refund amount as number
-  const [totalFeeRefundAmount, setTotalFeeRefundAmount] = useState<number>(0);
+  const [, setTotalFeeRefundAmount] = useState<number>(0);
 
   // Helper function to parse numeric value from formatted string (removes commas)
   const parseNumericValue = (formattedValue: string) =>
@@ -78,6 +68,7 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
   const [discountValues, setDiscountValues] = useState<{ [key: string]: string }>({});
 
   // State to control if save button should be enabled
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isSaveEnabled, setIsSaveEnabled] = useState(false);
 
   // Handler to update discount value for a specific fee head
@@ -94,20 +85,11 @@ const FinanceFeeCollectionRefundApprovedDialog: React.FC<IFinanceFeeCollectionRe
   };
 
   // Calculate total discount by summing all discount values
-  const calculateTotalDiscount = () => {
-    const totalDiscount = Object.values(discountValues).reduce(
-      (sum, value) => sum + (Number(value) || 0),
-      0
-    );
-
-    return totalDiscount;
-  };
   const [feeRefundremark, setFeeRefundRemark] = useState('');
   // ✅ Use useEffect to correctly update isSaveEnabled when discountValues change
   useEffect(() => {
     const canSave =
       Object.values(discountValues).some((val) => Number(val) > 0) && feeRefundremark !== '';
-    const totalDiscount = calculateTotalDiscount();
 
     setIsSaveEnabled(canSave);
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -32,7 +32,7 @@ const FinanceBounceScreen = () => {
   const dialog = useBoolean();
 
   // State to store selected entry data for bounce charge collection
-  const [selectedEntry, setSelectedEntry] = useState<IChargeData>();
+  const [selectedEntry] = useState<IChargeData>();
 
   // Handler to close bounce charge collection dialog
   const closeDialog = () => {

@@ -94,7 +94,7 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
     [StudentsData?.items]
   );
 
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>(''); /**
+  const [, setSelectedAcademicYear] = useState<string>(''); /**
   /**
    * Hook to fetch academic year data
    */

@@ -22,7 +22,7 @@ const ViewExpenseData = ({
   expenseDetailedData: any;
   onClose: () => void;
 }) => {
-  const { data: expenseListData, isLoading } = useQueryAndMutation({
+  const { data: expenseListData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseListQuery,
   });

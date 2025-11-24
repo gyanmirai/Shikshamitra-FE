@@ -30,7 +30,6 @@ const AddBudgetCategoryDialog: React.FC<IFinanceAddBudgetCategoryDialogProps> = 
     errors, // Validation errors
     touched, // Fields that have been touched/visited
     handleSubmit, // Form submission handler
-    handleChange, // Input change handler
     handleBlur, // Input blur handler
     isSubmitting, // Submission state
     setSubmitting, // Function to update submission state

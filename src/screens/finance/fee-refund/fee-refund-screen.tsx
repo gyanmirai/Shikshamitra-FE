@@ -40,7 +40,6 @@ import type { IStudentRefundRequest } from '../new-fee-refund/new-refund-request
 
 const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedView = false }) => {
   const dialog = useBoolean();
-  const dialogForCreateRequest = useBoolean();
   const dialogForApprovalRequest = useBoolean();
   const dialogForFeeRefundedView = useBoolean();
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
@@ -49,7 +48,7 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
   );
 
   const [open, setOpen] = useState(false);
-  const [editData, setEditData] = useState<any>(null);
+  const [, setEditData] = useState<any>(null);
   const confirmDelete = useBoolean();
   const [isEdit, setIsEdit] = useState(false);
 
@@ -65,10 +64,6 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
         { name: 'Fee Refund', href: '/finance/fee-refund' },
       ];
 
-  const closeDialog = () => {
-    setOpen(false);
-    setEditData(null);
-  };
   const handleClose = () => {
     setOpen(false);
     setIsEdit(false);
@@ -93,11 +88,10 @@ const FeeRefundScreen: React.FC<IFeeRefundScreenProps> = ({ fromStudentDetailedV
   // States for managing division selection
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { currentMedium: medium, setCurrentMedium: setMedium } = useSelector(
+    (state: RootState) => state.globalState
+  );
 
   // Effect to update organizations when medium changes
   useEffect(() => {

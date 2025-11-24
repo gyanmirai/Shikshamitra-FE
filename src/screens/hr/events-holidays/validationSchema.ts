@@ -8,6 +8,7 @@ export const eventAndHolidayValidationSchema = Yup.object().shape({
   // Validate end date with custom validation logic
   endDate: Yup.date()
     .nullable()
+    // eslint-disable-next-line func-names
     .test('endDate', 'End date must be after start date', function (value) {
       // Get start date from parent object
       const { startDate } = this.parent;

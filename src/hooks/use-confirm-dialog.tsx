@@ -77,7 +77,7 @@ export function useConfirmDialog(): [(options: ConfirmOptions) => Promise<boolea
       </DialogActions>
     </Dialog>
   ) : (
-    <></>
+    <Box />
   );
 
   return [showConfirm, ConfirmDialog];

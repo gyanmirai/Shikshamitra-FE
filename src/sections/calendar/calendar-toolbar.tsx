@@ -70,7 +70,7 @@ export function CalendarToolbar({
   const popover = usePopover();
   const datePopover = usePopover();
 
-  const selectedItem = VIEW_OPTIONS.filter((item) => item.value === view)[0];
+  // const selectedItem = VIEW_OPTIONS.filter((item) => item.value === view)[0];
 
   const dateValue = dayjs(date, format ?? formatStr.date);
 

@@ -14,6 +14,7 @@ export const bookValidationSchema = [
       .string()
       .trim()
       .max(17, 'ISBN with hyphens cannot exceed 17 characters')
+      // eslint-disable-next-line func-names
       .test('isbn-validation', 'Please enter a valid ISBN-10 or ISBN-13', function (value) {
         if (!value) return true;
 
@@ -116,6 +117,7 @@ export const bookValidationSchema = [
       .test(
         'matches-numberOfCopies',
         'Number of copy rows must match "Number of Copies" set in General Information',
+        // eslint-disable-next-line func-names
         function (copies) {
           // this.parent is the parent object validated by this schema (root object)
           const numberOfCopies = this.parent?.numberOfCopies;

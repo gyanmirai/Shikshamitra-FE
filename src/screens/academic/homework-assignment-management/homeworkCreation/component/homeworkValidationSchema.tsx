@@ -41,6 +41,7 @@ export const homeworkValidationSchema = (currentYear: any) =>
               (value) =>
                 value && dayjs(value as any).isSameOrBefore(dayjs(currentYear.endDate), 'day')
             )
+            // eslint-disable-next-line func-names
             .test('after-publish', 'Due Date must be on or after Publish Date', function (value) {
               const { publishDate } = this.parent;
               return (

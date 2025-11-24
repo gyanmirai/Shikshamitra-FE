@@ -20,7 +20,7 @@ const MyResourcesScreen = () => {
   const raisedConcernDialog = useBoolean();
 
   // Tracks whether the dialog is in Edit mode (true) or Add mode (false)
-  const [isEdit, setEdit] = useState(false);
+  const [, setEdit] = useState(false);
 
   // Holds the visitor data selected for editing; null when adding a new visitor
   const [selectedResource, setSelectedResource] = useState<IMyResources | null>(null);

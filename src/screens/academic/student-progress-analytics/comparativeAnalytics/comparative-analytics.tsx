@@ -3,7 +3,6 @@
 import type { Division, Standards } from 'src/types/school';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
-import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
 import { Box, Grid, Typography } from '@mui/material';
 import { useGetClassQuery } from 'src/redux/class/classApi';
@@ -20,13 +19,12 @@ const ComparativeAnalytics = (props: TabComponentType) => {
   const [classes1, setClasses1] = useState('');
   const [classes2, setClasses2] = useState('');
   const [classes3, setClasses3] = useState('');
-  const [division, setDivision] = useState('');
-  const [divisionOptions, setDivisionOptions] = useState<Division[]>([]);
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const [, setDivision] = useState('');
+  const [, setDivisionOptions] = useState<Division[]>([]);
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });
-  const theme = useTheme();
 
   useEffect(() => {
     if (classData?.items?.length) {

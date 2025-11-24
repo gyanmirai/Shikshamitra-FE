@@ -42,7 +42,6 @@ const FeeCollectComponent = ({
       }
     },
   });
-  console.log('formik----', formik.values);
 
   return (
     <Box display="flex" flexDirection="column" height="100%">

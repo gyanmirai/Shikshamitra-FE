@@ -23,7 +23,6 @@ interface RefundDialogProps {
 const RefundDialog: React.FC<RefundDialogProps> = ({ studentData, onClose }) => {
   const [selectedFees, setSelectedFees] = useState<any>([]);
   const [refundMethod, setRefundMethod] = useState<'original' | 'bank'>('original');
-  const [refundAmount, setRefundAmount] = useState<any>(0);
   const [bankDetails, setBankDetails] = useState<any>('');
   const [totalPaid, setTotalPaid] = useState<any>(0);
   const [error, setError] = useState<any>('');

@@ -5,7 +5,6 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { Box } from '@mui/material';
 import React, { useState, useEffect } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -15,7 +14,6 @@ import { StudentSubmissions } from './assignmentCreation/studentSubmission/stude
 
 const StudentSubmission = (props: TabComponentType) => {
   // Dialog state for modal/popup control
-  const dialog = useBoolean();
 
   // Props destructuring for search parameters and setter
   const { searchParams, setSearchParams } = props;
@@ -43,7 +41,7 @@ const StudentSubmission = (props: TabComponentType) => {
   );
 
   // Query hook for fetching class data
-  const { data: classData, isLoading } = useQueryAndMutation({
+  const { data: classData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetClassQuery,
   });

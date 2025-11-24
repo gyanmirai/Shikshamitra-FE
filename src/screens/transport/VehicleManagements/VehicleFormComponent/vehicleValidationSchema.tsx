@@ -225,6 +225,7 @@ export const vehicleValidationSchema = [
         'Expiry Date must be a valid date',
         (value) => !value || (value && dayjs(value as Dayjs).isValid())
       )
+      // eslint-disable-next-line func-names
       .test('is-after-issue-date', 'Expiry Date cannot be before Issue Date', function (value) {
         const { insuranceIssueDate } = this.parent;
         if (!value || !insuranceIssueDate) return true;
@@ -268,6 +269,7 @@ export const vehicleValidationSchema = [
         'Expiry Date must be a valid date',
         (value) => !value || (value && dayjs(value as Dayjs).isValid())
       )
+      // eslint-disable-next-line func-names
       .test('is-after-issue-date', 'Expiry Date cannot be before Issue Date', function (value) {
         const { pucIssueDate } = this.parent;
         if (!value || !pucIssueDate) return true;
@@ -297,6 +299,7 @@ export const vehicleValidationSchema = [
         'Expiry Date must be a valid date',
         (value) => !value || (value && dayjs(value as Dayjs).isValid())
       )
+      // eslint-disable-next-line func-names
       .test('is-after-issue-date', 'Expiry Date cannot be before Issue Date', function (value) {
         const { fitnessIssueDate } = this.parent;
         if (!value || !fitnessIssueDate) return true;

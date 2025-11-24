@@ -100,7 +100,7 @@ const EmployeeCalendar = ({ employee }: EmployeeCalendarProps) => {
     holidayType: [],
     status: [],
   });
-  const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
+  const [, setCurrentDateClick] = useState<EventClickArg | null>(null);
   const filterDialog = useBoolean();
 
   const calendarData = useMemo(
@@ -124,11 +124,11 @@ const EmployeeCalendar = ({ employee }: EmployeeCalendarProps) => {
     setCurrentDateClick(clickedEvent as any);
   };
 
-  const handleApply = (currentFilters: Filters) => {
-    console.log('Applied filters:', currentFilters);
-    filterDialog.onFalse();
-    setFilters(currentFilters);
-  };
+  // const handleApply = (currentFilters: Filters) => {
+  //   console.log('Applied filters:', currentFilters);
+  //   filterDialog.onFalse();
+  //   setFilters(currentFilters);
+  // };
 
   // Function to handle removing a filter
   const handleRemoveFilter = (type: keyof Filters, value: string) => {

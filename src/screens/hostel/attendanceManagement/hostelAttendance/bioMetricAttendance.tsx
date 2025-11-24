@@ -22,11 +22,11 @@ const BiometricHostelAttendance = () => {
   // State for storing the selected date
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   // State for storing the selected block
-  const [_block, setBlock] = useState<string>('');
+  const [, setBlock] = useState<string>('');
   // State for storing the selected hostel
-  const [_hostel, setHostel] = useState<string>('');
+  const [, setHostel] = useState<string>('');
   // State for storing the selected room
-  const [_room, setRoom] = useState<string>('');
+  const [, setRoom] = useState<string>('');
 
   // Actions to be displayed in the three-dot menu
   const actions = useCallback(

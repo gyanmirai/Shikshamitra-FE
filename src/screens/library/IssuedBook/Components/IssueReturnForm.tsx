@@ -40,10 +40,10 @@ import { bookReturnValidationSchema } from './ReturnValidatioSchema';
 import type { ReturnBookFormProps } from './type';
 
 const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData, onDelete }) => {
-  const [showReservation, setShowReservation] = useState(true);
+  const [showReservation] = useState(true);
 
   //   Fetch issued/returned books
-  const { data: reservedBooks, isLoading } = useQueryAndMutation({
+  const { data: reservedBooks } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReservationBooksQuery,
   });

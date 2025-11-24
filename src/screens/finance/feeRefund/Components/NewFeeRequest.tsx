@@ -26,16 +26,11 @@ export const termOptions = [
   { name: 'Quarter 4', amount: 5000 },
 ];
 
-const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => {
+const NewFeeRequestRefundForm: React.FC<any> = ({ onClose, editData }) => {
   //   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const {
-    currentYear,
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Lazy query hook to fetch classes by medium
-  const [getClassByMedium, { data: classes, isLoading: classLoading }] = useQueryAndMutation({
+  const [getClassByMedium, { data: classes }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
@@ -50,7 +45,7 @@ const NewFeeRequestRefundForm: React.FC<any> = ({ open, onClose, editData }) => 
     initialValues: getInitialRefundFormData(editData),
     validationSchema: refundValidationSchema,
     enableReinitialize: true,
-    onSubmit: (values) => {
+    onSubmit: () => {
       onClose(null, true);
     },
   });

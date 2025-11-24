@@ -158,8 +158,6 @@ const FinanceFeeReportsScreen = () => {
     setAnchorElTrend(null);
   };
 
-  const handelSave = () => {};
-
   const categories1 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
   const series1 = [
     { name: 'Class 2', data: [43, 33, 22, 37, 67, 68, 37, 24, 55] },

@@ -2,7 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
-import type { TabComponentType } from 'src/screens/hr/leave-request';
+// import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
@@ -24,7 +24,7 @@ import { ViewSubject } from './component/viewDetailComponents/viewSubjectCompone
 
 import type { ISubjectFormValues } from './component/type';
 
-const Subject = (props: TabComponentType) => {
+const Subject = () => {
   // State to manage subject table data and filtered data
   const [subjectTableData, setSubjectTableData] =
     useState<ISubjectFormValues[]>(electiveSubjectData);
@@ -36,11 +36,7 @@ const Subject = (props: TabComponentType) => {
   const [classes, setClasses] = useState<string>('');
 
   // Get current board, medium and medium setter from global state
-  const {
-    currentBoard,
-    currentMedium: medium,
-    setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {
@@ -62,7 +58,6 @@ const Subject = (props: TabComponentType) => {
   // State for managing selected subject and edit mode
   // State to store the currently selected subject for editing/viewing
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
-  console.log('selected subject-----', selectedSubject);
 
   // Boolean flag to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
@@ -73,16 +68,16 @@ const Subject = (props: TabComponentType) => {
   // Redux dispatch function for triggering actions
   const dispatch = useDispatch();
   // State to track pending status changes for subjects
-  const [pendingStatusChange, setPendingStatusChange] = useState<{
-    id: number;
-    newValue: string;
-  } | null>(null);
+  // const [pendingStatusChange, setPendingStatusChange] = useState<{
+  //   id: number;
+  //   newValue: string;
+  // } | null>(null);
 
   // Handle subject status toggle between Publish/Unpublish
-  const handleStatusChange = (id: number, value: string) => {
-    setPendingStatusChange({ id, newValue: value === 'Published' ? 'Unpublish' : 'Published' });
-    confirmPublishDialog.onTrue();
-  };
+  // const handleStatusChange = (id: number, value: string) => {
+  //   setPendingStatusChange({ id, newValue: value === 'Published' ? 'Unpublish' : 'Published' });
+  //   confirmPublishDialog.onTrue();
+  // };
 
   // Open dialog to view subject details
   const handleViewSubject = (subject: ISubjectFormValues) => {
