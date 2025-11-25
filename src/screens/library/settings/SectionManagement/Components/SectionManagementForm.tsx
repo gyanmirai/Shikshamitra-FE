@@ -26,6 +26,7 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
     },
     validationSchema: sectionManagementValidationSchema,
     onSubmit: (values) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const payload = {
         ...values,
         shelfNames,

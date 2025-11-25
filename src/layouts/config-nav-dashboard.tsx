@@ -1615,13 +1615,13 @@ const financeModule = {
               shortcutKey: 'Alt+F+7',
               shortcutKeyName: 'Alt+F+7',
             },
-            {
-              title: 'Income Category',
-              path: '/finance/settings/incomeCategories',
-              _action: 'expense-category',
-              shortcutKey: 'Alt+F+7',
-              shortcutKeyName: 'Alt+F+7',
-            },
+            // {
+            //   title: 'Income Category',
+            //   path: '/finance/settings/incomeCategories',
+            //   _action: 'expense-category',
+            //   shortcutKey: 'Alt+F+7',
+            //   shortcutKeyName: 'Alt+F+7',
+            // },
             {
               title: 'Income Category',
               path: '/finance/settings/incomeCategories',

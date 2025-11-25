@@ -18,6 +18,9 @@ import FeeCollectComponent from './Components/FeeCollectComponent';
 import type { IStudentFee } from './Components/type';
 
 const FeeCollection = () => {
+  const [selectedBoard, setSelectedBoard] = useState('');
+  const [selectedMedium, setSelectedMedium] = useState('');
+
   /**
    * Hook to fetch academic year data
    */
@@ -94,10 +97,11 @@ const FeeCollection = () => {
         <FeeCollectionTable
           data={feeCollectionData || []}
           onAddFee={studentDialog}
-          setOpenDialog={() => {}}
-          setEditData={() => {}}
+          selectedBoard={selectedBoard}
+          setSelectedBoard={setSelectedBoard}
+          selectedMedium={selectedMedium}
+          setSelectedMedium={setSelectedMedium}
           onDelete={() => {}}
-          onEdit={() => {}}
           onCollectFee={(row) => {
             studentDialog.onTrue();
             setSelectedStudent(row as IStudentFee);

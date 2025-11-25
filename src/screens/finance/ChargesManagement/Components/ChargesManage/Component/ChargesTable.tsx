@@ -118,7 +118,7 @@ const ChargesTable = ({
 
   return (
     <>
-      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
+      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px' }}>
         <Tabs
           value={tabs.value}
           onChange={tabs.onChange}
