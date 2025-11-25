@@ -292,7 +292,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
             <Typography variant="h6" color="primary.main">
               Payment Details
             </Typography>
-            <Scrollbar sx={{ height: '300px', p: 1 }}>
+            <Scrollbar sx={{ height: '400px', p: 1 }}>
               <Grid container spacing={3} pt={1}>
                 {/* Terms Selection Section */}
 

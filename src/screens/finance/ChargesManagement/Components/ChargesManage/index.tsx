@@ -190,7 +190,7 @@ const ChargesManagement = () => {
               Charge
             </Button>
           }
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 1 }}
         />
       )}
       {!addChargeDialog.value && !viewChargeDetailsDialog.value && !editChargeDialog.value && (

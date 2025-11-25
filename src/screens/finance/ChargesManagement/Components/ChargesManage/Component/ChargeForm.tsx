@@ -65,7 +65,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       medium: '',
       class: '',
       division: '',
-      studentName: '',
+      studentName: null,
       additionalNotes: '',
     };
   }, [isEdit, editData]);
@@ -105,7 +105,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       priority: Yup.string().required('Priority is required'),
       class: Yup.string().required('Class is required'),
       division: Yup.string().required('Division is required'),
-      studentName: Yup.string().required('Student Name is required'),
+      studentName: Yup.object().nullable().required('Student is required'),
     }),
     onSubmit: (values) => {
       onClose(null, true);
@@ -147,7 +147,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       setAllDivision(divisionsWithAll);
     }
   }, [values.class, allClass]); // Only depend on class value and allClass
-
+  console.log('formik---', formik.values);
   // Fetch students when class and divisions are selected
   useEffect(() => {
     if (values.class && values.division) {

@@ -91,7 +91,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
           </Box>
         )}
       </Box>
-      <Scrollbar sx={{ height: '300px', p: 1 }}>
+      <Scrollbar sx={{ height: '400px', p: 1 }}>
         {terms?.map((term) => (
           <Paper
             key={term.id}

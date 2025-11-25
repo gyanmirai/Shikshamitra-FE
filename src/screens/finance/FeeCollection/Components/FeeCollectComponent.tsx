@@ -27,6 +27,7 @@ const FeeCollectComponent = ({
   loading?: boolean;
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  console.log('student--', student);
 
   const formik = useFormik({
     initialValues: buildInitialValues(),
@@ -45,7 +46,7 @@ const FeeCollectComponent = ({
 
   return (
     <Box display="flex" flexDirection="column" height="100%">
-      <Box p={2}>
+      <Box p={2} sx={{ height: '100%' }}>
         {/* <Scrollbar sx={{ p: 2, height: '100%' }}> */}
         <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
           <StudentFeeSummaryCard student={student} />

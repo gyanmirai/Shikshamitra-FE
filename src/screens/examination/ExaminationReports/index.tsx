@@ -182,11 +182,6 @@ export const ExamReportFieldsMap = {
 };
 
 const ExaminationReportComponent = () => {
-  // const { currentYear } = useSelector((state: RootState) => state.globalState);
-  // const { data: classes, isLoading: isGetLoading } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetClassQuery,
-  // });
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
