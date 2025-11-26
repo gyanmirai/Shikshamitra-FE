@@ -46,7 +46,7 @@ const CustomizableView = ({ sections, setSections, dashBoardSections }: any) => 
                       sx={{
                         cursor: 'grab',
                         userSelect: 'none',
-                        p: 2, // optional padding
+                        height: '100%',
                       }}
                     >
                       {dashBoardSections[section.id]}

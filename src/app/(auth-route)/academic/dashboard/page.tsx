@@ -1,6 +1,6 @@
 import React from 'react';
-import AcademicDashboardScreen from 'src/screens/academic/dashboard';
+import AcademicPrincipalDashboard from 'src/screens/academic/AcademicPrincipalDashboard';
 
-const AcademicDashboard = () => <AcademicDashboardScreen />;
+const AcademicDashboard = () => <AcademicPrincipalDashboard />;
 
 export default AcademicDashboard;
