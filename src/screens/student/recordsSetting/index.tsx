@@ -239,7 +239,7 @@ const HouseSetting = () => {
                   message: `${editData?.name} House Deleted Successfully`,
                 });
               } catch (error) {
-                console.log(error);
+                console.error(error);
               }
               setEditData(null);
             }}
@@ -317,7 +317,7 @@ const GroupManagementForm = ({
         // Close dialog after successful operation
         handleClose(null, true);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

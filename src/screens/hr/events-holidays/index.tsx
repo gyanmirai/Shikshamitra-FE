@@ -287,7 +287,6 @@ const HrEventsAndHolidaysScreen = () => {
             data={calendarData}
             showCalendarToolbar={false}
             onDateClick={(e) => {
-              console.log(e);
               setCurrentDateClick(e);
             }}
           />
@@ -429,7 +428,7 @@ export const HrEventsAndHolidaysForm = ({
         // Close form after successful submission
         handleClose(null, true);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

@@ -45,9 +45,7 @@ const TakeActionForm: React.FC<ITakeActionFormProps> = ({ open, onClose, editDat
     // Apply validation rules defined in incidentValidationSchema
     validationSchema: incidentValidationSchema,
     // Handle form submission
-    onSubmit: (values, formikHelpers) => {
-      console.log(values);
-    },
+    onSubmit: (values, formikHelpers) => {},
   });
 
   return (

@@ -28,8 +28,6 @@ const TransportRealTimeTrackingScreen = () => {
       .map((coord) => `${coord[1]},${coord[0]}`)
       .join(';');
 
-    console.log('coordinates', coordinates);
-
     const response = await fetch(
       `https://router.project-osrm.org/route/v1/driving/${coordinates}?geometries=geojson`
     );
@@ -40,7 +38,7 @@ const TransportRealTimeTrackingScreen = () => {
   useEffect(() => {
     const fetchRoute = async () => {
       const coordinates = await getRouteCoordinates(start, end, waypoint);
-      console.log('Fetched coordinates :', coordinates);
+
       setRouteCoordinates(coordinates);
     };
 

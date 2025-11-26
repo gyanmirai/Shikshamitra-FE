@@ -45,7 +45,6 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
   // value: new value for the property
   const updateRecipient = (name: string, key: keyof IRecipient, value: any) => {
     if (!isFromView) {
-      console.log('updateRecipient called with:', name, key, value);
       setNotification((prev) => ({
         ...prev,
         recipient: prev.recipient.map((r) => (r.name === name ? { ...r, [key]: value } : r)),
@@ -79,67 +78,64 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
           </Box>
 
           <Box display="flex" flexWrap="wrap" gap={4}>
-            {notification.recipient.map((recipient) => {
-              console.log('recipient', recipient);
-              return (
-                <Box
-                  key={recipient.name}
-                  width="49%"
-                  mt={3}
-                  p={2}
-                  border="1px solid #ddd"
-                  borderRadius="8px"
-                >
-                  <Grid size={{ xl: 6 }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Box display="flex" gap={2} alignItems="center">
-                        <Typography variant="subtitle1">
-                          {recipient.name.charAt(0).toUpperCase() + recipient.name.slice(1)}{' '}
-                          Notification
-                        </Typography>
-                      </Box>
-
-                      <FormControlLabel
-                        disabled={isFromView}
-                        control={
-                          <Switch
-                            disabled={isFromView}
-                            checked={recipient.isEnable}
-                            onChange={(e) => handleToggle(recipient.name, e.target.checked)}
-                            name={`On Notification For ${recipient.name}`}
-                          />
-                        }
-                        label={`On Notification For ${recipient.name}`}
-                      />
-
-                      {/* <Button  startIcon={<Iconify icon="solar:trash-bin-trash-bold" />} color="error" onClick={() => removeRecipient(recipient.name)} /> */}
-                    </Box>
-                    <Box display="flex" gap={2} mt={2} mb={2}>
-                      <CustomSelect
-                        label="Select Communication Channels"
-                        options={CHANNEL_OPTIONS}
-                        onChange={(val) =>
-                          updateRecipient(recipient.name, 'communicationChannel', val)
-                        }
-                        value={recipient.communicationChannel}
-                        multiple
-                        formControlProps={{ sx: { width: '100%', mt: 2 } }}
-                        disabled={isFromView}
-                      />
+            {notification.recipient.map((recipient) => (
+              <Box
+                key={recipient.name}
+                width="49%"
+                mt={3}
+                p={2}
+                border="1px solid #ddd"
+                borderRadius="8px"
+              >
+                <Grid size={{ xl: 6 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Box display="flex" gap={2} alignItems="center">
+                      <Typography variant="subtitle1">
+                        {recipient.name.charAt(0).toUpperCase() + recipient.name.slice(1)}{' '}
+                        Notification
+                      </Typography>
                     </Box>
 
-                    <CustomPlaceholderInput
-                      isFromView={isFromView ?? false}
-                      value={recipient.message}
-                      onChange={(newValue: string) =>
-                        updateRecipient(recipient.name, 'message', newValue)
+                    <FormControlLabel
+                      disabled={isFromView}
+                      control={
+                        <Switch
+                          disabled={isFromView}
+                          checked={recipient.isEnable}
+                          onChange={(e) => handleToggle(recipient.name, e.target.checked)}
+                          name={`On Notification For ${recipient.name}`}
+                        />
                       }
-                      placeholderOptions={recipient.placeHolderOptions ?? []}
+                      label={`On Notification For ${recipient.name}`}
                     />
-                  </Grid>
-                </Box>
-              );
-            })}
+
+                    {/* <Button  startIcon={<Iconify icon="solar:trash-bin-trash-bold" />} color="error" onClick={() => removeRecipient(recipient.name)} /> */}
+                  </Box>
+                  <Box display="flex" gap={2} mt={2} mb={2}>
+                    <CustomSelect
+                      label="Select Communication Channels"
+                      options={CHANNEL_OPTIONS}
+                      onChange={(val) =>
+                        updateRecipient(recipient.name, 'communicationChannel', val)
+                      }
+                      value={recipient.communicationChannel}
+                      multiple
+                      formControlProps={{ sx: { width: '100%', mt: 2 } }}
+                      disabled={isFromView}
+                    />
+                  </Box>
+
+                  <CustomPlaceholderInput
+                    isFromView={isFromView ?? false}
+                    value={recipient.message}
+                    onChange={(newValue: string) =>
+                      updateRecipient(recipient.name, 'message', newValue)
+                    }
+                    placeholderOptions={recipient.placeHolderOptions ?? []}
+                  />
+                </Grid>
+              </Box>
+            ))}
           </Box>
         </Scrollbar>
         <DialogActions

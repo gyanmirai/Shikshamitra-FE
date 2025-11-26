@@ -229,14 +229,64 @@ const EarningComponent = () => {
 export default EarningComponent;
 
 const componentTypes = ['Fixed', 'Percentage'];
-const dependsOnOptions = ['Basic', 'Gross', 'Fixed'];
+// Updated dependsOnOptions as requested
+const dependsOnOptions = [
+  'Basic Salary',
+  'Gross Salary',
+  'Net Salary',
+  'CTC',
+  'Allowances',
+  'Any custom salary component',
+];
+// Sample custom salary components for the additional dropdown when last option selected
+const customComponents = [
+  'Overtime Pay',
+  'Shift Allowance',
+  'Leave Encashment',
+  'Project Incentive',
+  'Travel Reimbursement',
+];
 
 const validationSchema = Yup.object({
   componentName: Yup.string().required('Component Name is required'),
   description: Yup.string(),
-  componentType: Yup.string().required('Component Type is required'),
-  dependOn: Yup.string().required('Depend On is required'),
-  amount: Yup.string().required('Amount is required'),
+  componentType: Yup.string().test(
+    'required-if-fixed',
+    'Component Type is required',
+    function componentTypeRequired(value) {
+      const { isFixed } = this.parent;
+      return !isFixed || !!value;
+    }
+  ),
+  dependOn: Yup.string().test(
+    'required-if-percentage',
+    'Depend On is required',
+    function dependOnRequired(value) {
+      const { isFixed, componentType } = this.parent;
+      if (!isFixed) return true;
+      if (componentType !== 'Percentage') return true;
+      return !!value;
+    }
+  ),
+  customComponent: Yup.string().test(
+    'required-if-custom-depend',
+    'Custom component is required',
+    function customComponentRequired(value) {
+      const { dependOn, isFixed, componentType } = this.parent;
+      if (!isFixed) return true;
+      if (componentType !== 'Percentage') return true;
+      if (dependOn !== 'Any custom salary component') return true;
+      return !!value;
+    }
+  ),
+  amount: Yup.string().test(
+    'required-if-fixed',
+    'Amount is required',
+    function amountRequired(value) {
+      const { isFixed } = this.parent;
+      return !isFixed || !!value;
+    }
+  ),
 });
 
 const EarningComponentForm = ({
@@ -252,12 +302,14 @@ const EarningComponentForm = ({
       description: editData?.description || '',
       componentType: editData?.componentType || '',
       dependOn: editData?.dependOn || '',
+      customComponent: editData?.customComponent || '',
       amount: editData?.amount || '',
       visibleInPayslip: editData?.visibleInPayslip || true,
+      isFixed: editData ? editData?.isFixed : true,
     },
     validationSchema,
     onSubmit: (values) => {
-      console.log(values);
+      handleClose();
     },
   });
 
@@ -265,48 +317,64 @@ const EarningComponentForm = ({
     <>
       <DialogScrollContent>
         {/* General Information */}
-        <SectionCard title="General Information">
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <ShakingTextField
+        <SectionCard
+          title="General Information"
+          gridProps={{
+            sx: {
+              alignItems: 'start',
+            },
+          }}
+        >
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <ShakingTextField
+              error={formik.touched.componentName && Boolean(formik.errors.componentName)}
+            >
+              <TextField
+                size="small"
+                fullWidth
+                label="Component Name *"
+                name="componentName"
+                value={formik.values.componentName}
+                onChange={formik.handleChange}
                 error={formik.touched.componentName && Boolean(formik.errors.componentName)}
-              >
-                <TextField
+                helperText={(formik.touched.componentName && formik.errors.componentName) as string}
+              />
+            </ShakingTextField>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <ShakingTextField
+              error={formik.touched.description && Boolean(formik.errors.description)}
+            >
+              <TextField
+                size="small"
+                fullWidth
+                label="Description"
+                name="description"
+                multiline
+                rows={2}
+                value={formik.values.description}
+                onChange={formik.handleChange}
+              />
+            </ShakingTextField>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FormControlLabel
+              control={
+                <Switch
                   size="small"
-                  fullWidth
-                  label="Component Name *"
-                  name="componentName"
-                  value={formik.values.componentName}
-                  onChange={formik.handleChange}
-                  error={formik.touched.componentName && Boolean(formik.errors.componentName)}
-                  helperText={
-                    (formik.touched.componentName && formik.errors.componentName) as string
-                  }
+                  name="isFixed"
+                  checked={formik.values.isFixed}
+                  onChange={(_e, value) => formik.setFieldValue('isFixed', value)}
                 />
-              </ShakingTextField>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <ShakingTextField
-                error={formik.touched.description && Boolean(formik.errors.description)}
-              >
-                <TextField
-                  size="small"
-                  fullWidth
-                  label="Description"
-                  name="description"
-                  multiline
-                  rows={2}
-                  value={formik.values.description}
-                  onChange={formik.handleChange}
-                />
-              </ShakingTextField>
-            </Grid>
+              }
+              label="Is Fixed Component"
+            />
           </Grid>
         </SectionCard>
 
         {/* Earning Configuration */}
-        <SectionCard title="Earning Configuration">
-          <Grid container spacing={2}>
+        {formik.values.isFixed && (
+          <SectionCard title="Earning Configuration">
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <ShakingTextField
                 error={formik.touched.componentType && Boolean(formik.errors.componentType)}
@@ -318,7 +386,13 @@ const EarningComponentForm = ({
                   label="Component Type *"
                   name="componentType"
                   value={formik.values.componentType}
-                  onChange={formik.handleChange}
+                  onChange={(e) => {
+                    formik.handleChange(e);
+                    if (e.target.value !== 'Percentage') {
+                      formik.setFieldValue('dependOn', '');
+                      formik.setFieldValue('customComponent', '');
+                    }
+                  }}
                   error={formik.touched.componentType && Boolean(formik.errors.componentType)}
                   helperText={
                     (formik.touched.componentType && formik.errors.componentType) as string
@@ -333,35 +407,75 @@ const EarningComponentForm = ({
               </ShakingTextField>
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              <ShakingTextField error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}>
-                <TextField
-                  size="small"
-                  select
-                  fullWidth
-                  label="Depend on *"
-                  name="dependOn"
-                  value={formik.values.dependOn}
-                  onChange={formik.handleChange}
+            {formik.values.componentType === 'Percentage' && (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <ShakingTextField
                   error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}
-                  helperText={(formik.touched.dependOn && formik.errors.dependOn) as string}
                 >
-                  {dependsOnOptions.map((dep) => (
-                    <MenuItem key={dep} value={dep}>
-                      {dep}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </ShakingTextField>
-            </Grid>
+                  <TextField
+                    size="small"
+                    select
+                    fullWidth
+                    label="Depend on *"
+                    name="dependOn"
+                    value={formik.values.dependOn}
+                    onChange={formik.handleChange}
+                    error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}
+                    helperText={(formik.touched.dependOn && formik.errors.dependOn) as string}
+                  >
+                    {dependsOnOptions.map((dep) => (
+                      <MenuItem key={dep} value={dep}>
+                        {dep}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </ShakingTextField>
+              </Grid>
+            )}
+
+            {formik.values.componentType === 'Percentage' &&
+              formik.values.dependOn === 'Any custom salary component' && (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <ShakingTextField
+                    error={formik.touched.customComponent && Boolean(formik.errors.customComponent)}
+                  >
+                    <TextField
+                      size="small"
+                      select
+                      fullWidth
+                      label="Select Custom Component *"
+                      name="customComponent"
+                      value={formik.values.customComponent}
+                      onChange={formik.handleChange}
+                      error={
+                        formik.touched.customComponent && Boolean(formik.errors.customComponent)
+                      }
+                      helperText={
+                        (formik.touched.customComponent && formik.errors.customComponent) as string
+                      }
+                    >
+                      {customComponents.map((c) => (
+                        <MenuItem key={c} value={c}>
+                          {c}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </ShakingTextField>
+                </Grid>
+              )}
 
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <ShakingTextField error={formik.touched.amount && Boolean(formik.errors.amount)}>
                 <TextField
                   size="small"
                   fullWidth
-                  label="Amount Percentage/Amount *"
+                  label={
+                    formik.values.componentType === 'Percentage'
+                      ? 'Amount Percentage *'
+                      : 'Amount *'
+                  }
                   name="amount"
+                  type="number"
                   value={formik.values.amount}
                   onChange={formik.handleChange}
                   error={formik.touched.amount && Boolean(formik.errors.amount)}
@@ -383,8 +497,8 @@ const EarningComponentForm = ({
                 label="Visible in Payslip"
               />
             </Grid>
-          </Grid>
-        </SectionCard>
+          </SectionCard>
+        )}
       </DialogScrollContent>
 
       <DialogActions>

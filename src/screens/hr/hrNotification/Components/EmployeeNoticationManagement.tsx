@@ -152,9 +152,7 @@ const EmployeeNotificationManagement = ({ dialog, setIsViewMode }: any) => {
                 return (
                   <Switch
                     checked={NotificationStatusType.Active === row.isActive}
-                    onChange={(event) => {
-                      console.log(event.target.checked);
-                    }}
+                    onChange={(event) => {}}
                   />
                 );
               },

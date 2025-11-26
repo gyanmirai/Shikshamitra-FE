@@ -520,7 +520,6 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
     return { aggregatedSelectedIds: idSet, aggregatedSelectedNodes: allNodes };
   }, [selectedByType]);
 
-  console.log({ selectedByType, aggregatedSelectedIds, aggregatedSelectedNodes });
   const getAllChildIds = (node: TreeNodeData): string[] => {
     let ids: string[] = [node.id];
     if (node.children) {
@@ -689,7 +688,6 @@ const AcademicTreeView: React.FC<AcademicTreeViewProps> = ({
         divisions: Array.from(selectedByType.divisions.values()),
       };
       const hierarchicalSelectedTree = buildSelectedHierarchy(data);
-      console.log('🚀 ~ handleApply ~ hierarchicalSelectedTree:', hierarchicalSelectedTree);
 
       onApply(
         Array.from(aggregatedSelectedIds),

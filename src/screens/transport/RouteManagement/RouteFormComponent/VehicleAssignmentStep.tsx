@@ -31,7 +31,7 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
     type: 'query',
     currentQueryAndMutation: useGetSelectableDriversQuery,
   });
-  console.log('availableDrivers---', availableDrivers);
+
   const { data: availableConductors = [] } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSelectableConductorsQuery,
@@ -60,9 +60,6 @@ const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
     // ✅ Remove the array wrapper if you're only assigning one vehicle
     formik.setFieldValue('vehicleAssignment', newAssignment);
   };
-
-  console.log('formik----', formik.values);
-  console.log('formik---errre-', formik.errors);
 
   // Helper functions for nested error handling
   const getNestedError = (errors: any, path: string): string | undefined => {

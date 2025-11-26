@@ -22,8 +22,6 @@ const CustomPlaceholderInput: React.FC<CustomPlaceholderInputProps> = ({
     const text = event.target.value;
     const cursorIndex = event.target.selectionStart || 0;
 
-    console.log('Cursor position:', cursorIndex);
-
     // Find the last "@" before the cursor
     const lastAtIndex = text.lastIndexOf('@', cursorIndex - 1);
 

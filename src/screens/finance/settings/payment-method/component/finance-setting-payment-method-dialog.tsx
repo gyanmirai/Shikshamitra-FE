@@ -94,10 +94,7 @@ const FinanceSettingPaymentMethodDialog: React.FC<FinanceSettingPaymentMethodDia
         onSave(values);
       } else {
         setShowExistingEntryMessage(true);
-        return;
       }
-
-      console.log('Form Submitted:', values);
     },
   });
 

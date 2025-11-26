@@ -48,7 +48,6 @@ const TransportMaintenanceDialog: React.FC<ITransportAddNewMaintenanceDialogProp
       } else {
         onSave(values);
       }
-      console.log('Form Submitted type', values);
     },
   });
 

@@ -57,7 +57,6 @@ const ChangeStopRequestForm = ({ onClose, selectedApplication }: Props) => {
       newDescription: Yup.string().required('Description is required'),
     }),
     onSubmit: (values) => {
-      console.log('🚍 Change Stop Request Submitted:', values);
       onClose(values, true);
     },
   });

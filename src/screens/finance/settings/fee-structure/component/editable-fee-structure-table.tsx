@@ -46,9 +46,7 @@ const EditableFeeStructureTable: React.FC<IEditableFeeStructureTableProps> = ({
       })),
     },
     validationSchema: editFeeStructureValidationSchema,
-    onSubmit: (values) => {
-      console.log('Updated Values:', values);
-    },
+    onSubmit: (values) => {},
   });
 
   return (

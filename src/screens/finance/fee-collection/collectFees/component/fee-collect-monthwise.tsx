@@ -57,9 +57,7 @@ const FeeCollectionMonthWise: React.FC<IFeeCollectionMonthWiseProps> = ({
       // Store receivedAmount per fee item (keyed by `${month}-${feeHead}`)
       receivedAmountsByFeeItem: {},
     },
-    onSubmit: (values) => {
-      console.log('Form Values:', values);
-    },
+    onSubmit: (values) => {},
   });
 
   const { values, setFieldValue } = formik;

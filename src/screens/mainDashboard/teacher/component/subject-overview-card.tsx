@@ -99,7 +99,7 @@ export function SubjectOverviewCard({
                   { value: 'english', label: 'English' },
                 ]}
                 value="all"
-                onChange={(e) => console.log(e)}
+                onChange={(e) => {}}
               />
             </Box>
             <Scrollbar sx={{ minHeight: 200, maxHeight: 200, overflowY: 'auto', bgcolor: 'white' }}>
@@ -127,7 +127,7 @@ export function SubjectOverviewCard({
                   { value: 'english', label: 'English' },
                 ]}
                 value="all"
-                onChange={(e) => console.log(e)}
+                onChange={(e) => {}}
               />
             </Box>
             <Scrollbar sx={{ minHeight: 200, maxHeight: 200, overflowY: 'auto', bgcolor: 'white' }}>

@@ -17,7 +17,6 @@ interface BusStopPickerProps {
 }
 
 const BusStopPicker: React.FC<BusStopPickerProps> = ({ onStopsChange, stepOneInfo }) => {
-  console.log('stepOneinfo', stepOneInfo);
   const [busStops, setBusStops] = useState<BusStop[]>([]);
 
   const fetchCityName = async (lat: number, lng: number) => {

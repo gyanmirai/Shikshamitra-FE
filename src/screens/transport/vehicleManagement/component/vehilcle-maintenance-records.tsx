@@ -80,10 +80,10 @@ const VehicleMaintenanceRecords: React.FC<VehicleMaintenanceRecordsProps> = ({ v
     const formattedMaintenanceDate = dayjs(dateOfMaintenance).format('DD-MM-YYYY');
     const formattednextScheduledMaintenance = dayjs(nextScheduleMaintenance).format('DD-MM-YYYY');
 
-    // console.log("formattedMaintenanceDate", formattedMaintenanceDate)
-    // console.log("formattednextScheduledMaintenance", formattednextScheduledMaintenance)
-    // console.log("maintenanceDate", maintenanceDate)
-    // console.log("fnextScheduledMaintenance", nextScheduleMaintenance)
+    //
+    //
+    //
+    //
 
     if (isEdit) {
       const existingIndex = tableData.findIndex((val) => val.id === id);

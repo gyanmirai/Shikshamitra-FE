@@ -31,7 +31,6 @@ const FinanceEditFeeStructureForStudent: React.FC<FinanceEditFeeStructureForStud
       finalFee: data.finalFees,
     },
     onSubmit: (values: any) => {
-      console.log('Form Submitted:', values);
       onSave(values);
     },
   });

@@ -4,7 +4,7 @@ import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { Grid, Switch, TextField, FormControlLabel } from '@mui/material';
 
 interface RoleConfigForNotificationProps {
-  role: string;
+  userRole: string;
   selectedRoles: string[];
   configurations: any;
   handleConfigChange: (role: string, field: string, value: string) => void;
@@ -24,7 +24,7 @@ interface RoleConfigForNotificationProps {
 }
 
 const RoleConfigForNotification: React.FC<RoleConfigForNotificationProps> = ({
-  role,
+  userRole,
   selectedRoles,
   configurations,
   handleConfigChange,
@@ -42,13 +42,13 @@ const RoleConfigForNotification: React.FC<RoleConfigForNotificationProps> = ({
   templateOptions,
   handleTemplateChange,
 }) => {
-  if (!selectedRoles.includes(role)) return null;
+  if (!selectedRoles.includes(userRole)) return null;
 
   return (
     <Grid size={{ lg: 6 }} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <CustomSelect
         disabled={fromSendManual}
-        label={`Select Template for ${role.charAt(0).toUpperCase() + role.slice(1)}`}
+        label={`Select Template for ${userRole.charAt(0).toUpperCase() + userRole.slice(1)}`}
         options={templateOptions}
         value={selectedTemplateName}
         onChange={(e) => handleTemplateChange(e as string)}
@@ -77,10 +77,10 @@ const RoleConfigForNotification: React.FC<RoleConfigForNotificationProps> = ({
           <CustomSelect
             label="Timing"
             options={timingOptions}
-            value={configurations[role].timing}
-            onChange={(e) => handleConfigChange(role, 'timing', e as string)}
+            value={configurations[userRole].timing}
+            onChange={(e) => handleConfigChange(userRole, 'timing', e as string)}
           />
-          {configurations[role].timing === 'scheduled' && (
+          {configurations[userRole].timing === 'scheduled' && (
             <TimePicker
               value={null}
               viewRenderers={{
@@ -88,7 +88,7 @@ const RoleConfigForNotification: React.FC<RoleConfigForNotificationProps> = ({
                 minutes: renderTimeViewClock,
                 seconds: renderTimeViewClock,
               }}
-              onChange={(newTime) => console.log(newTime)}
+              onChange={(newTime) => {}}
               slotProps={{ textField: { size: 'small' } }}
             />
           )}

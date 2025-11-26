@@ -13,7 +13,6 @@ const FeeHeadDialog = () => {
     },
     validationSchema: feeHeadValidationSchema,
     onSubmit: (values) => {
-      console.log('Submitted Fee Head:', values);
       // Add dispatch or API call here
     },
   });

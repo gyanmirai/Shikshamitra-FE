@@ -35,9 +35,7 @@ const ViewDetailsComp: React.FC<ITakeActionFormProps> = ({ open, onClose, editDa
   const formik = useFormik({
     initialValues: getTakeActionInitialValues(editData),
     // Handle form submission
-    onSubmit: (values, formikHelpers) => {
-      console.log(values);
-    },
+    onSubmit: (values, formikHelpers) => {},
   });
 
   return (

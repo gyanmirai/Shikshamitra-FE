@@ -24,9 +24,7 @@ const AddFacilityForm: React.FC<IFacilityFormProps> = ({ dialog, onClose, editDa
       description: Yup.string().required('Description is required'),
       facilities: Yup.array().required('Facilities are required'),
     }),
-    onSubmit: (values) => {
-      console.log('Facility Form Values:', values);
-    },
+    onSubmit: (values) => {},
   });
 
   const facilitiesOptions = [

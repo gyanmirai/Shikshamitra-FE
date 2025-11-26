@@ -3,7 +3,6 @@ import { Iconify } from 'src/components/iconify';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 
 export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any }) {
-  console.log('feeStructure----', feeStructure);
   return (
     <Paper
       sx={{

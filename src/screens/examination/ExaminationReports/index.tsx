@@ -11,9 +11,7 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useEffect } from 'react';
-import { useGetClassQuery } from 'src/redux/class/classApi';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { ExamReportTitle, ExamReportTitleOptions } from 'src/enums/examination-reports';
@@ -70,100 +68,100 @@ export const examReportInitialValues: ExamReportInitialValues = {
 const examCommonFields = ['organizations', 'standards', 'divisions'];
 
 export const ExamReportFieldsMap = {
-  // 1️⃣ Average Subject Mark Analysis
+  // Average Subject Mark Analysis
   AverageSubjectMarkAnalysis: [...examCommonFields, 'exam', 'subjects_optional'],
 
-  // 2️⃣ Bright Student Analysis
+  // Bright Student Analysis
   BrightStudentAnalysis: [...examCommonFields, 'exam', 'grade'],
 
-  // 3️⃣ Bright Student List Subject Wise
+  // Bright Student List Subject Wise
   BrightStudentListSubjectWise: [...examCommonFields, 'exam', 'subjects', 'grade'],
 
-  // 4️⃣ Gender Wise Grade Analysis
+  // Gender Wise Grade Analysis
   GenderWiseGradeAnalysis: [...examCommonFields, 'exam'],
 
-  // 5️⃣ Mark List With All Subject
+  // Mark List With All Subject
   MarkListWithAllSubject: [...examCommonFields, 'exam'],
 
-  // 6️⃣ Result List
+  // Result List
   ResultList: [...examCommonFields, 'exam'],
 
-  // 7️⃣ Subject Average Class Mark Analysis Division Wise
+  // Subject Average Class Mark Analysis Division Wise
   SubjectAverageClassMarkAnalysisDivisionWise: [...examCommonFields, 'exam', 'divisions_optional'],
 
-  // 8️⃣ ResultListConsolidateVerify
+  // ResultListConsolidateVerify
   ResultListConsolidateVerify: [
     ...examCommonFields,
     'exams', // multi exam
   ],
 
-  // 9️⃣ ResultListConsolidateWithMarkGrade
+  // ResultListConsolidateWithMarkGrade
   ResultListConsolidateWithMarkGrade: [...examCommonFields, 'exam'],
 
-  // 🔟 ResultListConsolidateWithMarks
+  // ResultListConsolidateWithMarks
   ResultListConsolidateWithMarks: [...examCommonFields, 'exam'],
 
-  // 1️⃣1️⃣ ResultListConsolidateWithMarksSiddhiKrupa
+  // ResultListConsolidateWithMarksSiddhiKrupa
   ResultListConsolidateWithMarksSiddhiKrupa: [...examCommonFields, 'exam'],
 
-  // 1️⃣2️⃣ ResultListOneGrade
+  // ResultListOneGrade
   ResultListOneGrade: [...examCommonFields, 'exam'],
 
-  // 1️⃣3️⃣ ResultListOneMark
+  // ResultListOneMark
   ResultListOneMark: [...examCommonFields, 'exam'],
 
-  // 1️⃣4️⃣ ResultListTwoMark
+  // ResultListTwoMark
   ResultListTwoMark: [...examCommonFields, 'exam'],
 
-  // 1️⃣5️⃣ ResultListWithSubject
+  // ResultListWithSubject
   ResultListWithSubject: [...examCommonFields, 'exam', 'subjects'],
 
-  // 1️⃣6️⃣ ResultListWithSubjectFailedDetails
+  // ResultListWithSubjectFailedDetails
   ResultListWithSubjectFailedDetails: [...examCommonFields, 'exam', 'subjects'],
 
-  // 1️⃣7️⃣ ResultListWithSubjectGrade
+  // ResultListWithSubjectGrade
   ResultListWithSubjectGrade: [...examCommonFields, 'exam', 'subjects'],
 
-  // 1️⃣8️⃣ ResultListWithSubjectSmall
+  // ResultListWithSubjectSmall
   ResultListWithSubjectSmall: [...examCommonFields, 'exam', 'subjects'],
 
-  // 1️⃣9️⃣ ResultListWithSubjectWithGrace
+  // ResultListWithSubjectWithGrace
   ResultListWithSubjectWithGrace: [...examCommonFields, 'exam', 'subjects'],
 
-  // 2️⃣0️⃣ Result Over All Synopsis
+  // Result Over All Synopsis
   ResultOverAllSynopsis: [...examCommonFields, 'exam'],
 
-  // 2️⃣1️⃣ Result Statistics Report
+  // Result Statistics Report
   ResultStatisticsReport: [...examCommonFields],
 
-  // 2️⃣2️⃣ Result With All Subject List
+  // Result With All Subject List
   ResultWithAllSubjectList: [...examCommonFields, 'exam'],
 
-  // 2️⃣3️⃣ ResultListOverallGradeAnalysis
+  // ResultListOverallGradeAnalysis
   ResultListOverallGradeAnalysis: [...examCommonFields, 'exam'],
 
-  // 2️⃣4️⃣ ResultListPassFailAnalysisSubjectWise
+  // ResultListPassFailAnalysisSubjectWise
   ResultListPassFailAnalysisSubjectWise: [...examCommonFields, 'exam'],
 
-  // 2️⃣5️⃣ ResultListPassFailOverAllAnalysis
+  // ResultListPassFailOverAllAnalysis
   ResultListPassFailOverAllAnalysis: [...examCommonFields, 'exam'],
 
-  // 2️⃣6️⃣ ResultListSubjectGradeAnalysis
+  // ResultListSubjectGradeAnalysis
   ResultListSubjectGradeAnalysis: [...examCommonFields, 'exam'],
 
-  // 2️⃣7️⃣ StudentAllBatchResult
+  // StudentAllBatchResult
   StudentAllBatchResult: [...examCommonFields],
 
-  // 2️⃣8️⃣ StudentAllExamResult
+  // StudentAllExamResult
   StudentAllExamResult: ['organization_single', 'standard_single', 'division_single'],
 
-  // 2️⃣9️⃣ StudentGradeAnalysis
+  // StudentGradeAnalysis
   StudentGradeAnalysis: [...examCommonFields, 'exam'],
 
-  // 3️⃣0️⃣ StudentGradeAnalysisSubjectWise
+  // StudentGradeAnalysisSubjectWise
   StudentGradeAnalysisSubjectWise: [...examCommonFields, 'exam', 'subjects_optional'],
 
-  // 3️⃣1️⃣ Subject Wise Grade List
+  // Subject Wise Grade List
   SubjectWiseGradeList: [
     ...examCommonFields,
     'exam',
@@ -172,10 +170,10 @@ export const ExamReportFieldsMap = {
     'maxMark_optional',
   ],
 
-  // 3️⃣2️⃣ Weak Student Analysis
+  // Weak Student Analysis
   WeakStudentAnalysis: [...examCommonFields, 'exams'],
 
-  // 3️⃣3️⃣ Weak Student Analysis Subject Wise
+  // Weak Student Analysis Subject Wise
   WeakStudentAnalysisSubjectWise: [
     ...examCommonFields,
     'exam',
@@ -184,11 +182,11 @@ export const ExamReportFieldsMap = {
 };
 
 const ExaminationReportComponent = () => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data: classes, isLoading: isGetLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetClassQuery,
-  });
+  // const { currentYear } = useSelector((state: RootState) => state.globalState);
+  // const { data: classes, isLoading: isGetLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetClassQuery,
+  // });
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -254,11 +252,6 @@ const ExaminationReportComponent = () => {
     setAllOrganization(updatedOrganizations);
   }, [medium?.educationMediumStages]);
 
-  console.log('formik values----', formik.values);
-  console.log('formik errors----', formik.errors);
-  console.log('all classes----', allClass);
-  console.log('classes----', classes || []);
-  console.log('all organizations----', allOrganization);
   useEffect(() => {
     const selectedOrgs = formik.values.organizations.filter((id) => id !== 'all');
 
@@ -279,7 +272,6 @@ const ExaminationReportComponent = () => {
       }
     });
 
-    console.log('Filtered Standards (Classes):', allStandards);
     setAllClass(allStandards);
 
     if (allStandards.length > 0) {

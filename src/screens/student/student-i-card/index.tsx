@@ -150,7 +150,6 @@ const StudentICardForm = ({ handleClose }: { handleClose: () => void }): JSX.Ele
   }, [allOrganization, organization]);
 
   const handleSave = (data: Record<string, any>) => {
-    console.log(data);
     Template.current = null;
     setSelectedTemplate(null);
     handleClose();

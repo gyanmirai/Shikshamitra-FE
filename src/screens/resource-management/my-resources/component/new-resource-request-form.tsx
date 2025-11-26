@@ -23,9 +23,7 @@ const NewResourcesRequestForm: React.FC<IRequestResourceFormProps> = ({ onClose 
   const formik = useFormik({
     initialValues: initialRequestResourceValues,
     validationSchema: requestResourceValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   //   const isDisabled = data !== null && isEdit === false;

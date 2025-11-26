@@ -143,7 +143,7 @@ export function NotificationsDrawer({
     <Scrollbar>
       <Box component="ul">
         {filteredNotifications?.map((notification) => (
-          // console.log(notification, " notification");
+          //
           <Box component="li" key={notification.id} sx={{ display: 'flex' }}>
             <NotificationItem notification={notification} />
           </Box>

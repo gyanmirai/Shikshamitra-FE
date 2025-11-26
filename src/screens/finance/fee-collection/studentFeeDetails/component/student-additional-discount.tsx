@@ -74,17 +74,11 @@ const AdditionalDiscountDialog: React.FC<Props> = ({ dialogValue, onClose, stude
   );
 
   const handleSubmit = () => {
-    const updatedData = feeHeads.map((f) => ({
-      ...f,
-      additionalDiscount: Number(discountValues[f.feeHead] || 0),
-      remark: remarkValues[f.feeHead] || '',
-    }));
-
-    console.log({
-      studentDetails,
-      updatedFeeHeads: updatedData,
-    });
-
+    // const updatedData = feeHeads.map((f) => ({
+    //   ...f,
+    //   additionalDiscount: Number(discountValues[f.feeHead] || 0),
+    //   remark: remarkValues[f.feeHead] || '',
+    // }));
     // Trigger your onSave / API function here
   };
 

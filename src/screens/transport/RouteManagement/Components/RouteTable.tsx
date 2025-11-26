@@ -52,7 +52,7 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
 
   const handleStatusChange = (statusData: IStopStatusChange) => {
     // Handle status change logic here
-    console.log('Status changed:', statusData);
+
     handleClose(null, true);
   };
 

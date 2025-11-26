@@ -78,7 +78,6 @@ const BulkDataUpdateScreen = () => {
       prevData.map((row) => (row.id === rowId ? { ...row, [selectedSubCategory.id]: value } : row))
     );
   };
-  console.log('tableData---', tableData);
 
   return (
     <Box>

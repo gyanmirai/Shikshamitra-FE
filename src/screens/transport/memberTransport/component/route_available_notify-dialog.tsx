@@ -33,7 +33,7 @@ const RouteAvailableNotifyDialog: React.FC<RouteAvailableNotifyDialogProps> = ({
                             value=''
                             labelKey="name"
                             valueKey="key"
-                            onChange={(val) => console.log("val", val)}
+                            onChange={(val) =>{} }
                             formControlProps={{ fullWidth: true, }}
 
 

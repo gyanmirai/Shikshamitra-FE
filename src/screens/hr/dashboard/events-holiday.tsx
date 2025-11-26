@@ -46,7 +46,6 @@ const EventsHoliday = () => {
         data={calendarData}
         showCalendarToolbar={false}
         onDateClick={(e) => {
-          console.log(e);
           setCurrentDateClick(e);
         }}
       />

@@ -106,9 +106,7 @@ const GuardRosterScreen = () => {
   };
 
   // Debug log for assigned guards updates
-  useEffect(() => {
-    console.log(assignedGuards, 'updated assignedGuards');
-  }, [assignedGuards]);
+  useEffect(() => {}, [assignedGuards]);
 
   // Remove a guard from a shift slot
   const onDeleteGuard = (fullDate: string, timeSlot: string, guardName: string) => {

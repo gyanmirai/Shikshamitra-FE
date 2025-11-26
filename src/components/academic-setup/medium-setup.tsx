@@ -306,7 +306,7 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
       }
       handleClose();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

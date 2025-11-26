@@ -23,9 +23,7 @@ const AddReportLossForm: React.FC<IAddReportLossFormProps> = ({ isEdit, data, on
   const formik = useFormik({
     initialValues: getInitialResourceIncidentValues(data),
     validationSchema: resourceIncidentValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   // const isDisabled = data !== null && isEdit === false;

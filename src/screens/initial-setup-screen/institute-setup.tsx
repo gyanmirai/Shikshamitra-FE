@@ -127,7 +127,6 @@ const InstituteSetup = () => {
   const [activeStep, setActiveStep] = useState(0);
 
   const handleSubmit = async (values: InstituteSetupValues) => {
-    console.log('Form submitted:', values);
     // Handle form submission here
   };
 

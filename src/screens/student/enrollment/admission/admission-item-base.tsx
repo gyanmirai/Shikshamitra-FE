@@ -33,8 +33,6 @@ export const AdmissionItemBase = forwardRef<{ current: Element }, TaskItemProps>
         ref={disabled ? undefined : setNodeRef}
         task={task}
         onClick={() => {
-          console.log('called');
-
           openDetails.onTrue();
         }}
         stateProps={{

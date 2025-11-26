@@ -197,7 +197,7 @@ const StudentNotificationScreen = () => {
               //                     <Switch
               //                         checked={row.isActive}
               //                         onChange={(event) => {
-              //                             console.log(event.target.checked);
+              //
               //                         }}
               //                     />
               //                 </Box>

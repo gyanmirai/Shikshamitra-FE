@@ -40,9 +40,7 @@ const ReportSafteyManagemtForm: React.FC<IReportSafteyManagemtFormProps> = ({
   const formik = useFormik({
     initialValues: getSafetyManagementInitialValues(data),
     validationSchema: safetyManagementValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;

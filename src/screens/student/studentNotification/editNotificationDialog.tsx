@@ -34,7 +34,6 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
 
   const updateRecipient = (name: string, key: keyof IRecipient, value: any) => {
     if (!isFromView) {
-      console.log('updateRecipient called with:', name, key, value);
       setNotification((prev) => ({
         ...prev,
         recipient: prev.recipient.map((r) => (r.name === name ? { ...r, [key]: value } : r)),

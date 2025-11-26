@@ -23,7 +23,7 @@ export const SubmitAssignmentContent = ({
     validationSchema: assignmentContentValidationSchema,
     onSubmit: (values) => {
       // Handle content submission
-      console.log('Submitting content:', values);
+
       onClose(values, true);
     },
   });

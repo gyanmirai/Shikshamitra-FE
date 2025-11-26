@@ -29,9 +29,7 @@ const AddProcurementRequestForm: React.FC<IAddProcurementRequestFormProps> = ({
   const formik = useFormik({
     initialValues: getInitialProcurementAndVendorValues(data),
     validationSchema: procurementAndVendorValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   // const isDisabled = data !== null && isEdit === false;

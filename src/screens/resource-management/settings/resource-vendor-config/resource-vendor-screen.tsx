@@ -51,7 +51,6 @@ const ResourceVendorScreen = () => {
         break;
 
       default:
-        console.warn('Unknown action:', action);
     }
   };
 

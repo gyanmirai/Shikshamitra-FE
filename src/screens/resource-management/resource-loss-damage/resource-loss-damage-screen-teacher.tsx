@@ -54,7 +54,6 @@ const ResourceLossDamageScreenTeacher = () => {
         break;
 
       default:
-        console.warn('Unknown action:', action);
     }
   };
 

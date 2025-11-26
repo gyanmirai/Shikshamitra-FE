@@ -45,7 +45,6 @@ const FinanceSettingCreateBudgetDialog: React.FC<FinanceSettingCreateBudgetDialo
     validationSchema,
     onSubmit: (values) => {
       onSave(values);
-      console.log('Form Submitted type', values);
     },
   });
   return (

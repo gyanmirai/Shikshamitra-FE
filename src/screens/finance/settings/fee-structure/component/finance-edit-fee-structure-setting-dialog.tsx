@@ -61,7 +61,7 @@ export default FinanceEditFeeStructureSettingDialog;
 // }
 
 // const FinanceEditFeeStructureSettingDialog: React.FC<FinanceEditFeeStructureSettingDialogProps> = ({ onClose, data, dialogValue }) => {
-//     console.log("data", data);
+//
 
 //     const dummyData = [
 //         {

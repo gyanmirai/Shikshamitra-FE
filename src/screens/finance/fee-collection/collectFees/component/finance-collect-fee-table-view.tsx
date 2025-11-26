@@ -101,7 +101,7 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
             chequeAmount: '',
             onlineAmount: '',
           }}
-          onSubmit={(values) => console.log('Selected Fees:', values)}
+          onSubmit={(values) => {}}
         >
           {({ values, setFieldValue }) => (
             <Form>
@@ -112,9 +112,7 @@ const FeeCollectionForm: React.FC<FeeCollectionFormProps> = ({ dialogValue, onCl
                       {
                         id: 'select',
                         label: 'Select',
-                        render: (value, row) => (
-                          <Checkbox checked onChange={(e) => console.log(e)} />
-                        ),
+                        render: (value, row) => <Checkbox checked onChange={(e) => {}} />,
                       },
                       { id: 'feeHead', label: 'Fee Head' },
                       { id: 'month', label: 'Month' },

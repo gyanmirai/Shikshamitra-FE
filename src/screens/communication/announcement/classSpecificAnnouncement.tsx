@@ -150,7 +150,6 @@ const ClassWiseAnnounsement = (props: TabComponentType) => {
           }}
           handleSwitchChange={(announcement) => {
             // toggle active/inactive etc.
-            console.log('Switch changed:', announcement);
           }}
           onRemove={(row) => {
             confirm_dialog.onTrue();

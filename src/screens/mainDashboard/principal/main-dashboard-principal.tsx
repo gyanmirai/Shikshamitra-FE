@@ -128,7 +128,7 @@ const MainDashboardPrincipal = () => {
               { value: '2', label: '3' },
             ]}
             selectedValue="all"
-            onSelectChange={(val) => console.log('Selected:', val)}
+            onSelectChange={(val) => {}}
           />
         </Grid>
 
@@ -151,7 +151,7 @@ const MainDashboardPrincipal = () => {
               { value: 'Non-Teaching', label: 'Non-Teaching' },
             ]}
             selectedValue="all"
-            onSelectChange={(val) => console.log('Selected Employee:', val)}
+            onSelectChange={(val) => {}}
           />
         </Grid>
 
@@ -175,7 +175,7 @@ const MainDashboardPrincipal = () => {
               { value: 'March', label: 'March' },
             ]}
             selectedValue="all"
-            onSelectChange={(val) => console.log('Selected Month:', val)}
+            onSelectChange={(val) => {}}
           />
         </Grid>
       </Grid>
@@ -321,7 +321,7 @@ const MainDashboardPrincipal = () => {
                     sx={{ width: '100%', minWidth: '200px' }}
                   />
                 )}
-                onChange={(e, value) => console.log('GR No', value ? value.firstName : '')}
+                onChange={(e, value) => {}}
               />
             )}
           </Box>

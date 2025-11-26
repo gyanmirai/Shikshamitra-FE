@@ -23,7 +23,7 @@ export const SubmitHomeworkFile = ({
     validationSchema: homeworkFileValidationSchema,
     onSubmit: (values) => {
       // Handle file submission
-      console.log('Submitting files:', values);
+
       onClose(values, true);
     },
   });

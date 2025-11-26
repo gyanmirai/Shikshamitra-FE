@@ -84,8 +84,6 @@ export function CalendarView() {
 
   const dataFiltered = applyFilter({ inputData: events, filters: filters.state, dateError });
 
-  console.log('dataFiltered', dataFiltered);
-
   // const renderResults = (
   //   <CalendarFiltersResult
   //     filters={filters}
@@ -220,8 +218,6 @@ export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = (
   teacherId,
   subjectId,
 }: SchoolTimetableCalendarProps) => {
-  console.log('SchoolTimetableCalendar---');
-
   const calendarRef = useRef<FullCalendar>(null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const events = [
@@ -304,8 +300,6 @@ export const SchoolTimetableCalendar: React.FC<SchoolTimetableCalendarProps> = (
     }
     return events;
   }, [teacherId, subjectId, events]);
-
-  console.log('feltured eventen====', filteredEvents);
 
   const flexProps = { flex: '1 1 auto', display: 'flex', flexDirection: 'column' };
   return (

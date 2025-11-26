@@ -61,7 +61,7 @@ interface VehicleInformationProps {
 // ];
 
 const VehicleInformation: React.FC<VehicleInformationProps> = ({ vehicleData }) => (
-  // console.log("vehicleData",vehicleData)
+  //
   <Card sx={{ p: 2, borderRadius: 2, boxShadow: 2 }}>
     <Grid container spacing={2}>
       <Grid size={6}>

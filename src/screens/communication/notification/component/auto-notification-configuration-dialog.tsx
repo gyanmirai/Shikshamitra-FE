@@ -190,7 +190,7 @@
 //                             { label: "Student", value: "student" }
 //                         ]}
 //                         value=""
-//                         onChange={(e) => console.log(e)}
+//                         onChange={(e) => {}}
 //                     />
 //                 </Grid>
 //                 <Grid item lg={4}>
@@ -202,7 +202,7 @@
 
 //                         ]}
 //                         value=""
-//                         onChange={(e) => console.log(e)}
+//                         onChange={(e) => {}}
 //                     />
 //                 </Grid>
 //                 <Grid item lg={4}>
@@ -214,7 +214,7 @@
 
 //                         ]}
 //                         value=""
-//                         onChange={(e) => console.log(e)}
+//                         onChange={(e) => {}}
 //                     />
 //                 </Grid>
 //             </Grid>
@@ -240,7 +240,7 @@
 //                             { label: "2", value: "2" }
 //                         ]}
 //                         value={[]}
-//                         onChange={(e) => console.log(e)}
+//                         onChange={(e) => {}}
 //                     />
 //                 </Grid>}
 
@@ -253,7 +253,7 @@
 //                             { label: "2", value: "2" }
 //                         ]}
 //                         value={[]}
-//                         onChange={(e) => console.log(e as string[])}
+//                         onChange={(e) => {}}
 //                     />
 //                 </Grid>}
 //             </Grid>
@@ -293,7 +293,7 @@
 //                                                         minutes: renderTimeViewClock,
 //                                                         seconds: renderTimeViewClock,
 //                                                     }}
-//                                                     onChange={(newTime) => console.log(newTime)}
+//                                                     onChange={(newTime) => }
 //                                                     slotProps={{ textField: { size: 'small' } }}
 //                                                 />
 //                                             )}
@@ -301,7 +301,7 @@
 //                                                 control={
 //                                                     <Switch
 //                                                         checked
-//                                                         onChange={(e) => console.log(e)}
+//                                                         onChange={(e) => {}}
 
 //                                                     />
 //                                                 }
@@ -332,7 +332,7 @@
 //                                                         minutes: renderTimeViewClock,
 //                                                         seconds: renderTimeViewClock,
 //                                                     }}
-//                                                     onChange={(newTime) => console.log(newTime)}
+//                                                     onChange={(newTime) => }
 //                                                     slotProps={{ textField: { size: 'small' } }}
 //                                                 />
 //                                             )}

@@ -25,7 +25,7 @@ export async function fetchBookDetails(url: string) {
   //       .querySelector("div#details div:contains('ISBN 13')")
   //       ?.nextElementSibling?.innerText.trim() || '';
   const coverImage = doc.querySelector('img.cover')?.src || '';
-  console.log('coverImage---', coverImage);
+
   // Collect subjects
   const subjects =
     Array.from(doc.querySelectorAll('a.subject'))?.map((s) => s.innerText.trim()) || [];

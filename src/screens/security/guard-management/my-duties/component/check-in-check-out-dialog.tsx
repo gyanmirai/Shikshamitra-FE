@@ -23,9 +23,7 @@ const CheckInCheckOutDialog: React.FC<ICheckInCheckOutDialogProps> = ({
       checkOutNotes: data?.checkOutNotes ?? '',
     },
     validationSchema: !isCheckIn ? checkOutValidationSchema : checkInValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   return (

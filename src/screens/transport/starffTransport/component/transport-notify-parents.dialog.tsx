@@ -41,9 +41,7 @@ const TransportNotifyParentsDialog: React.FC<TransportNotifyParentsDialogProps> 
       name: data.name,
       notificationType: 'email',
     },
-    onSubmit: (values) => {
-      console.log('Form Submitted', values);
-    },
+    onSubmit: (values) => {},
   });
   return (
     <CustomDialog title="Notify Parent/Staff" open={dialogValue} handleClose={onClose}>

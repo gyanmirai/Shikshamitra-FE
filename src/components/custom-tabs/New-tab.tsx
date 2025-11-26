@@ -44,7 +44,6 @@ const TabsComponent = ({ tabs, value, onChange }: TabsComponentProps) => {
           <StyledTabs
             value={value}
             onChange={(e: React.SyntheticEvent, val: any) => {
-              console.log('val', val);
               if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
                 onChange?.(e, val);
                 dispatch(setIsChanges(false));

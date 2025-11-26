@@ -58,7 +58,6 @@ const VehicleFormStepper = ({
           onClose?.(null, true);
         }
       } catch (error) {
-        console.log(error);
         shikshaMitraToast.error({
           message: 'Something went wrong. Please try again.',
         });

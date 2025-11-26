@@ -102,9 +102,7 @@ const SecurityReportsScreen = () => {
                   startIcon={<Iconify icon="ion:download" />}
                   variant="contained"
                   color="primary"
-                  onClick={() => {
-                    console.log('Download PDF clicked', formik.values);
-                  }}
+                  onClick={() => {}}
                   sx={{
                     backgroundColor: (theme) =>
                       varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
@@ -122,9 +120,7 @@ const SecurityReportsScreen = () => {
                   startIcon={<Iconify icon="ion:download" />}
                   variant="contained"
                   color="warning"
-                  onClick={() => {
-                    console.log('Download Excel clicked', formik.values);
-                  }}
+                  onClick={() => {}}
                   sx={{
                     backgroundColor: (theme) =>
                       varAlpha(theme.vars.palette.warning.mainChannel, 0.1),

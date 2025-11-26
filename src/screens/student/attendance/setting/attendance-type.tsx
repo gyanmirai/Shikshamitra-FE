@@ -281,7 +281,7 @@ export const AttendanceTypeForm = ({
         }
         handleClose(null, true);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

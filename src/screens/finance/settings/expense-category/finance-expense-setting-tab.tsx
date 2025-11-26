@@ -82,7 +82,6 @@ const FinanceExpenseSettingTab = () => {
       }
     }
     closeDialog();
-    console.log(dataFromDialog);
   };
 
   const handleDelete = (item: any) => {

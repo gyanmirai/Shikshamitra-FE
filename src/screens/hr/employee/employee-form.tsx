@@ -17,6 +17,7 @@ import {
   useUpdateBankDetailsMutation,
   useAddBasicInformationMutation,
   useUpdateFamilyInformationMutation,
+  useUpdateAdditionalInformationMutation,
   useUpdateExperienceInformationMutation,
 } from 'src/redux/employee/employeeApi';
 
@@ -146,6 +147,14 @@ export const familyInformationInitialValues = (editData: any) => ({
   spousePinCode: editData ? editData?.spouseDetails?.pinCode : '',
 });
 
+export const additionalDetailsInitialValues = (editData: any) => ({
+  bplCardNo: editData ? editData.additionalDetails?.bplCardNo : '',
+  personWithDisability: editData ? editData.additionalDetails?.personWithDisability : '',
+  secondLanguage: editData ? editData.additionalDetails?.secondLanguage : '',
+  libraryMember: editData ? editData.additionalDetails?.libraryMember : false,
+  transportMember: editData ? editData.additionalDetails?.transportMember : false,
+});
+
 export const documentsInitialValues = () => ({ documents: new FormData() });
 
 export const workExperienceInitialValues = (editData: any) => ({
@@ -164,12 +173,17 @@ export const payrollInitialValues = (editData: any) => ({
   accountHolderName: editData ? editData.bankDetails.accountHolderName : '',
   accountNumber: editData ? editData.bankDetails.accountNumber : '',
   ifscCode: editData ? editData.bankDetails.ifscCode : '',
+  pfRule: editData ? editData.bankDetails.pfRule : '',
   pfType: '',
   epfNumber: '',
   uanNumber: '',
   basicSalary: '',
   punchId: '',
-  shiftName: '',
+  // shiftName: '',
+  tdsPercentage: '',
+  tdsAmount: '',
+  earningComponents: [],
+  deductionComponents: [],
 });
 
 export const assignReportingManagerInitialValues = (editData: any) => ({
@@ -179,6 +193,7 @@ export const assignReportingManagerInitialValues = (editData: any) => ({
 const steps = [
   'Personal Information',
   'Family Information',
+  'Additional Details',
   'Documents',
   'Work Experience',
   'Payroll',
@@ -203,6 +218,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     currentQueryAndMutation: useUpdateFamilyInformationMutation,
     isThrowError: true,
   });
+  useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateAdditionalInformationMutation,
+    isThrowError: true,
+  });
   const [updateExperienceInfo] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateExperienceInformationMutation,
@@ -224,6 +244,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     () => ({
       ...personalInformationInitialValues(editData),
       ...familyInformationInitialValues(editData),
+      ...additionalDetailsInitialValues(editData),
       ...documentsInitialValues(),
       ...workExperienceInitialValues(editData),
       ...payrollInitialValues(editData),
@@ -337,6 +358,24 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     },
     [updateFamilyInfo]
   );
+
+  // const handleAdditionalDetails = useCallback(
+  //   async (values: any, formik: any) => {
+  //     const res = await updateAdditionalInfo({
+  //       employeeId: values.employeeId,
+  //       body: {
+  //         bplCardNo: values.bplCardNo,
+  //         personWithDisability: values.personWithDisability,
+  //         secondLanguage: values.secondLanguage,
+  //         libraryMember: values.libraryMember,
+  //         transportMember: values.transportMember,
+  //       },
+  //     }).unwrap();
+  //     return res;
+  //   },
+  //   [updateAdditionalInfo]
+  // );
+
   const handleWorkExperience = useCallback(
     async (values: any, formik: any) => {
       const res = await updateExperienceInfo({
@@ -361,6 +400,16 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           accountHolderName: values.accountHolderName,
           accountNumber: values.accountNumber,
           ifscCode: values.ifscCode,
+          pfRule: values.pfRule,
+          pfType: values.pfType,
+          epfNumber: values.epfNumber,
+          uanNumber: values.uanNumber,
+          basicSalary: values.basicSalary,
+          punchId: values.punchId,
+          tdsPercentage: values.tdsPercentage,
+          tdsAmount: values.tdsAmount,
+          earningComponents: values.earningComponents,
+          deductionComponents: values.deductionComponents,
         },
       }).unwrap();
       return res;
@@ -461,12 +510,15 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           // if (isSaveButton) {
           shikshaMitraToast.success({ message: 'Family information updated successfully' });
           // }
-        } else if (activeStep === 3) {
+        } else if (activeStep === 2) {
+          // await handleAdditionalDetails(values, formik);
+          shikshaMitraToast.success({ message: 'Additional details updated successfully' });
+        } else if (activeStep === 4) {
           await handleWorkExperience(values, formik);
           // if (isSaveButton) {
           shikshaMitraToast.success({ message: 'Work experience updated successfully' });
           // }
-        } else if (activeStep === 4) {
+        } else if (activeStep === 5) {
           await handleBankDetailsInformation(values, formik);
           // if (isSaveButton) {
           shikshaMitraToast.success({ message: 'Bank details updated successfully' });
@@ -481,7 +533,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           setActiveStep(activeStep + 1);
         }
       } catch (error) {
-        console.log(error, '============================');
+        console.error(error, '============================');
       }
       setIsLoading(false);
       if (isLastStep) {
@@ -499,7 +551,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       handleWorkExperience,
     ]
   );
-  console.log(validations[activeStep], '==================');
+
   return (
     <CustomStepperWithFormik
       initialValues={initialValues}
@@ -530,6 +582,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       ) => handleSave(isLastStep, value, formik, setIsLoading, true)}
       renderItem={({ activeStep: step, formik }: any) => (
         <FormikDetectChanges values={formik.values} initialValues={initialValues}>
+          {}
           <FormSlider step={step} formik={formik} />
         </FormikDetectChanges>
       )}
@@ -570,7 +623,7 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                 )} */}
                 <Box
                   p={2}
-                  display={step === 2 || step === 1 ? 'block' : 'flex'}
+                  display={step === 2 || step === 1 || step === 3 ? 'block' : 'flex'}
                   flexWrap="wrap"
                   gap={2}
                   width="100%"
@@ -580,8 +633,8 @@ const FormSlider = ({ step, formik }: { step: number; formik: any }) => {
                     {allFields[step].map((field) => (
                       <Grid
                         size={{
-                          xs: [1, 2, 3].includes(step) ? 12 : 4,
-                          md: [1, 2, 3].includes(step) ? 12 : 4,
+                          xs: [1, 2, 3, 4].includes(step) ? 12 : 4,
+                          md: [1, 2, 3, 4].includes(step) ? 12 : 4,
                         }}
                         key={field.name}
                         {...field.gridProps}

@@ -229,9 +229,7 @@ const AddGroup = ({ onSubmit, onClose, data, isEdit }: any) => {
       behavioralTags: [],
       behavioralParticipations: [],
     },
-    onSubmit: (values) => {
-      console.log('Form Submitted', values);
-    },
+    onSubmit: (values) => {},
   });
 
   const resetDynamicGroupFields = () => {

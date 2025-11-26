@@ -49,8 +49,6 @@ const GroupManagement = ({
   tableData: IInquiryData[];
   isLoading: boolean;
 }) => {
-  console.log('🚀 ~ tableData:', tableData);
-
   // // State to store query parameters
   // const [queryParams, setQueryParams] = useState({
   //   SkipCount: 0,
@@ -147,7 +145,7 @@ const GroupManagement = ({
                   message: `${editData?.groupMembership?.groupName} House Deleted Successfully for ${editData?.name}`,
                 });
               } catch (error) {
-                console.log(error);
+                console.error(error);
               }
               setEditData(null);
             }}
@@ -187,7 +185,7 @@ const GroupManagement = ({
                 });
                 isRemoveFromDivisionLeader.onFalse();
               } catch (error) {
-                console.log(error);
+                console.error(error);
               }
               setEditData(null);
             }}
@@ -225,7 +223,7 @@ const GroupManagement = ({
                 });
                 isRemoveLeader.onFalse();
               } catch (error) {
-                console.log(error);
+                console.error(error);
               }
               setEditData(null);
             }}
@@ -267,7 +265,7 @@ const GroupManagement = ({
                 });
                 isRemoveStudentToHouse.onFalse();
               } catch (error) {
-                console.log(error);
+                console.error(error);
               }
               setEditData(null);
             }}
@@ -320,7 +318,7 @@ const GroupManagement = ({
                   message: `Division leader assign successfully for ${editData?.name}`,
                 });
               } catch (error) {
-                console.log(error);
+                console.error(error);
               }
               setEditData(null);
             }}
@@ -372,7 +370,7 @@ const GroupManagement = ({
                   message: `House Leader assign successfully for ${editData?.name}`,
                 });
               } catch (error) {
-                console.log(error);
+                console.error(error);
               }
               setEditData(null);
             }}
@@ -416,8 +414,6 @@ const GroupManagement = ({
             minWidth: '160px',
             align: 'left',
             render(value, row) {
-              console.log('value---', value);
-
               return (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   {/* <SubjectColorIndicator color={row.color} /> */}
@@ -452,8 +448,6 @@ const GroupManagement = ({
             minWidth: '160px',
             align: 'left',
             render(value) {
-              console.log('Division Leader---', value);
-
               return (
                 <Box
                   sx={{
@@ -568,7 +562,7 @@ const GroupManagement = ({
                             if (!row.groupMembership) {
                               shikshaMitraToast.error({ message: 'Please assign house first' });
                               popover.onClose();
-                              console.log('🚀 ~ tableData:', tableData);
+
                               return;
                             }
                             setEditData(row as IInquiryData);
@@ -767,7 +761,6 @@ const GroupManagementForm = ({
     },
     // Handle form submission for both add and update operations
     onSubmit: async (values) => {
-      console.log('formik');
       try {
         if (editData) {
           // Update existing group if editData exists
@@ -786,7 +779,7 @@ const GroupManagementForm = ({
         // Close dialog after successful operation
         handleClose();
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });
@@ -919,7 +912,7 @@ const AssignStudentForm = ({
         dispatch(StudentApi.util.invalidateTags(['Student']));
         handleClose();
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

@@ -1089,7 +1089,7 @@ const YearForm = ({ handleClose, handleSetTeb, editData }: IYearForm) => {
       }
       handleClose();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

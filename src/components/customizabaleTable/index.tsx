@@ -190,7 +190,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     // Divide sticky columns into left and right halves
     const stickyCols = columns.filter((col) => col.sticky);
     const half = Math.ceil(stickyCols.length / 2);
-    console.log(columnVisibility, 'columnVisibility');
+
     columns.forEach((col, idx) => {
       if (col.sticky && columnVisibility[col.id]) {
         if (idx < half) {

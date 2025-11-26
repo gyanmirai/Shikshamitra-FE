@@ -23,10 +23,7 @@ const TransportApplicationRouteDetail = ({
     type: 'query',
     currentQueryAndMutation: useGetRouteStopDataQuery,
   });
-  const [selectedRoute, setSelectedRoute] = useState<any>(formik.values.selectedRoute);
-  console.log('routeData---', routeData);
-  console.log('selectedRoute---', selectedRoute);
-  console.log('formik.value---', formik.values);
+  const [setSelectedRoute] = useState<any>(formik.values.selectedRoute);
 
   const theme = useTheme();
   return (

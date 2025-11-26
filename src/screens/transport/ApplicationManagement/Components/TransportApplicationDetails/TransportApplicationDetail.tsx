@@ -50,7 +50,6 @@ const TransportApplicationDetail = ({
       ),
     }),
     onSubmit: (values) => {
-      console.log('🚍 Submitted values:', values);
       // 🔗 call API or emit event to parent
       if (onClose) onClose(values, true);
     },

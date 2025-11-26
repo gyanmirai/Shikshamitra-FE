@@ -5,18 +5,15 @@ interface StopsChargesAndNameProps {
   stopList: any;
 }
 
-const StopsChargesAndName: React.FC<StopsChargesAndNameProps> = ({ stopList }) => {
-  console.log('data', stopList);
-  return (
-    <CustomizableTable
-      tableId="stops-charges-and-name"
-      data={[]}
-      columns={[
-        { id: 'stopName', label: 'Stop Name' },
-        { id: 'stopCharges', label: 'Stop Charges' },
-      ]}
-    />
-  );
-};
+const StopsChargesAndName: React.FC<StopsChargesAndNameProps> = ({ stopList }) => (
+  <CustomizableTable
+    tableId="stops-charges-and-name"
+    data={[]}
+    columns={[
+      { id: 'stopName', label: 'Stop Name' },
+      { id: 'stopCharges', label: 'Stop Charges' },
+    ]}
+  />
+);
 
 export default StopsChargesAndName;

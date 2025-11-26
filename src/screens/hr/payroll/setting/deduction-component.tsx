@@ -11,6 +11,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -218,15 +219,65 @@ const DeductionComponent = () => {
 
 export default DeductionComponent;
 
-const genders = ['Male', 'Female', 'Other'];
-const salaryRanges = ['Basic', 'Gross', 'CTC'];
-const deductionFrequencies = ['Monthly', 'Quarterly', 'Yearly'];
+const componentTypes = ['Fixed', 'Percentage'];
+// Updated dependsOnOptions as requested
+const dependsOnOptions = [
+  'Basic Salary',
+  'Gross Salary',
+  'Net Salary',
+  'CTC',
+  'Allowances',
+  'Any custom salary component',
+];
+// Sample custom salary components for the additional dropdown when last option selected
+const customComponents = [
+  'Overtime Pay',
+  'Shift Allowance',
+  'Leave Encashment',
+  'Project Incentive',
+  'Travel Reimbursement',
+];
 
 const validationSchema = Yup.object({
   componentName: Yup.string().required('Component Name is required'),
-  componentType: Yup.string().required('Component Type is required'),
   description: Yup.string(),
-  // Add more validation rules as per your requirement
+  componentType: Yup.string().test(
+    'required-if-fixed',
+    'Component Type is required',
+    function componentTypeRequired(value) {
+      const { isFixed } = this.parent;
+      return !isFixed || !!value;
+    }
+  ),
+  dependOn: Yup.string().test(
+    'required-if-percentage',
+    'Depend On is required',
+    function dependOnRequired(value) {
+      const { isFixed, componentType } = this.parent;
+      if (!isFixed) return true;
+      if (componentType !== 'Percentage') return true;
+      return !!value;
+    }
+  ),
+  customComponent: Yup.string().test(
+    'required-if-custom-depend',
+    'Custom component is required',
+    function customComponentRequired(value) {
+      const { dependOn, isFixed, componentType } = this.parent;
+      if (!isFixed) return true;
+      if (componentType !== 'Percentage') return true;
+      if (dependOn !== 'Any custom salary component') return true;
+      return !!value;
+    }
+  ),
+  amount: Yup.string().test(
+    'required-if-fixed',
+    'Amount is required',
+    function amountRequired(value) {
+      const { isFixed } = this.parent;
+      return !isFixed || !!value;
+    }
+  ),
 });
 
 const DeductionComponentForm = ({
@@ -239,38 +290,17 @@ const DeductionComponentForm = ({
   const formik = useFormik({
     initialValues: {
       componentName: editData?.name || '',
-      componentType: editData?.componentType || '',
       description: editData?.description || '',
+      componentType: editData?.componentType || '',
+      dependOn: editData?.dependOn || '',
+      customComponent: editData?.customComponent || '',
+      amount: editData?.amount || '',
       visibleInPayslip: editData?.visibleInPayslip || true,
-
-      // PF
-      employeePercentage: editData?.employeePercentage || '',
-      employerPercentage: editData?.employerPercentage || '',
-
-      // PT
-      ptGender: editData?.ptGender || '',
-      ptFromSalary: editData?.ptFromSalary || '',
-      ptToSalary: editData?.ptToSalary || '',
-      ptTaxAmount: editData?.ptTaxAmount || '',
-
-      // TDS
-      tdsFromSalary: editData?.tdsFromSalary || '',
-      tdsToSalary: editData?.tdsToSalary || '',
-      tdsAmount: editData?.tdsAmount || '',
-
-      // LWF
-      lwfEmployee: editData?.lwfEmployee || '',
-      lwfEmployer: editData?.lwfEmployer || '',
-      lwfFrequency: editData?.lwfFrequency || '',
-
-      // ESI
-      esiEmployee: editData?.esiEmployee || '',
-      esiEmployer: editData?.esiEmployer || '',
-      esiCap: editData?.esiCap || '',
+      isFixed: editData ? editData?.isFixed : true,
     },
     validationSchema,
     onSubmit: (values) => {
-      console.log(values);
+      handleClose();
     },
   });
 
@@ -278,9 +308,18 @@ const DeductionComponentForm = ({
     <>
       <DialogScrollContent>
         {/* General Information */}
-        <SectionCard title="General Information">
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+        <SectionCard
+          title="General Information"
+          gridProps={{
+            sx: {
+              alignItems: 'start',
+            },
+          }}
+        >
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <ShakingTextField
+              error={formik.touched.componentName && Boolean(formik.errors.componentName)}
+            >
               <TextField
                 size="small"
                 fullWidth
@@ -291,68 +330,152 @@ const DeductionComponentForm = ({
                 error={formik.touched.componentName && Boolean(formik.errors.componentName)}
                 helperText={(formik.touched.componentName && formik.errors.componentName) as string}
               />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                size="small"
-                select
-                fullWidth
-                label="Component Type *"
-                name="componentType"
-                value={formik.values.componentType}
-                onChange={formik.handleChange}
-                error={formik.touched.componentType && Boolean(formik.errors.componentType)}
-                helperText={(formik.touched.componentType && formik.errors.componentType) as string}
-              >
-                {['Deduction', 'Tax', 'Other'].map((opt) => (
-                  <MenuItem key={opt} value={opt}>
-                    {opt}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 12 }}>
+            </ShakingTextField>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <ShakingTextField
+              error={formik.touched.description && Boolean(formik.errors.description)}
+            >
               <TextField
                 size="small"
                 fullWidth
-                multiline
-                rows={2}
                 label="Description"
                 name="description"
+                multiline
+                rows={2}
                 value={formik.values.description}
                 onChange={formik.handleChange}
               />
-            </Grid>
+            </ShakingTextField>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  name="isFixed"
+                  checked={formik.values.isFixed}
+                  onChange={(_e, value) => formik.setFieldValue('isFixed', value)}
+                />
+              }
+              label="Is Fixed Component"
+            />
           </Grid>
         </SectionCard>
 
-        {/* Deduction Configuration */}
-        <SectionCard title="Deduction Configuration">
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2">For Provident Fund (PF)</Typography>
+        {/* Earning Configuration */}
+        {formik.values.isFixed && (
+          <SectionCard title="Earning Configuration">
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <ShakingTextField
+                error={formik.touched.componentType && Boolean(formik.errors.componentType)}
+              >
+                <TextField
+                  size="small"
+                  select
+                  fullWidth
+                  label="Component Type *"
+                  name="componentType"
+                  value={formik.values.componentType}
+                  onChange={(e) => {
+                    formik.handleChange(e);
+                    if (e.target.value !== 'Percentage') {
+                      formik.setFieldValue('dependOn', '');
+                      formik.setFieldValue('customComponent', '');
+                    }
+                  }}
+                  error={formik.touched.componentType && Boolean(formik.errors.componentType)}
+                  helperText={
+                    (formik.touched.componentType && formik.errors.componentType) as string
+                  }
+                >
+                  {componentTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </ShakingTextField>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                size="small"
-                label="Employee Percentage"
-                name="employeePercentage"
-                fullWidth
-                value={formik.values.employeePercentage}
-                onChange={formik.handleChange}
-              />
+
+            {formik.values.componentType === 'Percentage' && (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <ShakingTextField
+                  error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}
+                >
+                  <TextField
+                    size="small"
+                    select
+                    fullWidth
+                    label="Depend on *"
+                    name="dependOn"
+                    value={formik.values.dependOn}
+                    onChange={formik.handleChange}
+                    error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}
+                    helperText={(formik.touched.dependOn && formik.errors.dependOn) as string}
+                  >
+                    {dependsOnOptions.map((dep) => (
+                      <MenuItem key={dep} value={dep}>
+                        {dep}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </ShakingTextField>
+              </Grid>
+            )}
+
+            {formik.values.componentType === 'Percentage' &&
+              formik.values.dependOn === 'Any custom salary component' && (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <ShakingTextField
+                    error={formik.touched.customComponent && Boolean(formik.errors.customComponent)}
+                  >
+                    <TextField
+                      size="small"
+                      select
+                      fullWidth
+                      label="Select Custom Component *"
+                      name="customComponent"
+                      value={formik.values.customComponent}
+                      onChange={formik.handleChange}
+                      error={
+                        formik.touched.customComponent && Boolean(formik.errors.customComponent)
+                      }
+                      helperText={
+                        (formik.touched.customComponent && formik.errors.customComponent) as string
+                      }
+                    >
+                      {customComponents.map((c) => (
+                        <MenuItem key={c} value={c}>
+                          {c}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </ShakingTextField>
+                </Grid>
+              )}
+
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <ShakingTextField error={formik.touched.amount && Boolean(formik.errors.amount)}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label={
+                    formik.values.componentType === 'Percentage'
+                      ? 'Amount Percentage *'
+                      : 'Amount *'
+                  }
+                  name="amount"
+                  type="number"
+                  value={formik.values.amount}
+                  onChange={formik.handleChange}
+                  error={formik.touched.amount && Boolean(formik.errors.amount)}
+                  helperText={(formik.touched.amount && formik.errors.amount) as string}
+                />
+              </ShakingTextField>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                size="small"
-                label="Employer Percentage"
-                name="employerPercentage"
-                fullWidth
-                value={formik.values.employerPercentage}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
+
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} display="flex" alignItems="center">
               <FormControlLabel
                 control={
                   <Switch
@@ -365,175 +488,8 @@ const DeductionComponentForm = ({
                 label="Visible in Payslip"
               />
             </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2">For Professional Tax (PT)</Typography>
-            </Grid>
-            <Grid size={{ xs: 6, sm: 3 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                select
-                label="Gender"
-                name="ptGender"
-                fullWidth
-                value={formik.values.ptGender}
-                onChange={formik.handleChange}
-              >
-                {genders.map((gender) => (
-                  <MenuItem key={gender} value={gender}>
-                    {gender}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 6, sm: 3 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                select
-                label="From Salary"
-                name="ptFromSalary"
-                fullWidth
-                value={formik.values.ptFromSalary}
-                onChange={formik.handleChange}
-              >
-                {salaryRanges.map((range) => (
-                  <MenuItem key={range} value={range}>
-                    {range}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 6, sm: 3 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                label="To Salary"
-                name="ptToSalary"
-                fullWidth
-                value={formik.values.ptToSalary}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-            <Grid size={{ xs: 6, sm: 3 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                label="Tax Amount"
-                name="ptTaxAmount"
-                fullWidth
-                value={formik.values.ptTaxAmount}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2">For Tax Deducted at Source (TDS)</Typography>
-            </Grid>
-            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                label="From Salary"
-                name="tdsFromSalary"
-                fullWidth
-                value={formik.values.tdsFromSalary}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                label="To Salary"
-                name="tdsToSalary"
-                fullWidth
-                value={formik.values.tdsToSalary}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                label="TDS Amount/Percentage"
-                name="tdsAmount"
-                fullWidth
-                value={formik.values.tdsAmount}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2">For Labour Welfare Fund (LWF)</Typography>
-            </Grid>
-            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                label="Employee Contribution"
-                name="lwfEmployee"
-                fullWidth
-                value={formik.values.lwfEmployee}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                label="Employer Contribution"
-                name="lwfEmployer"
-                fullWidth
-                value={formik.values.lwfEmployer}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                select
-                label="Deduction Frequency"
-                name="lwfFrequency"
-                fullWidth
-                value={formik.values.lwfFrequency}
-                onChange={formik.handleChange}
-              >
-                {deductionFrequencies.map((freq) => (
-                  <MenuItem key={freq} value={freq}>
-                    {freq}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="subtitle2">For Employee State Insurance (ESI)</Typography>
-            </Grid>
-            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                label="Employee Contribution"
-                name="esiEmployee"
-                fullWidth
-                value={formik.values.esiEmployee}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-            <Grid size={{ xs: 6, sm: 4 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                label="Employer Contribution"
-                name="esiEmployer"
-                fullWidth
-                value={formik.values.esiEmployer}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 4 }} sx={{ pt: '8px !important' }}>
-              <TextField
-                size="small"
-                label="ESI Eligibility Salary Cap"
-                name="esiCap"
-                fullWidth
-                value={formik.values.esiCap}
-                onChange={formik.handleChange}
-              />
-            </Grid>
-          </Grid>
-        </SectionCard>
+          </SectionCard>
+        )}
       </DialogScrollContent>
 
       <DialogActions>

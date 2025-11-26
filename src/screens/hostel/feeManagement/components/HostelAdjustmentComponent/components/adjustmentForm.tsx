@@ -21,9 +21,7 @@ const AdjustmentForm: React.FC<IAdjustmentFormProps> = ({ onClose, editData }) =
       reason: editData?.reason || '',
     },
     validationSchema: hostelAdjustmentValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   return (

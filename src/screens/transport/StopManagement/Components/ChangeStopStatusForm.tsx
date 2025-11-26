@@ -47,8 +47,6 @@ const ChangeStopStatusForm: React.FC<ChangeStopStatusProps> = ({
       onClose(null, true);
     },
   });
-  console.log('formik---initialValues---', formik.initialValues);
-  console.log('formik---values---', formik.values);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

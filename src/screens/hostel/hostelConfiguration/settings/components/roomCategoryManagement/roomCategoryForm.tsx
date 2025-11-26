@@ -22,9 +22,7 @@ const AddRoomCategoryForm = ({ dialog, onClose, editData }: any) => {
       name: Yup.string().required('Category Name is required'),
       description: Yup.string().required('Description is required'),
     }),
-    onSubmit: (values) => {
-      console.log('Form Values:', values);
-    },
+    onSubmit: (values) => {},
   });
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

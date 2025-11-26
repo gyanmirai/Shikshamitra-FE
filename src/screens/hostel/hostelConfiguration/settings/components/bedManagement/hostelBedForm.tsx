@@ -25,9 +25,7 @@ const AddBedNumberForm: React.FC<IBedNumberFormProps> = ({ dialog, onClose, edit
       hostelName: Yup.string().required('Hostel Name is required'),
     }),
     // Handle form submission
-    onSubmit: (values) => {
-      console.log('Form Values:', values);
-    },
+    onSubmit: (values) => {},
   });
 
   return (

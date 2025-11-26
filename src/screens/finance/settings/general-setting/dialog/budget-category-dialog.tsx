@@ -13,7 +13,6 @@ const BudgetCategoryDialog = () => {
     },
     validationSchema: categoryValidationSchema,
     onSubmit: (values) => {
-      console.log('Submitted Category:', values);
       // Add dispatch or API call here
     },
   });

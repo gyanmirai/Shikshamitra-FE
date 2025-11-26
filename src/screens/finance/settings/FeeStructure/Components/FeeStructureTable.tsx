@@ -25,7 +25,6 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
   onView,
 }) => {
   const theme = useTheme();
-  console.log('data====', data);
 
   return (
     <CustomizableTable

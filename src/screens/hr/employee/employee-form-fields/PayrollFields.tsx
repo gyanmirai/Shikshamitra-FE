@@ -1,10 +1,242 @@
+import { Add } from '@mui/icons-material';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Grid, MenuItem, TextField } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
+import {
+  Box,
+  Card,
+  Grid,
+  Paper,
+  Button,
+  MenuItem,
+  TextField,
+  IconButton,
+  Typography,
+} from '@mui/material';
 
 import { RenderPfRules } from './RenderPfRules';
-import { CardActions } from './InformationFields';
+import PayrollComponentDialog from './PayrollComponentDialog';
+import { CardActions, SectionCard } from './InformationFields';
 
 import type { FieldsType } from './types';
+
+const EARNINGS_CONFIG: Record<string, { isFixed: boolean }> = {
+  'Basic Salary': { isFixed: false },
+  'House Rent Allowance (HRA)': { isFixed: true },
+  'Transport Allowance': { isFixed: true },
+  'Special Allowance': { isFixed: false },
+  'Medical Allowance': { isFixed: true },
+  Bonus: { isFixed: false },
+};
+
+export const RenderComponents = ({ formik, name, label, type, showTempAdd = false }: any) => {
+  const { values } = formik;
+  const components = values[name] || [];
+  const isDialogOpen = useBoolean();
+  const isAddingTemp = useBoolean(false);
+
+  const handleAdd = (selectedNames: string[]) => {
+    const currentComponents = [...components];
+    selectedNames.forEach((compName) => {
+      const exists = currentComponents.some((c: any) => c.name === compName);
+      if (!exists) {
+        const config = EARNINGS_CONFIG[compName];
+        // Default to not fixed if not found in config, or handle deductions which might not be in EARNINGS_CONFIG
+        const isFixed = type === 'earning' ? (config?.isFixed ?? false) : false;
+        currentComponents.push({
+          name: compName,
+          type: isFixed ? 'Fixed' : 'Not Fixed',
+          amount: '',
+          isFixed,
+          isTemp: isAddingTemp.value || false,
+        });
+      }
+    });
+    formik.setFieldValue(name, currentComponents);
+    // Reset temp add mode after adding
+    if (isAddingTemp.value) {
+      isAddingTemp.onFalse();
+    }
+  };
+
+  const handleRemove = (index: number) => {
+    const updatedComponents = components.filter((_: any, i: number) => i !== index);
+    formik.setFieldValue(name, updatedComponents);
+  };
+
+  return (
+    <Box mt={2}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography
+          variant="h6"
+          sx={{
+            borderLeft: (theme) =>
+              `4px solid ${type === 'earning' ? theme.palette.success.main : theme.palette.error.main}`,
+            pl: 1,
+          }}
+        >
+          {label}
+        </Typography>
+        <Box display="flex" alignItems="center" gap={1}>
+          {showTempAdd && (
+            <Button
+              variant="soft"
+              color="warning"
+              startIcon={<Add />}
+              size="small"
+              onClick={() => {
+                isAddingTemp.onTrue();
+                isDialogOpen.onTrue();
+              }}
+            >
+              Temp {type === 'earning' ? 'Earning' : 'Deduction'}
+            </Button>
+          )}
+          <Button
+            variant="soft"
+            startIcon={<Add />}
+            onClick={() => {
+              isAddingTemp.onFalse();
+              isDialogOpen.onTrue();
+            }}
+            size="small"
+          >
+            {type === 'earning' ? 'Earning' : 'Deduction'}
+          </Button>
+        </Box>
+      </Box>
+
+      <Box display="flex" flexDirection="column" gap={2}>
+        {components.map((component: any, index: number) => {
+          const { isFixed } = component;
+          // If it's fixed, we don't show inputs. If it's not fixed, we show Amount.
+          // We never show "Type" dropdown as per requirement.
+
+          return (
+            <Card
+              key={index}
+              sx={{
+                p: 2,
+                position: 'relative',
+                boxShadow: (theme) => theme.customShadows.z4,
+              }}
+            >
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                mb={isFixed ? 0 : 2}
+              >
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Iconify
+                    icon={
+                      type === 'earning'
+                        ? 'solar:wallet-money-bold-duotone'
+                        : 'solar:minus-circle-bold-duotone'
+                    }
+                    color={type === 'earning' ? 'success.main' : 'error.main'}
+                    width={18}
+                  />
+                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                    {component.name}
+                  </Typography>
+
+                  {isFixed && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: 'text.secondary',
+                        bgcolor: 'background.neutral',
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      Fixed Value
+                    </Typography>
+                  )}
+                  {isFixed && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: 'text.secondary',
+                        bgcolor: 'background.neutral',
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      {component.amount || '₹ 10,000'}
+                    </Typography>
+                  )}
+                  {component.isTemp && <Label color="warning">Temp</Label>}
+                  {!isFixed && (
+                    <ShakingTextField
+                      error={
+                        formik.touched[name]?.[index]?.amount &&
+                        Boolean((formik.errors[name] as any)?.[index]?.amount)
+                      }
+                    >
+                      <NumericFormatCustom
+                        fullWidth
+                        size="small"
+                        required
+                        variant="standard"
+                        label="Amount"
+                        name={`${name}.${index}.amount`}
+                        value={component.amount}
+                        onChange={formik.handleChange}
+                        error={
+                          formik.touched[name]?.[index]?.amount &&
+                          Boolean((formik.errors[name] as any)?.[index]?.amount)
+                        }
+                        helperText={
+                          formik.touched[name]?.[index]?.amount &&
+                          (formik.errors[name] as any)?.[index]?.amount
+                        }
+                        sx={{ ml: 2 }}
+                      />
+                    </ShakingTextField>
+                  )}
+                </Box>
+                <IconButton size="small" color="error" onClick={() => handleRemove(index)}>
+                  <Iconify icon="solar:trash-bin-trash-bold" />
+                </IconButton>
+              </Box>
+            </Card>
+          );
+        })}
+
+        {components.length === 0 && (
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 3,
+              textAlign: 'center',
+              borderStyle: 'dashed',
+              bgcolor: (theme) => theme.palette.background.neutral,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              No {type} components added yet. Click the button above to add.
+            </Typography>
+          </Paper>
+        )}
+      </Box>
+
+      {isDialogOpen.value && (
+        <PayrollComponentDialog
+          open={isDialogOpen.value}
+          onClose={isDialogOpen.onFalse}
+          type={type}
+          onAdd={handleAdd}
+        />
+      )}
+    </Box>
+  );
+};
 
 const RenderPayrollFields = (props: any) => {
   const { formik, isMainForm } = props;
@@ -33,7 +265,7 @@ const RenderPayrollFields = (props: any) => {
           />
         </Box>
       )}
-      <Grid container spacing={2}>
+      <SectionCard title="Payroll Details">
         <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
@@ -100,8 +332,8 @@ const RenderPayrollFields = (props: any) => {
             value={values.pfType || ''}
             onChange={handleChange}
           >
-            <MenuItem value="Type A">Type A</MenuItem>
-            <MenuItem value="Type B">Type B</MenuItem>
+            <MenuItem value="PF Rule 1">PF Rule 1</MenuItem>
+            <MenuItem value="PF Rule 2">PF Rule 2</MenuItem>
           </TextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
@@ -135,7 +367,7 @@ const RenderPayrollFields = (props: any) => {
         <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
-            type="number"
+            // type="number"
             fullWidth
             disabled={!isEditable.value}
             label="Basic Salary"
@@ -175,6 +407,25 @@ const RenderPayrollFields = (props: any) => {
             name="tdsAmount"
             value={values.tdsAmount || ''}
             onChange={handleChange}
+          />
+        </Grid>
+      </SectionCard>
+
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <RenderComponents
+            formik={formik}
+            name="earningComponents"
+            label="Earning Components"
+            type="earning"
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <RenderComponents
+            formik={formik}
+            name="deductionComponents"
+            label="Deduction Components"
+            type="deduction"
           />
         </Grid>
       </Grid>

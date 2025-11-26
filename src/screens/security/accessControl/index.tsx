@@ -121,7 +121,7 @@ export const AccessControlForm = ({
       });
       handleClose?.();
     } catch (error) {
-      console.log('Error adding access control:', error);
+      console.error(error);
     }
   };
 
@@ -341,8 +341,6 @@ const BoardScreenStep = ({
     [allBoards]
   );
 
-  console.log(nodeData, 'nodeData');
-
   // Helper function to find all child nodes
   const findAllChildren = (node: any, step = 0): any[] => {
     let childIds: string[] = step > 0 ? [node] : [];
@@ -393,7 +391,6 @@ const BoardScreenStep = ({
       });
       childIds.forEach((ids) => {
         if (updatedValues[ids.type as keyof typeof checkedItem]) {
-          console.log(updatedValues, 'updatedValues');
           updatedValues[ids.type as keyof typeof checkedItem]?.push(ids?.id);
         }
       });

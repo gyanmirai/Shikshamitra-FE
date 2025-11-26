@@ -118,7 +118,6 @@ const FinanceTaxSettingTab = () => {
     }
 
     closeDialog();
-    console.log(dataFromDialog);
   };
 
   // Handler to close dialog and reset edit mode

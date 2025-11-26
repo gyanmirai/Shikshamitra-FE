@@ -366,7 +366,7 @@ const LeaveTypeForm = ({
         handleClose(null, true);
         formik.resetForm();
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

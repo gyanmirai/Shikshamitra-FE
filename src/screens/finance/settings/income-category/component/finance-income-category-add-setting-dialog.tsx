@@ -51,7 +51,6 @@ const FinanceIncomeCategoryAddSettingDialog: React.FC<
       } else {
         onSave(values);
       }
-      console.log('Form Submitted type', values);
     },
   });
 

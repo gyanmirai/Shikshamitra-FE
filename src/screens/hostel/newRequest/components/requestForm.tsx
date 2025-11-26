@@ -67,9 +67,7 @@ const HostelRequestForm: React.FC<{
     // Apply validation schema
     validationSchema: hostelRequestValidationSchema,
     // Handle form submission
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

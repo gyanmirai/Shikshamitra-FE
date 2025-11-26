@@ -23,9 +23,7 @@ const ReviewStaffGatePassRequestDialog: React.FC<
   const formik = useFormik({
     initialValues: getReviewStaffGatePassRequestInitialValues(data),
     validationSchema: reviewStaffGatePassRequestValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   return (

@@ -126,7 +126,7 @@ const HrAttendanceSettingScreen = () => {
 
   const [isBackClick, setIsBackClick] = useState(false);
 
-  // console.log(data, 'data');
+  //
   // const handleClose = () => {
   //   setEditData(null);
   //   dialog.onFalse();

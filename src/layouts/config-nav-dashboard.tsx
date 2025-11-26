@@ -460,7 +460,7 @@ const hrModule = (isDdvs: boolean) => ({
             {
               title: 'Employee List',
               path: '/hr/employee',
-              _action: 'employee',
+              _action: 'employee-list',
               shortcutKey: 'Alt+H+E+1',
               shortcutKeyName: 'Alt+H+E+1',
             },
@@ -497,8 +497,6 @@ const hrModule = (isDdvs: boolean) => ({
           _action: 'payroll-management',
           shortcutKey: 'Alt+H+P',
           shortcutKeyName: 'Alt+H+P',
-          disabled: !isDdvs,
-          caption: 'Coming Soon',
           children: [
             {
               title: 'Dashboard',
@@ -527,6 +525,22 @@ const hrModule = (isDdvs: boolean) => ({
               _action: 'payroll-setting',
               shortcutKey: 'Alt+H+P+4',
               shortcutKeyName: 'Alt+H+P+4',
+              children: [
+                {
+                  title: 'Earning Components',
+                  path: '/hr/payroll/setting/earning-component',
+                  _action: 'payroll-setting-earning-components',
+                  shortcutKey: 'Alt+H+P+4',
+                  shortcutKeyName: 'Alt+H+P+4',
+                },
+                {
+                  title: 'Deduction Components',
+                  path: '/hr/payroll/setting/deduction-component',
+                  _action: 'payroll-setting-deduction-components',
+                  shortcutKey: 'Alt+H+P+4+2',
+                  shortcutKeyName: 'Alt+H+P+4+2',
+                },
+              ],
             },
           ],
         },

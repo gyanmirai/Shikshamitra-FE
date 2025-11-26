@@ -99,8 +99,6 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
     }
   };
 
-  console.log('setSelectedBook---', setSelectedBook);
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Breadcrumbs */}
@@ -233,7 +231,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         //   }}
         //   onReserveBook={(data) => {
         //     setSelectedBook(data);
-        //     console.log('reserve data', data);
+        //
         //     reserveDialog.onTrue();
         //   }}
         //   onViewAllReservationBook={(data) => {
@@ -256,7 +254,7 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
           }}
           onReserveBook={(data) => {
             setSelectedBook(data);
-            console.log('reserve data', data);
+
             reserveDialog.onTrue();
           }}
           onViewAllReservationBook={(data) => {

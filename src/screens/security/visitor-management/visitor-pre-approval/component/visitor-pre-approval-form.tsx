@@ -25,9 +25,7 @@ const VisitorPreApprovedForm: React.FC<IVisitorPreApprovedFormProps> = ({
   const formik = useFormik({
     initialValues: getInitialVisitorPreApprovalValues(data),
     validationSchema: visitorPreApprovalValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;

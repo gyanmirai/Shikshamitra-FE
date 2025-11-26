@@ -146,7 +146,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
     validationSchema: groupValidationSchema,
     onSubmit: (values) => {
       // Placeholder submit logic
-      console.log('Submitting group form values:', values);
+
       onClose?.(values, true);
     },
   });
@@ -318,7 +318,7 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
       formik.setFieldValue('selectionAcademicSelection', selectedData || []);
     }
   };
-  console.log(formik.values.selections, 'formik.values.selections');
+
   const renderFilters = () => (
     <SectionCard title="Select Audience" paperProps={{ sx: { mb: 2 } }}>
       <Grid size={{ xs: 12 }}>

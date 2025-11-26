@@ -22,7 +22,6 @@ const LeaveTypeForm: React.FC<ILeaveTypeFormProps> = ({ dialog, onClose, editDat
       backgroundColor: Yup.string().required('Color is required'),
     }),
     onSubmit: (values) => {
-      console.log('Submitted:', values);
       onClose(null, true);
     },
   });

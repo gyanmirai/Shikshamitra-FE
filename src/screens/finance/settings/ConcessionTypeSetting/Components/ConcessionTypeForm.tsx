@@ -53,9 +53,6 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
     },
   });
 
-  console.log('formik,,values----', formik.values);
-  console.log('formik,,errors----', formik.errors);
-
   // Document add/remove handlers
   const handleAddDocument = () => {
     formik.setFieldValue('documents', [

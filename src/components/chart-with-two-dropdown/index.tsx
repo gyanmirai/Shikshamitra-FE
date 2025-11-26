@@ -262,7 +262,7 @@ export function ChartWithTwoDropDown({
     if (type === 'png') {
       if (charts) {
         const data = await charts.dataURI();
-        console.log('data', data);
+
         const { imgURI } = data as { imgURI: string };
 
         // trigger download

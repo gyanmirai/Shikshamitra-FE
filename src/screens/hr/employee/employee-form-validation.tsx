@@ -187,6 +187,14 @@ const familyInformationValidationSchema = Yup.object({
     .nullable(),
 });
 
+const additionalDetailsValidationSchema = Yup.object({
+  bplCardNo: Yup.string().nullable(),
+  personWithDisability: Yup.string().nullable(),
+  secondLanguage: Yup.string().nullable(),
+  libraryMember: Yup.boolean(),
+  transportMember: Yup.boolean(),
+});
+
 export const workExperienceValidationSchema = Yup.object({
   experiences: Yup.array().of(
     Yup.object({
@@ -228,6 +236,46 @@ export const workExperienceValidationSchema = Yup.object({
     })
   ),
 });
+
+export const payrollValidationSchema = Yup.object({
+  bankName: Yup.string().nullable(),
+  branchName: Yup.string().nullable(),
+  accountHolderName: Yup.string().nullable(),
+  accountNumber: Yup.string().nullable(),
+  ifscCode: Yup.string().nullable(),
+  pfType: Yup.string().nullable(),
+  epfNumber: Yup.string().nullable(),
+  uanNumber: Yup.string().nullable(),
+  basicSalary: Yup.string().nullable(),
+  punchId: Yup.string().nullable(),
+  tdsPercentage: Yup.string().nullable(),
+  tdsAmount: Yup.string().nullable(),
+  earningComponents: Yup.array().of(
+    Yup.object({
+      name: Yup.string().required('Name is required'),
+      type: Yup.string().required('Type is required'),
+      amount: Yup.string().test('amount', 'Amount is required', function () {
+        if (this.parent.type === 'fixed') {
+          return false;
+        }
+        return true;
+      }),
+    })
+  ),
+  deductionComponents: Yup.array().of(
+    Yup.object({
+      name: Yup.string().required('Name is required'),
+      type: Yup.string().required('Type is required'),
+      amount: Yup.string().test('amount', 'Amount is required', function () {
+        if (this.parent.type === 'fixed') {
+          return false;
+        }
+        return true;
+      }),
+    })
+  ),
+});
+
 export const reportingManagerValidationSchema = Yup.object({
   reportingManager: Yup.string().required('Reporting manager is required'),
 });
@@ -235,14 +283,16 @@ export const reportingManagerValidationSchema = Yup.object({
 export const validations = [
   personalInformationValidationSchema,
   familyInformationValidationSchema,
+  additionalDetailsValidationSchema,
   Yup.object({}),
   workExperienceValidationSchema,
-  Yup.object({}),
+  payrollValidationSchema,
   reportingManagerValidationSchema,
 ];
 export const infoValidations = [
   personalInformationValidationSchema,
   familyInformationValidationSchema,
+  additionalDetailsValidationSchema,
   workExperienceValidationSchema,
   Yup.object({}),
   reportingManagerValidationSchema,

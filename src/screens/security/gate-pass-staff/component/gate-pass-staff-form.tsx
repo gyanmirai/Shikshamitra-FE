@@ -25,9 +25,7 @@ const EarlyGatePassFormStaff: React.FC<IGatePassStaffRequestFormProps> = ({
   const formik = useFormik({
     initialValues: getStaffPassRequestInitialValues(data),
     validationSchema: staffPassRequestValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;

@@ -605,7 +605,7 @@ export const ExamForm = ({
         });
         handleClose(null, true);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });
@@ -912,7 +912,7 @@ const ResultForm = ({
         });
         handleClose(null, true);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

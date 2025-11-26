@@ -84,8 +84,6 @@ const AnnouncementForm: React.FC<IClassWiseAnnouncementFormProps> = ({
       onClose(null, true);
     },
   });
-  console.log('formik erroes===', formik.errors);
-  console.log('formik values===', formik.values);
 
   // Update divisions list when class selection changes
   useEffect(() => {

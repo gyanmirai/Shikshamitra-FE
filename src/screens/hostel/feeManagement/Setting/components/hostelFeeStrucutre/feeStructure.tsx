@@ -69,8 +69,6 @@ const HostelFeeStructure = (props: TabComponentType) => {
     const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
     const feeHeadLabel: any = feeHeadList.map((e) => (e.value === feeHead ? e.label : null));
 
-    console.log('Data from dialog', dataFromDialog);
-
     // Handle edit mode
     if (isEdit) {
       const existingIndex = tableData.findIndex((val) => val.id === id);
@@ -97,8 +95,6 @@ const HostelFeeStructure = (props: TabComponentType) => {
           const updatedTableData = [...tableData];
           updatedTableData[existingIndex] = rowData;
           setTableData(updatedTableData);
-
-          console.log('Updated rowData', rowData);
         } else {
           // Add new subcategory
           rowData.feeSubCategoryList.push({
@@ -112,8 +108,6 @@ const HostelFeeStructure = (props: TabComponentType) => {
           const updatedTableData = [...tableData];
           updatedTableData[existingIndex] = rowData;
           setTableData(updatedTableData);
-
-          console.log('Added new subcategory', rowData);
         }
 
         // Update switch states
@@ -277,9 +271,6 @@ const HostelFeeStructure = (props: TabComponentType) => {
                         : total,
                     0
                   );
-
-                  console.log('Row data:', row);
-                  console.log('Total amount:', totalAmount);
 
                   return (
                     <Typography sx={{ fontSize: '12px' }}>

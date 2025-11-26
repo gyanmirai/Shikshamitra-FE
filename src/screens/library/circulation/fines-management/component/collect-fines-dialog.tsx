@@ -41,7 +41,6 @@ const CollectFinesDialog: React.FC<CollectFinesDialogProps> = ({
       accountHolder: '',
     },
     onSubmit: (values) => {
-      console.log('Form Submitted:', values);
       onSave(values);
     },
   });

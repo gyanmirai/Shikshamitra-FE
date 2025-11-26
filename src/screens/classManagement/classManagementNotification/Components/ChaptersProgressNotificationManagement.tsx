@@ -265,9 +265,7 @@ const ChaptersProgressNotificationManagement = ({ dialog, setIsViewMode }: any) 
                 return (
                   <Switch
                     checked={NotificationStatusType.Active === row.isActive}
-                    onChange={(event) => {
-                      console.log('Toggle active status:', event.target.checked);
-                    }}
+                    onChange={(event) => {}}
                   />
                 );
               },

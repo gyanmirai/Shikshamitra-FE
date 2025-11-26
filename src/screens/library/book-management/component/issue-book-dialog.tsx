@@ -44,7 +44,6 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
       RequestedDate: dayjs(), // Ensure safe initialization
     },
     onSubmit: (values: any) => {
-      console.log('Form Submitted:', values);
       onSave(values);
     },
   });
@@ -148,9 +147,7 @@ const IssueBookDialog: React.FC<IssueBookDialogProps> = ({
                   loading={false}
                   noOptionsText="No Student Found"
                   fullWidth
-                  onChange={(e, value: any) => {
-                    console.log('e');
-                  }}
+                  onChange={(e, value: any) => {}}
                   options={[]}
                   getOptionLabel={(option: any) => `${option.name} (${option.role})`} // Use the formatted label
                   renderInput={(params: any) => (
@@ -408,7 +405,7 @@ export default IssueBookDialog;
 //             dueDate: dayjs(),
 //         },
 //         onSubmit: (values: any) => {
-//             console.log('Form Submitted:', values);
+//
 //             onSave(values);
 //         },
 //     });
@@ -692,7 +689,7 @@ export default IssueBookDialog;
 // //             condition: '',
 // //         },
 // //         onSubmit: (values: any) => {
-// //             console.log('Form Submitted:', values);
+// //
 // //             onSave(values);
 // //         },
 // //     });

@@ -13,7 +13,6 @@ const VehicleInformationCard = () => {
     type: 'query',
     currentQueryAndMutation: useGetvehicleInformationQuery,
   });
-  console.log('🚀 ~ VehicleInformationCard ~ vehicle:', vehicle);
 
   return (
     <Card

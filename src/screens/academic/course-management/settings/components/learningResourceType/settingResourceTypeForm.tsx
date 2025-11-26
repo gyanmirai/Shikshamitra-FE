@@ -24,9 +24,7 @@ const SettingResourceTypeForm: React.FC<IResourceTypeFormProps> = ({ open, onClo
       resourceTypeName: Yup.string().trim().required('Resource Type Name is required'),
     }),
     // Handle form submission
-    onSubmit: (values, formikHelpers) => {
-      console.log(values);
-    },
+    onSubmit: (values, formikHelpers) => {},
   });
 
   return (

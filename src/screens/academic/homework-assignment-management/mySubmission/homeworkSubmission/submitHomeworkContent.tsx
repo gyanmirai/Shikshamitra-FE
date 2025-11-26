@@ -23,7 +23,7 @@ export const SubmitHomeworkContent = ({
     validationSchema: homeworkContentValidationSchema,
     onSubmit: (values) => {
       // Handle content submission
-      console.log('Submitting content:', values);
+
       onClose(values, true);
     },
   });

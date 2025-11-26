@@ -140,7 +140,7 @@ const MainDashboardTeacher = () => {
           ]}
           selectOptions={[]}
           selectedValue="1"
-          onSelectChange={(val) => console.log('sele:', val)}
+          onSelectChange={(val) => {}}
         />
       </Grid>
 
@@ -159,7 +159,7 @@ const MainDashboardTeacher = () => {
           ]}
           selectOptions={[]}
           selectedValue="Jan"
-          onSelectChange={(val) => console.log('Selected Month:', val)}
+          onSelectChange={(val) => {}}
         />
       </Grid>
       {/* 
@@ -177,7 +177,7 @@ const MainDashboardTeacher = () => {
           ]}
           selectOptions={[]}
           selectedValue="Jan"
-          onSelectChange={(val) => console.log('Selected Month:', val)}
+          onSelectChange={(val) => }
         />
       </Grid> */}
       <Grid size={{ xs: 12, md: 6, lg: 3 }}>
@@ -195,7 +195,7 @@ const MainDashboardTeacher = () => {
           ]}
           selectOptions={[]}
           selectedValue="Jan"
-          onSelectChange={(val) => console.log('Selected Month:', val)}
+          onSelectChange={(val) => {}}
         />
       </Grid>
 

@@ -21,7 +21,6 @@ const HostelPaymentMethodDialog = (props: TabComponentType) => {
     }),
     // Handle form submission
     onSubmit: (values) => {
-      console.log('Submitted Payment Method:', values);
       // TODO: Implement API call or dispatch action to save payment method
     },
   });

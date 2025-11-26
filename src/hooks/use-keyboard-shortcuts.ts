@@ -8,7 +8,7 @@ const useKeyboardShortcuts = () => {
   useHotkeys('ctrl+shift+h+f', (e) => {
     e.preventDefault();
     nProgress.start();
-    console.log(e);
+
     router.push('/hr/employee');
   });
   //   useHotkeys('ctrl+shift+h+e', () => {});

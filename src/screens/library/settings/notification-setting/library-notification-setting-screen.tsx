@@ -37,11 +37,11 @@ const LibraryNotificationSettingScreen = () => {
 
   // Handle change in communication preference for each user group
   const handleGroupChange = (group: string, type: string, checked: boolean) => {
-    const updatedData = communicationData.map((item) =>
-      item.group === group ? { ...item, [type]: checked } : item
-    );
+    // const updatedData = communicationData.map((item) =>
+    //   item.group === group ? { ...item, [type]: checked } : item
+    // );
     // Update the communication preferences data (SMS, Email, WhatsApp) accordingly
-    console.log(updatedData); // This is where you could update the state or perform actions with the updated data
+    // This is where you could update the state or perform actions with the updated data
   };
 
   return (

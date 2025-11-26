@@ -74,8 +74,6 @@ const TransportStopsSettingScreen = () => {
                     <MenuList>
                       <MenuItem
                         onClick={() => {
-                          console.log('row', row);
-
                           viewStopDialog.onTrue();
                         }}
                       >

@@ -69,8 +69,6 @@ const TransportVehicleManagementScreen = () => {
   const [tableData, setTableData] = useState(vehiclesOverview);
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const handleOnClick = (vehicleData: any) => {
-    console.log('vehicleData', vehicleData);
-
     setSelectedVehicle(vehicleData);
     dialogDetailedView.onTrue();
   };
@@ -90,7 +88,6 @@ const TransportVehicleManagementScreen = () => {
           index === existingIndex ? { ...val, assignedRoutes, capacity, driver } : val
         );
         setTableData(updatedData);
-        console.log('tableData', tableData);
         closeDialog();
         return;
       }
@@ -104,8 +101,6 @@ const TransportVehicleManagementScreen = () => {
       id,
       assignedRoutes,
     };
-
-    console.log('new vehicle', newVehicle);
 
     const updatedData = [...tableData, newVehicle];
     setTableData(updatedData);

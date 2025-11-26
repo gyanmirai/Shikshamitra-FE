@@ -9,11 +9,10 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetEmployeeNotificationHistoryQuery } from 'src/redux/employee/employeeApi';
 
 const HrAttendanceNotificationScreen = () => {
-  const { data } = useQueryAndMutation({
+  useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeNotificationHistoryQuery,
   });
-  console.log(data, 'data');
 
   const dummyData = [
     {

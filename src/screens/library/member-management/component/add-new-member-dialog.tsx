@@ -30,7 +30,6 @@ const AddNewMemberDialog: React.FC<IAddNewMemberDialogProps> = ({
       condition: '',
     },
     onSubmit: (values: any) => {
-      console.log('Form Submitted:', values);
       onSave(values);
     },
   });
@@ -106,7 +105,6 @@ const AddNewMemberDialog: React.FC<IAddNewMemberDialogProps> = ({
                   label="Requested Date"
                   value={formik.values.issueDate}
                   onChange={(value) => {
-                    console.log('value', value);
                     // formik.setFieldValue('issueDate', value);
                     // const role = memberData.find((member) => member.id === formik.values.memberID)?.role;
                     // const dueDate = calculateDueDate(value, role);

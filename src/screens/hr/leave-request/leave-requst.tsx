@@ -201,7 +201,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           }
           handleClose?.(null, true);
         } catch (e) {
-          console.log(e);
+          console.error(e);
         }
       },
     });
@@ -437,7 +437,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               {/* <UploadButton
                 onChange={(e) => {
                   const file = e?.target?.files?.[0];
-                  console.log(file, '===========>', e);
+                  
                   if (!file) return;
                   const reader = new FileReader();
                   reader.readAsDataURL(file);

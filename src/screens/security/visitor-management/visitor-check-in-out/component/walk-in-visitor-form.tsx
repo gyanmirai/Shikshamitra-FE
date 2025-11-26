@@ -21,9 +21,7 @@ const WalkInVisitorForm: React.FC<IWalkInVisitorFormProps> = ({ isEdit, data, on
   const formik = useFormik({
     initialValues: getInitialWalkInVisitorApprovalValues(data),
     validationSchema: visitorWalkInValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;

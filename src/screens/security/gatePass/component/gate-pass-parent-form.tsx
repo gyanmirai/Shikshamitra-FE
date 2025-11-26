@@ -25,9 +25,7 @@ const EarlyGateRequestForm: React.FC<IGetEarlyPassRequestFormProps> = ({
   const formik = useFormik({
     initialValues: getEarlyPassRequestInitialValues(data),
     validationSchema: earlyPassRequestValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;

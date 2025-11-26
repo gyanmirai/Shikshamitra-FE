@@ -61,8 +61,6 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
       onClose?.(null, true);
     },
   });
-  console.log('formikk   values---', formik.values);
-  console.log('formikk   initial values---', formik.initialValues);
 
   // Update classes when organization changes
   useEffect(() => {

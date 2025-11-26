@@ -15,7 +15,6 @@ const FinanceReceiptBookDialogForDropdown = () => {
     },
     validationSchema: receiptBookValidationSchema,
     onSubmit: (values) => {
-      console.log('Form Values:', values);
       // You can dispatch your action or API call here
       // dispatch(setIsChanges(true));
     },

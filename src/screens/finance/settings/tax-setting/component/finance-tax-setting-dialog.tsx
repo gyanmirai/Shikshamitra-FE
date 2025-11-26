@@ -79,14 +79,11 @@ const FinanceTaxSettingDialog: React.FC<FinanceTaxSettingDialogProps> = ({
         } else {
           // Show error message if tax name already exists
           setShowExistingEntryMessage(true);
-          return;
         }
       } else {
         // In edit mode, directly save the changes
         onSave(values);
       }
-
-      console.log('Form Submitted type', values);
     },
     enableReinitialize: true,
   });

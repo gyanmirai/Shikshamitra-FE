@@ -18,7 +18,7 @@ const RuleForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
     initialValues: getRoomInitialValues(editData),
     validationSchema: hostelRoomValidationSchema,
     onSubmit: (values, formikHelpers) => {
-      console.log(values); // Handle form submission
+      // Handle form submission
     },
   });
   return (

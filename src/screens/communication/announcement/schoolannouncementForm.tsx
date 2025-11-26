@@ -83,10 +83,6 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
     },
   });
 
-  console.log('formik erroes===', formik.errors);
-  console.log('formik values===', formik.values);
-  console.log('formik initialValues===', formik.initialValues);
-
   return (
     <>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

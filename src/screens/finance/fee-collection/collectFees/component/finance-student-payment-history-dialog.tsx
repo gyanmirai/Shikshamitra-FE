@@ -26,52 +26,49 @@ const FinanceStudentPaymentHistoryDialog: React.FC<FinanceStudentPaymentHistoryD
   data,
   onClose,
   onSave,
-}) => {
-  console.log('data table', data);
-  return (
-    <CustomDialog maxWidth="lg" title="Payment History" open={dialogValue} handleClose={onClose}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
-        <CustomizableTable
-          noDataText="No payment history found. It looks like no payments have been made yet."
-          tableId="financeStudentPaymentHistory"
-          isFilter={false}
-          isScrollbar={false}
-          isSearch={false}
-          isPagination={false}
-          isShowedDense={false}
-          columns={[
-            { id: 'feeHead', label: 'Fee Head' },
-            { id: 'paymentId', label: 'Payment Id / Cheque No' },
+}) => (
+  <CustomDialog maxWidth="lg" title="Payment History" open={dialogValue} handleClose={onClose}>
+    <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral', height: '350px' }}>
+      <CustomizableTable
+        noDataText="No payment history found. It looks like no payments have been made yet."
+        tableId="financeStudentPaymentHistory"
+        isFilter={false}
+        isScrollbar={false}
+        isSearch={false}
+        isPagination={false}
+        isShowedDense={false}
+        columns={[
+          { id: 'feeHead', label: 'Fee Head' },
+          { id: 'paymentId', label: 'Payment Id / Cheque No' },
 
-            { id: 'paymentMode', label: 'Payment Mode' },
-            {
-              id: 'amount',
-              label: 'Amount',
-              filterType: 'formattedNumber',
-              align: 'right',
-              render(value, row) {
-                return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
-              },
+          { id: 'paymentMode', label: 'Payment Mode' },
+          {
+            id: 'amount',
+            label: 'Amount',
+            filterType: 'formattedNumber',
+            align: 'right',
+            render(value, row) {
+              return <Typography fontSize="12px">{formatNumber(row.amount, 'INR')}</Typography>;
             },
-            {
-              id: 'paymentStatus',
-              label: 'Status',
-              filterType: 'enum',
-              enumOptions: PaymentStatusOptions,
-              minWidth: '180px',
-              align: 'left',
-              render(value, row) {
-                const color = PaymentStatusTypeColors[value as PaymentStatusType] as LabelColor;
+          },
+          {
+            id: 'paymentStatus',
+            label: 'Status',
+            filterType: 'enum',
+            enumOptions: PaymentStatusOptions,
+            minWidth: '180px',
+            align: 'left',
+            render(value, row) {
+              const color = PaymentStatusTypeColors[value as PaymentStatusType] as LabelColor;
 
-                return <Label color={color}>{PaymentStatusType[value as PaymentStatusType]}</Label>;
-              },
+              return <Label color={color}>{PaymentStatusType[value as PaymentStatusType]}</Label>;
             },
-          ]}
-          data={data.paymentHistory}
-        />
-      </Scrollbar>
-    </CustomDialog>
-  );
-};
+          },
+        ]}
+        data={data.paymentHistory}
+      />
+    </Scrollbar>
+  </CustomDialog>
+);
 
 export default FinanceStudentPaymentHistoryDialog;

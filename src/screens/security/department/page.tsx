@@ -458,7 +458,7 @@ const OrganizationUnitFrom = ({
         }
         handleClose();
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });
@@ -502,9 +502,7 @@ const AssignUserForm = () => {
     initialValues: {
       users: [],
     },
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
   const { data: employees, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -837,7 +835,6 @@ const RenderUserTable = ({ organizationId }: { organizationId: string }) => {
       skip: !organizationId,
     },
   });
-  console.log('🚀 ~ file: page.tsx:718 ~ RenderUserTable ~ data:', data);
 
   /**
    * Mutation hook for removing a user from organization unit

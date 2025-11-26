@@ -320,7 +320,6 @@ const ShiftManagementForm = ({
       weekStartDay: Yup.string().required('Week start day is required'),
     }),
     onSubmit: (values) => {
-      console.log(values);
       handleClose(null, true);
       shikshaMitraToast.success({ message: 'Shift rule updated successfully' });
     },

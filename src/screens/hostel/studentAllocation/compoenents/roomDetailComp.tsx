@@ -17,9 +17,7 @@ const RoomDetailComp: React.FC<IRoomFormProps> = ({ open, onClose, editData }) =
   const formik = useFormik({
     initialValues: getRoomInitialValues(editData),
     validationSchema: hostelRoomValidationSchema,
-    onSubmit: (values, formikHelpers) => {
-      console.log(values);
-    },
+    onSubmit: (values, formikHelpers) => {},
   });
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

@@ -113,7 +113,7 @@ const FinanceFeeCollectionPaymentHistoryComponent = () => {
                     </MenuItem>
                     {/* <MenuItem
                       onClick={() => {
-                        console.log('data row', row);
+                        
 
                       }}
                     >

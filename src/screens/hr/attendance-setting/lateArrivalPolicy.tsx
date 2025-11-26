@@ -206,14 +206,14 @@ const LateArrivalPolicyForm = ({
     },
     onSubmit: async (values) => {
       try {
-        if (editData) {
-          console.log('update data--');
-        } else {
-          console.log('add data--');
-        }
+        // if (editData) {
+        //     return ;
+        // } else {
+
+        // }
         handleClose(null, true);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });
@@ -316,9 +316,7 @@ const AssignEmployeeForm = () => (
                   sx={{ width: '100%', minWidth: '200px' }}
                 />
               )}
-              onChange={(e, value) =>
-                console.log('organization', value ? value.map((org) => org.organization) : '')
-              }
+              onChange={(e, value) => {}}
             />
           </Grid>
           <Grid size={12}>
@@ -352,9 +350,7 @@ const AssignEmployeeForm = () => (
                   sx={{ width: '100%', minWidth: '200px' }}
                 />
               )}
-              onChange={(e, value) =>
-                console.log('GR No', value ? value.map((emp) => emp.employee) : '')
-              }
+              onChange={(e, value) => {}}
             />
           </Grid>
         </Grid>

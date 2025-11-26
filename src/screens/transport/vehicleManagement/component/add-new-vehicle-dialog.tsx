@@ -46,8 +46,6 @@ const TransportAddNewVehicleDialog: React.FC<TransportAddNewVehicleDialogProps> 
   allData,
 }) => {
   const [showExistingEntryMessage, setShowExistingEntryMessage] = useState(false);
-  console.log('data', allData);
-  console.log('seldata', data);
 
   const formik = useFormik<FormikValue>({
     initialValues: {
@@ -74,7 +72,6 @@ const TransportAddNewVehicleDialog: React.FC<TransportAddNewVehicleDialogProps> 
       } else {
         onSave(values);
       }
-      console.log('Form Submitted type', values);
     },
   });
   return (

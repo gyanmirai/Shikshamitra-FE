@@ -258,9 +258,7 @@ const CTCPreviewForm = ({ handleClose, editData }: { handleClose: () => void; ed
       esi: editData?.esi || '',
     },
     validationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   return (

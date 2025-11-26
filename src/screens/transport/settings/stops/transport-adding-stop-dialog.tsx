@@ -113,7 +113,6 @@ const TransportAddingStopDialog: React.FC<ITransportAddingStopDialogProps> = ({
       return updatedMarkers;
     });
 
-    console.log('markers', markers);
     // sendToParent(markers);
   };
 

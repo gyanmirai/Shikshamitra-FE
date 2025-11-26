@@ -262,12 +262,7 @@ const HrEmployeeNotificationManagementScreen = () => {
               render(value, row) {
                 return (
                   <Box>
-                    <Switch
-                      checked={row.isActive}
-                      onChange={(event) => {
-                        console.log(event.target.checked);
-                      }}
-                    />
+                    <Switch checked={row.isActive} onChange={(event) => {}} />
                   </Box>
                 );
               },

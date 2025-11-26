@@ -152,13 +152,9 @@ function ReviewForm() {
     }));
   };
 
-  const handleSubmit = () => {
-    console.log('Submitted Reviews:', reviews);
-  };
+  const handleSubmit = () => {};
 
-  const handleSaveDraft = () => {
-    console.log('Draft Saved:', reviews);
-  };
+  const handleSaveDraft = () => {};
 
   const handleCancel = () => {
     setReviews({

@@ -92,7 +92,6 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
     }
 
     closeDialog();
-    console.log('Updated Data:', dataFromDialog);
   };
 
   useEffect(() => {}, [selectedEntry, isEdit]);

@@ -13,7 +13,6 @@ import type { FieldsType } from './types';
 
 function FatherAddressComponent(props: any) {
   const { formik, disabled } = props;
-  console.log('formik values of employe---', formik.values);
 
   const isSameAsEmployeeAddressForFather =
     formik?.values?.addressLine1 === formik?.values?.fatherAddress1 &&

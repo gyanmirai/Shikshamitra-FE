@@ -20,9 +20,7 @@ const AddHostelTypeForm: React.FC<IHostelTypeFormProps> = ({ dialog, onClose, ed
       hostelTypeName: Yup.string().required('Hostel Type Name is required'),
       description: Yup.string().required('Description is required'),
     }),
-    onSubmit: (values) => {
-      console.log('Form Values:', values);
-    },
+    onSubmit: (values) => {},
   });
 
   return (

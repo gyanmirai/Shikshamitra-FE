@@ -23,7 +23,7 @@ const ResourceAllocateDialog: React.FC<IResourceAllocateDialogProps> = ({
 }) => {
   // Generate initial form values based on `isEdit` mode and incoming `data`.
   // This uses a utility function for reusability across the app.
-  console.log('data', data);
+
   const initialValues = useMemo<IResourceAllocateFormValues>(
     () => getInitialResourceAllocateValues(data, isEdit),
     [data, isEdit]

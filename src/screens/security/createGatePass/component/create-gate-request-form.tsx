@@ -26,9 +26,7 @@ const CreateGatePassRequestForm: React.FC<ICreateEmergencyGatePassFormProps> = (
   const formik = useFormik({
     initialValues: getEmergencyGatePassInitialValues(data),
     validationSchema: emergencyGatePassValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;

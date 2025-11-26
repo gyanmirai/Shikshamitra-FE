@@ -36,7 +36,6 @@ const UploadFileUploadForm = ({
     },
     validationSchema,
     onSubmit: (values) => {
-      console.log('Submitted file:', values.file);
       shikshaMitraToast.success({
         message: 'File uploaded successfully!',
       });

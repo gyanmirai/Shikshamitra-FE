@@ -257,8 +257,6 @@ const InquiryForm = ({
     }
   }, [academicYear?.items, board?.items, editData, getClassByMedium, values.academicYear]);
 
-  console.log('formik errors', errors);
-
   return (
     <Card sx={{ height: '100%', boxShadow: 'none', background: 'transparent', mt: 1 }}>
       <BackPopUpChecked initialValues={initialValues} currentValues={values}>

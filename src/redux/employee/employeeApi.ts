@@ -72,6 +72,14 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee'],
     }),
+    updateAdditionalInformation: builder.mutation({
+      query: ({ employeeId, body }) => ({
+        url: `/app/employee/additional-info/${employeeId}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
     updateExperienceInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
         url: `/app/employee/experience-info/${employeeId}`,
@@ -288,6 +296,7 @@ export const {
   useUpdateBankDetailsMutation,
   useUpdateExperienceInformationMutation,
   useUpdateFamilyInformationMutation,
+  useUpdateAdditionalInformationMutation,
   useAddBasicInformationMutation,
   useUploadDocumentsMutation,
   useGetEmployeeDocumentsQuery,

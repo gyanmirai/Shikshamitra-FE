@@ -35,9 +35,7 @@ const ResourceRequestDetailedView: React.FC<IResourceRequestDetailedViewProps> =
       requestStatusType === 'New'
         ? NewRequestResourceValidationSchema
         : requestResourceValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;

@@ -10,8 +10,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
 import { fileToBase64 } from 'src/utils/file-to-base64';
+import { motion, AnimatePresence } from 'framer-motion';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { m as motion, AnimatePresence } from 'framer-motion';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -189,7 +189,6 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const isContactDetailsEditable = useBoolean(!!isMainForm);
   const isProfessionalDetailsEditable = useBoolean(!!isMainForm);
   const isAddressDetailsEditable = useBoolean(!!isMainForm);
-  console.log('formik erroes---', formik.errors);
 
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();

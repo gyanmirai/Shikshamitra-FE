@@ -72,7 +72,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
       eventType: '',
     },
     onSubmit: (values) => {
-      console.log('Form Submitted type:', values);
+      // handle submit
     },
   });
 
@@ -456,7 +456,9 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
                 {formik.values.selectedRoles.length > 0 && (
                   <Grid size={{ lg: 12 }}>
                     <Box display="flex" flexDirection="row" gap={2}>
-                      <RoleConfigForNotification // eslint-disable-next-line jsx-a11y/aria-role
+                      <RoleConfigForNotification
+                        // @ts-ignore
+                        // eslint-disable-next-line jsx-a11y/aria-role
                         role="Teacher"
                         selectedRoles={formik.values.selectedRoles}
                         configurations={configurations}
@@ -486,6 +488,7 @@ const StudentAutoNotificationConfigurationDialog: React.FC<
                       />
 
                       <RoleConfigForNotification
+                        // @ts-ignore
                         // eslint-disable-next-line jsx-a11y/aria-role
                         role="Student"
                         selectedRoles={formik.values.selectedRoles}

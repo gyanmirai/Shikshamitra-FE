@@ -29,9 +29,7 @@ const AddRoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
     initialValues: roomInitialValues(editData),
     validationSchema: hostelRoomValidationSchema,
     // Handle form submission
-    onSubmit: (values) => {
-      console.log('Room Form Data:', values);
-    },
+    onSubmit: (values) => {},
   });
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

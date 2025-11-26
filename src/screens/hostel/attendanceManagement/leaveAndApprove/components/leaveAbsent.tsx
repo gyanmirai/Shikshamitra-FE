@@ -25,7 +25,7 @@ const HostelLeaveAbsent = ({
     },
     // Empty submit handler - to be implemented
     async onSubmit() {
-      console.log('');
+      // submit handler
     },
   });
 

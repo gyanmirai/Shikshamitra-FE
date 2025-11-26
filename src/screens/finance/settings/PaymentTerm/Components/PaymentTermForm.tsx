@@ -46,9 +46,6 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
   });
 
   const [installments, setInstallments] = useState(formik.values.installments || []);
-  console.log('formik....values----', formik.values);
-
-  console.log('formik....erroes----', formik.errors);
 
   // Update installments when number changes
   useEffect(() => {
@@ -58,7 +55,6 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
       // Run full validation to get the latest errors
       const errors = await formik.validateForm();
       const hasError = Boolean(errors.totalInstallments);
-      console.log('hasError----', hasError);
 
       if (count > 0 && !hasError) {
         const updated = Array.from({ length: count }, (_, i) => ({

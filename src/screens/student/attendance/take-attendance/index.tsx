@@ -554,7 +554,6 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                   size="small"
                   value={value || ''}
                   onChange={(e) => {
-                    console.log(e.target.value);
                     setStudentData(
                       data.map((item: any) =>
                         item.id === row.id ? { ...item, remarks: e.target.value } : item

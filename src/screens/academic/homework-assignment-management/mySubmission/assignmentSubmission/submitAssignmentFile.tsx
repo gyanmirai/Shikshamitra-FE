@@ -22,7 +22,7 @@ export const SubmitAssignmentFile = ({
     validationSchema: assignmentFileValidationSchema,
     onSubmit: (values) => {
       // Handle file submission
-      console.log('Submitting files:', values);
+
       onClose(values, true);
     },
   });

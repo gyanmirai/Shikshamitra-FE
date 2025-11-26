@@ -227,7 +227,6 @@ const AuditForm = ({ handleClose }: { handleClose: () => void }) => {
       dueDate: Yup.string().required('Due date is required'),
     }),
     onSubmit: (values) => {
-      console.log(values);
       handleClose();
     },
   });
