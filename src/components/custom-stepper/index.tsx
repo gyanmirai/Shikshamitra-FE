@@ -210,7 +210,11 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           position: 'relative',
           height: '100%',
         }}
-        onSubmit={formik.handleSubmit}
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          formik.handleSubmit(e);
+        }}
       >
         <Scrollbar
           sx={{

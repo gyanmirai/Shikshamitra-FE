@@ -30,11 +30,10 @@ const FinanceStudentUpdatePaymentDialog: React.FC<FinanceStudentUpdatePaymentDia
     },
     // validationSchema: validationSchema,
     onSubmit: (values: studentFeePaymentStatusUpdated) => {
-      console.log('Form Submitted type:', typeof values.date);
       onSave(values);
     },
   });
-  console.log('data from parent', data);
+
   return (
     <CustomDialog title="Payment Status Form" open={dialogValue} handleClose={onClose}>
       <Scrollbar>

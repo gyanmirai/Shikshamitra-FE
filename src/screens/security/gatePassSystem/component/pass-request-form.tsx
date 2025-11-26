@@ -22,9 +22,7 @@ const GatePassRequestForm: React.FC<IGateRequestFormProps> = ({ isEdit, data, on
   const formik = useFormik({
     initialValues: getGatePassInitialValues(data),
     validationSchema: gatePassValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;

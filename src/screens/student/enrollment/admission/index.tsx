@@ -172,7 +172,6 @@ const AdmissionScreen = () => {
         })) || [],
     [admissionData?.items, tabs.value]
   );
-  console.log('tableData', tableData);
 
   const sendInstantNotificationDialogValue = useBoolean();
 
@@ -1012,7 +1011,7 @@ const AssignDivisionForm = ({
         });
         handleClose();
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });
@@ -1119,7 +1118,7 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
         });
         handleClose();
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

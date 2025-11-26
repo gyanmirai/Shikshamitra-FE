@@ -117,7 +117,6 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
       //     onSave(values);
       // }
       onSave(values);
-      console.log('Form Submitted', values);
     },
   });
 
@@ -366,7 +365,7 @@ const TransportStudentAndStaffUpdateInfoDialog: React.FC<
                 value=""
                 labelKey="name"
                 valueKey="key"
-                onChange={(val) => console.log('val', val)}
+                onChange={(val) => {}}
                 formControlProps={{ fullWidth: true }}
               />
             </Grid>

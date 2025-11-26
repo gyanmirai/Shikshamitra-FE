@@ -29,9 +29,7 @@ const VisitorForm: React.FC<IVisitorFormProps> = ({ open, onClose, editData }) =
   const formik = useFormik({
     initialValues: getVisitorInitialValues(editData),
     validationSchema: visitorValidationSchema,
-    onSubmit: (values, formikHelpers) => {
-      console.log(values);
-    },
+    onSubmit: (values, formikHelpers) => {},
   });
 
   return (

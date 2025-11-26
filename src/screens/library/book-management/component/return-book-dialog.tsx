@@ -52,7 +52,6 @@ const ReturnBookDialog: React.FC<IReturnBookDialogProps> = ({
       accountHolder: '',
     },
     onSubmit: (values: any) => {
-      console.log('Form Submitted:', values);
       onSave(values);
     },
   });
@@ -419,7 +418,7 @@ export default ReturnBookDialog;
 //             collectedFineAmount: '0',
 //         },
 //         onSubmit: (values: any) => {
-//             console.log('Form Submitted:', values);
+//
 //             onSave(values);
 //         },
 //     });
@@ -632,7 +631,7 @@ export default ReturnBookDialog;
 //             condition: '',
 //         },
 //         onSubmit: (values: any) => {
-//             console.log('Form Submitted:', values);
+//
 //             onSave(values);
 //         },
 //     });

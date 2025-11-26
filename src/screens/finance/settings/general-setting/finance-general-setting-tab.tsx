@@ -62,7 +62,6 @@ const FinanceGeneralSettingTab = () => {
         icon: <Iconify icon="hugeicons:payment-02" width={20} />,
         onClick: () => {
           setPaymentMethodDialog.onTrue();
-          console.log('Add Payment Method clicked');
         },
         component: (props: any) => <SetPaymentMethodComponent {...props} />,
       },
@@ -73,7 +72,6 @@ const FinanceGeneralSettingTab = () => {
         icon: <Iconify icon="streamline-freehand:wealth-time-money" width={20} />,
         onClick: () => {
           setLateFeeTypeDialog.onTrue();
-          console.log('Add Late Fee Type clicked');
         },
         component: (props: any) => <SetLateFeeTypeMethod {...props} />,
       },
@@ -84,7 +82,6 @@ const FinanceGeneralSettingTab = () => {
         icon: <Iconify icon="mdi:payment-clock" width={20} />,
         onClick: () => {
           setPaymentTermDialog.onTrue();
-          console.log('Add Payment Term clicked');
         },
         component: (props: any) => <SetPaymentTerm {...props} />,
       },
@@ -95,7 +92,6 @@ const FinanceGeneralSettingTab = () => {
         icon: <Iconify icon="hugeicons:payment-success-01" width={20} />,
         onClick: () => {
           setPaymentStatusDialog.onTrue();
-          console.log('Add Payment Status Option clicked');
         },
         component: (props: any) => <ConfigurePaymentStatusComponent {...props} />,
       },
@@ -111,7 +107,6 @@ const FinanceGeneralSettingTab = () => {
         ),
         onClick: () => {
           presetCategoryAndDepartmentForBudgetDialog.onTrue();
-          console.log('Add Budget Category clicked');
         },
         component: (props: any) => <PresetCategoryAndDepartmentForBudget {...props} />,
       },
@@ -127,7 +122,6 @@ const FinanceGeneralSettingTab = () => {
         ),
         onClick: () => {
           predefinedCategoryIncomeExpenseDialog.onTrue();
-          console.log('Add Income/Expense Category clicked');
         },
         component: (props: any) => <PredefinedCategoryIncomeExpenseComponent {...props} />,
       },

@@ -50,7 +50,6 @@ const VisitorCheckInOutScreen = () => {
         break;
 
       default:
-        console.warn('Unknown action:', action);
     }
   };
 

@@ -209,7 +209,7 @@ const PFForm = ({ editData, handleClose }: { editData: any; handleClose: () => v
         }
         handleClose();
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

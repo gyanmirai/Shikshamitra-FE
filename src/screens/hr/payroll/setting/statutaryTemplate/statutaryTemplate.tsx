@@ -196,8 +196,6 @@ const AddStatutoryComponent = ({
       tdsAmount: editData?.tdsAmount || 0,
     },
     onSubmit: async (val) => {
-      console.log('on submit calls');
-
       //   try {
       //     if (editData) {
       //       await updatePayElement({
@@ -217,7 +215,6 @@ const AddStatutoryComponent = ({
       //                 },
       //               }
       //             : {}),
-
       //           isVisibleInPaySlip: val.paySlip,
       //         },
       //       });
@@ -237,13 +234,12 @@ const AddStatutoryComponent = ({
       //               },
       //             }
       //           : {}),
-
       //         isVisibleInPaySlip: val.paySlip,
       //       });
       //     }
       //     handleClose();
       //   } catch (error) {
-      //     console.log(error);
+      //
       //   }
     },
   });

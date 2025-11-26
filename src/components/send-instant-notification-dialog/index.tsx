@@ -17,8 +17,6 @@ const SendInstantNotificationDialog: React.FC<ISendInstantNotificationDialogProp
   data,
   userList,
 }) => {
-  console.log(userList, 'userList');
-
   const formik = useFormik({
     initialValues: {
       communicationChannel: [],
@@ -28,7 +26,6 @@ const SendInstantNotificationDialog: React.FC<ISendInstantNotificationDialogProp
 
     onSubmit: async (values) => {
       onClose();
-      console.log(values);
     },
   });
 

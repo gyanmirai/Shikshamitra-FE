@@ -170,9 +170,7 @@ const LibraryMemberManagementScreen = () => {
     dialog.onFalse();
   };
 
-  const saveHandler = () => {
-    console.log('Saved data:', selectedEntry);
-  };
+  const saveHandler = () => {};
 
   const renderTableActions = (row: any) => (
     <ThreeDotsActions

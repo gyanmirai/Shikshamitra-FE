@@ -8,12 +8,10 @@ function SentMessage(props: TabComponentType) {
 
   const handleResend = (messageId: string) => {
     // Handle resend logic here
-    console.log(`Resending message: ${messageId}`);
   };
 
   const handleForward = (messageId: string) => {
     // Handle forward logic here
-    console.log(`Forwarding message: ${messageId}`);
   };
 
   return (

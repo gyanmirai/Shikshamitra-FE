@@ -97,7 +97,6 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
       ],
     },
     onSubmit: (values) => {
-      console.log('here values', values);
       onSave(values);
     },
   });
@@ -182,7 +181,6 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
   ]);
 
   const handleAddFee = () => {
-    console.log('handleAddFee called');
     const { feeType, selectedTerms: pendingTerm, paymentMode } = formik.values;
 
     // Ensure required fields are selected before adding
@@ -221,8 +219,6 @@ const FinanceNewCollectFeeDialog: React.FC<FinanceNewCollectFeeDialogProps> = ({
       selectedTerms: [],
       paymentMode: [],
     });
-
-    console.log('Updated selectedFees:', [...selectedFees, newFee]);
   };
 
   const handleDeleteFee = (index: number) => {

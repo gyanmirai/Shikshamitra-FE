@@ -26,9 +26,7 @@ const HostelPackageForm: React.FC<IHostelPackageFormProps> = ({ dialog, onClose,
   const formik = useFormik({
     initialValues: getPackageInitialValues(editData),
     validationSchema: packageValidationSchema,
-    onSubmit: (values) => {
-      console.log('Form Values:', values);
-    },
+    onSubmit: (values) => {},
   });
 
   return (

@@ -206,7 +206,6 @@ export const CommunicationForm = ({
     }),
     enableReinitialize: true,
     onSubmit: async (values) => {
-      console.log('Form values:', values);
       try {
         await addFollowUp({
           studentEnrollmentId,
@@ -222,7 +221,7 @@ export const CommunicationForm = ({
         });
         handleCloseDialog();
       } catch (error) {
-        console.log('Error submitting form:', error);
+        console.error(error);
       }
     },
   });

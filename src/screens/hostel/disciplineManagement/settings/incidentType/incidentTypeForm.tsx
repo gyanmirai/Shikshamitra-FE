@@ -21,7 +21,6 @@ const IncidentTypeForm: React.FC<IncidentTypeFormProps> = ({ dialog, onClose, ed
       description: Yup.string().required('Description is required'),
     }),
     onSubmit: (values) => {
-      console.log('Submitted:', values);
       onClose(null, true);
     },
   });

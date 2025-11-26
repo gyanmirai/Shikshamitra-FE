@@ -125,7 +125,7 @@ const EmployeeCalendar = ({ employee }: EmployeeCalendarProps) => {
   };
 
   // const handleApply = (currentFilters: Filters) => {
-  //   console.log('Applied filters:', currentFilters);
+  //
   //   filterDialog.onFalse();
   //   setFilters(currentFilters);
   // };
@@ -201,12 +201,10 @@ const EmployeeCalendar = ({ employee }: EmployeeCalendarProps) => {
         data={calendarData}
         showCalendarToolbar
         onDateClick={(e) => {
-          console.log(e);
           handleEventClick(e);
         }}
         showCalendarFilter
         onOPenFiler={() => {
-          console.log('open filter');
           filterDialog.onTrue();
         }}
         containerProps={{

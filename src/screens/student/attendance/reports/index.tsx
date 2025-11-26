@@ -298,9 +298,7 @@ const ScheduledReportsFrom = ({ handleClose }: { handleClose: () => void }) => {
       active: false,
       weekday: 'monday',
     },
-    onSubmit: () => {
-      console.log('submit');
-    },
+    onSubmit: () => {},
   });
   return (
     <Box component="form" onSubmit={handleSubmit}>

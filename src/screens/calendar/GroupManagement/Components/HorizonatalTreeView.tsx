@@ -36,8 +36,6 @@ interface PathRow {
 }
 
 const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true }) => {
-  console.log('🚀 ~ HierarchyTextView ~ data:', data);
-
   // Dummy hierarchical sample data (Board -> Department -> Divisions) with students and employees
   const DUMMY_DATA: PathNode[] = React.useMemo(
     () => [

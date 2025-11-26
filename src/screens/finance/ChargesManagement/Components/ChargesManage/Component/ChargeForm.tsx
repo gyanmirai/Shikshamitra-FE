@@ -113,8 +113,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   });
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
-  console.log('erroress---', errors);
-  console.log('values---', values);
 
   // Update classes when medium changes (only when medium changes)
   useEffect(() => {

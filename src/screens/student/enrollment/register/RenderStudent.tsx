@@ -7,7 +7,7 @@ const RenderStudent = ({ formik, ...props }: any) => {
     type: 'query',
     currentQueryAndMutation: useGetAllStudentsQuery,
   });
-  console.log(students);
+
   return (
     <Autocomplete
       disabled={!props.isEdit}

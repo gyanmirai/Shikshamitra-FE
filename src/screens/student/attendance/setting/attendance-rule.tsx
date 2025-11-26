@@ -250,7 +250,7 @@ export const AttendanceRuleForm = ({ handleClose, editData }: any) => {
         }
         handleClose();
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

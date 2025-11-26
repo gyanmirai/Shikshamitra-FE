@@ -13,7 +13,6 @@ const PaymentMethodDialog = () => {
     },
     validationSchema: paymentMethodValidationSchema,
     onSubmit: (values) => {
-      console.log('Submitted Payment Method:', values);
       // Add dispatch or API call here
     },
   });

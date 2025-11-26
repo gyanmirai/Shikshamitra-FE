@@ -27,9 +27,7 @@ const ResourceRequestReviewDialog: React.FC<IResourceRequestReviewDetailedViewPr
   const formik = useFormik({
     initialValues: getInitialResourceRequestReviewValues(data),
     validationSchema: adminReviewValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;

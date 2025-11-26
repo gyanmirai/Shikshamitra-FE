@@ -20,7 +20,7 @@ const ResourceRequestReviewScreen = () => {
             label="From Date"
             format="DD-MM-YYYY"
             value={null}
-            onChange={(value) => console.log('Date', value)}
+            onChange={(value) => {}}
             slotProps={{
               textField: {
                 size: 'small',
@@ -35,7 +35,7 @@ const ResourceRequestReviewScreen = () => {
             label="To Date"
             format="DD-MM-YYYY"
             value={null}
-            onChange={(value) => console.log('Date', value)}
+            onChange={(value) => {}}
             slotProps={{
               textField: {
                 size: 'small',

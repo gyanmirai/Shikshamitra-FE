@@ -23,6 +23,10 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
+  useGetEmployeeLeaveQuery,
+  useEmployeeLeaveRequestStatusMutation,
+} from 'src/redux/employee/employeeApi';
+import {
   Box,
   Button,
   MenuItem,
@@ -31,10 +35,6 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
-import {
-  useGetEmployeeLeaveQuery,
-  useEmployeeLeaveRequestStatusMutation,
-} from 'src/redux/employee/employeeApi';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
@@ -474,7 +474,7 @@ export const ApproveRejectForm = ({
         }).unwrap();
         handleClose(null, true);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

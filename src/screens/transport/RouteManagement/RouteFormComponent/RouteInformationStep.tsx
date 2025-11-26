@@ -21,7 +21,6 @@ const RouteInformationStep = ({ formik }: RouteInformationStepProps) => {
     type: 'query',
     currentQueryAndMutation: useGetRouteMatcherOptionsQuery,
   });
-  console.log('formik----', formik.errors);
 
   return (
     <Grid size={{ xs: 12 }}>

@@ -64,10 +64,8 @@ const RefundDialog: React.FC<RefundDialogProps> = ({ studentData, onClose }) => 
 
   const initiateRefund = () => {
     if (refundMethod === 'original') {
-      console.log('Processing refund to original payment method...');
       // API call to handle original payment method refund
     } else {
-      console.log('Processing bank transfer refund...');
       // API call to handle bank transfer refund
     }
 

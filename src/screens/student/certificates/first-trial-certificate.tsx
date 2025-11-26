@@ -197,7 +197,6 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
       onClose(null, true);
     },
   });
-  console.log('errors--', errors);
 
   // Query hook for fetching student data
   const [getStudents, { data: StudentsData, isLoading }] = useQueryAndMutation({

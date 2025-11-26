@@ -50,11 +50,11 @@ const HrAttendanceSettingScreen = () => {
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
-  const { data } = useQueryAndMutation({
+  useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeCustomAttendanceRuleQuery,
   });
-  console.log(data, 'data');
+
   // const handleClose = () => {
   //   setEditData(null);
   //   dialog.onFalse();

@@ -24,16 +24,10 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
   // Request interceptor
   instance.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
-      console.log('Cookies in Document:', document.cookie);
       if (typeof window !== 'undefined') {
         const reduxStore = store.getState();
         const { currentYear, currentBoard, currentMedium } = reduxStore.globalState;
-        console.log(
-          '🚀 ~ currentYear, currentBoard, currentMedium:',
-          currentYear,
-          currentBoard,
-          currentMedium
-        );
+
         const cookieString = `AcademicYearId=${currentYear?.id};EducationBoardId=${currentBoard?.id};EducationMediumId=${currentMedium?.id}`;
 
         // Cookies.set('AcademicYearId', currentYear?.id, {
@@ -84,7 +78,7 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
                   handleLogout();
                 }
               } catch (error) {
-                console.log(error, '=========error========');
+                console.error(error, '=========error========');
                 handleLogout();
               } finally {
                 isRefreshing = false;

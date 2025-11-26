@@ -20,9 +20,7 @@ const GuardShiftsForm: React.FC<IGuardShiftFormProps> = ({ isEdit, data, onClose
   const formik = useFormik({
     initialValues: getInitialGuardShiftFormValues(data),
     validationSchema: guardShiftValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;

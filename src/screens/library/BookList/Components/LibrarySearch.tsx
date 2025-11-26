@@ -62,7 +62,7 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
   // });
   // const { data: books, isLoading, error } = useGetAllBooksQuery(undefined);
   const [books] = useState(libraryDummyData.books);
-  // console.log({ books, isLoading, error });
+  //
   const filteredBooks = useMemo(() => {
     if (!debouncedSearch) return books;
     const term = debouncedSearch.toLowerCase();

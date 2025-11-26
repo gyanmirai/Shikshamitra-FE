@@ -37,7 +37,6 @@ const AssignSlots = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
       classNames: Yup.array().min(1, 'Please select at least one class'),
     }),
     onSubmit: (values) => {
-      console.log('Selected classes:', values.classNames);
       shikshaMitraToast.success({
         message: `Slots assign successfully to class ${values.classNames}`,
       });

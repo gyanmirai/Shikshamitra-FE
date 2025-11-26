@@ -54,13 +54,13 @@ const BulkStudentAddScreen = () => {
       shikshaMitraToast.success({ message: 'File imported successfully' });
 
       const data = await convertCsvToJson(file);
-      console.log('🚀 ~ handleImport ~ data:', data);
+
       setReviewStudentData(data); // Set the review student data
       isOpenReviewDialog.onTrue();
 
       // Handle the response from the API here
     } catch (error) {
-      console.log('Error importing file:', error);
+      console.error(error);
     }
   };
 

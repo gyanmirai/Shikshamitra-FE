@@ -90,9 +90,7 @@ const AssignUserForm = () => {
     initialValues: {
       users: [],
     },
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
   const { data: employees, isLoading } = useQueryAndMutation({
     type: 'query',

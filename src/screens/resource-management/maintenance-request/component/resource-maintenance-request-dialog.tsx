@@ -28,11 +28,8 @@ const ResourceRequestMaintenaceDialog: React.FC<IResourceRequestMaintenanceDialo
 }) => {
   const formik = useFormik({
     initialValues: getInitialResourceRequestMaintenanceValues(data),
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
-  console.log('orderStatus', maintenanceStatus);
 
   const isDisabled = data !== null && isEdit === false;
 

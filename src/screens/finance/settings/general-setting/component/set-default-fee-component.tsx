@@ -27,7 +27,7 @@
 //   const [selectedFeeHeadId, setSelectedFeeHeadId] = useState<number | null>(null);
 //   // State to store name of fee head to be deleted (for confirmation message)
 //   const [selectedFeeHeadName, setSelectedFeeHeadName] = useState<string | null>(null);
-//   console.log('selectedFeeHead---', selectedFeeHead);
+//
 
 //   // RTK Query hook to fetch all fee heads
 //   const { data: feeHeadList, isLoading: isFeeHeadLoading, refetch } = useGetfeeHeadQuery(null);

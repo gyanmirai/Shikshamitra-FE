@@ -61,7 +61,6 @@ const SafteyManagemtScreen = () => {
         break;
 
       default:
-        console.warn('Unknown action:', action);
     }
   };
 

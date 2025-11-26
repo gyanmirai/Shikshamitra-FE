@@ -326,7 +326,7 @@ export const SlotsForm = ({
         }
         handleClose?.(null, true);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

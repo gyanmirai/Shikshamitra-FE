@@ -564,4 +564,3 @@ const convertedMenu = (originalDataSet: NavigationItem[], abpData: PermissionGro
   });
 };
 convertedMenu(firstDataset, secondDataset);
-console.log('🚀 ~ firstDataset:', firstDataset);

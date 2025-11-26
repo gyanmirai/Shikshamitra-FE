@@ -51,7 +51,7 @@ const AddStopIndex: React.FC<AddStopIndexProps> = ({
       onClose(null, true);
     },
   });
-  console.log('formik.erroes---', formik.errors);
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box display="flex" flexDirection="column" gap={2} height="100%">

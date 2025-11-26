@@ -33,11 +33,13 @@ import { PayrollFields } from './employee-form-fields/PayrollFields';
 import { InformationFields } from './employee-form-fields/InformationFields';
 import { WorkExperienceFields } from './employee-form-fields/WorkExperienceFields';
 import { AssignReportingManager } from './employee-form-fields/AssignReportingManager';
+import { AdditionalDetailsFields } from './employee-form-fields/AdditionalDetailsFields';
 // } from './employee-form-fields';
 import {
   payrollInitialValues,
   workExperienceInitialValues,
   familyInformationInitialValues,
+  additionalDetailsInitialValues,
   personalInformationInitialValues,
   assignReportingManagerInitialValues,
 } from './employee-form';
@@ -48,6 +50,7 @@ import type { FieldsType } from './employee-form-fields/types';
 const fields = [
   InformationFields,
   FamilyFields,
+  AdditionalDetailsFields,
   WorkExperienceFields,
   PayrollFields,
   AssignReportingManager,
@@ -57,6 +60,7 @@ const fields = [
 const TABS = [
   { value: 'personalInformation', label: 'Personal Information' },
   { value: 'familyInformation', label: 'Family Information' },
+  { value: 'additionalFields', label: 'Additional Information' },
   { value: 'workExperience', label: 'Work Experience' },
   { value: 'payroll', label: 'Payroll' },
   { value: 'assignReportingManager', label: 'Assign Reporting Manager' },
@@ -284,7 +288,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
         shikshaMitraToast.success({ message: 'Bank Details updated successfully' });
       }
     } catch (error) {
-      console.log('Error submitting form:', error);
+      console.error(error);
     }
   };
 
@@ -293,6 +297,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     initialValues: {
       ...personalInformationInitialValues(editData),
       ...familyInformationInitialValues(editData),
+      ...additionalDetailsInitialValues(editData),
       ...workExperienceInitialValues(editData),
       ...payrollInitialValues(editData),
       ...assignReportingManagerInitialValues(editData),

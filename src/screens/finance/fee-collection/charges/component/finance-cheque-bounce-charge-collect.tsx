@@ -33,7 +33,6 @@ const FinanceChequeBounceChargeCollect: React.FC<FinanceChequeBounceChargeCollec
       remarks: '',
     },
     onSubmit: (values: any) => {
-      console.log('Form Submitted type:', values);
       onSave(values);
     },
   });

@@ -239,230 +239,227 @@ const CollectChargesForm: React.FC<ICollectChargesProps> = ({ open, onClose, cha
               {formik.values.paymentDetails.paymentMethod !== 'Cash' &&
                 paymentMethodsConfig[
                   formik.values.paymentDetails.paymentMethod as keyof typeof paymentMethodsConfig
-                ]?.map((field: IPaymentFieldConfig) => {
-                  console.log('field----', field);
-                  return (
-                    <Grid
-                      size={6}
-                      key={`${formik.values.paymentDetails.paymentMethod}-${field.name}`}
+                ]?.map((field: IPaymentFieldConfig) => (
+                  <Grid
+                    size={6}
+                    key={`${formik.values.paymentDetails.paymentMethod}-${field.name}`}
+                  >
+                    <ShakingTextField
+                      error={
+                        !!(
+                          formik.touched.paymentDetails?.[
+                            field.name as keyof typeof formik.touched.paymentDetails
+                          ] &&
+                          formik.errors.paymentDetails?.[
+                            field.name as keyof typeof formik.errors.paymentDetails
+                          ]
+                        )
+                      }
                     >
-                      <ShakingTextField
-                        error={
-                          !!(
+                      {field.type === 'date' ? (
+                        <DatePicker
+                          label={field.label}
+                          value={
+                            formik.values.paymentDetails?.[
+                              field.name as keyof typeof formik.values.paymentDetails
+                            ]
+                              ? dayjs(
+                                  formik.values.paymentDetails[
+                                    field.name as keyof typeof formik.values.paymentDetails
+                                  ]
+                                )
+                              : null
+                          }
+                          onChange={(date) =>
+                            formik.setFieldValue(`paymentDetails.${field.name}`, date)
+                          }
+                          sx={{ width: '100%' }}
+                          slotProps={{
+                            textField: {
+                              size: 'small',
+                              fullWidth: true,
+                              error:
+                                formik.touched.paymentDetails &&
+                                formik.touched.paymentDetails[
+                                  field.name as keyof typeof formik.touched.paymentDetails
+                                ] &&
+                                Boolean(
+                                  formik.errors.paymentDetails?.[
+                                    field.name as keyof typeof formik.errors.paymentDetails
+                                  ]
+                                ),
+                              helperText:
+                                formik.touched.paymentDetails?.[
+                                  field.name as keyof typeof formik.touched.paymentDetails
+                                ] &&
+                                typeof formik.errors.paymentDetails?.[
+                                  field.name as keyof typeof formik.errors.paymentDetails
+                                ] === 'string'
+                                  ? (formik.errors.paymentDetails?.[
+                                      field.name as keyof typeof formik.errors.paymentDetails
+                                    ] as string)
+                                  : undefined,
+                            },
+                          }}
+                        />
+                      ) : field.type === 'select' ? (
+                        <TextField
+                          select
+                          fullWidth
+                          label={field.label}
+                          name={`paymentDetails.${field.name}`}
+                          value={
+                            formik.values.paymentDetails?.[
+                              field.name as keyof typeof formik.values.paymentDetails
+                            ] || ''
+                          }
+                          onChange={formik.handleChange}
+                          size="small"
+                          error={
+                            !!(
+                              formik.touched.paymentDetails?.[
+                                field.name as keyof typeof formik.touched.paymentDetails
+                              ] &&
+                              formik.errors.paymentDetails?.[
+                                field.name as keyof typeof formik.errors.paymentDetails
+                              ]
+                            )
+                          }
+                          helperText={
                             formik.touched.paymentDetails?.[
                               field.name as keyof typeof formik.touched.paymentDetails
                             ] &&
-                            formik.errors.paymentDetails?.[
+                            typeof formik.errors.paymentDetails?.[
                               field.name as keyof typeof formik.errors.paymentDetails
-                            ]
-                          )
-                        }
-                      >
-                        {field.type === 'date' ? (
-                          <DatePicker
-                            label={field.label}
-                            value={
-                              formik.values.paymentDetails?.[
-                                field.name as keyof typeof formik.values.paymentDetails
+                            ] === 'string'
+                              ? (formik.errors.paymentDetails?.[
+                                  field.name as keyof typeof formik.errors.paymentDetails
+                                ] as string)
+                              : undefined
+                          }
+                        >
+                          {field.options?.map((opt) => (
+                            <MenuItem key={opt} value={opt}>
+                              {opt}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      ) : field.type === 'multiline' ? (
+                        <TextField
+                          fullWidth
+                          multiline
+                          sx={{ width: '100%' }}
+                          minRows={2}
+                          size="small"
+                          label={field.label}
+                          name={`paymentDetails.${field.name}`}
+                          value={
+                            formik.values.paymentDetails?.[
+                              field.name as keyof typeof formik.values.paymentDetails
+                            ] || ''
+                          }
+                          onChange={formik.handleChange}
+                          error={
+                            !!(
+                              formik.touched.paymentDetails?.[
+                                field.name as keyof typeof formik.touched.paymentDetails
+                              ] &&
+                              formik.errors.paymentDetails?.[
+                                field.name as keyof typeof formik.errors.paymentDetails
                               ]
-                                ? dayjs(
-                                    formik.values.paymentDetails[
-                                      field.name as keyof typeof formik.values.paymentDetails
-                                    ]
-                                  )
-                                : null
-                            }
-                            onChange={(date) =>
-                              formik.setFieldValue(`paymentDetails.${field.name}`, date)
-                            }
-                            sx={{ width: '100%' }}
-                            slotProps={{
-                              textField: {
-                                size: 'small',
-                                fullWidth: true,
-                                error:
-                                  formik.touched.paymentDetails &&
-                                  formik.touched.paymentDetails[
-                                    field.name as keyof typeof formik.touched.paymentDetails
-                                  ] &&
-                                  Boolean(
-                                    formik.errors.paymentDetails?.[
-                                      field.name as keyof typeof formik.errors.paymentDetails
-                                    ]
-                                  ),
-                                helperText:
-                                  formik.touched.paymentDetails?.[
-                                    field.name as keyof typeof formik.touched.paymentDetails
-                                  ] &&
-                                  typeof formik.errors.paymentDetails?.[
-                                    field.name as keyof typeof formik.errors.paymentDetails
-                                  ] === 'string'
-                                    ? (formik.errors.paymentDetails?.[
-                                        field.name as keyof typeof formik.errors.paymentDetails
-                                      ] as string)
-                                    : undefined,
-                              },
-                            }}
-                          />
-                        ) : field.type === 'select' ? (
-                          <TextField
-                            select
-                            fullWidth
-                            label={field.label}
-                            name={`paymentDetails.${field.name}`}
-                            value={
-                              formik.values.paymentDetails?.[
-                                field.name as keyof typeof formik.values.paymentDetails
-                              ] || ''
-                            }
-                            onChange={formik.handleChange}
-                            size="small"
-                            error={
-                              !!(
-                                formik.touched.paymentDetails?.[
-                                  field.name as keyof typeof formik.touched.paymentDetails
-                                ] &&
-                                formik.errors.paymentDetails?.[
+                            )
+                          }
+                          helperText={
+                            formik.touched.paymentDetails?.[
+                              field.name as keyof typeof formik.touched.paymentDetails
+                            ] &&
+                            typeof formik.errors.paymentDetails?.[
+                              field.name as keyof typeof formik.errors.paymentDetails
+                            ] === 'string'
+                              ? (formik.errors.paymentDetails?.[
                                   field.name as keyof typeof formik.errors.paymentDetails
-                                ]
-                              )
-                            }
-                            helperText={
+                                ] as string)
+                              : undefined
+                          }
+                        />
+                      ) : field.type === 'amount' ? (
+                        <NumericFormatCustom
+                          size="small"
+                          fullWidth
+                          label={field.label}
+                          name={`paymentDetails.${field.name}`}
+                          value={
+                            formik.values.paymentDetails?.[
+                              field.name as keyof typeof formik.values.paymentDetails
+                            ] || ''
+                          }
+                          onChange={formik.handleChange}
+                          error={
+                            !!(
                               formik.touched.paymentDetails?.[
                                 field.name as keyof typeof formik.touched.paymentDetails
                               ] &&
-                              typeof formik.errors.paymentDetails?.[
+                              formik.errors.paymentDetails?.[
                                 field.name as keyof typeof formik.errors.paymentDetails
-                              ] === 'string'
-                                ? (formik.errors.paymentDetails?.[
-                                    field.name as keyof typeof formik.errors.paymentDetails
-                                  ] as string)
-                                : undefined
-                            }
-                          >
-                            {field.options?.map((opt) => (
-                              <MenuItem key={opt} value={opt}>
-                                {opt}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                        ) : field.type === 'multiline' ? (
-                          <TextField
-                            fullWidth
-                            multiline
-                            sx={{ width: '100%' }}
-                            minRows={2}
-                            size="small"
-                            label={field.label}
-                            name={`paymentDetails.${field.name}`}
-                            value={
-                              formik.values.paymentDetails?.[
-                                field.name as keyof typeof formik.values.paymentDetails
-                              ] || ''
-                            }
-                            onChange={formik.handleChange}
-                            error={
-                              !!(
-                                formik.touched.paymentDetails?.[
-                                  field.name as keyof typeof formik.touched.paymentDetails
-                                ] &&
-                                formik.errors.paymentDetails?.[
+                              ]
+                            )
+                          }
+                          helperText={
+                            formik.touched.paymentDetails?.[
+                              field.name as keyof typeof formik.touched.paymentDetails
+                            ] &&
+                            typeof formik.errors.paymentDetails?.[
+                              field.name as keyof typeof formik.errors.paymentDetails
+                            ] === 'string'
+                              ? (formik.errors.paymentDetails?.[
                                   field.name as keyof typeof formik.errors.paymentDetails
-                                ]
-                              )
-                            }
-                            helperText={
+                                ] as string)
+                              : undefined
+                          }
+                        />
+                      ) : (
+                        <TextField
+                          fullWidth
+                          type={field.type}
+                          label={field.label}
+                          size="small"
+                          name={`paymentDetails.${field.name}`}
+                          value={
+                            formik.values.paymentDetails?.[
+                              field.name as keyof typeof formik.values.paymentDetails
+                            ] || ''
+                          }
+                          onChange={formik.handleChange}
+                          error={
+                            !!(
                               formik.touched.paymentDetails?.[
                                 field.name as keyof typeof formik.touched.paymentDetails
                               ] &&
-                              typeof formik.errors.paymentDetails?.[
+                              formik.errors.paymentDetails?.[
                                 field.name as keyof typeof formik.errors.paymentDetails
-                              ] === 'string'
-                                ? (formik.errors.paymentDetails?.[
-                                    field.name as keyof typeof formik.errors.paymentDetails
-                                  ] as string)
-                                : undefined
-                            }
-                          />
-                        ) : field.type === 'amount' ? (
-                          <NumericFormatCustom
-                            size="small"
-                            fullWidth
-                            label={field.label}
-                            name={`paymentDetails.${field.name}`}
-                            value={
-                              formik.values.paymentDetails?.[
-                                field.name as keyof typeof formik.values.paymentDetails
-                              ] || ''
-                            }
-                            onChange={formik.handleChange}
-                            error={
-                              !!(
-                                formik.touched.paymentDetails?.[
-                                  field.name as keyof typeof formik.touched.paymentDetails
-                                ] &&
-                                formik.errors.paymentDetails?.[
+                              ]
+                            )
+                          }
+                          helperText={
+                            formik.touched.paymentDetails?.[
+                              field.name as keyof typeof formik.touched.paymentDetails
+                            ] &&
+                            typeof formik.errors.paymentDetails?.[
+                              field.name as keyof typeof formik.errors.paymentDetails
+                            ] === 'string'
+                              ? (formik.errors.paymentDetails?.[
                                   field.name as keyof typeof formik.errors.paymentDetails
-                                ]
-                              )
-                            }
-                            helperText={
-                              formik.touched.paymentDetails?.[
-                                field.name as keyof typeof formik.touched.paymentDetails
-                              ] &&
-                              typeof formik.errors.paymentDetails?.[
-                                field.name as keyof typeof formik.errors.paymentDetails
-                              ] === 'string'
-                                ? (formik.errors.paymentDetails?.[
-                                    field.name as keyof typeof formik.errors.paymentDetails
-                                  ] as string)
-                                : undefined
-                            }
-                          />
-                        ) : (
-                          <TextField
-                            fullWidth
-                            type={field.type}
-                            label={field.label}
-                            size="small"
-                            name={`paymentDetails.${field.name}`}
-                            value={
-                              formik.values.paymentDetails?.[
-                                field.name as keyof typeof formik.values.paymentDetails
-                              ] || ''
-                            }
-                            onChange={formik.handleChange}
-                            error={
-                              !!(
-                                formik.touched.paymentDetails?.[
-                                  field.name as keyof typeof formik.touched.paymentDetails
-                                ] &&
-                                formik.errors.paymentDetails?.[
-                                  field.name as keyof typeof formik.errors.paymentDetails
-                                ]
-                              )
-                            }
-                            helperText={
-                              formik.touched.paymentDetails?.[
-                                field.name as keyof typeof formik.touched.paymentDetails
-                              ] &&
-                              typeof formik.errors.paymentDetails?.[
-                                field.name as keyof typeof formik.errors.paymentDetails
-                              ] === 'string'
-                                ? (formik.errors.paymentDetails?.[
-                                    field.name as keyof typeof formik.errors.paymentDetails
-                                  ] as string)
-                                : undefined
-                            }
-                            inputProps={
-                              field.type === 'number' ? { min: field.min, max: field.max } : {}
-                            }
-                          />
-                        )}
-                      </ShakingTextField>
-                    </Grid>
-                  );
-                })}
+                                ] as string)
+                              : undefined
+                          }
+                          inputProps={
+                            field.type === 'number' ? { min: field.min, max: field.max } : {}
+                          }
+                        />
+                      )}
+                    </ShakingTextField>
+                  </Grid>
+                ))}
             </Grid>
           </SectionCard>
         </Grid>

@@ -60,7 +60,6 @@ const GatePassSystemScreen = () => {
         break;
 
       default:
-        console.warn('Unknown action:', action);
     }
   };
 

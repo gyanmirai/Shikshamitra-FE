@@ -577,9 +577,7 @@ const CreateTemplate = () => {
         height: 100,
       },
     },
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const pageProps: PageProps | undefined = useMemo(

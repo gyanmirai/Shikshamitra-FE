@@ -394,7 +394,6 @@ const FinanceFeeCollectionPaymentHistoryTab = () => {
                     </MenuItem>
                     <MenuItem
                       onClick={() => {
-                        console.log('data row', row);
                         dialog.onTrue();
                         setSelectedEntry(row);
                       }}

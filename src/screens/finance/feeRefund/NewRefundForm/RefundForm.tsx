@@ -37,7 +37,7 @@ const FeeRefundFormComponent = ({
       if (onSubmit) {
         onSubmit(values);
       } else {
-        console.log('Refund form submission data:', values);
+        // else handle
       }
     },
   });

@@ -82,7 +82,6 @@ const FinanceBudgetSettingTab = () => {
       }
 
       closeDialog();
-      console.log(dataFromDialog);
     }
   };
   return (

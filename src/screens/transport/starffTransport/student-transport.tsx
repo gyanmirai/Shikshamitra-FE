@@ -93,12 +93,8 @@ const assignments: any = [
   },
 ];
 
-const handleSaveForBulk = (e: any) => {
-  console.log(e);
-};
-const handleSaveNotify = (e: any) => {
-  console.log(e);
-};
+const handleSaveForBulk = (e: any) => {};
+const handleSaveNotify = (e: any) => {};
 
 const StudentTransportScreen = () => {
   const columnData = [

@@ -298,7 +298,6 @@ const ManualHostelAttendance = () => {
                   size="small"
                   value={value || ''}
                   onChange={(e) => {
-                    console.log(e.target.value);
                     setStudentsData(
                       studentsData?.map((item: any) =>
                         item.id === row.id ? { ...item, remarks: e.target.value } : item

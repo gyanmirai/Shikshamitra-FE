@@ -39,7 +39,6 @@ const InvoiceForm = ({ open, onClose }: InvoiceFormProps) => {
     }),
     onSubmit: (values) => {
       // Handle form submission
-      console.log(values);
     },
   });
 

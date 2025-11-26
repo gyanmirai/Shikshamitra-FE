@@ -48,7 +48,7 @@ const AudienceStep = ({ formik }: { formik: FormikProps<INotificationSendSchema>
     }
     setAllClass(allClasses);
   }, [medium]);
-  console.log('formik....', formik.errors);
+
   // Update division list based on class selection
   useEffect(() => {
     if (formik.values.audience.classes?.length === 0) {

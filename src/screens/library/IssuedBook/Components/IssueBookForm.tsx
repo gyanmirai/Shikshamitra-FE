@@ -168,7 +168,6 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
       onClose(values, true);
     },
   });
-  console.log('🚀 ~ IssueBookForm ~ formik:', formik);
 
   const selectedBooks = bookCategoryOptions?.find(
     (item: IBookCategoryOption) => item.value === formik.values.bookTitle

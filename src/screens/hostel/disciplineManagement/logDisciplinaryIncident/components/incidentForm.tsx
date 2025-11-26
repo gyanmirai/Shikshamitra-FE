@@ -47,9 +47,7 @@ const IncidentForm: React.FC<IHostelIncidentFormProps> = ({ open, onClose, editD
     // Apply validation rules defined in incidentValidationSchema
     validationSchema: incidentValidationSchema,
     // Handle form submission
-    onSubmit: (values, formikHelpers) => {
-      console.log(values);
-    },
+    onSubmit: (values, formikHelpers) => {},
   });
 
   return (

@@ -249,7 +249,7 @@ export const ApproveRejectForm = ({
       try {
         handleClose(null, true);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

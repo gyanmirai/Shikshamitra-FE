@@ -231,7 +231,7 @@ const StudentCalendar = (props: StudentTabsComponentType) => {
   };
 
   // const handleApply = (currentFilters: Filters) => {
-  //   console.log('Applied filters:', currentFilters);
+  //
   //   filterDialog.onFalse();
   //   setFilters(currentFilters);
   // };
@@ -307,12 +307,10 @@ const StudentCalendar = (props: StudentTabsComponentType) => {
         data={calendarData}
         showCalendarToolbar
         onDateClick={(e) => {
-          console.log(e);
           handleEventClick(e);
         }}
         showCalendarFilter
         onOPenFiler={() => {
-          console.log('open filter');
           filterDialog.onTrue();
         }}
         containerProps={{

@@ -273,10 +273,10 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
       dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
       handleClose();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
-  console.log(formik.values.banner || '');
+
   return (
     <Box component="form" onSubmit={formik.handleSubmit}>
       <ConfirmDialog

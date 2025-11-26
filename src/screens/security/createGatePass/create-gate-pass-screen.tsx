@@ -62,7 +62,6 @@ const CreateGatePassScreen = () => {
         break;
 
       default:
-        console.warn('Unknown action:', action);
     }
   };
 

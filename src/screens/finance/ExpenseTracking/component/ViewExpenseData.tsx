@@ -27,8 +27,6 @@ const ViewExpenseData = ({
     currentQueryAndMutation: useGetExpenseListQuery,
   });
 
-  console.log('expenseListData', expenseListData);
-
   return (
     <Box>
       <DialogScrollContent>

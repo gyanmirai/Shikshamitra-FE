@@ -31,11 +31,7 @@ const NewCreateRouteScreen = () => {
     const { startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong } = data;
 
     setMapData({ startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong });
-    // console.log('Map data being set:', {
-    //   startPointLatAndLong,
-    //   endPointLatAndLong,
-    //   wayPointLatAndLong,
-    // });
+    //
     setMapDialogOpen(true);
   };
 
@@ -264,18 +260,18 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose }) => {
   // };
 
   // useEffect(() => {
-  //   console.log('Updated route data:', allRouteDetails);
+  //
   // }, [allRouteDetails, allRouteDetails.stops]);
 
   // const handleStop = (newStop: RoutePoint) => {
-  //   console.log('new stop from handle stop', newStop);
+  //
 
   //   setAllRouteDetails((prevDetails: any) => {
   //     const updatedDetails = {
   //       ...prevDetails,
   //       stops: [...prevDetails.stops, newStop],
   //     };
-  //     console.log('Updated route details:', updatedDetails);
+  //
 
   //     return updatedDetails;
   //   });
@@ -307,7 +303,6 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose }) => {
 
   const handleSubmit = () => {
     if (scheduleData.length <= 0) {
-      console.warn('No scheduled data available');
       onClose();
     }
   };

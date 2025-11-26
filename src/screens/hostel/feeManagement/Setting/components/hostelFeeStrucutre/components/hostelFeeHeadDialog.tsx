@@ -20,7 +20,6 @@ const HostelFeeHeadDialog = () => {
 
     // Handle form submission
     onSubmit: (values) => {
-      console.log('Submitted Fee Head:', values);
       // TODO: Implement API call to save fee head data
       // TODO: Dispatch action to update store if using Redux
     },

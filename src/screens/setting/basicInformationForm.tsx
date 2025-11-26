@@ -153,7 +153,7 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
 
         handleClose?.();
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

@@ -60,7 +60,6 @@ const ManageProcurementRequestScreenTeacher = () => {
         break;
 
       default:
-        console.warn('Unknown action:', action);
     }
   };
 

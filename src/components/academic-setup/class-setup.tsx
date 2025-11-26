@@ -272,7 +272,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
       dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
       handleClose();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
   const [addClass, { isLoading }] = useQueryAndMutation({

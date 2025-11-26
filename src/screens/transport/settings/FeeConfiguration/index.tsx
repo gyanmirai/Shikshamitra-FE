@@ -49,12 +49,8 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
     initialValues,
     validationSchema: getValidationSchemaByModel(selectedModel, currentYear),
     enableReinitialize: true,
-    onSubmit: (values) => {
-      console.log('Submitted Data:', values);
-    },
+    onSubmit: (values) => {},
   });
-
-  console.log('formik values----', formik.values);
 
   return (
     <Box height="100%" display="flex" flexDirection="column">

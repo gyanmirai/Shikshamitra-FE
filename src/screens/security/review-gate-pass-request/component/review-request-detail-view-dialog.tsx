@@ -25,9 +25,7 @@ const ReviewRequestDetailView: React.FC<IReviewRequestDetailViewDialogProps> = (
   const formik = useFormik({
     initialValues: getReviewEarlyPassRequestInitialValues(data),
     validationSchema: reviewEarlyPassRequestValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   return (

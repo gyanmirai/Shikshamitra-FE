@@ -148,11 +148,7 @@ const RoutesAndSchedulesScreen = () => {
     const { startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong } = data;
 
     setMapData({ startPointLatAndLong, endPointLatAndLong, wayPointLatAndLong });
-    console.log('Map data being set:', {
-      startPointLatAndLong,
-      endPointLatAndLong,
-      wayPointLatAndLong,
-    });
+
     setMapDialogOpen(true);
   };
 
@@ -164,7 +160,6 @@ const RoutesAndSchedulesScreen = () => {
   useEffect(() => {}, [selectedExpense, isEdit, mapDialogOpen]);
 
   const handleSave = (item: any) => {
-    console.log('from the save', item);
     const updatedData = [...tableData, item];
     setTableData(updatedData);
   };
@@ -267,9 +262,7 @@ interface AddBusStopsProps {
 const AddBusStops: React.FC<AddBusStopsProps> = ({ onChange, selectedStop }) => {
   const [busStops, setBusStops] = useState<SelectedStop[]>(selectedStop);
 
-  useEffect(() => {
-    console.log('Current bus stops:', busStops);
-  }, [busStops]);
+  useEffect(() => {}, [busStops]);
   const handleRemoveStop = (stopId: number) => {
     const updatedStops = busStops.filter((stop) => stop.stopId !== stopId);
     setBusStops(updatedStops);
@@ -461,7 +454,6 @@ const SetSchedule: React.FC<SetScheduleProps> = ({ scheduleData, onChange }) => 
     { key: 'dropoffTime', label: 'Dropoff Time' },
   ];
 
-  console.log('console.log', scheduleData);
   const handleTimeChange = (
     routeName: string,
     stopName: string,
@@ -630,7 +622,6 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose, addNewRouteHan
 
   const handleSubmit = () => {
     if (scheduleData.length <= 0) {
-      console.warn('No scheduled data available');
       onClose();
       return;
     }
@@ -650,8 +641,6 @@ const CreateRoutesForm: React.FC<CreateRoutesProps> = ({ onClose, addNewRouteHan
     };
 
     addNewRouteHandle(newRoute);
-
-    console.log('New Route', newRoute);
 
     setSelectedStop([]);
     setVehicle('');

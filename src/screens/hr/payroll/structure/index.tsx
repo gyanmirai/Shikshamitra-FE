@@ -60,8 +60,6 @@ const EmployeeSalaryStructureScreen = () => {
     },
   });
 
-  console.log(payrollStructure, 'payrollStructure');
-
   return (
     <Box>
       <CustomBreadcrumbs

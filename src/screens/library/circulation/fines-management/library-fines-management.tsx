@@ -69,7 +69,6 @@ const LibraryFineManagement = () => {
 
   // Handler function to process fine collection
   const handleCollectFine = (values: any) => {
-    console.log('Collected Fine Data:', values);
     closeCollectFineDialog();
   };
 

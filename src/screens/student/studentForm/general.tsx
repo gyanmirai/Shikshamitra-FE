@@ -42,7 +42,6 @@ const StudentGeneralForm = () => {
     },
     validationSchema,
     onSubmit: (values) => {
-      console.log(values);
       // Handle form submission
     },
   });

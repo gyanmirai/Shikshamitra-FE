@@ -11,9 +11,7 @@ const SilentRenew = () => {
   useEffect(() => {
     const handleSilentRenew = async () => {
       try {
-        console.log('Processing silent renew...');
         await oidcService.signinSilentCallback(); // Complete silent token renewal
-        console.log('Silent renew completed successfully.');
       } catch (error) {
         console.error('Silent renew failed:', error);
         // Redirect to login page on error

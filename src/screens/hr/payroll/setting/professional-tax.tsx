@@ -242,7 +242,6 @@ const ProfessionalTaxForm = ({
       taxAmount: Yup.string().required('Tax amount is required'),
     }),
     onSubmit: async (values) => {
-      console.log(values);
       try {
         if (editData) {
           await updatePF({
@@ -264,7 +263,7 @@ const ProfessionalTaxForm = ({
         }
         handleClose();
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     },
   });

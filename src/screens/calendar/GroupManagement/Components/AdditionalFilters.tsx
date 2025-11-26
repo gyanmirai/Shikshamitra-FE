@@ -106,10 +106,8 @@ const createEmptyFilter = (): FilterRow => ({ id: crypto.randomUUID() });
 
 const AdditionalFilters: React.FC = () => {
   const [studentFilters, setStudentFilters] = useState<FilterRow[]>([]);
-  console.log('🚀 ~ AdditionalFilters ~ studentFilters:', studentFilters);
 
   const [employeeFilters, setEmployeeFilters] = useState<FilterRow[]>([]);
-  console.log('🚀 ~ AdditionalFilters ~ employeeFilters:', employeeFilters);
 
   const getFieldMeta = useCallback(
     (fieldValue: string | undefined, isStudent: boolean): FieldOption | undefined => {

@@ -18,8 +18,6 @@ const FinalRoute: React.FC<FinalRouteProps> = ({ routeDetails }) => {
 
   const lastIndex = stops.length - 1;
 
-  console.log('final screen final route', stops);
-
   return (
     <Box padding={2} border={1} borderColor="grey.300" borderRadius={2}>
       <Typography variant="h6" gutterBottom>

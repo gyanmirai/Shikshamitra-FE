@@ -50,7 +50,6 @@ const VisitorPreApprovalScreen = () => {
         break;
 
       default:
-        console.warn('Unknown action:', action);
     }
   };
 

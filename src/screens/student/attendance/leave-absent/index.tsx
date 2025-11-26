@@ -498,7 +498,7 @@ const LeaveRequestForm = ({
           });
           handleClose(null, true);
         } catch (err) {
-          console.log(err);
+          console.error(err);
         }
       },
     });

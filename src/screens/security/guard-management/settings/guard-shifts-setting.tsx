@@ -60,7 +60,6 @@ const GuardShiftsSettings = () => {
         break;
 
       default:
-        console.warn('Unknown action:', action);
     }
   };
 

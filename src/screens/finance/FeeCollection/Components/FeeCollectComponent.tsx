@@ -38,7 +38,7 @@ const FeeCollectComponent = ({
         onSubmit(values);
         onCancel?.(null, true);
       } else {
-        console.log('Form submission data:', values);
+        // else part
       }
     },
   });

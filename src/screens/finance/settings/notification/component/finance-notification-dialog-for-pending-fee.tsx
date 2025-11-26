@@ -66,7 +66,6 @@ const FinanceNotificationDialogForPendingFee: React.FC<
       ),
     },
     onSubmit: (values) => {
-      console.log('Submitted values:', values);
       onClose();
     },
   });
@@ -118,7 +117,7 @@ const FinanceNotificationDialogForPendingFee: React.FC<
                     { label: '2', value: '2' },
                   ]}
                   value={[]}
-                  onChange={(e: any) => console.log(e)}
+                  onChange={(e: any) => {}}
                 />
               </Grid>
 

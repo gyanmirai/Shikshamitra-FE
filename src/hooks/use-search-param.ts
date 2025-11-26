@@ -119,7 +119,7 @@ export const useNewSearchParam = <T>(
 
 //   const exitingParams = useMemo(() => new URLSearchParams(nextJsParams.toString()), [nextJsParams]);
 
-//   console.log(exitingParams, 'exitingParams');
+//
 
 //   useMemo(() => {
 //     updateSearchParams(exitingParams, {
@@ -128,7 +128,7 @@ export const useNewSearchParam = <T>(
 //     });
 //   }, [defaultValues, exitingParams]);
 
-//   console.log('🚀 ~ file: use-search-param.ts:170 ~ exitingParams:', exitingParams.toString());
+//
 //   const getAllParams: () => T = useCallback(
 //     () => parseSearchParams(exitingParams),
 //     [exitingParams]
@@ -147,7 +147,7 @@ export const useNewSearchParam = <T>(
 //   const removeSearchParamsByKey = useCallback(
 //     (key: string) => {
 //       exitingParams.delete(key);
-//       console.log(key, 'removeSearchParamsByKey=======', exitingParams.toString());
+//
 //       router.push(`${window.location.pathname}?${exitingParams.toString()}`);
 //     },
 //     [exitingParams, router]

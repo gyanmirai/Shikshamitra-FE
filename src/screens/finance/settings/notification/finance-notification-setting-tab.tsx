@@ -72,7 +72,7 @@ const FinanceNotificationTable = () => {
   };
 
   const handleSaveDetails = () => {
-    // console.log(`${currentRow.cardTitle} updated details:`, details);
+    //
     // Here you can update the data source with the new details value
     handleCloseDialog();
   };
@@ -92,12 +92,7 @@ const FinanceNotificationTable = () => {
             id: 'switchLabel',
             label: 'Enable/Disable',
             render(value, item) {
-              return (
-                <Switch
-                  checked
-                  onChange={(e) => console.log(`${item.cardTitle} switch:`, e.target.checked)}
-                />
-              );
+              return <Switch checked onChange={(e) => {}} />;
             },
           },
 

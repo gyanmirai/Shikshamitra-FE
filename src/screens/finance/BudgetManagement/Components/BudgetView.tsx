@@ -22,8 +22,6 @@ const BudgetDetailsCard: React.FC<{
     1: 'Inactive',
   };
 
-  console.log('budget--', budget);
-
   return (
     <Box
       sx={{

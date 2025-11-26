@@ -40,16 +40,12 @@ const FinanceStudentFeeManagementComponent = () => {
 
   useEffect(() => {
     if (selectedEntry) {
-      console.log('Updated selectedEntry:', selectedEntry);
-
       //     <FinanceStudentUpdatePaymentDialog  dialogValue={dialog.value} onClose={()=>{dialog.onFalse}} data={selectedEntry}/>
       // }
     }
   }, [selectedEntry]);
 
   const handleSave = (values: studentFeePaymentStatusUpdated) => {
-    console.log('Data after save', values);
-
     const updatedData = studentFeeManagementData.map((val) => {
       if (
         val.studentName === selectedEntry.studentName &&

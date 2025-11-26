@@ -25,7 +25,6 @@ const TagForm: React.FC<TagFormProps> = ({ dialog, onClose, editData }) => {
     }),
     // Handle form submission
     onSubmit: (values) => {
-      console.log('Submitted:', values);
       onClose(null, true);
     },
   });

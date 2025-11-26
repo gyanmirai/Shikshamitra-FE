@@ -66,7 +66,6 @@ const FinanceCategoryNotificationDialogForOverDueFee: React.FC<
       ),
     },
     onSubmit: (values) => {
-      console.log('Submitted values:', values);
       onClose();
     },
   });
@@ -122,7 +121,7 @@ const FinanceCategoryNotificationDialogForOverDueFee: React.FC<
                     { label: '3', value: '3' },
                   ]}
                   value={[]}
-                  onChange={(e: any) => console.log(e)}
+                  onChange={(e: any) => {}}
                 />
               </Grid>
 

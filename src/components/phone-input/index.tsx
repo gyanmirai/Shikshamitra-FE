@@ -12,7 +12,6 @@ type PhoneInputProps = Omit<TextFieldProps, 'value' | 'onChange' | 'placeholder'
 
 const PhoneInput = ({ value, onChange, error, label, helperText, ...props }: PhoneInputProps) => {
   const handleChange = (newPhone: string, info: MuiTelInputInfo) => {
-    console.log('🚀 ~ handleChange ~ newPhone:', newPhone);
     if (newPhone === '+91') {
       onChange(undefined, info);
       return;

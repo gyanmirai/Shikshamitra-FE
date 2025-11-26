@@ -4,14 +4,16 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
 import Add from '@mui/icons-material/Add';
 import { Label } from 'src/components/label';
 import { useState, useCallback } from 'react';
 import { GenderType } from 'src/enums/gender';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { convertBase64Format } from 'src/utils/base64Formate';
@@ -21,19 +23,30 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
-import { Box, Grid, Card, Button, Avatar, MenuList, MenuItem, Typography } from '@mui/material';
 import {
   EmployeeStatusType,
   EmployeeStatusTypeColor,
   EmployeeStatusTypeOptions,
 } from 'src/enums/employee-status-type';
+import {
+  Box,
+  Card,
+  Grid,
+  Paper,
+  Button,
+  Avatar,
+  MenuList,
+  MenuItem,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
 import EmployeeFrom from './employee-form';
 import EmployeeView from './employee-view';
-import { Sections } from '../payroll/structure';
 import ChangeStatusForm from './chnage-status-form';
+import { RenderComponents } from './employee-form-fields/PayrollFields';
 
 const HrEmployee = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -50,7 +63,7 @@ const HrEmployee = () => {
       <>
         {' '}
         <MenuList>
-          {/* <MenuItem
+          <MenuItem
             onClick={() => {
               payrollDialog.onTrue();
               setEditData(row);
@@ -61,8 +74,8 @@ const HrEmployee = () => {
               icon="material-symbols:payments-outline-sharp"
               sx={{ height: '16px', width: '16px' }}
             />
-            Payroll Structure
-          </MenuItem> */}
+            Salary Structure
+          </MenuItem>
           <MenuItem
             onClick={() => {
               pop.onClose();
@@ -76,7 +89,7 @@ const HrEmployee = () => {
         </MenuList>
       </>
     ),
-    [statusDialog]
+    [payrollDialog, statusDialog]
   );
   const {
     data: employee,
@@ -119,7 +132,6 @@ const HrEmployee = () => {
     // employeeType: EmployeeGroupType[item?.employeeGroup],
     organization: item?.educationMediumStage?.name,
   }));
-  const [selectedStudents] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
 
   const handlerSendNotification = () => {
@@ -193,51 +205,9 @@ const HrEmployee = () => {
               </>
             }
             onSendNotification={handlerSendNotification}
-            showCheckbox={selectedStudents.length !== 0}
             isLoading={isLoading}
             tableId="employee-table"
             columns={[
-              // {
-              //   id: 'checkBox',
-              //   align: 'left',
-              //   minWidth: '60px',
-              //   isSort: false,
-              //   isFilter: false,
-              //   sticky: true,
-              //   label: '',
-              //   renderColumn() {
-              //     return (
-              //       <Checkbox
-              //         checked={
-              //           tableData?.length && selectedStudents?.length === tableData?.length
-              //         }
-              //         onChange={(e) => {
-              //           if (e.target.checked) {
-              //             setSelectedStudents(tableData || []);
-              //           } else {
-              //             setSelectedStudents([]);
-              //           }
-              //         }}
-              //       />
-              //     );
-              //   },
-              //   render(value, row) {
-              //     return (
-              //       <Checkbox
-              //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-              //         onChange={(e) => {
-              //           if (e.target.checked) {
-              //             setSelectedStudents([...selectedStudents, row]);
-              //           } else {
-              //             setSelectedStudents(
-              //               selectedStudents.filter((i: any) => i.id !== row.id)
-              //             );
-              //           }
-              //         }}
-              //       />
-              //     );
-              //   },
-              // },
               {
                 id: 'fullName',
                 label: 'Name',
@@ -354,14 +324,6 @@ const HrEmployee = () => {
             ]}
             data={tableData || []}
           />
-          {sendInstantNotificationDialogValue.value && (
-            <SendInstantNotificationDialog
-              open={sendInstantNotificationDialogValue.value}
-              onClose={sendInstantNotificationDialogValue.onFalse}
-              data={[]}
-              userList={selectedStudents}
-            />
-          )}
           <CustomDialog
             open={statusDialog.value}
             handleClose={handleCloseStatus}
@@ -396,26 +358,7 @@ const HrEmployee = () => {
             title="Payroll Structure"
             paperProps={{ sx: { maxHeight: '70vh' } }}
           >
-            <Box bgcolor="background.neutral" p={2}>
-              <Grid container spacing={3}>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Sections
-                    title="Earning"
-                    organization={editData?.educationMediumStageId}
-                    data={[]}
-                    type={0}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Sections
-                    title="Deduction"
-                    organization={editData?.educationMediumStageId}
-                    data={[]}
-                    type={1}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
+            <SalaryStructure handleClose={handleClosePayroll} />
           </CustomDialog>
         </>
       ) : (
@@ -425,3 +368,90 @@ const HrEmployee = () => {
   );
 };
 export default HrEmployee;
+
+const SalaryStructure = ({ handleClose }: { handleClose: () => void }) => {
+  const formik = useFormik({
+    initialValues: {
+      earningComponents: [],
+      deductionComponents: [],
+    },
+    validationSchema: Yup.object({
+      earningComponents: Yup.array().of(
+        Yup.object({
+          name: Yup.string().required('Name is required'),
+          type: Yup.string().required('Type is required'),
+          amount: Yup.string().test('amount', 'Amount is required', function (value) {
+            // eslint-disable-next-line react/no-this-in-sfc
+            if (this.parent.type === 'fixed') {
+              return !!value;
+            }
+            return true;
+          }),
+        })
+      ),
+      deductionComponents: Yup.array().of(
+        Yup.object({
+          name: Yup.string().required('Name is required'),
+          type: Yup.string().required('Type is required'),
+          amount: Yup.string().test('amount', 'Amount is required', function (value) {
+            // eslint-disable-next-line react/no-this-in-sfc
+            if (this.parent.type === 'fixed') {
+              return !!value;
+            }
+            return true;
+          }),
+        })
+      ),
+    }),
+    onSubmit: (values) => {
+      handleClose();
+    },
+  });
+  return (
+    <>
+      <DialogScrollContent>
+        <Paper elevation={2} sx={{ p: 1 }}>
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <RenderComponents
+                formik={formik}
+                name="earningComponents"
+                label="Earning Components"
+                type="earning"
+                showTempAdd
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <RenderComponents
+                formik={formik}
+                name="deductionComponents"
+                label="Deduction Components"
+                type="deduction"
+                showTempAdd
+              />
+            </Grid>
+          </Grid>
+        </Paper>
+      </DialogScrollContent>
+
+      <DialogActions>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          size="small"
+          variant="outlined"
+          onClick={() => handleClose()}
+        >
+          Cancel
+        </Button>
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          size="small"
+          variant="contained"
+          onClick={(e: any) => formik.handleSubmit(e)}
+        >
+          Submit
+        </Button>
+      </DialogActions>
+    </>
+  );
+};

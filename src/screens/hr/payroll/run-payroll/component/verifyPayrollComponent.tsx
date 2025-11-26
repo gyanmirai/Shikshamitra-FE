@@ -23,16 +23,25 @@ const VerifyPayrollComponent = ({ onClose }: any) => {
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
+      showSaveButton={false}
       // validationSchema={validationSchema[activeStep as keyof typeof validationSchema]}
       validationSchema={yup.object().shape({})}
-      handleNext={(isLastStep, _values) => {
-        if (isLastStep) return;
+      handleNext={async (isLastStep, _values) => {
+        if (isLastStep) {
+          const XLSX = await import('xlsx');
+          const worksheet = XLSX.utils.json_to_sheet(salaryData);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, 'Salary Data');
+          XLSX.writeFile(workbook, `Payroll_Salary_${new Date().toISOString().split('T')[0]}.xlsx`);
+          onClose();
+          return;
+        }
         setActiveStep(activeStep + 1);
       }}
       renderItem={({ formik, activeStep: step }: any) => {
         const StepComponent = allTimetableSteps[step];
         return (
-          <Box p={2}>
+          <Box p={2} sx={{ height: '100%' }}>
             <StepComponent formik={formik} isFirstStep={step === 0} />
           </Box>
         );
@@ -184,7 +193,56 @@ const Attendance = ({ isFirstStep }: any) => {
     />
   );
 };
-
+const salaryData = [
+  {
+    employeeName: 'John Doe',
+    profilePicture: '', // Provide a valid base64 string or image URL
+    employeeId: 'EMP001',
+    employeeType: 'Full-Time',
+    salaryMonth: 'January 2025',
+    employeeGroup: 'Teaching',
+    basicSalary: '₹3,500',
+    grossSalary: '₹4,500',
+    totalDeduction: '₹500',
+    netPayble: '₹4,000',
+  },
+  {
+    employeeName: 'Jane Smith',
+    profilePicture: '', // Provide a valid base64 string or image URL
+    employeeId: 'EMP002',
+    employeeType: 'Part-Time',
+    salaryMonth: 'January 2025',
+    employeeGroup: 'Teaching',
+    basicSalary: '₹2,000',
+    grossSalary: '₹2,800',
+    totalDeduction: '₹300',
+    netPayble: '₹2,500',
+  },
+  {
+    employeeName: 'Alice Johnson',
+    profilePicture: '', // Provide a valid base64 string or image URL
+    employeeId: 'EMP003',
+    employeeType: 'Contract',
+    salaryMonth: 'January 2025',
+    employeeGroup: 'Teaching',
+    basicSalary: '₹3,200',
+    grossSalary: '₹4,000',
+    totalDeduction: '₹400',
+    netPayble: '₹3,600',
+  },
+  {
+    employeeName: 'Robert Brown',
+    profilePicture: '', // Provide a valid base64 string or image URL
+    employeeId: 'EMP004',
+    employeeType: 'Intern',
+    salaryMonth: 'January 2025',
+    employeeGroup: 'Teaching',
+    basicSalary: '₹1,500',
+    grossSalary: '₹2,000',
+    totalDeduction: '₹100',
+    netPayble: '₹1,900',
+  },
+];
 const Salary = ({ formik }: any) => (
   <CustomizableTable
     noDataText={<>No Data Found For Payroll</>}
@@ -239,55 +297,6 @@ const Salary = ({ formik }: any) => (
         align: 'left',
       },
     ]}
-    data={[
-      {
-        employeeName: 'John Doe',
-        profilePicture: '', // Provide a valid base64 string or image URL
-        employeeId: 'EMP001',
-        employeeType: 'Full-Time',
-        salaryMonth: 'January 2025',
-        employeeGroup: 'Teaching',
-        basicSalary: '₹3,500',
-        grossSalary: '₹4,500',
-        totalDeduction: '₹500',
-        netPayble: '₹4,000',
-      },
-      {
-        employeeName: 'Jane Smith',
-        profilePicture: '', // Provide a valid base64 string or image URL
-        employeeId: 'EMP002',
-        employeeType: 'Part-Time',
-        salaryMonth: 'January 2025',
-        employeeGroup: 'Teaching',
-        basicSalary: '₹2,000',
-        grossSalary: '₹2,800',
-        totalDeduction: '₹300',
-        netPayble: '₹2,500',
-      },
-      {
-        employeeName: 'Alice Johnson',
-        profilePicture: '', // Provide a valid base64 string or image URL
-        employeeId: 'EMP003',
-        employeeType: 'Contract',
-        salaryMonth: 'January 2025',
-        employeeGroup: 'Teaching',
-        basicSalary: '₹3,200',
-        grossSalary: '₹4,000',
-        totalDeduction: '₹400',
-        netPayble: '₹3,600',
-      },
-      {
-        employeeName: 'Robert Brown',
-        profilePicture: '', // Provide a valid base64 string or image URL
-        employeeId: 'EMP004',
-        employeeType: 'Intern',
-        salaryMonth: 'January 2025',
-        employeeGroup: 'Teaching',
-        basicSalary: '₹1,500',
-        grossSalary: '₹2,000',
-        totalDeduction: '₹100',
-        netPayble: '₹1,900',
-      },
-    ]}
+    data={salaryData}
   />
 );

@@ -22,7 +22,6 @@ import {
 const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
   const { user } = useSelector((state: any) => state.auth);
   const data = navData(user?.profile?.email === 'ddvs@gmail.com').flatMap((item) => item.items);
-  console.log('🚀 ~ AssignModule ~ data:', data);
 
   const stackRef = useRef<any>(null);
   const [selectSubModule, setSelectSubModule] = useState<any>(null); // top-level module

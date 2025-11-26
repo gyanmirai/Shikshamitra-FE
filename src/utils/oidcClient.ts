@@ -22,11 +22,11 @@ const oidcConfig: UserManagerSettings = {
 export const userManager = new UserManager(oidcConfig);
 
 userManager.events.addAccessTokenExpiring(() => {
-  console.log('Access token is about to expire. Renewing...');
+  console.info('Access token is about to expire. Renewing...');
   oidcService
     .renewToken()
     .then((user) => {
-      console.log('Token renewed successfully:', user);
+      console.info('Token renewed successfully:', user);
     })
     .catch((error) => {
       console.error('Token renewal failed:', error);
@@ -34,7 +34,7 @@ userManager.events.addAccessTokenExpiring(() => {
 });
 
 userManager.events.addAccessTokenExpired(() => {
-  console.log('Access token expired. Logging out...');
+  console.info('Access token expired. Logging out...');
   oidcService.signOut();
 });
 

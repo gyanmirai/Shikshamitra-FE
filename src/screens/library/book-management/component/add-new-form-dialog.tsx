@@ -26,7 +26,7 @@
 //   };
 
 //   const handleSubmit = () => {
-//     console.log("Book Details Submitted:", bookDetails);
+//
 //   };
 
 //   return (

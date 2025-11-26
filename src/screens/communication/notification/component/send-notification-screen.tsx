@@ -29,9 +29,7 @@ const SendNotificationScreen = () => {
       category: '',
       template: '',
     },
-    onSubmit: (values) => {
-      console.log('Sending Notification:', selectedStudents, messageTemplate);
-    },
+    onSubmit: (values) => {},
   });
 
   // **Filter students based on selected filters**
@@ -163,15 +161,15 @@ const SendNotificationScreen = () => {
               </Typography>
               <Box display="flex" gap={2} flexDirection="row">
                 <FormControlLabel
-                  control={<Checkbox checked onChange={(e) => console.log(e)} />}
+                  control={<Checkbox checked onChange={(e) => {}} />}
                   label="Email"
                 />
                 <FormControlLabel
-                  control={<Checkbox checked onChange={(e) => console.log(e)} />}
+                  control={<Checkbox checked onChange={(e) => {}} />}
                   label="Whatsapp"
                 />
                 <FormControlLabel
-                  control={<Checkbox checked onChange={(e) => console.log(e)} />}
+                  control={<Checkbox checked onChange={(e) => {}} />}
                   label="Message"
                 />
               </Box>

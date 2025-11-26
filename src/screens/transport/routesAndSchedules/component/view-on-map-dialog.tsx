@@ -19,9 +19,9 @@ interface TransportMapProps {
 
 const TransportMap: React.FC<TransportMapProps> = ({ start, end, waypoints }) => {
   const [routeCoordinates, setRouteCoordinates] = useState<LatLngExpression[]>([]);
-  console.log('final screen waypoinyts', waypoints);
+
   // const flattenedStops = waypoints.flat();
-  // console.log("final screen flatwaypoinyts",flattenedStops)
+  //
   const getRouteCoordinates = async (
     startPoint: [number, number],
     endPoint: [number, number],
@@ -31,7 +31,6 @@ const TransportMap: React.FC<TransportMapProps> = ({ start, end, waypoints }) =>
       .map((coord) => `${coord[1]},${coord[0]}`)
       .join(';');
 
-    console.log('final screen', coordinates);
     const response = await fetch(
       `https://router.project-osrm.org/route/v1/driving/${coordinates}?geometries=geojson`
     );
@@ -47,7 +46,7 @@ const TransportMap: React.FC<TransportMapProps> = ({ start, end, waypoints }) =>
   useEffect(() => {
     const fetchRoute = async () => {
       const coordinates = await getRouteCoordinates(start, end, waypoints);
-      console.log('Fetched coordinates:', coordinates);
+
       setRouteCoordinates(coordinates);
     };
 
@@ -67,7 +66,6 @@ const TransportMap: React.FC<TransportMapProps> = ({ start, end, waypoints }) =>
     iconSize: [40, 50],
     iconAnchor: [12, 41],
   });
-  console.log('start', start);
 
   const students = [
     { id: 1, name: 'John Doe' },

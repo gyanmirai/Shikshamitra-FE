@@ -299,9 +299,7 @@ const ClassTeacherAssignmentNotificationManagement = ({ dialog, setIsViewMode }:
                 return (
                   <Switch
                     checked={NotificationStatusType.Active === row.isActive}
-                    onChange={(event) => {
-                      console.log('Toggle active status:', event.target.checked);
-                    }}
+                    onChange={(event) => {}}
                   />
                 );
               },

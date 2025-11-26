@@ -40,7 +40,6 @@ const AddNewBookDialog: React.FC<IAddNewBookDialogProps> = ({
   const formik = useFormik<any>({
     initialValues,
     onSubmit: (values: any) => {
-      console.log('Form Submitted:', values);
       onSave(values); // Pass form values to parent component
     },
   });

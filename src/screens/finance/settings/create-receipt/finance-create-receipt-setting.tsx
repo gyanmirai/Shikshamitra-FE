@@ -20,9 +20,7 @@ const FinanceCreateReceiptSetting = () => {
   };
 
   // Handler for saving the selected template configuration
-  const handleSave = () => {
-    console.log('Selected Template:', selectedTemplate);
-  };
+  const handleSave = () => {};
 
   // Array of available fee receipt templates
   const feeTemplates = [

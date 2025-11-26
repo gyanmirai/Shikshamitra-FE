@@ -25,11 +25,9 @@ const NewFeeRefundRequestForm: React.FC<INewFeeRefundRequestFormProps> = ({
   const formik = useFormik({
     initialValues: getInitialStudentRefundRequest(data),
     validationSchema: studentRefundRequestValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
-  console.log('ree refund data', data);
+
   return (
     <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

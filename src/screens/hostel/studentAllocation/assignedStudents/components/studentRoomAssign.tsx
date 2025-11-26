@@ -22,7 +22,6 @@ const StudentRoomAssign: React.FC<IStudentRoomAssignProps> = ({
     validationSchema: studentRoomAssignValidationSchema,
     onSubmit: (values) => {
       // handle submit logic
-      console.log(values);
     },
   });
   return (

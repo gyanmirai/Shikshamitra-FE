@@ -29,11 +29,8 @@ const ResourceRequestOrderDialog: React.FC<IResourceRequestOrderDialogProps> = (
 }) => {
   const formik = useFormik({
     initialValues: getInitialResourceRequestOrderValues(data),
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
-  console.log('orderStatus', orderStatus);
 
   const isDisabled = data !== null && isEdit === false;
 

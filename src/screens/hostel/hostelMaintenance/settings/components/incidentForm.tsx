@@ -29,7 +29,6 @@ const IncidentTypeSettingForm: React.FC<IIncidentTypeFormProps> = ({
     }),
     // Handle form submission
     onSubmit: (values) => {
-      console.log('Submitted:', values);
       onClose(null, true);
     },
   });

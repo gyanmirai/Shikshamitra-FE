@@ -25,7 +25,7 @@ const BudgetStep1 = (props: FormikProps<IBudgetFormValues>) => {
     currentQueryAndMutation: useGetBoardsQuery,
   });
   const [boards, setBoards] = useState([]);
-  console.log('formik.values----', formik.values);
+
   useEffect(() => {
     setBoards(currentYear.boards || []);
   }, [currentYear]);

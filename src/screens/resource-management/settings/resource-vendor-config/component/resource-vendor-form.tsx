@@ -21,9 +21,7 @@ const ResourceVendorForm: React.FC<IResourceVendorFormProps> = ({ isEdit, data, 
   const formik = useFormik({
     initialValues: getResourceVendorInitialValues(data),
     validationSchema: resourceVendorValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;

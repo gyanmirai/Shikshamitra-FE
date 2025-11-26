@@ -231,9 +231,7 @@ const FeeNewCollectionForm: React.FC<FeeNewCollectionFormProps> = ({
       selectedTerms: [],
       paymentMode: [],
     },
-    onSubmit: (values) => {
-      console.log('Final Submission:', values);
-    },
+    onSubmit: (values) => {},
   });
   const [selectedFees, setSelectedFees] = useState<any[]>([]);
   const [selectedStudent] = useState<any>(students[0]);

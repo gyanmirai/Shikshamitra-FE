@@ -37,9 +37,7 @@ const AddWeeklyMenuDialog: React.FC<IAddWeeklyMenuDialogProps> = ({ data, isEdit
   const formik = useFormik({
     initialValues: getMealInitialValues(data),
     validationSchema: mealValidationSchema,
-    onSubmit: (values, formikHelpers) => {
-      console.log(values);
-    },
+    onSubmit: (values, formikHelpers) => {},
   });
 
   // const isDisabled = data !== null && isEdit === true;

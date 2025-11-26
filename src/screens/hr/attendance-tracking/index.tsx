@@ -807,7 +807,6 @@ const EmployeeWise = ({
 
   useEffect(() => {
     if (searchParams?.employeeId && startDate) {
-      console.log('getAttendance');
       getAttendance({
         employeeId: `${searchParams.employeeId}`,
         month: dateConvertor(dayjs(startDate, 'DD-MM-YYYY').format(dateFormat), true),

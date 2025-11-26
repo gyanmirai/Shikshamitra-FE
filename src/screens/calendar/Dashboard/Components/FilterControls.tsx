@@ -106,15 +106,12 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
         // inputValue={
         //   search.eventType || makeDisplayValue(filters.eventType, eventTypesOptions) || ''
         // }
-        onChange={(_, value, reason, details) => {
-          console.log('🚀 ~ FilterControls ~ details:', details);
-
-          console.log('🚀 ~ FilterControls ~ reason:', reason);
-          return onChange({
+        onChange={(_, value, reason, details) =>
+          onChange({
             ...filters,
             eventType: normalize(value, eventTypesOptions, reason, details),
-          });
-        }}
+          })
+        }
         // onInputChange={(_, value, reason) => {
         //   if (reason === 'input') setSearch((prev) => ({ ...prev, eventType: value }));
         //   if (reason === 'clear') setSearch((prev) => ({ ...prev, eventType: '' }));

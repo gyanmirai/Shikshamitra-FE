@@ -25,7 +25,7 @@ module.exports = {
     'no-alert': 0,
     'react/prop-types': 'off',
     camelcase: 0,
-    'no-console': 0,
+    'no-console': [1, { allow: ['error', 'info'] }],
     'no-unused-vars': 0,
     'no-nested-ternary': 0,
     'no-param-reassign': 0,

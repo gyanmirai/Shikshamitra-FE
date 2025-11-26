@@ -57,7 +57,6 @@ const VehicleFormDialog: React.FC<IVehicleFormDialogProps> = ({
     initialValues,
     validationSchema: vehicleManagementValidationSchema,
     onSubmit: (values: any) => {
-      console.log('Form Submitted:', values);
       // onSave(values);
     },
   });

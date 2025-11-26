@@ -63,14 +63,14 @@ const HostelLeaveForm: React.FC<IAddLeaveRequestProps> = ({ open, onClose, editD
       validationSchema={getLeaveValidationSchema(editData)}
       onSubmit={async (values: ILeaveFormValues, { setSubmitting, resetForm }) => {
         try {
-          if (editData) {
-            console.log('editdata for leave');
-          } else {
-            resetForm();
-          }
+          // if (editData) {
+
+          // } else {
+          //   resetForm();
+          // }
           onClose?.(null, true);
         } catch (errors) {
-          console.log(errors);
+          console.error(errors);
         }
       }}
     >

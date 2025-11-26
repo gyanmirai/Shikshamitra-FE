@@ -23,7 +23,6 @@ export const loadUser = createAsyncThunk(
       }
       return null;
     } catch (error) {
-      console.log('Failed to load user:', error);
       return rejectWithValue(error);
     }
   }
@@ -59,7 +58,6 @@ export const getEmployee = createAsyncThunk(
       const employeeData = await employeeRes.json();
       return employeeData;
     } catch (error) {
-      console.log('Failed to get employee:', error);
       return rejectWithValue(error);
     }
   }

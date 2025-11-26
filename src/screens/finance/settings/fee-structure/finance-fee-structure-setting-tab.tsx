@@ -131,8 +131,6 @@ const FinanceFeeStructureSettingTab = () => {
     const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, '').trim();
     const feeHeadLabel: any = feeHeadList.map((e) => (e.value === feeHead ? e.label : null));
 
-    console.log('Data from dialog', dataFromDialog);
-
     if (isEdit) {
       const existingIndex = tableData.findIndex((val) => val.id === id);
 
@@ -156,8 +154,6 @@ const FinanceFeeStructureSettingTab = () => {
           const updatedTableData = [...tableData];
           updatedTableData[existingIndex] = rowData;
           setTableData(updatedTableData);
-
-          console.log('Updated rowData', rowData);
         } else {
           rowData.feeSubCategoryList.push({
             id: Math.floor(Math.random() * 10000),
@@ -170,8 +166,6 @@ const FinanceFeeStructureSettingTab = () => {
           const updatedTableData = [...tableData];
           updatedTableData[existingIndex] = rowData;
           setTableData(updatedTableData);
-
-          console.log('Added new subcategory', rowData);
         }
 
         setSwitchStates({

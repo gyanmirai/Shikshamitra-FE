@@ -234,7 +234,6 @@ export const InquiryPreferenceForm = ({
       fieldName: Yup.string().required('Preference Name is required'),
     }),
     onSubmit: async (formikValues) => {
-      console.log(formikValues);
       if (editData) {
         await updateDocument({
           id: editData.id,

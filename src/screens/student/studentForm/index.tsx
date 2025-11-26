@@ -77,7 +77,7 @@ const initialValues: StudentFormValues = {
 const StudentForm: React.FC = () => {
   const handleSubmit = (values: StudentFormValues, { setSubmitting }: any) => {
     // Handle form submission here
-    console.log(values);
+
     setSubmitting(false);
   };
 

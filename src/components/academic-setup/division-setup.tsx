@@ -271,7 +271,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
       dispatch(boardApi.util.invalidateTags([{ type: 'Board' }]));
       handleClose();
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

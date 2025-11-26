@@ -86,9 +86,7 @@ const TransportBulkRouteDialog: React.FC<TransportBulkRouteDialogProps> = ({
       pickupPoint: pickupPoints[0],
       dropoffPoint: dropoffPoints[0],
     },
-    onSubmit: (values) => {
-      console.log('Form Submitted', values);
-    },
+    onSubmit: (values) => {},
   });
 
   React.useEffect(() => {

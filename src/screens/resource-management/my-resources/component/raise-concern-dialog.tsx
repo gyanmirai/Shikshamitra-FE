@@ -22,9 +22,7 @@ const RaisedConcernForResourcesDialog: React.FC<IRaiseConcernDialogProps> = ({ o
   const formik = useFormik({
     initialValues: getMyResourceInitialValues(data),
     validationSchema: raisedConcernValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   //   const isDisabled = data !== null && isEdit === false;

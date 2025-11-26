@@ -186,8 +186,6 @@ const CustomStepLabel = styled(StepLabel)(({ theme, error }) => ({
 }));
 
 const ShiftManageMentForm = ({ handleClose, editData }: any) => {
-  console.log('🚀 ~ ShiftManageMentForm ~ editData:', editData);
-
   const [addShift, { isLaoding: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddShiftMutation,
@@ -246,7 +244,7 @@ const ShiftManageMentForm = ({ handleClose, editData }: any) => {
         }
         handleClose();
       } catch (error) {
-        console.log('🚀 ~ onSubmit:async ~ error:', error);
+        console.error(error);
       }
     },
   });

@@ -216,9 +216,7 @@ const KPIForm = () => {
       startDate: null,
       endDate: null,
     },
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   return (

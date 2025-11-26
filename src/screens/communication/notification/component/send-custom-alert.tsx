@@ -39,9 +39,7 @@ const SendCustomAlert = () => {
       template: '',
       role: '',
     },
-    onSubmit: (values) => {
-      console.log('Sending Notification:');
-    },
+    onSubmit: (values) => {},
   });
   useEffect(() => {
     const { organization, class: selectedClass, division } = formik.values;

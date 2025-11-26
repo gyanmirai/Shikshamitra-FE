@@ -27,8 +27,6 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
 }) => {
   // Get the theme object from MUI theme provider
   const theme = useTheme();
-  console.log('data---', data);
-  console.log('selectedDivision---', selectedDivision);
 
   const filteredData = useMemo(() => {
     if (!selectedDivision) return data || [];

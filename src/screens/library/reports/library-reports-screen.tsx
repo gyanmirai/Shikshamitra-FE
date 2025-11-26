@@ -67,7 +67,6 @@ const LibraryReportsScreen = () => {
   ];
 
   const handleGenerateReport = (values: any) => {
-    console.log('Generating report with values:', values);
     // Logic to generate or fetch the report from the backend can be added here
   };
   const dialog = useBoolean();
@@ -151,9 +150,7 @@ const LibraryReportsScreen = () => {
                     loading={false}
                     noOptionsText="No Student Found"
                     fullWidth
-                    onChange={(e, value: any) => {
-                      console.log('e');
-                    }}
+                    onChange={(e, value: any) => {}}
                     options={[]}
                     getOptionLabel={(option: any) => `${option.name} (${option.role})`} // Use the formatted label
                     renderInput={(params: any) => (
@@ -291,9 +288,7 @@ const ScheduledReportsFrom = ({ handleClose }: { handleClose: () => void }) => {
       active: false,
       weekday: 'monday',
     },
-    onSubmit: () => {
-      console.log('submit');
-    },
+    onSubmit: () => {},
   });
   return (
     <Box component="form" onSubmit={handleSubmit}>

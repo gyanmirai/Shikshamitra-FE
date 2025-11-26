@@ -120,7 +120,6 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
             }
             setMentionOpen(true);
           } catch (err) {
-            console.warn('coordsAtPos failed', err);
             cleanupAnchorSpan();
             setMentionOpen(false);
           }
@@ -139,7 +138,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
         try {
           anchorSpanRef.current.remove();
         } catch (err) {
-          console.warn('remove anchor span failed', err);
+          console.error('remove anchor span failed', err);
         }
         anchorSpanRef.current = null;
         setAnchorEl(null);
@@ -181,7 +180,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
           setSelectedIndex((prev) => (prev === 0 ? filteredItems.length - 1 : prev - 1));
         } else if (e.key === 'Enter') {
           e.preventDefault();
-          console.log(filteredItems[selectedIndex], 'filteredItems[selectedIndex]');
+
           handleSelectMention(filteredItems[selectedIndex]);
         } else if (e.key === 'Escape') {
           e.preventDefault();

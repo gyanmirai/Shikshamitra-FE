@@ -103,8 +103,6 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
     },
   });
 
-  console.log('formik.values', formik);
-
   // Update organizations list when medium changes
   useEffect(() => {
     const orgs = cloneDeep(medium?.educationMediumStages || []);
@@ -601,7 +599,6 @@ const AddEvent: React.FC<IAddEventProps> = ({ initialValues = null, onClose, isE
                           name="endTime"
                           value={formik.values.endTime}
                           onChange={(newValue) => {
-                            console.log(newValue);
                             formik.setFieldValue('endTime', newValue);
                           }}
                           views={['hours', 'minutes']}

@@ -34,9 +34,7 @@ const RoomAllocateForm: React.FC<{
       roomName: Yup.string().required('Room Name is required'),
     }),
     // Handle form submission
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const roomOptions = [

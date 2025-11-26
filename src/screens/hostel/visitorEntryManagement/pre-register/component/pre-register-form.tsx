@@ -22,9 +22,7 @@ const PreRegisterForm: React.FC<IPreVisitorFormProps> = ({ isEdit, data, onClose
   const formik = useFormik({
     initialValues: getVisitorInitialValues(data),
     validationSchema: visitorValidationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-    },
+    onSubmit: (values) => {},
   });
 
   const isDisabled = data !== null && isEdit === false;
