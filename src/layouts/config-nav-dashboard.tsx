@@ -81,21 +81,30 @@ const studentModule = (isDdvs: boolean) => ({
       subheader: '',
       items: [
         {
+          title: 'Dashboard',
+          path: '/student/dashboard',
+          _action: 'student-dashboard',
+          permissionName: 'Student.Dashboard',
+          permission: 'Permission:StudentDashboard',
+          shortcutKey: 'Alt+S+1',
+          shortcutKeyName: 'Alt+S+1',
+        },
+        {
           title: 'Student Enrollment',
           path: '',
           _action: 'student-enrollment',
           permissionName: 'Student.Enrollment',
           permission: 'Permission:StudentEnrollment',
           children: [
-            {
-              title: 'Dashboard',
-              path: '/student/enrollment/dashboard',
-              _action: 'student-enrollment-dashboard',
-              permission: 'Permission:StudentEnrollment.Dashboard',
-              permissionName: 'Student.Enrollment.Dashboard',
-              shortcutKey: 'Alt+S+1',
-              shortcutKeyName: 'Alt+S+1',
-            },
+            // {
+            //   title: 'Dashboard',
+            //   path: '/student/enrollment/dashboard',
+            //   _action: 'student-enrollment-dashboard',
+            //   permission: 'Permission:StudentEnrollment.Dashboard',
+            //   permissionName: 'Student.Enrollment.Dashboard',
+            //   shortcutKey: 'Alt+S+1',
+            //   shortcutKeyName: 'Alt+S+1',
+            // },
             {
               title: 'Inquiry',
               path: '/student/enrollment/inquiry',
@@ -216,13 +225,13 @@ const studentModule = (isDdvs: boolean) => ({
           shortcutKey: 'Alt+S+R',
           shortcutKeyName: 'Alt+S+R',
           children: [
-            {
-              title: 'Dashboard',
-              path: '/student/overview',
-              _action: 'student-overview',
-              shortcutKey: 'Alt+S+R+1',
-              shortcutKeyName: 'Alt+S+R+1',
-            },
+            // {
+            //   title: 'Dashboard',
+            //   path: '/student/overview',
+            //   _action: 'student-overview',
+            //   shortcutKey: 'Alt+S+R+1',
+            //   shortcutKeyName: 'Alt+S+R+1',
+            // },
             {
               title: 'Student List',
               path: '/student/profile',
@@ -275,13 +284,13 @@ const studentModule = (isDdvs: boolean) => ({
           path: '',
           _action: 'student-attendance',
           children: [
-            {
-              title: 'Dashboard',
-              path: '/student/attendance/dashboard',
-              _action: 'student-attendance-dashboard',
-              shortcutKey: 'Alt+S+A+1',
-              shortcutKeyName: 'Alt+S+A+1',
-            },
+            // {
+            //   title: 'Dashboard',
+            //   path: '/student/attendance/dashboard',
+            //   _action: 'student-attendance-dashboard',
+            //   shortcutKey: 'Alt+S+A+1',
+            //   shortcutKeyName: 'Alt+S+A+1',
+            // },
             {
               title: 'Mark Attendance',
               path: '/student/attendance/take-attendance',
@@ -2546,7 +2555,7 @@ export const navData = (isDdvs: boolean) => [
       },
       {
         title: 'Student',
-        path: '/student/enrollment/dashboard',
+        path: '/student/dashboard/',
         icon: ICONS.student,
         _action: 'student',
         shortcutKey: 'Alt+S',
