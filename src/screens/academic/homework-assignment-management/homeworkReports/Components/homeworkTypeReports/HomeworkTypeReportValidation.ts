@@ -17,10 +17,8 @@ export const getHomeworkValidationSchema = (showField: string[], currentYear: an
   }
 
   // Classes
-  if (showField.includes('classes')) {
-    shape.classes = Yup.array()
-      .min(1, 'At least one class is required')
-      .required('Class is required');
+  if (showField.includes('class')) {
+    shape.class = Yup.string().required('Classes is required');
   }
 
   // Divisions
@@ -55,51 +53,65 @@ export const getHomeworkValidationSchema = (showField: string[], currentYear: an
   if (showField.includes('fromDate')) {
     shape.fromDate = Yup.mixed()
       .test(
-        'is-valid-dayjs',
-        'From Date is required',
-        (value) => value && dayjs(value as Dayjs).isValid()
-      )
-      .test(
         'min-date',
         (value) =>
           `From Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+        (value) => {
+          if (value === null || value === undefined) return true; // allow empty
+          return dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day');
+        }
       )
       .test(
         'max-date',
         (value) =>
           `From Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+        (value) => {
+          if (value === null || value === undefined) return true; // allow empty
+          return dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day');
+        }
       )
-      .required('From Date is required');
+      .nullable()
+      .optional();
   }
 
   // To Date
   if (showField.includes('toDate')) {
     shape.toDate = Yup.mixed()
-      .test(
-        'is-valid-dayjs',
-        'To Date is required',
-        (value) => value && dayjs(value as Dayjs).isValid()
-      )
+      // To Date must be >= From Date
+      // eslint-disable-next-line func-names
       .test('is-after-start', 'To Date cannot be before From Date', function (value) {
         const { fromDate } = this.parent;
-        if (!value || !fromDate) return true;
+
+        // allow empty value or empty fromDate
+        if (value === null || value === undefined) return true;
+        if (!fromDate) return true;
+
         return dayjs(value as Dayjs).isSameOrAfter(dayjs(fromDate), 'day');
       })
+      // Academic year MIN date check
       .test(
         'min-date',
         (value) =>
           `To Date must be on or after ${dayjs(currentYear.startDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day')
+        (value) => {
+          if (value === null || value === undefined) return true; // allow empty
+          return dayjs(value as Dayjs).isSameOrAfter(dayjs(currentYear.startDate), 'day');
+        }
       )
+      // Academic year MAX date check
       .test(
         'max-date',
         (value) =>
           `To Date must be on or before ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`,
-        (value) => value && dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day')
+        (value) => {
+          if (value === null || value === undefined) return true; // allow empty
+          return dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day');
+        }
       )
-      .required('To Date is required');
+
+      .nullable()
+      .optional();
   }
+
   return Yup.object().shape(shape);
 };

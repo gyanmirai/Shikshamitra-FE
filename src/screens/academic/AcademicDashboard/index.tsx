@@ -11,8 +11,9 @@ import CustomSelect from 'src/components/custom-select';
 import SummaryCards from './Components/SummaryCards';
 import { PerformersList } from './Components/Performers';
 import SubjectPassFailChart from './Components/SubjectPassFailChart';
-import ChapterCompletionChart from './Components/ChapterCompletionChart';
+import SubjectDifficultyHeatmap from './Components/SubjectDifficultyHeatmap';
 import DivisionPerformanceChart from './Components/DivisionPerformanceChart';
+import ChapterCompletionTrendChart from './Components/ChapterCompletionTrendChart';
 import PlannedVsActualProgressChart from './Components/PlannedVsActualProgressChart';
 
 const AcademicDashboardScreen = () => {
@@ -118,7 +119,11 @@ const AcademicDashboardScreen = () => {
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
-          <ChapterCompletionChart />
+          <SubjectDifficultyHeatmap />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <ChapterCompletionTrendChart />
         </Grid>
 
         {/* <Grid size={{ xs: 12, md: 6 }}>

@@ -6,15 +6,13 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import { Box, Grid } from '@mui/material';
 import React, { useState, useEffect } from 'react';
-import CustomSelect from 'src/components/custom-select';
 
 import SummaryCards from '../AcademicDashboard/Components/SummaryCards';
 import { PerformersList } from '../AcademicDashboard/Components/Performers';
+import AcademicDashboardExams from '../dashboard/components/AcademicDashboardExams';
 import SubjectPassFailChart from '../AcademicDashboard/Components/SubjectPassFailChart';
 import ChapterCompletionChart from '../AcademicDashboard/Components/ChapterCompletionChart';
-import AcademicDashboardTimetable from '../dashboard/components/AcademicDashboardTimetable';
-import DivisionPerformanceChart from '../AcademicDashboard/Components/DivisionPerformanceChart';
-import PlannedVsActualProgressChart from '../AcademicDashboard/Components/PlannedVsActualProgressChart';
+import TeacherPerformanceComparisonChart from '../AcademicDashboard/Components/TeacherPerformanceComparisonChart';
 
 const AcademicPrincipalDashboardScreen = () => {
   // State to store all classes/standards for the selected organization
@@ -91,30 +89,6 @@ const AcademicPrincipalDashboardScreen = () => {
     <Box>
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid size={{ xs: 12 }}>
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <CustomSelect
-              options={allClass}
-              label="Class"
-              value={classes}
-              onChange={(val) => setClasses(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            />
-            <CustomSelect
-              options={allDivision}
-              label="Division"
-              value={division}
-              onChange={(val) => setDivision(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!classes}
-            />
-          </Box>
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
           <SummaryCards />
         </Grid>
 
@@ -137,21 +111,20 @@ const AcademicPrincipalDashboardScreen = () => {
         <Grid size={{ xs: 12, md: 6 }}>
           <SubjectPassFailChart />
         </Grid>
-        <Grid size={{ xs: 12 }}>
-          <AcademicDashboardTimetable />
-        </Grid>
-
         <Grid size={{ xs: 12, md: 6 }}>
-          <DivisionPerformanceChart />
+          <TeacherPerformanceComparisonChart />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <AcademicDashboardExams />
         </Grid>
 
         {/* <Grid size={{ xs: 12, md: 6 }}>
           <TeacherWorkloadHeatmap />
         </Grid> */}
 
-        <Grid size={{ xs: 12, md: 6 }}>
+        {/* <Grid size={{ xs: 12, md: 6 }}>
           <PlannedVsActualProgressChart />
-        </Grid>
+        </Grid> */}
 
         <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 2 }}>
           <PerformersList
