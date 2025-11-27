@@ -4,5 +4,7 @@ export interface TDashboardCardProps {
   icon: string;
   href?: string;
   color?: string;
+  bgColor?: string;
+  labels?: { name: string; color: string }[];
   description?: string;
 }
