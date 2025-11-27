@@ -1,34 +1,27 @@
 'use client';
 
-import React from 'react';
 import { Box, Grid } from '@mui/material';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs/custom-breadcrumbs';
-import { EcommerceYearlySales } from 'src/sections/overview/e-commerce/ecommerce-yearly-sales';
-import { BankingBalanceStatistics } from 'src/sections/overview/banking/banking-balance-statistics';
 
-import FinanceFeeTrackingComponent from '../fee-management/Tabs/finance-fee-structure-overview/component/finance-fee-tracking';
+import FinanceRecentExpenses from './Components/FinanceRecentExpenses';
+import FinanceCategoryExpense from './Components/FinanceCategoryExpense';
+import FinanceCollectionMethod from './Components/FinanceCollectionMethod';
+import FinanceDashboardOverview from './Components/FinanceDashboardOverview';
+import FinanceIncomeExpenseTrend from './Components/FinanceIncomeExpenseTrend';
+import FinanceOutstandingByClass from './Components/FinanceOutstandingByClass';
+import FinanceMonthlyFeesCollectionTrend from './Components/FinanceMonthlyFeesCollectionTrend';
 
 const FinanceDashboardScreen = () => (
-  // const [selectedSeries, setSelectedSeries] = useState<any>('Income');
-  <Box sx={{ p: 3 }}>
-    {/* Top Section: Key Metrics */}
-    <CustomBreadcrumbs
-      heading="Dashboard"
-      links={[{ name: 'Finance' }, { name: 'Dashboard' }]}
-      sx={{ mb: 2 }}
-      description="Easily manage and analyze key financial metrics like collections, refunds, and expense breakdowns."
-    />
-    <FinanceFeeTrackingComponent />
+  <Box>
+    <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid size={{ xs: 12 }}>
+        <FinanceDashboardOverview />
+      </Grid>
 
-    {/* Middle Section: Charts */}
-    <Grid container spacing={2} sx={{ pt: 5 }}>
-      <Grid size={{ xs: 12, md: 12 }}>
-        <EcommerceYearlySales
-          id=""
-          title="Income vs. Expense"
-          subheader="(+43%) than last year"
+      <Grid size={{ xs: 12, md: 8 }}>
+        <FinanceIncomeExpenseTrend
+          title="Income vs Expense Trend"
           chart={{
-            categories: [
+            labels: [
               'Jan',
               'Feb',
               'Mar',
@@ -44,99 +37,159 @@ const FinanceDashboardScreen = () => (
             ],
             series: [
               {
-                name: '2022',
+                name: 'Income',
+                type: 'bar',
+                fill: 'solid',
                 data: [
-                  {
-                    name: 'Total income',
-                    data: [10, 41, 35, 51, 49, 62, 69, 91, 148, 35, 51, 49],
-                  },
-                  {
-                    name: 'Total expenses',
-                    data: [10, 34, 13, 56, 77, 88, 99, 77, 45, 13, 56, 77],
-                  },
+                  180000, 150000, 200000, 220000, 175000, 210000, 240000, 195000, 260000, 230000,
+                  225000, 250000,
                 ],
               },
               {
-                name: '2023',
+                name: 'Expense',
+                type: 'area',
+                fill: 'solid',
+                color: '#cfcfcf7d',
                 data: [
-                  {
-                    name: 'Total income',
-                    data: [51, 35, 41, 10, 91, 69, 62, 148, 91, 69, 62, 49],
-                  },
-                  {
-                    name: 'Total expenses',
-                    data: [56, 13, 34, 10, 77, 99, 88, 45, 77, 99, 88, 77],
-                  },
+                  120000, 110000, 130000, 150000, 90000, 125000, 140000, 115000, 160000, 135000,
+                  128000, 150000,
                 ],
               },
             ],
           }}
         />
       </Grid>
-    </Grid>
 
-    <Grid container spacing={2} sx={{ pt: '20px' }}>
+      <Grid size={{ xs: 12, md: 4 }}>
+        <FinanceCollectionMethod
+          title="Collection Method"
+          chart={{
+            series: [
+              { label: 'Online', value: 4344 },
+              { label: 'Cash', value: 5435 },
+              { label: 'Cheque', value: 1443 },
+            ],
+          }}
+        />
+      </Grid>
+
       <Grid size={{ xs: 12, md: 6 }}>
-        <BankingBalanceStatistics
-          title="Expense statistics"
+        <FinanceOutstandingByClass
+          title="Outstanding Fees by Class"
           chart={{
+            labels: [
+              'Class 1',
+              'Class 2',
+              'Class 3',
+              'Class 4',
+              'Class 5',
+              'Class 6',
+              'Class 7',
+              'Class 8',
+              'Class 9',
+              'Class 10',
+              'Class 11',
+              'Class 12',
+            ],
             series: [
               {
-                name: 'Weekly',
-                categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-                data: [
-                  { name: 'Salaries', data: [24, 41, 35, 151, 49] },
-                  { name: 'Maintenance', data: [24, 56, 77, 88, 99] },
-                ],
-              },
-              {
-                name: 'Monthly',
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-                data: [
-                  { name: 'Salaries', data: [83, 112, 119, 88, 103, 112, 114, 108, 93] },
-                  { name: 'Maintenance', data: [46, 46, 43, 58, 40, 59, 54, 42, 51] },
-                ],
-              },
-              {
-                name: 'Yearly',
-                categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
-                data: [
-                  { name: 'Salaries', data: [76, 42, 29, 41, 27, 96] },
-                  { name: 'Maintenance', data: [46, 44, 24, 43, 44, 43] },
-                ],
+                name: 'Outstanding Amount',
+                data: Array.from({ length: 12 }, () => Math.floor(Math.random() * 50000) + 10000),
               },
             ],
           }}
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 6 }} px={1}>
-        <BankingBalanceStatistics
-          title="Income statistics"
+      <Grid size={{ xs: 12, md: 6 }}>
+        <FinanceCategoryExpense
+          title="Expense Categories"
           chart={{
+            labels: ['Salaries', 'Maintenance', 'Utilities', 'Events', 'Others'],
             series: [
               {
-                name: 'Weekly',
-                categories: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-                data: [
-                  { name: 'Fee', data: [24, 41, 35, 151, 49] },
-                  { name: 'Donation', data: [24, 56, 77, 88, 99] },
-                ],
+                name: 'Expenses',
+                data: [120000, 50000, 30000, 20000, 10000],
               },
+            ],
+          }}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }} mb={2}>
+        <FinanceRecentExpenses
+          title="Recent Expenses"
+          list={[
+            {
+              id: '1',
+              category: 'Office Supplies',
+              amount: 1200,
+              addedBy: 'John Doe',
+              date: '2 hours ago',
+              avatarUrl: '/static/images/avatars/avatar_1.png',
+            },
+            {
+              id: '2',
+              category: 'Maintenance',
+              amount: 4500,
+              addedBy: 'Jane Smith',
+              date: '4 hours ago',
+              avatarUrl: '/static/images/avatars/avatar_2.png',
+            },
+            {
+              id: '3',
+              category: 'Electricity Bill',
+              amount: 15000,
+              addedBy: 'Admin',
+              date: '1 day ago',
+              avatarUrl: '/static/images/avatars/avatar_3.png',
+            },
+            {
+              id: '4',
+              category: 'Water Bill',
+              amount: 2000,
+              addedBy: 'Admin',
+              date: '1 day ago',
+              avatarUrl: '/static/images/avatars/avatar_4.png',
+            },
+            {
+              id: '5',
+              category: 'Internet',
+              amount: 3000,
+              addedBy: 'Admin',
+              date: '2 days ago',
+              avatarUrl: '/static/images/avatars/avatar_5.png',
+            },
+          ]}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }} mb={2}>
+        <FinanceMonthlyFeesCollectionTrend
+          title="Monthly Fees Collection Trend"
+          chart={{
+            labels: [
+              'Jan',
+              'Feb',
+              'Mar',
+              'Apr',
+              'May',
+              'Jun',
+              'Jul',
+              'Aug',
+              'Sep',
+              'Oct',
+              'Nov',
+              'Dec',
+            ],
+            series: [
               {
-                name: 'Monthly',
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+                name: 'Total Collection',
+                type: 'column',
+                fill: 'solid',
                 data: [
-                  { name: 'Fee', data: [83, 112, 119, 88, 103, 112, 114, 108, 93] },
-                  { name: 'Donation', data: [46, 46, 43, 58, 40, 59, 54, 42, 51] },
-                ],
-              },
-              {
-                name: 'Yearly',
-                categories: ['2018', '2019', '2020', '2021', '2022', '2023'],
-                data: [
-                  { name: 'Fee', data: [76, 42, 29, 41, 27, 96] },
-                  { name: 'Donation', data: [46, 44, 24, 43, 44, 43] },
+                  115000, 55000, 110000, 135000, 65000, 110000, 185000, 105000, 220000, 110000,
+                  150000, 225000,
                 ],
               },
             ],
@@ -146,4 +199,5 @@ const FinanceDashboardScreen = () => (
     </Grid>
   </Box>
 );
+
 export default FinanceDashboardScreen;
