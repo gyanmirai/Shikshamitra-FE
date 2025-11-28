@@ -962,7 +962,7 @@ const academicModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+E+R',
             },
             {
-              title: 'Settigs',
+              title: 'Settings',
               path: '',
               _action: 'examination-settings',
               shortcutKey: 'Alt+E+1+6',

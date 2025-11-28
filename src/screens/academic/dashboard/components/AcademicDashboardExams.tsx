@@ -11,7 +11,7 @@ import {
 } from 'src/enums/schedule-exam-status';
 
 const AcademicDashboardExams = () => (
-  <Card sx={{ p: 3, height: '100%', borderRadius: 3 }}>
+  <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
     <Typography variant="h6">Next 5 Exams</Typography>
     <CustomizableTable
       tableId="nextExams"
