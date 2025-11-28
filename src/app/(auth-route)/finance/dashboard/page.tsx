@@ -1,6 +1,6 @@
 import React from 'react';
-import FinancePrincipalDashboard from 'src/screens/finance/FinancePrincipalDashboard';
+import FinanceDashboardScreen from 'src/screens/finance/dashboard';
 
-const FinanceDashboard = () => <FinancePrincipalDashboard />;
+const FinanceDashboard = () => <FinanceDashboardScreen />;
 
 export default FinanceDashboard;
