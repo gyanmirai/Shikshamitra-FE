@@ -21,13 +21,13 @@ import type { IFeeData, IFeeTableProps } from './type';
 const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   data,
   onAddFee,
-  setOpenDialog,
-  setEditData,
+  selectedBoard,
+  setSelectedBoard,
+  selectedMedium,
+  setSelectedMedium,
   onCollectFee,
   onView,
 }) => {
-  const [selectedBoard, setSelectedBoard] = useState('');
-  const [selectedMedium, setSelectedMedium] = useState('');
   const [boards, setBoards] = useState([]);
   const [mediums, setMediums] = useState<Medium[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -43,6 +43,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     <MenuList>
       <MenuItem
         onClick={() => {
+          console.log('row in table compo---', row);
           onCollectFee(row as IFeeData);
         }}
       >
@@ -81,28 +82,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
       {selectedMedium && (
         <CustomizableTable
           tableId="fee-collection-table"
-          noDataText={
-            <>
-              Fee Data Not Found{' '}
-              <Box
-                onClick={() => {
-                  onAddFee.onTrue();
-                  setOpenDialog(true);
-                  setEditData(null);
-                }}
-                color="primary.main"
-                fontWeight={600}
-                sx={{
-                  '&:hover': {
-                    cursor: 'pointer',
-                    textDecoration: 'underline',
-                  },
-                }}
-              >
-                Add Fee Record
-              </Box>
-            </>
-          }
+          noDataText={<>Fee Collection Data Not Found </>}
           columns={[
             {
               id: 'name',
@@ -200,7 +180,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               isSort: false,
               sticky: true,
               isFilter: false,
-              render(row) {
+              render(value, row) {
                 return (
                   <ThreeDotsActions
                     actions={(props) => actions({ ...props, row })}

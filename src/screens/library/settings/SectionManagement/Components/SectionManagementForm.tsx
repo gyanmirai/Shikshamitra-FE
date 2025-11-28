@@ -26,10 +26,11 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
     },
     validationSchema: sectionManagementValidationSchema,
     onSubmit: (values) => {
-      // const payload = {
-      //   ...values,
-      //   shelfNames,
-      // };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const payload = {
+        ...values,
+        shelfNames,
+      };
       if (editData) {
         shikshaMitraToast.success({
           message: `${values.sectionName} Section updated successfully`,

@@ -1,3 +1,4 @@
+import { Editor } from 'src/components/editor';
 import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
@@ -5,8 +6,6 @@ import CancelButton from 'src/components/cancel-button';
 import SubmitButton from 'src/components/submit-button';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Switch, Typography, DialogActions, FormControlLabel } from '@mui/material';
-
-import CustomPlaceholderInput from './textfiledForMessageWithPlaceholder';
 
 import type {
   IRecipient,
@@ -51,7 +50,16 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
   return (
     <BackPopUpChecked initialValues={data} currentValues={notification}>
       <Box display="flex" flexDirection="column" height="100%">
-        <Scrollbar sx={{ p: 2, flex: 1 }}>
+        <Scrollbar
+          sx={{
+            p: 2,
+            flex: 1,
+            '& .simplebar-wrapper': {
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          }}
+        >
           <Box display="flex" gap={2} alignItems="center" justifyContent="space-between">
             <Box display="flex" flexDirection="column" mt={1}>
               <Typography variant="body2" color="text.secondary">
@@ -112,13 +120,19 @@ const EditNotificationDialog: React.FC<IEditNotificationDialogProps> = ({
                   />
                 </Box>
 
-                <CustomPlaceholderInput
-                  isFromView={isFromView ?? false}
-                  value={recipient.message}
-                  onChange={(newValue: string) =>
-                    updateRecipient(recipient.name, 'message', newValue)
+                <Editor
+                  mentionable
+                  mentionItems={
+                    recipient.placeHolderOptions?.map((item: any) => ({
+                      id: item.value,
+                      label: item.label,
+                    })) ?? []
                   }
-                  placeholderOptions={recipient.placeHolderOptions ?? []}
+                  value={recipient.message}
+                  onChange={(value) => updateRecipient(recipient.name, 'message', value)}
+                  placeholder="Message"
+                  editable={!isFromView}
+                  error={false}
                 />
               </Grid>
             ))}

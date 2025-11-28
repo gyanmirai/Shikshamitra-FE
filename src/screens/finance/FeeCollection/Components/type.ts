@@ -19,10 +19,11 @@ export interface IFeeData {
 export interface IFeeTableProps {
   data: IFeeData[];
   onAddFee: UseBooleanReturn;
-  setOpenDialog: (open: boolean) => void;
-  setEditData: (data: IFeeData | null) => void;
+  selectedBoard: string;
+  setSelectedBoard: (value: string) => void;
+  selectedMedium: string;
+  setSelectedMedium: (value: string) => void;
   onDelete: (row: IFeeData) => void;
-  onEdit: (row: IFeeData) => void;
   onCollectFee: (row: IFeeData) => void;
   onView: (row: IFeeData) => void;
 }
