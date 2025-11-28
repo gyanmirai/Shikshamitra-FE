@@ -1,26 +1,23 @@
-'use client';
-
-import type { JSX } from 'react';
 import type { ICardItem } from 'src/screens/student/enrollment/entrollment-interface';
 
 import { useState } from 'react';
+import { Grid } from '@mui/material';
 import { fNumber } from 'src/utils/format-number';
-import CustomizableView from 'src/components/customizable-view';
-import { StudentEnrollmentCard } from 'src/screens/student/enrollment/dashboard/overview';
+import { DashboardCard } from 'src/components/dashboard-card';
 
 const ClassManagementDashboardOverview = () => {
   // Define the initial state for the cards
-  const [cards, setCards] = useState<ICardItem[]>([
+  const [cards] = useState<ICardItem[]>([
     {
       id: 'elective-assigned',
       icon: 'material-symbols:menu-book-outline', // book icon, use the closest matching
       title: 'Elective Assigned',
       count: `${fNumber(420)}/${fNumber(500)}`,
       color: 'success.main',
-      bgColor: 'success',
+      bgColor: 'success.lighter',
       href: '',
       labels: [],
-      width: 4,
+      width: 3,
     },
     {
       id: 'chapter-completed',
@@ -28,10 +25,10 @@ const ClassManagementDashboardOverview = () => {
       title: 'Chapter Completed',
       count: fNumber(20),
       color: 'info.main',
-      bgColor: 'info',
+      bgColor: 'info.lighter',
       href: '',
       labels: [],
-      width: 4,
+      width: 3,
     },
     {
       id: 'teachers-assigned',
@@ -39,34 +36,40 @@ const ClassManagementDashboardOverview = () => {
       title: 'Class Teachers Assigned',
       count: `${fNumber(28)}/${fNumber(30)}`,
       color: 'secondary.main', // use a theme color similar to purple
-      bgColor: 'secondary',
+      bgColor: 'secondary.lighter',
       href: '',
       labels: [],
-      width: 4,
+      width: 3,
+    },
+    {
+      id: 'pending-tasks',
+      icon: 'material-symbols:pending-actions',
+      title: 'Pending Tasks',
+      count: fNumber(15),
+      color: 'warning.main',
+      bgColor: 'warning.lighter',
+      href: '',
+      labels: [],
+      width: 3,
     },
   ]);
 
-  const dashBoardSections = cards.reduce((acc: { [key: string]: JSX.Element }, card, index) => {
-    acc[card.id] = (
-      <StudentEnrollmentCard
-        icon={card.icon}
-        title={card.title}
-        count={card.count}
-        color={card.color}
-        bgColor={card.bgColor}
-        href={card.href}
-        labels={card.labels}
-      />
-    );
-    return acc;
-  }, {});
-
   return (
-    <CustomizableView
-      sections={cards}
-      setSections={setCards}
-      dashBoardSections={dashBoardSections}
-    />
+    <Grid container spacing={3}>
+      {cards.map((card) => (
+        <Grid size={{ xs: 12, md: 4 }} key={card.id}>
+          <DashboardCard
+            icon={card.icon}
+            title={card.title}
+            value={card.count}
+            color={card.color}
+            bgColor={card.bgColor}
+            href={card.href}
+            labels={card.labels}
+          />
+        </Grid>
+      ))}
+    </Grid>
   );
 };
 

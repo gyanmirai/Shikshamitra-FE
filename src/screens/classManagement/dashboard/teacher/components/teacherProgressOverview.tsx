@@ -1,26 +1,27 @@
+'use client';
+
 import React from 'react';
 import { Box, Card, Stack, Typography, LinearProgress } from '@mui/material';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 
-const chapterProgress = [
-  { subject: 'Mathematics', updatedOn: '20-06-2025', completed: 12, total: 15, color: '#1976d2' },
-  { subject: 'Physics', updatedOn: '18-06-2025', completed: 8, total: 15, color: '#2e7d32' },
-  { subject: 'Chemistry', updatedOn: '18-06-2025', completed: 8, total: 15, color: '#d32f2f' },
+const subjectProgress = [
+  { subject: 'Mathematics', completed: 9, total: 12, color: '#1976d2' },
+  { subject: 'Science', completed: 6, total: 14, color: '#2e7d32' },
+  { subject: 'English', completed: 10, total: 10, color: '#ed6c02' },
 ];
 
-const ClassManagementSubjectProgress = () => (
+const TeacherProgressOverview = () => (
   <Card sx={{ p: 3, borderRadius: 3, height: '100%' }}>
     <Typography variant="h6" mb={3}>
-      Chapter Progress Overview
+      Progress Overview
     </Typography>
     <Stack spacing={1.5}>
-      {chapterProgress.map((item, index) => (
-        <SubjectProgressChart
+      {subjectProgress.map((item, index) => (
+        <SubjectProgressItem
           key={index}
           subject={item.subject}
-          updatedDate={item.updatedOn}
-          completedChapters={item.completed}
-          totalChapters={item.total}
+          completed={item.completed}
+          total={item.total}
           color={item.color}
         />
       ))}
@@ -28,24 +29,22 @@ const ClassManagementSubjectProgress = () => (
   </Card>
 );
 
-export default ClassManagementSubjectProgress;
+export default TeacherProgressOverview;
 
-interface SubjectProgressChartProps {
+interface SubjectProgressItemProps {
   subject: string;
-  updatedDate: string;
-  completedChapters: number;
-  totalChapters: number;
+  completed: number;
+  total: number;
   color: string;
 }
 
-const SubjectProgressChart: React.FC<SubjectProgressChartProps> = ({
+const SubjectProgressItem: React.FC<SubjectProgressItemProps> = ({
   subject,
-  updatedDate,
-  completedChapters,
-  totalChapters,
+  completed,
+  total,
   color,
 }) => {
-  const percentage = Math.round((completedChapters / totalChapters) * 100);
+  const percentage = Math.round((completed / total) * 100);
 
   return (
     <Card
@@ -67,12 +66,9 @@ const SubjectProgressChart: React.FC<SubjectProgressChartProps> = ({
           </Typography>
           <Box flexGrow={1} />
           <Typography variant="subtitle2">
-            {completedChapters}/{totalChapters}
+            {completed}/{total} ({percentage}%)
           </Typography>
         </Stack>
-        <Typography variant="caption" color="text.secondary">
-          Updated: {updatedDate}
-        </Typography>
         <LinearProgress
           variant="determinate"
           value={percentage}

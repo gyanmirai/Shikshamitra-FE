@@ -3,11 +3,11 @@
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { CalendarView } from 'src/sections/calendar/view';
+import { DashboardCard } from 'src/components/dashboard-card';
 import { Box, Grid, Card, Typography, CardContent } from '@mui/material';
 import { AppCurrentDownload } from 'src/sections/overview/app/app-current-download';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 
-import { CommunicationDashboardCard } from '../components/DashboardCard';
 import { CommunicationTrendChart } from '../components/CommunicationTrendChart';
 
 // Placeholder data for charts
@@ -43,7 +43,7 @@ const PrincipalDashboard = () => {
       {/* Summary Cards */}
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 4 }}>
-          <CommunicationDashboardCard
+          <DashboardCard
             title="Total Announcements"
             value="35"
             icon="mdi:bullhorn"
@@ -56,7 +56,7 @@ const PrincipalDashboard = () => {
           />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <CommunicationDashboardCard
+          <DashboardCard
             title="Communications Today"
             value="150"
             icon="mdi:message-processing"
@@ -69,7 +69,7 @@ const PrincipalDashboard = () => {
           />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
-          <CommunicationDashboardCard
+          <DashboardCard
             title="Audience Reach %"
             value="88%"
             icon="mdi:account-group"

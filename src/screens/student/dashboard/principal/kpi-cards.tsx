@@ -1,8 +1,7 @@
 import React from 'react';
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+import { Grid } from '@mui/material';
 import { fNumber } from 'src/utils/format-number';
-import { Box, Grid, Card, Avatar, Typography } from '@mui/material';
+import { DashboardCard } from 'src/components/dashboard-card';
 
 const kpiData = [
   {
@@ -10,8 +9,8 @@ const kpiData = [
     title: 'Total Students',
     value: fNumber(2018),
     labels: [
-      { name: `Male ${fNumber(1018)}`, color: 'success' },
-      { name: `Female ${fNumber(1000)}`, color: 'warning' },
+      { name: `Male ${fNumber(1018)}`, color: 'success' as const },
+      { name: `Female ${fNumber(1000)}`, color: 'warning' as const },
     ],
     icon: 'mdi:school-outline',
     color: 'primary.main',
@@ -21,7 +20,7 @@ const kpiData = [
     id: 'PR_ATTENDANCE_OVERVIEW',
     title: 'Avg Attendance',
     value: '92%',
-    labels: [{ name: 'School-wide', color: 'success' }],
+    labels: [{ name: 'School-wide', color: 'success' as const }],
     icon: 'mdi:calendar-check-outline',
     color: 'success.main',
     bgColor: 'success.lighter',
@@ -30,7 +29,7 @@ const kpiData = [
     id: 'PR_ENROLL_YEARLY',
     title: 'New Admissions',
     value: fNumber(450),
-    labels: [{ name: 'This Year', color: 'primary' }],
+    labels: [{ name: 'This Year', color: 'primary' as const }],
     icon: 'mdi:account-school-outline',
     color: 'info.main',
     bgColor: 'info.lighter',
@@ -39,7 +38,7 @@ const kpiData = [
     id: 'PR_EXAM_PERFORMANCE',
     title: 'Exam Performance',
     value: '88%',
-    labels: [{ name: 'Pass Rate', color: 'success' }],
+    labels: [{ name: 'Pass Rate', color: 'success' as const }],
     icon: 'mdi:trophy-outline',
     color: 'success.main',
     bgColor: 'success.lighter',
@@ -49,8 +48,8 @@ const kpiData = [
     title: 'RTE Students',
     value: fNumber(200),
     labels: [
-      { name: `Male ${fNumber(120)}`, color: 'success' },
-      { name: `Female ${fNumber(80)}`, color: 'warning' },
+      { name: `Male ${fNumber(120)}`, color: 'success' as const },
+      { name: `Female ${fNumber(80)}`, color: 'warning' as const },
     ],
     icon: 'mdi:account-check-outline',
     color: 'secondary.main',
@@ -62,45 +61,14 @@ const PrincipalKPICards = () => (
   <Grid container spacing={3}>
     {kpiData.map((kpi) => (
       <Grid size={{ xs: 12, sm: 6, md: 4 }} key={kpi.id}>
-        <Card
-          sx={{
-            p: 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: 2,
-          }}
-        >
-          <Box>
-            <Typography
-              variant="subtitle2"
-              sx={{ color: 'text.secondary', mb: 1, fontWeight: 'bold' }}
-            >
-              {kpi.title}
-            </Typography>
-            <Typography variant="h3" sx={{ mb: 1, fontWeight: 'bold' }}>
-              {kpi.value}
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {kpi.labels.map((label, index) => (
-                <Label key={index} color={label.color as any}>
-                  {label.name}
-                </Label>
-              ))}
-            </Box>
-          </Box>
-
-          <Avatar
-            sx={{
-              width: 56,
-              height: 56,
-              bgcolor: kpi.bgColor,
-              color: kpi.color,
-            }}
-          >
-            <Iconify icon={kpi.icon} width={32} />
-          </Avatar>
-        </Card>
+        <DashboardCard
+          title={kpi.title}
+          value={kpi.value}
+          icon={kpi.icon}
+          color={kpi.color}
+          bgColor={kpi.bgColor}
+          labels={kpi.labels}
+        />
       </Grid>
     ))}
   </Grid>
