@@ -5,7 +5,6 @@ import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
 
 import AdminDashboard from './admin';
-import LibrarianDashboard from './librarian';
 import PrincipalDashboard from './principal';
 
 const LibraryDashboard = () => {
@@ -14,11 +13,10 @@ const LibraryDashboard = () => {
 
   return (
     <Box>
-      {role === 'Librarian' && <LibrarianDashboard />}
-      {role === 'Admin' && <AdminDashboard />}
+      {(role === 'Librarian' || role === 'Admin') && <AdminDashboard />}
       {role === 'Principal' && <PrincipalDashboard />}
       {/* Fallback to Principal dashboard if role not recognized */}
-      {!['Librarian', 'Admin', 'Principal'].includes(role) && <LibrarianDashboard />}
+      {!['Librarian', 'Admin', 'Principal'].includes(role) && <AdminDashboard />}
     </Box>
   );
 };

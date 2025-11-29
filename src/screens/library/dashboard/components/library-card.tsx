@@ -53,7 +53,7 @@ export const LibraryCard = ({
           {value}
         </Typography>
         {labels.length > 0 && (
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             {labels.map((label, index) => (
               <Label key={index} color={label.color}>
                 {label.name}

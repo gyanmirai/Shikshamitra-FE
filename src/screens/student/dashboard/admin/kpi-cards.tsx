@@ -1,17 +1,16 @@
 import React from 'react';
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+import { Grid } from '@mui/material';
 import { fNumber } from 'src/utils/format-number';
-import { Box, Grid, Card, Avatar, Typography } from '@mui/material';
+import { DashboardCard } from 'src/components/dashboard-card';
 
 const kpiData = [
   {
     id: 'ENQ_TOTAL',
     title: 'Total Inquiries',
-    value: '2,220',
+    value: '100',
     labels: [
-      { name: `Male ${fNumber(1200)}`, color: 'success' },
-      { name: `Female ${fNumber(1020)}`, color: 'warning' },
+      { name: `Male ${fNumber(50)}`, color: 'success' as const },
+      { name: `Female ${fNumber(50)}`, color: 'warning' as const },
     ],
     icon: 'mdi:clipboard-text-outline',
     color: 'success.main',
@@ -20,10 +19,10 @@ const kpiData = [
   {
     id: 'REG_TOTAL',
     title: 'Total Registration',
-    value: '2,078',
+    value: '100',
     labels: [
-      { name: `Male ${fNumber(1129)}`, color: 'success' },
-      { name: `Female ${fNumber(949)}`, color: 'warning' },
+      { name: `Male ${fNumber(50)}`, color: 'success' as const },
+      { name: `Female ${fNumber(50)}`, color: 'warning' as const },
     ],
     icon: 'mdi:account-plus-outline',
     color: 'info.main',
@@ -32,10 +31,10 @@ const kpiData = [
   {
     id: 'ADM_TOTAL',
     title: 'Total Admission',
-    value: '2,045',
+    value: '100',
     labels: [
-      { name: `Male ${fNumber(1020)}`, color: 'success' },
-      { name: `Female ${fNumber(1025)}`, color: 'warning' },
+      { name: `Male ${fNumber(50)}`, color: 'success' as const },
+      { name: `Female ${fNumber(50)}`, color: 'warning' as const },
     ],
     icon: 'mdi:file-document-edit-outline',
     color: 'warning.main',
@@ -44,10 +43,10 @@ const kpiData = [
   {
     id: 'STU_TOTAL',
     title: 'Total Students',
-    value: '2,018',
+    value: '100',
     labels: [
-      { name: `Male ${fNumber(1018)}`, color: 'success' },
-      { name: `Female ${fNumber(1018)}`, color: 'warning' },
+      { name: `Male ${fNumber(50)}`, color: 'success' as const },
+      { name: `Female ${fNumber(50)}`, color: 'warning' as const },
     ],
     icon: 'mdi:school-outline',
     color: 'primary.main',
@@ -56,10 +55,10 @@ const kpiData = [
   {
     id: 'STU_LEFT',
     title: 'Students Left',
-    value: '150',
+    value: '100',
     labels: [
-      { name: `Transferred ${fNumber(100)}`, color: 'warning' },
-      { name: `Dropped Out ${fNumber(50)}`, color: 'error' },
+      { name: `Transferred ${fNumber(50)}`, color: 'warning' as const },
+      { name: `Dropped Out ${fNumber(50)}`, color: 'error' as const },
     ],
     icon: 'mdi:account-minus-outline',
     color: 'error.main',
@@ -68,10 +67,10 @@ const kpiData = [
   {
     id: 'RTE_STUDENTS',
     title: 'RTE Students',
-    value: '200',
+    value: '100',
     labels: [
-      { name: `Male ${fNumber(180)}`, color: 'success' },
-      { name: `Female ${fNumber(20)}`, color: 'error' },
+      { name: `Male ${fNumber(50)}`, color: 'success' as const },
+      { name: `Female ${fNumber(50)}`, color: 'error' as const },
     ],
     icon: 'mdi:account-check-outline',
     color: 'info.dark',
@@ -83,45 +82,14 @@ const AdminKPICards = () => (
   <Grid container spacing={3}>
     {kpiData.map((kpi) => (
       <Grid size={{ xs: 12, sm: 6, md: 4 }} key={kpi.id}>
-        <Card
-          sx={{
-            p: 3,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxShadow: 2,
-          }}
-        >
-          <Box>
-            <Typography
-              variant="subtitle2"
-              sx={{ color: 'text.secondary', mb: 1, fontWeight: 'bold' }}
-            >
-              {kpi.title}
-            </Typography>
-            <Typography variant="h3" sx={{ mb: 1, fontWeight: 'bold' }}>
-              {kpi.value}
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {kpi.labels.map((label, index) => (
-                <Label key={index} color={label.color as any}>
-                  {label.name}
-                </Label>
-              ))}
-            </Box>
-          </Box>
-
-          <Avatar
-            sx={{
-              width: 56,
-              height: 56,
-              bgcolor: kpi.bgColor,
-              color: kpi.color,
-            }}
-          >
-            <Iconify icon={kpi.icon} width={32} />
-          </Avatar>
-        </Card>
+        <DashboardCard
+          title={kpi.title}
+          value={kpi.value}
+          icon={kpi.icon}
+          color={kpi.color}
+          bgColor={kpi.bgColor}
+          labels={kpi.labels}
+        />
       </Grid>
     ))}
   </Grid>

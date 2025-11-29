@@ -9,10 +9,10 @@ import CustomSelect from 'src/components/custom-select';
 import { Box, Card, Stack, Typography } from '@mui/material';
 
 const classTeacherData = [
-  { className: '9A', teacher: 'Smit Patel', assigned: true },
-  { className: '9B', teacher: 'No Teacher Assigned', assigned: false },
-  { className: '10A', teacher: 'Devanshi Shah', assigned: true },
-  { className: '10B', teacher: 'No Teacher Assigned', assigned: false },
+  { className: '1-A', teacher: 'Smit Patel', assigned: true },
+  { className: '1-B', teacher: 'No Teacher Assigned', assigned: false },
+  { className: '1-C', teacher: 'Devanshi Shah', assigned: true },
+  { className: '1-D', teacher: 'No Teacher Assigned', assigned: false },
 ];
 
 const ClassTeacherAssignment = () => {
@@ -29,7 +29,7 @@ const ClassTeacherAssignment = () => {
   }, [medium]);
 
   return (
-    <Card sx={{ p: 3, borderRadius: 3 }}>
+    <Card sx={{ p: 3, borderRadius: 3, height: '100%' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6">Class Teacher Assignment</Typography>
         <CustomSelect
@@ -88,7 +88,7 @@ const TeacherCard = ({
       </Typography>
     </Box>
     <Box display="flex" justifyContent="flex-end">
-      <Label color={assigned ? 'success' : 'error'}>{assigned ? 'Assigned' : 'Unassigned'}</Label>
+      <Label color={assigned ? 'success' : 'error'}>{assigned ? 'Assigned' : 'Not Assigned'}</Label>
     </Box>
   </Card>
 );

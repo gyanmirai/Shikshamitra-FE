@@ -10,22 +10,22 @@ import { Box, Card, Stack, Typography } from '@mui/material';
 
 const teacherData = [
   {
-    subject: '9A - Mathematics',
+    subject: '1-A - Mathematics',
     teacher: 'Dharmik Jinjala',
     assigned: true,
   },
   {
-    subject: '9A - Physics',
+    subject: '1-B - Physics',
     teacher: 'Prerna atre',
     assigned: true,
   },
   {
-    subject: '9A - Chemistry',
+    subject: '1-C - Chemistry',
     teacher: 'No Teacher Assigned',
     assigned: false,
   },
   {
-    subject: '9A - Biology',
+    subject: '1-D - Biology',
     teacher: 'Parth Ghusar',
     assigned: true,
   },
@@ -126,7 +126,7 @@ const TeacherCard = ({
       </Typography>
     </Box>
     <Box display="flex" justifyContent="flex-end">
-      <Label color={assigned ? 'success' : 'error'}>{assigned ? 'Assigned' : 'Unassigned'}</Label>
+      <Label color={assigned ? 'success' : 'error'}>{assigned ? 'Assigned' : 'Not Assigned'}</Label>
     </Box>
   </Card>
 );

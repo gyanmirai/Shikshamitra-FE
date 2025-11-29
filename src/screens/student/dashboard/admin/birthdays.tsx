@@ -4,23 +4,35 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CalendarView } from 'src/sections/calendar/view';
-import { Box, Card, Stack, Button, Avatar, Divider, CardHeader, Typography } from '@mui/material';
+import {
+  Box,
+  Card,
+  Chip,
+  Stack,
+  Button,
+  Avatar,
+  Divider,
+  CardHeader,
+  Typography,
+} from '@mui/material';
 
 const birthdays = [
   {
     id: 1,
     name: 'Arjun Sharma',
     class: '5A',
-    date: 'Tomorrow',
+    date: 'Today',
+    isToday: true,
     initials: 'AS',
-    color: 'success.main',
-    bgColor: 'success.lighter',
+    color: 'primary.main',
+    bgColor: 'primary.lighter',
   },
   {
     id: 2,
     name: 'Priya Patel',
     class: '5A',
-    date: 'Dec 28',
+    date: 'Tomorrow',
+    isToday: false,
     initials: 'PP',
     color: 'success.main',
     bgColor: 'success.lighter',
@@ -30,18 +42,20 @@ const birthdays = [
     name: 'Raj Kumar',
     class: '4B',
     date: 'Dec 29',
+    isToday: false,
     initials: 'RK',
-    color: 'success.main',
-    bgColor: 'success.lighter',
+    color: 'info.main',
+    bgColor: 'info.lighter',
   },
   {
     id: 4,
     name: 'Meera Singh',
     class: '3C',
     date: 'Dec 30',
+    isToday: false,
     initials: 'MS',
-    color: 'success.main',
-    bgColor: 'success.lighter',
+    color: 'warning.main',
+    bgColor: 'warning.lighter',
   },
 ];
 
@@ -55,18 +69,18 @@ const Birthdays = () => {
         <CardHeader
           title={
             <Stack direction="row" alignItems="center" spacing={1}>
-              <Iconify icon="mdi:cake-variant" width={24} color="success.main" />
+              <Iconify icon="mdi:cake-variant" width={24} color="primary.main" />
               <Typography variant="h6">Birthdays</Typography>
             </Stack>
           }
-          subheader="Today's Birthdays"
+          subheader="Upcoming Birthdays"
           action={
             <Button
               size="small"
               color="inherit"
               endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
             >
-              View All Today&apos;s Birthday
+              View All
             </Button>
           }
         />
@@ -76,33 +90,112 @@ const Birthdays = () => {
               key={student.id}
               sx={{
                 p: 2,
-                borderRadius: 1,
-                border: (theme) => `1px solid ${theme.palette.divider}`,
+                borderRadius: 2,
+                border: (theme) =>
+                  student.isToday
+                    ? `2px solid ${theme.palette.primary.main}`
+                    : `1px solid ${theme.palette.divider}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                background: student.isToday
+                  ? 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 105, 180, 0.1) 100%)'
+                  : 'transparent',
+                position: 'relative',
+                overflow: 'hidden',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  boxShadow: student.isToday ? 4 : 2,
+                },
+                '&::before': student.isToday
+                  ? {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background:
+                        'linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%)',
+                      animation: 'shimmer 3s infinite',
+                    }
+                  : {},
+                '@keyframes shimmer': {
+                  '0%': { transform: 'translateX(-100%)' },
+                  '100%': { transform: 'translateX(100%)' },
+                },
               }}
             >
               <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar
-                  sx={{
-                    bgcolor: student.bgColor,
-                    color: student.color,
-                    fontWeight: 'bold',
-                  }}
-                >
-                  {student.initials}
-                </Avatar>
+                <Box sx={{ position: 'relative' }}>
+                  <Avatar
+                    sx={{
+                      bgcolor: student.bgColor,
+                      color: student.color,
+                      fontWeight: 'bold',
+                      width: student.isToday ? 56 : 48,
+                      height: student.isToday ? 56 : 48,
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    {student.initials}
+                  </Avatar>
+                  {student.isToday && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        animation: 'bounce 2s infinite',
+                        '@keyframes bounce': {
+                          '0%, 100%': { transform: 'translateY(0)' },
+                          '50%': { transform: 'translateY(-10px)' },
+                        },
+                      }}
+                    >
+                      <Iconify icon="noto:party-popper" width={24} />
+                    </Box>
+                  )}
+                </Box>
                 <Box>
-                  <Typography variant="subtitle2">{student.name}</Typography>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: student.isToday ? 700 : 600,
+                      fontSize: student.isToday ? '1rem' : '0.875rem',
+                    }}
+                  >
+                    {student.name}
+                  </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {student.class}
+                    Class {student.class}
                   </Typography>
                 </Box>
               </Stack>
-              <Typography variant="subtitle2" sx={{ color: 'success.main' }}>
-                {student.date}
-              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                {student.isToday ? (
+                  <Chip
+                    label="🎉 Today"
+                    size="small"
+                    sx={{
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      fontWeight: 700,
+                      animation: 'pulse 2s infinite',
+                      '@keyframes pulse': {
+                        '0%, 100%': { transform: 'scale(1)' },
+                        '50%': { transform: 'scale(1.05)' },
+                      },
+                    }}
+                  />
+                ) : (
+                  <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+                    {student.date}
+                  </Typography>
+                )}
+                <Iconify icon="mdi:cake-variant" width={20} color={student.color} />
+              </Stack>
             </Box>
           ))}
         </Stack>
@@ -116,7 +209,7 @@ const Birthdays = () => {
             }}
             endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} sx={{ ml: -0.5 }} />}
           >
-            View Calendar View
+            View Calendar
           </Button>
         </Box>
       </Card>
