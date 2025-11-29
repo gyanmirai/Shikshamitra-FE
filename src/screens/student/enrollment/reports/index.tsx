@@ -74,7 +74,6 @@ const initialValues = {
 // Mapping of report types to their required fields
 const reportFieldsMap = {
   [StudentEnrollmentReportTitle.ClassWiseStudentEnrollmentReport]: [
-    'academicYear',
     'class',
     'totalStudent',
     'gender',
@@ -206,7 +205,7 @@ const StudentReportsScreen = () => {
 
   // Update fields when report changes
   useEffect(() => {
-    if (formik.values.report) {
+    if (formik.values.report !== '') {
       const fields =
         reportFieldsMap[formik.values.report as unknown as StudentEnrollmentReportTitle] || [];
       setCurrentFieldsState(fields);
@@ -433,7 +432,7 @@ const StudentReportsScreen = () => {
                         { id: 'pending', name: 'Pending' },
                         { id: 'notinterest', name: 'Not Interest' },
                       ]}
-                      label="Inquiry Status *"
+                      label="Inquiry Status"
                       value={formik.values.inquiryStatus}
                       onChange={(val) =>
                         formik.handleChange({ target: { name: 'inquiryStatus', value: val } })
