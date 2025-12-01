@@ -16,6 +16,7 @@ interface DashboardCardProps {
   bgColor?: string;
   href?: string;
   labels?: LabelItem[];
+  description?: string;
 }
 
 export const DashboardCard = ({
@@ -26,6 +27,7 @@ export const DashboardCard = ({
   bgColor = 'primary.lighter',
   href = '',
   labels = [],
+  description,
 }: DashboardCardProps) => {
   const cardContent = (
     <Card
@@ -62,6 +64,11 @@ export const DashboardCard = ({
         <Typography sx={{ fontWeight: 700 }}>
           {title} / {value}
         </Typography>
+        {description && (
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+            {description}
+          </Typography>
+        )}
         {labels.length > 0 && (
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 1 }}>
             {labels.map((label, index) => (

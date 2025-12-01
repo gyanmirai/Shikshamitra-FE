@@ -1305,6 +1305,13 @@ const calendarModule = {
       subheader: '',
       items: [
         {
+          title: 'Dashboard',
+          path: '/calendar/dashboard',
+          _action: 'dashboard',
+          shortcutKey: 'Alt+C+1',
+          shortcutKeyName: 'Alt+C+1',
+        },
+        {
           title: 'Calendar View',
           path: '/calendar/view',
           _action: 'view',
