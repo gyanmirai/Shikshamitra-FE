@@ -9,10 +9,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import HomeworkAssignmentReports from '..';
 
-interface HomeworkReportsListProps {
-  onAddReport: () => void;
-}
-
 const MOCK_DATA = [
   {
     id: '1',

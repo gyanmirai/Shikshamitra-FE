@@ -174,7 +174,6 @@ export const payrollInitialValues = (editData: any) => ({
   accountNumber: editData ? editData.bankDetails.accountNumber : '',
   ifscCode: editData ? editData.bankDetails.ifscCode : '',
   pfRule: editData ? editData.bankDetails.pfRule : '',
-  pfType: '',
   epfNumber: '',
   uanNumber: '',
   basicSalary: '',

@@ -167,48 +167,15 @@ const PaySlipGenerationScreen = () => {
         </Card>
       </Box>
       <Box display="flex" gap={2} flexWrap="wrap" my={2} justifyContent="flex-end">
-        <Button
-          startIcon={<Iconify icon="ion:download" />}
-          variant="contained"
-          color="primary"
-          sx={{
-            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
-            color: 'primary.main',
-            '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.1),
-            },
-          }}
-        >
+        <Button size="small" startIcon={<Iconify icon="ion:download" />} variant="soft">
           Download PDF
         </Button>
 
-        <Button
-          startIcon={<Iconify icon="ion:print" />}
-          variant="contained"
-          color="secondary"
-          sx={{
-            backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
-            color: 'secondary.main',
-            '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.vars.palette.secondary.mainChannel, 0.1),
-            },
-          }}
-        >
+        <Button size="small" startIcon={<Iconify icon="ion:print" />} variant="soft">
           Print Payslip
         </Button>
 
-        <Button
-          startIcon={<Iconify icon="ion:email" />}
-          variant="contained"
-          color="warning"
-          sx={{
-            backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
-            color: 'warning.main',
-            '&:hover': {
-              backgroundColor: (theme) => varAlpha(theme.vars.palette.warning.mainChannel, 0.1),
-            },
-          }}
-        >
+        <Button size="small" startIcon={<Iconify icon="ion:email" />} variant="contained">
           Email Payslip
         </Button>
       </Box>

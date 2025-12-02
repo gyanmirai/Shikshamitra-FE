@@ -158,13 +158,14 @@ const HRBirthdaysAndAnniversaries = () => {
         start: today.toISOString(), // Use ISO string
         end: today.toISOString(),
         color: item.type === 'Birthday' ? theme.palette.secondary.main : theme.palette.info.main,
+        textColor: 'white',
         allDay: true,
         description: item.role,
-        extendedProps: {
-          type: item.type,
-          age: item.age,
-          years: item.years,
-        },
+        // extendedProps: {
+        //   type: item.type,
+        //   age: item.age,
+        //   years: item.years,
+        // },
       } as any); // Type assertion needed due to strict ICalendarEvent definition vs FullCalendar flexibility
     });
 
@@ -180,13 +181,14 @@ const HRBirthdaysAndAnniversaries = () => {
             end: dateIso,
             color:
               item.type === 'Birthday' ? theme.palette.secondary.main : theme.palette.info.main,
+            textColor: 'white',
             allDay: true,
             description: item.role,
-            extendedProps: {
-              type: item.type,
-              age: item.age,
-              years: item.years,
-            },
+            // extendedProps: {
+            //   type: item.type,
+            //   age: item.age,
+            //   years: item.years,
+            // },
           } as any);
         }
       }
@@ -199,7 +201,7 @@ const HRBirthdaysAndAnniversaries = () => {
     <>
       <Card
         sx={{
-          p: 3,
+          p: 2,
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
@@ -207,7 +209,7 @@ const HRBirthdaysAndAnniversaries = () => {
           boxShadow: theme.customShadows.z4,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Iconify
               icon="mdi:party-popper"

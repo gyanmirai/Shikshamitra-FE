@@ -4,17 +4,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import {
-  Box,
-  Card,
-  Grid,
-  Paper,
-  Button,
-  MenuItem,
-  TextField,
-  IconButton,
-  Typography,
-} from '@mui/material';
+import { Box, Card, Grid, Paper, Button, TextField, IconButton, Typography } from '@mui/material';
 
 import { RenderPfRules } from './RenderPfRules';
 import PayrollComponentDialog from './PayrollComponentDialog';
@@ -322,24 +312,11 @@ const RenderPayrollFields = (props: any) => {
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            select
-            fullWidth
-            disabled={!isEditable.value}
-            label="PF Type"
-            name="pfType"
-            value={values.pfType || ''}
-            onChange={handleChange}
-          >
-            <MenuItem value="PF Rule 1">PF Rule 1</MenuItem>
-            <MenuItem value="PF Rule 2">PF Rule 2</MenuItem>
-          </TextField>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
           <RenderPfRules
-          // value={values.pfRule || ''}
-          // onChange={(e) => setFormValues({ ...formValues, pfRule: e.target?.value ?? e })}
+            disabled={!isEditable.value}
+            formik={formik}
+            // value={values.pfRule || ''}
+            // onChange={(e) => setFormValues({ ...formValues, pfRule: e.target?.value ?? e })}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>

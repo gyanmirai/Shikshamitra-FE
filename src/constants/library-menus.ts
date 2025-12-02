@@ -1,0 +1,172 @@
+import { libraryPath } from 'src/routes/paths';
+
+const libraryModule = {
+  [libraryPath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Dashboard',
+          path: '/library/dashboard',
+          _action: 'library-dashboard',
+          shortcutKey: 'Alt+L+1',
+          shortcutKeyName: 'Alt+L+1',
+        },
+        {
+          title: 'All Books',
+          path: '/library/book-list',
+          _action: 'book-list',
+          shortcutKey: 'Alt+L+2',
+          shortcutKeyName: 'Alt+L+2',
+        },
+        // {
+        //   title: 'Book List',
+        //   path: '/library/book-management',
+        //   _action: 'book-management',
+        //   shortcutKey: 'Alt+L+2',
+        //   shortcutKeyName: 'Alt+L+2',
+        // },
+        {
+          title: 'Issue & Return',
+          path: '/library/issued-books',
+          _action: 'issued-books',
+          shortcutKey: 'Alt+L+2',
+          shortcutKeyName: 'Alt+L+2',
+        },
+        // {
+        //   title: 'Reservation Management',
+        //   path: '/library/reservation-management',
+        //   _action: 'reservation-management',
+        //   shortcutKey: 'Alt+L+2',
+        //   shortcutKeyName: 'Alt+L+2',
+        // },
+        // {
+        //   title: 'Book Management',
+        //   path: '/library/book-management',
+        //   _action: 'book-management',
+        //   shortcutKey: 'Alt+L+2',
+        //   shortcutKeyName: 'Alt+L+2',
+        // },
+        {
+          title: 'Library Members',
+          path: '/library/member-management',
+          _action: 'member-management',
+          shortcutKey: 'Alt+L+3',
+          shortcutKeyName: 'Alt+L+3',
+        },
+        {
+          title: 'Charges',
+          path: '/library/charges-management',
+          _action: 'charges-management',
+          shortcutKey: 'Alt+L+2',
+          shortcutKeyName: 'Alt+L+2',
+        },
+        // {
+        //   title: 'Circulation',
+        //   path: '',
+        //   _action: 'circulation',
+        //   shortcutKey: 'Alt+L+4',
+        //   shortcutKeyName: 'Alt+L+4',
+        //   children: [
+        //     {
+        //       title: 'Reservations Management',
+        //       path: '/library/circulation/reservation-management',
+        //       _action: 'reservation-management',
+        //       shortcutKey: 'Alt+L+5',
+        //       shortcutKeyName: 'Alt+L+5',
+        //     },
+        //     {
+        //       title: 'Fines Management',
+        //       path: '/library/circulation/fine-management',
+        //       _action: 'reservation-management',
+        //       shortcutKey: 'Alt+L+5',
+        //       shortcutKeyName: 'Alt+L+5',
+        //     },
+        //   ],
+        // },
+        {
+          title: 'Reports',
+          path: '/library/reports',
+          _action: 'library-reports',
+          shortcutKey: 'Alt+L+5',
+          shortcutKeyName: 'Alt+L+5',
+          caption: 'Coming Soon',
+        },
+        {
+          title: 'Notification',
+          path: '/library/notification',
+          _action: 'library-notification',
+          shortcutKey: 'Alt+L+N',
+          shortcutKeyName: 'Alt+L+N',
+        },
+        {
+          title: 'Setting',
+          path: '',
+          _action: 'library-settings',
+          shortcutKey: 'Alt+L+S',
+          shortcutKeyName: 'Alt+L+S',
+          children: [
+            // {
+            //   title: 'General Setting',
+            //   path: '/library/settings/general-setting',
+            //   _action: 'general-setting',
+            //   shortcutKey: 'Alt+L+S+1',
+            //   shortcutKeyName: 'Alt+L+S+1',
+            // },
+            // {
+            //   title: 'Notification Setting',
+            //   path: '/library/settings/notification-setting',
+            //   _action: 'notification-setting',
+            //   shortcutKey: 'Alt+L+S+2',
+            //   shortcutKeyName: 'Alt+L+S+2',
+            // },
+            {
+              title: 'Book Categories',
+              path: '/library/settings/book-category',
+              _action: 'general-setting',
+              shortcutKey: 'Alt+L+S+1',
+              shortcutKeyName: 'Alt+L+S+1',
+            },
+            {
+              title: 'Charges Categories',
+              path: '/library/settings/charge-type',
+              _action: 'general-setting',
+              shortcutKey: 'Alt+L+S+2',
+              shortcutKeyName: 'Alt+L+S+2',
+            },
+            // {
+            //   title: 'Book Conditions',
+            //   path: '/library/settings/book-condition',
+            //   _action: 'book-condition-setting',
+            //   shortcutKey: 'Alt+L+S+1',
+            //   shortcutKeyName: 'Alt+L+S+1',
+            // },
+            {
+              title: 'Library Hours',
+              path: '/library/settings/library-timing',
+              _action: 'general-setting',
+              shortcutKey: 'Alt+L+S+3',
+              shortcutKeyName: 'Alt+L+S+3',
+            },
+            {
+              title: 'Borrowing Rules',
+              path: '/library/settings/borrowing-and-return-rules',
+              _action: 'general-setting',
+              shortcutKey: 'Alt+L+S+4',
+              shortcutKeyName: 'Alt+L+S+4',
+            },
+            {
+              title: 'Section Management',
+              path: '/library/settings/sectionManagement',
+              _action: 'section-management',
+              shortcutKey: 'Alt+L+S+5',
+              shortcutKeyName: 'Alt+L+S+5',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+export default libraryModule;

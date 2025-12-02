@@ -229,15 +229,15 @@ const PaySlipGenerationScreen = () => {
         </Grid>
       </Box>
       <Box display="flex" gap={2} flexWrap="wrap" my={2} justifyContent="flex-end">
-        <Button startIcon={<Iconify icon="ion:download" />} variant="soft">
+        <Button size="small" startIcon={<Iconify icon="ion:download" />} variant="soft">
           Download PDF
         </Button>
 
-        <Button startIcon={<Iconify icon="ion:print" />} variant="soft">
+        <Button size="small" startIcon={<Iconify icon="ion:print" />} variant="soft">
           Print Payslip
         </Button>
 
-        <Button startIcon={<Iconify icon="ion:email" />} variant="contained">
+        <Button size="small" startIcon={<Iconify icon="ion:email" />} variant="contained">
           Email Payslip
         </Button>
       </Box>

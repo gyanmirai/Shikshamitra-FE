@@ -125,18 +125,20 @@ const RunPayroll = () => {
                   onClick={() => {
                     setOpen(true);
                   }}
+                  size="small"
+                  sx={{ px: '32px' }}
                 >
                   Run Payroll
                 </Button>
               </Box>
             </Box>
-            <Alert variant="outlined" severity="error">
-              The Payroll is Overdue by 87 day(s). in case you have paid the employees already.
-              Please mark payroll as paid and record the payments.
+            <Alert variant="outlined" severity="warning">
+              Please ensure all payroll data is accurate and verified before proceeding. Once
+              payroll is processed, any modifications may require additional steps.
             </Alert>
           </Card>
           <Card sx={{ p: 2, mt: 2 }}>
-            <Typography variant="h6">Employee Paybles</Typography>
+            <Typography variant="h6">Employee Payable</Typography>
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 6 }}>
                 <CustomizableTable
@@ -178,109 +180,16 @@ const RunPayroll = () => {
                   data={[
                     {
                       employeePayble: {
-                        BankTransfer: '680407.0',
-                        Cheques: '0.0',
-                        Cash: '680407.0',
-                        Total: '680407.0',
+                        BankTransfer: '₹68,0407.0',
+                        Cheques: '₹0.0',
+                        Cash: '₹68,0407.0',
+                        Total: '₹68,0407.0',
                       },
                     },
                   ]}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <CustomizableTable
-                  isFilter={false}
-                  isShowedDense={false}
-                  isPagination={false}
-                  isSearch={false}
-                  noDataText={<>No TDS found</>}
-                  tableId="incomeTaxTDS-table-id"
-                  columns={[
-                    {
-                      id: 'incomeTaxTDS',
-                      label: 'Income Tax TDS',
-                      align: 'left',
-                      isFilter: false,
-                      isSort: false,
-                      render(value, row) {
-                        if (!value || typeof value !== 'object') return null; // Ensure value is an object
-                        return (
-                          <Box sx={{ display: 'flex', mt: 1, gap: 6 }}>
-                            {Object.entries(value).map(([key, val]) => (
-                              <Box
-                                key={key}
-                                sx={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'left',
-                                }}
-                              >
-                                <Typography variant="subtitle2">{key}</Typography>
-                                <Typography variant="caption">{String(val)}</Typography>
-                              </Box>
-                            ))}
-                          </Box>
-                        );
-                      },
-                    },
-                  ]}
-                  data={[
-                    {
-                      incomeTaxTDS: {
-                        Payble: '$65',
-                        Employees: '$40',
-                      },
-                    },
-                  ]}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 3 }}>
-                <CustomizableTable
-                  noDataText={<>No PT found</>}
-                  isFilter={false}
-                  isShowedDense={false}
-                  isPagination={false}
-                  isSearch={false}
-                  tableId="PT-table-id"
-                  columns={[
-                    {
-                      id: 'PT',
-                      label: 'PT',
-                      align: 'left',
-                      isFilter: false,
-                      isSort: false,
-                      render(value, row) {
-                        if (!value || typeof value !== 'object') return null; // Ensure value is an object
-                        return (
-                          <Box sx={{ display: 'flex', mt: 1, gap: 6 }}>
-                            {Object.entries(value).map(([key, val]) => (
-                              <Box
-                                key={key}
-                                sx={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'left',
-                                }}
-                              >
-                                <Typography variant="subtitle2">{key}</Typography>
-                                <Typography variant="caption">{String(val)}</Typography>
-                              </Box>
-                            ))}
-                          </Box>
-                        );
-                      },
-                    },
-                  ]}
-                  data={[
-                    {
-                      PT: {
-                        Payble: '$65',
-                        Employees: '4',
-                      },
-                    },
-                  ]}
-                />
-              </Grid>
+
               <Grid size={{ xs: 12, md: 6 }}>
                 <CustomizableTable
                   noDataText={<>No PF Deduction found</>}
@@ -321,57 +230,9 @@ const RunPayroll = () => {
                   data={[
                     {
                       pfDeduction: {
-                        Employee: '$65',
-                        Employer: '$40',
-                        Total: '$98',
-                      },
-                    },
-                  ]}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <CustomizableTable
-                  noDataText={<>No ESIC Deduction found</>}
-                  isFilter={false}
-                  isShowedDense={false}
-                  isPagination={false}
-                  isSearch={false}
-                  tableId="ESIC-table-id"
-                  columns={[
-                    {
-                      id: 'ESICDeduction',
-                      label: 'ESIC Deduction',
-                      align: 'left',
-                      isFilter: false,
-                      isSort: false,
-                      render(value, row) {
-                        if (!value || typeof value !== 'object') return null; // Ensure value is an object
-                        return (
-                          <Box sx={{ display: 'flex', mt: 1, gap: 6 }}>
-                            {Object.entries(value).map(([key, val]) => (
-                              <Box
-                                key={key}
-                                sx={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'left',
-                                }}
-                              >
-                                <Typography variant="subtitle2">{key}</Typography>
-                                <Typography variant="caption">{String(val)}</Typography>
-                              </Box>
-                            ))}
-                          </Box>
-                        );
-                      },
-                    },
-                  ]}
-                  data={[
-                    {
-                      ESICDeduction: {
-                        Employee: '$65',
-                        Employer: '$40',
-                        Total: '$98',
+                        Employee: '₹65',
+                        Employer: '₹40',
+                        Total: '₹98',
                       },
                     },
                   ]}
@@ -390,7 +251,7 @@ const RunPayroll = () => {
           <Box display="flex" alignItems="center" gap={1}>
             Run Payroll
             <Typography fontSize={14} color="text.secondary" component="span">
-              ( {` Month :- ${month?.format('MMMM')}, Organization :- ${organizationValue?.name}`}
+              ( {` Month :- ₹{month?.format('MMMM')}, Organization :- ₹{organizationValue?.name}`}
               ){' '}
             </Typography>
           </Box>
