@@ -6,8 +6,6 @@ import { CONFIG } from 'src/config-global';
 import { SvgColor } from 'src/components/svg-color';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
-import { AppWelcome } from 'src/sections/overview/app/app-welcome';
-import SeoIllustration from 'src/assets/illustrations/seo-illustration';
 import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytics-website-visits';
 import {
   Box,
@@ -98,14 +96,6 @@ const MainDashboardPrincipal = () => {
   );
   return (
     <Grid container spacing={3} px={2} py={3}>
-      <Grid size={12}>
-        <AppWelcome
-          title={`Good Morning 👋 \n Jeet`}
-          description="If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything."
-          img={<SeoIllustration hideBackground />}
-        />
-      </Grid>
-
       <Grid container spacing={3} size={12}>
         <Grid size={{ xs: 12, md: 4 }}>
           <PrincipalDashboardCard
