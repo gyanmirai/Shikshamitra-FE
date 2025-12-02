@@ -190,7 +190,6 @@ export const navData = (isDdvs: boolean) => [
         path: '/resourceManagement/dashboard',
         icon: ICONS.resource,
         _action: 'resource',
-
         submodule: resourceManagement[resourceManagementPath].flatMap((list) => list.items),
         disabled: !isDdvs,
       },

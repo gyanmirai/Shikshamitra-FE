@@ -66,13 +66,13 @@ const financeModule = {
           //   },
           // ],
         },
-        {
-          title: 'Fee Refund',
-          path: '/finance/fee-refund',
-          _action: 'fee-refund',
-          shortcutKey: 'Alt+F+4',
-          shortcutKeyName: 'Alt+F+4',
-        },
+        // {
+        //   title: 'Fee Refund',
+        //   path: '/finance/fee-refund',
+        //   _action: 'fee-refund',
+        //   shortcutKey: 'Alt+F+4',
+        //   shortcutKeyName: 'Alt+F+4',
+        // },
         {
           title: 'Concession',
           path: '/finance/concession',
@@ -165,13 +165,13 @@ const financeModule = {
         //   shortcutKey: 'Alt+F+9',
         //   shortcutKeyName: 'Alt+F+9',
         // },
-        {
-          title: 'Budgeting',
-          path: '/finance/budgeting',
-          _action: 'finance-budget',
-          shortcutKey: 'Alt+F+10',
-          shortcutKeyName: 'Alt+F+10',
-        },
+        // {
+        //   title: 'Budgeting',
+        //   path: '/finance/budgeting',
+        //   _action: 'finance-budget',
+        //   shortcutKey: 'Alt+F+10',
+        //   shortcutKeyName: 'Alt+F+10',
+        // },
         {
           title: 'Reports',
           path: '/finance/reports',
