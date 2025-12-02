@@ -25,7 +25,7 @@ const SeatAllocationSection = ({
   // State to manage seat assignment data, tracking which students are assigned to which seats
   // Initialized with mock data from JSON file for seat allocation information
   const [assignedData, setAssignedData] = useState<ISeatAllocation[]>(seatAllocationData);
-
+  console.log('assignedData', assignedData);
   // State to manage the list of students available for room assignment
   // Tracks student details including assignment status and bench allocation
   const [students, setStudents] = useState<IStudentRoomAssignment[]>(seatAllocationStudents);
