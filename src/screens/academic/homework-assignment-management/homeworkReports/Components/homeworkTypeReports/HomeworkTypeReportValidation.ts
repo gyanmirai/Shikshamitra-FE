@@ -108,7 +108,6 @@ export const getHomeworkValidationSchema = (showField: string[], currentYear: an
           return dayjs(value as Dayjs).isSameOrBefore(dayjs(currentYear.endDate), 'day');
         }
       )
-
       .nullable()
       .optional();
   }

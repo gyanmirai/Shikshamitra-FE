@@ -1,6 +1,6 @@
 import React from 'react';
-import HomeworkAssignmentReports from 'src/screens/academic/homework-assignment-management/homeworkReports';
+import HomeworkReportsList from 'src/screens/academic/homework-assignment-management/homeworkReports/Components/HomeworkReportsList';
 
-const page = () => <HomeworkAssignmentReports />;
+const page = () => <HomeworkReportsList />;
 
 export default page;

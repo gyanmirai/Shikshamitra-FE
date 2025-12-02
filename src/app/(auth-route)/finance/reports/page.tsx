@@ -1,6 +1,6 @@
 import React from 'react';
-import FinanceNewReportsScreen from 'src/screens/finance/reports/finance-new-reports';
+import FinanceReports from 'src/screens/finance/FinanceReports';
 
-const FinanceReports = () => <FinanceNewReportsScreen />;
+const page = () => <FinanceReports />;
 
-export default FinanceReports;
+export default page;

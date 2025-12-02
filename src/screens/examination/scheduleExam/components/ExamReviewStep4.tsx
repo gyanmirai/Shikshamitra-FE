@@ -12,6 +12,7 @@ import type { IExamFormValues } from '../type';
 const ExamReviewStep4 = (props: FormikProps<IExamFormValues>) => {
   // Destructure formik props from the component props
   const formik = props;
+  console.log('formik.values', formik.values);
   return (
     <Box>
       <ExamBasicReview formik={formik} />
