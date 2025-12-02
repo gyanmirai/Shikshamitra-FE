@@ -29,10 +29,10 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
     return null;
   }
 
-  // if (!loading && !user) {
-  //   router.push('/login');
-  //   return null;
-  // }
+  if (!loading && !user) {
+    router.push('/login');
+    return null;
+  }
 
   if (loading) {
     return <SplashScreen />;
