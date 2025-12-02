@@ -84,19 +84,19 @@ const PayrollSummary = ({ employee }: any) => {
         </Card>
       </Box>
       <Box display="flex" gap={2} flexWrap="wrap" my={2} justifyContent="flex-end">
-        <Button startIcon={<Iconify icon="ion:email" />} variant="outlined">
+        <Button size="small" startIcon={<Iconify icon="ion:email" />} variant="outlined">
           Preview Payslip
         </Button>
 
-        <Button startIcon={<Iconify icon="ion:download" />} variant="outlined">
+        <Button size="small" startIcon={<Iconify icon="ion:download" />} variant="outlined">
           Download PDF
         </Button>
 
-        <Button startIcon={<Iconify icon="ion:print" />} variant="outlined">
+        <Button size="small" startIcon={<Iconify icon="ion:print" />} variant="outlined">
           Print Payslip
         </Button>
 
-        <Button startIcon={<Iconify icon="ion:email" />} variant="outlined">
+        <Button size="small" startIcon={<Iconify icon="ion:email" />} variant="outlined">
           Email Payslip
         </Button>
       </Box>

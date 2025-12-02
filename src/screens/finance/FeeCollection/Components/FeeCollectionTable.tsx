@@ -43,7 +43,6 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     <MenuList>
       <MenuItem
         onClick={() => {
-          console.log('row in table compo---', row);
           onCollectFee(row as IFeeData);
         }}
       >

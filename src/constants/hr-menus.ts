@@ -1,0 +1,210 @@
+import { hrPath } from 'src/routes/paths';
+
+const hrModule = (isDdvs: boolean) => ({
+  [hrPath]: [
+    {
+      subheader: '',
+      items: [
+        {
+          title: 'Dashboard',
+          path: '/hr/dashboard',
+          _action: 'dashboard',
+          shortcutKey: 'Alt+H+1',
+          shortcutKeyName: 'Alt+H+1',
+          disabled: !isDdvs,
+        },
+        {
+          title: 'Employee',
+          path: '',
+          _action: 'employee',
+          shortcutKey: 'Alt+H+E',
+          shortcutKeyName: 'Alt+H+E',
+          children: [
+            {
+              title: 'Employee List',
+              path: '/hr/employee',
+              _action: 'employee-list',
+              shortcutKey: 'Alt+H+E+1',
+              shortcutKeyName: 'Alt+H+E+1',
+            },
+            {
+              title: 'I-card',
+              path: '/hr/i-card',
+              _action: 'i-card',
+              disabled: !isDdvs,
+              caption: 'Coming Soon',
+              shortcutKey: 'Alt+H+E+2',
+              shortcutKeyName: 'Alt+H+E+2',
+            },
+            {
+              title: 'Setting',
+              path: '/hr/setting',
+              _action: 'hr-setting',
+              shortcutKey: 'Alt+H+S',
+              shortcutKeyName: 'Alt+H+S',
+              children: [
+                {
+                  title: 'Document Types',
+                  path: '/hr/setting',
+                  _action: 'hr-document-types',
+                  shortcutKey: 'Alt+H+S+1',
+                  shortcutKeyName: 'Alt+H+S+1',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          title: 'Payroll Management',
+          path: '',
+          _action: 'payroll-management',
+          shortcutKey: 'Alt+H+P',
+          shortcutKeyName: 'Alt+H+P',
+          children: [
+            {
+              title: 'Dashboard',
+              path: '/hr/payroll/dashboard',
+              _action: 'payroll-dashboard',
+              shortcutKey: 'Alt+H+P+1',
+              shortcutKeyName: 'Alt+H+P+1',
+            },
+            {
+              title: 'Run Payroll',
+              path: '/hr/payroll/run-payroll',
+              _action: 'run-payroll',
+              shortcutKey: 'Alt+H+P+2',
+              shortcutKeyName: 'Alt+H+P+2',
+            },
+            {
+              title: 'Generate Salary Slip',
+              path: '/hr/payroll/generate-salary-slip',
+              _action: 'generate-salary-slip',
+              shortcutKey: 'Alt+H+P+3',
+              shortcutKeyName: 'Alt+H+P+3',
+            },
+            {
+              title: 'Settings',
+              path: '',
+              _action: 'payroll-setting',
+              shortcutKey: 'Alt+H+P+4',
+              shortcutKeyName: 'Alt+H+P+4',
+              children: [
+                {
+                  title: 'Earning Components',
+                  path: '/hr/payroll/setting/earning-component',
+                  _action: 'payroll-setting-earning-components',
+                  shortcutKey: 'Alt+H+P+4',
+                  shortcutKeyName: 'Alt+H+P+4',
+                },
+                {
+                  title: 'Deduction Components',
+                  path: '/hr/payroll/setting/deduction-component',
+                  _action: 'payroll-setting-deduction-components',
+                  shortcutKey: 'Alt+H+P+4+2',
+                  shortcutKeyName: 'Alt+H+P+4+2',
+                },
+                {
+                  title: 'PF Rule',
+                  path: '/hr/payroll/setting/pf',
+                  _action: 'payroll-setting-pf',
+                  shortcutKey: 'Alt+H+P+4+2',
+                  shortcutKeyName: 'Alt+H+P+4+2',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          title: 'Attendance & Leave',
+          path: '',
+          _action: 'attendance-and-leave-management',
+          shortcutKey: 'Alt+H+A',
+          shortcutKeyName: 'Alt+H+A',
+          children: [
+            {
+              title: 'Import Attendance',
+              path: '/hr/biometric-integration',
+              _action: 'biometric-integration',
+              shortcutKey: 'Alt+H+A+1',
+              shortcutKeyName: 'Alt+H+A+1',
+            },
+            {
+              title: 'Leave Management',
+              path: '/hr/leave-requests',
+              _action: 'leave-requests-and-approvals',
+              shortcutKey: 'Alt+H+A+2',
+              shortcutKeyName: 'Alt+H+A+2',
+            },
+            {
+              title: 'Attendance Tracking',
+              path: '/hr/attendance-tracking',
+              _action: 'attendance-tracking',
+              shortcutKey: 'Alt+H+A+3',
+              shortcutKeyName: 'Alt+H+A+3',
+            },
+            {
+              title: 'Setting',
+              path: '/hr/attendance-setting',
+              _action: 'setting',
+              shortcutKey: 'Alt+H+A+4',
+              shortcutKeyName: 'Alt+H+A+4',
+              children: [
+                {
+                  title: 'Shift Management',
+                  path: '/hr/attendance-setting/shiftManagement',
+                  _action: 'shift-management',
+                  shortcutKey: 'Alt+H+A+4+1',
+                  shortcutKeyName: 'Alt+H+A+4+1',
+                },
+                {
+                  title: 'Leave Type',
+                  path: '/hr/attendance-setting/leaveType',
+                  _action: 'leave-type',
+                  shortcutKey: 'Alt+H+A+4+2',
+                  shortcutKeyName: 'Alt+H+A+4+2',
+                },
+                {
+                  title: 'Leave Policy',
+                  path: '/hr/attendance-setting/leavePolicy',
+                  _action: 'leave-policy',
+                  shortcutKey: 'Alt+H+A+4+3',
+                  shortcutKeyName: 'Alt+H+A+4+3',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          title: 'Professional Management',
+          path: '/hr/professional-management',
+          _action: 'professional-management',
+          disabled: !isDdvs,
+          caption: 'Coming Soon',
+          shortcutKey: 'Alt+H+M',
+          shortcutKeyName: 'Alt+H+M',
+        },
+        {
+          title: 'Reports',
+          path: '/hr/reports',
+          _action: 'reports',
+          shortcutKey: 'Alt+H+R',
+          shortcutKeyName: 'Alt+H+R',
+        },
+        // {
+        //   title: 'Events & Holidays',
+        //   _action: 'events-holidays',
+        //   path: '/hr/events-holidays',
+        //   shortcutKey: 'Alt+H+V',
+        //   shortcutKeyName: 'Alt+H+V',
+        // },
+        {
+          title: 'Notification',
+          path: '/hr/hr-notification',
+          _action: 'hr-notification',
+        },
+      ],
+    },
+  ],
+});
+
+export default hrModule;

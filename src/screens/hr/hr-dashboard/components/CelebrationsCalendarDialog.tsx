@@ -15,11 +15,11 @@ type Props = {
 export default function CelebrationsCalendarDialog({ open, onClose, events }: Props) {
   return (
     <CustomDialog
-      paperProps={{
-        sx: {
-          height: '60vh',
-        },
-      }}
+      // paperProps={{
+      //   sx: {
+      //     height: '80vh',
+      //   },
+      // }}
       maxWidth="xl"
       open={open}
       handleClose={onClose}

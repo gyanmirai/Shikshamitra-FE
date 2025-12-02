@@ -27,7 +27,6 @@ const FeeCollectComponent = ({
   loading?: boolean;
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  console.log('student--', student);
 
   const formik = useFormik({
     initialValues: buildInitialValues(),

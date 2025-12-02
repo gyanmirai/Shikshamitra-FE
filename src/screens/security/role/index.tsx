@@ -16,12 +16,21 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Button, Divider, TextField, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetPermissionsQuery,
   useUpdatePermissionMutation,
 } from 'src/redux/permission/permissionApi';
+import {
+  Box,
+  Button,
+  Divider,
+  MenuList,
+  MenuItem,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 import {
   useGetRolesQuery,
   useAddRoleMutation,
@@ -29,12 +38,15 @@ import {
   useUpdateRoleMutation,
 } from 'src/redux/role/roleApi';
 
-import AssignModule from './modules';
+import Visibility from './visibility';
+import Permission from './permission';
 
 // Main component for managing roles and permissions in the system
 const RoleScreen = () => {
   // State for managing confirmation dialog
   const confirm = useBoolean();
+
+  const permissionDialog = useBoolean();
 
   // State for managing dialog open/close
   const [open, setOpen] = useState(false);
@@ -154,11 +166,24 @@ const RoleScreen = () => {
                   setDeleteInformation(data);
                   confirm.onTrue();
                 }}
+                placement="right-center"
                 handleEditClick={() => {
                   setEditData(data);
                   setOpen(true);
                 }}
-                showThreeDots={false}
+                actions={({ popover: pop }) => (
+                  <MenuList>
+                    <MenuItem
+                      onClick={() => {
+                        permissionDialog.onTrue();
+                        pop.onClose();
+                      }}
+                    >
+                      <Iconify icon="mdi:account-lock" sx={{ height: '16px', width: '16px' }} />
+                      Permissions
+                    </MenuItem>
+                  </MenuList>
+                )}
               />
             ),
           },
@@ -186,6 +211,25 @@ const RoleScreen = () => {
       >
         <RoleForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
+      <CustomDialog
+        title={
+          <Box display="flex" alignItems="center" gap={1}>
+            Permissions
+            <CustomTooltip
+              arrow
+              placement="right"
+              title="Permissions define the actions users can perform within the system, ensuring secure and efficient access control"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>{' '}
+          </Box>
+        }
+        handleClose={permissionDialog.onFalse}
+        open={permissionDialog.value}
+        fullScreen
+      >
+        <Permission />
+      </CustomDialog>
     </Box>
   );
 };
@@ -194,7 +238,7 @@ export default RoleScreen;
 // Component for handling role creation and editing form
 const RoleForm = ({ handleClose, editData }: any) => {
   // State to store all permissions data
-  const [allPermissions, setAllPermissions] = useState([]);
+  const [allPermissions] = useState([]);
 
   // Query hook to fetch permission data based on role name
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -274,7 +318,12 @@ const RoleForm = ({ handleClose, editData }: any) => {
   return (
     <>
       <DialogScrollContent
-        sx={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '0',
+          height: '100%',
+        }}
         scrollBarProps={{
           sx: {
             '& .simplebar-content': {
@@ -283,22 +332,38 @@ const RoleForm = ({ handleClose, editData }: any) => {
           },
         }}
       >
-        <ShakingTextField error={formik.touched.role && !!formik.errors.role}>
-          <TextField
-            label="Role Name"
-            name="role"
-            size="small"
-            disabled={isSuccess}
-            value={formik.values.role}
-            onChange={formik.handleChange}
-            error={formik.touched.role && !!formik.errors.role}
-            helperText={(formik.touched.role && formik.errors.role) || ''}
-            sx={{ maxWidth: 300, width: '100%' }}
-            onBlur={formik.handleBlur}
-          />
-        </ShakingTextField>
+        <Box sx={{ pt: 2 }}>
+          <ShakingTextField error={formik.touched.role && !!formik.errors.role}>
+            <TextField
+              label="Role Name"
+              name="role"
+              size="small"
+              disabled={isSuccess}
+              value={formik.values.role}
+              onChange={formik.handleChange}
+              error={formik.touched.role && !!formik.errors.role}
+              helperText={(formik.touched.role && formik.errors.role) || ''}
+              sx={{ maxWidth: 300, width: '100%' }}
+              onBlur={formik.handleBlur}
+            />
+          </ShakingTextField>
+        </Box>
         <Divider sx={{ mt: 1 }} />
-        <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} />
+        {/* <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} /> */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 2 }}>
+          <Typography variant="subtitle1">Set Module Visibility</Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Iconify icon="fluent:bot-sparkle-24-filled" />}
+            onClick={() => {
+              // setVisibilityOpen(true);
+            }}
+          >
+            Set Visibility By MIRU
+          </Button>
+        </Box>
+        <Visibility />
       </DialogScrollContent>
       <DialogActions>
         <CancelButton onClick={handleClose} />

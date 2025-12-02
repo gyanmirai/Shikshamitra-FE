@@ -176,6 +176,7 @@ const HrEmployee = () => {
                 size="small"
                 startIcon={<Add />}
                 onClick={() => setOpen(true)}
+                sx={{ px: '32px' }}
               >
                 Employee
               </Button>

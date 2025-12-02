@@ -1,46 +1,212 @@
-// Redesigned module assignment view with left tree sidebar and right permission table
+// Redesigned module assignment view with table layout and hierarchical permissions
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
-import React, { useRef, useState } from 'react';
-import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useState } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { navData } from 'src/layouts/config-nav-dashboard';
 import {
   Box,
-  List,
-  Grid,
   Paper,
-  Stack,
-  Divider,
+  Table,
   Checkbox,
-  Collapse,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
   Typography,
-  ListItemButton,
-  FormControlLabel,
+  TableContainer,
 } from '@mui/material';
+
+// Helper to generate a permission name from title if missing
+const computePermissionName = (node: any, parentPermissionName: string | null) => {
+  if (node.permissionName) return node.permissionName;
+
+  // Remove spaces and special chars to make a valid permission segment
+  const cleanTitle = node.title.replace(/[^a-zA-Z0-9]/g, '');
+
+  if (!parentPermissionName) return cleanTitle;
+  return `${parentPermissionName}.${cleanTitle}`;
+};
+
+// Helper to flatten the tree into a list with depth for table rendering
+const flattenTree = (
+  nodes: any[],
+  depth = 0,
+  parentPermissionName: string | null = null
+): any[] => {
+  if (!nodes) return [];
+  return nodes.reduce((acc: any[], node: any) => {
+    const children = node.submodule || node.children || [];
+
+    // Compute permission name for current node
+    const currentPermissionName = computePermissionName(node, parentPermissionName);
+    const nodeWithPermission = {
+      ...node,
+      permissionName: currentPermissionName,
+      depth,
+      children,
+      isParent: children.length > 0,
+    };
+
+    // Add current node
+    acc.push(nodeWithPermission);
+
+    // Add children
+    if (children.length > 0) {
+      acc.push(...flattenTree(children, depth + 1, currentPermissionName));
+    }
+    return acc;
+  }, []);
+};
+
+// Helper to collect all permission names for a node and its descendants
+const collectPermissionNames = (node: any, type: string): string[] => {
+  const permissions: string[] = [];
+  const base = node.permissionName;
+
+  if (base) {
+    if (type === 'View') permissions.push(base);
+    else if (type === 'Add') permissions.push(`${base}.Create`);
+    else if (type === 'Edit') permissions.push(`${base}.Edit`);
+    else if (type === 'Delete') permissions.push(`${base}.Delete`);
+  }
+
+  const children = node.submodule || node.children || [];
+  children.forEach((child: any) => {
+    const childPermissionName = computePermissionName(child, base);
+    const childWithPermission = { ...child, permissionName: childPermissionName };
+    permissions.push(...collectPermissionNames(childWithPermission, type));
+  });
+
+  return permissions;
+};
+
+// Custom Checkbox Component
+const CustomCheckbox = (props: any) => <Checkbox {...props} />;
 
 const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
   const { user } = useSelector((state: any) => state.auth);
   const data = navData(user?.profile?.email === 'ddvs@gmail.com').flatMap((item) => item.items);
 
-  const stackRef = useRef<any>(null);
-  const [selectSubModule, setSelectSubModule] = useState<any>(null); // top-level module
-  const [selectedNode, setSelectedNode] = useState<any>(null); // currently selected submodule/child
+  const [selectSubModule, setSelectSubModule] = useState<any>(data[0] || null); // Default to first module
+
+  // Flatten the submodules of the selected top-level module
+  const tableRows = useMemo(() => {
+    if (!selectSubModule) return [];
+    // The top level module might have a permissionName too, we should use it as base
+    const parentPermission = computePermissionName(selectSubModule, null);
+    return flattenTree(selectSubModule.submodule || selectSubModule.children, 0, parentPermission);
+  }, [selectSubModule]);
+  // Check if a specific permission is granted
+  const isGranted = (name: string) =>
+    !!allPermissions?.find((p: any) => p.name === name)?.isGranted;
 
   // Update permission (add/remove)
-  const togglePermission = (permissionName: string, checked: boolean) => {
-    if (!permissionName) return;
-    if (checked) {
-      setAllPermissions((prev: any) => {
-        const idx = prev.findIndex((p: any) => p.name === permissionName);
-        if (idx === -1) return [...prev, { name: permissionName, isGranted: true }];
-        const clone = [...prev];
-        clone[idx] = { ...clone[idx], isGranted: true };
-        return clone;
+  // If it's a parent, it should update all children for that specific type (View/Add/Edit/Delete)
+  const togglePermission = (node: any, type: string, checked: boolean) => {
+    const targets = collectPermissionNames(node, type);
+
+    setAllPermissions((prev: any) => {
+      let newPermissions = [...prev];
+
+      targets.forEach((targetName) => {
+        if (checked) {
+          // Add if not exists
+          const exists = newPermissions.find((p: any) => p.name === targetName);
+          if (!exists) {
+            newPermissions.push({ name: targetName, isGranted: true });
+          } else {
+            // Ensure it's granted (though usually if it exists it is, but just in case)
+            newPermissions = newPermissions.map((p) =>
+              p.name === targetName ? { ...p, isGranted: true } : p
+            );
+          }
+        } else {
+          // Remove
+          newPermissions = newPermissions.filter((p: any) => p.name !== targetName);
+        }
       });
-    } else {
-      setAllPermissions((prev: any) => prev.filter((p: any) => p.name !== permissionName));
+      return newPermissions;
+    });
+  };
+
+  // Toggle all permissions of a specific type for the current visible table rows
+  const toggleAll = (type: string, checked: boolean) => {
+    const allTargets: string[] = [];
+    tableRows.forEach((row: any) => {
+      allTargets.push(...collectPermissionNames(row, type));
+    });
+    // Deduplicate
+    const uniqueTargets = Array.from(new Set(allTargets));
+
+    setAllPermissions((prev: any) => {
+      let newPermissions = [...prev];
+
+      uniqueTargets.forEach((targetName) => {
+        if (checked) {
+          const exists = newPermissions.find((p: any) => p.name === targetName);
+          if (!exists) {
+            newPermissions.push({ name: targetName, isGranted: true });
+          } else {
+            newPermissions = newPermissions.map((p) =>
+              p.name === targetName ? { ...p, isGranted: true } : p
+            );
+          }
+        } else {
+          newPermissions = newPermissions.filter((p: any) => p.name !== targetName);
+        }
+      });
+      return newPermissions;
+    });
+  };
+
+  // Check if all visible rows have the permission of a specific type
+  const isAllGranted = (type: string) => {
+    if (tableRows.length === 0) return false;
+
+    // We only care about rows that actually HAVE a permission name for this type
+    // But our logic ensures almost all do.
+    // Let's check if every row that *would* have a checkbox is checked.
+
+    // A simpler approximation: check if all rows are granted.
+    return tableRows.every((row: any) => {
+      const base = row.permissionName;
+      let permissionName = null;
+      if (base) {
+        if (type === 'View') permissionName = base;
+        else if (type === 'Add') permissionName = `${base}.Create`;
+        else if (type === 'Edit') permissionName = `${base}.Edit`;
+        else if (type === 'Delete') permissionName = `${base}.Delete`;
+      }
+      if (!permissionName) return true; // Skip if no permission applicable
+      return isGranted(permissionName);
+    });
+  };
+
+  const renderCheckbox = (node: any, type: string) => {
+    const base = node.permissionName;
+    let permissionName = null;
+
+    if (base) {
+      if (type === 'View') permissionName = base;
+      else if (type === 'Add') permissionName = `${base}.Create`;
+      else if (type === 'Edit') permissionName = `${base}.Edit`;
+      else if (type === 'Delete') permissionName = `${base}.Delete`;
     }
+
+    if (!permissionName) return <TableCell align="center">-</TableCell>;
+
+    const checked = isGranted(permissionName);
+
+    return (
+      <TableCell align="center">
+        <CustomCheckbox
+          size="small"
+          checked={checked}
+          onChange={(e: any) => togglePermission(node, type, e.target.checked)}
+        />
+      </TableCell>
+    );
   };
 
   return (
@@ -52,246 +218,202 @@ const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
         minHeight: '0',
         display: 'flex',
         flexDirection: 'column',
+        p: 1,
       }}
     >
       {/* Top-level module selection */}
-      <Stack
-        direction="row"
-        spacing={2}
-        justifyContent="center"
-        flexWrap="wrap"
-        ref={stackRef}
-        p={1}
-      >
-        {data.map((item) => (
-          <Paper
-            key={item._action}
-            elevation={8}
-            onClick={() => {
-              setSelectSubModule(item);
-              setSelectedNode(null);
-            }}
-            sx={{
-              p: 1,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: 14,
-              gap: 1,
-              backgroundColor: (theme) =>
-                selectSubModule?._action === item._action
-                  ? varAlpha(theme.vars.palette.primary.mainChannel, 0.12)
-                  : 'background.paper',
-              color: (theme) =>
-                selectSubModule?._action === item._action ? 'primary.main' : 'text.primary',
-              transition: 'all 0.3s ease',
-              '&:hover': { boxShadow: 6 },
-              '& :first-child': { height: 20, width: 20 },
-            }}
-          >
-            {item.icon}
-            <Typography variant="caption" fontWeight={600}>
-              {item.title}
-            </Typography>
-          </Paper>
-        ))}
-      </Stack>
-      <Divider sx={{ my: 2 }} />
-      {/* Two-column layout */}
-      <Grid
-        container
-        spacing={1}
-        sx={{ height: '100%', minHeight: '0', flex: '1', display: 'flex', flexDirection: 'column' }}
-      >
-        <Grid size={{ xs: 12, md: 3, lg: 2 }} sx={{ height: '100%', minHeight: '0' }}>
-          <Paper
-            elevation={3}
-            sx={{
-              flex: 1,
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              px: 1,
-              pt: 1,
-              height: '100%',
-            }}
-          >
-            <Scrollbar>
-              <List
-                dense
-                disablePadding
-                sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 0 }}
-              >
-                {selectSubModule?.submodule?.length ? (
-                  selectSubModule.submodule.map((node: any) => (
-                    <SidebarTreeItem
-                      key={node.id || node.title}
-                      node={node}
-                      depth={0}
-                      selectedNode={selectedNode}
-                      onSelect={setSelectedNode}
-                    />
-                  ))
-                ) : (
-                  <Typography variant="caption" sx={{ opacity: 0.7, p: 1 }}>
-                    {selectSubModule
-                      ? 'No submodules'
-                      : 'Pick a top-level module to view its tree.'}
+      <Box sx={{ display: 'flex', gap: 2, height: '100%' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            maxWidth: '200px',
+            width: '100%',
+          }}
+        >
+          <Scrollbar sx={{ p: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, height: '100%' }}>
+              {data.map((item) => (
+                <Paper
+                  key={item._action}
+                  elevation={4}
+                  onClick={() => setSelectSubModule(item)}
+                  sx={{
+                    p: 1,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+
+                    fontSize: 14,
+                    gap: 1,
+                    backgroundColor: (theme) =>
+                      selectSubModule?._action === item._action
+                        ? varAlpha(theme.vars.palette.primary.mainChannel, 0.12)
+                        : 'background.paper',
+                    color: (theme) =>
+                      selectSubModule?._action === item._action ? 'primary.main' : 'text.primary',
+                    transition: 'all 0.3s ease',
+                    '&:hover': { boxShadow: 6 },
+                    '& :first-child': { height: 20, width: 20 },
+                  }}
+                >
+                  {item.icon}
+                  <Typography variant="caption" fontWeight={600}>
+                    {item.title}
                   </Typography>
+                </Paper>
+              ))}
+            </Box>
+          </Scrollbar>
+        </Box>
+
+        {/* Permission Table */}
+        <Paper
+          elevation={3}
+          sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        >
+          <TableContainer sx={{ flex: 1, minHeight: 0 }}>
+            <Table stickyHeader size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: '#F4F6F8' }}>
+                  <TableCell
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      textTransform: 'uppercase',
+                      backgroundColor: '#F4F6F8',
+                    }}
+                  >
+                    Module / Page
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      textTransform: 'uppercase',
+                      backgroundColor: '#F4F6F8',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}
+                      >
+                        View
+                      </Typography>
+                      <CustomCheckbox
+                        size="small"
+                        checked={isAllGranted('View')}
+                        onChange={(e: any) => toggleAll('View', e.target.checked)}
+                      />
+                    </Box>
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      textTransform: 'uppercase',
+                      backgroundColor: '#F4F6F8',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}
+                      >
+                        Add/Edit
+                      </Typography>
+                      <CustomCheckbox
+                        size="small"
+                        checked={isAllGranted('Add')}
+                        onChange={(e: any) => toggleAll('Add', e.target.checked)}
+                      />
+                    </Box>
+                  </TableCell>
+                  {/* <TableCell align="center" sx={{ fontWeight: 700,  fontSize: '0.75rem', textTransform: 'uppercase', backgroundColor: '#F4F6F8' }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700,  fontSize: '0.75rem', textTransform: 'uppercase' }}>Edit</Typography>
+                    <CustomCheckbox
+                      size="small"
+                      checked={isAllGranted('Edit')}
+                      onChange={(e: any) => toggleAll('Edit', e.target.checked)}
+                    />
+                  </Box>
+                </TableCell> */}
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      textTransform: 'uppercase',
+                      backgroundColor: '#F4F6F8',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase' }}
+                      >
+                        Delete
+                      </Typography>
+                      <CustomCheckbox
+                        size="small"
+                        checked={isAllGranted('Delete')}
+                        onChange={(e: any) => toggleAll('Delete', e.target.checked)}
+                      />
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {tableRows.length > 0 ? (
+                  tableRows.map((row: any, index) => {
+                    const { isParent } = row;
+                    return (
+                      <TableRow
+                        key={`${row.title}-${row.depth}-${index}`}
+                        hover
+                        sx={{
+                          backgroundColor: (theme) =>
+                            isParent
+                              ? theme.vars.palette.background.neutral
+                              : theme.vars.palette.background.paper,
+                          '&:hover': { backgroundColor: isParent ? '#EDF0F2' : 'action.hover' },
+                        }}
+                      >
+                        <TableCell sx={{ fontWeight: isParent ? 700 : 400 }}>
+                          <Box sx={{ pl: row.depth * 3, display: 'flex', alignItems: 'center' }}>
+                            <Typography variant="body2" sx={{ fontWeight: isParent ? 700 : 400 }}>
+                              {row.title}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        {renderCheckbox(row, 'View')}
+                        {renderCheckbox(row, 'Add')}
+                        {/* {renderCheckbox(row, 'Edit')} */}
+                        {renderCheckbox(row, 'Delete')}
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      <Typography variant="body2" sx={{ py: 3, color: 'text.secondary' }}>
+                        No submodules available for this section.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </List>
-            </Scrollbar>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, md: 9, lg: 10 }} sx={{ height: '100%', minHeight: '0' }}>
-          <Paper elevation={3} sx={{ flex: 2, p: 2, overflow: 'auto', height: '100%' }}>
-            <Stack spacing={2}>
-              <Typography variant="subtitle2" fontWeight={600}>
-                {selectedNode
-                  ? `${selectedNode.title} Permissions`
-                  : 'Select a submodule item to manage permissions'}
-              </Typography>
-              {selectedNode && (
-                <PermissionTable
-                  node={selectedNode}
-                  allPermissions={allPermissions}
-                  togglePermission={togglePermission}
-                />
-              )}
-            </Stack>
-          </Paper>
-        </Grid>
-      </Grid>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Box>
     </Box>
   );
 };
 
 export default AssignModule;
-
-const SidebarTreeItem = ({ node, depth, selectedNode, onSelect }: any) => {
-  const hasChildren =
-    (node.submodule && node.submodule.length > 0) || (node?.children && node?.children.length > 0);
-  const isSelected = selectedNode?._action === node._action;
-  // Determine if current node is an ancestor of selected node
-  const isDescendant = (parent: any, target: any): boolean => {
-    if (!parent || !target) return false;
-    const children = parent?.submodule || parent?.children || [];
-    return children.some((c: any) => c?._action === target?._action || isDescendant(c, target));
-  };
-  const isAncestorSelected = !isSelected && isDescendant(node, selectedNode);
-  const [open, setOpen] = useState(false);
-  return (
-    <Box>
-      <ListItemButton
-        selected={isSelected}
-        onClick={() => (!hasChildren ? onSelect(node) : setOpen(!open))}
-        sx={{
-          pl: 1,
-          // ml: depth,
-          ml: `${depth * 8}px`,
-          borderRadius: 1,
-          bgcolor: (theme) =>
-            isSelected
-              ? varAlpha(theme.vars.palette.primary.mainChannel, 0.2)
-              : isAncestorSelected
-                ? varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
-                : 'transparent',
-          color: (theme) => (isSelected || isAncestorSelected ? 'primary.main' : 'text.primary'),
-
-          transition: 'background-color .25s ease',
-          display: 'flex',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Typography variant="body2">{node.title}</Typography>
-        {hasChildren && (
-          <Iconify
-            onClick={() => setOpen(!open)}
-            icon={open ? 'mdi:chevron-down' : 'mdi:chevron-right'}
-            sx={{ fontSize: 18, color: 'inherit' }}
-          />
-        )}
-      </ListItemButton>
-      {hasChildren && (
-        <Collapse in={open} timeout="auto" unmountOnExit sx={{ mt: 0.5 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            {(node?.submodule || node?.children || []).map(
-              (child: any, idx: number, arr: any[]) => (
-                <Box
-                  key={child.id || child.title}
-                  sx={{
-                    position: 'relative',
-
-                    // horizontal connector from vertical line to item
-                    '& > .MuiListItemButton-root': {
-                      position: 'relative',
-                      '&:before': {
-                        content: '""',
-                        position: 'absolute',
-                        left: -16,
-                        top: '50%',
-                        width: 16,
-                        borderTop: '1px solid',
-                        borderColor: 'divider',
-                      },
-                    },
-                    // remove bottom part of vertical line after last child by overlaying white block
-                    ...(idx === arr.length - 1
-                      ? {
-                          '&:after': {
-                            content: '""',
-                            position: 'absolute',
-                            left: -1,
-                            bottom: 0,
-                            width: 2,
-                            height: '50%',
-                            bgcolor: 'background.paper',
-                          },
-                        }
-                      : {}),
-                  }}
-                >
-                  <SidebarTreeItem
-                    node={child}
-                    depth={depth + 2}
-                    selectedNode={selectedNode}
-                    onSelect={onSelect}
-                  />
-                </Box>
-              )
-            )}
-          </Box>
-        </Collapse>
-      )}
-    </Box>
-  );
-};
-
-// Permission table component
-const PermissionTable = ({ node, allPermissions, togglePermission }: any) => {
-  const base = node?.permissionName;
-  const entries = [
-    { label: 'View', name: base },
-    { label: 'Add', name: base ? `${base}.Create` : null },
-    { label: 'Edit', name: base ? `${base}.Edit` : null },
-    { label: 'Delete', name: base ? `${base}.Delete` : null },
-  ].filter((e) => e.name);
-  return (
-    <Paper elevation={1} sx={{ p: 2 }}>
-      <Stack direction="row" spacing={2} flexWrap="wrap">
-        {entries.map((e) => {
-          const granted = !!allPermissions?.find((p: any) => p.name === e.name)?.isGranted;
-          return (
-            <FormControlLabel
-              key={e.name}
-              control={<Checkbox size="small" checked={granted} />}
-              label={e.label}
-              onChange={(evt: any) => togglePermission(e.name, evt.target.checked)}
-            />
-          );
-        })}
-      </Stack>
-    </Paper>
-  );
-};

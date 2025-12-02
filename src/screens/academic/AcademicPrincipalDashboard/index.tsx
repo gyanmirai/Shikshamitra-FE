@@ -20,9 +20,9 @@ const AcademicPrincipalDashboardScreen = () => {
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
   // State to store all divisions for the selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [, setAllDivision] = useState<Division[]>([]);
   // State to store selected division ID
-  const [division, setDivision] = useState<string>('');
+  const [, setDivision] = useState<string>('');
 
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);

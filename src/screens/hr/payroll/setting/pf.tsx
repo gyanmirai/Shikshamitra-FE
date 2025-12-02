@@ -1,17 +1,27 @@
+'use client';
+
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import Add from '@mui/icons-material/Add';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
+import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useGetPFQuery,
@@ -33,11 +43,13 @@ interface IPF {
   employerPercentage: number;
 }
 const PF = () => {
+  const [showConfirm, ChangesConfirmDialog] = useConfirmDialog();
   const dialog = useBoolean();
   const confirm = useBoolean();
   const [editData, setEditData] = useState<null | IPF>(null);
   // const [employee, setEmployee] = useState<string[] | undefined>([]);
-
+  // Redux state for tracking unsaved changes
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { data: PFData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPFQuery,
@@ -46,13 +58,46 @@ const PF = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeletePFMutation,
   });
+  const dispatch = useDispatch();
 
-  const handleClose = () => {
-    setEditData(null);
-    dialog.onFalse();
+  const handleClose = async (_e?: any, isSubmit?: boolean) => {
+    if (
+      isSubmit ||
+      (isChanges &&
+        (await showConfirm({
+          title: 'Alert',
+          message: 'Are you sure you want to discard changes?',
+          icon: 'warning',
+        })))
+    ) {
+      dispatch(setIsChanges(false));
+      dialog.onFalse();
+      setEditData(null);
+    } else if (!isChanges) {
+      dialog.onFalse();
+      setEditData(null);
+    }
   };
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <CustomBreadcrumbs
+        heading="PF Rule"
+        links={[
+          { name: 'HR/Staff', href: '/hr/dashboard/' },
+          {
+            name: 'Payroll Management',
+            href: '/hr/payroll/dashboard/',
+          },
+          { name: ' Settings' },
+          { name: 'PF Rule' },
+        ]}
+        action={
+          <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+            PF
+          </Button>
+        }
+      />
+      {ChangesConfirmDialog}
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -76,11 +121,7 @@ const PF = () => {
           </LoadingButton>
         }
       />
-      <Box display="flex" justifyContent="flex-end" alignItems="center">
-        <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
-          PF
-        </Button>
-      </Box>
+
       <CustomizableTable
         noDataText={
           <>
@@ -106,8 +147,8 @@ const PF = () => {
         tableId="pf-table"
         isLoading={isLoading}
         columns={[
+          { id: 'name', label: 'Name', sticky: true, minWidth: '140px', align: 'left' },
           { id: 'code', label: 'Code' },
-          { id: 'name', label: 'Name' },
           { id: 'employeePercentage', label: 'Employee Percentage' },
           { id: 'employerPercentage', label: 'Employer Percentage' },
           {
@@ -117,7 +158,7 @@ const PF = () => {
             isFilter: false,
             sticky: true,
 
-            minWidth: '140px',
+            minWidth: '80px',
             render(value, row) {
               return (
                 <ThreeDotsActions
@@ -142,10 +183,10 @@ const PF = () => {
 
       <CustomDialog
         open={dialog.value}
-        handleClose={handleClose}
+        handleClose={(e) => handleClose(e, false)}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">{editData ? 'Update PF' : 'Create New PF'}</Typography>
+            <Typography variant="h5">{editData ? 'Update PF Rule' : 'Create PF Rule'}</Typography>
             <CustomTooltip
               arrow
               placement="right"
@@ -164,7 +205,13 @@ const PF = () => {
 
 export default PF;
 
-const PFForm = ({ editData, handleClose }: { editData: any; handleClose: () => void }) => {
+const PFForm = ({
+  editData,
+  handleClose,
+}: {
+  editData: any;
+  handleClose: (e: any, isSubmit?: boolean) => void;
+}) => {
   const [addPF, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddPFMutation,
@@ -207,7 +254,7 @@ const PFForm = ({ editData, handleClose }: { editData: any; handleClose: () => v
         } else {
           await addPF(values);
         }
-        handleClose();
+        handleClose(undefined, true);
       } catch (error) {
         console.error(error);
       }
@@ -215,63 +262,90 @@ const PFForm = ({ editData, handleClose }: { editData: any; handleClose: () => v
   });
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
-        <Stack spacing={2}>
-          <TextField
-            size="small"
-            label="Code"
-            fullWidth
-            name="code"
-            value={formik.values.code}
-            onChange={formik.handleChange}
-            error={formik.touched.code && Boolean(formik.errors.code)}
-            helperText={formik.touched.code && formik.errors.code ? String(formik.errors.code) : ''}
-          />
-          <TextField
-            size="small"
-            label="Name"
-            fullWidth
-            name="name"
-            value={formik.values.name}
-            onChange={formik.handleChange}
-            error={formik.touched.name && Boolean(formik.errors.name)}
-            helperText={formik.touched.name && formik.errors.name ? String(formik.errors.name) : ''}
-          />
-          <TextField
-            size="small"
-            label="Employee Percentage"
-            type="number"
-            fullWidth
-            name="employeePercentage"
-            value={formik.values.employeePercentage}
-            onChange={formik.handleChange}
-            error={formik.touched.employeePercentage && Boolean(formik.errors.employeePercentage)}
-            helperText={
-              formik.touched.employeePercentage && formik.errors.employeePercentage
-                ? String(formik.errors.employeePercentage)
-                : ''
-            }
-          />
-          <TextField
-            size="small"
-            type="number"
-            label="Employer Percentage"
-            fullWidth
-            name="employerPercentage"
-            value={formik.values.employerPercentage}
-            onChange={formik.handleChange}
-            error={formik.touched.employerPercentage && Boolean(formik.errors.employerPercentage)}
-            helperText={
-              formik.touched.employerPercentage && formik.errors.employerPercentage
-                ? String(formik.errors.employerPercentage)
-                : ''
-            }
-          />
-        </Stack>
-      </Scrollbar>
+    <>
+      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+        <DialogScrollContent>
+          <Stack spacing={2}>
+            <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
+              <TextField
+                size="small"
+                label="Name *"
+                fullWidth
+                name="name"
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={
+                  formik.touched.name && formik.errors.name ? String(formik.errors.name) : ''
+                }
+              />
+            </ShakingTextField>
+            <ShakingTextField error={formik.touched.code && Boolean(formik.errors.code)}>
+              <TextField
+                size="small"
+                label="Code *"
+                fullWidth
+                name="code"
+                value={formik.values.code}
+                onChange={formik.handleChange}
+                error={formik.touched.code && Boolean(formik.errors.code)}
+                helperText={
+                  formik.touched.code && formik.errors.code ? String(formik.errors.code) : ''
+                }
+              />
+            </ShakingTextField>
+            <ShakingTextField
+              error={formik.touched.employeePercentage && Boolean(formik.errors.employeePercentage)}
+            >
+              <TextField
+                size="small"
+                label="Employee Percentage *"
+                type="number"
+                fullWidth
+                name="employeePercentage"
+                value={formik.values.employeePercentage}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.employeePercentage && Boolean(formik.errors.employeePercentage)
+                }
+                helperText={
+                  formik.touched.employeePercentage && formik.errors.employeePercentage
+                    ? String(formik.errors.employeePercentage)
+                    : ''
+                }
+              />
+            </ShakingTextField>
+            <ShakingTextField
+              error={formik.touched.employerPercentage && Boolean(formik.errors.employerPercentage)}
+            >
+              <TextField
+                size="small"
+                type="number"
+                label="Employer Percentage *"
+                fullWidth
+                name="employerPercentage"
+                value={formik.values.employerPercentage}
+                onChange={formik.handleChange}
+                error={
+                  formik.touched.employerPercentage && Boolean(formik.errors.employerPercentage)
+                }
+                helperText={
+                  formik.touched.employerPercentage && formik.errors.employerPercentage
+                    ? String(formik.errors.employerPercentage)
+                    : ''
+                }
+              />
+            </ShakingTextField>
+          </Stack>
+        </DialogScrollContent>
+      </BackPopUpChecked>
       <DialogActions>
-        <Button size="small" variant="outlined">
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          size="small"
+          variant="outlined"
+          onClick={(e) => handleClose(e, false)}
+        >
           Cancel
         </Button>
         <LoadingButton
@@ -279,10 +353,12 @@ const PFForm = ({ editData, handleClose }: { editData: any; handleClose: () => v
           size="small"
           variant="contained"
           type="submit"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          onClick={(e: any) => formik.handleSubmit(e)}
         >
-          Save
+          Submit
         </LoadingButton>
       </DialogActions>
-    </Box>
+    </>
   );
 };

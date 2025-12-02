@@ -10,7 +10,7 @@ import HRDashboardAttendanceTrend from './components/HRDashboardAttendanceTrend'
 import HRBirthdaysAndAnniversaries from './components/HRBirthdaysAndAnniversaries';
 
 const HRDashboardScreen = () => (
-  <Box sx={{ p: 3 }}>
+  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
     <HRStatsCards />
 
     <Grid container spacing={3} mb={3}>
@@ -23,10 +23,10 @@ const HRDashboardScreen = () => (
     </Grid>
 
     <Grid container spacing={3} mb={3}>
-      <Grid size={{ xs: 12, md: 8 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <LeaveManagement />
       </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <HRBirthdaysAndAnniversaries />
       </Grid>
     </Grid>

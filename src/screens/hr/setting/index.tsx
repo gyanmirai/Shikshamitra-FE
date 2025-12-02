@@ -100,7 +100,13 @@ const HrSetting = () => {
         sx={{ px: 1, mb: 1 }}
         description="Add, update or delete documents associated with an employee."
         action={
-          <Button startIcon={<Add />} variant="contained" onClick={dialog.onTrue} size="small">
+          <Button
+            sx={{ px: '32px' }}
+            startIcon={<Add />}
+            variant="contained"
+            onClick={dialog.onTrue}
+            size="small"
+          >
             Document
           </Button>
         }

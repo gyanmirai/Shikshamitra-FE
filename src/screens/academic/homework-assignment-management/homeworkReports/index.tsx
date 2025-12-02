@@ -152,10 +152,7 @@ const HomeworkAssignmentReports = ({ addReportDialog }: { addReportDialog: UseBo
     () => TABS.find((tab) => tab.value === searchParams?.tab),
     [searchParams.tab]
   );
-  const currentIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === searchParams?.tab),
-    [searchParams.tab]
-  );
+
   const dynamicLabel =
     currentActiveComponent?.value === 'homeworkReports'
       ? 'Homework Reports'
