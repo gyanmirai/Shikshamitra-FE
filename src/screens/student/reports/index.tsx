@@ -11,6 +11,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useEffect } from 'react';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Grid, Card, Button, TextField } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
@@ -253,6 +254,7 @@ const StudentReportsScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Reports"
+        description="Generate and view comprehensive reports on student records, including academic performance, attendance, and other relevant data."
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
           { name: 'Student Records', href: '/student/overview/' },
@@ -265,343 +267,401 @@ const StudentReportsScreen = () => {
           <Box sx={{ p: 2 }}>
             <Grid container spacing={3}>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <CustomSelect
-                  options={StudentReportTitleOptions}
-                  label="Report *"
-                  labelKey="label"
-                  valueKey="name"
-                  value={formik.values.report}
-                  onChange={(val) => {
-                    formik.setFieldValue('report', val);
-                  }}
-                  onBlur={() => formik.setFieldTouched('report', true)}
-                  error={formik.touched.report && Boolean(formik.errors.report)}
-                  helperText={(formik.touched.report && formik.errors.report) as string}
-                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                />
+                <ShakingTextField
+                  error={!!(formik.touched.report && formik.errors.report) || false}
+                >
+                  <CustomSelect
+                    options={StudentReportTitleOptions}
+                    label="Report *"
+                    labelKey="label"
+                    valueKey="name"
+                    value={formik.values.report}
+                    onChange={(val) => {
+                      formik.setFieldValue('report', val);
+                    }}
+                    onBlur={() => formik.setFieldTouched('report', true)}
+                    error={formik.touched.report && Boolean(formik.errors.report)}
+                    helperText={(formik.touched.report && formik.errors.report) as string}
+                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                  />
+                </ShakingTextField>
               </Grid>
 
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <CustomSelect
-                  options={allOrganization}
-                  label="Organization *"
-                  value={formik.values.organization}
-                  onChange={(val) => {
-                    formik.setFieldValue('organization', val);
+                <ShakingTextField
+                  error={!!(formik.touched.organization && formik.errors.organization) || false}
+                >
+                  <CustomSelect
+                    options={allOrganization}
+                    label="Organization *"
+                    value={formik.values.organization}
+                    onChange={(val) => {
+                      formik.setFieldValue('organization', val);
 
-                    const standards =
-                      allOrganization.find((org: any) => org?.id === val)?.standards || [];
-                    const standardIds = standards.map((standard: any) => standard.id);
+                      const standards =
+                        allOrganization.find((org: any) => org?.id === val)?.standards || [];
+                      const standardIds = standards.map((standard: any) => standard.id);
 
-                    // Avoid duplicating 'all'
-                    const uniqueClassIds = ['all', ...standardIds.filter((id) => id !== 'all')];
+                      // Avoid duplicating 'all'
+                      const uniqueClassIds = ['all', ...standardIds.filter((id) => id !== 'all')];
 
-                    formik.setFieldValue('classes', uniqueClassIds);
-                  }}
-                  onBlur={() => formik.setFieldTouched('organization', true)}
-                  error={formik.touched.organization && Boolean(formik.errors.organization)}
-                  helperText={(formik.touched.organization && formik.errors.organization) as string}
-                  labelKey="name"
-                  valueKey="id"
-                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                  disabled={!medium}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <CustomSelect
-                  options={allClass}
-                  label="Class *"
-                  multiple
-                  value={formik.values.classes}
-                  onChange={(val) => {
-                    const value = val as string[];
-
-                    const allClassIds =
-                      allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
-                    const isAllClicked = value.includes('all');
-                    const wasAllPreviouslySelected = (formik.values.classes as string[]).includes(
-                      'all'
-                    );
-
-                    if (isAllClicked && !wasAllPreviouslySelected) {
-                      // "All" was just clicked - select all classes
-                      formik.setFieldValue('classes', ['all', ...allClassIds]);
-                    } else if (!isAllClicked && wasAllPreviouslySelected) {
-                      // "All" was just unchecked - deselect all classes
-                      formik.setFieldValue('classes', []);
-                    } else if (isAllClicked && wasAllPreviouslySelected) {
-                      // Individual item was selected/deselected while "All" was already selected
-                      const selectedWithoutAll = value.filter((id) => id !== 'all');
-
-                      if (selectedWithoutAll.length === allClassIds.length) {
-                        // All individual items are selected, keep "All" selected
-                        formik.setFieldValue('classes', ['all', ...allClassIds]);
-                      } else {
-                        // Not all individual items are selected, remove "All"
-                        formik.setFieldValue('classes', selectedWithoutAll);
-                      }
-                    } else {
-                      // "All" is not selected, handle individual selections
-                      const selectedWithoutAll = value.filter((id) => id !== 'all');
-
-                      if (selectedWithoutAll.length === allClassIds.length) {
-                        // All individual items are selected, add "All"
-                        formik.setFieldValue('classes', ['all', ...allClassIds]);
-                      } else {
-                        // Not all items selected, just keep individual selections
-                        formik.setFieldValue('classes', selectedWithoutAll);
-                      }
+                      formik.setFieldValue('classes', uniqueClassIds);
+                    }}
+                    onBlur={() => formik.setFieldTouched('organization', true)}
+                    error={formik.touched.organization && Boolean(formik.errors.organization)}
+                    helperText={
+                      (formik.touched.organization && formik.errors.organization) as string
                     }
-                  }}
-                  onBlur={() => formik.setFieldTouched('classes', true)}
-                  error={formik.touched.classes && Boolean(formik.errors.classes)}
-                  helperText={(formik.touched.classes && formik.errors.classes) as string}
-                  labelKey="name"
-                  valueKey="id"
-                  formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                  disabled={!formik.values.organization}
-                />
+                    labelKey="name"
+                    valueKey="id"
+                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                    disabled={!medium}
+                  />
+                </ShakingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <ShakingTextField
+                  error={!!(formik.touched.classes && formik.errors.classes) || false}
+                >
+                  <CustomSelect
+                    options={allClass}
+                    label="Class *"
+                    multiple
+                    value={formik.values.classes}
+                    onChange={(val) => {
+                      const value = val as string[];
+
+                      const allClassIds =
+                        allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
+                      const isAllClicked = value.includes('all');
+                      const wasAllPreviouslySelected = (formik.values.classes as string[]).includes(
+                        'all'
+                      );
+
+                      if (isAllClicked && !wasAllPreviouslySelected) {
+                        // "All" was just clicked - select all classes
+                        formik.setFieldValue('classes', ['all', ...allClassIds]);
+                      } else if (!isAllClicked && wasAllPreviouslySelected) {
+                        // "All" was just unchecked - deselect all classes
+                        formik.setFieldValue('classes', []);
+                      } else if (isAllClicked && wasAllPreviouslySelected) {
+                        // Individual item was selected/deselected while "All" was already selected
+                        const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                        if (selectedWithoutAll.length === allClassIds.length) {
+                          // All individual items are selected, keep "All" selected
+                          formik.setFieldValue('classes', ['all', ...allClassIds]);
+                        } else {
+                          // Not all individual items are selected, remove "All"
+                          formik.setFieldValue('classes', selectedWithoutAll);
+                        }
+                      } else {
+                        // "All" is not selected, handle individual selections
+                        const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                        if (selectedWithoutAll.length === allClassIds.length) {
+                          // All individual items are selected, add "All"
+                          formik.setFieldValue('classes', ['all', ...allClassIds]);
+                        } else {
+                          // Not all items selected, just keep individual selections
+                          formik.setFieldValue('classes', selectedWithoutAll);
+                        }
+                      }
+                    }}
+                    onBlur={() => formik.setFieldTouched('classes', true)}
+                    error={formik.touched.classes && Boolean(formik.errors.classes)}
+                    helperText={(formik.touched.classes && formik.errors.classes) as string}
+                    labelKey="name"
+                    valueKey="id"
+                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                    disabled={!formik.values.organization}
+                  />
+                </ShakingTextField>
               </Grid>
 
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 {!(formik.values.classes as string[]).includes('all') &&
                   formik.values.classes.length > 0 && (
-                    <CustomSelect
-                      options={allDivision}
-                      label="Division *"
-                      value={formik.values.divisions}
-                      onChange={(val) => formik.setFieldValue('divisions', val)}
-                      onBlur={() => formik.setFieldTouched('divisions', true)}
-                      error={formik.touched.divisions && Boolean(formik.errors.divisions)}
-                      helperText={(formik.touched.divisions && formik.errors.divisions) as string}
-                      labelKey="name"
-                      valueKey="id"
-                      multiple={
-                        !(formik.values.classes as string[]).includes('all') ||
-                        formik.values.classes.length > 1
-                      }
-                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                      disabled={formik.values.classes.length === 0}
-                    />
+                    <ShakingTextField
+                      error={!!(formik.touched.divisions && formik.errors.divisions) || false}
+                    >
+                      <CustomSelect
+                        options={allDivision}
+                        label="Division *"
+                        value={formik.values.divisions}
+                        onChange={(val) => formik.setFieldValue('divisions', val)}
+                        onBlur={() => formik.setFieldTouched('divisions', true)}
+                        error={formik.touched.divisions && Boolean(formik.errors.divisions)}
+                        helperText={(formik.touched.divisions && formik.errors.divisions) as string}
+                        labelKey="name"
+                        valueKey="id"
+                        multiple={
+                          !(formik.values.classes as string[]).includes('all') ||
+                          formik.values.classes.length > 1
+                        }
+                        formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                        disabled={formik.values.classes.length === 0}
+                      />
+                    </ShakingTextField>
                   )}
               </Grid>
 
               {showField('fromRollNo') && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <TextField
-                    name="fromRollNo"
-                    value={formik.values.fromRollNo}
-                    type="number"
-                    label="From Roll No *"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    size="small"
-                    fullWidth
-                    disabled={formik.values.divisions.length === 0}
-                    error={formik.touched.fromRollNo && Boolean(formik.errors.fromRollNo)}
-                    helperText={(formik.touched.fromRollNo && formik.errors.fromRollNo) as string}
-                  />
+                  <ShakingTextField
+                    error={!!(formik.touched.fromRollNo && formik.errors.fromRollNo) || false}
+                  >
+                    <TextField
+                      name="fromRollNo"
+                      value={formik.values.fromRollNo}
+                      type="number"
+                      label="From Roll No *"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      size="small"
+                      fullWidth
+                      disabled={formik.values.divisions.length === 0}
+                      error={formik.touched.fromRollNo && Boolean(formik.errors.fromRollNo)}
+                      helperText={(formik.touched.fromRollNo && formik.errors.fromRollNo) as string}
+                    />
+                  </ShakingTextField>
                 </Grid>
               )}
               {showField('toRollNo') && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <TextField
-                    name="toRollNo"
-                    type="number"
-                    value={formik.values.toRollNo}
-                    label="To Roll No *"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    size="small"
-                    disabled={!formik.values.fromRollNo}
-                    fullWidth
-                    error={formik.touched.toRollNo && Boolean(formik.errors.toRollNo)}
-                    helperText={(formik.touched.toRollNo && formik.errors.toRollNo) as string}
-                  />
+                  <ShakingTextField
+                    error={!!(formik.touched.toRollNo && formik.errors.toRollNo) || false}
+                  >
+                    <TextField
+                      name="toRollNo"
+                      type="number"
+                      value={formik.values.toRollNo}
+                      label="To Roll No *"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      size="small"
+                      disabled={!formik.values.fromRollNo}
+                      fullWidth
+                      error={formik.touched.toRollNo && Boolean(formik.errors.toRollNo)}
+                      helperText={(formik.touched.toRollNo && formik.errors.toRollNo) as string}
+                    />
+                  </ShakingTextField>
                 </Grid>
               )}
 
               {showField('month') && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <CustomSelect
-                    label="Month *"
-                    options={[
-                      { id: '1', name: 'January' },
-                      { id: '2', name: 'February' },
-                      { id: '3', name: 'March' },
-                      { id: '4', name: 'April' },
-                      { id: '5', name: 'May' },
-                      { id: '6', name: 'June' },
-                      { id: '7', name: 'July' },
-                      { id: '8', name: 'August' },
-                      { id: '9', name: 'September' },
-                      { id: '10', name: 'October' },
-                      { id: '11', name: 'November' },
-                      { id: '12', name: 'December' },
-                    ]}
-                    name="month"
-                    labelKey="name"
-                    valueKey="id"
-                    multiple
-                    value={formik.values.month || []}
-                    onBlur={() => formik.setFieldTouched('month', true)} // ✅ Add this line
-                    onChange={(val) => {
-                      formik.setFieldValue('month', val);
-                      if (val.length === 0) {
-                        formik.setFieldTouched('month', true); // ✅ important
-                      }
-                    }}
-                    error={formik.touched.month && Boolean(formik.errors.month)}
-                    helperText={(formik.touched.month && formik.errors.month) as string}
-                  />
+                  <ShakingTextField
+                    error={!!(formik.touched.month && formik.errors.month) || false}
+                  >
+                    <CustomSelect
+                      label="Month *"
+                      options={[
+                        { id: '1', name: 'January' },
+                        { id: '2', name: 'February' },
+                        { id: '3', name: 'March' },
+                        { id: '4', name: 'April' },
+                        { id: '5', name: 'May' },
+                        { id: '6', name: 'June' },
+                        { id: '7', name: 'July' },
+                        { id: '8', name: 'August' },
+                        { id: '9', name: 'September' },
+                        { id: '10', name: 'October' },
+                        { id: '11', name: 'November' },
+                        { id: '12', name: 'December' },
+                      ]}
+                      name="month"
+                      labelKey="name"
+                      valueKey="id"
+                      multiple
+                      value={formik.values.month || []}
+                      onBlur={() => formik.setFieldTouched('month', true)}
+                      onChange={(val) => {
+                        formik.setFieldValue('month', val);
+                        if (val.length === 0) {
+                          formik.setFieldTouched('month', true);
+                        }
+                      }}
+                      error={formik.touched.month && Boolean(formik.errors.month)}
+                      helperText={(formik.touched.month && formik.errors.month) as string}
+                    />
+                  </ShakingTextField>
                 </Grid>
               )}
 
               {showField('fromDate') && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <DatePicker
-                    label="From Date *"
-                    disableFuture
-                    value={formik.values.fromDate}
-                    onChange={(date) => formik.setFieldValue('fromDate', date)}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: formik.touched.fromDate && Boolean(formik.errors.fromDate),
-                        helperText: (formik.touched.fromDate && formik.errors.fromDate) as string,
-                      },
-                    }}
-                  />
+                  <ShakingTextField
+                    error={!!(formik.touched.fromDate && formik.errors.fromDate) || false}
+                  >
+                    <DatePicker
+                      label="From Date *"
+                      disableFuture
+                      value={formik.values.fromDate}
+                      onChange={(date) => formik.setFieldValue('fromDate', date)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: formik.touched.fromDate && Boolean(formik.errors.fromDate),
+                          helperText: (formik.touched.fromDate && formik.errors.fromDate) as string,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
                 </Grid>
               )}
 
               {showField('toDate') && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <DatePicker
-                    label="To Date *"
-                    disableFuture
-                    value={formik.values.toDate}
-                    onChange={(date) => formik.setFieldValue('toDate', date)}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: formik.touched.toDate && Boolean(formik.errors.toDate),
-                        helperText: (formik.touched.toDate && formik.errors.toDate) as string,
-                      },
-                    }}
-                  />
+                  <ShakingTextField
+                    error={!!(formik.touched.toDate && formik.errors.toDate) || false}
+                  >
+                    <DatePicker
+                      label="To Date *"
+                      disableFuture
+                      value={formik.values.toDate}
+                      onChange={(date) => formik.setFieldValue('toDate', date)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: formik.touched.toDate && Boolean(formik.errors.toDate),
+                          helperText: (formik.touched.toDate && formik.errors.toDate) as string,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
                 </Grid>
               )}
 
               {showField('fromAge') && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <TextField
-                    label="From Age *"
-                    type="number"
-                    name="fromAge"
-                    value={formik.values.fromAge}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.fromAge && Boolean(formik.errors.fromAge)}
-                    helperText={(formik.touched.fromAge && formik.errors.fromAge) as string}
-                    fullWidth
-                  />
+                  <ShakingTextField
+                    error={!!(formik.touched.fromAge && formik.errors.fromAge) || false}
+                  >
+                    <TextField
+                      label="From Age *"
+                      type="number"
+                      name="fromAge"
+                      value={formik.values.fromAge}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={formik.touched.fromAge && Boolean(formik.errors.fromAge)}
+                      helperText={(formik.touched.fromAge && formik.errors.fromAge) as string}
+                      fullWidth
+                    />
+                  </ShakingTextField>
                 </Grid>
               )}
 
               {showField('toAge') && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <TextField
-                    label="To Age *"
-                    type="number"
-                    name="toAge"
-                    value={formik.values.toAge}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    fullWidth
-                    error={formik.touched.toAge && Boolean(formik.errors.toAge)}
-                    helperText={(formik.touched.toAge && formik.errors.toAge) as string}
-                    onKeyDown={(e) => {
-                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                        e.preventDefault();
-                      }
-                    }}
-                  />
+                  <ShakingTextField
+                    error={!!(formik.touched.toAge && formik.errors.toAge) || false}
+                  >
+                    <TextField
+                      label="To Age *"
+                      type="number"
+                      name="toAge"
+                      value={formik.values.toAge}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      fullWidth
+                      error={formik.touched.toAge && Boolean(formik.errors.toAge)}
+                      helperText={(formik.touched.toAge && formik.errors.toAge) as string}
+                      onKeyDown={(e) => {
+                        if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
+                    />
+                  </ShakingTextField>
                 </Grid>
               )}
 
               {showField('category') && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <CustomSelect
-                    labelId="category-dropdown-label"
-                    id="category-dropdown"
-                    value={formik.values.category}
-                    onBlur={() => formik.setFieldTouched('category', true)} // ✅ Add this line
-                    onChange={(val) => formik.setFieldValue('category', val)}
-                    size="small"
-                    label="Category *"
-                    name="category"
-                    error={formik.touched.category && Boolean(formik.errors.category)}
-                    helperText={(formik.touched.category && formik.errors.category) as string}
-                    options={EmployeeCastTypeArray.map((i, index) => ({
-                      value: index,
-                      label: EmployeeCastType[index],
-                    }))}
-                    multiple
-                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                  />
+                  <ShakingTextField
+                    error={!!(formik.touched.category && formik.errors.category) || false}
+                  >
+                    <CustomSelect
+                      labelId="category-dropdown-label"
+                      id="category-dropdown"
+                      value={formik.values.category}
+                      onBlur={() => formik.setFieldTouched('category', true)}
+                      onChange={(val) => formik.setFieldValue('category', val)}
+                      size="small"
+                      label="Category *"
+                      name="category"
+                      error={formik.touched.category && Boolean(formik.errors.category)}
+                      helperText={(formik.touched.category && formik.errors.category) as string}
+                      options={EmployeeCastTypeArray.map((i, index) => ({
+                        value: index,
+                        label: EmployeeCastType[index],
+                      }))}
+                      multiple
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                    />
+                  </ShakingTextField>
                 </Grid>
               )}
 
               {showField('gender') && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <CustomSelect
-                    label="Gender *"
-                    options={[
-                      { id: 'male', name: 'Male' },
-                      { id: 'female', name: 'Female' },
-                      { id: 'other', name: 'Other' },
-                    ]}
-                    value={formik.values.gender}
-                    onChange={(val) => formik.setFieldValue('gender', val)}
-                    onBlur={() => formik.setFieldTouched('gender', true)}
-                    error={formik.touched.gender && Boolean(formik.errors.gender)}
-                    helperText={(formik.touched.gender && formik.errors.gender) as string}
-                    labelKey="name"
-                    valueKey="id"
-                    multiple
-                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                  />
+                  <ShakingTextField
+                    error={!!(formik.touched.gender && formik.errors.gender) || false}
+                  >
+                    <CustomSelect
+                      label="Gender *"
+                      options={[
+                        { id: 'male', name: 'Male' },
+                        { id: 'female', name: 'Female' },
+                        { id: 'other', name: 'Other' },
+                      ]}
+                      value={formik.values.gender}
+                      onChange={(val) => formik.setFieldValue('gender', val)}
+                      onBlur={() => formik.setFieldTouched('gender', true)}
+                      error={formik.touched.gender && Boolean(formik.errors.gender)}
+                      helperText={(formik.touched.gender && formik.errors.gender) as string}
+                      labelKey="name"
+                      valueKey="id"
+                      multiple
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                    />
+                  </ShakingTextField>
                 </Grid>
               )}
 
               {showField('religion') && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <CustomSelect
-                    label="Religion *"
-                    options={[
-                      { id: 'Hinduism', name: 'Hinduism' },
-                      { id: 'Islam', name: 'Islam' },
-                      { id: 'Christianity', name: 'Christianity' },
-                      { id: 'Sikhism', name: 'Sikhism' },
-                      { id: 'Buddhism', name: 'Buddhism' },
-                      { id: 'Jainism', name: 'Jainism' },
-                      { id: 'Judaism', name: 'Judaism' },
-                      { id: 'Zoroastrianism', name: 'Zoroastrianism' },
-                    ]}
-                    value={formik.values.religion}
-                    onChange={(val) => formik.setFieldValue('religion', val)}
-                    onBlur={() => formik.setFieldTouched('religion', true)}
-                    error={formik.touched.religion && Boolean(formik.errors.religion)}
-                    helperText={(formik.touched.religion && formik.errors.religion) as string}
-                    labelKey="name"
-                    valueKey="id"
-                    multiple
-                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
-                  />
+                  <ShakingTextField
+                    error={!!(formik.touched.religion && formik.errors.religion) || false}
+                  >
+                    <CustomSelect
+                      label="Religion *"
+                      options={[
+                        { id: 'Hinduism', name: 'Hinduism' },
+                        { id: 'Islam', name: 'Islam' },
+                        { id: 'Christianity', name: 'Christianity' },
+                        { id: 'Sikhism', name: 'Sikhism' },
+                        { id: 'Buddhism', name: 'Buddhism' },
+                        { id: 'Jainism', name: 'Jainism' },
+                        { id: 'Judaism', name: 'Judaism' },
+                        { id: 'Zoroastrianism', name: 'Zoroastrianism' },
+                      ]}
+                      value={formik.values.religion}
+                      onChange={(val) => formik.setFieldValue('religion', val)}
+                      onBlur={() => formik.setFieldTouched('religion', true)}
+                      error={formik.touched.religion && Boolean(formik.errors.religion)}
+                      helperText={(formik.touched.religion && formik.errors.religion) as string}
+                      labelKey="name"
+                      valueKey="id"
+                      multiple
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                    />
+                  </ShakingTextField>
                 </Grid>
               )}
 
@@ -611,6 +671,11 @@ const StudentReportsScreen = () => {
                   type="submit"
                   variant="contained"
                   size="small"
+                  disabled={
+                    formik.values.report === '' ||
+                    formik.values.report === null ||
+                    formik.values.report === undefined
+                  }
                 >
                   Generate Report
                 </Button>

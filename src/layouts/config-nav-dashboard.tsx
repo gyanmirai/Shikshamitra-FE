@@ -162,7 +162,6 @@ const studentModule = (isDdvs: boolean) => ({
             {
               title: 'Reports',
               disabled: !isDdvs,
-              caption: 'Coming Soon',
               path: '/student/enrollment/reports',
               _action: 'student-enrollment-reports',
               permission: 'Permission:StudentEnrollment.Reports',
@@ -308,7 +307,6 @@ const studentModule = (isDdvs: boolean) => ({
             {
               title: 'Reports',
               disabled: !isDdvs,
-              caption: 'Coming Soon',
               path: '/student/attendance/reports',
               _action: 'student-attendance-reports',
               shortcutKey: 'Alt+S+A+4',

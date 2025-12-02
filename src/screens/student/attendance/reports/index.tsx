@@ -1,388 +1,465 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Medium, Division, Standards, Organization } from 'src/types/school';
+import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
+import { cloneDeep } from 'lodash';
+import dayjs, { Dayjs } from 'dayjs';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { Scrollbar } from 'src/components/scrollbar';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetBoardByIdQuery } from 'src/redux/board/boardApi';
+import React, { useMemo, useState, useEffect } from 'react';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Grid, Card, Button, TextField } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
-import {
-  Box,
-  Card,
-  Stack,
-  Radio,
-  Button,
-  Switch,
-  TextField,
-  FormLabel,
-  CardHeader,
-  Typography,
-  RadioGroup,
-  CardActions,
-  CardContent,
-  FormControl,
-  DialogActions,
-  InputAdornment,
-  FormControlLabel,
-} from '@mui/material';
+import { AttendanceReportTitle, AttendanceReportTitleOptions } from 'src/enums/attendanceReports';
 
-const AttendanceReportScreen = () => (
-  <Box>
-    <CustomBreadcrumbs
-      heading="Reports"
-      links={[
-        { name: 'Student', href: '/student/enrollment/dashboard/' },
-        { name: 'Attendance', href: '/student/attendance/dashboard/' },
-        { name: 'Reports' },
-      ]}
-      sx={{ mb: 2 }}
-    />
-    <AbsentStudentReport />
-  </Box>
-);
+import { getValidationSchema } from './validationSchema';
 
-export default AttendanceReportScreen;
+const initialValues = {
+  report: '',
+  organization: '',
+  classes: [],
+  divisions: [],
+  rollNo: '',
+  attendanceType: '',
+  fromDate: null,
+  toDate: null,
+  gender: [],
+};
 
-const AbsentStudentReport = () => {
-  const dialog = useBoolean();
-  const [allMediums, setAllMediums] = useState<Medium[]>([]);
-  const [medium, setMedium] = useState<string>('');
+const commonFields = ['organization', 'classes'];
+
+const reportFieldsMap = {
+  [AttendanceReportTitle.StudentWiseAbsentDays]: [...commonFields, 'divisions', 'rollNo'],
+  [AttendanceReportTitle.DailyStrengthAndGenderWiseSummary]: [
+    ...commonFields,
+    'gender', // Using gender dropdown for "Boys" and "Girls"
+  ],
+  [AttendanceReportTitle.DailyStrengthAndAttendanceSummary]: [...commonFields],
+  [AttendanceReportTitle.MonthlyStrengthSummary]: [
+    ...commonFields,
+    'divisions',
+    'gender', // Using gender dropdown for "Boys" and "Girls"
+  ],
+  [AttendanceReportTitle.MonthlyStrengthAndAttendanceSummary]: [
+    ...commonFields,
+    'divisions',
+    'gender', // Using gender dropdown for "Boys" and "Girls"
+  ],
+  [AttendanceReportTitle.StudentAttendanceRegisterSmall]: [...commonFields, 'divisions'],
+  [AttendanceReportTitle.StudentAttendanceSheet]: [...commonFields, 'divisions'],
+  [AttendanceReportTitle.MonthlyStrengthSummaryDateRange]: [
+    ...commonFields,
+    'divisions',
+    'attendanceType',
+    'fromDate',
+    'toDate',
+  ],
+  [AttendanceReportTitle.StudentWiseAbsentDaysDateRange]: [
+    'organization',
+    'attendanceType',
+    'rollNo',
+    'fromDate',
+    'toDate',
+  ],
+};
+
+const AttendanceReportScreen = () => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
-  const [organization, setOrganization] = useState<string>('');
   const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClass] = useState<string>('');
   const [allDivision, setAllDivision] = useState<Division[]>([]);
-  const [division, setDivision] = useState<string>('');
-  const { currentBoard } = useSelector((state: RootState) => state.globalState);
-  const [getBoard, { data: boardData }] = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useLazyGetBoardByIdQuery,
+  const [dynamicSchema, setDynamicSchema] = useState(getValidationSchema([]));
+
+  const formik = useFormik({
+    initialValues,
+    validationSchema: dynamicSchema,
+    enableReinitialize: true,
+    onSubmit: (val, { setSubmitting }) => {
+      alert(JSON.stringify(val, null, 2));
+      setSubmitting(false);
+    },
   });
+
+  const currentFields = useMemo(
+    () => reportFieldsMap[formik.values.report as unknown as AttendanceReportTitle] || [],
+    [formik.values.report]
+  );
+
   useEffect(() => {
-    if (currentBoard?.id) {
-      if (boardData) {
-        setAllMediums(boardData?.educationMediums || []);
-        setMedium(boardData?.educationMediums?.[0]?.id || '');
-      } else {
-        getBoard(currentBoard.id);
-      }
-    } else {
-      setAllMediums([]);
-      setMedium('');
+    const newSchema = getValidationSchema(currentFields);
+    setDynamicSchema(newSchema);
+  }, [currentFields]);
+
+  useEffect(() => {
+    setAllOrganization(cloneDeep(medium?.educationMediumStages || []));
+  }, [medium?.educationMediumStages]);
+
+  useEffect(() => {
+    const standards =
+      allOrganization.find((org: any) => org?.id === formik.values.organization)?.standards || [];
+
+    if (!standards.some((std) => std.id === 'all')) {
+      standards.unshift({
+        id: 'all',
+        name: 'All',
+        creationTime: '',
+        creatorId: '',
+        lastModificationTime: '',
+        lastModifierId: '',
+        educationMediumStageId: '',
+        divisions: [],
+      });
     }
-  }, [boardData, currentBoard?.id, getBoard]);
+    setAllClass(standards);
+  }, [allOrganization, formik.values.organization]);
+
+  const showField = (fieldName: string) => currentFields.includes(fieldName);
 
   useEffect(() => {
-    setAllMediums(boardData?.educationMediums || []);
-    setMedium(boardData?.educationMediums?.[0]?.id || '');
-  }, [boardData]);
+    if (formik.values.classes.length === 0) {
+      setAllDivision([]);
+      formik.setFieldValue('divisions', []);
+      return;
+    }
 
-  useEffect(() => {
-    setAllOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages || []
-    );
-    setOrganization(
-      allMediums.find((med: any) => med?.id === medium)?.educationMediumStages?.[0]?.id || ''
-    );
-  }, [medium, allMediums]);
+    if (formik.values.classes.length === 1 && formik.values.classes[0] !== 'all') {
+      const selectedClass = allClass.find((cls: any) => cls?.id === formik.values.classes[0]);
+      const divisions = selectedClass?.divisions || [];
+      setAllDivision(divisions);
 
-  useEffect(() => {
-    setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
-    setClass(
-      allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
-    );
-  }, [organization, allOrganization]);
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
-  }, [allClass, classes]);
+      const divisionIds = divisions.map((div: any) => div.id);
+      formik.setFieldValue('divisions', [...divisionIds]);
+    } else {
+      setAllDivision([
+        {
+          id: 'all',
+          name: 'All',
+          creationTime: '',
+          creatorId: '',
+          lastModificationTime: '',
+          lastModifierId: '',
+          strength: 0,
+          standardId: '',
+        },
+      ]);
+      formik.setFieldValue('divisions', ['all']);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allClass, formik.values.classes]);
 
   return (
     <Box>
-      <Card>
-        <CardHeader title="Student Attendance Report" />
-        <CardContent>
-          <Box display="flex" gap={2} flexWrap="wrap">
-            <CustomSelect
-              options={[
-                { name: 'Absent Student Report', id: 'absent-student-report' },
-                { name: 'Attendance Sheet', id: 'attendance-sheet' },
-                {
-                  name: 'Daily Strength Gender Wise Summary',
-                  id: 'daily-strength-gender-wise-summary',
-                },
-                {
-                  name: 'Student Attendance Register Small',
-                  id: 'student-attendance-register-small',
-                },
-                {
-                  name: 'Student Attendance Register Small',
-                  id: 'student-attendance-register-small',
-                },
-              ]}
-              label="Report Type"
-              value="absent-student-report"
-              onChange={(val) => {
-                //   setMedium(val as string);
-              }}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            />
-
-            <CustomSelect
-              options={allMediums}
-              label="Medium"
-              value={medium}
-              onChange={(val) => {
-                setMedium(val as string);
-              }}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-            />
-            <CustomSelect
-              options={allOrganization}
-              label="Organization"
-              value={organization}
-              onChange={(val) => setOrganization(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!medium}
-            />
-            <CustomSelect
-              options={allClass}
-              label="Class"
-              value={classes}
-              onChange={(val) => setClass(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!organization}
-            />
-            <CustomSelect
-              options={allDivision}
-              label="Division"
-              value={division}
-              onChange={(val) => setDivision(val as string)}
-              labelKey="name"
-              valueKey="id"
-              formControlProps={{ sx: { maxWidth: '250px', width: '100%' } }}
-              disabled={!classes}
-            />
-            <TextField
-              label="Search GR No"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    {' '}
-                    <Iconify icon="bytesize:search" sx={{ height: '20px', width: '20px' }} />
-                  </InputAdornment>
-                ),
-              }}
-              size="small"
-              sx={{ maxWidth: '250px', width: '100%' }}
-            />
-            <DatePicker
-              label="From Date"
-              slotProps={{ textField: { size: 'small', sx: { maxWidth: '250px', width: '100%' } } }}
-            />
-            <DatePicker
-              label="To Date"
-              slotProps={{ textField: { size: 'small', sx: { maxWidth: '250px', width: '100%' } } }}
-            />
-          </Box>
-        </CardContent>
-        <CardActions sx={{ justifyContent: 'flex-end' }}>
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.scheduledReport} />}
-            variant="outlined"
-            onClick={dialog.onTrue}
-          >
-            Schedule Report
-          </Button>
-          <Button startIcon={<Iconify icon={GlobalIcons.generateReport} />} variant="contained">
-            Generate Report
-          </Button>
-        </CardActions>
-      </Card>
-
-      <ScheduledReports />
-      <CustomDialog title="Schedule Report" open={dialog.value} handleClose={dialog.onFalse}>
-        <ScheduledReportsFrom handleClose={dialog.onFalse} />
-      </CustomDialog>
-    </Box>
-  );
-};
-
-const ScheduledReports = () => (
-  <Card sx={{ mt: 2 }}>
-    <CardHeader title="Scheduled Reports" />
-    <CardContent>
-      <CustomizableTable
-        tableId="scheduled-reports"
-        columns={[
-          { id: 'date', label: 'Date' },
-          { id: 'name', label: 'Name' },
-          { id: 'timeDuration', label: 'Time Duration' },
-          { id: 'notificationType', label: 'Notification Type' },
-          {
-            id: 'active',
-            label: 'Enable',
-            render(value, row) {
-              return <Switch />;
-            },
-          },
+      <CustomBreadcrumbs
+        heading="Reports"
+        description="Generate attendance reports for students."
+        links={[
+          { name: 'Student', href: '/student/enrollment/dashboard/' },
+          { name: 'Attendance', href: '/student/attendance/dashboard/' },
+          { name: 'Reports' },
         ]}
-        data={[
-          {
-            id: 1,
-            date: '2024-01-01',
-            name: 'Daily Attendance Report',
-            notificationType: 'email',
-            timeDuration: 'daily',
-          },
-          {
-            id: 2,
-            date: '2024-01-15',
-            name: 'Weekly Summary Report',
-            notificationType: 'sms',
-            timeDuration: 'weekly',
-          },
-          {
-            id: 3,
-            date: '2024-02-01',
-            name: 'Monthly Attendance Report',
-            notificationType: 'both',
-            timeDuration: 'monthly',
-          },
-          {
-            id: 4,
-            date: '2024-02-15',
-            name: 'Absentee Report',
-            notificationType: 'email',
-            timeDuration: 'weekly',
-          },
-          {
-            id: 5,
-            date: '2024-03-01',
-            name: 'Late Arrival Report',
-            notificationType: 'sms',
-            timeDuration: 'daily',
-          },
-        ]}
+        sx={{ mb: 2 }}
       />
-    </CardContent>
-  </Card>
-);
+      <Card>
+        <form onSubmit={formik.handleSubmit}>
+          <Box sx={{ p: 2 }}>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <ShakingTextField
+                  error={!!(formik.touched.report && formik.errors.report) || false}
+                >
+                  <CustomSelect
+                    options={AttendanceReportTitleOptions}
+                    label="Report *"
+                    labelKey="label"
+                    valueKey="name"
+                    value={formik.values.report}
+                    onChange={(val) => {
+                      formik.setFieldValue('report', val);
+                      // Reset fields on report change
+                      formik.setValues({
+                        ...initialValues,
+                        report: val as string,
+                      });
+                    }}
+                    onBlur={() => formik.setFieldTouched('report', true)}
+                    error={formik.touched.report && Boolean(formik.errors.report)}
+                    helperText={(formik.touched.report && formik.errors.report) as string}
+                    formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                  />
+                </ShakingTextField>
+              </Grid>
 
-const ScheduledReportsFrom = ({ handleClose }: { handleClose: () => void }) => {
-  const { values, handleChange, setFieldValue, handleSubmit } = useFormik({
-    initialValues: {
-      date: null,
-      name: '',
-      timeDuration: '',
-      notificationType: '',
-      active: false,
-      weekday: 'monday',
-    },
-    onSubmit: () => {},
-  });
-  return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Scrollbar sx={{ bgcolor: 'background.neutral', p: 2 }}>
-        <Stack spacing={2}>
-          <TextField label="Name" value={values.name} onChange={handleChange} size="small" />
-          <CustomSelect
-            options={[
-              { value: 'daily', label: 'Daily' },
-              { value: 'weekly', label: 'Weekly' },
-              { value: 'monthly', label: 'Monthly' },
-            ]}
-            label="Time Duration"
-            value={values.timeDuration}
-            onChange={(val) => setFieldValue('timeDuration', val)}
-            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset', width: '100%' } }}
-          />
-          {values.timeDuration === 'daily' && (
-            <TimePicker
-              value={values.date}
-              onChange={(val) => setFieldValue('date', val)}
-              viewRenderers={{
-                hours: renderTimeViewClock,
-                minutes: renderTimeViewClock,
-                seconds: renderTimeViewClock,
-              }}
-              slotProps={{ textField: { size: 'small' } }}
-            />
-          )}
-          {values.timeDuration === 'weekly' && (
-            <FormControl>
-              <FormLabel>Select Day</FormLabel>
-              <RadioGroup
-                row
-                value={values.weekday}
-                onChange={(e) => setFieldValue('weekday', e.target.value)}
-              >
-                <FormControlLabel value="monday" control={<Radio />} label="Monday" />
-                <FormControlLabel value="tuesday" control={<Radio />} label="Tuesday" />
-                <FormControlLabel value="wednesday" control={<Radio />} label="Wednesday" />
-                <FormControlLabel value="thursday" control={<Radio />} label="Thursday" />
-                <FormControlLabel value="friday" control={<Radio />} label="Friday" />
-                <FormControlLabel value="saturday" control={<Radio />} label="Saturday" />
-                <FormControlLabel value="sunday" control={<Radio />} label="Sunday" />
-              </RadioGroup>
-            </FormControl>
-          )}
-          {values.timeDuration === 'monthly' && (
-            <DatePicker
-              value={values.date}
-              onChange={(val) => setFieldValue('date', val)}
-              label="Date"
-              slotProps={{ textField: { size: 'small' } }}
-            />
-          )}
+              {showField('organization') && (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.organization && formik.errors.organization) || false}
+                  >
+                    <CustomSelect
+                      options={allOrganization}
+                      label="Organization *"
+                      value={formik.values.organization}
+                      onChange={(val) => {
+                        formik.setFieldValue('organization', val);
 
-          <CustomSelect
-            options={[
-              { value: 'email', label: 'Email' },
-              { value: 'sms', label: 'SMS' },
-              { value: 'both', label: 'Both' },
-            ]}
-            label="Notification Type"
-            value={values.notificationType}
-            onChange={(val) => setFieldValue('notificationType', val)}
-            formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset', width: '100%' } }}
-          />
-          <Box display="flex" alignItems="center">
-            <Switch
-              checked={values.active}
-              onChange={(e) => setFieldValue('active', e.target.checked)}
-            />
-            <Typography component="span">Enable</Typography>
+                        const standards =
+                          allOrganization.find((org: any) => org?.id === val)?.standards || [];
+                        const standardIds = standards.map((standard: any) => standard.id);
+
+                        const uniqueClassIds = ['all', ...standardIds.filter((id) => id !== 'all')];
+
+                        formik.setFieldValue('classes', uniqueClassIds);
+                      }}
+                      onBlur={() => formik.setFieldTouched('organization', true)}
+                      error={formik.touched.organization && Boolean(formik.errors.organization)}
+                      helperText={
+                        (formik.touched.organization && formik.errors.organization) as string
+                      }
+                      labelKey="name"
+                      valueKey="id"
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                      disabled={!medium}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
+
+              {showField('classes') && (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.classes && formik.errors.classes) || false}
+                  >
+                    <CustomSelect
+                      options={allClass}
+                      label="Class *"
+                      multiple
+                      value={formik.values.classes}
+                      onChange={(val) => {
+                        const value = val as string[];
+
+                        const allClassIds =
+                          allClass?.filter((cls) => cls.id !== 'all').map((cls) => cls.id) || [];
+                        const isAllClicked = value.includes('all');
+                        const wasAllPreviouslySelected = (
+                          formik.values.classes as string[]
+                        ).includes('all');
+
+                        if (isAllClicked && !wasAllPreviouslySelected) {
+                          formik.setFieldValue('classes', ['all', ...allClassIds]);
+                        } else if (!isAllClicked && wasAllPreviouslySelected) {
+                          formik.setFieldValue('classes', []);
+                        } else if (isAllClicked && wasAllPreviouslySelected) {
+                          const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                          if (selectedWithoutAll.length === allClassIds.length) {
+                            formik.setFieldValue('classes', ['all', ...allClassIds]);
+                          } else {
+                            formik.setFieldValue('classes', selectedWithoutAll);
+                          }
+                        } else {
+                          const selectedWithoutAll = value.filter((id) => id !== 'all');
+
+                          if (selectedWithoutAll.length === allClassIds.length) {
+                            formik.setFieldValue('classes', ['all', ...allClassIds]);
+                          } else {
+                            formik.setFieldValue('classes', selectedWithoutAll);
+                          }
+                        }
+                      }}
+                      onBlur={() => formik.setFieldTouched('classes', true)}
+                      error={formik.touched.classes && Boolean(formik.errors.classes)}
+                      helperText={(formik.touched.classes && formik.errors.classes) as string}
+                      labelKey="name"
+                      valueKey="id"
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                      disabled={!formik.values.organization}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
+
+              {showField('divisions') &&
+                !(formik.values.classes as string[]).includes('all') &&
+                formik.values.classes.length > 0 && (
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <ShakingTextField
+                      error={!!(formik.touched.divisions && formik.errors.divisions) || false}
+                    >
+                      <CustomSelect
+                        options={allDivision}
+                        label="Division *"
+                        value={formik.values.divisions}
+                        onChange={(val) => formik.setFieldValue('divisions', val)}
+                        onBlur={() => formik.setFieldTouched('divisions', true)}
+                        error={formik.touched.divisions && Boolean(formik.errors.divisions)}
+                        helperText={(formik.touched.divisions && formik.errors.divisions) as string}
+                        labelKey="name"
+                        valueKey="id"
+                        multiple={
+                          !(formik.values.classes as string[]).includes('all') ||
+                          formik.values.classes.length > 1
+                        }
+                        formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                        disabled={formik.values.classes.length === 0}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                )}
+
+              {showField('rollNo') && (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.rollNo && formik.errors.rollNo) || false}
+                  >
+                    <TextField
+                      label="Roll No *"
+                      size="small"
+                      fullWidth
+                      value={formik.values.rollNo}
+                      onChange={formik.handleChange}
+                      name="rollNo"
+                      error={formik.touched.rollNo && Boolean(formik.errors.rollNo)}
+                      helperText={(formik.touched.rollNo && formik.errors.rollNo) as string}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
+
+              {showField('attendanceType') && (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <ShakingTextField
+                    error={
+                      !!(formik.touched.attendanceType && formik.errors.attendanceType) || false
+                    }
+                  >
+                    <CustomSelect
+                      options={[
+                        { id: 'Present', name: 'Present' },
+                        { id: 'Absent', name: 'Absent' },
+                        { id: 'Leave', name: 'Leave' },
+                        { id: 'Late', name: 'Late' },
+                      ]}
+                      label="Attendance Type *"
+                      value={formik.values.attendanceType}
+                      onChange={(val) => formik.setFieldValue('attendanceType', val)}
+                      onBlur={() => formik.setFieldTouched('attendanceType', true)}
+                      error={formik.touched.attendanceType && Boolean(formik.errors.attendanceType)}
+                      helperText={
+                        (formik.touched.attendanceType && formik.errors.attendanceType) as string
+                      }
+                      labelKey="name"
+                      valueKey="id"
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
+
+              {showField('gender') && (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.gender && formik.errors.gender) || false}
+                  >
+                    <CustomSelect
+                      label="Gender *"
+                      options={[
+                        { id: 'male', name: 'Male' },
+                        { id: 'female', name: 'Female' },
+                        { id: 'other', name: 'Other' },
+                      ]}
+                      value={formik.values.gender}
+                      onChange={(val) => formik.setFieldValue('gender', val)}
+                      onBlur={() => formik.setFieldTouched('gender', true)}
+                      error={formik.touched.gender && Boolean(formik.errors.gender)}
+                      helperText={(formik.touched.gender && formik.errors.gender) as string}
+                      labelKey="name"
+                      valueKey="id"
+                      multiple
+                      formControlProps={{ sx: { maxWidth: 'unset', width: '100%' } }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
+
+              {showField('fromDate') && (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.fromDate && formik.errors.fromDate) || false}
+                  >
+                    <DatePicker
+                      label="From Date *"
+                      disableFuture
+                      format="DD/MM/YYYY"
+                      minDate={new Dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
+                      value={formik.values.fromDate}
+                      onChange={(date) => formik.setFieldValue('fromDate', date)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: formik.touched.fromDate && Boolean(formik.errors.fromDate),
+                          helperText: (formik.touched.fromDate && formik.errors.fromDate) as string,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
+
+              {showField('toDate') && (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <ShakingTextField
+                    error={!!(formik.touched.toDate && formik.errors.toDate) || false}
+                  >
+                    <DatePicker
+                      label="To Date *"
+                      disableFuture
+                      format="DD/MM/YYYY"
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
+                      value={formik.values.toDate}
+                      onChange={(date) => formik.setFieldValue('toDate', date)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: formik.touched.toDate && Boolean(formik.errors.toDate),
+                          helperText: (formik.touched.toDate && formik.errors.toDate) as string,
+                        },
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
+
+              <Grid size={12} justifyContent="flex-end" display="flex">
+                <Button
+                  startIcon={<Iconify icon={GlobalIcons.generateReport} />}
+                  type="submit"
+                  disabled={
+                    formik.values.report === '' ||
+                    formik.values.report === null ||
+                    formik.values.report === undefined
+                  }
+                  variant="contained"
+                  size="small"
+                >
+                  Generate Report
+                </Button>
+              </Grid>
+            </Grid>
           </Box>
-        </Stack>
-      </Scrollbar>
-      <DialogActions>
-        <Button variant="outlined" onClick={handleClose}>
-          Cancel
-        </Button>
-        <Button variant="contained" color="primary" type="submit">
-          Save
-        </Button>
-      </DialogActions>
+        </form>
+      </Card>
     </Box>
   );
 };
+
+export default AttendanceReportScreen;
