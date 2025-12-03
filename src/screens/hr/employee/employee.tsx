@@ -381,6 +381,7 @@ const SalaryStructure = ({ handleClose }: { handleClose: () => void }) => {
         Yup.object({
           name: Yup.string().required('Name is required'),
           type: Yup.string().required('Type is required'),
+          // eslint-disable-next-line func-names
           amount: Yup.string().test('amount', 'Amount is required', function (value) {
             // eslint-disable-next-line react/no-this-in-sfc
             if (this.parent.type === 'fixed') {
@@ -394,6 +395,7 @@ const SalaryStructure = ({ handleClose }: { handleClose: () => void }) => {
         Yup.object({
           name: Yup.string().required('Name is required'),
           type: Yup.string().required('Type is required'),
+          // eslint-disable-next-line func-names
           amount: Yup.string().test('amount', 'Amount is required', function (value) {
             // eslint-disable-next-line react/no-this-in-sfc
             if (this.parent.type === 'fixed') {
