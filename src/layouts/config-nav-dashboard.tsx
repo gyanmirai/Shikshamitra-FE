@@ -218,7 +218,6 @@ export const navData = (isDdvs: boolean) => [
         path: '/security-guard/dashboard',
         icon: ICONS.securityGuard,
         _action: 'security-guard',
-
         submodule: securityGuardModule[securityGuardPath].flatMap((list) => list.items),
       },
     ],

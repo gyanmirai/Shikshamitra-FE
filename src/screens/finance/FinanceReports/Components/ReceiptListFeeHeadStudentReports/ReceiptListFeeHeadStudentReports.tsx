@@ -12,15 +12,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Grid, Card, Button } from '@mui/material';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
-import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
-import { ReceiptListFeeHeadStudentReportsTitleOptions } from 'src/enums/receipt-list-fee-head-student-reports';
 
 import { getReceiptListFeeHeadStudentReportsValidationSchema } from './ReceiptListFeeHeadStudentReportsSchema';
 
@@ -120,7 +118,7 @@ const initialValues = {
 // -------------------------------------------------------------
 // COMPONENT
 // -------------------------------------------------------------
-const ReceiptListFeeHeadStudentReports = () => {
+const ReceiptListFeeHeadStudentReports = ({ report }: { report: any }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Cascading Data
@@ -160,7 +158,11 @@ const ReceiptListFeeHeadStudentReports = () => {
   );
 
   const formik = useFormik({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      report,
+    },
+    enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: (values, { setSubmitting }) => {
       window.alert('Report Generated!');
@@ -389,6 +391,20 @@ const ReceiptListFeeHeadStudentReports = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFields, allFeeHeads]);
 
+  // Auto-select students when list loads
+  useEffect(() => {
+    // Only auto-select students when standards & divisions are selected
+    if (!currentFields.includes('students')) return;
+    if (!formik.values.standards.length || !formik.values.divisions.length) return;
+
+    if (studentList.length > 0) {
+      formik.setFieldValue('students', ['all', ...studentList.map((s) => s.id)]);
+    } else {
+      formik.setFieldValue('students', []);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentList, currentFields, formik.values.standards, formik.values.divisions]);
+
   useEffect(() => {
     if (currentFields.includes('months') && allMonths.length > 0) {
       const allIds = allMonths.map((m) => m.id);
@@ -405,54 +421,9 @@ const ReceiptListFeeHeadStudentReports = () => {
         <form onSubmit={formik.handleSubmit}>
           <Box p={2}>
             <Grid container spacing={3}>
-              {/* REPORT TITLE */}
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <ShakingTextField
-                  error={(formik.values.report as unknown) === '' && !!formik.touched.report}
-                >
-                  <CustomTooltip placement="top" title={formik.values.report || ''}>
-                    <Autocomplete
-                      fullWidth
-                      options={ReceiptListFeeHeadStudentReportsTitleOptions}
-                      getOptionLabel={(option) => option.label}
-                      isOptionEqualToValue={(o, v) => o.name === v.name}
-                      value={
-                        ReceiptListFeeHeadStudentReportsTitleOptions.find(
-                          (opt) => opt.name === formik.values.report
-                        ) || null
-                      }
-                      onChange={(_, newValue) => {
-                        formik.setFieldValue('report', newValue ? newValue.name : '');
-                        // Reset fields on report change
-                        formik.setFieldValue('board', '');
-                        formik.setFieldValue('medium', '');
-                        formik.setFieldValue('organizations', []);
-                        formik.setFieldValue('organizationSingle', '');
-                        formik.setFieldValue('standards', []);
-                        formik.setFieldValue('divisions', []);
-                        formik.setFieldValue('students', []);
-                        formik.setFieldValue('feeHeads', []);
-                        formik.setFieldValue('months', []);
-                        formik.setFieldValue('fromDate', null);
-                        formik.setFieldValue('toDate', null);
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          size="small"
-                          label="Report *"
-                          error={Boolean(formik.touched.report && formik.errors.report)}
-                          helperText={formik.touched.report && (formik.errors.report as string)}
-                        />
-                      )}
-                    />
-                  </CustomTooltip>
-                </ShakingTextField>
-              </Grid>
-
               {/* BOARD */}
               {showField('board') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.board && formik.errors.board)}>
                     <CustomSelect
                       label="Board *"
@@ -473,7 +444,7 @@ const ReceiptListFeeHeadStudentReports = () => {
 
               {/* MEDIUM */}
               {showField('medium') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.medium && formik.errors.medium)}>
                     <CustomSelect
                       label="Medium *"
@@ -495,7 +466,7 @@ const ReceiptListFeeHeadStudentReports = () => {
 
               {/* ORGANIZATIONS (Multi) */}
               {showField('organizations') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.organizations && formik.errors.organizations)}
                   >
@@ -537,7 +508,7 @@ const ReceiptListFeeHeadStudentReports = () => {
 
               {/* ORGANIZATION (Single) */}
               {showField('organizationSingle') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(
                       formik.touched.organizationSingle && formik.errors.organizationSingle
@@ -566,7 +537,7 @@ const ReceiptListFeeHeadStudentReports = () => {
 
               {/* STANDARDS (Multi) */}
               {showField('standards') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.standards && formik.errors.standards)}
                   >
@@ -610,7 +581,7 @@ const ReceiptListFeeHeadStudentReports = () => {
 
               {/* DIVISIONS (Multi) */}
               {showField('divisions') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.divisions && formik.errors.divisions)}
                   >
@@ -651,7 +622,7 @@ const ReceiptListFeeHeadStudentReports = () => {
 
               {/* STUDENTS (Multi) */}
               {showField('students') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.students && formik.errors.students)}
                   >
@@ -691,7 +662,7 @@ const ReceiptListFeeHeadStudentReports = () => {
 
               {/* FEE HEADS (Multi) */}
               {showField('feeHeads') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.feeHeads && formik.errors.feeHeads)}
                   >
@@ -731,7 +702,7 @@ const ReceiptListFeeHeadStudentReports = () => {
 
               {/* MONTHS (Multi) */}
               {showField('months') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.months && formik.errors.months)}>
                     <ResponsiveMultiSelect
                       label="Months *"
@@ -769,7 +740,7 @@ const ReceiptListFeeHeadStudentReports = () => {
 
               {/* FROM DATE */}
               {showField('fromDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.fromDate && formik.errors.fromDate)}
                   >
@@ -795,7 +766,7 @@ const ReceiptListFeeHeadStudentReports = () => {
 
               {/* TO DATE */}
               {showField('toDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.toDate && formik.errors.toDate)}>
                     <DatePicker
                       label="To Date *"

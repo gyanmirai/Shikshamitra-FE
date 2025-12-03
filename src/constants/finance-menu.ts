@@ -178,7 +178,6 @@ const financeModule = {
           _action: 'finance-reports',
           shortcutKey: 'Alt+F+11',
           shortcutKeyName: 'Alt+F+11',
-          caption: 'Coming Soon',
         },
         {
           title: 'Notification',
