@@ -101,7 +101,7 @@ const EntranceExamSlots = () => {
         sx={{ mb: 2 }}
         action={
           <Button
-            sx={{ width: '160px' }}
+            sx={{ px: '32px' }}
             startIcon={<Add />}
             onClick={entranceExamSlotsDialog.onTrue}
             variant="contained"

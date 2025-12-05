@@ -105,6 +105,7 @@ const FinanceExpenseTracking = () => {
               size="small"
               startIcon={<Add />}
               variant="contained"
+              sx={{ px: '32px' }}
             >
               Expense
             </Button>

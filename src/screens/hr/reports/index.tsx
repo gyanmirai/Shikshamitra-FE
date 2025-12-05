@@ -45,6 +45,7 @@ const ReportsScreen = () => {
             size="small"
             onClick={openGenerateReport.onTrue}
             startIcon={<Iconify icon={GlobalIcons.report} />}
+            sx={{ px: '32px' }}
           >
             Generate Report
           </Button>

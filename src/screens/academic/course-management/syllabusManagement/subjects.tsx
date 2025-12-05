@@ -262,6 +262,7 @@ const Subjects = () => {
                 addChapterDialog.onTrue();
               }}
               disabled={!classes || !subject}
+              sx={{ px: '32px' }}
             >
               Chapter
             </Button>

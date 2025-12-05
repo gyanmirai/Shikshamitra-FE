@@ -80,6 +80,7 @@ const VehicleDocumentSettingScreen = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Vehicle Document
           </Button>

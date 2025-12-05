@@ -239,6 +239,7 @@ const Subject = () => {
                         setSelectedSubject(null);
                       }
                 }
+                sx={{ px: '32px' }}
               >
                 Subjects Assignment
               </Button>

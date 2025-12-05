@@ -270,6 +270,7 @@ const GradeEntry = (props: TabComponentType) => {
               publishMarksDialog.onTrue();
             }}
             title="Publish marks to make them visible to students"
+            sx={{ px: '32px' }}
           >
             Publish Marks
           </Button>

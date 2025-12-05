@@ -857,6 +857,7 @@ const ExaminationReportComponent = () => {
                     formik.values.report === null ||
                     formik.values.report === undefined
                   }
+                  sx={{ px: '32px' }}
                 >
                   Generate Report
                 </Button>

@@ -97,6 +97,7 @@ const RoleScreen = () => {
             variant="contained"
             onClick={() => setOpen(true)}
             size="small"
+            sx={{ px: '32px' }}
           >
             Role
           </Button>

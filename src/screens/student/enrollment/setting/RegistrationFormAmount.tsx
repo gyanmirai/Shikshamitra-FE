@@ -78,7 +78,7 @@ const RegistrationAmount = () => {
         ]}
         action={
           <Button
-            sx={{ width: '160px' }}
+            sx={{ px: '32px' }}
             startIcon={<Add />}
             onClick={registrationAmountDialog.onTrue}
             variant="contained"

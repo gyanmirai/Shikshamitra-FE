@@ -144,6 +144,7 @@ const FinanceExpenseCategory = () => {
             size="small"
             startIcon={<Iconify icon="eva:plus-fill" />}
             onClick={handleAdd}
+            sx={{ px: '32px' }}
           >
             Expense Category
           </Button>

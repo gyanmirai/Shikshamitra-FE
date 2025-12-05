@@ -309,6 +309,7 @@ const InquiryScreen = () => {
               startIcon={inquiryDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
               variant="contained"
               onClick={inquiryDialog.onTrue}
+              sx={{ px: '32px' }}
             >
               Inquiry
             </Button>

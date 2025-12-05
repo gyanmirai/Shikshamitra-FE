@@ -234,6 +234,7 @@ const AdmissionScreen = () => {
           disabled={!selectedStudents.length}
           onClick={statusDialog.onTrue}
           startIcon={<Iconify icon="mdi:exchange" />}
+          sx={{ px: '32px' }}
         >
           Change Status
         </Button>

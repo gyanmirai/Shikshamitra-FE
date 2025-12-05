@@ -259,6 +259,7 @@ const Teacher = ({
             }}
             size="small"
             disabled={!hasChanges}
+            sx={{ px: '32px' }}
           >
             Reset
           </Button>
@@ -270,6 +271,7 @@ const Teacher = ({
               saveConfirmDialog.onTrue();
             }}
             disabled={!hasChanges}
+            sx={{ px: '32px' }}
           >
             Save
           </Button>

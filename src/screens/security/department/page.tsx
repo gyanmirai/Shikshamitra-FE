@@ -251,6 +251,7 @@ const Department = () => {
             variant="contained"
             size="small"
             onClick={organizationUnitDialog.onTrue}
+            sx={{ px: '32px' }}
           >
             Department
           </Button>

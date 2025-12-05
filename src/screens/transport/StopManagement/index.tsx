@@ -78,6 +78,7 @@ const StopManagement = () => {
               size="small"
               startIcon={<Add />}
               variant="contained"
+              sx={{ px: '32px' }}
             >
               Stop
             </Button>

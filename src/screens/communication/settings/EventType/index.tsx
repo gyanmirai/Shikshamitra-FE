@@ -76,6 +76,7 @@ const EventTypeCreation = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Event Type
           </Button>
