@@ -70,6 +70,7 @@ const ZoneAreaSettingScreen = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Zone/Area
           </Button>

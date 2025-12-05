@@ -65,6 +65,7 @@ const BonofiedCertificate = () => {
           size="small"
           variant="contained"
           onClick={dialog.onTrue}
+          sx={{ px: '32px' }}
         >
           Bonafide
         </Button>

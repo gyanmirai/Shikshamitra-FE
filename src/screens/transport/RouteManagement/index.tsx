@@ -120,6 +120,7 @@ const RouteManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) 
                 variant="contained"
                 size="small"
                 onClick={() => setOpen(true)}
+                sx={{ px: '32px' }}
               >
                 Route
               </Button>

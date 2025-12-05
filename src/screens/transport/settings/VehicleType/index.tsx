@@ -77,6 +77,7 @@ const VehicleTypeSettingScreen = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Vehicle Type
           </Button>

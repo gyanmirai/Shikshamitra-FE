@@ -82,6 +82,7 @@ const RegisterScreen = () => {
               size="small"
               startIcon={<Add />}
               onClick={formDialog.onTrue}
+              sx={{ px: '32px' }}
             >
               Registration
             </Button>

@@ -42,6 +42,7 @@ const HomeworkReportsList = () => {
               variant="contained"
               startIcon={<Add />}
               onClick={addReportDialog.onTrue}
+              sx={{ px: '32px' }}
             >
               Add Report
             </Button>

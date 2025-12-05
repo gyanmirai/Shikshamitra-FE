@@ -136,7 +136,13 @@ const LeaveAndAbsentScreen = () => {
         ]}
         sx={{ mb: 2 }}
         action={
-          <Button startIcon={<Add />} variant="contained" size="small" onClick={dialog.onTrue}>
+          <Button
+            startIcon={<Add />}
+            variant="contained"
+            size="small"
+            onClick={dialog.onTrue}
+            sx={{ px: '32px' }}
+          >
             Leave Request
           </Button>
         }

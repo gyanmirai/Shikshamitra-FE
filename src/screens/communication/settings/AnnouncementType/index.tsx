@@ -78,6 +78,7 @@ const AnnouncementTypeCreation = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Announcement Type
           </Button>

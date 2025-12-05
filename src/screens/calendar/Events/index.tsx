@@ -101,6 +101,7 @@ const Events = (props: TabComponentType) => {
               startIcon={<Add />}
               variant="contained"
               onClick={() => setOpen(true)}
+              sx={{ px: '32px' }}
             >
               Event
             </Button>

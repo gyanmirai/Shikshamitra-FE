@@ -76,6 +76,7 @@ const BankAccountManagement: React.FC = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Add Bank Account
           </Button>

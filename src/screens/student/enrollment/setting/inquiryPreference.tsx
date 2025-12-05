@@ -83,6 +83,7 @@ const InquiryPreference = () => {
             onClick={inquiryPreferenceDialog.onTrue}
             variant="contained"
             size="small"
+            sx={{ px: '32px' }}
           >
             Inquiry Preference
           </Button>

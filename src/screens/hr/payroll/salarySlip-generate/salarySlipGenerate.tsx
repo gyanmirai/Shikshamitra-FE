@@ -107,7 +107,7 @@ const PaySlipGenerationScreen = () => {
           sx={{ maxWidth: '250px', width: '100%' }}
           slotProps={{ textField: { size: 'small' } }}
         />
-        <Button size="small" variant="contained" startIcon={<Search />}>
+        <Button size="small" variant="contained" startIcon={<Search />} sx={{ px: '32px' }}>
           Search
         </Button>
       </Box>
@@ -229,15 +229,30 @@ const PaySlipGenerationScreen = () => {
         </Grid>
       </Box>
       <Box display="flex" gap={2} flexWrap="wrap" my={2} justifyContent="flex-end">
-        <Button size="small" startIcon={<Iconify icon="ion:download" />} variant="soft">
+        <Button
+          size="small"
+          startIcon={<Iconify icon="ion:download" />}
+          variant="soft"
+          sx={{ px: '32px' }}
+        >
           Download PDF
         </Button>
 
-        <Button size="small" startIcon={<Iconify icon="ion:print" />} variant="soft">
+        <Button
+          size="small"
+          startIcon={<Iconify icon="ion:print" />}
+          variant="soft"
+          sx={{ px: '32px' }}
+        >
           Print Payslip
         </Button>
 
-        <Button size="small" startIcon={<Iconify icon="ion:email" />} variant="contained">
+        <Button
+          size="small"
+          startIcon={<Iconify icon="ion:email" />}
+          variant="contained"
+          sx={{ px: '32px' }}
+        >
           Email Payslip
         </Button>
       </Box>

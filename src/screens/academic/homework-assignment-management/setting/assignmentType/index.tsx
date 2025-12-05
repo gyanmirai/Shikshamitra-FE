@@ -73,11 +73,11 @@ const AssignmentTypeCreation = () => {
         description="Create and manage assignment types for homework and assignments. Add, edit, or delete assignment types as needed."
         action={
           <Button
-            sx={{ width: '160px' }}
             startIcon={<Iconify icon="eva:plus-fill" />}
             variant="contained"
             onClick={addAssignmentTypeDialog.onTrue}
             size="small"
+            sx={{ px: '32px' }}
           >
             Assignment Type
           </Button>

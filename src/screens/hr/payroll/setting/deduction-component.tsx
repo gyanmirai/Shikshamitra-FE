@@ -79,6 +79,7 @@ const DeductionComponent = () => {
             startIcon={<Add />}
             size="small"
             onClick={isDeductionComponentOpen.onTrue}
+            sx={{ px: '32px' }}
           >
             Deduction Component
           </Button>

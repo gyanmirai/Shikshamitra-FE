@@ -80,7 +80,13 @@ const HouseSetting = () => {
         ]}
         sx={{ mb: 1 }}
         action={
-          <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+          <Button
+            size="small"
+            startIcon={<Add />}
+            variant="contained"
+            onClick={dialog.onTrue}
+            sx={{ px: '32px' }}
+          >
             House
           </Button>
         }

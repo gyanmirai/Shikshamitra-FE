@@ -184,6 +184,7 @@ const WeeklyLectures = () => {
             variant="contained"
             size="small"
             onClick={addWeeklyLectureDialog.onTrue}
+            sx={{ px: '32px' }}
           >
             Weekly Lectures
           </Button>

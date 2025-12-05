@@ -125,6 +125,7 @@ const TransportRequests = () => {
               startIcon={<Add />}
               variant="contained"
               onClick={() => setOpenForm(true)}
+              sx={{ px: '32px' }}
             >
               Transport Application
             </Button>

@@ -199,6 +199,7 @@ const LibraryTimingCreation = () => {
             size="small"
             onClick={() => sameAsSchoolDialog.onTrue()}
             disabled={sameAsSchoolApplied}
+            sx={{ px: '32px' }}
           >
             Same as School Hours
           </Button>

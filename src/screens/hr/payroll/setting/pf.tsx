@@ -92,7 +92,13 @@ const PF = () => {
           { name: 'PF Rule' },
         ]}
         action={
-          <Button size="small" startIcon={<Add />} variant="contained" onClick={dialog.onTrue}>
+          <Button
+            size="small"
+            startIcon={<Add />}
+            variant="contained"
+            onClick={dialog.onTrue}
+            sx={{ px: '32px' }}
+          >
             PF
           </Button>
         }

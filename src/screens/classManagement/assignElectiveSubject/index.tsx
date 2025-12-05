@@ -273,6 +273,7 @@ const AssignElectiveSubject = () => {
             onClick={() => resetDialog.onTrue()}
             disabled={!classes || !division || !electiveSubject || !hasStudentSelections}
             size="small"
+            sx={{ px: '32px' }}
           >
             Reset
           </Button>
@@ -282,6 +283,7 @@ const AssignElectiveSubject = () => {
             onClick={() => saveDialog.onTrue()}
             disabled={!classes || !division || !electiveSubject || !hasStudentSelections}
             size="small"
+            sx={{ px: '32px' }}
           >
             Save
           </Button>

@@ -186,6 +186,7 @@ const AssignTeacher = () => {
             onClick={resetConfirmDialog.onTrue}
             size="small"
             disabled={!hasChanges}
+            sx={{ px: '32px' }}
           >
             Reset
           </Button>
@@ -195,6 +196,7 @@ const AssignTeacher = () => {
             size="small"
             onClick={saveConfirmDialog.onTrue}
             disabled={!hasChanges}
+            sx={{ px: '32px' }}
           >
             Save
           </Button>
