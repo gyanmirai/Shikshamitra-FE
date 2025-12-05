@@ -17,7 +17,7 @@ const FinanceReportsList = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {!addReportDialog.value && (
         <CustomBreadcrumbs
-          heading="Finance Reports"
+          heading="Reports"
           links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Reports' }]}
           action={
             <Button
@@ -40,38 +40,43 @@ const FinanceReportsList = () => {
           tableId="homework-reports"
           columns={[
             {
-              label: 'Report Name',
+              label: 'Name',
               id: 'reportName',
-              minWidth: '15vw',
+              minWidth: '90px',
               align: 'left',
               sticky: true,
             },
-
-            { label: 'Report Category', id: 'reportCategory', minWidth: '10vw', align: 'left' },
-
             {
-              label: 'Report Description',
-              id: 'reportDescription',
-              minWidth: '12vw',
+              label: 'Category',
+              id: 'reportCategory',
+              minWidth: '90px',
               align: 'left',
             },
             {
-              label: 'Generate Report Date',
-              id: 'generateReportDate',
-              minWidth: '13vw',
+              label: 'Description',
+              id: 'reportDescription',
+              minWidth: '170px',
+              align: 'left',
+            },
+            {
+              label: 'Generated Date',
+              id: 'generatedDate',
+              minWidth: '150px',
               align: 'left',
             },
             {
               label: 'Applied Filters',
               id: 'appliedFilters',
+              align: 'left',
+              minWidth: '150px',
               render(value, row) {
                 return (
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {row.appliedFilters.map((filter: any) => (
+                    {row.appliedFilters?.map((filter: any) => (
                       <Chip
+                        key={filter.name}
                         size="small"
                         variant="soft"
-                        key={filter.name}
                         label={`${filter.name}: ${filter.value}`}
                       />
                     ))}
@@ -82,12 +87,12 @@ const FinanceReportsList = () => {
             {
               label: 'Action',
               id: 'reportAction',
-              minWidth: '5vw',
+              minWidth: '40px',
               align: 'left',
               isFilter: false,
               isSort: false,
               sticky: true,
-              render(value, row) {
+              render() {
                 return (
                   <IconButton size="small" onClick={() => {}}>
                     <Iconify icon={GlobalIcons.report} />

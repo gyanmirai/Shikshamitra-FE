@@ -1,6 +1,6 @@
 import React from 'react';
-import ExaminationReportComponent from 'src/screens/examination/ExaminationReports';
+import ExaminationReportsList from 'src/screens/examination/ExaminationReports/ExaminationReportList';
 
-const ExaminationReportsScreen = () => <ExaminationReportComponent />;
+const ExaminationReportsScreen = () => <ExaminationReportsList />;
 
 export default ExaminationReportsScreen;
