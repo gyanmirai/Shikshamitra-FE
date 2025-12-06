@@ -78,7 +78,6 @@ const InquiryPreference = () => {
         description="Manage how inquiries are received to optimize student admissions tracking."
         action={
           <Button
-            sx={{ width: '160px' }}
             startIcon={<Add />}
             onClick={inquiryPreferenceDialog.onTrue}
             variant="contained"
