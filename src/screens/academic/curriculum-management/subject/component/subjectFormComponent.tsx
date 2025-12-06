@@ -425,8 +425,17 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" sx={{ height: '100%' }}>
-          <Scrollbar sx={{ p: 2, height: '100%' }}>
+        <Box display="flex" flexDirection="column" height="100%">
+          <Scrollbar
+            sx={{
+              p: 2,
+              height: '100%',
+              '& .simplebar-wrapper': {
+                display: 'flex',
+                flexDirection: 'column',
+              },
+            }}
+          >
             <Grid container spacing={3}>
               {/* Class selection */}
               <Grid size={{ xs: 12, md: 4 }}>

@@ -37,7 +37,6 @@ import {
 import {
   Box,
   Grid,
-  Card,
   Radio,
   Button,
   Divider,
@@ -258,15 +257,26 @@ const InquiryForm = ({
   }, [academicYear?.items, board?.items, editData, getClassByMedium, values.academicYear]);
 
   return (
-    <Card sx={{ height: '100%', boxShadow: 'none', background: 'transparent', mt: 1 }}>
-      <BackPopUpChecked initialValues={initialValues} currentValues={values}>
-        <Box
-          component="form"
-          sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-          onSubmit={handleSubmit}
+    <BackPopUpChecked initialValues={initialValues} currentValues={values}>
+      <Box
+        display="flex"
+        component="form"
+        onSubmit={handleSubmit}
+        flexDirection="column"
+        height="100%"
+      >
+        <Scrollbar
+          sx={{
+            p: 2,
+            height: '100%',
+            '& .simplebar-wrapper': {
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          }}
         >
-          <Scrollbar sx={{ px: 1, height: '100%' }}>
-            {/** Basic Details Section */}
+          {/** Basic Details Section */}
+          <Grid size={{ xs: 12 }}>
             <SectionCard title="Basic Details">
               <Grid size={{ xs: 12, md: 4 }}>
                 <ShakingTextField error={!!(touched.academicYear && errors.academicYear) || false}>
@@ -500,7 +510,8 @@ const InquiryForm = ({
                 </ShakingTextField>
               </Grid>
             </SectionCard>
-
+          </Grid>
+          <Grid size={{ xs: 12 }}>
             {/** Inquiry Details Section */}
             <SectionCard title="Inquiry Details">
               <Grid size={{ xs: 12, md: 4 }} mb={1}>
@@ -546,7 +557,8 @@ const InquiryForm = ({
                 />
               </Grid>
             </SectionCard>
-
+          </Grid>
+          <Grid size={{ xs: 12 }}>
             {/** Contact Information Section */}
             <SectionCard title="Contact Information">
               <Grid size={{ xs: 12, md: 4 }}>
@@ -621,7 +633,8 @@ const InquiryForm = ({
                 </ShakingTextField>
               </Grid>
             </SectionCard>
-
+          </Grid>
+          <Grid size={{ xs: 12 }}>
             {/** Address Details Section */}
             <SectionCard title="Address Details">
               <Grid size={{ xs: 12, md: 4 }}>
@@ -759,30 +772,29 @@ const InquiryForm = ({
                 </ShakingTextField>
               </Grid>
             </SectionCard>
-          </Scrollbar>
+          </Grid>
+        </Scrollbar>
 
-          <DialogActions sx={{ flexShrink: 0, p: 2 }}>
-            <Button
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.cancel} />}
-              onClick={handleClose}
-              size="small"
-            >
-              Cancel
-            </Button>
-            <LoadingButton
-              loading={isAddLoading || isUpdateLoading}
-              type="submit"
-              variant="contained"
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              size="small"
-            >
-              Submit
-            </LoadingButton>
-          </DialogActions>
-        </Box>
-      </BackPopUpChecked>
-
+        <DialogActions sx={{ flexShrink: 0, p: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={handleClose}
+            size="small"
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            loading={isAddLoading || isUpdateLoading}
+            type="submit"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            size="small"
+          >
+            Submit
+          </LoadingButton>
+        </DialogActions>
+      </Box>
       <CustomDialog
         open={dialog.value}
         handleClose={dialog.onFalse}
@@ -802,7 +814,7 @@ const InquiryForm = ({
       >
         <InquiryPreferenceForm handleClose={dialog.onFalse} editData={null} />
       </CustomDialog>
-    </Card>
+    </BackPopUpChecked>
   );
 };
 
