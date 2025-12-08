@@ -47,7 +47,12 @@ const ChapterCompletionChart = () => {
     xaxis: { categories: ['Math', 'Science', 'English', 'History', 'Geography', 'Physics'] },
     plotOptions: { bar: { horizontal: false, columnWidth: '40%' } },
     colors: ['#00AB55', '#FFAB00'], // Success, Warning
-    tooltip: { y: { formatter: (val: number) => `${val}` } },
+    tooltip: {
+      shared: true,
+      intersect: false,
+      followCursor: true,
+      y: { formatter: (val: number) => `${val}` },
+    },
   });
 
   return (

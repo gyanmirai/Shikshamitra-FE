@@ -17,6 +17,9 @@ const SubjectPassFailChart = () => {
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
 
+  const [allExamType, setAllExamType] = useState<{ id: string; name: string }[]>([]);
+  const [examType, setExamType] = useState<string>('');
+
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -34,6 +37,13 @@ const SubjectPassFailChart = () => {
   useEffect(() => {
     setAllDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions?.[0]?.id || '');
+    setAllExamType([
+      { id: 'midterm', name: 'Midterm' },
+      { id: 'final', name: 'Final' },
+      { id: 'diagnostic', name: 'Diagnostic' },
+      { id: 'quarterly', name: 'Quarterly' },
+      { id: 'entrance', name: 'Entrance' },
+    ]);
   }, [allClass, classes]);
   const series = [
     { name: 'Passed', data: [45, 52, 38, 33] },
@@ -80,6 +90,16 @@ const SubjectPassFailChart = () => {
 
         {/* Dropdowns */}
         <Box sx={{ display: 'flex', gap: 2 }}>
+          <CustomSelect
+            options={allExamType}
+            label="Exam Type"
+            value={examType}
+            onChange={(val) => setExamType(val as string)}
+            labelKey="name"
+            valueKey="id"
+            formControlProps={{ sx: { minWidth: '150px', width: '100%' } }}
+          />
+
           <CustomSelect
             options={allClass}
             label="Class"

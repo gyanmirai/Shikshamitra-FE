@@ -4,8 +4,9 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { Box, Grid } from '@mui/material';
+import { Box, Card, Grid } from '@mui/material';
 import React, { useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
 
 import SummaryCards from '../AcademicDashboard/Components/SummaryCards';
 import { PerformersList } from '../AcademicDashboard/Components/Performers';
@@ -20,9 +21,18 @@ const AcademicPrincipalDashboardScreen = () => {
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
   // State to store all divisions for the selected class
-  const [, setAllDivision] = useState<Division[]>([]);
+  const [allDivisions, setAllDivision] = useState<Division[]>([]);
   // State to store selected division ID
-  const [, setDivision] = useState<string>('');
+  const [division, setDivision] = useState<string>('');
+
+  // State to store all classes/standards for the selected organization
+  const [allBottomClass, setAllBottomClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [bottomClasses, setBottomClasses] = useState<string>('');
+  // State to store all divisions for the selected class
+  const [allBottomDivisions, setAllBottomDivision] = useState<Division[]>([]);
+  // State to store selected division ID
+  const [bottomDivision, setBottomDivision] = useState<string>('');
 
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -32,16 +42,28 @@ const AcademicPrincipalDashboardScreen = () => {
     // Flatten the list of standards from all stages
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
+    console.log('allClasses', allClasses);
     setAllClass(allClasses);
     setClasses(allClasses[0]?.id || '');
+    const allBottomClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllBottomClass(allBottomClasses);
+    setBottomClasses(allBottomClasses[0]?.id || '');
   }, [medium]);
 
   // Update divisions when class changes
   useEffect(() => {
     setAllDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions || []);
     setDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions?.[0]?.id || '');
-  }, [allClass, classes]);
+
+    setAllBottomDivision(
+      allBottomClass.find((org: Standards) => org?.id === bottomClasses)?.divisions || []
+    );
+    setBottomDivision(
+      allBottomClass.find((org: Standards) => org?.id === bottomClasses)?.divisions?.[0]?.id || ''
+    );
+  }, [allClass, classes, allBottomClass, bottomClasses]);
 
   const topPerformersData = [
     {
@@ -127,21 +149,100 @@ const AcademicPrincipalDashboardScreen = () => {
         </Grid> */}
 
         <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 2 }}>
-          <PerformersList
-            title="Top Performers"
-            list={topPerformersData}
-            type="top"
-            sx={{ height: '100%' }}
-          />
+          <Card sx={{ p: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                px: 1,
+              }}
+            >
+              {/* Title + Subtitle */}
+
+              <Box>
+                <Box sx={{ fontSize: '18px', fontWeight: 600 }}>Top Performers</Box>
+              </Box>
+
+              {/* Dropdowns */}
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <CustomSelect
+                  label="Class"
+                  value={classes}
+                  onChange={(value) => {
+                    setClasses(value as string);
+                  }}
+                  options={allClass}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+                />
+                <CustomSelect
+                  label="Division"
+                  value={division}
+                  onChange={(value) => {
+                    setDivision(value as string);
+                  }}
+                  options={allDivisions}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+                />
+              </Box>
+            </Box>
+            <Box sx={{ p: 3, pb: 1 }} dir="ltr">
+              <PerformersList list={topPerformersData} type="top" sx={{ height: '100%' }} />
+            </Box>
+          </Card>
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }} sx={{ mb: 2 }}>
-          <PerformersList
-            title="Bottom Performers"
-            list={bottomPerformersData}
-            type="bottom"
-            sx={{ height: '100%' }}
-          />
+          <Card sx={{ p: 2 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                px: 1,
+              }}
+            >
+              {/* Title + Subtitle */}
+
+              <Box>
+                <Box sx={{ fontSize: '18px', fontWeight: 600 }}>Bottom Performers</Box>
+              </Box>
+
+              {/* Dropdowns */}
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <CustomSelect
+                  label="Class"
+                  value={bottomClasses}
+                  onChange={(value) => {
+                    setBottomClasses(value as string);
+                  }}
+                  options={allBottomClass}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+                />
+                <CustomSelect
+                  label="Division"
+                  value={bottomDivision}
+                  onChange={(value) => {
+                    setBottomDivision(value as string);
+                  }}
+                  options={allBottomDivisions}
+                  labelKey="name"
+                  valueKey="id"
+                  formControlProps={{ sx: { minWidth: '90px', width: '100%' } }}
+                />
+              </Box>
+            </Box>
+
+            <Box sx={{ p: 3, pb: 1 }} dir="ltr">
+              <PerformersList list={bottomPerformersData} type="bottom" sx={{ height: '100%' }} />
+            </Box>
+          </Card>
         </Grid>
       </Grid>
     </Box>
