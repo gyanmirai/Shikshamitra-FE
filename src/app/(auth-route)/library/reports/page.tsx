@@ -1,5 +1,5 @@
 import React from 'react';
-import LibraryReportsScreen from 'src/screens/library/reports/library-reports-screen';
+import LibraryReportsScreen from 'src/screens/library/reports';
 
 const LibraryReports = () => <LibraryReportsScreen />;
 

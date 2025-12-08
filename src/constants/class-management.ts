@@ -41,6 +41,13 @@ const classManagementModule = {
           shortcutKeyName: 'Alt+A+Z',
         },
         {
+          title: 'Reports',
+          path: '/classManagement/reports',
+          _action: 'reports',
+          shortcutKey: 'Alt+A+R',
+          shortcutKeyName: 'Alt+A+R',
+        },
+        {
           title: 'Notification',
           path: '/classManagement/notification-management',
           _action: 'notification-management',
