@@ -92,7 +92,7 @@ const FinanceAdminDashboardOverview = () => {
       count: fNumber(20),
       color: 'warning.main',
       bgColor: 'warning',
-      href: '#',
+      href: '/finance/charge-management',
       width: 3,
     },
     {
@@ -102,7 +102,7 @@ const FinanceAdminDashboardOverview = () => {
       count: fNumber(8),
       color: 'info.main',
       bgColor: 'info',
-      href: '#',
+      href: '/finance/concession',
       width: 3,
     },
     {
@@ -112,7 +112,7 @@ const FinanceAdminDashboardOverview = () => {
       count: fCurrency(12500000),
       color: 'success.main',
       bgColor: 'success',
-      href: '#',
+      href: '/finance/fee-collection',
       width: 3,
     },
     {
@@ -122,7 +122,7 @@ const FinanceAdminDashboardOverview = () => {
       count: fCurrency(8500000),
       color: 'error.main',
       bgColor: 'error',
-      href: '#',
+      href: '/finance/expenseTracking',
       width: 3,
     },
   ]);
