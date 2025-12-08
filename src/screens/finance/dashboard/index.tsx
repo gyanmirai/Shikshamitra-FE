@@ -8,6 +8,7 @@ import FinanceCollectionMethod from './Components/FinanceCollectionMethod';
 import FinanceDashboardOverview from './Components/FinanceDashboardOverview';
 import FinanceIncomeExpenseTrend from './Components/FinanceIncomeExpenseTrend';
 import FinanceOutstandingByClass from './Components/FinanceOutstandingByClass';
+import FinanceExpectedVsCollected from './Components/FinanceExpectedVsCollected';
 import FinanceMonthlyFeesCollectionTrend from './Components/FinanceMonthlyFeesCollectionTrend';
 
 const FinanceDashboardScreen = () => (
@@ -103,7 +104,7 @@ const FinanceDashboardScreen = () => (
 
       <Grid size={{ xs: 12, md: 6 }}>
         <FinanceCategoryExpense
-          title="Expense Categories"
+          title="Expense by Categories"
           chart={{
             labels: ['Salaries', 'Maintenance', 'Utilities', 'Events', 'Others'],
             series: [
@@ -117,8 +118,51 @@ const FinanceDashboardScreen = () => (
       </Grid>
 
       <Grid size={{ xs: 12, md: 6 }} mb={2}>
+        <FinanceExpectedVsCollected
+          title="Expected vs Collected Fees"
+          subheader="Monthly comparison"
+          chart={{
+            labels: [
+              'Jan',
+              'Feb',
+              'Mar',
+              'Apr',
+              'May',
+              'Jun',
+              'Jul',
+              'Aug',
+              'Sep',
+              'Oct',
+              'Nov',
+              'Dec',
+            ],
+            series: [
+              {
+                name: 'Expected',
+                type: 'column',
+                fill: 'solid',
+                data: [
+                  150000, 145000, 155000, 160000, 140000, 165000, 200000, 155000, 250000, 145000,
+                  180000, 260000,
+                ],
+              },
+              {
+                name: 'Collected',
+                type: 'column',
+                fill: 'solid',
+                data: [
+                  115000, 55000, 110000, 135000, 65000, 110000, 185000, 105000, 220000, 110000,
+                  150000, 225000,
+                ],
+              },
+            ],
+          }}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }} mb={2}>
         <FinanceRecentExpenses
           title="Recent Expenses"
+          viewAllPath="/finance/expenseTracking"
           list={[
             {
               id: '1',

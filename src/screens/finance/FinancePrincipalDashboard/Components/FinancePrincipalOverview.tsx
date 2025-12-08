@@ -2,8 +2,8 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { fCurrency } from 'src/utils/format-number';
 import { Box, Card, Typography } from '@mui/material';
+import { fNumber, fCurrency } from 'src/utils/format-number';
 import CustomizableView from 'src/components/customizable-view';
 
 // ----------------------------------------------------------------------
@@ -92,8 +92,8 @@ const FinancePrincipalOverview = () => {
       count: fCurrency(12500000),
       color: 'success.main',
       bgColor: 'success',
-      href: '#',
-      width: 3,
+      href: '/finance/fee-collection/',
+      width: 2,
     },
     {
       id: 'CARD_OUTSTANDING_FEES_SUMMARY',
@@ -102,8 +102,28 @@ const FinancePrincipalOverview = () => {
       count: fCurrency(2500000),
       color: 'error.main',
       bgColor: 'error',
-      href: '#',
-      width: 3,
+      href: '/finance/fee-collection/',
+      width: 2,
+    },
+    {
+      id: 'CARD_PENDING_CONCESSION',
+      icon: 'hugeicons:discount',
+      title: 'Pending Concession Requests',
+      count: fNumber(8),
+      color: 'info.main',
+      bgColor: 'info',
+      href: '/finance/concession',
+      width: 2,
+    },
+    {
+      id: 'CARD_TODAY_FEES_COLLECTION',
+      icon: 'hugeicons:money-bag-02',
+      title: 'Today Fees Collection',
+      count: fCurrency(12500000),
+      color: 'success.main',
+      bgColor: 'success',
+      href: '/finance/fee-collection/',
+      width: 2,
     },
     {
       id: 'CARD_APPROVAL_REQUIRED',
@@ -112,12 +132,12 @@ const FinancePrincipalOverview = () => {
       count: '15',
       color: 'warning.main',
       bgColor: 'warning',
-      href: '#',
+      href: '/finance/fee-collection/',
       labels: [
         { name: 'Charges: 8', color: 'warning' },
         { name: 'Concessions: 7', color: 'info' },
       ],
-      width: 3,
+      width: 2,
     },
     {
       id: 'CARD_NET_PROFITABILITY',
@@ -126,12 +146,12 @@ const FinancePrincipalOverview = () => {
       count: fCurrency(4500000),
       color: 'info.main',
       bgColor: 'info',
-      href: '#',
+      href: '/finance/fee-collection/',
       labels: [
         { name: `Income: ${fCurrency(12500000)}`, color: 'success' },
         { name: `Expense: ${fCurrency(8000000)}`, color: 'error' },
       ],
-      width: 3,
+      width: 2,
     },
   ]);
 

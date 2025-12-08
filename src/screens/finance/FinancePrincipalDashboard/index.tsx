@@ -12,7 +12,9 @@ import FinanceConcessionImpact from './Components/FinanceConcessionImpact';
 import FinanceNeedApprovalList from './Components/FinanceNeedApprovalList';
 import FinancePrincipalOverview from './Components/FinancePrincipalOverview';
 import FinanceFeeStatusOverview from './Components/FinanceFeeStatusOverview';
+import FinancePaymentMethodUsage from './Components/FinancePaymentMethodUsage';
 import FinanceRecentExpenses from '../dashboard/Components/FinanceRecentExpenses';
+import FinancePendingFeesMediumWise from './Components/FinancePendingFeesMediumWise';
 // Reused Components
 import FinanceMonthlyFeesCollectionTrend from '../dashboard/Components/FinanceMonthlyFeesCollectionTrend';
 
@@ -73,7 +75,7 @@ const FinancePrincipalDashboard = () => (
       </Grid>
 
       {/* Charts Row 2 */}
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <FinanceFeeStatusOverview
           title="Fee Status Overview"
           subheader="Student Count by Status"
@@ -88,7 +90,7 @@ const FinancePrincipalDashboard = () => (
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <FinanceConcessionImpact
           title="Concession Impact"
           subheader="Amount given as concession"
@@ -104,7 +106,7 @@ const FinancePrincipalDashboard = () => (
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <FinanceRevenueStreams
           title="Revenue Streams"
           subheader="Other income sources"
@@ -120,8 +122,42 @@ const FinancePrincipalDashboard = () => (
         />
       </Grid>
 
+      {/* Pending Fees Medium-wise Chart */}
+      <Grid size={{ xs: 12, md: 6 }}>
+        <FinancePendingFeesMediumWise
+          title="Medium-wise Fee Analysis"
+          subheader="Expected, Pending & Concession by medium"
+          chart={{
+            labels: ['English', 'Hindi', 'Gujarati'],
+            series: [
+              {
+                name: 'Expected',
+                data: [120000, 85000, 65000],
+              },
+              {
+                name: 'Pending',
+                data: [45000, 32000, 18000],
+              },
+              {
+                name: 'Concession',
+                data: [15000, 12000, 8000],
+              },
+            ],
+          }}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <FinancePaymentMethodUsage
+          title="Payment Method Usage"
+          subheader="Collection by payment mode"
+          chart={{
+            labels: ['Cash', 'UPI', 'Cheque', 'Card', 'Bank Transfer'],
+            series: [180000, 145000, 85000, 65000, 45000],
+          }}
+        />
+      </Grid>
       {/* Lists Row */}
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <FinanceNeedApprovalList
           title="Pending Approvals"
           list={[
@@ -161,7 +197,7 @@ const FinancePrincipalDashboard = () => (
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <FinanceRecentExpenses
           title="Major Expenses"
           list={[
@@ -201,7 +237,7 @@ const FinancePrincipalDashboard = () => (
         />
       </Grid>
 
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 6 }}>
         <FinanceAlertsList
           title="Finance Alerts"
           list={[

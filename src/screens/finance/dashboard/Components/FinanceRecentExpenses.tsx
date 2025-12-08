@@ -1,9 +1,10 @@
 import type { CardProps } from '@mui/material';
 
 import React from 'react';
+import { useRouter } from 'src/routes/hooks';
 import { fCurrency } from 'src/utils/format-number';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Card, Avatar, CardHeader, Typography } from '@mui/material';
+import { Box, Card, Avatar, Button, CardHeader, Typography } from '@mui/material';
 
 type Props = CardProps & {
   title?: string;
@@ -16,12 +17,37 @@ type Props = CardProps & {
     date: string;
     avatarUrl?: string;
   }[];
+  viewAllPath?: string;
 };
 
-export default function FinanceRecentExpenses({ title, subheader, list, ...other }: Props) {
+export default function FinanceRecentExpenses({
+  title,
+  subheader,
+  list,
+  viewAllPath,
+  ...other
+}: Props) {
+  const router = useRouter();
+
+  const handleViewAll = () => {
+    if (viewAllPath) {
+      router.push(viewAllPath);
+    }
+  };
+
   return (
     <Card {...other} sx={{ height: '100%' }}>
-      <CardHeader title={title} subheader={subheader} />
+      <CardHeader
+        title={title}
+        subheader={subheader}
+        action={
+          viewAllPath && (
+            <Button size="small" onClick={handleViewAll}>
+              View All
+            </Button>
+          )
+        }
+      />
 
       <Scrollbar>
         <Box sx={{ p: 3, gap: 3, display: 'flex', flexDirection: 'column' }}>

@@ -92,7 +92,7 @@ const FinanceDashboardOverview = () => {
       count: fCurrency(1250000), // This would be the sum of outstanding, pending, and overdue
       color: 'success.main',
       bgColor: 'success',
-      href: '#',
+      href: '/finance/fee-collection/',
       labels: [
         { name: 'Outstanding - 700k', color: 'info' }, // Example value
         { name: 'Pending - 300k', color: 'warning' }, // Example value
@@ -107,7 +107,7 @@ const FinanceDashboardOverview = () => {
       count: fCurrency(320000),
       color: 'warning.main',
       bgColor: 'warning',
-      href: '#',
+      href: '/finance/expenseTracking/',
       labels: [
         { name: 'Salaries - 70%', color: 'warning' },
         { name: 'Maintenance - 30%', color: 'info' },
@@ -121,7 +121,7 @@ const FinanceDashboardOverview = () => {
       count: fCurrency(930000),
       color: 'info.main',
       bgColor: 'info',
-      href: '#',
+      href: '/finance/fee-collection/',
       labels: [{ name: 'Healthy', color: 'success' }],
       width: 4,
     },
