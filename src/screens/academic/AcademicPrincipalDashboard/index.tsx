@@ -42,7 +42,6 @@ const AcademicPrincipalDashboardScreen = () => {
     // Flatten the list of standards from all stages
     const allClasses =
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-    console.log('allClasses', allClasses);
     setAllClass(allClasses);
     setClasses(allClasses[0]?.id || '');
     const allBottomClasses =
