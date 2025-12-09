@@ -5,13 +5,19 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddRoomTypeMutation,
+  useUpdateRoomTypeMutation,
+} from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
 
 import type { IRoomType } from '../types';
 
@@ -22,18 +28,44 @@ interface IRoomTypeFormProps {
 }
 
 const RoomTypeForm: React.FC<IRoomTypeFormProps> = ({ open, onClose, editData }) => {
+  const [addRoomType, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddRoomTypeMutation,
+  });
+  const [updateRoomType, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateRoomTypeMutation,
+  });
   const formik = useFormik({
     initialValues: {
-      roomType: editData?.roomType || '',
+      roomTypeName: editData?.roomTypeName || '',
       shortName: editData?.shortName || '',
     },
     validationSchema: Yup.object().shape({
-      roomType: Yup.string().required('Room Type is required'),
+      roomTypeName: Yup.string().required('Room Type is required'),
       shortName: Yup.string().required('Short Name is required'),
     }),
     onSubmit: (values) => {
+      if (editData) {
+        updateRoomType({
+          id: editData.id,
+          body: {
+            roomTypeName: values.roomTypeName,
+            shortName: values.shortName,
+          },
+        });
+        shikshaMitraToast.success({
+          message: `"${values.roomTypeName}" Room type updated successfully`,
+        });
+        onClose(null, true);
+        return;
+      }
+      addRoomType({
+        roomTypeName: values.roomTypeName,
+        shortName: values.shortName,
+      });
       shikshaMitraToast.success({
-        message: `Room type ${values.roomType} ${editData ? 'updated' : 'added'} successfully`,
+        message: `"${values.roomTypeName}" Room type added successfully`,
       });
       onClose(null, true);
     },
@@ -44,17 +76,17 @@ const RoomTypeForm: React.FC<IRoomTypeFormProps> = ({ open, onClose, editData })
       <DialogScrollContent>
         <Grid container spacing={3}>
           <Grid size={12}>
-            <ShakingTextField error={!!(formik.touched.roomType && formik.errors.roomType)}>
+            <ShakingTextField error={!!(formik.touched.roomTypeName && formik.errors.roomTypeName)}>
               <TextField
                 fullWidth
                 size="small"
-                name="roomType"
+                name="roomTypeName"
                 label="Room Type *"
-                value={formik.values.roomType}
+                value={formik.values.roomTypeName}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.roomType && Boolean(formik.errors.roomType)}
-                helperText={formik.touched.roomType && formik.errors.roomType}
+                error={formik.touched.roomTypeName && Boolean(formik.errors.roomTypeName)}
+                helperText={formik.touched.roomTypeName && formik.errors.roomTypeName}
               />
             </ShakingTextField>
           </Grid>
@@ -85,7 +117,10 @@ const RoomTypeForm: React.FC<IRoomTypeFormProps> = ({ open, onClose, editData })
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
+          size="small"
+          variant="contained"
+          loading={isUpdateLoading || isLoading}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -93,12 +128,13 @@ const RoomTypeForm: React.FC<IRoomTypeFormProps> = ({ open, onClose, editData })
               height={editData ? 16 : 20}
             />
           }
-          variant="contained"
-          size="small"
-          onClick={(e: any) => formik.handleSubmit(e)}
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
+          type="submit"
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

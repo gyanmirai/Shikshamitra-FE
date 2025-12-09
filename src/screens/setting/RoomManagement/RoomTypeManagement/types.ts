@@ -1,5 +1,5 @@
 export interface IRoomType {
   id: number;
-  roomType: string;
+  roomTypeName: string;
   shortName: string;
 }

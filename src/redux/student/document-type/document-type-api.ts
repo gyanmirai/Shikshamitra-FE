@@ -4,7 +4,7 @@ import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 export const StudentDocumentTypeApi = createApi({
   reducerPath: 'StudentDocumentTypeApi',
   baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
+    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/tenant-settings`,
   }),
   tagTypes: ['Student-Document-Type'],
   endpoints: (builder) => ({
@@ -23,7 +23,7 @@ export const StudentDocumentTypeApi = createApi({
         query = query.replace('?&', '?');
 
         return {
-          url: `/app/student-document-setting${query}`,
+          url: `/document-types${query}`,
           method: 'GET',
         };
       },
@@ -31,7 +31,7 @@ export const StudentDocumentTypeApi = createApi({
     }),
     addStudentDocumentType: builder.mutation({
       query: (data) => ({
-        url: '/app/student-document-setting',
+        url: '/document-types',
         method: 'POST',
         data,
       }),
@@ -39,7 +39,7 @@ export const StudentDocumentTypeApi = createApi({
     }),
     updateStudentDocumentType: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/student-document-setting/${id}`,
+        url: `/document-types/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -47,7 +47,7 @@ export const StudentDocumentTypeApi = createApi({
     }),
     deleteStudentDocumentType: builder.mutation({
       query: (id) => ({
-        url: `/app/student-document-setting/${id}`,
+        url: `/document-types/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Student-Document-Type'],

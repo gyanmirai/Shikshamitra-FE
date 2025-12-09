@@ -3,14 +3,17 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useDeleteBuildingMutation } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 
 import BuildingForm from './components/buildingForm';
 import BuildingTable from './components/buildingTable';
@@ -23,129 +26,15 @@ const BuildingManagement = () => {
   const deleteBuildingDialog = useBoolean();
   const [open, setOpen] = useState(false);
 
+  const [deleteBuilding, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteBuildingMutation,
+  });
   // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // State for managing selected building and building data
   const [selectedBuilding, setSelectedBuilding] = useState<IBuilding | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [buildingData, setBuildingData] = useState<IBuilding[]>([
-    {
-      id: 1,
-      buildingName: 'Building 1',
-      totalFloors: 1,
-      description: 'In this building, there is a total of 1 floor.',
-      floors: [
-        {
-          id: 1,
-          floorName: 'Ground Floor',
-          totalRoom: 10,
-        },
-      ],
-    },
-    {
-      id: 2,
-      buildingName: 'Building 2',
-      totalFloors: 2,
-      description: 'In this building, there are a total of 2 floors.',
-      floors: [
-        {
-          id: 1,
-          floorName: 'Ground Floor',
-          totalRoom: 8,
-        },
-        {
-          id: 2,
-          floorName: 'First Floor',
-          totalRoom: 7,
-        },
-      ],
-    },
-    {
-      id: 3,
-      buildingName: 'Building 3',
-      totalFloors: 3,
-      description: 'In this building, there are a total of 3 floors.',
-      floors: [
-        {
-          id: 1,
-          floorName: 'Ground Floor',
-          totalRoom: 7,
-        },
-        {
-          id: 2,
-          floorName: 'First Floor',
-          totalRoom: 7,
-        },
-        {
-          id: 3,
-          floorName: 'Second Floor',
-          totalRoom: 6,
-        },
-      ],
-    },
-    {
-      id: 4,
-      buildingName: 'Building 4',
-      totalFloors: 4,
-      description: 'In this building, there are a total of 4 floors.',
-      floors: [
-        {
-          id: 1,
-          floorName: 'Ground Floor',
-          totalRoom: 7,
-        },
-        {
-          id: 2,
-          floorName: 'First Floor',
-          totalRoom: 6,
-        },
-        {
-          id: 3,
-          floorName: 'Second Floor',
-          totalRoom: 6,
-        },
-        {
-          id: 4,
-          floorName: 'Third Floor',
-          totalRoom: 6,
-        },
-      ],
-    },
-    {
-      id: 5,
-      buildingName: 'Building 5',
-      totalFloors: 5,
-      description: 'In this building, there are a total of 5 floors.',
-      floors: [
-        {
-          id: 1,
-          floorName: 'Ground Floor',
-          totalRoom: 6,
-        },
-        {
-          id: 2,
-          floorName: 'First Floor',
-          totalRoom: 6,
-        },
-        {
-          id: 3,
-          floorName: 'Second Floor',
-          totalRoom: 6,
-        },
-        {
-          id: 4,
-          floorName: 'Third Floor',
-          totalRoom: 6,
-        },
-        {
-          id: 5,
-          floorName: 'Fourth Floor',
-          totalRoom: 6,
-        },
-      ],
-    },
-  ]);
 
   // Redux dispatch hook
   const dispatch = useDispatch();
@@ -244,7 +133,6 @@ const BuildingManagement = () => {
           setOpenDialog={setOpen}
           editData={selectedBuilding}
           setEditData={setSelectedBuilding}
-          data={buildingData}
         />
       )}
 
@@ -262,21 +150,22 @@ const BuildingManagement = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
+            onClick={async () => {
+              await deleteBuilding(selectedBuilding?.id);
+              shikshaMitraToast.success({
+                message: `Building "${selectedBuilding?.buildingName}" deleted successfully`,
+              });
               deleteBuildingDialog.onFalse();
               setSelectedBuilding(null);
-              shikshaMitraToast.success({
-                message: `Building ${selectedBuilding?.buildingName} deleted successfully`,
-              });
-              // handle delete action
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

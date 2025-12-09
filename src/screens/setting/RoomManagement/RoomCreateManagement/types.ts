@@ -7,7 +7,7 @@ export interface IRoom {
   roomType: string;
   totalBenches: number;
   benchCapacity: number;
-  rows: number;
-  columns: number;
+  benchesPerRow: number;
+  benchesPerColumn: number;
   features: string[];
 }

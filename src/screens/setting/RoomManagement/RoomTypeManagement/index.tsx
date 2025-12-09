@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -10,8 +11,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useDeleteRoomTypeMutation } from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
 
 import RoomTypeForm from './components/roomTypeForm';
 import RoomTypeTable from './components/roomTypeTable';
@@ -22,30 +25,15 @@ const RoomTypeManagement = () => {
   // Dialog control hooks for add/edit and delete room type modals
   const addRoomTypeDialog = useBoolean();
   const deleteRoomTypeDialog = useBoolean();
-
+  const [deleteRoomType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteRoomTypeMutation,
+  });
   // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // State for managing selected room type and room type data
   const [selectedRoomType, setSelectedRoomType] = useState<IRoomType | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [roomTypeData, setRoomTypeData] = useState<IRoomType[]>([
-    {
-      id: 1,
-      roomType: 'Classroom',
-      shortName: 'CR',
-    },
-    {
-      id: 2,
-      roomType: 'Laboratory',
-      shortName: 'LAB',
-    },
-    {
-      id: 3,
-      roomType: 'Conference Room',
-      shortName: 'CONF',
-    },
-  ]);
 
   // Redux dispatch hook
   const dispatch = useDispatch();
@@ -123,37 +111,41 @@ const RoomTypeManagement = () => {
           setSelectedRoomType(data);
           addRoomTypeDialog.onTrue();
         }}
-        data={roomTypeData}
       />
 
       <ConfirmDialog
         open={deleteRoomTypeDialog.value}
         onClose={() => {
-          setSelectedRoomType(null);
           deleteRoomTypeDialog.onFalse();
+          setSelectedRoomType(null);
         }}
         title="Delete"
         content={
           <>
-            Are you sure you want to delete room type <strong>{selectedRoomType?.roomType}</strong>?
+            Are you sure you want to delete{' '}
+            <Box component="span" fontWeight="bold" color="text.primary">
+              {selectedRoomType?.roomTypeName}
+            </Box>
+            ?
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
+            onClick={async () => {
+              await deleteRoomType(selectedRoomType?.id);
+              shikshaMitraToast.success({
+                message: `Room type "${selectedRoomType?.roomTypeName}" deleted successfully`,
+              });
               deleteRoomTypeDialog.onFalse();
               setSelectedRoomType(null);
-              shikshaMitraToast.success({
-                message: `Room type ${selectedRoomType?.roomType} deleted successfully`,
-              });
-              // handle delete action
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

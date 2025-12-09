@@ -19,7 +19,6 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -241,6 +240,8 @@ export const SlotsForm = ({
   handleClose?: (e: any, isSubmit: boolean) => void;
   editData: ISlot | null;
 }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   // Hook for adding a new entrance exam slot
   const [addSlot, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -302,9 +303,11 @@ export const SlotsForm = ({
           await updateSlot({
             id: editData.id,
             body: {
+              academicYearId: currentYear?.id,
               slotName: values.slotName,
-              startDate: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
-              endDate: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
+              startTime: values.startTime ? dayjs(values.startTime).format('HH:mm:ss') : null,
+              endTime: values.endTime ? dayjs(values.endTime).format('HH:mm:ss') : null,
+              duration: values.duration,
               studentLimit: values.studentLimit,
               roomNo: values.roomNo,
             },
@@ -314,9 +317,11 @@ export const SlotsForm = ({
           });
         } else {
           await addSlot({
+            academicYearId: currentYear?.id,
             slotName: values.slotName,
-            startDate: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
-            endDate: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
+            startTime: values.startTime ? dayjs(values.startTime).format('HH:mm:ss') : null,
+            endTime: values.endTime ? dayjs(values.endTime).format('HH:mm:ss') : null,
+            duration: values.duration,
             studentLimit: values.studentLimit,
             roomNo: values.roomNo,
           }).unwrap();

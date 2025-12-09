@@ -35,7 +35,6 @@ import { incomeCategoryApi } from './finance/incomeCategory';
 import { openLibraryApi } from './library/LibraryDataSearch';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { feeRefundsTermsApi } from './finance/feeRefundTerms';
-import { financeModuleApi } from './finance/financeModuleApi';
 import { libraryModuleApi } from './library/libraryModuleApi';
 import { ExpenseCategoryApi } from './finance/expenseCategory';
 import { organizationApi } from './oraganization/oraganization';
@@ -54,6 +53,7 @@ import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
 import { FinanceFeeStructureApi } from './finance/financeFeeStructure';
 import { bookManagementApi } from './bookManagement/bookManagementApi';
+import { instituteSetupApi } from './InstituteSetup/instituteSetupApi';
 import { StudentAdmissionApi } from './student/admission/admission-api';
 import { studentGroupApi } from './student/student-group/student-group';
 import { financeFeeCollectionApi } from './feeCollection/feeCollection';
@@ -159,7 +159,7 @@ const reducers = combineReducers({
   [feeCategoryApi.reducerPath]: feeCategoryApi.reducer,
   [ChargeCategoryApi.reducerPath]: ChargeCategoryApi.reducer,
   [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
-  [financeModuleApi.reducerPath]: financeModuleApi.reducer,
+  // [financeModuleApi.reducerPath]: financeModuleApi.reducer,
   [expenseApi.reducerPath]: expenseApi.reducer,
   [expenseDetailsApi.reducerPath]: expenseDetailsApi.reducer,
   [incomeApi.reducerPath]: incomeApi.reducer,
@@ -186,6 +186,7 @@ const reducers = combineReducers({
   [transportApi.reducerPath]: transportApi.reducer,
   [libraryModuleApi.reducerPath]: libraryModuleApi.reducer,
   [openLibraryApi.reducerPath]: openLibraryApi.reducer,
+  [instituteSetupApi.reducerPath]: instituteSetupApi.reducer,
   // [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
 });
 
@@ -257,7 +258,7 @@ const store = configureStore({
       feeCategoryApi.middleware,
       ChargeCategoryApi.middleware,
       ExpenseCategoryApi.middleware,
-      financeModuleApi.middleware,
+      // financeModuleApi.middleware,
       expenseApi.middleware,
       expenseDetailsApi.middleware,
       incomeApi.middleware,
@@ -286,6 +287,7 @@ const store = configureStore({
       transportApi.middleware,
       libraryModuleApi.middleware,
       openLibraryApi.middleware,
+      instituteSetupApi.middleware,
     ]),
 });
 
