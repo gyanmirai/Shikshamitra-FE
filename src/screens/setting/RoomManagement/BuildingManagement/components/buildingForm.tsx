@@ -176,7 +176,7 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
                           label: 'Floor Name',
                           isFilter: false,
                           render: (_value, row) => {
-                            const idx = formik.values.floors.indexOf(row);
+                            const idx = formik.values.floors.indexOf(row as any);
 
                             return (
                               <ShakingTextField
@@ -219,7 +219,7 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
                           isSort: false,
                           isFilter: false,
                           render: (_value, row) => {
-                            const idx = formik.values.floors.indexOf(row);
+                            const idx = formik.values.floors.indexOf(row as any);
 
                             return (
                               <ShakingTextField
