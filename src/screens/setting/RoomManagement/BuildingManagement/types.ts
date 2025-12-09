@@ -13,7 +13,6 @@ export interface IBuilding {
 }
 
 export interface IBuildingTableProps {
-  data: IBuilding[];
   onAddBuilding: {
     onTrue: () => void;
     onFalse: () => void;

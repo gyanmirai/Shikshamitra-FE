@@ -1,9 +1,9 @@
 export interface IStudentDocument {
   id: string;
-  documentName: string;
+  name: string;
   isRequired: boolean;
-  documentSize: number;
-  documentTypes: { label: string; value: number }[];
+  maxSizeMB: number;
+  acceptedFormats: { label: string; value: number }[];
 }
 
 // types/slot.types.ts or within the same file

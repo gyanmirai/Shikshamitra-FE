@@ -1,14 +1,21 @@
 import React from 'react';
 import { isNaN } from 'lodash';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddBuildingMutation,
+  useUpdateBuildingMutation,
+} from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 
 import { getBuildingInitialValues } from './initialValues';
 import { buildingValidationSchema } from './validationSchema';
@@ -16,11 +23,49 @@ import { buildingValidationSchema } from './validationSchema';
 import type { IBuildingFormProps } from '../types';
 
 const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
+  const [addBuilding, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddBuildingMutation,
+  });
+  const [updateBuilding, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateBuildingMutation,
+  });
   const formik = useFormik({
     initialValues: getBuildingInitialValues(editData),
     validationSchema: buildingValidationSchema,
-    onSubmit(values) {},
+    onSubmit(values) {
+      console.log('values----', values);
+      if (editData) {
+        updateBuilding({
+          id: editData.id,
+          body: {
+            buildingName: values.buildingName,
+            totalFloors: values.totalFloors,
+            description: values.description,
+            floors: values.floors,
+          },
+        });
+        shikshaMitraToast.success({
+          message: `"${values.buildingName}" Building updated successfully`,
+        });
+        onClose(null, true);
+        return;
+      }
+      addBuilding({
+        buildingName: values.buildingName,
+        totalFloors: values.totalFloors,
+        description: values.description,
+        floors: values.floors,
+      });
+      shikshaMitraToast.success({
+        message: `"${values.buildingName}" Building added successfully`,
+      });
+      onClose(null, true);
+    },
   });
+  console.log('formik---', formik.values);
+  console.log('formik---', formik.errors);
 
   const handleTotalFloors = (e: any) => {
     const inputValue = e.target.value;
@@ -35,7 +80,7 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
         { length: floorsCount },
         (_, index) =>
           currentFloors[index] || {
-            id: index,
+            id: index + 1,
             floorName: '',
             totalRoom: '',
           }
@@ -124,84 +169,92 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
                         {
                           id: 'id',
                           label: 'Sr No.',
-                          render: (_value, row) => row.id + 1, // 1-based serial number
+                          render: (_value, row) => row.id, // 1-based serial number
                         },
                         {
                           id: 'floorName',
                           label: 'Floor Name',
                           isFilter: false,
-                          render: (_value, row) => (
-                            <ShakingTextField
-                              error={
-                                !!(
-                                  formik.touched.floors?.[row.id]?.floorName &&
-                                  (formik.errors.floors?.[row.id] as any)?.floorName
-                                )
-                              }
-                            >
-                              <TextField
-                                fullWidth
-                                label="Floor Name *"
-                                name={`floors.${row.id}.floorName`}
-                                value={formik.values.floors[row.id]?.floorName || ''}
-                                onChange={(e) => {
-                                  const val = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                                  formik.setFieldValue(`floors.${row.id}.floorName`, val);
-                                }}
-                                size="small"
+                          render: (_value, row) => {
+                            const idx = formik.values.floors.indexOf(row);
+
+                            return (
+                              <ShakingTextField
                                 error={
                                   !!(
-                                    formik.touched.floors?.[row.id]?.floorName &&
-                                    (formik.errors.floors?.[row.id] as any)?.floorName
+                                    formik.touched.floors?.[idx]?.floorName &&
+                                    (formik.errors.floors?.[idx] as any)?.floorName
                                   )
                                 }
-                                helperText={
-                                  formik.touched.floors?.[row.id]?.floorName &&
-                                  (formik.errors.floors?.[row.id] as any)?.floorName
-                                }
-                                sx={{ minWidth: '100px', width: '100%', mb: 1.5 }}
-                              />
-                            </ShakingTextField>
-                          ),
+                              >
+                                <TextField
+                                  fullWidth
+                                  label="Floor Name *"
+                                  name={`floors.${idx}.floorName`}
+                                  value={formik.values.floors[idx]?.floorName || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                                    formik.setFieldValue(`floors.${idx}.floorName`, val);
+                                  }}
+                                  size="small"
+                                  error={
+                                    !!(
+                                      formik.touched.floors?.[idx]?.floorName &&
+                                      (formik.errors.floors?.[idx] as any)?.floorName
+                                    )
+                                  }
+                                  helperText={
+                                    formik.touched.floors?.[idx]?.floorName &&
+                                    (formik.errors.floors?.[idx] as any)?.floorName
+                                  }
+                                  sx={{ minWidth: '100px', width: '100%', mb: 1.5 }}
+                                />
+                              </ShakingTextField>
+                            );
+                          },
                         },
                         {
                           id: 'totalRoom',
                           label: 'Total Room',
                           isSort: false,
                           isFilter: false,
-                          render: (_value, row) => (
-                            <ShakingTextField
-                              error={
-                                !!(
-                                  formik.touched.floors?.[row.id]?.totalRoom &&
-                                  (formik.errors.floors?.[row.id] as any)?.totalRoom
-                                )
-                              }
-                            >
-                              <TextField
-                                fullWidth
-                                label="Total Room *"
-                                name={`floors.${row.id}.totalRoom`}
-                                value={formik.values.floors[row.id]?.totalRoom || ''}
-                                onChange={(e) => {
-                                  const val = e.target.value.replace(/[^0-9]/g, '');
-                                  formik.setFieldValue(`floors.${row.id}.totalRoom`, val);
-                                }}
-                                size="small"
+                          render: (_value, row) => {
+                            const idx = formik.values.floors.indexOf(row);
+
+                            return (
+                              <ShakingTextField
                                 error={
                                   !!(
-                                    formik.touched.floors?.[row.id]?.totalRoom &&
-                                    (formik.errors.floors?.[row.id] as any)?.totalRoom
+                                    formik.touched.floors?.[idx]?.totalRoom &&
+                                    (formik.errors.floors?.[idx] as any)?.totalRoom
                                   )
                                 }
-                                helperText={
-                                  formik.touched.floors?.[row.id]?.totalRoom &&
-                                  (formik.errors.floors?.[row.id] as any)?.totalRoom
-                                }
-                                sx={{ minWidth: '100px', width: '100%', mb: 1.5 }}
-                              />
-                            </ShakingTextField>
-                          ),
+                              >
+                                <TextField
+                                  fullWidth
+                                  label="Total Room *"
+                                  name={`floors.${idx}.totalRoom`}
+                                  value={formik.values.floors[idx]?.totalRoom || ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9]/g, '');
+                                    formik.setFieldValue(`floors.${idx}.totalRoom`, val);
+                                  }}
+                                  size="small"
+                                  error={
+                                    !!(
+                                      formik.touched.floors?.[idx]?.totalRoom &&
+                                      (formik.errors.floors?.[idx] as any)?.totalRoom
+                                    )
+                                  }
+                                  helperText={
+                                    formik.touched.floors?.[idx]?.totalRoom &&
+                                    (formik.errors.floors?.[idx] as any)?.totalRoom
+                                  }
+                                  sx={{ minWidth: '100px', width: '100%', mb: 1.5 }}
+                                />
+                              </ShakingTextField>
+                            );
+                          },
                         },
                       ]}
                       data={formik.values.floors}
@@ -223,7 +276,11 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
+              size="small"
+              type="submit"
+              variant="contained"
+              loading={isUpdateLoading || isLoading}
               startIcon={
                 <Iconify
                   icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -231,13 +288,9 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
                   height={editData ? 16 : 20}
                 />
               }
-              form="dialog-form"
-              onClick={() => formik.handleSubmit()}
-              size="small"
-              variant="contained"
             >
               {editData ? 'Update' : 'Submit'}
-            </Button>
+            </LoadingButton>
           </DialogActions>
         </Box>
       </form>
