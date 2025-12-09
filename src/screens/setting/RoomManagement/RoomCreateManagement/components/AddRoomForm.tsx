@@ -17,11 +17,11 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
 import { useGetRoomTypesQuery } from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { Grid, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
 import {
   useAddRoomMutation,
   useUpdateRoomMutation,
 } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
-import { Grid, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
 
 interface IRoomFormProps {
   open: UseBooleanReturn;
@@ -201,7 +201,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     onChange={(value) => {
                       formik.setFieldValue('building', value);
                       setFloorsOptions(
-                        buildings?.find((building) => building.id === value)?.floors || []
+                        buildings?.find((building: any) => building.id === value)?.floors || []
                       );
                     }}
                     onBlur={formik.handleBlur}
