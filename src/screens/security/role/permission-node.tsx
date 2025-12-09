@@ -6,21 +6,22 @@ import Switch from '@mui/material/Switch';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
+import { Checkbox, IconButton } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { getNodeKey, PERMISSIONS } from './utils';
+import { PERMISSIONS, getAllChildrenData } from './utils';
 
-import type { PermissionType, PermissionsMap } from './utils';
+import type { PermissionType } from './utils';
 
 interface PermissionNodeProps {
   node: any;
   moduleTitle: string;
   submoduleTitle: string;
-  permissions: PermissionsMap;
-  onToggle: (key: string, type: PermissionType) => void;
-  onSelectAll: (node: any, value: boolean) => void;
+  permissions: { name: string; isGranted: boolean }[];
+  onToggle: (key: string, type: PermissionType, currentValue: boolean) => void;
+  onSelectAll: (node: any, value: boolean, hasChildren: boolean) => void;
   depth?: number;
+  setPermission: (data: any) => void;
 }
 
 export default function PermissionNode({
@@ -31,16 +32,25 @@ export default function PermissionNode({
   onToggle,
   onSelectAll,
   depth = 0,
+  setPermission,
 }: PermissionNodeProps) {
-  const [expanded, setExpanded] = useState(true);
-  const nodeKey = getNodeKey(moduleTitle, submoduleTitle, node.title);
-  const nodePerms = permissions[nodeKey] || { View: false, 'Add/Edit': false, Delete: false };
+  const [expanded, setExpanded] = useState(
+    !!permissions.find((p) => p.name === node.permissionName)?.isGranted
+  );
+  const nodeKey = node.permissionName;
   const hasChildren = node.children && node.children.length > 0;
 
   // Check if all permissions for this node are active
-  const isNodeFullySelected = Object.values(nodePerms).every(Boolean);
+  const isNodeFullySelected = PERMISSIONS.every(
+    (perm) => !!permissions.find((p) => p.name === `${nodeKey}.${perm}`)?.isGranted
+  );
 
-  const handleToggleExpand = () => {
+  const handleToggleExpand = (n: any) => {
+    setPermission(
+      permissions.map((per) =>
+        per.name === n.permissionName ? { ...per, isGranted: !expanded } : per
+      )
+    );
     setExpanded(!expanded);
   };
 
@@ -67,73 +77,100 @@ export default function PermissionNode({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            mb: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {hasChildren && (
-              <IconButton size="small" onClick={handleToggleExpand}>
-                <Iconify
-                  icon={expanded ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
-                  width={16}
-                />
-              </IconButton>
-            )}
-            <Typography variant="subtitle2" sx={{ fontWeight: isNodeFullySelected ? 700 : 600 }}>
-              {node.title}
-            </Typography>
-          </Box>
-          <Button
-            size="small"
-            color={isNodeFullySelected ? 'error' : 'primary'}
-            onClick={() => onSelectAll(node, !isNodeFullySelected)}
-          >
-            {isNodeFullySelected ? 'Unselect All' : 'Select All'}
-          </Button>
-        </Box>
-
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+            // mb: 2,
             gap: 2,
           }}
         >
-          {PERMISSIONS.map((perm) => {
-            const isChecked = !!nodePerms[perm];
-            return (
-              <motion.div key={perm} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                flexGrow: 1,
+                // justifyContent: 'space-between',
+              }}
+            >
+              {hasChildren && (
                 <Box
-                  onClick={() => onToggle(nodeKey, perm)}
-                  sx={{
-                    p: 1,
-                    borderRadius: 1,
-                    cursor: 'pointer',
-                    border: '1px solid',
-                    borderColor: isChecked ? 'primary.main' : 'divider',
-                    bgcolor: isChecked
-                      ? (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
-                      : 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    transition: 'all 0.2s',
-                  }}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
+                  onClick={() => handleToggleExpand(node)}
                 >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontWeight: isChecked ? 600 : 400,
-                      color: isChecked ? 'primary.main' : 'text.secondary',
-                    }}
-                  >
-                    {perm}
-                  </Typography>
-                  <Switch size="small" checked={isChecked} inputProps={{ 'aria-label': perm }} />
+                  <IconButton size="small">
+                    <Iconify
+                      icon={expanded ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
+                      width={16}
+                    />
+                  </IconButton>
+                  <Checkbox checked={expanded} />
                 </Box>
-              </motion.div>
-            );
-          })}
+              )}
+              <Typography variant="subtitle2" sx={{ fontWeight: isNodeFullySelected ? 700 : 600 }}>
+                {node.title}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: 2,
+              }}
+            >
+              {!hasChildren &&
+                PERMISSIONS.map((perm) => {
+                  const isChecked = hasChildren
+                    ? getAllChildrenData(node).find(
+                        (p: any) => p.permissionName === `${nodeKey}.${perm}`
+                      )?.isGranted
+                    : permissions.find((p) => p.name === `${nodeKey}.${perm}`)?.isGranted;
+                  return (
+                    <motion.div key={perm} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Box
+                        onClick={() => onToggle(nodeKey, perm, isChecked)}
+                        sx={{
+                          p: 1,
+                          borderRadius: 1,
+                          cursor: 'pointer',
+                          border: '1px solid',
+                          borderColor: isChecked ? 'primary.main' : 'divider',
+                          bgcolor: isChecked
+                            ? (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
+                            : 'transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontWeight: isChecked ? 600 : 400,
+                            color: isChecked ? 'primary.main' : 'text.secondary',
+                          }}
+                        >
+                          {perm}
+                        </Typography>
+                        <Switch
+                          size="small"
+                          checked={isChecked}
+                          inputProps={{ 'aria-label': perm }}
+                        />
+                      </Box>
+                    </motion.div>
+                  );
+                })}
+            </Box>
+          </Box>
+          {!hasChildren && (
+            <Button
+              size="small"
+              color={isNodeFullySelected ? 'error' : 'primary'}
+              onClick={() => onSelectAll(node, !isNodeFullySelected, hasChildren)}
+            >
+              {isNodeFullySelected ? 'Revoke All' : 'Grant All'}
+            </Button>
+          )}
         </Box>
       </Card>
 
@@ -167,6 +204,7 @@ export default function PermissionNode({
                   permissions={permissions}
                   onToggle={onToggle}
                   onSelectAll={onSelectAll}
+                  setPermission={setPermission}
                   depth={depth + 1}
                 />
               ))}

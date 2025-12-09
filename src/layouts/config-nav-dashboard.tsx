@@ -2,7 +2,6 @@ import { CONFIG } from 'src/config-global';
 import hrModule from 'src/constants/hr-menus';
 import { SvgColor } from 'src/components/svg-color';
 import hostelModule from 'src/constants/hostel-menus';
-import studentModule from 'src/constants/student-menu';
 import financeModule from 'src/constants/finance-menu';
 import libraryModule from 'src/constants/library-menus';
 import academicModule from 'src/constants/academic-menu';
@@ -14,6 +13,7 @@ import instituteSetupModule from 'src/constants/institute-setup';
 import classManagementModule from 'src/constants/class-management';
 import communicationModule from 'src/constants/comminication-menu';
 import securityGuardModule from 'src/constants/security-gaurd-menu';
+import studentModule, { defaultModulePermissionName } from 'src/constants/student-menu';
 import {
   hrPath,
   classPath,
@@ -88,7 +88,7 @@ export const settingMenu = {
   _action: 'setting',
 };
 
-export const navData = (isDdvs: boolean) => [
+export const navData = (visibility: boolean[]) => [
   {
     subheader: 'Management',
     items: [
@@ -99,6 +99,8 @@ export const navData = (isDdvs: boolean) => [
         _action: 'dashboard',
         shortcutKey: 'Alt+D',
         shortcutKeyName: 'Alt+D',
+        visibility: visibility[0],
+        permissionName: `${defaultModulePermissionName}Dashboard`,
       },
       {
         title: 'Student',
@@ -107,7 +109,9 @@ export const navData = (isDdvs: boolean) => [
         _action: 'student',
         shortcutKey: 'Alt+S',
         shortcutKeyName: 'Alt+S',
-        submodule: studentModule(isDdvs)[studentPath].flatMap((list) => list.items),
+        visibility: visibility[1],
+        submodule: studentModule(true)[studentPath].flatMap((list) => list.items),
+        permissionName: `${defaultModulePermissionName}Students`,
       },
       {
         title: 'Academics',
@@ -116,7 +120,9 @@ export const navData = (isDdvs: boolean) => [
         _action: 'academic',
         shortcutKey: 'Alt+A',
         shortcutKeyName: 'Alt+A',
-        submodule: academicModule(isDdvs)[academicPath].flatMap((list) => list.items),
+        visibility: visibility[2],
+        submodule: academicModule(true)[academicPath].flatMap((list) => list.items),
+        permissionName: `${defaultModulePermissionName}Academics`,
       },
       {
         title: 'Class Management',
@@ -125,7 +131,9 @@ export const navData = (isDdvs: boolean) => [
         _action: 'classManagement',
         shortcutKey: 'Alt+A',
         shortcutKeyName: 'Alt+A',
+        visibility: visibility[3],
         submodule: classManagementModule[classPath].flatMap((list) => list.items),
+        permissionName: `${defaultModulePermissionName}ClassManagement`,
       },
       {
         title: 'HR/Staff',
@@ -134,7 +142,9 @@ export const navData = (isDdvs: boolean) => [
         _action: 'hr',
         shortcutKey: 'Alt+H',
         shortcutKeyName: 'Alt+H',
-        submodule: hrModule(isDdvs)[hrPath].flatMap((list) => list.items),
+        visibility: visibility[4],
+        submodule: hrModule(true)[hrPath].flatMap((list) => list.items),
+        permissionName: `${defaultModulePermissionName}HR`,
       },
       {
         title: 'Finance',
@@ -143,7 +153,9 @@ export const navData = (isDdvs: boolean) => [
         _action: 'finance',
         shortcutKey: 'Alt+F',
         shortcutKeyName: 'Alt+F',
+        visibility: visibility[5],
         submodule: financeModule[financePath].flatMap((list) => list.items),
+        permissionName: `${defaultModulePermissionName}Finance`,
       },
       {
         title: 'Communication',
@@ -152,8 +164,9 @@ export const navData = (isDdvs: boolean) => [
         _action: 'communication',
         shortcutKey: 'Alt+C',
         shortcutKeyName: 'Alt+C',
+        visibility: visibility[6],
         submodule: communicationModule[communicationPath].flatMap((list) => list.items),
-        disabled: !isDdvs,
+        permissionName: `${defaultModulePermissionName}Communication`,
       },
       {
         title: 'Calendar',
@@ -162,8 +175,9 @@ export const navData = (isDdvs: boolean) => [
         _action: 'calendar',
         shortcutKey: 'Alt+K',
         shortcutKeyName: 'Alt+K',
+        visibility: visibility[7],
         submodule: calendarModule[calendarPath].flatMap((list) => list.items),
-        disabled: !isDdvs,
+        permissionName: `${defaultModulePermissionName}Calendar`,
       },
       {
         title: 'Library',
@@ -172,8 +186,9 @@ export const navData = (isDdvs: boolean) => [
         _action: 'library',
         shortcutKey: 'Alt+L',
         shortcutKeyName: 'Alt+L',
+        visibility: visibility[8],
         submodule: libraryModule[libraryPath].flatMap((list) => list.items),
-        disabled: !isDdvs,
+        permissionName: `${defaultModulePermissionName}Library`,
       },
       {
         title: 'Transport',
@@ -182,17 +197,19 @@ export const navData = (isDdvs: boolean) => [
         _action: 'transport',
         shortcutKey: 'Alt+T',
         shortcutKeyName: 'Alt+T',
+        visibility: visibility[9],
         submodule: transportModule[transportPath].flatMap((list) => list.items),
-        disabled: !isDdvs,
+        permissionName: `${defaultModulePermissionName}Transport`,
       },
       {
         title: 'Resource Management',
         path: '/resourceManagement/dashboard',
         icon: ICONS.resource,
+        visibility: visibility[10],
         _action: 'resource',
 
         submodule: resourceManagement[resourceManagementPath].flatMap((list) => list.items),
-        disabled: !isDdvs,
+        permissionName: `${defaultModulePermissionName}ResourceManagement`,
       },
       {
         title: 'Hostel',
@@ -201,8 +218,9 @@ export const navData = (isDdvs: boolean) => [
         _action: 'hostel',
         shortcutKey: 'Alt+O',
         shortcutKeyName: 'Alt+O',
+        visibility: visibility[11],
         submodule: hostelModule[hostelPath].flatMap((list) => list.items),
-        disabled: !isDdvs,
+        permissionName: `${defaultModulePermissionName}Hostel`,
       },
       {
         title: 'Security',
@@ -211,21 +229,24 @@ export const navData = (isDdvs: boolean) => [
         _action: 'security',
         shortcutKey: 'Alt+R',
         shortcutKeyName: 'Alt+R',
+        visibility: visibility[12],
         submodule: securityModule[securityPath].flatMap((list) => list.items),
+        permissionName: `${defaultModulePermissionName}Security`,
       },
       {
         title: 'Security Guard',
         path: '/security-guard/dashboard',
         icon: ICONS.securityGuard,
         _action: 'security-guard',
-
+        visibility: visibility[13],
         submodule: securityGuardModule[securityGuardPath].flatMap((list) => list.items),
+        permissionName: `${defaultModulePermissionName}SecurityGuard`,
       },
     ],
   },
 ];
 
-export const navSubData = (isDdvs: boolean) => ({
+export const navSubData = (isDdvs: boolean = true) => ({
   ...studentModule(isDdvs),
   ...hrModule(isDdvs),
   ...academicModule(isDdvs),

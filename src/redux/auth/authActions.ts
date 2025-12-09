@@ -1,7 +1,15 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 
-import { clearUser, getEmployee, setUser } from './authSlice';
+import {
+  clearUser,
+  extractGrantedPermissions,
+  getEmployee,
+  setMainModuleVisibility,
+  setPermissions,
+  setUser,
+} from './authSlice';
 import { oidcService } from 'src/utils/oidcClient';
+import { jwtDecode } from 'jwt-decode';
 
 export const signInUser = createAsyncThunk('auth/signIn', async () => {
   await oidcService.signIn();
@@ -13,9 +21,31 @@ export const completeSignInUser = createAsyncThunk(
     try {
       const user = await oidcService.completeSignIn();
       const userPlanObject = JSON.parse(JSON.stringify(user));
+      const decodeToken: any = jwtDecode(user.access_token);
+      const mainModuleVisibility = decodeToken?.module_mask || '';
+      const mainModuleVisibilityArray: boolean[] = mainModuleVisibility
+        .split('')
+        .map((item: string) => (item === '1' ? true : false));
+
+      const fetchPermssion = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/permission-management/permissions?providerName=U&providerKey=${user.profile.sub}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${user.access_token}`,
+          },
+        }
+      );
+
+      const jsonData = await fetchPermssion?.json();
+
+      const permissionData = extractGrantedPermissions(jsonData?.groups || []);
 
       await dispatch(getEmployee(userPlanObject)).unwrap();
       dispatch(setUser(userPlanObject));
+      dispatch(setMainModuleVisibility(mainModuleVisibilityArray));
+      dispatch(setPermissions(permissionData));
       return user;
     } catch (error) {
       console.error('Sign-in completion failed:', error);

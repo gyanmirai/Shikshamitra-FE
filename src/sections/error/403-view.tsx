@@ -1,11 +1,9 @@
 'use client';
 
-import { m } from 'framer-motion';
-import Button from '@mui/material/Button';
+import { Box } from '@mui/material';
+import { motion } from 'framer-motion';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
-import { SimpleLayout } from 'src/layouts/simple';
-import { RouterLink } from 'src/routes/components';
 import { ForbiddenIllustration } from 'src/assets/illustrations';
 import { varBounce, MotionContainer } from 'src/components/animate';
 
@@ -13,29 +11,29 @@ import { varBounce, MotionContainer } from 'src/components/animate';
 
 export function View403() {
   return (
-    <SimpleLayout content={{ compact: true }}>
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <Container component={MotionContainer}>
-        <m.div variants={varBounce().in}>
+        <motion.div variants={varBounce().in}>
           <Typography variant="h3" sx={{ mb: 2 }}>
             No permission
           </Typography>
-        </m.div>
+        </motion.div>
 
-        <m.div variants={varBounce().in}>
+        <motion.div variants={varBounce().in}>
           <Typography sx={{ color: 'text.secondary' }}>
             The page you’re trying to access has restricted access. Please refer to your system
             administrator.
           </Typography>
-        </m.div>
+        </motion.div>
 
-        <m.div variants={varBounce().in}>
+        <motion.div variants={varBounce().in}>
           <ForbiddenIllustration sx={{ my: { xs: 5, sm: 10 } }} />
-        </m.div>
+        </motion.div>
 
-        <Button component={RouterLink} href="/" size="large" variant="contained">
+        {/* <Button component={RouterLink} href="/" size="large" variant="contained">
           Go to home
-        </Button>
+        </Button> */}
       </Container>
-    </SimpleLayout>
+    </Box>
   );
 }

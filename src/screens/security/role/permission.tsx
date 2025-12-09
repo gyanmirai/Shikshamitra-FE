@@ -4,99 +4,126 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import { motion } from 'framer-motion';
 import Stack from '@mui/material/Stack';
-import { useMemo, useState } from 'react';
+import Switch from '@mui/material/Switch';
 import { useSelector } from 'react-redux';
 import Button from '@mui/material/Button';
 import { varAlpha } from 'src/theme/styles';
-import Accordion from '@mui/material/Accordion';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
+import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
+import { Tooltip, CircularProgress } from '@mui/material';
 import { navData } from 'src/layouts/config-nav-dashboard';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetPermissionsQuery } from 'src/redux/permission/permissionApi';
 
-import SecurityScore from './security-score';
+import { extractGrantedPermissions } from '.';
 import PermissionNode from './permission-node';
-import { updateNodeAndChildren, calculateSecurityScore } from './utils';
-
-import type { PermissionType, PermissionsMap } from './utils';
+import { getAllChildrenData, type PermissionType } from './utils';
 
 // ----------------------------------------------------------------------
 
-export default function Permission() {
-  const { user } = useSelector((state: any) => state.auth);
-  const isDdvs = user?.profile?.email === 'ddvs@gmail.com';
+export default function Permission({
+  editData,
+  setPermissionData,
+  permissionData,
+  providerName,
+}: {
+  editData: any;
+  setPermissionData: (data: { name: string; isGranted: boolean }[]) => void;
+  permissionData: { name: string; isGranted: boolean }[];
+  providerName: string;
+}) {
+  const { data: _permissionData, isLoading: isPermissionLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetPermissionsQuery,
+    params: { providerName, providerKey: providerName === 'R' ? editData?.name : editData?.id },
+    options: {
+      skip: !editData,
+    },
+  });
 
-  const navigationData = useMemo(() => navData(isDdvs), [isDdvs]);
+  // const [visibility, setVisibility] = useState<{ name: string; isGranted: boolean }[]>();
+  useEffect(() => {
+    if (_permissionData?.groups?.length > 0) {
+      setPermissionData(extractGrantedPermissions(_permissionData?.groups));
+    }
+  }, [_permissionData, setPermissionData]);
+
+  const { mainModuleVisibility } = useSelector((state: any) => state.auth);
+
+  const navigationData = useMemo(() => navData(mainModuleVisibility), [mainModuleVisibility]);
   const modules = useMemo(() => navigationData.flatMap((group) => group.items), [navigationData]);
 
-  const [selectedModule, setSelectedModule] = useState(modules[0]);
+  const [selectedModule, setSelectedModule] = useState<any>(modules[0]);
   const [expandedSubModule, setExpandedSubModule] = useState<string | false>(false);
 
   // State for permissions: { [module_submodule_child]: { view: true, add: false, ... } }
-  const [permissions, setPermissions] = useState<PermissionsMap>({});
+  // const [permissions, setPermissions] = useState<PermissionsMap>({});
 
   // Gamification Stats
-  const progress = calculateSecurityScore(permissions);
+  // const progress = calculateSecurityScore(permissionData);
 
   const handleModuleClick = (module: any) => {
     setSelectedModule(module);
     setExpandedSubModule(false);
   };
 
-  const handleSubModuleChange =
-    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
-      setExpandedSubModule(isExpanded ? panel : false);
-    };
+  const handleSubModuleChange = (value: string) => {
+    setExpandedSubModule(value === expandedSubModule ? false : value);
+  };
 
   const handlePermissionToggle = (key: string, type: PermissionType) => {
-    setPermissions((prev) => {
-      const current = prev[key] || { View: false, 'Add/Edit': false, Delete: false };
-      const newValue = !current[type];
-      const updatedPermissions = { ...current, [type]: newValue };
+    const targetName = `${key}.${type}`;
+    const targetItem = permissionData.find((item) => item.name === targetName);
+    const newValue = targetItem ? !targetItem.isGranted : false;
 
-      if (type === 'Add/Edit' && newValue) {
-        updatedPermissions.View = true;
-      }
+    setPermissionData(
+      permissionData.map((item) => {
+        if (item.name === targetName) {
+          return { ...item, isGranted: newValue };
+        }
 
-      return {
-        ...prev,
-        [key]: updatedPermissions,
-      };
-    });
+        if (newValue) {
+          if (type === 'Add' && item.name === `${key}.View`) {
+            return { ...item, isGranted: true };
+          }
+          if (type === 'Delete' && (item.name === `${key}.View` || item.name === `${key}.Add`)) {
+            return { ...item, isGranted: true };
+          }
+        }
+        return item;
+      })
+    );
   };
 
   const handleNodeSelectAll = (node: any, value: boolean) => {
     if (!expandedSubModule) return;
 
-    const newPermissions = updateNodeAndChildren(
-      permissions,
-      node,
-      selectedModule.title,
-      expandedSubModule,
-      'All',
-      value
+    let key: string[] = [];
+
+    if (node?.children?.length > 0) {
+      node.children.forEach((child: any) => {
+        key.push(`${child.permissionName}.View`);
+        key.push(`${child.permissionName}.Add`);
+        key.push(`${child.permissionName}.Delete`);
+      });
+    } else {
+      key = [
+        `${node.permissionName}.View`,
+        `${node.permissionName}.Add`,
+        `${node.permissionName}.Delete`,
+      ];
+    }
+
+    const newPermissions = permissionData.map((item) =>
+      key.includes(item.name) ? { ...item, isGranted: value } : item
     );
-    setPermissions(newPermissions);
+    setPermissionData(newPermissions);
   };
 
-  const handleGlobalSelectAll = (items: any[], select: boolean) => {
-    if (!expandedSubModule) return;
-
-    let newPermissions = { ...permissions };
-    items.forEach((item) => {
-      newPermissions = updateNodeAndChildren(
-        newPermissions,
-        item,
-        selectedModule.title,
-        expandedSubModule,
-        'All',
-        select
-      );
-    });
-    setPermissions(newPermissions);
-  };
+  const findVisibility = (name: string) =>
+    permissionData?.find((item) => item.name === name)?.isGranted;
 
   const renderModuleList = (
     <Card
@@ -118,35 +145,46 @@ export default function Permission() {
         <Stack spacing={0.5} sx={{ p: 1 }}>
           {modules.map((module) => {
             const isSelected = selectedModule.title === module.title;
+            const hasVisibility = findVisibility(module.permissionName);
             return (
-              <Button
+              <Tooltip
+                title={hasVisibility ? '' : 'Not Module visibility Accessible'}
                 key={module.title}
-                fullWidth
-                size="large"
-                startIcon={module.icon}
-                onClick={() => handleModuleClick(module)}
-                sx={{
-                  justifyContent: 'flex-start',
-                  px: 2.5,
-                  py: 1.5,
-                  borderRadius: 1.5,
-                  color: isSelected ? 'primary.main' : 'text.secondary',
-                  bgcolor: isSelected
-                    ? (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
-                    : 'transparent',
-                  '&:hover': {
-                    bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.04),
-                  },
-                  transition: 'all 0.2s',
-                }}
               >
-                <Box sx={{ flexGrow: 1, textAlign: 'left' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: isSelected ? 700 : 500 }}>
-                    {module.title}
-                  </Typography>
-                </Box>
-                {isSelected && <Iconify icon="eva:arrow-ios-forward-fill" width={16} />}
-              </Button>
+                <span key={module.title}>
+                  <Button
+                    key={module.title}
+                    fullWidth
+                    size="large"
+                    startIcon={module.icon}
+                    onClick={() => hasVisibility && handleModuleClick(module)}
+                    disabled={!hasVisibility}
+                    sx={{
+                      justifyContent: 'flex-start',
+                      px: 2.5,
+                      py: 1.5,
+                      borderRadius: 1.5,
+                      color: isSelected ? 'primary.main' : 'text.secondary',
+                      bgcolor: isSelected
+                        ? (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
+                        : 'transparent',
+                      '&:hover': {
+                        bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.04),
+                        // textDecoration: hasVisibility ? 'none' : 'line-through',
+                      },
+                      transition: 'all 0.2s',
+                      // textDecoration: hasVisibility ? 'none' : 'line-through',
+                    }}
+                  >
+                    <Box sx={{ flexGrow: 1, textAlign: 'left' }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: isSelected ? 700 : 500 }}>
+                        {module.title}
+                      </Typography>
+                    </Box>
+                    {isSelected && <Iconify icon="eva:arrow-ios-forward-fill" width={16} />}
+                  </Button>
+                </span>
+              </Tooltip>
             );
           })}
         </Stack>
@@ -164,46 +202,62 @@ export default function Permission() {
       </Box>
 
       <Scrollbar sx={{ p: 2 }}>
-        {selectedModule.submodule && selectedModule.submodule.length > 0 ? (
-          selectedModule.submodule.map((subItem: any) => (
-            <Accordion
-              key={subItem.title}
-              expanded={expandedSubModule === subItem.title}
-              onChange={handleSubModuleChange(subItem.title)}
-              sx={{
-                mb: 1,
-                borderRadius: 1.5,
-                '&:before': { display: 'none' },
-                bgcolor:
-                  expandedSubModule === subItem.title ? 'background.paper' : 'background.neutral',
-                boxShadow:
-                  expandedSubModule === subItem.title ? (theme) => theme.customShadows.z4 : 'none',
-                transition: 'all 0.3s',
-              }}
-            >
-              <AccordionSummary expandIcon={<Iconify icon="eva:arrow-ios-downward-fill" />}>
-                <Typography variant="subtitle2" sx={{ width: '100%', flexShrink: 0 }}>
-                  {subItem.title}
-                </Typography>
-              </AccordionSummary>
-              <AccordionDetails sx={{ p: 0 }}>
-                {/* This is just a placeholder to indicate selection, actual permissions are in the right panel */}
-                <Box sx={{ p: 2, pt: 0, color: 'text.secondary', typography: 'body2' }}>
-                  Select to view permissions on the right panel.
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-          ))
-        ) : (
-          <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
-            <Iconify
-              icon="solar:folder-with-files-broken"
-              width={48}
-              sx={{ mb: 1, opacity: 0.5 }}
-            />
-            <Typography variant="body2">No sub-modules found</Typography>
-          </Box>
-        )}
+        <Stack spacing={1} sx={{ p: 1 }}>
+          {selectedModule.submodule && selectedModule.submodule.length > 0 ? (
+            selectedModule.submodule.map((subItem: any) => {
+              const isSelected = expandedSubModule === subItem.title;
+              const hasVisibility = findVisibility(subItem.permissionName);
+              return (
+                <Tooltip
+                  title={hasVisibility ? '' : 'Not Module visibility Accessible'}
+                  key={subItem.title}
+                >
+                  <span key={subItem.title}>
+                    <Button
+                      fullWidth
+                      size="large"
+                      // startIcon={module.icon}
+                      disabled={!hasVisibility}
+                      onClick={() => hasVisibility && handleSubModuleChange(subItem.title)}
+                      sx={{
+                        justifyContent: 'flex-start',
+                        px: 2.5,
+                        py: 1.5,
+                        borderRadius: 1.5,
+                        color: isSelected ? 'primary.main' : 'text.secondary',
+                        bgcolor: isSelected
+                          ? (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
+                          : (theme) => theme.palette.grey[200],
+                        '&:hover': {
+                          bgcolor: (theme) =>
+                            varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
+                          // textDecoration: hasVisibility ? 'none' : 'line-through',
+                        },
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <Box sx={{ flexGrow: 1, textAlign: 'left' }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: isSelected ? 700 : 500 }}>
+                          {subItem.title}
+                        </Typography>
+                      </Box>
+                      {isSelected && <Iconify icon="eva:arrow-ios-forward-fill" width={16} />}
+                    </Button>
+                  </span>
+                </Tooltip>
+              );
+            })
+          ) : (
+            <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
+              <Iconify
+                icon="solar:folder-with-files-broken"
+                width={48}
+                sx={{ mb: 1, opacity: 0.5 }}
+              />
+              <Typography variant="body2">No sub-modules found</Typography>
+            </Box>
+          )}
+        </Stack>
       </Scrollbar>
     </Card>
   );
@@ -219,69 +273,100 @@ export default function Permission() {
         overflow: 'hidden',
       }}
     >
-      <Box
-        sx={{
-          p: 2.5,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: '1px dashed',
-          borderColor: 'divider',
-          zIndex: 1,
-        }}
-      >
-        <Box>
-          <Typography variant="h6">Permissions</Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Manage access & security
-          </Typography>
-        </Box>
-
-        {/* Gamification HUD & Global Actions */}
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          {expandedSubModule && (
-            <Stack direction="row" spacing={1}>
-              <Button
-                size="small"
-                variant="soft"
-                color="primary"
-                onClick={() => {
-                  const activeSubModule = selectedModule.submodule?.find(
-                    (s: any) => s.title === expandedSubModule
-                  );
-                  const itemsToShow =
-                    (activeSubModule as any)?.children?.length > 0
-                      ? (activeSubModule as any).children
-                      : [activeSubModule];
-                  handleGlobalSelectAll(itemsToShow, true);
-                }}
-              >
-                Select All
-              </Button>
-              <Button
-                size="small"
-                variant="soft"
-                color="error"
-                onClick={() => {
-                  const activeSubModule = selectedModule.submodule?.find(
-                    (s: any) => s.title === expandedSubModule
-                  );
-                  const itemsToShow =
-                    (activeSubModule as any)?.children?.length > 0
-                      ? (activeSubModule as any).children
-                      : [activeSubModule];
-                  handleGlobalSelectAll(itemsToShow, false);
-                }}
-              >
-                Deselect All
-              </Button>
-            </Stack>
-          )}
-          <Box sx={{ width: 250 }}>
-            <SecurityScore score={progress} />
+      {selectedModule.submodule?.find((s: any) => s.title === expandedSubModule)?.children?.length >
+        0 && (
+        <Box
+          sx={{
+            p: 2.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px dashed',
+            borderColor: 'divider',
+            zIndex: 1,
+          }}
+        >
+          <Box>
+            <Typography variant="h6">Permissions</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Manage access & security
+            </Typography>
           </Box>
-        </Stack>
-      </Box>
+
+          {/* Gamification HUD & Global Actions */}
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            {expandedSubModule && (
+              <Stack direction="row" spacing={2} alignItems="center">
+                {['View', 'Add', 'Delete'].map((type) => {
+                  const activeSubModule = selectedModule.submodule?.find(
+                    (s: any) => s.title === expandedSubModule
+                  );
+                  const itemsToShow =
+                    (activeSubModule as any)?.children?.length > 0
+                      ? getAllChildrenData(activeSubModule)
+                      : [activeSubModule];
+
+                  // Check if all items have this permission enabled
+                  const isGlobalChecked = itemsToShow.every((item: any) => {
+                    const key = `${item.permissionName}.${type}`;
+                    return !!permissionData?.find((i) => i.name === key)?.isGranted;
+                  });
+
+                  return (
+                    <Stack key={type} direction="row" spacing={1} alignItems="center">
+                      <Typography variant="subtitle2" sx={{ fontSize: '0.75rem' }}>
+                        {type}
+                      </Typography>
+                      <Switch
+                        size="small"
+                        checked={isGlobalChecked}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked;
+                          const newPermissions: { name: string; isGranted: boolean }[] = [
+                            ...permissionData,
+                          ];
+
+                          itemsToShow.forEach((item: any) => {
+                            const key = `${item.permissionName}.${type}`;
+                            const index = newPermissions.findIndex((i) => i.name === key);
+                            if (index !== -1) {
+                              newPermissions[index].isGranted = isChecked;
+
+                              if (isChecked) {
+                                if (type === 'Add') {
+                                  const viewIndex = newPermissions.findIndex(
+                                    (i) => i.name === `${item.permissionName}.View`
+                                  );
+                                  if (viewIndex !== -1) newPermissions[viewIndex].isGranted = true;
+                                }
+                                if (type === 'Delete') {
+                                  const viewIndex = newPermissions.findIndex(
+                                    (i) => i.name === `${item.permissionName}.View`
+                                  );
+                                  if (viewIndex !== -1) newPermissions[viewIndex].isGranted = true;
+                                  const addIndex = newPermissions.findIndex(
+                                    (i) => i.name === `${item.permissionName}.Add`
+                                  );
+                                  if (addIndex !== -1) newPermissions[addIndex].isGranted = true;
+                                }
+                              }
+                            }
+                          });
+
+                          setPermissionData(newPermissions);
+                        }}
+                      />
+                    </Stack>
+                  );
+                })}
+              </Stack>
+            )}
+            {/* <Box sx={{ width: 250 }}>
+              <SecurityScore score={progress} />
+            </Box> */}
+          </Stack>
+        </Box>
+      )}
 
       <Scrollbar sx={{ p: 2.5, zIndex: 1 }}>
         {expandedSubModule ? (
@@ -295,29 +380,36 @@ export default function Permission() {
               const itemsToShow =
                 (activeSubModule as any)?.children?.length > 0
                   ? (activeSubModule as any).children
-                  : [activeSubModule];
+                  : [];
 
-              return itemsToShow?.map((item: any, index: number) => {
-                if (!item) return null;
+              return itemsToShow.length > 0 ? (
+                itemsToShow?.map((item: any, index: number) => {
+                  if (!item) return null;
 
-                return (
-                  <motion.div
-                    key={item.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <PermissionNode
-                      node={item}
-                      moduleTitle={selectedModule.title}
-                      submoduleTitle={expandedSubModule}
-                      permissions={permissions}
-                      onToggle={handlePermissionToggle}
-                      onSelectAll={handleNodeSelectAll}
-                    />
-                  </motion.div>
-                );
-              });
+                  return (
+                    <motion.div
+                      key={item.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <PermissionNode
+                        node={item}
+                        moduleTitle={selectedModule.title}
+                        submoduleTitle={expandedSubModule}
+                        permissions={permissionData}
+                        setPermission={setPermissionData}
+                        onToggle={handlePermissionToggle}
+                        onSelectAll={handleNodeSelectAll}
+                      />
+                    </motion.div>
+                  );
+                })
+              ) : (
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  No sub-modules found
+                </Typography>
+              );
             })()}
           </Stack>
         ) : (
@@ -374,13 +466,19 @@ export default function Permission() {
       spacing={2}
       sx={{ height: 'calc(100vh - 100px)', p: 1 }}
     >
-      <Box sx={{ width: { xs: '100%', md: 280 }, flexShrink: 0, height: '100%' }}>
-        {renderModuleList}
-      </Box>
-      <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0, height: '100%' }}>
-        {renderSubModules}
-      </Box>
-      <Box sx={{ flexGrow: 1, minWidth: 0, height: '100%' }}>{renderPermissionMatrix}</Box>
+      {isPermissionLoading ? (
+        <CircularProgress />
+      ) : (
+        <>
+          <Box sx={{ width: { xs: '100%', md: 280 }, flexShrink: 0, height: '100%' }}>
+            {renderModuleList}
+          </Box>
+          <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0, height: '100%' }}>
+            {renderSubModules}
+          </Box>
+          <Box sx={{ flexGrow: 1, minWidth: 0, height: '100%' }}>{renderPermissionMatrix}</Box>
+        </>
+      )}
     </Stack>
   );
 }
