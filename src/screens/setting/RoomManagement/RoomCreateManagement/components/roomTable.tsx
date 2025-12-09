@@ -47,7 +47,7 @@ const RoomTable: React.FC<IRoomTableProps> = ({ onEdit, onDelete }) => {
           ),
         },
         {
-          id: 'building',
+          id: 'buildingName',
           label: 'Building',
           align: 'left',
           render: (value) => (
@@ -67,7 +67,7 @@ const RoomTable: React.FC<IRoomTableProps> = ({ onEdit, onDelete }) => {
           ),
         },
         {
-          id: 'roomType',
+          id: 'roomTypeName',
           label: 'Room Type',
           align: 'left',
           minWidth: 130,

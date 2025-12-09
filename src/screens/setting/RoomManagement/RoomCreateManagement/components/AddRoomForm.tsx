@@ -4,10 +4,10 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -64,14 +64,14 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
     initialValues: {
       roomName: editData?.roomName || '',
       capacity: editData?.capacity || '',
-      building: editData?.building || '',
+      building: editData?.buildingId || '',
       floor: editData?.floor || '',
-      roomType: editData?.roomType || '',
+      roomType: editData?.roomTypeId || '',
       totalBenches: editData?.totalBenches || '',
       benchCapacity: editData?.benchCapacity || '',
       benchesPerRow: editData?.benchesPerRow || '',
       benchesPerColumn: editData?.benchesPerColumn || '',
-      features: editData?.features ? editData.features.split(',') : [],
+      features: editData?.features ? editData.features : [],
     },
     validationSchema: Yup.object().shape({
       roomName: Yup.string().required('Room Name/No. is required'),
@@ -137,6 +137,12 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
       formik.setFieldValue('features', [...current, feature]);
     }
   };
+
+  useEffect(() => {
+    setFloorsOptions(
+      buildings?.find((building: any) => building.id === formik.values.building)?.floors || []
+    );
+  }, [buildings, formik.values.building]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
