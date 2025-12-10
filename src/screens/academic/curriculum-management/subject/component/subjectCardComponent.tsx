@@ -235,7 +235,9 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   }
                   // UI expects objects, not IDs → convert stored ids to objects
                   value={
-                    teacherOptions?.filter((t) => subject.secondaryTeacher?.includes(t?.id)) || []
+                    teacherOptions?.filter((t) =>
+                      subject.secondaryTeacher?.includes(t?.id as any)
+                    ) || []
                   }
                   getOptionLabel={(option) => option?.name ?? ''}
                   isOptionEqualToValue={(option, value) => option.id === value.id}
