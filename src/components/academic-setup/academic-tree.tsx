@@ -85,6 +85,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
   const handleMenuOpen = (event: React.MouseEvent) => {
     event.stopPropagation();
+    // @ts-ignore
     setAnchorEl(event.currentTarget);
   };
 

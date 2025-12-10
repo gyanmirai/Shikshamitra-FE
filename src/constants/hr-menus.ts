@@ -48,11 +48,11 @@ export const hrPermissions = {
   dashboard: `${defaultModulePermissionName}${defaultHrPermissionName}Dashboard`,
   employee: {
     root: `${defaultModulePermissionName}${defaultHrPermissionName}Employee`,
-    list: `${defaultHrPermissionName}EmployeeList`,
-    iCard: `${defaultHrPermissionName}ICard`,
+    list: `${defaultHrPermissionName}Employee.EmployeeList`,
+    iCard: `${defaultHrPermissionName}Employee.ICard`,
     setting: {
-      root: `${defaultHrPermissionName}Setting`,
-      documentTypes: `${defaultHrPermissionName}Setting.DocumentTypes`,
+      root: `${defaultModulePermissionName}${defaultHrPermissionName}Employee.Settings`,
+      documentTypes: `${defaultHrPermissionName}Employee.Setting.DocumentTypes`,
     },
   },
   payroll: {
@@ -64,7 +64,7 @@ export const hrPermissions = {
       root: `${defaultModulePermissionName}${defaultHrPermissionName}Payroll.Settings`,
       earningComponents: `${defaultHrPermissionName}PayrollManagement.Settings.EarningComponents`,
       deductionComponents: `${defaultHrPermissionName}PayrollManagement.Settings.DeductionComponents`,
-      pfRule: `${defaultHrPermissionName}PayrollManagement.Settings.PFRule`,
+      pfRule: `${defaultHrPermissionName}PayrollManagement.Settings.PfRule`,
     },
   },
   attendance: {
@@ -73,7 +73,7 @@ export const hrPermissions = {
     leaveManagement: `${defaultHrPermissionName}AttendanceAndLeave.LeaveManagement`,
     attendanceTracking: `${defaultHrPermissionName}AttendanceAndLeave.AttendanceTracking`,
     setting: {
-      root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceManagement.Setting`,
+      root: `${defaultModulePermissionName}${defaultHrPermissionName}AttendanceManagement.Settings`,
       shiftManagement: `${defaultHrPermissionName}AttendanceAndLeave.Setting.ShiftManagement`,
       leaveType: `${defaultHrPermissionName}AttendanceAndLeave.Setting.LeaveType`,
       leavePolicy: `${defaultHrPermissionName}AttendanceAndLeave.Setting.LeavePolicy`,

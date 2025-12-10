@@ -22,7 +22,7 @@ export const communicationPaths = {
 
 export const communicationPermissions = {
   dashboard: `${defaultModulePermissionName}${defaultCommunicationPermissionName}Dashboard`,
-  announcement: `${defaultModulePermissionName}${defaultCommunicationPermissionName}Announcement`,
+  announcement: `${defaultModulePermissionName}${defaultCommunicationPermissionName}Announcements`,
   notification: {
     root: `${defaultModulePermissionName}${defaultCommunicationPermissionName}Notification`,
     sent: `${defaultCommunicationPermissionName}Notification.SentNotification`,

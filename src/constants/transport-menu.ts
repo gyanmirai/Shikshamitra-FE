@@ -28,9 +28,9 @@ export const transportPermissions = {
   stopManagement: `${defaultModulePermissionName}${defaultTransportPermissionName}StopManagement`,
   routeManagement: `${defaultModulePermissionName}${defaultTransportPermissionName}RouteManagement`,
   vehicleManagement: `${defaultModulePermissionName}${defaultTransportPermissionName}VehicleManagement`,
-  driverManagement: `${defaultModulePermissionName}${defaultTransportPermissionName}DriverManagement`,
+  driverManagement: `${defaultModulePermissionName}${defaultTransportPermissionName}TransportStaffManagement`,
   applicationManagement: `${defaultModulePermissionName}${defaultTransportPermissionName}ApplicationManagement`,
-  reports: `${defaultModulePermissionName}${defaultTransportPermissionName}ReportsAnalytics`,
+  reports: `${defaultModulePermissionName}${defaultTransportPermissionName}Reports`,
   notification: `${defaultModulePermissionName}${defaultTransportPermissionName}Notification`,
   settings: {
     root: `${defaultModulePermissionName}${defaultTransportPermissionName}Settings`,
@@ -81,7 +81,7 @@ const transportModule = {
           permissionName: transportPermissions.vehicleManagement,
         },
         {
-          title: ' Transport Staff Management',
+          title: 'Transport Staff Management',
           path: transportPaths.driverManagement,
           _action: 'driver-management',
           shortcutKey: 'Alt+T+3',

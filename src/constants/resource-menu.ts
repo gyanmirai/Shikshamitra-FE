@@ -58,7 +58,7 @@ export const resourcePermissions = {
   lossDamage: `${defaultModulePermissionName}${defaultResourcePermissionName}ReportLossDamage`,
   incidentReport: `${defaultModulePermissionName}${defaultResourcePermissionName}IncidentReport`,
   audit: `${defaultModulePermissionName}${defaultResourcePermissionName}AuditVerification`,
-  reports: `${defaultModulePermissionName}${defaultResourcePermissionName}ReportsAnalytics`,
+  reports: `${defaultModulePermissionName}${defaultResourcePermissionName}Reports`,
   settings: {
     root: `${defaultModulePermissionName}${defaultResourcePermissionName}Settings`,
     category: `${defaultResourcePermissionName}Settings.ResourceCategory`,

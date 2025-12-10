@@ -81,13 +81,13 @@ export const academicPermissions = {
   dashboard: `${defaultModulePermissionName}${defaultAcademicPermissionName}Dashboard`,
   curriculum: {
     root: `${defaultModulePermissionName}${defaultAcademicPermissionName}Curriculum`,
-    subjectsAssignment: `${defaultAcademicPermissionName}CurriculumManagement.SubjectsAssignment`,
-    chaptersManagement: `${defaultAcademicPermissionName}CurriculumManagement.ChaptersManagement`,
+    subjectsAssignment: `${defaultAcademicPermissionName}CurriculumManagement.SubjectAssignment`,
+    chaptersManagement: `${defaultAcademicPermissionName}CurriculumManagement.ChapterManagement`,
     resources: `${defaultAcademicPermissionName}CurriculumManagement.Resources`,
     reports: `${defaultAcademicPermissionName}CurriculumManagement.Reports`,
     settings: {
       root: `${defaultModulePermissionName}${defaultAcademicPermissionName}Curriculum.Settings`,
-      subjectsCreation: `${defaultAcademicPermissionName}CurriculumManagement.Settings.SubjectsCreation`,
+      subjectsCreation: `${defaultAcademicPermissionName}CurriculumManagement.Settings.SubjectCreation`,
       electiveGroupCreation: `${defaultAcademicPermissionName}CurriculumManagement.Settings.ElectiveGroupCreation`,
     },
   },
@@ -103,13 +103,13 @@ export const academicPermissions = {
   },
   homework: {
     root: `${defaultModulePermissionName}${defaultAcademicPermissionName}HomeworkAssignment`,
-    learningTasks: `${defaultAcademicPermissionName}HomeworkAssignment.LearningTasks`,
-    assessment: `${defaultAcademicPermissionName}HomeworkAssignment.AssessmentAndFeedback`,
-    reports: `${defaultAcademicPermissionName}HomeworkAssignment.Reports`,
+    learningTasks: `${defaultAcademicPermissionName}HomeworkAndAssignment.LearningTasks`,
+    assessment: `${defaultAcademicPermissionName}HomeworkAndAssignment.AssessmentAndFeedback`,
+    reports: `${defaultAcademicPermissionName}HomeworkAndAssignment.Reports`,
     settings: {
       root: `${defaultModulePermissionName}${defaultAcademicPermissionName}HomeworkAssignment.Settings`,
-      homeworkTypes: `${defaultAcademicPermissionName}HomeworkAssignment.Settings.HomeworkTypes`,
-      assignmentTypes: `${defaultAcademicPermissionName}HomeworkAssignment.Settings.AssignmentTypes`,
+      homeworkTypes: `${defaultAcademicPermissionName}HomeworkAndAssignment.Settings.HomeworkTypes`,
+      assignmentTypes: `${defaultAcademicPermissionName}HomeworkAndAssignment.Settings.AssignmentTypes`,
     },
   },
   examination: {
@@ -132,7 +132,7 @@ export const academicPermissions = {
     activityManagement: `${defaultAcademicPermissionName}GroupManagement.ActivityManagement`,
   },
   lms: {
-    root: `${defaultModulePermissionName}${defaultAcademicPermissionName}LearningManagementSystem`,
+    root: `${defaultModulePermissionName}${defaultAcademicPermissionName}LMS`,
     dashboard: `${defaultAcademicPermissionName}LearningManagementSystem.Dashboard`,
     course: `${defaultAcademicPermissionName}LearningManagementSystem.Course`,
     studentProgress: `${defaultAcademicPermissionName}LearningManagementSystem.StudentProgressTracking`,

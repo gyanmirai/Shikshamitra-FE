@@ -104,7 +104,7 @@ export function NavList({
   }
 
   // Has children
-  if (data.children && isGranted) {
+  if (data.children) {
     return (
       <NavLi
         disabled={data.disabled}
@@ -134,7 +134,7 @@ export function NavList({
   }
 
   // Default
-  return isGranted && <NavLi disabled={data.disabled}>{renderNavItem}</NavLi>;
+  return <NavLi disabled={data.disabled}>{renderNavItem}</NavLi>;
 }
 
 // ----------------------------------------------------------------------

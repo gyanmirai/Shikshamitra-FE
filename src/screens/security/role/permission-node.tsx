@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
 import { Checkbox, IconButton } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { PERMISSIONS, getAllChildrenData } from './utils';
+import { PERMISSIONS } from './utils';
 
 import type { PermissionType } from './utils';
 
@@ -39,6 +39,8 @@ export default function PermissionNode({
   );
   const nodeKey = node.permissionName;
   const hasChildren = node.children && node.children.length > 0;
+
+  console.log('permissions', permissions);
 
   // Check if all permissions for this node are active
   const isNodeFullySelected = PERMISSIONS.every(
@@ -118,11 +120,8 @@ export default function PermissionNode({
             >
               {!hasChildren &&
                 PERMISSIONS.map((perm) => {
-                  const isChecked = hasChildren
-                    ? getAllChildrenData(node).find(
-                        (p: any) => p.permissionName === `${nodeKey}.${perm}`
-                      )?.isGranted
-                    : permissions.find((p) => p.name === `${nodeKey}.${perm}`)?.isGranted;
+                  const isChecked = !!permissions.find((p) => p.name === `${nodeKey}.${perm}`)
+                    ?.isGranted;
                   return (
                     <motion.div key={perm} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Box

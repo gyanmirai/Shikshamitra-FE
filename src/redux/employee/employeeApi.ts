@@ -74,7 +74,7 @@ export const employeeApi = createApi({
     }),
     updateAdditionalInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee/additional-info/${employeeId}`,
+        url: `/app/employee/additional-details/${employeeId}`,
         method: 'PUT',
         data: body,
       }),
