@@ -84,6 +84,7 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
         borderRadius: 1,
         boxShadow: 2,
         minWidth: 280,
+        height: '100%',
         borderLeft: `3px solid ${
           LibraryBookStatusColors[copy.status] === 'default'
             ? theme.palette.grey[500]
@@ -114,7 +115,7 @@ const BookCopyCard: React.FC<IBookCopyCardProps> = ({
         {/* Body */}
         {copy.status === LibraryBookStatus.Available || !copy.memberId ? (
           <Box textAlign="center" py={2}>
-            <Iconify icon="noto:open-book" width={30} color="text.secondary" />
+            <Iconify icon="noto:open-book" width={25} color="text.secondary" />
             <Typography color="text.secondary">Not issued</Typography>
           </Box>
         ) : (

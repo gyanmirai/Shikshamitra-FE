@@ -1,10 +1,10 @@
-export type PermissionType = 'View' | 'Add/Edit' | 'Delete';
+export type PermissionType = 'View' | 'Add' | 'Delete';
 
-export const PERMISSIONS: PermissionType[] = ['View', 'Add/Edit', 'Delete'];
+export const PERMISSIONS: PermissionType[] = ['View', 'Add', 'Delete'];
 
 export interface PermissionState {
   View: boolean;
-  'Add/Edit': boolean;
+  Add: boolean;
   Delete: boolean;
 }
 
@@ -48,11 +48,11 @@ export const updateNodeAndChildren = (
     const currentPerms = newPermissions[key] || { View: false, 'Add/Edit': false, Delete: false };
 
     if (type === 'All') {
-      newPermissions[key] = { View: value, 'Add/Edit': value, Delete: value };
+      newPermissions[key] = { View: value, Add: value, Delete: value };
     } else {
       newPermissions[key] = { ...currentPerms, [type]: value };
       // Auto-enable View if Add/Edit is enabled
-      if (type === 'Add/Edit' && value) {
+      if (type === 'Add' && value) {
         newPermissions[key].View = true;
       }
     }
@@ -68,9 +68,21 @@ export const calculateSecurityScore = (permissions: PermissionsMap) => {
 
   const totalPossiblePerms = totalKeys * 3; // 3 permissions per node
   const activePerms = Object.values(permissions).reduce(
-    (acc, curr) => acc + (curr.View ? 1 : 0) + (curr['Add/Edit'] ? 1 : 0) + (curr.Delete ? 1 : 0),
+    (acc, curr) => acc + (curr.View ? 1 : 0) + (curr.Add ? 1 : 0) + (curr.Delete ? 1 : 0),
     0
   );
 
   return Math.round((activePerms / totalPossiblePerms) * 100);
+};
+
+export const getAllChildrenData = (node: any, list: any = []) => {
+  node?.children?.forEach((child: any) => {
+    if (child?.children?.length > 0) {
+      list = [...list];
+    } else {
+      list.push(child);
+    }
+    getAllChildrenData(child, list);
+  });
+  return list;
 };

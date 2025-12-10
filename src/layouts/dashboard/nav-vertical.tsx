@@ -2,6 +2,7 @@ import type { Breakpoint } from '@mui/material/styles';
 import type { NavSectionProps } from 'src/components/nav-section';
 
 import Box from '@mui/material/Box';
+import { useSelector } from 'react-redux';
 import { Logo } from 'src/components/logo';
 import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -33,6 +34,7 @@ export function NavVertical({
   ...other
 }: NavVerticalProps) {
   const theme = useTheme();
+  const { mainModuleVisibility } = useSelector((state: any) => state.auth);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const renderNavVertical = (
@@ -107,7 +109,7 @@ export function NavVertical({
       {renderNavMini}
       {/* <NavList depth={1} data={settingMenu} cssVars={cssVars} /> */}
       <NavSectionMini
-        data={[{ items: [settingMenu] }]}
+        data={[{ items: [{ ...settingMenu, visibility: mainModuleVisibility[14] }] }]}
         sx={{
           pb: 2,
           px: 0.5,

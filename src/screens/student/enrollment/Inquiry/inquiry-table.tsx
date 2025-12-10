@@ -5,15 +5,15 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import calculateAge from 'src/utils/calculate-age';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, MenuItem, MenuList } from '@mui/material';
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 import { useGetStudentInquiryQuery } from 'src/redux/student/inquiry/inquiry-api';
 import {
   FollowUpStatusType,
@@ -36,9 +36,16 @@ const InquiryTable = ({
   editData: null | IInquiryData;
   setEditData: React.Dispatch<React.SetStateAction<null | IInquiryData>>;
 }) => {
+  const { currentMedium } = useSelector((state: any) => state.globalState);
   const { data: inquiryData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentInquiryQuery,
+    params: {
+      academicMediumId: currentMedium?.id,
+    },
+    options: {
+      skip: currentMedium?.id === undefined,
+    },
   });
 
   const tableData = useMemo(
@@ -53,16 +60,16 @@ const InquiryTable = ({
           : undefined,
         studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
         genderValue: GenderType[item?.genderType as any],
-        address: [
-          item.addressLine1,
-          item.addressLine2,
-          item.addressLine3,
-          item.city,
-          item.state?.name,
-          item.country?.name,
-        ]
-          .filter(Boolean)
-          .join(', '),
+        // address: [
+        //   item.addressLine1,
+        //   item.addressLine2,
+        //   item.addressLine3,
+        //   item.city,
+        //   item.state?.name,
+        //   item.country?.name,
+        // ]
+        //   .filter(Boolean)
+        //   .join(', '),
       })),
     [inquiryData?.items]
   );
@@ -96,7 +103,7 @@ const InquiryTable = ({
         }
         columns={[
           {
-            id: 'inquiryNumber',
+            id: 'inquiryNo',
             label: 'Inquiry No.',
             sticky: true,
             minWidth: '110px',
@@ -109,29 +116,29 @@ const InquiryTable = ({
             minWidth: '150px',
             align: 'left',
             sticky: true,
-            render: (value, row) => {
-              const fullName = `${row.lastName} ${row.firstName} ${row.middleName}`.trim();
+            // render: (value, row) => {
+            //   const fullName = `${row.lastName} ${row.firstName} ${row.middleName}`.trim();
 
-              return (
-                <CustomTooltip title={fullName} arrow sx={{ textAlign: 'justify' }}>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: '13px',
-                      display: 'block',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      maxWidth: '150px',
-                    }}
-                  >
-                    {fullName}
-                  </Typography>
-                </CustomTooltip>
-              );
-            },
+            //   return (
+            //     <CustomTooltip title={fullName} arrow sx={{ textAlign: 'justify' }}>
+            //       <Typography
+            //         variant="caption"
+            //         sx={{
+            //           fontSize: '13px',
+            //           display: 'block',
+            //           overflow: 'hidden',
+            //           textOverflow: 'ellipsis',
+            //           whiteSpace: 'nowrap',
+            //           maxWidth: '150px',
+            //         }}
+            //       >
+            //         {fullName}
+            //       </Typography>
+            //     </CustomTooltip>
+            //   );
+            // },
           },
-          { id: 'standard.name', label: 'Class', align: 'left' },
+          { id: 'standard', label: 'Class', align: 'left' },
           {
             id: 'dobValue',
             label: 'Date of Birth',
@@ -139,7 +146,7 @@ const InquiryTable = ({
             align: 'left',
             filterType: 'date',
           },
-          { id: 'ageValue', label: 'Age', align: 'left', minWidth: '120px' },
+          { id: 'age', label: 'Age', align: 'left', minWidth: '120px' },
           {
             id: 'doiValue',
             label: 'Date of Inquiry',
@@ -149,7 +156,7 @@ const InquiryTable = ({
             isDateRangeFilter: true,
           },
           {
-            id: 'genderValue',
+            id: 'gender',
             label: 'Gender',
             align: 'left',
             filterType: 'enum',
@@ -165,48 +172,48 @@ const InquiryTable = ({
             label: 'Address',
             minWidth: '200px',
             align: 'left',
-            render: (value, row) => {
-              // Split address into lines and take first two lines
-              const addressLines = value.split(', ');
-              const displayAddress = addressLines.slice(0, 3).join(', ');
-              const hasMoreLines = addressLines.length > 3;
+            // render: (value, row) => {
+            //   // Split address into lines and take first two lines
+            //   const addressLines = value.split(', ');
+            //   const displayAddress = addressLines.slice(0, 3).join(', ');
+            //   const hasMoreLines = addressLines.length > 3;
 
-              return (
-                <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: '13px',
-                      // width: 200,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      lineHeight: '1.2em',
-                      maxHeight: '2.4em',
-                    }}
-                  >
-                    {displayAddress}
-                    {hasMoreLines && '...'}
-                  </Typography>
-                </CustomTooltip>
-              );
-            },
+            //   return (
+            //     <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+            //       <Typography
+            //         variant="caption"
+            //         sx={{
+            //           fontSize: '13px',
+            //           // width: 200,
+            //           display: '-webkit-box',
+            //           WebkitLineClamp: 2,
+            //           WebkitBoxOrient: 'vertical',
+            //           overflow: 'hidden',
+            //           lineHeight: '1.2em',
+            //           maxHeight: '2.4em',
+            //         }}
+            //       >
+            //         {displayAddress}
+            //         {hasMoreLines && '...'}
+            //       </Typography>
+            //     </CustomTooltip>
+            //   );
+            // },
           },
           {
-            id: 'primaryContactNumber',
+            id: 'primaryContactNo',
             label: 'Primary Contact No.',
             minWidth: '180px',
             align: 'left',
           },
           {
-            id: 'secondaryContactNumber',
+            id: 'secondaryContactNo',
             label: 'Secondary Contact No.',
             minWidth: '200px',
             align: 'left',
           },
           {
-            id: 'previousSchoolName',
+            id: 'previousSchool',
             label: 'Previous School',
             minWidth: '150px',
             align: 'left',
@@ -215,7 +222,7 @@ const InquiryTable = ({
             },
           },
           {
-            id: 'inquiryPreference.preferenceName',
+            id: 'inquiryPreference',
             label: 'Inquiry Preference',
             minWidth: '11vw',
             align: 'left',

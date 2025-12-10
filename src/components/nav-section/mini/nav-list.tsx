@@ -58,6 +58,7 @@ export function NavList({
       // slots
       path={data.path}
       icon={data.icon}
+      visibility={data.visibility}
       info={data.info}
       title={data.title}
       caption={data.caption}
