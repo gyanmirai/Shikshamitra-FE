@@ -11,11 +11,8 @@ import {
   Badge,
   Avatar,
   Divider,
-  ListItem,
   Typography,
   CardContent,
-  ListItemText,
-  ListItemAvatar,
 } from '@mui/material';
 
 import type { ISubjectDetail } from '../type';
@@ -56,7 +53,7 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
               <Typography variant="subtitle2" gutterBottom>
                 Primary Teacher
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <ListItem
                   sx={{
                     borderRadius: '8px',
@@ -130,12 +127,12 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
                     }
                   />
                 </ListItem>
-              </Box>
+              </Box> */}
             </Box>
 
             {/* Secondary Teachers */}
             <Typography variant="subtitle2">Secondary Teacher</Typography>
-            <Scrollbar sx={{ height: '200px' }}>
+            {/* <Scrollbar sx={{ height: '200px' }}>
               {Array.isArray(subject?.secondaryTeacher) && subject?.secondaryTeacher.length > 0 ? (
                 subject.secondaryTeacher.map((teacher, idx) => (
                   <ListItem
@@ -219,7 +216,7 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
                   No secondary teachers assigned
                 </Typography>
               )}
-            </Scrollbar>
+            </Scrollbar> */}
           </CardContent>
         </Card>
       </Grid>
