@@ -207,7 +207,6 @@ export const navData = (visibility: boolean[]) => [
         icon: ICONS.resource,
         visibility: visibility[10],
         _action: 'resource',
-
         submodule: resourceManagement[resourceManagementPath].flatMap((list) => list.items),
         permissionName: `${defaultModulePermissionName}ResourceManagement`,
       },

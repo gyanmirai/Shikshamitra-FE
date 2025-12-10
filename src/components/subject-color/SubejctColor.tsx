@@ -11,7 +11,7 @@ export const SubjectColorIndicator = ({ color }: SubjectColorIndicatorProps) => 
       width: 4,
       height: 18,
       borderRadius: 1,
-      backgroundColor: color,
+      bgcolor: color,
     }}
   />
 );
