@@ -1,3 +1,6 @@
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import { usePathname } from 'src/routes/hooks';
 import { useEffect, useCallback } from 'react';
 import { isExternalLink } from 'src/routes/utils';
@@ -22,6 +25,11 @@ export function NavList({
 }: NavListProps) {
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');
+  const { permissions } = useSelector((state: RootState) => state.auth);
+
+  const isGranted = permissions.find(
+    (perm: any) => perm.name === data.permissionName || perm.name === `${data.permissionName}.View`
+  )?.isGranted;
 
   const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
   // const active = useActiveLink(data.path, !!data.children);

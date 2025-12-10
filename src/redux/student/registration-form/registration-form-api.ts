@@ -10,9 +10,8 @@ export const StudentRegistrationFormApi = createApi({
   endpoints: (builder) => ({
     getStudentRegistrationForm: builder.query({
       query: (params) => ({
-        url: '/app/student-enrollment/student-registration-form',
+        url: `/students/registration-forms/${params.academicMediumId}`,
         method: 'GET',
-        params,
       }),
       providesTags: ['Student-Registration-Form'],
     }),

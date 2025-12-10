@@ -85,8 +85,8 @@ const collectPermissionNames = (node: any, type: string): string[] => {
 const CustomCheckbox = (props: any) => <Checkbox {...props} />;
 
 const AssignModule = ({ allPermissions, setAllPermissions }: any) => {
-  const { user } = useSelector((state: any) => state.auth);
-  const data = navData(user?.profile?.email === 'ddvs@gmail.com').flatMap((item) => item.items);
+  const { mainModuleVisibility } = useSelector((state: any) => state.auth);
+  const data = navData(mainModuleVisibility).flatMap((item) => item.items);
 
   const [selectSubModule, setSelectSubModule] = useState<any>(data[0] || null); // Default to first module
 

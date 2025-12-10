@@ -1,5 +1,41 @@
 import { communicationPath } from 'src/routes/paths';
 
+import { defaultModulePermissionName } from './student-menu';
+
+const defaultCommunicationPermissionName = 'Communication.';
+
+export const communicationPaths = {
+  dashboard: '/communication/dashboard',
+  announcements: '/communication/announcement',
+  notification: {
+    root: '',
+    sent: '/communication/notification/send-notification',
+    templates: '/communication/notification/templates',
+    setting: '/communication/notification/notificationSetting',
+  },
+  history: '/communication/notification-history',
+  settings: {
+    root: '/communication/settings',
+    announcementType: '/communication/settings/announcementType',
+  },
+};
+
+export const communicationPermissions = {
+  dashboard: `${defaultModulePermissionName}${defaultCommunicationPermissionName}Dashboard`,
+  announcement: `${defaultModulePermissionName}${defaultCommunicationPermissionName}Announcements`,
+  notification: {
+    root: `${defaultModulePermissionName}${defaultCommunicationPermissionName}Notification`,
+    sent: `${defaultCommunicationPermissionName}Notification.SentNotification`,
+    templates: `${defaultCommunicationPermissionName}Notification.Templates`,
+    setting: `${defaultCommunicationPermissionName}Notification.NotificationSetting`,
+  },
+  history: `${defaultModulePermissionName}${defaultCommunicationPermissionName}NotificationHistory`,
+  settings: {
+    root: `${defaultModulePermissionName}${defaultCommunicationPermissionName}Settings`,
+    announcementType: `${defaultCommunicationPermissionName}Settings.AnnouncementType`,
+  },
+};
+
 const communicationModule = {
   [communicationPath]: [
     {
@@ -7,171 +43,78 @@ const communicationModule = {
       items: [
         {
           title: 'Dashboard',
-          path: '/communication/dashboard',
+          path: communicationPaths.dashboard,
           _action: 'dashboard',
           shortcutKey: 'Alt+C+1',
           shortcutKeyName: 'Alt+C+1',
+          permissionName: communicationPermissions.dashboard,
         },
-        // {
-        //   title: 'Conversation',
-        //   path: '/communication/messages',
-        //   _action: 'conversation',
-        //   shortcutKey: 'Alt+C+M',
-        //   shortcutKeyName: 'Alt+C+M',
-        // },
         {
           title: 'Announcements',
-          path: '/communication/announcement',
+          path: communicationPaths.announcements,
           _action: 'announcement',
           shortcutKey: 'Alt+C+A',
           shortcutKeyName: 'Alt+C+A',
-          // children: [
-          //   {
-          //     title: 'School Announcement',
-          //     path: '/communication/announcement/schoolWiseAnnounsement',
-          //     _action: 'announcement-schoolWiseAnnounsement',
-          //     shortcutKey: 'Alt+C+A+1',
-          //     shortcutKeyName: 'Alt+C+A+1',
-          //   },
-          //   {
-          //     title: 'Class Announcement',
-          //     path: '/communication/announcement/classSpecificAnnouncement',
-          //     _action: 'announcement-classSpecificAnnouncement',
-          //     shortcutKey: 'Alt+C+A+2',
-          //     shortcutKeyName: 'Alt+C+A+2',
-          //   },
-          // ],
+          permissionName: communicationPermissions.announcement,
         },
-        // {
-        //   title: 'Events',
-        //   path: '/communication/eventsAndCalendar',
-        //   _action: 'eventsAndCalendar',
-        //   shortcutKey: 'Alt+C+E',
-        //   shortcutKeyName: 'Alt+C+E',
-        // },
-        // {
-        //   title: 'Feedback & Survey',
-        //   path: '/communication/feedbackAndSurvey',
-        //   _action: 'feedbackAndSurvey',
-        //   shortcutKey: 'Alt+C+F',
-        //   shortcutKeyName: 'Alt+C+F',
-        //   children: [
-        //     {
-        //       title: 'Scheduled Survey',
-        //       path: '/communication/feedbackAndSurvey/scheduledSurvey',
-        //       _action: 'feedbackAndSurvey-scheduledSurvey',
-        //       shortcutKey: 'Alt+C+F+1',
-        //       shortcutKeyName: 'Alt+C+F+1',
-        //     },
-        //     {
-        //       title: 'Active Survey',
-        //       path: '/communication/feedbackAndSurvey/activeSurvey',
-        //       _action: 'feedbackAndSurvey-activeSurvey',
-        //       shortcutKey: 'Alt+C+F+2',
-        //       shortcutKeyName: 'Alt+C+F+2',
-        //     },
-        //     {
-        //       title: 'Past Survey',
-        //       path: '/communication/feedbackAndSurvey/pastSurvey',
-        //       _action: 'feedbackAndSurvey-pastSurvey',
-        //       shortcutKey: 'Alt+C+F+3',
-        //       shortcutKeyName: 'Alt+C+F+3',
-        //     },
-        //   ],
-        // },
-        // {
-        //   title: 'Meetings',
-        //   path: '/communication/meetings',
-        //   _action: 'meetings',
-        //   shortcutKey: 'Alt+C+T',
-        //   shortcutKeyName: 'Alt+C+T',
-        // },
-        // {
-        //   title: 'Holidays',
-        //   path: '/communication/holidays',
-        //   _action: 'meetings',
-        //   shortcutKey: 'Alt+C+T',
-        //   shortcutKeyName: 'Alt+C+T',
-        // },
         {
           title: 'Notification',
-          path: '',
+          path: communicationPaths.notification.root,
           _action: 'notification',
           shortcutKey: 'Alt+C+N',
           shortcutKeyName: 'Alt+C+N',
+          permissionName: communicationPermissions.notification.root,
           children: [
             {
               title: 'Sent Notification',
-              path: '/communication/notification/send-notification',
+              path: communicationPaths.notification.sent,
               _action: 'send-notification',
               shortcutKey: 'Alt+C+N+1',
               shortcutKeyName: 'Alt+C+N+1',
+              permissionName: communicationPermissions.notification.sent,
             },
             {
               title: 'Templates',
-              path: '/communication/notification/templates',
+              path: communicationPaths.notification.templates,
               _action: 'templates',
               shortcutKey: 'Alt+C+T',
               shortcutKeyName: 'Alt+C+T',
+              permissionName: communicationPermissions.notification.templates,
             },
             {
               title: 'Notification Setting',
-              path: '/communication/notification/notificationSetting',
+              path: communicationPaths.notification.setting,
               _action: 'notification-setting',
               shortcutKey: 'Alt+C+N+3',
               shortcutKeyName: 'Alt+C+N+3',
+              permissionName: communicationPermissions.notification.setting,
             },
           ],
         },
         {
           title: 'Notification History',
-          path: '/communication/notification-history',
+          path: communicationPaths.history,
           _action: 'notification-history',
           shortcutKey: 'Alt+C+H',
           shortcutKeyName: 'Alt+C+H',
+          permissionName: communicationPermissions.history,
         },
         {
           title: 'Settings',
-          path: '/communication/settings',
+          path: communicationPaths.settings.root,
           _action: 'settings',
           shortcutKey: 'Alt+C+S',
           shortcutKeyName: 'Alt+C+S',
+          permissionName: communicationPermissions.settings.root,
           children: [
             {
               title: 'Announcement Type',
-              path: '/communication/settings/announcementType',
+              path: communicationPaths.settings.announcementType,
               _action: 'settings-announcementType',
               shortcutKey: 'Alt+C+S+5',
               shortcutKeyName: 'Alt+C+S+5',
+              permissionName: communicationPermissions.settings.announcementType,
             },
-            // {
-            //   title: 'Event Type',
-            //   path: '/communication/settings/eventType',
-            //   _action: 'settings-eventType',
-            //   shortcutKey: 'Alt+C+S+4',
-            //   shortcutKeyName: 'Alt+C+S+4',
-            // },
-            // {
-            //   title: 'Holiday Type',
-            //   path: '/communication/settings/holidayType',
-            //   _action: 'settings-holidayType',
-            //   shortcutKey: 'Alt+C+S+6',
-            //   shortcutKeyName: 'Alt+C+S+6',
-            // },
-            // {
-            //   title: 'Importance Level',
-            //   path: '/communication/settings/importanceLevel',
-            //   _action: 'settings-importanceLevel',
-            //   shortcutKey: 'Alt+C+S+9',
-            //   shortcutKeyName: 'Alt+C+S+9',
-            // },
-            // {
-            //   title: 'Delivery Channel Type',
-            //   path: '/communication/settings/deliveryChannelType',
-            //   _action: 'settings-deliveryChannelType',
-            //   shortcutKey: 'Alt+C+S+0',
-            //   shortcutKeyName: 'Alt+C+S+0',
-            // },
           ],
         },
       ],
