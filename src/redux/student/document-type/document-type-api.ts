@@ -4,7 +4,7 @@ import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 export const StudentDocumentTypeApi = createApi({
   reducerPath: 'StudentDocumentTypeApi',
   baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/tenant-settings`,
+    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/student-enrollment/settings`,
   }),
   tagTypes: ['Student-Document-Type'],
   endpoints: (builder) => ({

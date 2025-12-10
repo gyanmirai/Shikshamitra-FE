@@ -16,7 +16,7 @@ export interface ISubject {
 }
 
 export interface TeacherProfile {
-  id?: number;
+  id?: string;
   name?: string;
   avatarUrl?: string;
   designation?: string;
@@ -32,12 +32,12 @@ export interface TeacherProfile {
 }
 
 export interface ISubjectDetail {
-  id: number;
+  subjectNo: number;
   subjectName: string;
   subjectCode: string;
   subjectColor?: string;
-  primaryTeacher: TeacherProfile;
-  secondaryTeacher: TeacherProfile[] | null;
+  primaryTeacher: string;
+  secondaryTeacher: string[] | null;
   documents?: File[];
   prerequisites: string;
   learningGoal: string;
@@ -48,6 +48,7 @@ export interface ISubjectDetail {
 export interface ISubjectFormValues {
   id?: number;
   status: number;
+  classId: string;
   className: string;
   subjectName: string;
   subjects?: ISubjectDetail[];
@@ -71,6 +72,7 @@ export interface ISubjectFormProps {
   data: ISubjectFormValues | null;
   isEdit: boolean;
   selectedClass: string;
+  classId: string;
 }
 
 export interface IViewSubjectProps {

@@ -15,7 +15,11 @@ interface IRoomTypeTableProps {
 }
 
 const RoomTypeTable: React.FC<IRoomTypeTableProps> = ({ onEdit, onDelete }) => {
-  const { data: roomTypes, isLoading } = useQueryAndMutation({
+  const {
+    data: roomTypes,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRoomTypesQuery,
   });
@@ -23,7 +27,7 @@ const RoomTypeTable: React.FC<IRoomTypeTableProps> = ({ onEdit, onDelete }) => {
   return (
     <CustomizableTable
       tableId="room-type-data-table"
-      isLoading={isLoading}
+      isLoading={isLoading || isFetching}
       noDataText="Room Type Data Not Found"
       columns={[
         {

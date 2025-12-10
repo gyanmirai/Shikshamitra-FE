@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -12,9 +13,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import settingSubjectTableData from 'src/json/academic/curriculum/settingSubjectTableData.json';
+import { useDeleteSubjectMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import SettingSubjectForm from './subjectForm';
 import SettingSubjectTable from './settingSubjectTable';
@@ -29,11 +31,16 @@ const SubjectCreation = () => {
   const [open, setOpen] = useState(false);
   const addSubjectDialog = useBoolean(false);
 
+  const [deleteSubject, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteSubjectMutation,
+  });
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
   // Breadcrumb navigation links based on form state
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedSubject, setSelectedSubject] = useState<ISubject | null>(null);
-  const [subjectData] = useState<ISubject[]>(settingSubjectTableData);
   // Redux dispatch
   const dispatch = useDispatch();
 
@@ -97,7 +104,6 @@ const SubjectCreation = () => {
         setOpenDialog={setOpen}
         editData={selectedSubject}
         setEditData={setSelectedSubject}
-        data={subjectData}
       />
 
       <CustomDialog
@@ -144,26 +150,36 @@ const SubjectCreation = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete subject <strong>{selectedSubject?.subjectName}</strong>?
+            Are you sure you want to delete subject{' '}
+            <strong>&quot;{selectedSubject?.name}&quot;</strong>?
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              deleteSubjectDialog.onFalse();
-              setSelectedSubject(null);
-              shikshaMitraToast.success({
-                message: `Subject ${selectedSubject?.subjectName} deleted successfully`,
-              });
-              // handle delete action
+            onClick={async () => {
+              try {
+                const payload = {
+                  academicMediumId: (currentMedium as any).id,
+                  id: (selectedSubject as any).id,
+                };
+                await deleteSubject(payload).unwrap();
+                deleteSubjectDialog.onFalse();
+                setSelectedSubject(null);
+                shikshaMitraToast.success({
+                  message: `Subject &quot;${selectedSubject?.name}&quot; deleted successfully`,
+                });
+              } catch (error) {
+                console.error('Failed to delete subject', error);
+              }
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

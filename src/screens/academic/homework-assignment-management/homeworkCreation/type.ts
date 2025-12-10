@@ -46,7 +46,7 @@ export interface IHomeworkDetail {
   content?: string | null;
   submission?: string | null;
   createdBy: TeacherProfile; // includes name, email, avatar, etc.
-  divisionMeta: DivisionHomeworkMeta; // ✅ Each division with its own dates
+  divisionMeta: DivisionHomeworkMeta;
 }
 
 export interface IStudentSubmissionsProps {

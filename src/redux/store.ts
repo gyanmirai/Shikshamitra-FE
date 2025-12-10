@@ -21,6 +21,7 @@ import { documentApi } from './document/documentApi';
 import { feeTermsApi } from './feeCollection/feeTerms';
 import { PaymentTermApi } from './finance/paymentTerm';
 import { transportApi } from './transport/transportApi';
+import { academicApi } from './academicAPI/academicApi';
 import { librarySettingsApi } from './library/settingApi';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
@@ -36,7 +37,6 @@ import { openLibraryApi } from './library/LibraryDataSearch';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { feeRefundsTermsApi } from './finance/feeRefundTerms';
 import { libraryModuleApi } from './library/libraryModuleApi';
-import { ExpenseCategoryApi } from './finance/expenseCategory';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { feeConcessionApi } from './feeCollection/feeConcession';
@@ -158,7 +158,7 @@ const reducers = combineReducers({
   [studentReceiptApi.reducerPath]: studentReceiptApi.reducer,
   [feeCategoryApi.reducerPath]: feeCategoryApi.reducer,
   [ChargeCategoryApi.reducerPath]: ChargeCategoryApi.reducer,
-  [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
+  // [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
   // [financeModuleApi.reducerPath]: financeModuleApi.reducer,
   [expenseApi.reducerPath]: expenseApi.reducer,
   [expenseDetailsApi.reducerPath]: expenseDetailsApi.reducer,
@@ -186,6 +186,7 @@ const reducers = combineReducers({
   [transportApi.reducerPath]: transportApi.reducer,
   [libraryModuleApi.reducerPath]: libraryModuleApi.reducer,
   [openLibraryApi.reducerPath]: openLibraryApi.reducer,
+  [academicApi.reducerPath]: academicApi.reducer,
   [instituteSetupApi.reducerPath]: instituteSetupApi.reducer,
   // [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
 });
@@ -257,9 +258,10 @@ const store = configureStore({
       studentReceiptApi.middleware,
       feeCategoryApi.middleware,
       ChargeCategoryApi.middleware,
-      ExpenseCategoryApi.middleware,
+      // ExpenseCategoryApi.middleware,
       // financeModuleApi.middleware,
       expenseApi.middleware,
+      academicApi.middleware,
       expenseDetailsApi.middleware,
       incomeApi.middleware,
       incomeDetailsApi.middleware,

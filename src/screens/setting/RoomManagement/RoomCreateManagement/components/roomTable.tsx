@@ -15,14 +15,18 @@ interface IRoomTableProps {
 }
 
 const RoomTable: React.FC<IRoomTableProps> = ({ onEdit, onDelete }) => {
-  const { data: rooms, isLoading } = useQueryAndMutation({
+  const {
+    data: rooms,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRoomsQuery,
   });
   return (
     <CustomizableTable
       tableId="room-data-table"
-      isLoading={isLoading}
+      isLoading={isLoading || isFetching}
       noDataText="Room Data Not Found"
       columns={[
         {

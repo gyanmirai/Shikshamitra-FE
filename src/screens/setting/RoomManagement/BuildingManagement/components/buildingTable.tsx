@@ -18,14 +18,18 @@ const BuildingTable: React.FC<IBuildingTableProps> = ({
   onDelete,
   onEdit,
 }) => {
-  const { data: buildings, isLoading } = useQueryAndMutation({
+  const {
+    data: buildings,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBuildingsQuery,
   });
   return (
     <CustomizableTable
       tableId="building-data-table"
-      isLoading={isLoading}
+      isLoading={isLoading || isFetching}
       noDataText={
         <>
           Building Data Not Found{' '}
@@ -74,9 +78,11 @@ const BuildingTable: React.FC<IBuildingTableProps> = ({
           label: 'Description',
           align: 'left',
           render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value || '-'}
-            </Typography>
+            <Typography
+              variant="caption"
+              fontSize="13px"
+              dangerouslySetInnerHTML={{ __html: value || '-' }}
+            />
           ),
         },
         {

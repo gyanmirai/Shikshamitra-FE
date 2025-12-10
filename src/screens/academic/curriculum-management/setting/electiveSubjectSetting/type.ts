@@ -1,12 +1,14 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export type IElectiveSubject = {
-  title: string;
+  id: string;
+  name: string;
   subjects: {
     name: string;
     subjectColor: string;
   }[];
-  subjectColor: string;
+  subjectIds: string[];
+  color: string;
   createdBy: string;
 };
 

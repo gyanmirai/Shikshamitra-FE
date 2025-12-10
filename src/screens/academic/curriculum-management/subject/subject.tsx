@@ -26,14 +26,14 @@ import type { ISubjectFormValues } from './component/type';
 
 const Subject = () => {
   // State to manage subject table data and filtered data
-  const [subjectTableData, setSubjectTableData] =
-    useState<ISubjectFormValues[]>(electiveSubjectData);
+  const [subjectTableData, setSubjectTableData] = useState<any[]>(electiveSubjectData);
 
   // Query hook to fetch class data
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
+  const [classId, setClassId] = useState<string>('');
 
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -45,6 +45,7 @@ const Subject = () => {
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
     setAllClass(allClasses);
+    setClassId(allClasses[0]?.id || '');
     setClasses(allClasses[0]?.name || '');
   }, [medium]);
   // URL search parameter state for form visibility
@@ -198,6 +199,7 @@ const Subject = () => {
               data={selectedSubject}
               isEdit={isEdit}
               selectedClass={classes}
+              classId={classId}
             />{' '}
           </Card>
         </>
@@ -218,12 +220,14 @@ const Subject = () => {
                 label="Class"
                 name="class"
                 options={allClass}
-                valueKey="name"
+                valueKey="id"
                 labelKey="name"
                 formControlProps={{ sx: { maxWidth: '247px', width: '100%' } }}
-                value={classes}
+                value={classId}
                 onChange={(value) => {
                   setClasses(value as string);
+                  const standard = allClass.find((c) => c.id === value);
+                  setClassId(standard?.id || '');
                 }}
               />
               <Button
