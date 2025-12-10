@@ -10,11 +10,6 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
 import {
-  AttendanceStatusType,
-  AttendanceStatusOptions,
-  AttendanceStatusTypeColors,
-} from 'src/enums/attendance-type';
-import {
   Box,
   Grid,
   Paper,
@@ -24,6 +19,11 @@ import {
   ButtonGroup,
   CircularProgress,
 } from '@mui/material';
+import {
+  AttendanceStatusType,
+  AttendanceStatusOptions,
+  AttendanceStatusTypeColors,
+} from 'src/enums/attendance-type';
 
 import { AttendanceChart, YearlyAttendance } from './attendanceChart';
 

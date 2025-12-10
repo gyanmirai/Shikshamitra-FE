@@ -217,7 +217,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     currentQueryAndMutation: useUpdateFamilyInformationMutation,
     isThrowError: true,
   });
-  useQueryAndMutation({
+  const [updateAdditionalInfo] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateAdditionalInformationMutation,
     isThrowError: true,
@@ -358,22 +358,22 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     [updateFamilyInfo]
   );
 
-  // const handleAdditionalDetails = useCallback(
-  //   async (values: any, formik: any) => {
-  //     const res = await updateAdditionalInfo({
-  //       employeeId: values.employeeId,
-  //       body: {
-  //         bplCardNo: values.bplCardNo,
-  //         personWithDisability: values.personWithDisability,
-  //         secondLanguage: values.secondLanguage,
-  //         libraryMember: values.libraryMember,
-  //         transportMember: values.transportMember,
-  //       },
-  //     }).unwrap();
-  //     return res;
-  //   },
-  //   [updateAdditionalInfo]
-  // );
+  const handleAdditionalDetails = useCallback(
+    async (values: any, formik: any) => {
+      const res = await updateAdditionalInfo({
+        employeeId: values.employeeId,
+        body: {
+          bplCardNo: values.bplCardNo,
+          personWithDisability: values.personWithDisability,
+          secondLanguage: values.secondLanguage,
+          libraryMember: values.libraryMember,
+          transportMember: values.transportMember,
+        },
+      }).unwrap();
+      return res;
+    },
+    [updateAdditionalInfo]
+  );
 
   const handleWorkExperience = useCallback(
     async (values: any, formik: any) => {
@@ -407,8 +407,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           punchId: values.punchId,
           tdsPercentage: values.tdsPercentage,
           tdsAmount: values.tdsAmount,
-          earningComponents: values.earningComponents,
-          deductionComponents: values.deductionComponents,
+          earning: values.earningComponents,
+          deduction: values.deductionComponents,
         },
       }).unwrap();
       return res;
@@ -510,7 +510,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           shikshaMitraToast.success({ message: 'Family information updated successfully' });
           // }
         } else if (activeStep === 2) {
-          // await handleAdditionalDetails(values, formik);
+          await handleAdditionalDetails(values, formik);
           shikshaMitraToast.success({ message: 'Additional details updated successfully' });
         } else if (activeStep === 4) {
           await handleWorkExperience(values, formik);
@@ -543,6 +543,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       activeStep,
       editData,
       handelUpdateEmployee,
+      handleAdditionalDetails,
       handleBankDetailsInformation,
       handleBasicInformation,
       handleClose,

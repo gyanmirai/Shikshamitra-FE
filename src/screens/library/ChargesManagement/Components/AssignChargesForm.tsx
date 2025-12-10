@@ -5,9 +5,10 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import Image from 'next/image';
 import { useFormik } from 'formik';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import debounce from 'src/utils/debounce';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import { ExpandMore } from '@mui/icons-material';
@@ -266,8 +267,14 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [expandedMemberAccordion, setExpandedMemberAccordion] = useState(false);
   const [loadingMember, setLoadingMember] = useState(false);
-  const [expandedBookAccordion, setExpandedBookAccordion] = useState(false);
   const [loadingBook, setLoadingBook] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any | null>(null);
+  const [selectedBook, setSelectedBook] = useState<any | null>(null);
+  const [expandedBookAccordion, setExpandedBookAccordion] = useState(false);
+
+  // Debounced states to track when debounce completes
+  const [debouncedMemberId, setDebouncedMemberId] = useState('');
+  const [debouncedBookNumber, setDebouncedBookNumber] = useState('');
 
   const formik = useFormik({
     initialValues: assignLibraryChargeInitialValues(fillEditData(editData)),
@@ -277,101 +284,112 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
     },
   });
 
-  // Get selected member
-  const selectedMember = useMemo(() => {
-    if (!formik.values.memberId) return null;
-    return staticMembers.find((m) => m.memberId === formik.values.memberId) || null;
-  }, [formik.values.memberId]);
-
-  // Member details using useMemo
-  const memberDetails = useMemo(() => {
-    if (!selectedMember) return [];
-    const details = [
-      { label: 'Member Name', icon: 'mdi:account', value: selectedMember.name || '—' },
-      { label: 'Email', icon: 'mdi:email', value: selectedMember.email || '—' },
-      {
-        label: 'Member ID',
-        icon: 'mdi:card-account-details',
-        value: selectedMember.memberId || '—',
-      },
-      { label: 'Phone', icon: 'mdi:phone', value: selectedMember.contactNo || '—' },
-      { label: 'Role', icon: 'mdi:account-group', value: selectedMember.role || '—' },
-      { label: 'Join Date', icon: 'mdi:calendar-check', value: selectedMember.joinDate || '—' },
-    ];
-
-    if (selectedMember.role === 'Student') {
-      details.splice(
-        3,
-        0,
-        {
-          label: 'Class/Division',
-          icon: 'mdi:school',
-          value: `${selectedMember.class || '—'} - ${selectedMember.division || '—'}`,
-        },
-        {
-          label: 'Roll No.',
-          icon: 'mdi:format-list-numbered',
-          value: selectedMember.rollNo || '—',
-        },
-        {
-          label: 'GR No.',
-          icon: 'mdi:card-account-details-outline',
-          value: selectedMember.grNo || '—',
-        }
-      );
-    }
-
-    return details;
-  }, [selectedMember]);
-
-  // Get selected book
-  const selectedBook = useMemo(() => {
-    if (formik.values.bookNumber === 'Acc001') {
-      return {
-        bookNumber: 'Acc001',
-        title: 'Introduction to Physics',
-        author: 'Dr. John Smith',
-        isbn: '978-0123456789',
-        category: 'Science',
-        publisher: 'Academic Press',
-        edition: '3rd Edition',
-        coverImage: '/placeholder-book.jpg',
-      };
-    }
-    return null;
-  }, [formik.values.bookNumber]);
-
-  // Book details using useMemo
-  const bookDetails = useMemo(() => {
-    if (!selectedBook) return [];
-    return [
-      { label: 'Book Title', icon: 'mdi:book-open-page-variant', value: selectedBook.title || '—' },
-      { label: 'Accession No.', icon: 'mdi:barcode', value: selectedBook.bookNumber || '—' },
-      { label: 'Author', icon: 'mdi:account-edit', value: selectedBook.author || '—' },
-      { label: 'ISBN', icon: 'mdi:barcode-scan', value: selectedBook.isbn || '—' },
-      { label: 'Publisher', icon: 'mdi:domain', value: selectedBook.publisher || '—' },
-      { label: 'Edition', icon: 'mdi:book-variant', value: selectedBook.edition || '—' },
-      { label: 'Category', icon: 'mdi:shape', value: selectedBook.category || '—' },
-    ];
-  }, [selectedBook]);
-
-  // Handle member search with loading
+  // Handle member search
   const handleMemberIdChange = (value: string) => {
     formik.setFieldValue('memberId', value);
-    if (value) {
-      setLoadingMember(true);
-      setTimeout(() => setLoadingMember(false), 300);
+
+    if (!value) {
+      setSelectedMember(null);
+      setDebouncedMemberId('');
+      return;
     }
+
+    setLoadingMember(true);
+    debounce(() => {
+      setDebouncedMemberId(value);
+      const foundMember = staticMembers.find((m) => m.memberId === value);
+
+      if (foundMember) {
+        setSelectedMember(foundMember);
+      } else {
+        setSelectedMember(null);
+      }
+      setLoadingMember(false);
+    }, 800);
   };
 
-  // Handle book number change with loading
+  // Handle book number change
   const handleBookNumberChange = (value: string) => {
     formik.setFieldValue('bookNumber', value);
-    if (value) {
-      setLoadingBook(true);
-      setTimeout(() => setLoadingBook(false), 300);
+
+    if (!value) {
+      setSelectedBook(null);
+      setDebouncedBookNumber('');
+      return;
     }
+
+    setLoadingBook(true);
+    debounce(() => {
+      setDebouncedBookNumber(value);
+      if (value === 'ACC-0001') {
+        setSelectedBook({
+          bookNumber: 'ACC-0001',
+          title: 'Introduction to Physics',
+          author: 'Dr. John Smith',
+          isbn: '978-0123456789',
+          category: 'Science',
+          publisher: 'Academic Press',
+          edition: '3rd Edition',
+          coverImage: '/placeholder-book.jpg',
+        });
+      } else {
+        setSelectedBook(null);
+      }
+      setLoadingBook(false);
+    }, 800);
   };
+
+  // Member details calculation
+  const memberDetails = selectedMember
+    ? [
+        { label: 'Member Name', icon: 'mdi:account', value: selectedMember.name || '—' },
+        { label: 'Email', icon: 'mdi:email', value: selectedMember.email || '—' },
+        {
+          label: 'Member ID',
+          icon: 'mdi:card-account-details',
+          value: selectedMember.memberId || '—',
+        },
+        ...(selectedMember.role === 'Student'
+          ? [
+              {
+                label: 'Class/Division',
+                icon: 'mdi:school',
+                value: `${selectedMember.class || '—'} - ${selectedMember.division || '—'}`,
+              },
+              {
+                label: 'Roll No.',
+                icon: 'mdi:format-list-numbered',
+                value: selectedMember.rollNo || '—',
+              },
+              {
+                label: 'GR No.',
+                icon: 'mdi:card-account-details-outline',
+                value: selectedMember.grNo || '—',
+              },
+            ]
+          : []),
+        { label: 'Phone', icon: 'mdi:phone', value: selectedMember.contactNo || '—' },
+        { label: 'Role', icon: 'mdi:account-group', value: selectedMember.role || '—' },
+        { label: 'Join Date', icon: 'mdi:calendar-check', value: selectedMember.joinDate || '—' },
+      ]
+    : [];
+
+  // Book details calculation
+  const bookDetails = selectedBook
+    ? [
+        {
+          label: 'Book Title',
+          icon: 'mdi:book-open-page-variant',
+          value: selectedBook.title || '—',
+        },
+        { label: 'Accession No.', icon: 'mdi:barcode', value: selectedBook.bookNumber || '—' },
+        { label: 'Author', icon: 'mdi:account-edit', value: selectedBook.author || '—' },
+        { label: 'ISBN', icon: 'mdi:barcode-scan', value: selectedBook.isbn || '—' },
+        { label: 'Publisher', icon: 'mdi:domain', value: selectedBook.publisher || '—' },
+        { label: 'Edition', icon: 'mdi:book-variant', value: selectedBook.edition || '—' },
+        { label: 'Category', icon: 'mdi:shape', value: selectedBook.category || '—' },
+      ]
+    : [];
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -577,7 +595,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
               );
             }
 
-            if (formik.values.memberId !== '') {
+            if (formik.values.memberId !== '' && formik.values.memberId === debouncedMemberId) {
               return (
                 <Grid size={{ xs: 12 }}>
                   <Box
@@ -609,7 +627,7 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
                 onChange={(e) => handleBookNumberChange(e.target.value)}
                 error={!!(formik.touched.bookNumber && formik.errors.bookNumber)}
                 helperText={(formik.touched.bookNumber && formik.errors.bookNumber) as string}
-                placeholder="Enter Accession no (e.g., Acc001)"
+                placeholder="Enter Accession no (e.g., ACC-0001)"
               />
             </ShakingTextField>
           </Grid>
@@ -799,7 +817,10 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
               );
             }
 
-            if (formik.values.bookNumber !== '') {
+            if (
+              formik.values.bookNumber !== '' &&
+              formik.values.bookNumber === debouncedBookNumber
+            ) {
               return (
                 <Grid size={{ xs: 12 }}>
                   <Box

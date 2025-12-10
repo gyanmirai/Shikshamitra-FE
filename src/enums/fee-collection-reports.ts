@@ -1,11 +1,11 @@
 export enum FeeCollectionReportsTitle {
-  FeeCollectionBatchAndMonthwise = 'FeeCollectionBatchAndMonthwise',
-  FeeCollectionBatchwise = 'FeeCollectionBatchwise',
-  FeeCollectionMonthAndFeeHeadwise = 'FeeCollectionMonthAndFeeHeadwise',
-  FeeCollectionStudentWithFeewise = 'FeeCollectionStudentWithFeewise',
-  FeeMonthlyRegister = 'FeeMonthlyRegister',
-  MonthlyFeeCollectionSummary = 'MonthlyFeeCollectionSummary',
-  FeeListChequeClearDateWise = 'FeeListChequeClearDateWise',
+  FeeCollectionBatchAndMonthwise,
+  FeeCollectionBatchwise,
+  FeeCollectionMonthAndFeeHeadwise,
+  FeeCollectionStudentWithFeewise,
+  FeeMonthlyRegister,
+  MonthlyFeeCollectionSummary,
+  FeeListChequeClearDateWise,
 }
 
 export const FeeCollectionReportsTitleOptions = [

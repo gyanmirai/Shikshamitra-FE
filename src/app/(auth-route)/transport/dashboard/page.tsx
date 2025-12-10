@@ -1,6 +1,6 @@
 import React from 'react';
-import TransportDashboardScreen from 'src/screens/transport/dashboard/transport-dashboard-screen';
+import TransportManagerDashboard from 'src/screens/transport/ManagerDashboard';
 
-const TransportDashboard = () => <TransportDashboardScreen />;
+const TransportDashboard = () => <TransportManagerDashboard />;
 
 export default TransportDashboard;

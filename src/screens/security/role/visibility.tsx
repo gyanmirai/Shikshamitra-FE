@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useState } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import { navData } from 'src/layouts/config-nav-dashboard';
@@ -19,13 +19,13 @@ import {
 // ----------------------------------------------------------------------
 
 // Helper to get all submodule titles recursively
-const getAllSubmoduleTitles = (submodules: any[]): string[] => {
-  let titles: string[] = [];
+const getAllSubmoduleTitles = (submodules: any[]): { name: string; isGranted: boolean }[] => {
+  let titles: { name: string; isGranted: boolean }[] = [];
   submodules.forEach((sub) => {
     if (sub.children) {
       titles = [...titles, ...getAllSubmoduleTitles(sub.children)];
     } else {
-      titles.push(sub.title);
+      titles.push({ name: sub.permissionName, isGranted: sub.isGranted });
     }
   });
   return titles;
@@ -50,25 +50,19 @@ const SubmoduleItem = ({
   moduleTitle,
   submoduleVisibility,
   onToggleSubmodule,
-  onToggleGroup,
   level = 0,
 }: {
   submodule: any;
   moduleTitle: string;
-  submoduleVisibility: Record<string, string[]>;
-  onToggleSubmodule: (moduleTitle: string, submoduleTitle: string) => void;
-  onToggleGroup: (moduleTitle: string, groupSubmodules: any[]) => void;
+  submoduleVisibility: { name: string; isGranted: boolean }[];
+  onToggleSubmodule: (submoduleTitle: string) => void;
+
   level?: number;
 }) => {
   const theme = useTheme();
-  const hasChildren = submodule.children && submodule.children.length > 0;
-  const isGroupFullyVisible =
-    hasChildren &&
-    getAllSubmoduleTitles(submodule.children).every((t) =>
-      submoduleVisibility[moduleTitle]?.includes(t)
-    );
 
-  const isVisible = submoduleVisibility[moduleTitle]?.includes(submodule.title) || false;
+  const isVisible =
+    submoduleVisibility.find((t) => t.name === submodule.permissionName)?.isGranted || false;
 
   return (
     <Box sx={{ pl: level * 3 }}>
@@ -87,7 +81,9 @@ const SubmoduleItem = ({
             bgcolor: alpha(theme.palette.primary.main, 0.02),
           },
           mb: 1,
+          cursor: 'pointer',
         }}
+        onClick={(e) => onToggleSubmodule(submodule.permissionName)}
       >
         <Typography
           variant="body2"
@@ -100,84 +96,97 @@ const SubmoduleItem = ({
         </Typography>
         <Switch
           size="small"
-          checked={hasChildren ? isGroupFullyVisible : isVisible}
-          onChange={() =>
-            hasChildren
-              ? onToggleGroup(moduleTitle, submodule.children)
-              : onToggleSubmodule(moduleTitle, submodule.title)
-          }
+          checked={isVisible}
+          // onChange={() => onToggleSubmodule(submodule.permissionName)}
+          // onClick={(e) => e.stopPropagation()}
         />
       </Paper>
     </Box>
   );
 };
 
-const Visibility = () => {
-  const [visibility, setVisibility] = useState<string[]>([]);
-  const [submoduleVisibility, setSubmoduleVisibility] = useState<Record<string, string[]>>({});
+const Visibility = ({
+  visibility,
+  setVisibility,
+}: {
+  visibility: { name: string; isGranted: boolean }[];
+  setVisibility: (visibility: { name: string; isGranted: boolean }[]) => void;
+}) => {
+  // const [submoduleVisibility, setSubmoduleVisibility] = useState<string[]>([]);
   const [currentSelected, setCurrentSelected] = useState<any>(null);
 
   const theme = useTheme();
-  const { user } = useSelector((state: any) => state.auth);
+  const { mainModuleVisibility } = useSelector((state: any) => state.auth);
 
   const data = useMemo(
-    () => navData(user?.profile?.email === 'ddvs@gmail.com').flatMap((item) => item.items),
-    [user?.profile?.email]
+    () => navData(mainModuleVisibility).flatMap((item) => item.items),
+    [mainModuleVisibility]
   );
 
   // ============================================================
   // HANDLE VISIBILITY TOGGLE
   // ============================================================
-  const handleToggleVisibility = (title: string) => {
-    setVisibility((prev) =>
-      prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]
+  const handleToggleVisibility = (permissionName: string) => {
+    const isVisible = visibility.find((t) => t.name === permissionName)?.isGranted;
+    if (isVisible) {
+      setVisibility(
+        visibility.map((t) =>
+          t.name === permissionName ? { ...t, name: permissionName, isGranted: false } : t
+        )
+      );
+    } else {
+      setVisibility(
+        visibility.map((t) =>
+          t.name === permissionName ? { ...t, name: permissionName, isGranted: true } : t
+        )
+      );
+    }
+  };
+
+  const handleToggleSubmodule = (submoduleTitle: string) => {
+    const isVisible = visibility.find((t) => t.name === submoduleTitle)?.isGranted;
+    if (isVisible) {
+      setVisibility(
+        visibility.map((t) =>
+          t.name === submoduleTitle ? { ...t, name: submoduleTitle, isGranted: false } : t
+        )
+      );
+    } else {
+      setVisibility(
+        visibility.map((t) =>
+          t.name === submoduleTitle ? { ...t, name: submoduleTitle, isGranted: true } : t
+        )
+      );
+    }
+  };
+
+  const handleToggleAllSubmodules = (moduleVisibility: string, allSubmodules: any[]) => {
+    const isAllVisible = allSubmodules.every(
+      (submodule) => !!visibility.find((t) => t.name === submodule.permissionName)?.isGranted
     );
-  };
+    if (isAllVisible) {
+      const cloneData = [...visibility];
 
-  const handleToggleSubmodule = (moduleTitle: string, submoduleTitle: string) => {
-    setSubmoduleVisibility((prev) => {
-      const currentModuleVis = prev[moduleTitle] || [];
-      const isVisible = currentModuleVis.includes(submoduleTitle);
+      allSubmodules.forEach((submodule) => {
+        const index = cloneData.findIndex((t) => t.name === submodule.permissionName);
+        if (index !== -1) {
+          cloneData[index].isGranted = false;
+        }
+      });
 
-      const updatedModuleVis = isVisible
-        ? currentModuleVis.filter((t) => t !== submoduleTitle)
-        : [...currentModuleVis, submoduleTitle];
+      setVisibility(cloneData);
+    } else {
+      const cloneData = [...visibility];
 
-      return {
-        ...prev,
-        [moduleTitle]: updatedModuleVis,
-      };
-    });
-  };
+      allSubmodules.forEach((submodule) => {
+        const index = cloneData.findIndex((t) => t.name === submodule.permissionName);
+        if (index !== -1) {
+          cloneData[index].isGranted = true;
+        }
+      });
 
-  const handleToggleAllSubmodules = (moduleTitle: string, allSubmodules: any[]) => {
-    setSubmoduleVisibility((prev) => {
-      const currentModuleVis = prev[moduleTitle] || [];
-      const allSubmoduleTitles = getAllSubmoduleTitles(allSubmodules);
-      const isAllVisible = allSubmoduleTitles.every((title) => currentModuleVis.includes(title));
-
-      return {
-        ...prev,
-        [moduleTitle]: isAllVisible ? [] : allSubmoduleTitles,
-      };
-    });
-  };
-
-  const handleToggleGroup = (moduleTitle: string, groupSubmodules: any[]) => {
-    const groupTitles = getAllSubmoduleTitles(groupSubmodules);
-    const currentModuleVis = submoduleVisibility[moduleTitle] || [];
-    const isGroupAllVisible = groupTitles.every((title) => currentModuleVis.includes(title));
-
-    setSubmoduleVisibility((prev) => {
-      const current = prev[moduleTitle] || [];
-      let updated;
-      if (isGroupAllVisible) {
-        updated = current.filter((t) => !groupTitles.includes(t));
-      } else {
-        updated = [...new Set([...current, ...groupTitles])];
-      }
-      return { ...prev, [moduleTitle]: updated };
-    });
+      setVisibility(cloneData);
+    }
   };
 
   return (
@@ -218,13 +227,12 @@ const Visibility = () => {
         <Scrollbar sx={{ px: 2, pb: 2 }}>
           <Stack spacing={1.5}>
             {data.map((item, index) => {
-              const isUnlocked = visibility.includes(item.title);
+              const isUnlocked = visibility.find((t) => t.name === item.permissionName)?.isGranted;
               const isSelected = currentSelected?.title === item.title;
               const totalSubmodules = countTotalSubmodules(item.submodule || []);
               const visibleSubmodules =
-                submoduleVisibility[item.title]?.filter((t) =>
-                  getAllSubmoduleTitles(item.submodule || []).includes(t)
-                ).length || 0;
+                visibility?.filter((t) => getAllSubmoduleTitles(item.submodule || []).includes(t))
+                  .length || 0;
 
               const progress =
                 totalSubmodules > 0 ? (visibleSubmodules / totalSubmodules) * 100 : 0;
@@ -348,17 +356,8 @@ const Visibility = () => {
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleToggleVisibility(item.title);
+                        handleToggleVisibility(item.permissionName);
                       }}
-                      // sx={{
-                      //   '& .MuiSwitch-switchBase.Mui-checked': {
-                      //     color: 'success.main',
-                      //     '& + .MuiSwitch-track': {
-                      //       bgcolor: 'success.main',
-                      //       // opacity: 0.3,
-                      //     },
-                      //   },
-                      // }}
                     />
                   </Stack>
                 </Card>
@@ -390,7 +389,7 @@ const Visibility = () => {
             description="Choose a module from the sidebar to manage its visibility settings."
             imgUrl={`${theme.palette.mode === 'dark' ? '/assets/icons/empty/ic_content_dark.svg' : '/assets/icons/empty/ic_content.svg'}`}
           />
-        ) : !visibility.includes(currentSelected.title) ? (
+        ) : !visibility.find((t) => t.name === currentSelected.permissionName)?.isGranted ? (
           <Stack
             alignItems="center"
             justifyContent="center"
@@ -412,11 +411,11 @@ const Visibility = () => {
               <Iconify icon="solar:lock-password-bold-duotone" width={40} />
             </Box>
             <Typography variant="h6" gutterBottom>
-              Module Locked
+              Module Visibility
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400 }}>
               Enable the <strong>{currentSelected.title}</strong> module from the sidebar to
-              configure its visibility settings.
+              configure it&lsquo;s visibility settings.
             </Typography>
           </Stack>
         ) : (
@@ -474,14 +473,15 @@ const Visibility = () => {
                       Select All
                     </Typography>
                     <Switch
-                      checked={
-                        currentSelected.submodule?.length > 0 &&
-                        getAllSubmoduleTitles(currentSelected.submodule).every((title) =>
-                          submoduleVisibility[currentSelected.title]?.includes(title)
-                        )
-                      }
+                      checked={currentSelected.submodule.every(
+                        (submodule: any) =>
+                          visibility.find((t) => t.name === submodule.permissionName)?.isGranted
+                      )}
                       onChange={() =>
-                        handleToggleAllSubmodules(currentSelected.title, currentSelected.submodule)
+                        handleToggleAllSubmodules(
+                          currentSelected.permissionName,
+                          currentSelected.submodule
+                        )
                       }
                     />
                   </Paper>
@@ -498,10 +498,9 @@ const Visibility = () => {
                       <SubmoduleItem
                         key={idx}
                         submodule={sub}
-                        moduleTitle={currentSelected.title}
-                        submoduleVisibility={submoduleVisibility}
+                        moduleTitle={currentSelected.permissionName}
+                        submoduleVisibility={visibility}
                         onToggleSubmodule={handleToggleSubmodule}
-                        onToggleGroup={handleToggleGroup}
                         level={0}
                       />
                     ))}

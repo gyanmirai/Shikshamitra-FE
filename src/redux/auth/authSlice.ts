@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 import { User } from 'oidc-client-ts';
 import { oidcService } from 'src/utils/oidcClient';
 
@@ -8,20 +8,58 @@ interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   employee: any;
+  permissions: { name: string; isGranted: boolean }[];
+  mainModuleVisibility: boolean[];
 }
+export function extractGrantedPermissions(groups: any): { name: string; isGranted: boolean }[] {
+  if (!Array.isArray(groups)) return [];
 
+  return groups.flatMap((group: any) =>
+    group.permissions.map((permission: any) => ({
+      name: permission.name,
+      isGranted: permission.isGranted,
+    }))
+  );
+}
 export const loadUser = createAsyncThunk(
   'auth/loadUser',
   async (_, { dispatch, rejectWithValue }) => {
     try {
       const user = await oidcService.getUser();
-
+      console.log(user, 'user');
       if (user) {
+        const decodeToken: any = jwtDecode(user.access_token);
+        console.log(decodeToken, 'decodeToken');
+        const mainModuleVisibility = decodeToken?.module_mask || '';
+        const mainModuleVisibilityArray: boolean[] = mainModuleVisibility
+          .split('')
+          .map((item: string) => (item === '1' ? true : false));
+
+        const fetchPermssion = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/permission-management/permissions?providerName=U&providerKey=${user.profile.sub}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${user.access_token}`,
+            },
+          }
+        );
+
+        const jsonData = await fetchPermssion?.json();
+
+        const permissionData = extractGrantedPermissions(jsonData?.groups || []);
+        console.log(permissionData, 'permissionData');
+
         const userPlanObject = JSON.parse(JSON.stringify(user));
         await dispatch(getEmployee(userPlanObject)).unwrap();
-        return userPlanObject;
+        return {
+          user: userPlanObject,
+          mainModuleVisibility: mainModuleVisibilityArray,
+          permissionData,
+        };
       }
-      return null;
+      return { user: null, mainModuleVisibility: [], permissionData: [] };
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -68,6 +106,8 @@ const initialState: AuthState = {
   isAuthenticated: false,
   loading: false,
   employee: null,
+  permissions: [],
+  mainModuleVisibility: [],
 };
 
 const authSlice = createSlice({
@@ -82,6 +122,12 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
     },
+    setMainModuleVisibility: (state, action: PayloadAction<boolean[]>) => {
+      state.mainModuleVisibility = action.payload;
+    },
+    setPermissions: (state, action: PayloadAction<{ name: string; isGranted: boolean }[]>) => {
+      state.permissions = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -89,8 +135,10 @@ const authSlice = createSlice({
         state.loading = true;
       })
       .addCase(loadUser.fulfilled, (state, action) => {
-        state.user = action.payload;
+        state.user = action.payload.user;
         state.isAuthenticated = !!action.payload;
+        state.mainModuleVisibility = action.payload.mainModuleVisibility;
+        state.permissions = action.payload.permissionData;
         state.loading = false;
       })
       .addCase(loadUser.rejected, (state) => {
@@ -122,5 +170,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, clearUser } = authSlice.actions;
+export const { setUser, clearUser, setMainModuleVisibility, setPermissions } = authSlice.actions;
 export default authSlice.reducer;

@@ -10,16 +10,12 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Card, Grid, Button } from '@mui/material';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
-import { Box, Card, Grid, Button, TextField, Autocomplete } from '@mui/material';
-import {
-  ReceiptSummaryReportsTitle,
-  ReceiptSummaryReportsTitleOptions,
-} from 'src/enums/receipt-summary-reports';
+import { ReceiptSummaryReportsTitle } from 'src/enums/receipt-summary-reports';
 
 import { getReceiptSummaryReportsValidationSchema } from './ReceiptSummaryReportsSchema';
 
@@ -112,7 +108,7 @@ const initialValues = {
 // -------------------------------------------------------------
 // COMPONENT
 // -------------------------------------------------------------
-const ReceiptSummaryReports = () => {
+const ReceiptSummaryReports = ({ report }: { report: any }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Cascading Data
@@ -144,7 +140,11 @@ const ReceiptSummaryReports = () => {
   );
 
   const formik = useFormik({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      report,
+    },
+    enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: (values, { setSubmitting }) => {
       window.alert('Receipt Summary Report Generated!');
@@ -260,27 +260,6 @@ const ReceiptSummaryReports = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.organizations, allOrganizations, currentFields]);
 
-  // -------------------------------------------------------------
-  // DEFAULT VALUES LOGIC
-  // -------------------------------------------------------------
-  // useEffect(() => {
-  //   // Pay Types Default All
-  //   if (currentFields.includes('payTypes') && formik.values.payTypes.length === 0) {
-  //     const allIds = payTypeOptions.map((p) => p.id);
-  //     formik.setFieldValue('payTypes', ['all', ...allIds]);
-  //   }
-  //   // Receipt Books Default All (only for specific report)
-  //   if (
-  //     formik.values.report ===
-  //       ReceiptSummaryReportsTitle.ReceiptSummaryDateAndReceiptBookWithPayType &&
-  //     formik.values.receiptBooks.length === 0
-  //   ) {
-  //     const allIds = allReceiptBooks.map((r) => r.id);
-  //     formik.setFieldValue('receiptBooks', ['all', ...allIds]);
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [currentFields, formik.values.report]);
-
   const showField = (field: string) => currentFields.includes(field);
 
   return (
@@ -289,55 +268,9 @@ const ReceiptSummaryReports = () => {
         <form onSubmit={formik.handleSubmit}>
           <Box p={2}>
             <Grid container spacing={3}>
-              {/* REPORT TITLE */}
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <ShakingTextField
-                  error={(formik.values.report as unknown) === '' && !!formik.touched.report}
-                >
-                  <CustomTooltip
-                    placement="top"
-                    title={ReceiptSummaryReportsTitle[formik.values.report] || ''}
-                  >
-                    <Autocomplete
-                      fullWidth
-                      options={ReceiptSummaryReportsTitleOptions}
-                      getOptionLabel={(option) => option.label}
-                      isOptionEqualToValue={(o, v) => o.name === v.name}
-                      value={
-                        ReceiptSummaryReportsTitleOptions.find(
-                          (opt) => opt.name === formik.values.report
-                        ) || null
-                      }
-                      onChange={(_, newValue) => {
-                        formik.setFieldValue('report', newValue ? newValue.name : '');
-                        // Reset fields on report change
-                        formik.setFieldValue('board', '');
-                        formik.setFieldValue('medium', '');
-                        formik.setFieldValue('organizations', []);
-                        formik.setFieldValue('standards', []);
-                        formik.setFieldValue('receiptBooks', []);
-                        formik.setFieldValue('payTypes', []);
-                        formik.setFieldValue('feeHeads', []);
-                        formik.setFieldValue('fromDate', null);
-                        formik.setFieldValue('toDate', null);
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          size="small"
-                          label="Report *"
-                          error={Boolean(formik.touched.report && formik.errors.report)}
-                          helperText={formik.touched.report && (formik.errors.report as string)}
-                        />
-                      )}
-                    />
-                  </CustomTooltip>
-                </ShakingTextField>
-              </Grid>
-
               {/* BOARD */}
               {showField('board') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.board && formik.errors.board)}>
                     <CustomSelect
                       label="Board *"
@@ -358,7 +291,7 @@ const ReceiptSummaryReports = () => {
 
               {/* MEDIUM */}
               {showField('medium') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.medium && formik.errors.medium)}>
                     <CustomSelect
                       label="Medium *"
@@ -380,7 +313,7 @@ const ReceiptSummaryReports = () => {
 
               {/* ORGANIZATIONS (Multi) */}
               {showField('organizations') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.organizations && formik.errors.organizations)}
                   >
@@ -422,7 +355,7 @@ const ReceiptSummaryReports = () => {
 
               {/* RECEIPT BOOKS (Multi) */}
               {showField('receiptBooks') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.receiptBooks && formik.errors.receiptBooks)}
                   >
@@ -464,7 +397,7 @@ const ReceiptSummaryReports = () => {
 
               {/* PAY TYPES (Multi) */}
               {showField('payTypes') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.payTypes && formik.errors.payTypes)}
                   >
@@ -504,7 +437,7 @@ const ReceiptSummaryReports = () => {
 
               {/* FEE HEADS (Multi) */}
               {showField('feeHeads') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.feeHeads && formik.errors.feeHeads)}
                   >
@@ -544,7 +477,7 @@ const ReceiptSummaryReports = () => {
 
               {/* STANDARDS (Multi) */}
               {showField('standards') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.standards && formik.errors.standards)}
                   >
@@ -585,7 +518,7 @@ const ReceiptSummaryReports = () => {
 
               {/* FROM DATE */}
               {showField('fromDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.fromDate && formik.errors.fromDate)}
                   >
@@ -611,7 +544,7 @@ const ReceiptSummaryReports = () => {
 
               {/* TO DATE */}
               {showField('toDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.toDate && formik.errors.toDate)}>
                     <DatePicker
                       label="To Date *"
