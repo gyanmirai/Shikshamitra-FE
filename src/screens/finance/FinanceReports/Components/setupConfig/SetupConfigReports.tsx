@@ -8,15 +8,14 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { Box, Grid, Card, Button } from '@mui/material';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
-import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { SetupConfigReportTitle } from 'src/enums/setup-config-reports';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
-import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
 
 import { getSetupConfigValidationSchema } from './setupConfigValidation';
 
@@ -68,7 +67,7 @@ const initialValues = {
 // -------------------------------------------------------------
 // COMPONENT
 // -------------------------------------------------------------
-const SetupConfigReports = () => {
+const SetupConfigReports = ({ report }: { report: SetupConfigReportTitle }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { data: academicYear } = useQueryAndMutation({
     type: 'query',
@@ -113,7 +112,11 @@ const SetupConfigReports = () => {
   const [dynamicSchema, setDynamicSchema] = useState(getSetupConfigValidationSchema([]));
 
   const formik = useFormik({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      report,
+    },
+    enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: (values, { setSubmitting }) => {
       window.alert('Report Generated Successfully!');
@@ -325,7 +328,7 @@ const SetupConfigReports = () => {
           <Box p={2}>
             <Grid container spacing={3}>
               {/* REPORT DROPDOWN */}
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              {/* <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <ShakingTextField
                   error={(formik.values.report as unknown) === '' && !!formik.touched.report}
                 >
@@ -361,11 +364,11 @@ const SetupConfigReports = () => {
                     />
                   </CustomTooltip>
                 </ShakingTextField>
-              </Grid>
+              </Grid> */}
 
               {/* BOARD */}
               {showField('board') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.board && Boolean(formik.errors.board)}>
                     <CustomSelect
                       label="Board *"
@@ -390,7 +393,7 @@ const SetupConfigReports = () => {
 
               {/* MEDIUM */}
               {showField('medium') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.medium && Boolean(formik.errors.medium)}>
                     <CustomSelect
                       label="Medium *"
@@ -415,7 +418,7 @@ const SetupConfigReports = () => {
 
               {/* ORGANIZATION (Single) */}
               {showField('organization_single') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={
                       formik.touched.organization_single &&
@@ -445,7 +448,7 @@ const SetupConfigReports = () => {
 
               {/* ORGANIZATIONS (Multi) */}
               {showField('organizations') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.organizations && Boolean(formik.errors.organizations)}
                   >
@@ -489,7 +492,7 @@ const SetupConfigReports = () => {
 
               {/* CLASS (Standards) */}
               {showField('standards') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.standards && Boolean(formik.errors.standards)}
                   >
@@ -532,7 +535,7 @@ const SetupConfigReports = () => {
 
               {/* DIVISIONS */}
               {showField('divisions') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.divisions && Boolean(formik.errors.divisions)}
                   >
@@ -573,7 +576,7 @@ const SetupConfigReports = () => {
 
               {/* STUDENTS */}
               {showField('students') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.students && Boolean(formik.errors.students)}
                   >
@@ -621,7 +624,7 @@ const SetupConfigReports = () => {
 
               {/* ACADEMIC YEARS */}
               {showField('academicYears') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.academicYears && Boolean(formik.errors.academicYears)}
                   >
@@ -661,7 +664,7 @@ const SetupConfigReports = () => {
 
               {/* MONTHS */}
               {showField('months') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.months && Boolean(formik.errors.months)}>
                     <ResponsiveMultiSelect
                       label="Months *"
@@ -697,7 +700,7 @@ const SetupConfigReports = () => {
 
               {/* FEE HEADS */}
               {showField('feeHeads') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.feeHeads && Boolean(formik.errors.feeHeads)}
                   >

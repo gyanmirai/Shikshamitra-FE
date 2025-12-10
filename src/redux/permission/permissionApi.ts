@@ -7,14 +7,14 @@ export const permissionApi = createApi({
     baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
   }),
   endpoints: (builder) => ({
-    getPermissions: builder.query<any, void>({
-      query: (role) => ({
-        url: `/permission-management/permissions?providerName=R&providerKey=${role}`,
+    getPermissions: builder.query<any, { providerName: string; providerKey: string }>({
+      query: ({ providerName, providerKey }) => ({
+        url: `/permission-management/permissions?providerName=${providerName}&providerKey=${providerKey}`,
       }),
     }),
     updatePermission: builder.mutation<any, any>({
-      query: ({ role, data }) => ({
-        url: `/permission-management/permissions?providerName=R&providerKey=${role}`,
+      query: ({ providerName, providerKey, data }) => ({
+        url: `/permission-management/permissions?providerName=${providerName}&providerKey=${providerKey}`,
         method: 'PUT',
         data,
       }),

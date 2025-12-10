@@ -299,7 +299,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
   const dispatch = useDispatch();
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
+    <Box>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -401,9 +401,9 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
         <LoadingButton
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           loading={isLoading || isUpdateLoading}
-          type="submit"
           variant="contained"
           size="small"
+          onClick={(e: any) => formik.handleSubmit(e)}
         >
           Submit
         </LoadingButton>
