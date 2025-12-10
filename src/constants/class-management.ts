@@ -68,6 +68,13 @@ const classManagementModule = {
           permissionName: classManagementPermissions.classTeacherAssignment,
         },
         {
+          title: 'Reports',
+          path: '/classManagement/reports',
+          _action: 'reports',
+          shortcutKey: 'Alt+A+R',
+          shortcutKeyName: 'Alt+A+R',
+        },
+        {
           title: 'Notification',
           path: classManagementPaths.notification,
           _action: 'notification-management',
