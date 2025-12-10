@@ -1,7 +1,7 @@
 import type { IBook } from 'src/screens/library/BookManagement/Components/type';
 
-import React, { useMemo, useState } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import React, { useMemo, useState, useEffect } from 'react';
 import { EmptyContent } from 'src/components/empty-content';
 import { Box, Grid, Button, TextField, CircularProgress } from '@mui/material';
 
@@ -38,10 +38,19 @@ const LibraryMainScreen: React.FC<LibrarySearchProps> = ({
   // --- Filter logic ---
   const [debouncedSearch, setDebouncedSearch] = useState(searchInput);
 
-  React.useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchInput), 300);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchInput), 800);
     return () => clearTimeout(handler);
   }, [searchInput]);
+
+  useEffect(() => {
+    if (debouncedSearch.trim()) {
+      const firstChar = debouncedSearch.trim()[0].toUpperCase();
+      if (alphabet.includes(firstChar)) setSelectedLetter(firstChar);
+    } else {
+      setSelectedLetter('ALL');
+    }
+  }, [debouncedSearch]);
 
   const filteredBooks = useMemo(() => {
     let filtered = books;
@@ -146,17 +155,15 @@ const LibraryMainScreen: React.FC<LibrarySearchProps> = ({
             size="small"
             value={searchInput}
             onChange={(e) => {
-              const val = e.target.value;
-              setSearchInput(val);
-              if (val.trim()) {
-                const firstChar = val.trim()[0].toUpperCase();
-                if (alphabet.includes(firstChar)) setSelectedLetter(firstChar);
-              } else {
-                setSelectedLetter('ALL');
-              }
+              setSearchInput(e.target.value);
             }}
-            label="Search by Title, Author, ISBN.."
+            label="Search by Title, Author, ISBN."
             fullWidth
+            InputProps={{
+              endAdornment: (
+                <>{searchInput !== debouncedSearch && <CircularProgress size={20} />}</>
+              ),
+            }}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 2 }}>
