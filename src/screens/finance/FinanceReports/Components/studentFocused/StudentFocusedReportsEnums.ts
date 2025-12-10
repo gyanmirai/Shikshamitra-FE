@@ -1,11 +1,11 @@
 export enum StudentFocusedReportsTitle {
-  ReceiptListNumberWise = 'ReceiptListNumberWise',
-  StudentFeeHistory = 'StudentFeeHistory',
-  StudentOptionalFeeList = 'StudentOptionalFeeList',
-  FeeCertificateBasedOnStudentFee = 'FeeCertificateBasedOnStudentFee',
-  FeeCertificateWithAllFeeDetails = 'FeeCertificateWithAllFeeDetails',
-  ReceiptListStudentWise = 'ReceiptListStudentWise',
-  FeeSummaryPayTypeWiseStudentFilter = 'FeeSummaryPayTypeWiseStudentFilter',
+  ReceiptListNumberWise,
+  StudentFeeHistory,
+  StudentOptionalFeeList,
+  FeeCertificateBasedOnStudentFee,
+  FeeCertificateWithAllFeeDetails,
+  ReceiptListStudentWise,
+  FeeSummaryPayTypeWiseStudentFilter,
 }
 
 export const StudentFocusedReportsTitleOptions = [

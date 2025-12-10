@@ -1,10 +1,45 @@
 export enum SetupConfigReportTitle {
-  ClasswiseFeeSetup = 'Classwise Fee Setup',
-  FeeSetupStudentWise = 'Fee Setup Student Wise',
-  ClassSetupFeeRules = 'Class Setup / Fee Rules',
-  FeeCollectionBatchAndMonthwise = 'Fee Collection Year And Monthwise',
-  FeeCollectionBatchwiseBoardwise = 'Fee Collection Yearwise',
-  FeeCollectionMonthAndFeeHeadwise = 'Fee Collection Month And FeeHeadwise',
-  FeeHeadDefaultSetup = 'Fee Head Default Setup',
-  FeeCollectionBatchwiseSetup = 'Fee Collection Yearwise Setup',
+  ClasswiseFeeSetup,
+  FeeSetupStudentWise,
+  ClassSetupFeeRules,
+  FeeCollectionBatchAndMonthwise,
+  FeeCollectionBatchwiseBoardwise,
+  FeeCollectionMonthAndFeeHeadwise,
+  FeeHeadDefaultSetup,
+  FeeCollectionBatchwiseSetup,
 }
+
+export const SetupConfigReportTitleOptions = [
+  {
+    name: SetupConfigReportTitle.ClasswiseFeeSetup,
+    label: 'Classwise Fee Setup',
+  },
+  {
+    name: SetupConfigReportTitle.FeeSetupStudentWise,
+    label: 'Fee Setup Student Wise',
+  },
+  {
+    name: SetupConfigReportTitle.ClassSetupFeeRules,
+    label: 'Class Setup / Fee Rules',
+  },
+  {
+    name: SetupConfigReportTitle.FeeCollectionBatchAndMonthwise,
+    label: 'Fee Collection Year And Monthwise',
+  },
+  {
+    name: SetupConfigReportTitle.FeeCollectionBatchwiseBoardwise,
+    label: 'Fee Collection Yearwise',
+  },
+  {
+    name: SetupConfigReportTitle.FeeCollectionMonthAndFeeHeadwise,
+    label: 'Fee Collection Month And FeeHeadwise',
+  },
+  {
+    name: SetupConfigReportTitle.FeeHeadDefaultSetup,
+    label: 'Fee Head Default Setup',
+  },
+  {
+    name: SetupConfigReportTitle.FeeCollectionBatchwiseSetup,
+    label: 'Fee Collection Yearwise Setup',
+  },
+];

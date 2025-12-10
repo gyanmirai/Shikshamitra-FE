@@ -10,17 +10,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Grid, Card, Button } from '@mui/material';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
-import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
-import {
-  FeeStatusClassDivReportsTitle,
-  FeeStatusClassDivReportsTitleOptions,
-} from 'src/enums/fee-status-divisionClass';
+import { FeeStatusClassDivReportsTitle } from 'src/enums/fee-status-divisionClass';
 
 import { getFeeStatusClassDivValidationSchema } from './FeeStatusClassDivisionReportIntialValues';
 
@@ -121,7 +117,7 @@ const initialValues = {
 // -------------------------------------------------------------
 // COMPONENT
 // -------------------------------------------------------------
-const FeeStatusClassDivisionReports = () => {
+const FeeStatusClassDivisionReports = ({ report }: { report: any }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Cascading Data
@@ -148,7 +144,11 @@ const FeeStatusClassDivisionReports = () => {
   );
 
   const formik = useFormik({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      report,
+    },
+    enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: (values, { setSubmitting }) => {
       window.alert('Class/Division Wise Fee Report Generated!');
@@ -374,12 +374,17 @@ const FeeStatusClassDivisionReports = () => {
 
   // Auto-select students when list loads
   useEffect(() => {
-    if (tableData?.length) {
-      const allStudentIds = tableData.map((s: any) => s.id);
-      formik.setFieldValue('students', ['all', ...allStudentIds]);
+    // Only auto-select students when standards & divisions are selected
+    if (!currentFields.includes('students')) return;
+    if (!formik.values.standards.length || !formik.values.divisions.length) return;
+
+    if (tableData.length > 0) {
+      formik.setFieldValue('students', ['all', ...tableData.map((s: any) => s.id)]);
+    } else {
+      formik.setFieldValue('students', []);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableData]);
+  }, [tableData, currentFields, formik.values.standards, formik.values.divisions]);
 
   const showField = (field: string) => currentFields.includes(field);
 
@@ -392,53 +397,9 @@ const FeeStatusClassDivisionReports = () => {
         <form onSubmit={formik.handleSubmit}>
           <Box p={2}>
             <Grid container spacing={3}>
-              {/* REPORT DROPDOWN */}
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <ShakingTextField
-                  error={(formik.values.report as unknown) === '' && !!formik.touched.report}
-                >
-                  <CustomTooltip
-                    placement="top"
-                    title={FeeStatusClassDivReportsTitle[formik.values.report]}
-                  >
-                    <Autocomplete
-                      options={FeeStatusClassDivReportsTitleOptions}
-                      getOptionLabel={(opt) => opt.label}
-                      isOptionEqualToValue={(o, v) => o.name === v.name}
-                      value={
-                        FeeStatusClassDivReportsTitleOptions.find(
-                          (o) => o.name === formik.values.report
-                        ) || null
-                      }
-                      onChange={(e, val) => {
-                        formik.setFieldValue('report', val ? val.name : '');
-                        // reset all other fields
-                        formik.setFieldValue('board', '');
-                        formik.setFieldValue('medium', '');
-                        formik.setFieldValue('organizations', []);
-                        formik.setFieldValue('standards', []);
-                        formik.setFieldValue('divisions', []);
-                        formik.setFieldValue('receiptBooks', []);
-                        formik.setFieldValue('students', []);
-                      }}
-                      renderInput={(p) => (
-                        <TextField
-                          {...p}
-                          size="small"
-                          fullWidth
-                          label="Report *"
-                          error={formik.touched.report && Boolean(formik.errors.report)}
-                          helperText={formik.touched.report && formik.errors.report}
-                        />
-                      )}
-                    />
-                  </CustomTooltip>
-                </ShakingTextField>
-              </Grid>
-
               {/* BOARD */}
               {showField('board') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.board && Boolean(formik.errors.board)}>
                     <CustomSelect
                       label="Board *"
@@ -462,7 +423,7 @@ const FeeStatusClassDivisionReports = () => {
 
               {/* MEDIUM */}
               {showField('medium') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.medium && Boolean(formik.errors.medium)}>
                     <CustomSelect
                       label="Medium *"
@@ -486,7 +447,7 @@ const FeeStatusClassDivisionReports = () => {
 
               {/* ORGANIZATIONS */}
               {showField('organizations') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.organizations && Boolean(formik.errors.organizations)}
                   >
@@ -530,7 +491,7 @@ const FeeStatusClassDivisionReports = () => {
 
               {/* CLASS */}
               {showField('standards') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.standards && Boolean(formik.errors.standards)}
                   >
@@ -574,7 +535,7 @@ const FeeStatusClassDivisionReports = () => {
               )}
 
               {showField('standard_single') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.standard_single && Boolean(formik.errors.standard_single)}
                   >
@@ -599,7 +560,7 @@ const FeeStatusClassDivisionReports = () => {
 
               {/* DIVISIONS */}
               {showField('divisions') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.divisions && Boolean(formik.errors.divisions)}
                   >
@@ -638,7 +599,7 @@ const FeeStatusClassDivisionReports = () => {
 
               {/* RECEIPT BOOKS */}
               {showField('receiptBooks') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.receiptBooks && Boolean(formik.errors.receiptBooks)}
                   >
@@ -680,7 +641,7 @@ const FeeStatusClassDivisionReports = () => {
 
               {/* DATES */}
               {showField('fromDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.fromDate && Boolean(formik.errors.fromDate)}
                   >
@@ -688,8 +649,8 @@ const FeeStatusClassDivisionReports = () => {
                       label="From Date"
                       format="DD/MM/YYYY"
                       disableFuture
-                      minDate={dayjs(currentYear.startDate)}
-                      maxDate={dayjs(currentYear.endDate)}
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
                       value={formik.values.fromDate}
                       onChange={(d) => formik.setFieldValue('fromDate', d)}
                       slotProps={{
@@ -697,7 +658,7 @@ const FeeStatusClassDivisionReports = () => {
                           fullWidth: true,
                           size: 'small',
                           error: formik.touched.fromDate && Boolean(formik.errors.fromDate),
-                          helperText: formik.touched.fromDate && formik.errors.fromDate,
+                          helperText: (formik.touched.fromDate && formik.errors.fromDate) as string,
                         },
                       }}
                     />
@@ -706,14 +667,14 @@ const FeeStatusClassDivisionReports = () => {
               )}
 
               {showField('toDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.toDate && Boolean(formik.errors.toDate)}>
                     <DatePicker
                       label="To Date"
                       format="DD/MM/YYYY"
                       disableFuture
-                      minDate={dayjs(currentYear.startDate)}
-                      maxDate={dayjs(currentYear.endDate)}
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
                       value={formik.values.toDate}
                       onChange={(d) => formik.setFieldValue('toDate', d)}
                       slotProps={{
@@ -721,7 +682,7 @@ const FeeStatusClassDivisionReports = () => {
                           fullWidth: true,
                           size: 'small',
                           error: formik.touched.toDate && Boolean(formik.errors.toDate),
-                          helperText: formik.touched.toDate && formik.errors.toDate,
+                          helperText: (formik.touched.toDate && formik.errors.toDate) as string,
                         },
                       }}
                     />
@@ -731,7 +692,7 @@ const FeeStatusClassDivisionReports = () => {
 
               {/* STUDENTS */}
               {showField('students') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.students && Boolean(formik.errors.students)}
                   >

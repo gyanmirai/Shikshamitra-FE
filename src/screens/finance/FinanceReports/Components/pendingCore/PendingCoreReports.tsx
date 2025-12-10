@@ -10,17 +10,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Grid, Card, Button } from '@mui/material';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { PendingCoreReportsTitle } from 'src/enums/pending-core-reports';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
-import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
-import {
-  PendingCoreReportsTitle,
-  PendingCoreReportsTitleOptions,
-} from 'src/enums/pending-core-reports';
 
 import { getPendingCoreReportsValidationSchema } from './PendingCoreReportsSchema';
 
@@ -114,7 +110,7 @@ const initialValues = {
 // -------------------------------------------------------------
 // COMPONENT
 // -------------------------------------------------------------
-const PendingCoreReports = () => {
+const PendingCoreReports = ({ report }: { report: any }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Cascading Data
@@ -141,7 +137,11 @@ const PendingCoreReports = () => {
   );
 
   const formik = useFormik({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      report,
+    },
+    enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: (values, { setSubmitting }) => {
       window.alert('Pending Core Report Generated!');
@@ -359,15 +359,6 @@ const PendingCoreReports = () => {
     getStudents(payload);
   }, [formik.values.standards, formik.values.divisions, getStudents]);
 
-  // Auto-select students when list loads
-  useEffect(() => {
-    if (StudentsData?.items?.length) {
-      const allStudentIds = StudentsData.items.map((s: any) => s.id);
-      formik.setFieldValue('students', ['all', ...allStudentIds]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [StudentsData]);
-
   const studentList = useMemo(
     () => [
       { id: 'all', name: 'All' },
@@ -378,6 +369,20 @@ const PendingCoreReports = () => {
     ],
     [StudentsData]
   );
+
+  // Auto-select students when list loads
+  useEffect(() => {
+    // Only auto-select students when standards & divisions are selected
+    if (!currentFields.includes('students')) return;
+    if (!formik.values.standards.length || !formik.values.divisions.length) return;
+
+    if (studentList.length > 0) {
+      formik.setFieldValue('students', ['all', ...studentList.map((s) => s.id)]);
+    } else {
+      formik.setFieldValue('students', []);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentList, currentFields, formik.values.standards, formik.values.divisions]);
 
   const showField = (field: string) => currentFields.includes(field);
 
@@ -390,53 +395,9 @@ const PendingCoreReports = () => {
         <form onSubmit={formik.handleSubmit}>
           <Box p={2}>
             <Grid container spacing={3}>
-              {/* REPORT DROPDOWN */}
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <ShakingTextField
-                  error={(formik.values.report as unknown) === '' && !!formik.touched.report}
-                >
-                  <CustomTooltip
-                    placement="top"
-                    title={PendingCoreReportsTitle[formik.values.report]}
-                  >
-                    <Autocomplete
-                      options={PendingCoreReportsTitleOptions}
-                      getOptionLabel={(opt) => opt.label}
-                      isOptionEqualToValue={(o, v) => o.name === v.name}
-                      value={
-                        PendingCoreReportsTitleOptions.find(
-                          (o) => o.name === formik.values.report
-                        ) || null
-                      }
-                      onChange={(e, val) => {
-                        formik.setFieldValue('report', val ? val.name : '');
-                        // reset all other fields
-                        formik.setFieldValue('board', '');
-                        formik.setFieldValue('medium', '');
-                        formik.setFieldValue('organizations', []);
-                        formik.setFieldValue('standards', []);
-                        formik.setFieldValue('divisions', []);
-                        formik.setFieldValue('receiptBooks', []);
-                        formik.setFieldValue('students', []);
-                      }}
-                      renderInput={(p) => (
-                        <TextField
-                          {...p}
-                          size="small"
-                          fullWidth
-                          label="Report *"
-                          error={formik.touched.report && Boolean(formik.errors.report)}
-                          helperText={formik.touched.report && formik.errors.report}
-                        />
-                      )}
-                    />
-                  </CustomTooltip>
-                </ShakingTextField>
-              </Grid>
-
               {/* BOARD */}
               {showField('board') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.board && Boolean(formik.errors.board)}>
                     <CustomSelect
                       label="Board *"
@@ -460,7 +421,7 @@ const PendingCoreReports = () => {
 
               {/* MEDIUM */}
               {showField('medium') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.medium && Boolean(formik.errors.medium)}>
                     <CustomSelect
                       label="Medium *"
@@ -484,7 +445,7 @@ const PendingCoreReports = () => {
 
               {/* ORGANIZATIONS */}
               {showField('organizations') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.organizations && Boolean(formik.errors.organizations)}
                   >
@@ -528,7 +489,7 @@ const PendingCoreReports = () => {
 
               {/* CLASS */}
               {showField('standards') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.standards && Boolean(formik.errors.standards)}
                   >
@@ -571,7 +532,7 @@ const PendingCoreReports = () => {
               )}
 
               {showField('standard_single') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.standard_single && Boolean(formik.errors.standard_single)}
                   >
@@ -596,7 +557,7 @@ const PendingCoreReports = () => {
 
               {/* DIVISIONS */}
               {showField('divisions') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.divisions && Boolean(formik.errors.divisions)}
                   >
@@ -619,7 +580,7 @@ const PendingCoreReports = () => {
 
               {/* RECEIPT BOOKS */}
               {showField('receiptBooks') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.receiptBooks && Boolean(formik.errors.receiptBooks)}
                   >
@@ -642,7 +603,7 @@ const PendingCoreReports = () => {
 
               {/* DATES */}
               {showField('fromDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.fromDate && Boolean(formik.errors.fromDate)}
                   >
@@ -668,7 +629,7 @@ const PendingCoreReports = () => {
               )}
 
               {showField('toDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.toDate && Boolean(formik.errors.toDate)}>
                     <DatePicker
                       label="To Date"
@@ -693,7 +654,7 @@ const PendingCoreReports = () => {
 
               {/* STUDENTS */}
               {showField('students') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.students && Boolean(formik.errors.students)}
                   >

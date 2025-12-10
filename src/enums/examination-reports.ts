@@ -105,3 +105,153 @@ export const ExamReportTitleOptions = [
     label: 'Weak Student Analysis Subject Wise',
   },
 ];
+
+export const SubjectPerformanceAnalysisReportMap = [
+  {
+    name: ExamReportTitle.AverageSubjectMarkAnalysis,
+    label: 'Average Subject Mark Analysis',
+  },
+  {
+    name: ExamReportTitle.SubjectAverageClassMarkAnalysisDivisionWise,
+    label: 'Subject Average Class Mark Analysis Division Wise',
+  },
+  {
+    name: ExamReportTitle.StudentGradeAnalysisSubjectWise,
+    label: 'Student Grade Analysis Subject Wise',
+  },
+  {
+    name: ExamReportTitle.SubjectWiseGradeList,
+    label: 'Subject Wise Grade List',
+  },
+  {
+    name: ExamReportTitle.ResultListPassFailAnalysisSubjectWise,
+    label: 'Result List Pass/Fail Analysis Subject Wise',
+  },
+  {
+    name: ExamReportTitle.ResultListSubjectGradeAnalysis,
+    label: 'Result List Subject Grade Analysis',
+  },
+  {
+    name: ExamReportTitle.ResultListWithSubject,
+    label: 'Result List With Subject',
+  },
+  {
+    name: ExamReportTitle.ResultListWithSubjectFailedDetails,
+    label: 'Result List With Subject Failed Details',
+  },
+  {
+    name: ExamReportTitle.ResultListWithSubjectGrade,
+    label: 'Result List With Subject Grade',
+  },
+  {
+    name: ExamReportTitle.ResultListWithSubjectSmall,
+    label: 'Result List With Subject Small',
+  },
+  {
+    name: ExamReportTitle.ResultListWithSubjectWithGrace,
+    label: 'Result List With Subject With Grace',
+  },
+];
+
+export const StudentRankingBrightWeakReportMap = [
+  {
+    name: ExamReportTitle.BrightStudentAnalysis,
+    label: 'Bright Student Analysis',
+  },
+  {
+    name: ExamReportTitle.BrightStudentListSubjectWise,
+    label: 'Bright Student List Subject Wise',
+  },
+  {
+    name: ExamReportTitle.WeakStudentAnalysis,
+    label: 'Weak Student Analysis',
+  },
+  {
+    name: ExamReportTitle.WeakStudentAnalysisSubjectWise,
+    label: 'Weak Student Analysis Subject Wise',
+  },
+  {
+    name: ExamReportTitle.StudentGradeAnalysis,
+    label: 'Student Grade Analysis',
+  },
+  {
+    name: ExamReportTitle.ResultListPassFailOverAllAnalysis,
+    label: 'Result List Pass/Fail Overall Analysis',
+  },
+  {
+    name: ExamReportTitle.ResultListOverallGradeAnalysis,
+    label: 'Result List Overall Grade Analysis',
+  },
+];
+
+export const StandardResultListReportMap = [
+  {
+    name: ExamReportTitle.ResultList,
+    label: 'Result List',
+  },
+  {
+    name: ExamReportTitle.ResultListOneGrade,
+    label: 'Result List One Grade',
+  },
+  {
+    name: ExamReportTitle.ResultListOneMark,
+    label: 'Result List One Mark',
+  },
+  {
+    name: ExamReportTitle.ResultListTwoMark,
+    label: 'Result List Two Mark',
+  },
+  {
+    name: ExamReportTitle.MarkListWithAllSubject,
+    label: 'Result List With All Subject',
+  },
+  {
+    name: ExamReportTitle.ResultWithAllSubjectList,
+    label: 'Result With All Subject List',
+  },
+  {
+    name: ExamReportTitle.ResultOverAllSynopsis,
+    label: 'Result Over All Synopsis',
+  },
+];
+
+export const ConsolidatedMultiExamReportMap = [
+  {
+    name: ExamReportTitle.ResultListConsolidateVerify,
+    label: 'Result List Consolidate Verify',
+  },
+  {
+    name: ExamReportTitle.ResultListConsolidateWithMarkGrade,
+    label: 'Result List Consolidate With Mark Grade',
+  },
+  {
+    name: ExamReportTitle.ResultListConsolidateWithMarks,
+    label: 'Result List Consolidate With Marks',
+  },
+  {
+    name: ExamReportTitle.ResultListConsolidateWithMarksSiddhiKrupa,
+    label: 'Result List Consolidate With Marks (Siddhi Krupa)',
+  },
+];
+
+export const StudentWiseResultReportMap = [
+  {
+    name: ExamReportTitle.StudentAllBatchResult,
+    label: 'Student All Batch Result',
+  },
+  {
+    name: ExamReportTitle.StudentAllExamResult,
+    label: 'Student All Exam Result',
+  },
+];
+
+export const GeneralGradePerformanceReportMap = [
+  {
+    name: ExamReportTitle.GenderWiseGradeAnalysis,
+    label: 'Gender Wise Grade Analysis',
+  },
+  {
+    name: ExamReportTitle.ResultStatisticsReport,
+    label: 'Result Statistics Report',
+  },
+];
