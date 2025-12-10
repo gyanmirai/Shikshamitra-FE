@@ -9,6 +9,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Stack } from '@mui/system';
 import { useSelector } from 'react-redux';
+import debounce from 'src/utils/debounce';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -153,16 +154,15 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
     }
 
     setLoading(true);
-
-    setTimeout(() => {
+    debounce(() => {
       const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
-
       const foundBook = foundCopy
         ? {
             ...foundCopy,
             book: books?.find((b) => b.id === foundCopy.bookId),
           }
         : null;
+
       if (foundBook) {
         if (foundBook.status !== 1) {
           // only proceed if book is currently issued
@@ -173,7 +173,6 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
           setSelectedMember(null);
         } else {
           setSelectedBook(foundBook);
-          formik.setFieldValue('accessionNo', foundBook.accessionNo);
 
           const foundMember = memberData?.find(
             (member: any) => member.memberId?.toLowerCase() === foundBook.memberId?.toLowerCase()
@@ -184,9 +183,8 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
         setSelectedBook(null);
         setSelectedMember(null);
       }
-
       setLoading(false);
-    }, 400);
+    }, 1000);
   };
 
   // Auto search when accession number is passed as prop
@@ -633,23 +631,25 @@ const ReturnBookModal: React.FC<ReturnBookFormProps> = ({ onClose, accessionNo }
                 </Grid>
               )}
             </>
-          ) : formik.values.accessionNo !== '' ? (
-            <Grid size={{ xs: 12 }}>
-              <div
-                style={{
-                  padding: '12px',
-                  backgroundColor: '#ffebee',
-                  borderRadius: '4px',
-                  border: '1px solid #f44336',
-                  color: '#d32f2f',
-                  textAlign: 'center',
-                }}
-              >
-                Book with accession number &quot;{formik.values.accessionNo}&quot; not found or not
-                issued.
-              </div>
-            </Grid>
-          ) : null}
+          ) : (
+            formik.values.accessionNo !== '' && (
+              <Grid size={{ xs: 12 }}>
+                <div
+                  style={{
+                    padding: '12px',
+                    backgroundColor: '#ffebee',
+                    borderRadius: '4px',
+                    border: '1px solid #f44336',
+                    color: '#d32f2f',
+                    textAlign: 'center',
+                  }}
+                >
+                  Book with accession number &quot;{formik.values.accessionNo}&quot; not found or
+                  not issued.
+                </div>
+              </Grid>
+            )
+          )}
 
           {selectedBook && (
             <>

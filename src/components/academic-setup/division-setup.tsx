@@ -276,7 +276,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
   };
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
+    <Box>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -360,9 +360,9 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
           </Button>
           <LoadingButton
             loading={isLoading || isUpdateLoading}
-            type="submit"
             variant="contained"
             size="small"
+            onClick={(e: any) => formik.handleSubmit(e)}
           >
             Submit
           </LoadingButton>

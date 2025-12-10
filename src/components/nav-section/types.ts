@@ -51,6 +51,8 @@ export type NavItemBaseProps = {
   info?: string[] | React.ReactNode;
   style?: any;
   submodule?: any;
+  visibility?: boolean;
+  permissionName?: string;
 };
 
 export type NavItemProps = ButtonBaseProps & NavItemStateProps & NavItemBaseProps;
@@ -88,5 +90,6 @@ export type NavSectionProps = Omit<
     isSubLayout?: boolean;
     submodule?: NavItemBaseProps[];
     shortcutKeyName?: string;
+    visibility?: boolean;
   }[];
 };

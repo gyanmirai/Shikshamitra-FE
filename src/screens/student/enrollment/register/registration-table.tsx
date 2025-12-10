@@ -1,8 +1,7 @@
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
-import { GenderType } from 'src/enums/gender';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import calculateAge from 'src/utils/calculate-age';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useCallback } from 'react';
@@ -34,7 +33,7 @@ const RegistrationTable = ({
   setEditData: (data: null | IInquiryData) => void;
 }) => {
   const [moveId, setMoveId] = useState<string | null>(null);
-
+  const { currentMedium } = useSelector((state: any) => state.globalState);
   const confirmMovePopup = useBoolean();
   const [moveToAdmission, { isLoading: isMoveToAdmissionLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -97,6 +96,12 @@ const RegistrationTable = ({
   const { data: registrationData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentRegistrationQuery,
+    params: {
+      academicMediumId: currentMedium.id,
+    },
+    options: {
+      skip: !currentMedium.id,
+    },
   });
 
   const [selectedStudents] = useState<any>([]);
@@ -106,18 +111,8 @@ const RegistrationTable = ({
       registrationData?.items.map((item: IInquiryData) => ({
         ...item,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
-        ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
+
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-        studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
-        genderValue: GenderType[item?.genderType as any],
-        percentage: (item.onboardingProgressState / 8) * 100,
-        address: [item.addressLine1, item.addressLine2, item.addressLine3]
-          .filter(Boolean)
-          .join(', '),
-        secondaryContactNumber:
-          item.secondaryContactNumber && item.secondaryContactNumber !== ''
-            ? item.secondaryContactNumber
-            : undefined,
       })) || [],
     [registrationData?.items]
   );
@@ -160,43 +155,6 @@ const RegistrationTable = ({
         }
         isLoading={isLoading}
         columns={[
-          // {
-          //   id: 'checkBox',
-          //   align: 'left',
-          //   minWidth: '30px',
-          //   isSort: false,
-          //   sticky: true,
-          //   isFilter: false,
-          //   label: '',
-          //   renderColumn() {
-          //     return (
-          //       <Checkbox
-          //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents(tableData || []);
-          //           } else {
-          //             setSelectedStudents([]);
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          //   render(value, row) {
-          //     return (
-          //       <Checkbox
-          //         checked={!!selectedStudents.some((i: any) => i.id === row.id)}
-          //         onChange={(e) => {
-          //           if (e.target.checked) {
-          //             setSelectedStudents([...selectedStudents, row]);
-          //           } else {
-          //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
           {
             id: 'studentName',
             label: 'Student Name',
@@ -204,16 +162,16 @@ const RegistrationTable = ({
             align: 'left',
             sticky: true,
           },
-          { id: 'formNumber', label: 'Form No.', minWidth: '100px', align: 'left' },
+          { id: 'formNo', label: 'Form No.', minWidth: '100px', align: 'left' },
           {
-            id: 'inquiryNumber',
+            id: 'inquiryNo',
             label: 'Inquiry No.',
             minWidth: '120px',
             isFilter: true,
             filterType: 'string',
             align: 'left',
           },
-          { id: 'standard.name', label: 'Class', align: 'left', minWidth: '80px' },
+          { id: 'standard', label: 'Class', align: 'left', minWidth: '80px' },
           {
             id: 'dobValue',
             label: 'Date of Birth',
@@ -222,7 +180,7 @@ const RegistrationTable = ({
             isFilter: true,
             filterType: 'date',
           },
-          { id: 'ageValue', label: 'Age', align: 'left' },
+          { id: 'age', label: 'Age', align: 'left' },
           {
             id: 'doiValue',
             label: 'Date of Inquiry',
@@ -232,7 +190,7 @@ const RegistrationTable = ({
             isDateRangeFilter: true,
           },
           {
-            id: 'genderValue',
+            id: 'gender',
             label: 'Gender',
             align: 'left',
             filterType: 'enum',
@@ -244,20 +202,20 @@ const RegistrationTable = ({
           },
           { id: 'address', label: 'Address', minWidth: '150px', align: 'left' },
           {
-            id: 'primaryContactNumber',
+            id: 'primaryContactNo',
             label: 'Primary Contact No.',
             minWidth: '180px',
             align: 'left',
           },
           {
-            id: 'secondaryContactNumber',
+            id: 'secondaryContactNo',
             label: 'Secondary Contact No.',
             minWidth: '200px',
             align: 'left',
           },
-          { id: 'previousSchoolName', label: 'Previous School', minWidth: '150px', align: 'left' },
+          { id: 'previousSchool', label: 'Previous School', minWidth: '150px', align: 'left' },
           {
-            id: 'inquiryPreference.preferenceName',
+            id: 'inquiryPreference',
             label: 'Inquiry Preference',
             minWidth: '175px',
             align: 'left',
@@ -283,7 +241,7 @@ const RegistrationTable = ({
           // },
           // { id: 'educationMedium.name', label: 'Organization', align: 'left' },
           {
-            id: 'percentage',
+            id: 'progress',
             label: 'Progress',
             align: 'left',
             sticky: true,

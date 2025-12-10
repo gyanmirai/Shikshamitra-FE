@@ -5,12 +5,11 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { GenderOptions } from 'src/enums/gender';
 import { useBoolean } from 'src/hooks/use-boolean';
-import calculateAge from 'src/utils/calculate-age';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { GenderType, GenderOptions } from 'src/enums/gender';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -38,10 +37,18 @@ const RegistrationFormScreen = () => {
   // Dialog control for follow-up form
   const followUpDialog = useBoolean();
 
+  const { currentMedium } = useSelector((state: any) => state.globalState);
+
   // Query hook to fetch registration form data
   const { data: inquiryFormData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentRegistrationFormQuery,
+    params: {
+      academicMediumId: currentMedium.id,
+    },
+    options: {
+      skip: !currentMedium.id,
+    },
   });
 
   // Mutation hook to move student to registration status
@@ -61,16 +68,11 @@ const RegistrationFormScreen = () => {
   // - Maps gender type enum to display value
   const tableData = useMemo(
     () =>
-      inquiryFormData?.items.map((item: IInquiryData) => ({
+      inquiryFormData?.items?.map((item: IInquiryData) => ({
         ...item,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
-        ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
+
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-        studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
-        genderValue: GenderType[item?.genderType as any],
-        address: [item.addressLine1, item.addressLine2, item.addressLine3]
-          .filter(Boolean)
-          .join(', '),
       })),
     [inquiryFormData?.items]
   );
@@ -150,44 +152,44 @@ const RegistrationFormScreen = () => {
               minWidth: '180px',
               align: 'left',
               sticky: true,
-              render: (value, row) => {
-                const fullName = `${row.lastName} ${row.firstName} ${row.middleName}`.trim();
+              // render: (value, row) => {
+              //   const fullName = `${row.lastName} ${row.firstName} ${row.middleName}`.trim();
 
-                return (
-                  <CustomTooltip title={fullName} arrow sx={{ textAlign: 'justify' }}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontSize: '13px',
-                        display: 'block',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        maxWidth: '150px',
-                      }}
-                    >
-                      {fullName}
-                    </Typography>
-                  </CustomTooltip>
-                );
-              },
+              //   return (
+              //     <CustomTooltip title={fullName} arrow sx={{ textAlign: 'justify' }}>
+              //       <Typography
+              //         variant="caption"
+              //         sx={{
+              //           fontSize: '13px',
+              //           display: 'block',
+              //           overflow: 'hidden',
+              //           textOverflow: 'ellipsis',
+              //           whiteSpace: 'nowrap',
+              //           maxWidth: '150px',
+              //         }}
+              //       >
+              //         {fullName}
+              //       </Typography>
+              //     </CustomTooltip>
+              //   );
+              // },
             },
             {
-              id: 'formNumber',
+              id: 'formNo',
               label: 'Form No.',
               minWidth: '100px',
               align: 'left',
               sticky: true,
             },
             {
-              id: 'inquiryNumber',
+              id: 'inquiryNo',
               label: 'Inquiry No.',
               align: 'left',
               minWidth: '115px',
               isFilter: true,
               filterType: 'string',
             },
-            { id: 'standard.name', label: 'Class', align: 'left', filterType: 'number' },
+            { id: 'studentName', label: 'Class', align: 'left', filterType: 'number' },
             {
               id: 'dobValue',
               label: 'Date of Birth',
@@ -196,7 +198,7 @@ const RegistrationFormScreen = () => {
               isFilter: true,
               filterType: 'date',
             },
-            { id: 'ageValue', label: 'Age', align: 'left' },
+            { id: 'age', label: 'Age', align: 'left' },
             {
               id: 'doiValue',
               label: 'Date of Inquiry',
@@ -206,7 +208,7 @@ const RegistrationFormScreen = () => {
               filterType: 'date',
             },
             {
-              id: 'genderValue',
+              id: 'gender',
               label: 'Gender',
               align: 'left',
               filterType: 'enum',
@@ -227,19 +229,19 @@ const RegistrationFormScreen = () => {
               },
             },
             {
-              id: 'primaryContactNumber',
+              id: 'primaryContactNo',
               label: 'Primary Contact No.',
               minWidth: '180px',
               align: 'left',
             },
             {
-              id: 'secondaryContactNumber',
+              id: 'secondaryContactNo',
               label: 'Secondary Contact No.',
               minWidth: '200px',
               align: 'left',
             },
             {
-              id: 'previousSchoolName',
+              id: 'previousSchool',
               label: 'Previous School',
               minWidth: '170px',
               align: 'left',
@@ -248,7 +250,7 @@ const RegistrationFormScreen = () => {
               },
             },
             {
-              id: 'inquiryPreference.preferenceName',
+              id: 'inquiryPreference',
               label: 'Inquiry Preference',
               minWidth: '170px',
               align: 'left',
