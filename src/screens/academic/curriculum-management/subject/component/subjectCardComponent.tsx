@@ -64,12 +64,12 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   // @param field - The field name to update
   // @param value - The new value to set
   const handleChange = (field: string, value: any) => {
-    onSubjectChange(subject.id, field, value);
+    onSubjectChange(subject.subjectNo, field, value);
   };
 
   useEffect(() => {
     setIsExpanded(subject.isSubjectOpen || false);
-  }, [subject.id, subject.isSubjectOpen]);
+  }, [subject.subjectNo, subject.isSubjectOpen]);
 
   // Get validation error for a specific field
   // @param field - The field name to check for errors
@@ -133,9 +133,9 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             {!isExpanded && subject.subjectCode && (
               <Chip label={`Code : ${subject.subjectCode}`} size="small" variant="outlined" />
             )}
-            {!isExpanded && subject.primaryTeacher?.name && (
+            {!isExpanded && subject.primaryTeacher && (
               <Chip
-                label={`Primary Teacher : ${subject.primaryTeacher?.name}`}
+                label={`Primary Teacher : ${subject.primaryTeacher}`}
                 size="small"
                 variant="outlined"
               />
@@ -168,6 +168,19 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             <Grid size={{ xs: 12, md: 4 }}>
               <FormControl fullWidth error={!!getError('primaryTeacher')}>
                 <Autocomplete
+                  options={teacherOptions}
+                  value={teacherOptions.find((t) => t.id === subject.primaryTeacher) ?? null}
+                  getOptionLabel={(option) => option.name ?? ''}
+                  onChange={(_, newValue) =>
+                    formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '')
+                  }
+                  renderOption={(props, option) => <li {...props}>{option?.name}</li>}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Primary Teacher" size="small" />
+                  )}
+                />
+
+                {/* <Autocomplete
                   options={
                     teacherOptions?.filter(
                       (option) =>
@@ -176,23 +189,24 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                         )
                     ) || []
                   }
-                  getOptionLabel={(option: any) => option.name || ''}
-                  value={subject.primaryTeacher}
+                  getOptionLabel={(option) => option?.name || ''}
+                  value={teacherOptions?.find((t) => t.id === subject.primaryTeacher) || null}
                   onChange={(event, newValue) =>
-                    formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue)
+                    formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id)
                   }
                   disabled={isPublished}
                   renderOption={(props, option: any) => <li {...props}>{option.name || ''}</li>}
-                  renderTags={(value: any) => {
+                  renderTags={(value) => {
                     if (!value) return null;
                     return (
                       <Chip
-                        avatar={<Avatar>{value.label.charAt(0)}</Avatar>}
-                        label={value.label}
+                        avatar={<Avatar>{value.charAt(0)}</Avatar>}
+                        label={value?.name}
                         onDelete={
-                          isPublished ? undefined : () => handleChange('primaryTeacher', '')
+                          isPublished
+                            ? undefined
+                            : () => formik.setFieldValue(`subjects.${index}.primaryTeacher`, '')
                         }
-                        sx={{ ml: 1 }}
                         size="small"
                       />
                     );
@@ -206,7 +220,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                       helperText={getError('primaryTeacher')}
                     />
                   )}
-                />
+                /> */}
               </FormControl>
             </Grid>
 
@@ -215,46 +229,51 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               <FormControl fullWidth error={!!getError('secondaryTeacher')}>
                 <Autocomplete
                   multiple
-                  options={
-                    teacherOptions?.filter((option) => subject.primaryTeacher?.id !== option.id) ||
-                    []
-                  }
                   disableCloseOnSelect
-                  getOptionLabel={(option) => option.name || ''}
-                  value={subject.secondaryTeacher || []}
-                  onChange={(event, newValue) =>
-                    formik.setFieldValue(`subjects.${index}.secondaryTeacher`, newValue)
+                  options={
+                    teacherOptions?.filter((option) => option.id !== subject.primaryTeacher) || []
                   }
-                  isOptionEqualToValue={(option, value) => option.name === value.name}
+                  // UI expects objects, not IDs → convert stored ids to objects
+                  value={
+                    teacherOptions?.filter((t) => subject.secondaryTeacher?.includes(t?.id)) || []
+                  }
+                  getOptionLabel={(option) => option?.name ?? ''}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  onChange={(_, newValue) =>
+                    formik.setFieldValue(
+                      `subjects.${index}.secondaryTeacher`,
+                      newValue.map((item) => item.id)
+                    )
+                  }
                   renderOption={(props, option, { selected }) => (
                     <li {...props}>
                       <Checkbox
                         icon={<CheckBoxOutlineBlankIcon />}
                         checkedIcon={<CheckBoxIcon />}
-                        style={{ marginRight: 8 }}
                         checked={selected}
+                        sx={{ marginRight: 1 }}
                       />
-                      {option.name}
+                      {option?.name}
                     </li>
                   )}
-                  renderTags={(value) => {
-                    if (value.length === 0) return null;
-                    const first = value[0];
-                    const remainingCount = value.length - 1;
+                  renderTags={(values) => {
+                    if (!values || values.length === 0) return null;
+                    const first = values[0];
+                    const remaining = values.length - 1;
+
                     return [
                       <Chip
-                        key={first.name}
-                        avatar={<Avatar>{first?.name?.charAt(0)}</Avatar>}
-                        label={first.name}
-                        sx={{ ml: 1 }}
+                        key={first?.id}
+                        avatar={<Avatar>{first?.name?.[0]}</Avatar>}
+                        label={first?.name}
                         size="small"
-                        variant="soft"
+                        sx={{ ml: 1 }}
                       />,
-                      remainingCount > 0 && (
+                      remaining > 0 && (
                         <TeacherListPopover
-                          key="more-count"
-                          teachers={value.slice(1)}
-                          count={remainingCount}
+                          key="popover"
+                          teachers={values.slice(1)}
+                          count={remaining}
                         />
                       ),
                     ];
@@ -263,7 +282,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     <TextField
                       {...params}
                       label="Secondary Teacher"
-                      value={`${subject.secondaryTeacher?.length || 0} Teachers Selected`}
+                      placeholder={`${subject.secondaryTeacher?.length || 0} Selected`}
                       size="small"
                       error={!!getError('secondaryTeacher')}
                       helperText={getError('secondaryTeacher')}

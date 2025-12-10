@@ -7,7 +7,7 @@
     "subjectType": 1,
     "subjects": [
       {
-        "id": 501,
+        "subjectNo": 501,
         "subjectName": "Computer",
         "subjectCode": "CS-12",
         "primaryTeacher": {
@@ -79,11 +79,11 @@
         "subjectColor": "#4169E1"
       },
       {
-        "id": 701,
+        "subjectNo": 701,
         "subjectName": "Physical Training",
         "subjectCode": "PE-12",
         "primaryTeacher": {
-          "id": 5,
+          "subjectNo": 5,
           "name": "Badgujar Sweta Ramesh",
           "avatarUrl": "/assets/teachers/badgujar.jpg",
           "designation": "Teacher",
@@ -160,7 +160,7 @@
     "subjectType": 1,
     "subjects": [
       {
-        "id": 901,
+        "subjectNo": 901,
         "subjectName": "Hindi",
         "subjectCode": "HIN-12",
         "primaryTeacher": {
@@ -202,7 +202,7 @@
         "subjectColor": "#FF4500"
       },
       {
-        "id": 902,
+        "subjectNo": 902,
         "subjectName": "Sanskrit",
         "subjectCode": "SAN-12",
         "primaryTeacher": {
@@ -253,7 +253,7 @@
     "subjectType": 0,
     "subjects": [
       {
-        "id": 201,
+        "subjectNo": 201,
         "subjectName": "Mathematics",
         "subjectCode": "MATH-10",
         "primaryTeacher": {
@@ -304,7 +304,7 @@
     "subjectType": 0,
     "subjects": [
       {
-        "id": 910,
+        "subjectNo": 910,
         "subjectName": "Science",
         "subjectCode": "SCI-12",
         "primaryTeacher": {
@@ -355,7 +355,7 @@
     "subjectType": 0,
     "subjects": [
       {
-        "id": 911,
+        "subjectNo": 911,
         "subjectName": "Social Science",
         "subjectCode": "SOC-12",
         "primaryTeacher": {
@@ -406,7 +406,7 @@
     "subjectType": 0,
     "subjects": [
       {
-        "id": 912,
+        "subjectNo": 912,
         "subjectName": "Gujarati",
         "subjectCode": "GUJ-12",
         "primaryTeacher": {
@@ -457,7 +457,7 @@
     "subjectType": 0,
     "subjects": [
       {
-        "id": 602,
+        "subjectNo": 602,
         "subjectName": "English",
         "subjectCode": "ENG-12",
         "primaryTeacher": {

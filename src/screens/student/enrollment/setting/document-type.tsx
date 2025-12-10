@@ -67,7 +67,11 @@ const StudentDocumentType = () => {
     maxResultCount: 10,
   });
 
-  const { data: documents, isLoading } = useQueryAndMutation({
+  const {
+    data: documents,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentTypeQuery,
     params: { ...query },
@@ -168,7 +172,7 @@ const StudentDocumentType = () => {
             </Box>
           </>
         }
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         serverSide
         onServerSort={(column, sortData) => {
           setQuery((prev) => ({
@@ -184,11 +188,12 @@ const StudentDocumentType = () => {
           }));
         }}
         columns={[
-          { id: 'name', label: 'Document Name' },
-          { id: 'maxSizeMB', label: 'Document Size' },
+          { id: 'name', label: 'Document Name', align: 'left' },
+          { id: 'maxSizeMB', label: 'Document Size', align: 'left' },
           {
             id: 'acceptedFormats',
             label: 'Accepted Format',
+            align: 'left',
             render(value, row) {
               return value.map((item: number) => DocumentType[item]).join(', ');
             },
@@ -219,7 +224,7 @@ const StudentDocumentType = () => {
             },
           },
         ]}
-        data={documents?.data?.items || []}
+        data={documents?.items || []}
       />{' '}
       <CustomDialog
         open={defaultDocumentTypes?.value}

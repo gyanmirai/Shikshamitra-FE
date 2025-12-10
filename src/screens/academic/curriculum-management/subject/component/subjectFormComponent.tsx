@@ -1,22 +1,29 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Standards, Organization } from 'src/types/school';
+import type { Medium, Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { SubjectType } from 'src/enums/subject-type';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import {
+  useAddSubjectAssignmentMutation,
+  useUpdateSubjectAssignmentMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import SubjectCard from './subjectCardComponent';
 import { validationSchema } from './validationSchema';
@@ -28,15 +35,15 @@ import type { TeacherProfile, ISubjectFormProps, ISubjectFormValues } from './ty
 
 // Enhanced subject options with Core and Elective groups
 const subjectOptions = [
-  { label: 'Mathematics', value: 'Mathematics', type: 'Core', subjectColor: '#DEB887' },
-  { label: 'Science', value: 'Science', type: 'Core', subjectColor: '#00CED1' },
-  { label: 'Social Science', value: 'Social Science', type: 'Core', subjectColor: '#B22222' },
-  { label: 'English', value: 'English', type: 'Core', subjectColor: '#4682B4' },
-  { label: 'Gujarati', value: 'Gujarati', type: 'Core', subjectColor: '#3CB371' },
+  { label: 'Mathematics', value: 'Mathematics', type: 0, subjectColor: '#DEB887' },
+  { label: 'Science', value: 'Science', type: 0, subjectColor: '#00CED1' },
+  { label: 'Social Science', value: 'Social Science', type: 0, subjectColor: '#B22222' },
+  { label: 'English', value: 'English', type: 0, subjectColor: '#4682B4' },
+  { label: 'Gujarati', value: 'Gujarati', type: 0, subjectColor: '#3CB371' },
   {
     label: 'Tech & Fitness Group',
     value: 'Tech & Fitness Group',
-    type: 'Elective',
+    type: 1,
     subjects: [
       { name: 'Computer', code: 'COMP101', subjectColor: '#4169E1' },
       { name: 'Physical Training', code: 'PT101', subjectColor: '#FF69B4' },
@@ -45,7 +52,7 @@ const subjectOptions = [
   {
     label: 'Language Enrichment Group',
     value: 'Language Enrichment Group',
-    type: 'Elective',
+    type: 1,
     subjects: [
       { name: 'Sanskrit', code: 'SNSK101', subjectColor: '#DA70D6' },
       { name: 'Hindi', code: 'HIND101', subjectColor: '#FF4500' },
@@ -55,7 +62,7 @@ const subjectOptions = [
 
 const teacherProfiles: TeacherProfile[] = [
   {
-    id: 1,
+    id: '1',
     name: 'Sharma Riya Kumar',
     avatarUrl: 'https://yourcdn.com/riya.png',
     designation: 'Senior Mathematics Teacher',
@@ -70,7 +77,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['Algebra', 'Geometry'],
   },
   {
-    id: 2,
+    id: '2',
     name: 'Patel Ankit Rajesh',
     avatarUrl: 'https://yourcdn.com/ankit.png',
     designation: 'Science Teacher',
@@ -85,7 +92,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['Physics', 'Chemistry'],
   },
   {
-    id: 3,
+    id: '3',
     name: 'Desai Priya Mahesh',
     avatarUrl: 'https://yourcdn.com/priya.png',
     designation: 'English Lecturer',
@@ -100,7 +107,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['Literature', 'Grammar'],
   },
   {
-    id: 4,
+    id: '4',
     name: 'Singh Rahul Vikram',
     avatarUrl: 'https://yourcdn.com/rahul.png',
     designation: 'History Teacher',
@@ -115,7 +122,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['History', 'Civics'],
   },
   {
-    id: 5,
+    id: '5',
     name: 'Mehta Neha Suresh',
     avatarUrl: 'https://yourcdn.com/neha.png',
     designation: 'Hindi Teacher',
@@ -130,7 +137,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['Hindi'],
   },
   {
-    id: 6,
+    id: '6',
     name: 'Atre Harshita Bhanudas',
     avatarUrl: 'https://yourcdn.com/harshita.png',
     designation: 'Subject Coordinator',
@@ -145,7 +152,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['Mathematics', 'Physics'],
   },
   {
-    id: 7,
+    id: '7',
     name: 'Patel Priyanka Ramesh',
     avatarUrl: 'https://yourcdn.com/priyanka.png',
     designation: 'Science Teacher',
@@ -160,7 +167,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['Biology'],
   },
   {
-    id: 8,
+    id: '8',
     name: 'Kumar Ankit Mahesh',
     avatarUrl: 'https://yourcdn.com/ankitk.png',
     designation: 'Secondary Teacher',
@@ -175,7 +182,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['Science'],
   },
   {
-    id: 9,
+    id: '9',
     name: 'Johnson Robert Alan',
     avatarUrl: 'https://yourcdn.com/robert.png',
     designation: 'English Teacher',
@@ -190,7 +197,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['English Literature'],
   },
   {
-    id: 10,
+    id: '10',
     name: 'Ahir Dharmik Ganesh',
     avatarUrl: 'https://yourcdn.com/dharmik.png',
     designation: 'Computer Teacher',
@@ -205,7 +212,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['Computer Science'],
   },
   {
-    id: 11,
+    id: '11',
     name: 'Atre Prerna Bhanudas',
     avatarUrl: 'https://yourcdn.com/prerna.png',
     designation: 'Primary Class Teacher',
@@ -220,7 +227,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['All Subjects'],
   },
   {
-    id: 12,
+    id: '12',
     name: 'Vadher Yagnik Jethabhai',
     avatarUrl: 'https://yourcdn.com/yagnik.png',
     designation: 'Primary Teacher',
@@ -235,7 +242,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['EVS', 'Gujarati'],
   },
   {
-    id: 13,
+    id: '13',
     name: 'Trivedi Amit Jignesh',
     avatarUrl: 'https://yourcdn.com/amit.png',
     designation: 'Primary Science Teacher',
@@ -250,7 +257,7 @@ const teacherProfiles: TeacherProfile[] = [
     subjects: ['Science'],
   },
   {
-    id: 14,
+    id: '14',
     name: 'Mehta Kavita Mahesh',
     avatarUrl: 'https://yourcdn.com/kavita.png',
     designation: 'Art & Craft Teacher',
@@ -266,7 +273,7 @@ const teacherProfiles: TeacherProfile[] = [
   },
 ];
 
-const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps) => {
+const SubjectForm = ({ onClose, data, isEdit, selectedClass, classId }: ISubjectFormProps) => {
   // State to track if the form is in draft mode - determined by edit status or existing data status
   const [isDraft, setIsDraft] = useState<boolean>(false);
   // Flag to check if the subject is already published
@@ -280,31 +287,62 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
   const [selectedOption, setSelectedOption] = useState<any[]>([]);
   // Flag to prevent infinite update loops
   const [isInitializing, setIsInitializing] = useState(true);
-
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [addSubjectAssignment, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddSubjectAssignmentMutation,
+  });
+  const [updateSubjectAssignment, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateSubjectAssignmentMutation,
+  });
   // Initialize formik form with initial values from data prop or default values
   const formik = useFormik<ISubjectFormValues>({
-    initialValues: getSubjectInitialValues(data, selectedClass),
+    initialValues: getSubjectInitialValues(data, selectedClass, classId),
     validationSchema,
     // Handle form submission
-    onSubmit: (values) => {
-      // Prepare the complete submission data
-      if (data) {
-        shikshaMitraToast.success({
-          message: `${values.subjectName} updated successfully for class ${values.className}`,
-        });
-      } else if (isDraft) {
-        shikshaMitraToast.success({
-          message: `${values.subjectName} subject save as draft successfully for class ${values.className}`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `${values.subjectName} subject published successfully for class ${values.className}`,
-        });
-      }
+    onSubmit: async (values, formikHelpers) => {
+      try {
+        const payload = {
+          academicMediumId: (currentMedium as Medium).id,
+          body: {
+            classId: values.classId,
+            subjectName: values.subjectName,
+            status: values.status,
+            subjectType: values.subjectType,
+            subjects: values.subjects,
+          },
+        };
 
-      // Pass the data to the parent component's handler
-      // onSubmit(submitData);
-      onClose(null, true);
+        if (data) {
+          const updatePayload = {
+            ...payload,
+            id: (data as ISubjectFormValues).id,
+          };
+
+          await updateSubjectAssignment(updatePayload).unwrap();
+
+          shikshaMitraToast.success({
+            message: `"${values.subjectName}" Subject updated successfully for class ${values.classId}`,
+          });
+        } else {
+          await addSubjectAssignment(payload).unwrap();
+
+          if (values.status === 0) {
+            shikshaMitraToast.success({
+              message: `"${values.subjectName}" Subject saved as draft for class ${values.classId}`,
+            });
+          } else {
+            shikshaMitraToast.success({
+              message: `"${values.subjectName}" Subject published successfully for class ${values.classId}`,
+            });
+          }
+        }
+
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to save subject assignment', error);
+      }
     },
   });
 
@@ -331,7 +369,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
       const option = subjectOptions.find(
         (opt) =>
           opt.value === data.subjectName ||
-          (opt.type === 'Elective' &&
+          (opt.type === 1 &&
             opt.subjects?.some((s) => data.subjects?.some((ds) => ds.subjectName === s.name)))
       );
 
@@ -352,7 +390,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
   const handleSubjectChange = (newValue: any[]) => {
     if (!newValue || newValue.length === 0) {
       formik.setFieldValue('subjectName', '');
-      formik.setFieldValue('subjectType', 'Core');
+      formik.setFieldValue('subjectType', SubjectType.Core);
       formik.setFieldValue('subjects', []);
       setSelectedOption([]);
       return;
@@ -365,12 +403,12 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
     const allSubjects: any[] = [];
 
     newValue.forEach((option) => {
-      if (option.type === 'Core') {
+      if (option.type === SubjectType.Core) {
         const newSubject = {
-          id: Date.now() + Math.random(),
-          name: option.value,
+          // name: option.value,
+          subjectNo: Date.now() + Math.random(),
+
           subjectName: option.value,
-          className: formik.values.className || '',
           subjectCode: '',
           primaryTeacher: {},
           secondaryTeacher: [],
@@ -379,16 +417,14 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
           learningGoal: '',
           prerequisites: '',
           subjectColor: option.subjectColor,
-          scheduleDate: null,
-          status: 'Draft',
+          documents: [],
         };
         allSubjects.push(newSubject);
-      } else if (option.type === 'Elective') {
+      } else if (option.type === SubjectType.Elective) {
         const electives = option.subjects.map((subject: any) => ({
-          id: Date.now() + Math.random(),
-          name: subject.name,
+          // name: subject.name,
+          subjectNo: Date.now() + Math.random(),
           subjectName: subject.name,
-          className: formik.values.className || '',
           subjectCode: '',
           primaryTeacher: {},
           secondaryTeacher: [],
@@ -397,8 +433,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
           learningGoal: '',
           prerequisites: '',
           subjectColor: subject.subjectColor,
-          scheduleDate: null,
-          status: 'Draft',
+          documents: [],
         }));
         allSubjects.push(...electives);
       }
@@ -409,18 +444,21 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
     // Store comma-separated subject names
     formik.setFieldValue('subjectName', newValue.map((v) => v.label).join(', '));
     // Set type based on what's selected (you may need custom logic here)
-    const hasCore = newValue.some((v) => v.type === 'Core');
-    formik.setFieldValue('subjectType', hasCore ? 'Core' : 'Elective');
+    const hasCore = newValue.some((v) => v.type === SubjectType.Core);
+    formik.setFieldValue('subjectType', hasCore ? SubjectType.Core : SubjectType.Elective);
   };
 
   // Handle changes to individual subject fields
   const handleSubjectFieldChange = (subjectId: string | number, field: string, value: any) => {
     // Update the subjects array in Formik
     const updatedSubjects = formik.values.subjects?.map((subject) =>
-      subject.id === subjectId ? { ...subject, [field]: value } : subject
+      subject.subjectNo === subjectId ? { ...subject, [field]: value } : subject
     );
     formik.setFieldValue('subjects', updatedSubjects);
   };
+
+  console.log('formik values---', formik.values);
+  console.log('formik erroes---', formik.errors);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -443,11 +481,13 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                   <CustomSelect
                     options={allClass}
                     label="Class *"
-                    value={formik.values.className || selectedClass}
+                    value={formik.values.classId}
                     labelKey="name"
-                    valueKey="name"
+                    valueKey="id"
                     onChange={(val) => {
-                      formik.setFieldValue('className', val);
+                      formik.setFieldValue('classId', val);
+                      const standard = allClass.find((c) => c.id === val);
+                      formik.setFieldValue('className', standard?.name);
 
                       // Update className for all subjects
                       if ((formik?.values?.subjects ?? []).length > 0) {
@@ -491,8 +531,8 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                           {option.label}
                           <Chip
                             size="small"
-                            label={option.type === 'Core' ? 'Core' : 'Elective'}
-                            color={option.type === 'Core' ? 'primary' : 'secondary'}
+                            label={option.type === SubjectType.Core ? 'Core' : 'Elective'}
+                            color={option.type === SubjectType.Core ? 'primary' : 'secondary'}
                             sx={{ ml: 1, height: 20 }}
                           />
                         </Box>
@@ -540,7 +580,7 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                 <Grid size={{ xs: 12 }}>
                   {formik?.values?.subjects?.map((subject, index) => (
                     <SubjectCard
-                      key={subject.id}
+                      key={subject.subjectNo}
                       index={index}
                       formik={formik}
                       subject={subject}
@@ -569,43 +609,47 @@ const SubjectForm = ({ onClose, data, isEdit, selectedClass }: ISubjectFormProps
                 >
                   Cancel
                 </Button>
-                <Button
+                <LoadingButton
+                  size="small"
                   variant="contained"
-                  startIcon={<Iconify icon={GlobalIcons.edit} width={16} height={16} />}
                   onClick={() => {
                     setIsDraft(true);
                     formik.handleSubmit();
                   }}
-                  size="small"
+                  loading={isUpdateLoading}
+                  startIcon={<Iconify icon={GlobalIcons.edit} width={16} height={16} />}
                 >
                   Update
-                </Button>
+                </LoadingButton>
               </>
             ) : (
               <>
-                <Button
+                <LoadingButton
+                  size="small"
+                  type="submit"
                   variant="outlined"
-                  startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                   onClick={() => {
                     setIsDraft(true);
                     formik.handleSubmit();
                   }}
-                  size="small"
+                  loading={isAddLoading}
+                  startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 >
                   Save Draft
-                </Button>
-                <Button
-                  startIcon={<Iconify icon={GlobalIcons.publish} />}
+                </LoadingButton>
+                <LoadingButton
+                  size="small"
                   type="submit"
                   variant="contained"
                   onClick={() => {
                     setIsDraft(false);
                     formik.handleSubmit();
                   }}
-                  size="small"
+                  loading={isAddLoading}
+                  startIcon={<Iconify icon={GlobalIcons.publish} />}
                 >
                   Publish
-                </Button>
+                </LoadingButton>
               </>
             )}
           </DialogActions>

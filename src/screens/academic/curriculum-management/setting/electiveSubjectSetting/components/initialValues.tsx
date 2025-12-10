@@ -1,7 +1,7 @@
 import type { IElectiveSubject } from '../type';
 
 export const getElectiveSubjectInitialValues = (editData?: IElectiveSubject | null) => ({
-  title: editData?.title || '',
-  subjects: editData?.subjects?.length ? editData.subjects : [],
-  subjectColor: editData?.subjectColor || '',
+  name: editData?.name || '',
+  subjectIds: editData?.subjectIds?.length ? editData.subjectIds : [],
+  color: editData?.color || '',
 });

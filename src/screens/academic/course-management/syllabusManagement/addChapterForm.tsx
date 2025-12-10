@@ -18,9 +18,14 @@ import { fileData } from 'src/components/file-thumbnail';
 import { shikshaMitraToast } from 'src/components/toast';
 import { SingleFilePreview } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useAddChapterMutation,
+  useUpdateChapterMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import { getChapterInitialValues } from './initialValues';
 import { getChapterValidationSchema } from './validationSchema';
@@ -44,7 +49,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
 
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const previewDialog = useBoolean();
-
+  const [addChapter, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddChapterMutation,
+  });
+  const [updateChapter, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateChapterMutation,
+  });
   // Initialize formik for form handling
   const formik = useFormik<IChapterFormValues>({
     initialValues: getChapterInitialValues(initialValues),

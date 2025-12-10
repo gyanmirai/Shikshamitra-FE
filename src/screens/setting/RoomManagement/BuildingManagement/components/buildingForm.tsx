@@ -80,7 +80,7 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
         { length: floorsCount },
         (_, index) =>
           currentFloors[index] || {
-            id: index + 1,
+            floorNo: index + 1,
             floorName: '',
             totalRoom: '',
           }
@@ -167,13 +167,16 @@ const BuildingForm = ({ open, onClose, editData }: IBuildingFormProps) => {
                       isFilter={false}
                       columns={[
                         {
-                          id: 'id',
-                          label: 'Sr No.',
-                          render: (_value, row) => row.id, // 1-based serial number
+                          id: 'floorNo',
+                          label: 'Floor No.',
+                          render: (_value, row) => row.floorNo,
+                          isSort: false,
+                          isFilter: false,
                         },
                         {
                           id: 'floorName',
                           label: 'Floor Name',
+                          isSort: false,
                           isFilter: false,
                           render: (_value, row) => {
                             const idx = formik.values.floors.indexOf(row as any);
