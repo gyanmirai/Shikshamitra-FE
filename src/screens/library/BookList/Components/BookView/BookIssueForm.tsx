@@ -8,12 +8,13 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { Stack } from '@mui/system';
 import { useSelector } from 'react-redux';
+import debounce from 'src/utils/debounce';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { DatePicker } from '@mui/x-date-pickers';
 import { ExpandMore } from '@mui/icons-material';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -53,6 +54,23 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
   const [expandedBook, setExpandedBook] = useState(false);
   const [expandedMemberAccordion, setExpandedMemberAccordion] = useState(false);
 
+  // Debounce states
+  const [debouncedAccessionNumber, setDebouncedAccessionNumber] = useState(
+    editData?.accessionNo || ''
+  );
+  const [debouncedMemberId, setDebouncedMemberId] = useState(editData?.memberId || '');
+
+  const formik = useFormik({
+    initialValues: getInitialValues(editData),
+    validationSchema: getIssueBookSchema(currentYear),
+    onSubmit: (values) => {
+      shikshaMitraToast.success({
+        message: `${editData?.book?.title || ''} book issued successfully`,
+      });
+      onClose(null, true);
+    },
+  });
+
   const { data: memberData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllMembersQuery,
@@ -61,6 +79,35 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     type: 'query',
     currentQueryAndMutation: useGetAllCopiesQuery,
   });
+
+  // Accession Number Search Handler
+  const handleAccessionNumberChange = (value: string) => {
+    formik.setFieldValue('accessionNumber', value);
+
+    if (!value) {
+      setSelectedBook(null);
+      setDebouncedAccessionNumber('');
+      return;
+    }
+
+    setLoading(true);
+    debounce(() => {
+      const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
+      const foundBook = foundCopy
+        ? {
+            ...foundCopy,
+            book: books?.find((b) => b.id === foundCopy.bookId),
+          }
+        : null;
+
+      if (foundBook) {
+        setSelectedBook(foundBook);
+      } else {
+        setSelectedBook(null);
+      }
+      setLoading(false);
+    }, 800);
+  };
 
   // Book details using useMemo
   const bookDetails = useMemo(() => {
@@ -139,20 +186,22 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     return details;
   }, [selectedMember]);
 
-  const handleMemberSearch = (value: string) => {
+  // Member ID Search Handler
+  const handleMemberIdChange = (value: string) => {
     formik.setFieldValue('memberId', value);
 
     if (!value) {
       setSelectedMember(null);
+      setDebouncedMemberId('');
       return;
     }
 
     setLoadingMember(true);
-
-    setTimeout(() => {
+    debounce(() => {
+      setDebouncedMemberId(value);
       const searchValue = value.toLowerCase().trim();
 
-      const foundMember = memberData.find(
+      const foundMember = memberData?.find(
         (member: any) =>
           member.memberId?.toLowerCase() === searchValue ||
           member.rollNo?.toLowerCase() === searchValue ||
@@ -168,49 +217,9 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
       } else {
         setSelectedMember(null);
       }
-
       setLoadingMember(false);
-    }, 400);
+    }, 800);
   };
-
-  const formik = useFormik({
-    initialValues: getInitialValues(editData),
-    validationSchema: getIssueBookSchema(currentYear),
-    onSubmit: (values) => {
-      shikshaMitraToast.success({
-        message: `${editData?.book?.title || ''} book issued successfully`,
-      });
-      onClose(null, true);
-    },
-  });
-
-  const handleSearchBook = useCallback(
-    (value: string) => {
-      formik.setFieldValue('accessionNumber', value);
-      if (!value) {
-        setSelectedBook(null);
-        return;
-      }
-      setLoading(true);
-
-      const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
-      const foundBook = foundCopy
-        ? {
-            ...foundCopy,
-            book: books?.find((b) => b.id === foundCopy.bookId),
-          }
-        : null;
-
-      if (foundBook) {
-        setSelectedBook(foundBook);
-        formik.setFieldValue('accessionNumber', foundBook.accessionNo);
-      } else {
-        setSelectedBook(null);
-      }
-      setLoading(false);
-    },
-    [formik, copies, books]
-  );
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -226,13 +235,22 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                   size="small"
                   fullWidth
                   value={formik.values.accessionNumber}
-                  onChange={(e) => handleSearchBook(e.target.value)}
+                  onChange={(e) => handleAccessionNumberChange(e.target.value)}
                   disabled={!!editData}
                   error={!!(formik.touched.accessionNumber && formik.errors.accessionNumber)}
                   helperText={
                     (formik.touched.accessionNumber && formik.errors.accessionNumber) as string
                   }
                   placeholder="Enter Accession No. (e.g., ACC-0001, ACC-0002, ACC-0003)"
+                  InputProps={{
+                    endAdornment: (
+                      <>
+                        {formik.values.accessionNumber !== debouncedAccessionNumber && (
+                          <CircularProgress size={20} />
+                        )}
+                      </>
+                    ),
+                  }}
                 />
               </ShakingTextField>
             </Grid>
@@ -419,7 +437,10 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
               );
             }
 
-            if (formik.values.accessionNumber !== '') {
+            if (
+              formik.values.accessionNumber !== '' &&
+              formik.values.accessionNumber === debouncedAccessionNumber
+            ) {
               return (
                 <Grid size={{ xs: 12 }}>
                   <Box
@@ -447,12 +468,21 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                   variant="outlined"
                   size="small"
                   value={formik.values.memberId}
-                  onChange={(e) => handleMemberSearch(e.target.value)}
+                  onChange={(e) => handleMemberIdChange(e.target.value)}
                   label="Search Member Id *"
                   fullWidth
                   error={!!(formik.touched.memberId && formik.errors.memberId)}
                   helperText={(formik.touched.memberId && formik.errors.memberId) as string}
                   placeholder="Enter Member Id (M001, M002)"
+                  InputProps={{
+                    endAdornment: (
+                      <>
+                        {formik.values.memberId !== debouncedMemberId && (
+                          <CircularProgress size={20} />
+                        )}
+                      </>
+                    ),
+                  }}
                 />
               </ShakingTextField>
             </Grid>
@@ -644,7 +674,7 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
               );
             }
 
-            if (formik.values.memberId !== '') {
+            if (formik.values.memberId !== '' && formik.values.memberId === debouncedMemberId) {
               return (
                 <Grid size={{ xs: 12 }}>
                   <Box

@@ -8,7 +8,7 @@ import AdminKPICards from './kpi-cards';
 import HouseDistribution from './house-distribution';
 
 const AdminDashboard = () => (
-  <Box sx={{ p: 3 }}>
+  <Box sx={{ p: 0 }}>
     <Box sx={{ mb: 4 }}>
       <AdminKPICards />
     </Box>

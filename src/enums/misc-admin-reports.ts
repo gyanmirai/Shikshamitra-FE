@@ -1,9 +1,9 @@
 export enum MiscAdminReportsTitle {
-  AllBatchFeeStatus = 'AllBatchFeeStatus',
-  FRCStatement = 'FRCStatement',
-  PendingFeeAllBatch = 'PendingFeeAllBatch',
-  PendingFeeWithFeeName = 'PendingFeeWithFeeName',
-  CrossOrganizationAdminQueries = 'CrossOrganizationAdminQueries',
+  AllBatchFeeStatus,
+  FRCStatement,
+  PendingFeeAllBatch,
+  PendingFeeWithFeeName,
+  CrossOrganizationAdminQueries,
 }
 
 export const MiscAdminReportsTitleOptions = [

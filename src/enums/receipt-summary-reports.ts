@@ -1,11 +1,11 @@
 export enum ReceiptSummaryReportsTitle {
-  ReceiptSummaryDateWise = 'ReceiptSummaryDateWise',
-  ReceiptSummaryDateAndPayTypeWise = 'ReceiptSummaryDateAndPayTypeWise',
-  ReceiptSummaryDateAndReceiptBookWise = 'ReceiptSummaryDateAndReceiptBookWise',
-  ReceiptSummaryDateAndReceiptBookWithPayType = 'ReceiptSummaryDateAndReceiptBookWithPayType',
-  ReceiptSummaryFeeHeadWise = 'ReceiptSummaryFeeHeadWise',
-  ReceiptSummaryFeeWise = 'ReceiptSummaryFeeWise',
-  ReceiptSummaryOrganizationFeeHeadAndPayTypeWise = 'ReceiptSummaryOrganizationFeeHeadAndPayTypeWise',
+  ReceiptSummaryDateWise,
+  ReceiptSummaryDateAndPayTypeWise,
+  ReceiptSummaryDateAndReceiptBookWise,
+  ReceiptSummaryDateAndReceiptBookWithPayType,
+  ReceiptSummaryFeeHeadWise,
+  ReceiptSummaryFeeWise,
+  ReceiptSummaryOrganizationFeeHeadAndPayTypeWise,
 }
 
 export const ReceiptSummaryReportsTitleOptions = [

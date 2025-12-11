@@ -11,14 +11,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Grid, Card, Button } from '@mui/material';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { MiscAdminReportsTitle } from 'src/enums/misc-admin-reports';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
-import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
-import { MiscAdminReportsTitle, MiscAdminReportsTitleOptions } from 'src/enums/misc-admin-reports';
 
 import { getMiscAdminReportsValidationSchema } from './MiscAdminReportsSchema';
 
@@ -102,7 +101,7 @@ const initialValues = {
 // -------------------------------------------------------------
 // COMPONENT
 // -------------------------------------------------------------
-const MiscAdminReports = () => {
+const MiscAdminReports = ({ report }: { report: any }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Cascading Data
@@ -129,7 +128,11 @@ const MiscAdminReports = () => {
   );
 
   const formik = useFormik({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      report,
+    },
+    enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: (values, { setSubmitting }) => {
       window.alert('Misc Admin Report Generated!');
@@ -140,8 +143,10 @@ const MiscAdminReports = () => {
   // -------------------------------------------------------------
   // DETERMINE SELECTED FIELDS
   // -------------------------------------------------------------
+
   const currentFields = useMemo(() => {
     if ((formik.values.report as unknown) === '' || formik.values.report === null) return [];
+    // Convert enum number → enum string key
     const enumKey = MiscAdminReportsTitle[formik.values.report];
     return MiscAdminReportsFieldsMap[enumKey] || [];
   }, [formik.values.report]);
@@ -325,6 +330,19 @@ const MiscAdminReports = () => {
     getStudents,
   ]);
 
+  useEffect(() => {
+    // Only auto-select students when standards & divisions are selected
+    if (!currentFields.includes('students')) return;
+    if (!formik.values.standards.length || !formik.values.divisions.length) return;
+
+    if (studentList?.length > 0) {
+      formik.setFieldValue('students', ['all', ...studentList.map((s: any) => s.id)]);
+    } else {
+      formik.setFieldValue('students', []);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentList, currentFields, formik.values.standards, formik.values.divisions]);
+
   const showField = (field: string) => currentFields.includes(field);
 
   return (
@@ -333,55 +351,9 @@ const MiscAdminReports = () => {
         <form onSubmit={formik.handleSubmit}>
           <Box p={2}>
             <Grid container spacing={3}>
-              {/* REPORT TITLE */}
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <ShakingTextField
-                  error={(formik.values.report as unknown) === '' && !!formik.touched.report}
-                >
-                  <CustomTooltip
-                    placement="top"
-                    title={MiscAdminReportsTitle[formik.values.report] || ''}
-                  >
-                    <Autocomplete
-                      fullWidth
-                      options={MiscAdminReportsTitleOptions}
-                      getOptionLabel={(option) => option.label}
-                      isOptionEqualToValue={(o, v) => o.name === v.name}
-                      value={
-                        MiscAdminReportsTitleOptions.find(
-                          (opt) => opt.name === formik.values.report
-                        ) || null
-                      }
-                      onChange={(_, newValue) => {
-                        formik.setFieldValue('report', newValue ? newValue.name : '');
-                        // Reset fields on report change
-                        formik.setFieldValue('board', '');
-                        formik.setFieldValue('medium', '');
-                        formik.setFieldValue('organizations', []);
-                        formik.setFieldValue('standards', []);
-                        formik.setFieldValue('divisions', []);
-                        formik.setFieldValue('receiptBooks', []);
-                        formik.setFieldValue('students', []);
-                        formik.setFieldValue('fromDate', null);
-                        formik.setFieldValue('toDate', null);
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          size="small"
-                          label="Report *"
-                          error={Boolean(formik.touched.report && formik.errors.report)}
-                          helperText={formik.touched.report && (formik.errors.report as string)}
-                        />
-                      )}
-                    />
-                  </CustomTooltip>
-                </ShakingTextField>
-              </Grid>
-
               {/* BOARD */}
               {showField('board') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.board && formik.errors.board)}>
                     <CustomSelect
                       label="Board *"
@@ -402,7 +374,7 @@ const MiscAdminReports = () => {
 
               {/* MEDIUM */}
               {showField('medium') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.medium && formik.errors.medium)}>
                     <CustomSelect
                       label="Medium *"
@@ -424,7 +396,7 @@ const MiscAdminReports = () => {
 
               {/* ORGANIZATIONS (Multi) */}
               {showField('organizations') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.organizations && formik.errors.organizations)}
                   >
@@ -466,7 +438,7 @@ const MiscAdminReports = () => {
 
               {/* RECEIPT BOOKS (Multi) */}
               {(showField('receiptBooks') || showField('receiptBooksOptional')) && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.receiptBooks && formik.errors.receiptBooks)}
                   >
@@ -508,7 +480,7 @@ const MiscAdminReports = () => {
 
               {/* STANDARDS (Multi) */}
               {showField('standards') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.standards && formik.errors.standards)}
                   >
@@ -549,7 +521,7 @@ const MiscAdminReports = () => {
 
               {/* DIVISIONS (Multi) */}
               {showField('divisions') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.divisions && formik.errors.divisions)}
                   >
@@ -590,7 +562,7 @@ const MiscAdminReports = () => {
 
               {/* FROM DATE */}
               {(showField('fromDate') || showField('fromDateOptional')) && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.fromDate && formik.errors.fromDate)}
                   >
@@ -616,7 +588,7 @@ const MiscAdminReports = () => {
 
               {/* TO DATE */}
               {(showField('toDate') || showField('toDateOptional')) && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.toDate && formik.errors.toDate)}>
                     <DatePicker
                       label={showField('toDate') ? 'To Date *' : 'To Date'}
@@ -640,7 +612,7 @@ const MiscAdminReports = () => {
 
               {/* STUDENTS (Multi) */}
               {(showField('students') || showField('studentsOptional')) && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.students && formik.errors.students)}
                   >

@@ -36,7 +36,7 @@ export type DashboardLayoutProps = {
 };
 
 export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
-  const { user } = useSelector((state: any) => state.auth);
+  const { mainModuleVisibility } = useSelector((state: any) => state.auth);
   const theme = useTheme();
 
   const mobileNavOpen = useBoolean();
@@ -47,7 +47,7 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
 
   const layoutQuery: Breakpoint = 'lg';
 
-  const navData = data?.nav ?? dashboardNavData(user?.profile?.email === 'ddvs@gmail.com');
+  const navData = data?.nav ?? dashboardNavData(mainModuleVisibility);
 
   const isNavMini = settings.navLayout === 'mini';
 

@@ -74,7 +74,7 @@ export const employeeApi = createApi({
     }),
     updateAdditionalInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee/additional-info/${employeeId}`,
+        url: `/app/employee/additional-details/${employeeId}`,
         method: 'PUT',
         data: body,
       }),
@@ -214,7 +214,7 @@ export const employeeApi = createApi({
     // Access Control & Notifications
     addAccessControl: builder.mutation({
       query: (body) => ({
-        url: '/app/academic-setup-permission/assign-permissions',
+        url: '/app/user-scope/bulk-assign',
         method: 'POST',
         data: body,
       }),
@@ -222,7 +222,7 @@ export const employeeApi = createApi({
     }),
     getAccessControl: builder.query({
       query: (userId) => ({
-        url: `/app/academic-setup-permission/permissions-by-user-id/${userId}`,
+        url: `/app/user-scope/user-scope/${userId}`,
         redirect: 'follow',
       }),
       providesTags: ['Employee'],
