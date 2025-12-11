@@ -11,17 +11,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Grid, Card, Button } from '@mui/material';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
-import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
-import {
-  StudentCentricReportsTitle,
-  StudentCentricReportsTitleOptions,
-} from 'src/enums/student-centric-reports';
+import { StudentCentricReportsTitle } from 'src/enums/student-centric-reports';
 
 import { getStudentCentricReportsValidationSchema } from './StudentCentricReportsSchema';
 
@@ -128,7 +124,7 @@ const initialValues = {
 // -------------------------------------------------------------
 // COMPONENT
 // -------------------------------------------------------------
-const StudentCentricReports = () => {
+const StudentCentricReports = ({ report }: { report: any }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Cascading Data
@@ -148,7 +144,11 @@ const StudentCentricReports = () => {
   );
 
   const formik = useFormik({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      report,
+    },
+    enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: (values, { setSubmitting }) => {
       window.alert('Student Centric Report Generated!');
@@ -281,6 +281,19 @@ const StudentCentricReports = () => {
     ],
     [StudentsData]
   );
+  // Auto-select students when list loads
+  useEffect(() => {
+    // Only auto-select students when standards & divisions are selected
+    if (!currentFields.includes('students')) return;
+    if (!formik.values.standards.length || !formik.values.divisions.length) return;
+
+    if (studentList.length > 0) {
+      formik.setFieldValue('students', ['all', ...studentList.map((s) => s.id)]);
+    } else {
+      formik.setFieldValue('students', []);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentList, currentFields, formik.values.standards, formik.values.divisions]);
 
   // -------------------------------------------------------------
   // STANDARDS (Multi) → DIVISIONS
@@ -352,54 +365,9 @@ const StudentCentricReports = () => {
         <form onSubmit={formik.handleSubmit}>
           <Box p={2}>
             <Grid container spacing={3}>
-              {/* REPORT TITLE */}
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <ShakingTextField
-                  error={(formik.values.report as unknown) === '' && !!formik.touched.report}
-                >
-                  <CustomTooltip
-                    placement="top"
-                    title={StudentCentricReportsTitle[formik.values.report] || ''}
-                  >
-                    <Autocomplete
-                      fullWidth
-                      options={StudentCentricReportsTitleOptions}
-                      getOptionLabel={(option) => option.label}
-                      isOptionEqualToValue={(o, v) => o.name === v.name}
-                      value={
-                        StudentCentricReportsTitleOptions.find(
-                          (opt) => opt.name === formik.values.report
-                        ) || null
-                      }
-                      onChange={(_, newValue) => {
-                        formik.setFieldValue('report', newValue ? newValue.name : '');
-                        // Reset fields on report change
-                        formik.setFieldValue('board', '');
-                        formik.setFieldValue('medium', '');
-                        formik.setFieldValue('organizations', []);
-                        formik.setFieldValue('standards', []);
-                        formik.setFieldValue('divisions', []);
-                        formik.setFieldValue('students', []);
-                        formik.setFieldValue('fromDate', null);
-                        formik.setFieldValue('toDate', null);
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          size="small"
-                          label="Report *"
-                          error={Boolean(formik.touched.report && formik.errors.report)}
-                          helperText={formik.touched.report && (formik.errors.report as string)}
-                        />
-                      )}
-                    />
-                  </CustomTooltip>
-                </ShakingTextField>
-              </Grid>
-
               {/* BOARD */}
               {showField('board') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.board && formik.errors.board)}>
                     <CustomSelect
                       label="Board *"
@@ -420,7 +388,7 @@ const StudentCentricReports = () => {
 
               {/* MEDIUM */}
               {showField('medium') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.medium && formik.errors.medium)}>
                     <CustomSelect
                       label="Medium *"
@@ -442,7 +410,7 @@ const StudentCentricReports = () => {
 
               {/* ORGANIZATIONS (Multi) */}
               {showField('organizations') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.organizations && formik.errors.organizations)}
                   >
@@ -484,7 +452,7 @@ const StudentCentricReports = () => {
 
               {/* STANDARDS (Multi) */}
               {showField('standards') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.standards && formik.errors.standards)}
                   >
@@ -525,7 +493,7 @@ const StudentCentricReports = () => {
 
               {/* DIVISIONS (Multi) */}
               {showField('divisions') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.divisions && formik.errors.divisions)}
                   >
@@ -566,7 +534,7 @@ const StudentCentricReports = () => {
 
               {/* FROM DATE */}
               {showField('fromDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.fromDate && formik.errors.fromDate)}
                   >
@@ -592,7 +560,7 @@ const StudentCentricReports = () => {
 
               {/* TO DATE */}
               {showField('toDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.toDate && formik.errors.toDate)}>
                     <DatePicker
                       label="To Date *"
@@ -616,7 +584,7 @@ const StudentCentricReports = () => {
 
               {/* STUDENTS (Multi) */}
               {(showField('students') || showField('studentsOptional')) && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.students && formik.errors.students)}
                   >

@@ -147,7 +147,6 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       setAllDivision(divisionsWithAll);
     }
   }, [values.class, allClass]); // Only depend on class value and allClass
-  console.log('formik---', formik.values);
   // Fetch students when class and divisions are selected
   useEffect(() => {
     if (values.class && values.division) {

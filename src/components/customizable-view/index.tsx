@@ -42,7 +42,7 @@ const CustomizableView = ({ sections, setSections, dashBoardSections }: any) => 
                     {...p.dragHandleProps}
                   >
                     <Paper
-                      elevation={snapshot.isDragging ? 6 : 1}
+                      // elevation={snapshot.isDragging ? 6 : 1}
                       sx={{
                         cursor: 'grab',
                         userSelect: 'none',

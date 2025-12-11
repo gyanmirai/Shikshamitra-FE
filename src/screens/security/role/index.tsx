@@ -2,13 +2,14 @@
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CancelButton from 'src/components/cancel-button';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -22,6 +23,12 @@ import {
   useUpdatePermissionMutation,
 } from 'src/redux/permission/permissionApi';
 import {
+  useGetRolesQuery,
+  useAddRoleMutation,
+  useDeleteRoleMutation,
+  useUpdateRoleMutation,
+} from 'src/redux/role/roleApi';
+import {
   Box,
   Button,
   Divider,
@@ -30,13 +37,8 @@ import {
   TextField,
   Typography,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
-import {
-  useGetRolesQuery,
-  useAddRoleMutation,
-  useDeleteRoleMutation,
-  useUpdateRoleMutation,
-} from 'src/redux/role/roleApi';
 
 import Visibility from './visibility';
 import Permission from './permission';
@@ -176,6 +178,7 @@ const RoleScreen = () => {
                   <MenuList>
                     <MenuItem
                       onClick={() => {
+                        setEditData(data);
                         permissionDialog.onTrue();
                         pop.onClose();
                       }}
@@ -215,7 +218,7 @@ const RoleScreen = () => {
       <CustomDialog
         title={
           <Box display="flex" alignItems="center" gap={1}>
-            Permissions
+            Permissions of {editData?.name}
             <CustomTooltip
               arrow
               placement="right"
@@ -225,35 +228,60 @@ const RoleScreen = () => {
             </CustomTooltip>{' '}
           </Box>
         }
-        handleClose={permissionDialog.onFalse}
+        handleClose={() => {
+          permissionDialog.onFalse();
+          setEditData(null);
+        }}
         open={permissionDialog.value}
         fullScreen
       >
-        <Permission />
+        <PermissionForm
+          handleClose={() => permissionDialog.onFalse()}
+          editData={editData}
+          providerName="R"
+        />
       </CustomDialog>
     </Box>
   );
 };
 export default RoleScreen;
 
+export function extractGrantedPermissions(groups: any): { name: string; isGranted: boolean }[] {
+  if (!Array.isArray(groups)) return [];
+
+  return groups.flatMap((group: any) =>
+    group.permissions.map((permission: any) => ({
+      name: permission.name,
+      isGranted: permission.isGranted,
+    }))
+  );
+}
+
 // Component for handling role creation and editing form
 const RoleForm = ({ handleClose, editData }: any) => {
   // State to store all permissions data
-  const [allPermissions] = useState([]);
+
+  const [visibility, setVisibility] = useState<{ name: string; isGranted: boolean }[]>([]);
 
   // Query hook to fetch permission data based on role name
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: _permissionData } = useQueryAndMutation({
+  const { data: _permissionData, isLoading: isPermissionLoading } = useQueryAndMutation({
     type: 'query',
-    options: {
-      refetchOnMountOrArgChange: true,
-    },
     currentQueryAndMutation: useGetPermissionsQuery,
-    params: editData ? editData.name : 'abc-xyz',
+    params: { providerName: 'R', providerKey: editData?.name },
+    options: {
+      skip: !editData,
+    },
   });
 
+  useEffect(() => {
+    if (_permissionData?.groups?.length > 0) {
+      setVisibility(extractGrantedPermissions(_permissionData?.groups));
+    }
+  }, [_permissionData]);
+
   // Mutation hook to update permissions
-  const [updatePermission] = useQueryAndMutation({
+  const [updatePermission, { isLoading: isUpdatePermissionLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdatePermissionMutation,
   });
@@ -272,10 +300,6 @@ const RoleForm = ({ handleClose, editData }: any) => {
   const [updateRole, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateRoleMutation,
-    popupConfig: {
-      successMessage: 'Role Updated successfully',
-      success: true,
-    },
   });
 
   // Formik instance for form handling and validation
@@ -305,11 +329,21 @@ const RoleForm = ({ handleClose, editData }: any) => {
           });
         }
         await updatePermission({
-          role: values.role,
+          providerName: 'R',
+          providerKey: values.role,
           data: {
-            permissions: allPermissions.map((i: any) => ({ name: i.name, isGranted: i.isGranted })),
+            permissions: visibility,
           },
         });
+        if (editData) {
+          shikshaMitraToast.success({
+            message: 'Updated role and its visibility successfully',
+          });
+        } else {
+          shikshaMitraToast.success({
+            message: 'Created role and its visibility successfully',
+          });
+        }
         handleClose();
       } catch (error) {
         console.error('Role operation failed:', error);
@@ -352,7 +386,9 @@ const RoleForm = ({ handleClose, editData }: any) => {
         <Divider sx={{ mt: 1 }} />
         {/* <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} /> */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 2 }}>
-          <Typography variant="subtitle1">Set Module Visibility</Typography>
+          <Typography color="primary.main" variant="subtitle1">
+            Set Module Visibility
+          </Typography>
           <Button
             variant="outlined"
             size="small"
@@ -361,19 +397,84 @@ const RoleForm = ({ handleClose, editData }: any) => {
               // setVisibilityOpen(true);
             }}
           >
-            Set Visibility By MIRU
+            MIRU Visibility
           </Button>
         </Box>
-        <Visibility />
+        {isPermissionLoading ? (
+          <Box
+            sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Visibility visibility={visibility} setVisibility={setVisibility} />
+        )}
       </DialogScrollContent>
       <DialogActions>
         <CancelButton onClick={handleClose} />
         <LoadingButton
           size="small"
           variant="contained"
-          loading={isLoading || isUpdateLoading}
+          loading={isLoading || isUpdateLoading || isUpdatePermissionLoading}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={() => formik.handleSubmit()}
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
+    </>
+  );
+};
+
+export const PermissionForm = ({
+  handleClose,
+  editData,
+  providerName,
+}: {
+  handleClose: () => void;
+  editData: any;
+  providerName: string;
+}) => {
+  const [permissioNData, setPermissionData] = useState<{ name: string; isGranted: boolean }[]>([]);
+
+  // Mutation hook to update permissions
+  const [updatePermission, { isLoading: isUpdatePermissionLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdatePermissionMutation,
+  });
+  return (
+    <>
+      <DialogScrollContent
+        sx={{ display: 'flex', flexDirection: 'column', minHeight: '0', height: '100%', p: 0 }}
+        scrollBarProps={{ sx: { overflow: 'hidden' } }}
+      >
+        <Permission
+          editData={editData}
+          permissionData={permissioNData}
+          setPermissionData={setPermissionData}
+          providerName={providerName}
+        />
+      </DialogScrollContent>
+      <DialogActions>
+        <CancelButton onClick={handleClose} />
+        <LoadingButton
+          size="small"
+          variant="contained"
+          loading={isUpdatePermissionLoading}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          onClick={async () => {
+            await updatePermission({
+              providerName,
+              providerKey: providerName === 'R' ? editData?.name : editData?.id,
+              data: {
+                permissions: permissioNData,
+              },
+            });
+            shikshaMitraToast.success({
+              message: 'Updated Permissions successfully',
+            });
+            handleClose();
+          }}
         >
           Submit
         </LoadingButton>

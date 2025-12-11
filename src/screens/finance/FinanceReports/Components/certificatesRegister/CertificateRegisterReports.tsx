@@ -10,13 +10,12 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Grid, Card, Button } from '@mui/material';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
-import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
 import { CertificateRegisterReportTitle } from 'src/enums/certificate-register-reports';
 
 import { getCertificateRegisterValidationSchema } from './certificateRegisterValidation';
@@ -96,7 +95,7 @@ const initialValues = {
 // -------------------------------------------------------------
 // COMPONENT
 // -------------------------------------------------------------
-const CertificateRegisterReports = () => {
+const CertificateRegisterReports = ({ report }: { report: any }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Cascading Data
@@ -116,7 +115,11 @@ const CertificateRegisterReports = () => {
   );
 
   const formik = useFormik({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      report,
+    },
+    enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: (values, { setSubmitting }) => {
       window.alert('Report Generated Successfully!');
@@ -289,16 +292,17 @@ const CertificateRegisterReports = () => {
   // AUTO-SELECT STUDENTS
   // -------------------------------------------------------------
   useEffect(() => {
+    // Only auto-select students when standards & divisions are selected
     if (!currentFields.includes('students')) return;
+    if (!formik.values.standards.length || !formik.values.divisions.length) return;
 
     if (tableData.length > 0) {
-      const allIds = tableData.map((s: any) => s.id);
-      formik.setFieldValue('students', ['all', ...allIds]);
+      formik.setFieldValue('students', ['all', ...tableData.map((s: any) => s.id)]);
     } else {
       formik.setFieldValue('students', []);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tableData, currentFields]);
+  }, [tableData, currentFields, formik.values.standards, formik.values.divisions]);
 
   const showField = (field: string) => currentFields.includes(field);
 
@@ -315,46 +319,9 @@ const CertificateRegisterReports = () => {
         <form onSubmit={formik.handleSubmit}>
           <Box p={2}>
             <Grid container spacing={3}>
-              {/* REPORT DROPDOWN */}
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <ShakingTextField
-                  error={(formik.values.report as unknown) === '' && !!formik.touched.report}
-                >
-                  <CustomTooltip placement="top" title={formik.values.report}>
-                    <Autocomplete
-                      options={Object.values(CertificateRegisterReportTitle)}
-                      getOptionLabel={(opt) => opt}
-                      value={formik.values.report || null}
-                      onChange={(e, val) => {
-                        formik.setFieldValue('report', val || '');
-                        // reset all other fields
-                        formik.setFieldValue('board', '');
-                        formik.setFieldValue('medium', '');
-                        formik.setFieldValue('organizations', []);
-                        formik.setFieldValue('standards', []);
-                        formik.setFieldValue('divisions', []);
-                        formik.setFieldValue('students', []);
-                        formik.setFieldValue('fromDate', null);
-                        formik.setFieldValue('toDate', null);
-                      }}
-                      renderInput={(p) => (
-                        <TextField
-                          {...p}
-                          size="small"
-                          fullWidth
-                          label="Report *"
-                          error={formik.touched.report && Boolean(formik.errors.report)}
-                          helperText={formik.touched.report && formik.errors.report}
-                        />
-                      )}
-                    />
-                  </CustomTooltip>
-                </ShakingTextField>
-              </Grid>
-
               {/* BOARD */}
               {showField('board') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.board && Boolean(formik.errors.board)}>
                     <CustomSelect
                       label="Board *"
@@ -379,7 +346,7 @@ const CertificateRegisterReports = () => {
 
               {/* MEDIUM */}
               {showField('medium') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.medium && Boolean(formik.errors.medium)}>
                     <CustomSelect
                       label="Medium *"
@@ -403,7 +370,7 @@ const CertificateRegisterReports = () => {
 
               {/* ORGANIZATIONS (Multi) */}
               {showField('organizations') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.organizations && Boolean(formik.errors.organizations)}
                   >
@@ -447,7 +414,7 @@ const CertificateRegisterReports = () => {
 
               {/* CLASS (Standards) */}
               {showField('standards') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.standards && Boolean(formik.errors.standards)}
                   >
@@ -490,7 +457,7 @@ const CertificateRegisterReports = () => {
 
               {/* DIVISIONS */}
               {showField('divisions') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.divisions && Boolean(formik.errors.divisions)}
                   >
@@ -531,7 +498,7 @@ const CertificateRegisterReports = () => {
 
               {/* STUDENTS */}
               {showField('students') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.students && Boolean(formik.errors.students)}
                   >
@@ -579,7 +546,7 @@ const CertificateRegisterReports = () => {
 
               {/* FROM DATE */}
               {showField('fromDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.fromDate && Boolean(formik.errors.fromDate)}
                   >
@@ -606,7 +573,7 @@ const CertificateRegisterReports = () => {
 
               {/* TO DATE */}
               {showField('toDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.toDate && Boolean(formik.errors.toDate)}>
                     <DatePicker
                       label={getDateLabel('to')}

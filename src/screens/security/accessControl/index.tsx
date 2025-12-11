@@ -96,24 +96,24 @@ export const AccessControlForm = ({
 
   // Effect to populate form with existing access control data
   useEffect(() => {
-    if (accessControl) {
+    if (accessControl?.effectiveScope) {
       const data = {
-        boards: accessControl.educationBoards?.map((board: Board) => board.id),
-        mediums: accessControl.educationMediums?.map((medium: Medium) => medium.id),
-        organizations: accessControl.educationMediumStages?.map((org: Organization) => org.id),
-        standards: accessControl.standards?.map((std: Standards) => std.id),
-        divisions: accessControl.divisions?.map((div: Division) => div.id),
+        boards: accessControl.effectiveScope.boardIds,
+        mediums: accessControl.effectiveScope.mediumIds,
+        organizations: accessControl.effectiveScope.mediumStageIds,
+        standards: accessControl.effectiveScope.standardIds,
+        divisions: accessControl.effectiveScope.divisionIds,
       };
       setCheckedItem(data);
     }
-  }, [accessControl]);
+  }, [accessControl?.effectiveScope]);
 
   // Handler for form submission
   const handleSubmit = async () => {
     try {
       await addAccessControl({
         academicYearIds: [currentYear.id],
-        userId: user.id,
+        userIds: [user.id],
         educationBoardIds: checkedItem.boards,
         educationMediumIds: checkedItem.mediums,
         educationMediumStageIds: checkedItem.organizations,
@@ -291,6 +291,8 @@ const BoardScreenStep = ({
   // Get current academic year from global state
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
+  console.log(currentYear, 'currentYear');
+
   // Query hook for fetching boards data
   const { data: boards, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -340,7 +342,7 @@ const BoardScreenStep = ({
       })),
     [allBoards]
   );
-
+  console.log(nodeData, 'nodeData');
   // Helper function to find all child nodes
   const findAllChildren = (node: any, step = 0): any[] => {
     let childIds: string[] = step > 0 ? [node] : [];
@@ -376,36 +378,39 @@ const BoardScreenStep = ({
   // Handler for node selection/deselection
   const handleNodeSelect = (node: any) => {
     const { id, type } = node;
-    const updatedValues = { ...checkedItem };
+
     const childIds = findAllChildren(node);
     const parentIds = findParents(nodeData, id);
-    const isCurrentlyChecked = updatedValues[type as keyof typeof checkedItem]?.includes(id);
+
+    const isCurrentlyChecked = checkedItem[type as keyof typeof checkedItem]?.includes(id);
+
+    const updatedValues = { ...checkedItem };
 
     if (!isCurrentlyChecked) {
-      updatedValues[type as keyof typeof checkedItem]?.push(id);
+      updatedValues[type as keyof typeof checkedItem] = [
+        ...(updatedValues[type as keyof typeof checkedItem] || []),
+        id,
+      ];
+
       parentIds?.forEach((parent) => {
-        const parentType = `${parent.type}` as keyof typeof checkedItem;
-        if (updatedValues[parentType]) {
-          updatedValues[parentType].push(parent.id);
-        }
+        const parentType = parent.type as keyof typeof checkedItem;
+        updatedValues[parentType] = [...(updatedValues[parentType] || []), parent.id];
       });
-      childIds.forEach((ids) => {
-        if (updatedValues[ids.type as keyof typeof checkedItem]) {
-          updatedValues[ids.type as keyof typeof checkedItem]?.push(ids?.id);
-        }
+
+      childIds.forEach((child) => {
+        const childType = child.type as keyof typeof checkedItem;
+        updatedValues[childType] = [...(updatedValues[childType] || []), child.id];
       });
+
       setCheckedItem(updatedValues);
     } else {
-      updatedValues[type as keyof typeof checkedItem] = updatedValues[
-        type as keyof typeof checkedItem
-      ].filter((ids) => ids !== id);
+      updatedValues[type as keyof typeof checkedItem] =
+        updatedValues[type as keyof typeof checkedItem]?.filter((ids) => ids !== id) || [];
 
-      childIds.forEach((ids) => {
-        if (updatedValues[ids.type as keyof typeof checkedItem]) {
-          updatedValues[ids.type as keyof typeof checkedItem] = updatedValues[
-            ids.type as keyof typeof checkedItem
-          ].filter((item) => item !== ids.id);
-        }
+      childIds.forEach((child) => {
+        const childType = child.type as keyof typeof checkedItem;
+        updatedValues[childType] =
+          updatedValues[childType]?.filter((item) => item !== child.id) || [];
       });
 
       setCheckedItem(updatedValues);

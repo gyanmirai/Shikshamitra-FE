@@ -13,6 +13,7 @@ import { GenderType } from 'src/enums/gender';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { getRoleColor } from 'src/utils/role-colors';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useSearchParam } from 'src/hooks/use-search-param';
@@ -24,6 +25,7 @@ import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { RoleColorIndicator } from 'src/components/role-color/RoleColorIndicator';
 import { EmployeeGroupType, EmployeeGroupTypeFilter } from 'src/enums/employee-group';
 import {
   EmployeeStatusType,
@@ -210,6 +212,20 @@ const HrEmployee = () => {
             tableId="employee-table"
             columns={[
               {
+                id: 'roleValue',
+                label: 'Role',
+                align: 'left',
+                sticky: true,
+                render(value, row) {
+                  return (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <RoleColorIndicator color={getRoleColor(value)} />
+                      <Label variant="soft">{value}</Label>
+                    </Box>
+                  );
+                },
+              },
+              {
                 id: 'fullName',
                 label: 'Name',
                 minWidth: '12vw',
@@ -273,14 +289,6 @@ const HrEmployee = () => {
               },
               { id: 'shiftName', label: 'Shift', align: 'left', minWidth: '12vw' },
               { id: 'organization', label: 'Organization', align: 'left' },
-              {
-                id: 'roleValue',
-                label: 'Role',
-                align: 'left',
-                render(value, row) {
-                  return <Label variant="soft">{value}</Label>;
-                },
-              },
               {
                 id: 'statusValue',
                 label: 'Status',
@@ -381,6 +389,7 @@ const SalaryStructure = ({ handleClose }: { handleClose: () => void }) => {
         Yup.object({
           name: Yup.string().required('Name is required'),
           type: Yup.string().required('Type is required'),
+          // eslint-disable-next-line func-names
           amount: Yup.string().test('amount', 'Amount is required', function (value) {
             // eslint-disable-next-line react/no-this-in-sfc
             if (this.parent.type === 'fixed') {
@@ -394,6 +403,7 @@ const SalaryStructure = ({ handleClose }: { handleClose: () => void }) => {
         Yup.object({
           name: Yup.string().required('Name is required'),
           type: Yup.string().required('Type is required'),
+          // eslint-disable-next-line func-names
           amount: Yup.string().test('amount', 'Amount is required', function (value) {
             // eslint-disable-next-line react/no-this-in-sfc
             if (this.parent.type === 'fixed') {

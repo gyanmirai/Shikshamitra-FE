@@ -254,6 +254,7 @@ export const payrollValidationSchema = Yup.object({
     Yup.object({
       name: Yup.string().required('Name is required'),
       type: Yup.string().required('Type is required'),
+      // eslint-disable-next-line func-names
       amount: Yup.string().test('amount', 'Amount is required', function () {
         if (this.parent.type === 'fixed') {
           return false;
@@ -266,6 +267,7 @@ export const payrollValidationSchema = Yup.object({
     Yup.object({
       name: Yup.string().required('Name is required'),
       type: Yup.string().required('Type is required'),
+      // eslint-disable-next-line func-names
       amount: Yup.string().test('amount', 'Amount is required', function () {
         if (this.parent.type === 'fixed') {
           return false;

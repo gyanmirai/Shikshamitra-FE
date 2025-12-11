@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Avatar, Typography } from '@mui/material';
 
+import { SubjectColorIndicator } from '../subject-color/SubejctColor';
+
 interface LabelItem {
   name: string;
   color: 'success' | 'warning' | 'error' | 'info' | 'primary' | 'secondary' | 'default';
@@ -62,7 +64,7 @@ export const DashboardCard = ({
       {/* Title and Value - Middle */}
       <Box sx={{ flex: 1 }}>
         <Typography sx={{ fontWeight: 700 }}>
-          {title} / {value}
+          {title} : {value}
         </Typography>
         {description && (
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
@@ -73,14 +75,7 @@ export const DashboardCard = ({
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 1 }}>
             {labels.map((label, index) => (
               <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Box
-                  sx={{
-                    width: 3,
-                    height: 20,
-                    bgcolor: `${label.color}.main`,
-                    borderRadius: 0.5,
-                  }}
-                />
+                <SubjectColorIndicator color={`${label.color}.main`} />
                 <Typography sx={{ fontWeight: 300, fontSize: 14 }}>{label.name}</Typography>
               </Box>
             ))}

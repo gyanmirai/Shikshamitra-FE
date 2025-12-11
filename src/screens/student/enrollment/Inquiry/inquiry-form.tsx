@@ -5,7 +5,6 @@ import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
-// FormHelperText is already imported via the destructured import from @mui/material below
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -20,7 +19,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { FollowUpStatusType } from 'src/enums/inquiry-status-type';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
@@ -123,35 +121,34 @@ const InquiryForm = ({
    * @returns Promise<void>
    */
   const onSubmit = async (values: IInquiryFormValues) => {
+    console.log(values, 'values');
     try {
       if (editData) {
         await updateInquiry({
           id: editData.id,
           body: {
-            firstName: values.firstName,
-            middleName: values.middleName,
-            lastName: values.lastName,
-            formNumber: values.formNo,
-            previousSchoolName: values.previousSchool,
+            firstName: values.firstName || undefined,
+            middleName: values.middleName || undefined,
+            lastName: values.lastName || undefined,
+            previousSchool: values.previousSchool || undefined,
             dateOfBirth: dateConvertor(values.dateOfBirth?.format(dateFormat) || '') || '',
             dateOfInquiry: dateConvertor(values.dateOfInquiry?.format(dateFormat) || '') || '',
-            genderType: values.gender,
-            primaryContactNumber: values.primaryContactNumber,
-            secondaryContactNumber: values.secondaryContactNumber,
-            city: values?.city?.name,
-            state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-            country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-            pinCode: values.pinCode,
-            addressLine1: values.addressLine1,
-            addressLine2: values.addressLine2,
-            addressLine3: values.addressLine3,
-            inquiryStatusType: 0,
-            educationMediumId: values.medium,
-            academicYearId: values.academicYear,
-            standardId: values.class,
-            inquiryPreferenceId: values.inquiryPreferences,
-            email: values.email,
-            educationBoardId: values.board,
+            gender: +values.gender,
+            primaryContactNo: values.primaryContactNumber || undefined,
+            secondaryContactNo: values.secondaryContactNumber || undefined,
+            city: values?.city?.name || undefined,
+            state: values?.state?.name || undefined,
+            country: values?.country?.name || undefined,
+            pinCode: values.pinCode || undefined,
+            address1: values.addressLine1 || undefined,
+            address2: values.addressLine2 || undefined,
+            address3: values.addressLine3 || undefined,
+            academicMediumId: values.medium || undefined,
+            // academicYearId: values.academicYear || undefined,
+            standardId: values.class || undefined,
+            inquiryPreferenceId: values.inquiryPreferences || undefined,
+            // educationBoardId: values.board || undefined,
+            email: values.email || undefined,
           },
         }).unwrap();
         shikshaMitraToast.success({
@@ -159,30 +156,28 @@ const InquiryForm = ({
         });
       } else {
         await addInquiry({
-          firstName: values.firstName,
-          middleName: values.middleName,
-          lastName: values.lastName,
-          formNumber: values.formNo,
-          previousSchoolName: values.previousSchool,
+          firstName: values.firstName || undefined,
+          middleName: values.middleName || undefined,
+          lastName: values.lastName || undefined,
+          previousSchool: values.previousSchool || undefined,
           dateOfBirth: dateConvertor(values.dateOfBirth?.format(dateFormat) || '') || '',
           dateOfInquiry: dateConvertor(values.dateOfInquiry?.format(dateFormat) || '') || '',
-          genderType: values.gender,
-          primaryContactNumber: values.primaryContactNumber,
-          secondaryContactNumber: values.secondaryContactNumber,
-          city: values?.city?.name,
-          state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
-          country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-          pinCode: values.pinCode,
-          addressLine1: values.addressLine1,
-          addressLine2: values.addressLine2,
-          addressLine3: values.addressLine3,
-          inquiryStatusType: FollowUpStatusType.Pending,
-          educationMediumId: values.medium,
-          academicYearId: values.academicYear,
-          standardId: values.class,
-          inquiryPreferenceId: values.inquiryPreferences,
-          educationBoardId: values.board,
-          email: values.email,
+          gender: +values.gender,
+          primaryContactNo: values.primaryContactNumber || undefined,
+          secondaryContactNo: values.secondaryContactNumber || undefined,
+          city: values?.city?.name || undefined,
+          state: values?.state?.name || undefined,
+          country: values?.country?.name || undefined,
+          pinCode: values.pinCode || undefined,
+          address1: values.addressLine1 || undefined,
+          address2: values.addressLine2 || undefined,
+          address3: values.addressLine3 || undefined,
+          academicMediumId: values.medium || undefined,
+          // academicYearId: values.academicYear || undefined,
+          standardId: values.class || undefined,
+          inquiryPreferenceId: values.inquiryPreferences || undefined,
+          // educationBoardId: values.board || undefined,
+          email: values.email || undefined,
         }).unwrap();
         shikshaMitraToast.success({
           message: `Inquiry for ${values.firstName} ${values.lastName} added successfully for ${selectedAcademicYear}`,

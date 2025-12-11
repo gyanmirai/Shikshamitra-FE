@@ -10,13 +10,12 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Grid, Card, Button } from '@mui/material';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
-import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
 import { ReceiptSummaryAdvancedReportTitle } from 'src/enums/receipt-summary-advanced-reports';
 
 import { getReceiptSummaryAdvancedValidationSchema } from './receiptSummaryAdvancedValidation';
@@ -117,7 +116,11 @@ const initialValues = {
 // -------------------------------------------------------------
 // COMPONENT
 // -------------------------------------------------------------
-const ReceiptSummaryAdvancedReports = () => {
+const ReceiptSummaryAdvancedReports = ({
+  report,
+}: {
+  report: ReceiptSummaryAdvancedReportTitle;
+}) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Cascading Data
@@ -156,7 +159,11 @@ const ReceiptSummaryAdvancedReports = () => {
   );
 
   const formik = useFormik({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      report,
+    },
+    enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: (values, { setSubmitting }) => {
       window.alert('Report Generated Successfully!');
@@ -164,6 +171,9 @@ const ReceiptSummaryAdvancedReports = () => {
     },
   });
 
+  // -------------------------------------------------------------
+  // DETERMINE SELECTED FIELDS
+  // -------------------------------------------------------------
   // -------------------------------------------------------------
   // DETERMINE SELECTED FIELDS
   // -------------------------------------------------------------
@@ -344,6 +354,20 @@ const ReceiptSummaryAdvancedReports = () => {
     [StudentsData?.items]
   );
 
+  // Auto-select students when list loads
+  useEffect(() => {
+    // Only auto-select students when standards & divisions are selected
+    if (!currentFields.includes('students')) return;
+    if (!formik.values.standards.length || !formik.values.divisions.length) return;
+
+    if (tableData.length > 0) {
+      formik.setFieldValue('students', ['all', ...tableData.map((s: any) => s.id)]);
+    } else {
+      formik.setFieldValue('students', []);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tableData, currentFields, formik.values.standards, formik.values.divisions]);
+
   const showField = (field: string) => currentFields.includes(field);
 
   return (
@@ -353,7 +377,7 @@ const ReceiptSummaryAdvancedReports = () => {
           <Box p={2}>
             <Grid container spacing={3}>
               {/* REPORT DROPDOWN */}
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              {/* <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <ShakingTextField
                   error={(formik.values.report as unknown) === '' && !!formik.touched.report}
                 >
@@ -390,11 +414,11 @@ const ReceiptSummaryAdvancedReports = () => {
                     />
                   </CustomTooltip>
                 </ShakingTextField>
-              </Grid>
+              </Grid> */}
 
               {/* BOARD */}
               {showField('board') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.board && Boolean(formik.errors.board)}>
                     <CustomSelect
                       label="Board *"
@@ -419,7 +443,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* MEDIUM */}
               {showField('medium') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.medium && Boolean(formik.errors.medium)}>
                     <CustomSelect
                       label="Medium *"
@@ -444,7 +468,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* ORGANIZATIONS (Multi) */}
               {showField('organizations') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.organizations && Boolean(formik.errors.organizations)}
                   >
@@ -485,7 +509,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* ORGANIZATION (Single) */}
               {showField('organization_single') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={
                       formik.touched.organization_single &&
@@ -515,7 +539,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* CLASS (Standards) */}
               {showField('standards') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.standards && Boolean(formik.errors.standards)}
                   >
@@ -557,7 +581,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* DIVISIONS */}
               {showField('divisions') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.divisions && Boolean(formik.errors.divisions)}
                   >
@@ -596,7 +620,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* RECEIPT BOOKS (Multi) */}
               {showField('receiptBooks') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.receiptBooks && Boolean(formik.errors.receiptBooks)}
                   >
@@ -637,7 +661,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* RECEIPT BOOK (Single) */}
               {showField('receiptBook_single') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={
                       formik.touched.receiptBook_single && Boolean(formik.errors.receiptBook_single)
@@ -666,7 +690,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* PAY TYPES */}
               {showField('payTypes') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.payTypes && Boolean(formik.errors.payTypes)}
                   >
@@ -704,7 +728,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* FEE HEADS */}
               {showField('feeHeads') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.feeHeads && Boolean(formik.errors.feeHeads)}
                   >
@@ -742,7 +766,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* STUDENTS */}
               {showField('students') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.students && Boolean(formik.errors.students)}
                   >
@@ -790,7 +814,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* FROM DATE */}
               {showField('fromDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={formik.touched.fromDate && Boolean(formik.errors.fromDate)}
                   >
@@ -817,7 +841,7 @@ const ReceiptSummaryAdvancedReports = () => {
 
               {/* TO DATE */}
               {showField('toDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={formik.touched.toDate && Boolean(formik.errors.toDate)}>
                     <DatePicker
                       label="To Date *"

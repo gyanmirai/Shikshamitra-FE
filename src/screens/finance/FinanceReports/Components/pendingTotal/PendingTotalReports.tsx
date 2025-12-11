@@ -10,17 +10,13 @@ import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Grid, Card, Button } from '@mui/material';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { PendingTotalReportsTitle } from 'src/enums/pending-total-reports';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
-import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
-import {
-  PendingTotalReportsTitle,
-  PendingTotalReportsTitleOptions,
-} from 'src/enums/pending-total-reports';
 
 import { getPendingTotalReportsValidationSchema } from './PendingTotalReportsSchema';
 
@@ -98,7 +94,7 @@ const initialValues = {
 // -------------------------------------------------------------
 // COMPONENT
 // -------------------------------------------------------------
-const PendingTotalReports = () => {
+const PendingTotalReports = ({ report }: { report: any }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Cascading Data
@@ -118,7 +114,11 @@ const PendingTotalReports = () => {
   );
 
   const formik = useFormik({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      report,
+    },
+    enableReinitialize: true,
     validationSchema: dynamicSchema,
     onSubmit: (values, { setSubmitting }) => {
       window.alert('Pending Total Report Generated!');
@@ -200,7 +200,13 @@ const PendingTotalReports = () => {
     // 6. Set all standards
     setAllStandards(uniqueStandards);
 
-    // 7. Reset divisions
+    // If using Single Standard, clear if not in list
+    if (formik.values.standard_single) {
+      const exists = uniqueStandards.find((s) => s.id === formik.values.standard_single);
+      if (!exists) formik.setFieldValue('standard_single', '');
+    }
+
+    // Reset divisions
     formik.setFieldValue('divisions', []);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -315,53 +321,9 @@ const PendingTotalReports = () => {
         <form onSubmit={formik.handleSubmit}>
           <Box p={2}>
             <Grid container spacing={3}>
-              {/* REPORT TITLE */}
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <ShakingTextField
-                  error={(formik.values.report as unknown) === '' && !!formik.touched.report}
-                >
-                  <CustomTooltip
-                    placement="top"
-                    title={PendingTotalReportsTitle[formik.values.report] || ''}
-                  >
-                    <Autocomplete
-                      fullWidth
-                      options={PendingTotalReportsTitleOptions}
-                      getOptionLabel={(option) => option.label}
-                      isOptionEqualToValue={(o, v) => o.name === v.name}
-                      value={
-                        PendingTotalReportsTitleOptions.find(
-                          (opt) => opt.name === formik.values.report
-                        ) || null
-                      }
-                      onChange={(_, newValue) => {
-                        formik.setFieldValue('report', newValue ? newValue.name : '');
-                        // Reset fields on report change
-                        formik.setFieldValue('board', '');
-                        formik.setFieldValue('medium', '');
-                        formik.setFieldValue('organizations', []);
-                        formik.setFieldValue('standard_single', '');
-                        formik.setFieldValue('divisions', []);
-                        formik.setFieldValue('students', []);
-                        formik.setFieldValue('toDate', null);
-                      }}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          size="small"
-                          label="Report *"
-                          error={Boolean(formik.touched.report && formik.errors.report)}
-                          helperText={formik.touched.report && (formik.errors.report as string)}
-                        />
-                      )}
-                    />
-                  </CustomTooltip>
-                </ShakingTextField>
-              </Grid>
-
               {/* BOARD */}
               {showField('board') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.board && formik.errors.board)}>
                     <CustomSelect
                       label="Board *"
@@ -382,7 +344,7 @@ const PendingTotalReports = () => {
 
               {/* MEDIUM */}
               {showField('medium') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.medium && formik.errors.medium)}>
                     <CustomSelect
                       label="Medium *"
@@ -404,7 +366,7 @@ const PendingTotalReports = () => {
 
               {/* ORGANIZATIONS (Multi) */}
               {showField('organizations') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.organizations && formik.errors.organizations)}
                   >
@@ -446,7 +408,7 @@ const PendingTotalReports = () => {
 
               {/* STANDARD (Single) */}
               {showField('standard_single') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.standard_single && formik.errors.standard_single)}
                   >
@@ -473,7 +435,7 @@ const PendingTotalReports = () => {
 
               {/* DIVISIONS (Multi) */}
               {showField('divisions') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.divisions && formik.errors.divisions)}
                   >
@@ -496,7 +458,7 @@ const PendingTotalReports = () => {
 
               {/* TO DATE */}
               {showField('toDate') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField error={Boolean(formik.touched.toDate && formik.errors.toDate)}>
                     <DatePicker
                       label="To Date"
@@ -520,7 +482,7 @@ const PendingTotalReports = () => {
 
               {/* STUDENTS (Multi) */}
               {showField('students') && (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <ShakingTextField
                     error={Boolean(formik.touched.students && formik.errors.students)}
                   >
@@ -531,7 +493,34 @@ const PendingTotalReports = () => {
                       getOptionValue={(o) => o.id}
                       disabled={!formik.values.divisions.length}
                       value={formik.values.students}
-                      onChange={(val) => formik.setFieldValue('students', val)}
+                      onChange={(selectedValues) => {
+                        const allActualStudents = studentList || [];
+                        const allRealIds = allActualStudents.map((s: any) => s.id);
+                        const hasAllInSelection = selectedValues.includes('all');
+                        const wasAllPreviouslySelected = (
+                          formik.values.students as string[]
+                        ).includes('all');
+                        let finalValues: string[] = [];
+
+                        if (hasAllInSelection && !wasAllPreviouslySelected) {
+                          finalValues = ['all', ...allRealIds];
+                        } else if (!hasAllInSelection && wasAllPreviouslySelected) {
+                          finalValues = [];
+                        } else if (hasAllInSelection && wasAllPreviouslySelected) {
+                          finalValues = selectedValues.filter((id) => id !== 'all');
+                        } else {
+                          const selectedRealIds = selectedValues.filter((id) => id !== 'all');
+                          if (
+                            selectedRealIds.length === allRealIds.length &&
+                            allRealIds.every((id: any) => selectedRealIds.includes(id))
+                          ) {
+                            finalValues = ['all', ...allRealIds];
+                          } else {
+                            finalValues = selectedRealIds;
+                          }
+                        }
+                        formik.setFieldValue('students', finalValues);
+                      }}
                       error={formik.touched.students && Boolean(formik.errors.students)}
                       helperText={(formik.touched.students && formik.errors.students) as string}
                     />
