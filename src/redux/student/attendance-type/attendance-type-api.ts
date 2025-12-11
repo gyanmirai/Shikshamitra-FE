@@ -10,14 +10,14 @@ export const StudentAttendanceTypeApi = createApi({
   endpoints: (builder) => ({
     getStudentAttendanceType: builder.query({
       query: () => ({
-        url: '/app/attendance-type',
+        url: '/students/attendance/settings/leave-types',
         method: 'GET',
       }),
       providesTags: ['Student-Attendance-Type'],
     }),
     addStudentAttendanceType: builder.mutation({
       query: (data) => ({
-        url: '/app/attendance-type',
+        url: '/students/attendance/settings/leave-types',
         method: 'POST',
         data,
       }),
@@ -25,7 +25,7 @@ export const StudentAttendanceTypeApi = createApi({
     }),
     updateStudentAttendanceType: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/attendance-type/${id}`,
+        url: `/students/attendance/settings/leave-types/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -33,7 +33,7 @@ export const StudentAttendanceTypeApi = createApi({
     }),
     deleteStudentAttendanceType: builder.mutation({
       query: (id) => ({
-        url: `/app/attendance-type/${id}`,
+        url: `/students/attendance/settings/leave-types/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Student-Attendance-Type'],

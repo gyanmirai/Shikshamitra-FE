@@ -23,7 +23,16 @@ import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Stack,
+  Button,
+  Switch,
+  TextField,
+  Typography,
+  DialogActions,
+  FormControlLabel,
+} from '@mui/material';
 import {
   useGetStudentAttendanceTypeQuery,
   useAddStudentAttendanceTypeMutation,
@@ -126,7 +135,7 @@ const AttendanceType = () => {
         isLoading={isLoading}
         columns={[
           {
-            id: 'type',
+            id: 'leaveTypeName',
             label: 'Type',
             render(value, row) {
               return (
@@ -137,6 +146,13 @@ const AttendanceType = () => {
                   </Typography>
                 </Box>
               );
+            },
+          },
+          {
+            id: 'isActive',
+            label: 'Active',
+            render(values) {
+              return <Typography variant="caption">{values ? 'Yes' : 'No'}</Typography>;
             },
           },
           {
@@ -177,7 +193,7 @@ const AttendanceType = () => {
           <>
             Are you sure you want to delete Leave Type{' '}
             <Box component="span" fontWeight="bold" color="text.primary">
-              {editData?.type}
+              {editData?.leaveTypeName}
             </Box>
             ?
           </>
@@ -191,7 +207,7 @@ const AttendanceType = () => {
             onClick={async () => {
               await deleteAttendanceType(editData?.id);
               shikshaMitraToast.success({
-                message: `${editData?.type} leave type deleted sucessfully`,
+                message: `${editData?.leaveTypeName} leave type deleted sucessfully`,
               });
               confirm.onFalse();
               setEditData(null);
@@ -260,8 +276,9 @@ export const AttendanceTypeForm = ({
     handleBlur,
   } = useFormik({
     initialValues: {
-      type: editData?.type || '',
+      type: editData?.leaveTypeName || '',
       color: editData?.color || '',
+      isActive: editData?.isActive || false,
     },
     validationSchema: Yup.object({
       type: Yup.string().required('Leave Type is required'),
@@ -272,11 +289,19 @@ export const AttendanceTypeForm = ({
         if (editData) {
           await updateAttendanceType({
             id: editData.id,
-            body: value,
+            body: {
+              leaveTypeName: value.type,
+              color: value.color,
+              isActive: value.isActive,
+            },
           });
           shikshaMitraToast.success({ message: `${value.type} leave type updated sucessfully` });
         } else {
-          await addAttendanceType(value);
+          await addAttendanceType({
+            leaveTypeName: value.type,
+            color: value.color,
+            isActive: value.isActive,
+          });
           shikshaMitraToast.success({ message: `${value.type} leave type created sucessfully` });
         }
         handleClose(null, true);
@@ -321,6 +346,19 @@ export const AttendanceTypeForm = ({
                   setFieldValue('color', color);
                 }}
                 initialColor={values.color}
+              />
+            </ShakingTextField>
+            <ShakingTextField error={touched.isActive && Boolean(errors.isActive)}>
+              <FormControlLabel
+                label="Active"
+                control={
+                  <Switch
+                    checked={values.isActive}
+                    onChange={(e) => {
+                      setFieldValue('isActive', e.target.checked);
+                    }}
+                  />
+                }
               />
             </ShakingTextField>
           </Stack>

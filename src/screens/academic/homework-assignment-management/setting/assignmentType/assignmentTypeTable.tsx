@@ -39,15 +39,7 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({ data, onDele
         ),
       },
     ]}
-    data={[
-      { assignmentTypeName: 'Essay' },
-      { assignmentTypeName: 'Research Paper' },
-      { assignmentTypeName: 'Presentation' },
-      { assignmentTypeName: 'Lab Report' },
-      { assignmentTypeName: 'Case Study' },
-      { assignmentTypeName: 'Project Work' },
-      { assignmentTypeName: 'Reflection Paper' },
-    ]}
+    data={data}
   />
 );
 
