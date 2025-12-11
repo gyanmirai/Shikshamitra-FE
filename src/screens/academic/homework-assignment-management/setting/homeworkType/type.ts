@@ -1,4 +1,5 @@
 export interface IHomeworkType {
+  id: any;
   homeworkTypeName: string;
 }
 

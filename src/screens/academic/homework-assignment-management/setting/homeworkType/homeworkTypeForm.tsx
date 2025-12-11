@@ -1,8 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -10,10 +13,19 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { Stack, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddHomeworkTypeMutation,
+  useUpdateHomeworkTypeMutation,
+} from 'src/redux/academics/homeworkAndAssignment/homeworkTypeApi';
 
 import type { IHomeworkTypeFormProps } from './type';
 
 const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, editData }) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  const [addHomeworkType] = useAddHomeworkTypeMutation();
+  const [updateHomeworkType] = useUpdateHomeworkTypeMutation();
+
   const formik = useFormik({
     initialValues: {
       homeworkTypeName: editData?.homeworkTypeName || '',
@@ -22,6 +34,18 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
       homeworkTypeName: Yup.string().required('Name is required'),
     }),
     onSubmit: (values) => {
+      if (editData) {
+        updateHomeworkType({
+          id: editData.id,
+          name: values.homeworkTypeName,
+          academicMediumId: currentMedium?.id,
+        });
+      } else {
+        addHomeworkType({
+          name: values.homeworkTypeName,
+          academicMediumId: currentMedium?.id,
+        });
+      }
       shikshaMitraToast.success({
         message: `${values.homeworkTypeName} Homework Type ${editData ? 'updated' : 'added'} successfully`,
       });
