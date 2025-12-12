@@ -105,6 +105,7 @@ const VehicleManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }
                 variant="contained"
                 size="small"
                 onClick={() => setOpen(true)}
+                sx={{ px: '32px' }}
               >
                 Register Vehicle
               </Button>

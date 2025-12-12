@@ -14,8 +14,8 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Card, Button, Typography } from '@mui/material';
 import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -289,7 +289,7 @@ const InquiryScreen = () => {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {ConfirmDialog}
       <CustomBreadcrumbs
         heading="Inquiry"
@@ -309,6 +309,7 @@ const InquiryScreen = () => {
               startIcon={inquiryDialog.value ? <Iconify icon="eva:arrow-back-fill" /> : <Add />}
               variant="contained"
               onClick={inquiryDialog.onTrue}
+              sx={{ px: '32px' }}
             >
               Inquiry
             </Button>
@@ -317,7 +318,9 @@ const InquiryScreen = () => {
       />
 
       {inquiryDialog.value ? (
-        <InquiryForm handleClose={handleClose} editData={editData} />
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-10)', minHeight: 0 }}>
+          <InquiryForm handleClose={handleClose} editData={editData} />
+        </Card>
       ) : (
         <InquiryTable
           inquiryDialog={inquiryDialog}
@@ -329,7 +332,6 @@ const InquiryScreen = () => {
       )}
 
       <CustomDialog
-        maxWidth="sm"
         open={followUpDialog.value}
         handleClose={() => {
           setEditData(null);

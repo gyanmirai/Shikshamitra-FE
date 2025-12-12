@@ -83,6 +83,7 @@ const FeeHeadCreation = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Fee Head
           </Button>

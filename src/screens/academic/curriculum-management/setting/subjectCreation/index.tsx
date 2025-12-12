@@ -71,7 +71,7 @@ const SubjectCreation = () => {
         ]}
         action={
           <Button
-            sx={{ width: '160px' }}
+            sx={{ px: '32px' }}
             startIcon={<Add />}
             variant="contained"
             onClick={addSubjectDialog.onTrue}

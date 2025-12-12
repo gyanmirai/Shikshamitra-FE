@@ -77,6 +77,7 @@ const EarningComponent = () => {
             startIcon={<Add />}
             size="small"
             onClick={isEarningComponentOpen.onTrue}
+            sx={{ px: '32px' }}
           >
             Earning Component
           </Button>

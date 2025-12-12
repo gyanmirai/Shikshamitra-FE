@@ -102,11 +102,17 @@ const BiometricIntegrationScreen = () => {
             size="small"
             startIcon={<Iconify icon="eva:download-fill" />}
             onClick={handleDownloadTemplate}
+            sx={{ px: '32px' }}
           >
             Download Sample File
           </LoadingButton>
 
-          <Button variant="contained" size="small" startIcon={<Iconify icon="eva:upload-fill" />}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Iconify icon="eva:upload-fill" />}
+            sx={{ px: '32px' }}
+          >
             Upload File
           </Button>
         </Box>

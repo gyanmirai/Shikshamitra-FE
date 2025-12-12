@@ -123,14 +123,14 @@ const financeModule = {
           //   // ...
           // ],
         },
-//         {
-//           title: 'Fee Refund',
-//           path: financePaths.feeRefund,
-//           _action: 'fee-refund',
-//           shortcutKey: 'Alt+F+4',
-//           shortcutKeyName: 'Alt+F+4',
-//           permissionName: financePermissions.feeRefund,
-//         },
+        //         {
+        //           title: 'Fee Refund',
+        //           path: financePaths.feeRefund,
+        //           _action: 'fee-refund',
+        //           shortcutKey: 'Alt+F+4',
+        //           shortcutKeyName: 'Alt+F+4',
+        //           permissionName: financePermissions.feeRefund,
+        //         },
         {
           title: 'Concession',
           path: financePaths.concession,
@@ -186,14 +186,14 @@ const financeModule = {
         //   ],
         // },
         // ...
-//         {
-//           title: 'Budgeting',
-//           path: financePaths.budgeting,
-//           _action: 'finance-budget',
-//           shortcutKey: 'Alt+F+10',
-//           shortcutKeyName: 'Alt+F+10',
-//           permissionName: financePermissions.budgeting,
-//         },
+        //         {
+        //           title: 'Budgeting',
+        //           path: financePaths.budgeting,
+        //           _action: 'finance-budget',
+        //           shortcutKey: 'Alt+F+10',
+        //           shortcutKeyName: 'Alt+F+10',
+        //           permissionName: financePermissions.budgeting,
+        //         },
         {
           title: 'Reports',
           path: financePaths.reports,

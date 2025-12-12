@@ -147,9 +147,7 @@ const QuizTable = ({
           onClick={() => {
             setOpenDialog(true);
           }}
-          sx={{
-            mt: 2,
-          }}
+          sx={{ px: '32px' }}
         >
           Quiz
         </Button>

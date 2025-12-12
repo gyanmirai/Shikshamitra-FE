@@ -206,6 +206,7 @@ const LeaveHistory = (props: any) => {
           onClick={() => {
             modal?.onTrue?.();
           }}
+          sx={{ px: '32px' }}
         >
           Leave Request
         </Button>

@@ -75,6 +75,7 @@ const BookCategoryCreation = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Book Category
           </Button>

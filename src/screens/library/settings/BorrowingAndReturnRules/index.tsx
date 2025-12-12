@@ -169,6 +169,7 @@ const BorrowingReturnRules = () => {
               onClick={() => resetDialog.onTrue()}
               disabled={!hasChanges || saveLoading}
               size="small"
+              sx={{ px: '32px' }}
             >
               Reset
             </Button>
@@ -179,6 +180,7 @@ const BorrowingReturnRules = () => {
               onClick={handleSaveClick}
               disabled={!hasChanges}
               size="small"
+              sx={{ px: '32px' }}
             >
               Save
             </LoadingButton>
