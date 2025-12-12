@@ -18,12 +18,14 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { Box, Chip, Stack, Avatar, Button, Divider, TextField, Typography } from '@mui/material';
-import { useGetAttendanceByFilterQuery } from 'src/redux/student/take-attendance/take-attendace-api';
+import {
+  useMarkAttendanceMutation,
+  useGetAttendanceByFilterQuery,
+} from 'src/redux/student/take-attendance/take-attendace-api';
 
 const TakeAttendanceScreen = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -48,7 +50,11 @@ const TakeAttendanceScreen = () => {
   // check if the attendance is saved
   const isSaved = useBoolean();
 
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium: medium } = useSelector(
+    (state: RootState) => state.globalState
+  );
+
+  const [markAttendance] = useMarkAttendanceMutation();
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
@@ -69,19 +75,26 @@ const TakeAttendanceScreen = () => {
 
   const handleSave = async () => {
     try {
-      // const response = await fillStudentAttendance({
-      //   attendanceDate: dateConvertor(dayjs(date).format(dateFormat), true), // Passing date as a query parameter
-      //   data: studentData.map((student: any) => ({
-      //     studentId: student?.student?.id,
-      //     isPresent: student.isPresent,
-      //     remarks: student.remarks,
-      //   })),
-      // }).unwrap();
+      const payload = {
+        academicYearId: currentYear?.id,
+        standardId: classes,
+        divisionId: division,
+        date: dayjs(date).toISOString(),
+        entries: studentData.map((student: any) => ({
+          studentId: student.student.id,
+          status: student.isPresent ? 1 : 0,
+          remarks: student.remarks || '',
+        })),
+      };
+
+      await markAttendance(payload).unwrap();
+
       shikshaMitraToast.success({
-        message: `Attendance saved successfully of ${date?.format('DD-MM-YYYY')}`,
+        message: `Attendance saved successfully for ${date?.format('DD-MM-YYYY')}`,
       });
     } catch (error) {
-      console.error('Error saving attendance:', error);
+      console.error('Error marking attendance:', error);
+      shikshaMitraToast.error({ message: 'Failed to save attendance.' });
     }
   };
 
@@ -89,10 +102,10 @@ const TakeAttendanceScreen = () => {
     type: 'query',
     currentQueryAndMutation: useGetAttendanceByFilterQuery,
     params: {
-      attendanceDate: dateConvertor(dayjs(date).format(dateFormat), true),
-      educationMediumStageId: organization,
-      standardId: classes,
-      divisionId: division,
+      AcademicYearId: currentYear?.id,
+      StandardId: classes,
+      DivisionId: division,
+      Date: dayjs(date).toISOString(),
     },
     options: { skip: !(date && organization && classes && division) },
   });
@@ -136,7 +149,7 @@ const TakeAttendanceScreen = () => {
         heading="Mark Attendance"
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Attendance', href: '/student/attendance/dashboard/' },
+          { name: 'Attendance', href: '' },
           { name: 'Mark Attendance' },
         ]}
         sx={{ mb: 1 }}

@@ -5,6 +5,7 @@ export interface IAttendanceRule {
   lastModificationTime: string;
   lastModifierId: string;
   tenantId: string;
-  type: string;
+  leaveTypeName: string;
   color: string;
+  isActive: boolean;
 }
