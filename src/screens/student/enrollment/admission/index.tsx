@@ -520,7 +520,7 @@ const AdmissionScreen = () => {
         }
       >
         <RegisterForm
-          editData={editData}
+          editData={editData as any}
           handleClose={() => {
             setEditData(null);
             setOpen(false);
@@ -608,7 +608,7 @@ const AdmissionScreen = () => {
             setEditData(null);
             followUpDialog.onFalse();
           }}
-          selectedStudent={editData}
+          selectedStudent={editData as any}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
           isStatus={false}
         />
