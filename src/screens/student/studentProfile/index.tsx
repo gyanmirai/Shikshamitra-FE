@@ -38,7 +38,7 @@ import type { IInquiryData } from '../enrollment/Inquiry';
 
 export interface StudentTabsComponentType {
   tabs?: UseTabsReturn;
-  student?: IInquiryData;
+  student?: any;
   refetch?: any;
 }
 
