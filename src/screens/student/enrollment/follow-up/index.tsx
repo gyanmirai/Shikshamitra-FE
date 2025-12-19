@@ -57,6 +57,8 @@ import {
 } from '@mui/lab';
 
 import type { IInquiryData } from '../Inquiry';
+import type { IInquiryResponse } from '../Inquiry/type';
+import type { IGeneralInformationResponse } from '../register/type';
 
 const FollowUpScreen: React.FC = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
@@ -180,7 +182,7 @@ export const CommunicationForm = ({
   handleCloseDialog: () => void;
   studentEnrollmentId: string;
   isStatus?: boolean;
-  selectedStudent?: IInquiryData | null;
+  selectedStudent?: IInquiryResponse | IGeneralInformationResponse | null;
 }) => {
   const [addFollowUp, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',

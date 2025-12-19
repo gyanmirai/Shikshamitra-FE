@@ -34,17 +34,24 @@ import {
   useDeleteEmployeeLeavePolicyMutation,
 } from 'src/redux/employee/employeeApi';
 
-interface ILeavePolicy {
+export interface ILeavePolicy {
   id: string;
   creationTime: string;
   creatorId: string;
   lastModificationTime: string;
   lastModifierId: string;
+  isDeleted: boolean;
+  deleterId: string;
+  deletionTime: string;
+  policyName: string;
   leaveType: string;
-  leaveDays: number;
+  maximumDaysPerYear: number;
+  paidType: string;
   carryForward: boolean;
-  accrualRate: number;
-  color: string;
+  encashable: boolean;
+  requiresApproval: boolean;
+  description: string;
+  isActive: boolean;
 }
 
 const LeaveType = () => {
@@ -83,10 +90,10 @@ const LeaveType = () => {
     () =>
       leavePolicyData?.items.map((item: ILeavePolicy) => ({
         ...item,
-        leaveDays: item.leaveDays.toString(),
+        leaveDays: item?.maximumDaysPerYear?.toString(),
         isCarryForward: item.carryForward ? 'Yes' : 'No',
-        accrualRateString: AccurateRateType[item.accrualRate],
-        color: item.color,
+        // accrualRateString: AccurateRateType[item.accrualRate],
+        // color: item.color,
       })) || [],
     [leavePolicyData?.items]
   );

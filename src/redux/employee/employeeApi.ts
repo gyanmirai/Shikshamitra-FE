@@ -96,6 +96,14 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee'],
     }),
+    update: builder.mutation({
+      query: ({ employeeId, body }) => ({
+        url: `/app/employee/bank-details/${employeeId}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
     updateEmployeeStatus: builder.mutation({
       query: ({ id, employeeStatusType }) => ({
         url: `/app/employee/employee-status/${id}?employeeStatusType=${employeeStatusType}`,

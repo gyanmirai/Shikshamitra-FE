@@ -22,7 +22,7 @@ export interface IInquiryFormValues {
   country: { name: ICountry['name']; isoCode: ICountry['isoCode'] };
   city: { name: ICity['name'] };
   state: { name: IState['name']; isoCode: IState['isoCode'] };
-  pinCode: number | null;
+  pinCode: string | null;
   medium: string;
   formNo: string | undefined;
   board: string;
@@ -31,4 +31,52 @@ export interface IInquiryFormValues {
   addressLine3: string;
   email: string;
   // village: string;
+}
+
+export interface IInquiryResponse {
+  studentId: string;
+  inquiryNo: string;
+  studentName: string;
+  standard: string;
+  standardId: string;
+  academicMediumId: string;
+  academicMediumName: string;
+  academicBoardId: string;
+  academicBoardName: string;
+  academicYearId: string;
+  academicYearName: string;
+  dateOfBirth: string;
+  age: string;
+  dateOfInquiry: string;
+  gender: GenderType;
+  address: string;
+  primaryContactNo: string;
+  secondaryContactNo: string;
+  previousSchool: string;
+  inquiryPreference: string;
+  inquiryPreferenceId: string;
+  nextReminderDate: string;
+
+  formNo: string;
+
+  firstName: string;
+  middleName: string;
+  lastName: string;
+
+  country: {
+    name: string;
+    isoCode: string;
+  };
+  city: string;
+  state: {
+    name: string;
+    isoCode: string;
+  };
+  pinCode: string;
+
+  address1: string;
+  address2: string;
+  address3: string;
+
+  email: string;
 }

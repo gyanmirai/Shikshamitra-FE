@@ -25,13 +25,14 @@ import { CommunicationForm } from '../follow-up';
 import RegisterForm from '../register/register-form';
 
 import type { IInquiryData } from '../Inquiry';
+import type { IGeneralInformationResponse } from '../register/type';
 
 const RegistrationFormScreen = () => {
   // Dialog control for registration form
   const registerFormDialog = useBoolean();
   const dispatch = useDispatch();
   // State to store inquiry data for editing
-  const [editData, setEditData] = useState<IInquiryData | null>(null);
+  const [editData, setEditData] = useState<IGeneralInformationResponse | null>(null);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // Dialog control for follow-up form
@@ -68,13 +69,13 @@ const RegistrationFormScreen = () => {
   // - Maps gender type enum to display value
   const tableData = useMemo(
     () =>
-      inquiryFormData?.items?.map((item: IInquiryData) => ({
+      inquiryFormData?.data?.items?.map((item: IInquiryData) => ({
         ...item,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
 
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
       })),
-    [inquiryFormData?.items]
+    [inquiryFormData?.data?.items]
   );
 
   /**
@@ -189,7 +190,7 @@ const RegistrationFormScreen = () => {
               isFilter: true,
               filterType: 'string',
             },
-            { id: 'studentName', label: 'Class', align: 'left', filterType: 'number' },
+            { id: 'standard', label: 'Class', align: 'left', filterType: 'number' },
             {
               id: 'dobValue',
               label: 'Date of Birth',
@@ -272,7 +273,7 @@ const RegistrationFormScreen = () => {
                           onClick={async (e) => {
                             // dialog.onTrue();
                             // setMoveId(row.id);
-                            setEditData(row as IInquiryData);
+                            setEditData(row as IGeneralInformationResponse);
                             registerFormDialog.onTrue();
                             popover.onClose();
                           }}
@@ -282,7 +283,7 @@ const RegistrationFormScreen = () => {
                         </MenuItem>
                         <MenuItem
                           onClick={(e) => {
-                            setEditData(row as IInquiryData);
+                            setEditData(row as IGeneralInformationResponse);
                             followUpDialog.onTrue();
                             e.stopPropagation();
                             popover.onClose();
@@ -331,7 +332,7 @@ const RegistrationFormScreen = () => {
             followUpDialog.onFalse();
           }}
           selectedStudent={editData}
-          studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+          studentEnrollmentId={(editData as IGeneralInformationResponse)?.studentId || ''}
         />{' '}
       </CustomDialog>
     </Box>

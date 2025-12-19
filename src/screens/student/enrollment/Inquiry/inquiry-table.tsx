@@ -8,9 +8,9 @@ import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { GenderOptions } from 'src/enums/gender';
 import calculateAge from 'src/utils/calculate-age';
 import { Box, MenuItem, MenuList } from '@mui/material';
-import { GenderType, GenderOptions } from 'src/enums/gender';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -22,6 +22,7 @@ import {
 } from 'src/enums/inquiry-status-type';
 
 import type { IInquiryData } from '.';
+import type { IInquiryResponse } from './type';
 
 const InquiryTable = ({
   followUpDialog,
@@ -33,8 +34,8 @@ const InquiryTable = ({
   inquiryDialog: UseBooleanReturn;
   issueRegistrationFormDialog: UseBooleanReturn;
   followUpDialog: UseBooleanReturn;
-  editData: null | IInquiryData;
-  setEditData: React.Dispatch<React.SetStateAction<null | IInquiryData>>;
+  editData: null | IInquiryResponse;
+  setEditData: React.Dispatch<React.SetStateAction<null | IInquiryResponse>>;
 }) => {
   const { currentMedium } = useSelector((state: any) => state.globalState);
   const { data: inquiryData, isLoading } = useQueryAndMutation({
@@ -48,9 +49,11 @@ const InquiryTable = ({
     },
   });
 
+  console.log(inquiryData, 'inquiryData');
+
   const tableData = useMemo(
     () =>
-      inquiryData?.items.map((item: IInquiryData) => ({
+      inquiryData?.data?.items.map((item: IInquiryData) => ({
         ...item,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
@@ -58,8 +61,8 @@ const InquiryTable = ({
         secondaryContactNumber: item.secondaryContactNumber
           ? item.secondaryContactNumber
           : undefined,
-        studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
-        genderValue: GenderType[item?.genderType as any],
+        // studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
+        // genderValue: GenderType[item?.genderType as any],
         // address: [
         //   item.addressLine1,
         //   item.addressLine2,
@@ -71,7 +74,7 @@ const InquiryTable = ({
         //   .filter(Boolean)
         //   .join(', '),
       })),
-    [inquiryData?.items]
+    [inquiryData?.data?.items]
   );
   return (
     <Box sx={{ minHeight: 0, flexGrow: 1 }}>
@@ -260,14 +263,14 @@ const InquiryTable = ({
                   showEditIcon
                   handleEditClick={() => {
                     inquiryDialog.onTrue();
-                    setEditData(row as IInquiryData);
+                    setEditData(row as IInquiryResponse);
                   }}
                   actions={({ popover }) => (
                     <MenuList>
                       <MenuItem
                         onClick={() => {
                           followUpDialog.onTrue();
-                          setEditData(row as IInquiryData);
+                          setEditData(row as IInquiryResponse);
                           popover.onClose();
                         }}
                       >
@@ -277,7 +280,7 @@ const InquiryTable = ({
                       <MenuItem
                         onClick={() => {
                           issueRegistrationFormDialog.onTrue();
-                          setEditData(row as IInquiryData);
+                          setEditData(row as IInquiryResponse);
                           popover.onClose();
                         }}
                       >

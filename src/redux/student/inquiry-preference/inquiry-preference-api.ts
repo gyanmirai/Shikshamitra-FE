@@ -9,15 +9,15 @@ export const inquiryPreferenceApi = createApi({
   tagTypes: ['Student-Document-Type'],
   endpoints: (builder) => ({
     getInquiryPreference: builder.query({
-      query: () => ({
-        url: '/app/inquiry-preference',
+      query: ({ academicYearId }) => ({
+        url: `/student-enrollment/${academicYearId}/settings/inquiry-preferences`,
         method: 'GET',
       }),
       providesTags: ['Student-Document-Type'],
     }),
     addInquiryPreference: builder.mutation({
-      query: (data) => ({
-        url: '/app/inquiry-preference',
+      query: ({ academicYearId, data }) => ({
+        url: `/student-enrollment/${academicYearId}/settings/inquiry-preferences`,
         method: 'POST',
         data,
       }),
@@ -25,7 +25,7 @@ export const inquiryPreferenceApi = createApi({
     }),
     updateInquiryPreference: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/inquiry-preference/${id}`,
+        url: `/student-enrollment/settings/inquiry-preferences/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -33,7 +33,7 @@ export const inquiryPreferenceApi = createApi({
     }),
     deleteInquiryPreference: builder.mutation({
       query: (id) => ({
-        url: `/app/inquiry-preference/${id}`,
+        url: `/student-enrollment/settings/inquiry-preferences/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Student-Document-Type'],

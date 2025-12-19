@@ -1,5 +1,6 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
@@ -20,10 +21,10 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { TimePicker, DatePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
@@ -42,6 +43,7 @@ const EntranceExamSlots = () => {
   const confirm = useBoolean();
   // State to store data being edited
   const [editData, setEditData] = useState<ISlot | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const entranceExamSlotsDialog = useBoolean();
 
   // Redux state for tracking unsaved changes
@@ -147,6 +149,16 @@ const EntranceExamSlots = () => {
         }
       />
 
+      <Box sx={{ maxWidth: '250px', mb: 1 }}>
+        <DatePicker
+          label="Select Date"
+          format="DD-MM-YYYY"
+          value={selectedDate}
+          onChange={(newValue) => setSelectedDate(newValue)}
+          slotProps={{ textField: { size: 'small', fullWidth: true } }}
+        />
+      </Box>
+
       <CustomizableTable
         isLoading={isLoading}
         tableId="entrance-exam-slots"
@@ -210,7 +222,9 @@ const EntranceExamSlots = () => {
       <CustomDialog
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">{editData ? 'Update Slots' : 'Add Slots'}</Typography>
+            <Typography variant="h5">
+              {editData ? 'Update Slots' : 'Add Slots'}({selectedDate?.format('DD-MM-YYYY')})
+            </Typography>
             <CustomTooltip
               arrow
               placement="right"
@@ -226,7 +240,7 @@ const EntranceExamSlots = () => {
           setEditData(null);
         }}
       >
-        <SlotsForm handleClose={handleClose} editData={editData} />
+        <SlotsForm handleClose={handleClose} editData={editData} date={selectedDate} />
       </CustomDialog>
     </Box>
   );
@@ -237,9 +251,11 @@ export default EntranceExamSlots;
 export const SlotsForm = ({
   handleClose,
   editData,
+  date,
 }: {
   handleClose?: (e: any, isSubmit: boolean) => void;
   editData: ISlot | null;
+  date: Dayjs | null;
 }) => {
   // Hook for adding a new entrance exam slot
   const [addSlot, { isLoading }] = useQueryAndMutation({
@@ -315,8 +331,8 @@ export const SlotsForm = ({
         } else {
           await addSlot({
             slotName: values.slotName,
-            startDate: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
-            endDate: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
+            startTime: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
+            endTime: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
             studentLimit: values.studentLimit,
             roomNo: values.roomNo,
           }).unwrap();
@@ -367,12 +383,12 @@ export const SlotsForm = ({
                   minutes: renderTimeViewClock,
                   seconds: renderTimeViewClock,
                 }}
-                onChange={(date) => {
-                  formik.setFieldValue('startTime', date);
+                onChange={(startTime) => {
+                  formik.setFieldValue('startTime', startTime);
 
                   const { endTime } = formik.values;
-                  if (endTime && date) {
-                    const diffInMinutes = dayjs(endTime).diff(dayjs(date), 'minute');
+                  if (endTime && startTime) {
+                    const diffInMinutes = dayjs(endTime).diff(dayjs(startTime), 'minute');
                     formik.setFieldValue('duration', diffInMinutes);
                   }
                 }}
@@ -402,12 +418,12 @@ export const SlotsForm = ({
                   minutes: renderTimeViewClock,
                   seconds: renderTimeViewClock,
                 }}
-                onChange={(date) => {
-                  formik.setFieldValue('endTime', date);
+                onChange={(endTime) => {
+                  formik.setFieldValue('endTime', endTime);
 
                   const { startTime } = formik.values;
-                  if (startTime && date) {
-                    const diffInMinutes = dayjs(date).diff(dayjs(startTime), 'minute');
+                  if (startTime && endTime) {
+                    const diffInMinutes = dayjs(endTime).diff(dayjs(startTime), 'minute');
                     formik.setFieldValue('duration', diffInMinutes);
                   }
                 }}
