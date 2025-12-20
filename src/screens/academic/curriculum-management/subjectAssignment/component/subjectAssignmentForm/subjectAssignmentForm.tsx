@@ -106,7 +106,6 @@ const teacherProfiles: TeacherProfile[] = [
     qualification: 'M.A. English, B.Ed',
     subjects: ['Literature', 'Grammar'],
   },
-  // ... more profiles can be added here
 ];
 
 const SubjectAssignmentForm = ({
@@ -131,12 +130,10 @@ const SubjectAssignmentForm = ({
   // Flag to prevent infinite update loops
   const [isInitializing, setIsInitializing] = useState(true);
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
-
   const [addSubjectAssignment, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddSubjectAssignmentMutation,
   });
-
   const [updateSubjectAssignment, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateSubjectAssignmentMutation,
@@ -329,6 +326,9 @@ const SubjectAssignmentForm = ({
     );
     formik.setFieldValue('subjects', updatedSubjects);
   };
+
+  console.log('formik values---', formik.values);
+  console.log('formik erroes---', formik.errors);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

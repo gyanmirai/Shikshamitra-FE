@@ -48,7 +48,6 @@ const Subject = () => {
         },
       ],
     },
-
     {
       subjectType: 1,
       electiveGroupId: 'EG-02',
