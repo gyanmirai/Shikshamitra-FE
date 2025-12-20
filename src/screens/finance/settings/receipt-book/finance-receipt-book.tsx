@@ -314,6 +314,60 @@ const FinanceReceiptBookSetting = () => {
           </Button>
         }
       />
+
+      <ConfirmDialog
+        open={dialogForDeleteConfirmation.value}
+        onClose={() => {
+          setTimeout(() => {
+            setSelectedEntry(null);
+          }, 200);
+          dialogForDeleteConfirmation.onFalse();
+        }}
+        title="Delete Receipt Book"
+        content={
+          selectedEntry && Array.isArray(selectedEntry.receiptBookName) ? (
+            <>
+              Are you sure you want to delete the receipt book{' '}
+              <strong>{selectedEntry.receiptBookName}</strong>?
+            </>
+          ) : (
+            <>
+              Are you sure you want to delete the receipt book{' '}
+              <strong>{selectedEntry?.receiptBookName}</strong>?
+            </>
+          )
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            onClick={() => {
+              shikshaMitraToast.success({
+                message:
+                  selectedEntry && Array.isArray(selectedEntry.receiptBookName) ? (
+                    <>
+                      Receipt Book: <strong>{selectedEntry.receiptBookName}</strong> deleted
+                      successfully.
+                    </>
+                  ) : (
+                    <>
+                      Receipt Book: <strong>{selectedEntry?.receiptBookName}</strong> deleted
+                      successfully.
+                    </>
+                  ),
+              });
+              setTimeout(() => {
+                setSelectedEntry(null);
+              }, 200);
+              dialogForDeleteConfirmation.onFalse();
+            }}
+          >
+            Delete
+          </Button>
+        }
+      />
     </Box>
   );
 };

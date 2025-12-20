@@ -78,7 +78,7 @@ const BankAccountManagement: React.FC = () => {
             variant="contained"
             sx={{ px: '32px' }}
           >
-            Add Bank Account
+            Bank Account
           </Button>
         }
         sx={{ px: 1, mb: 1 }}

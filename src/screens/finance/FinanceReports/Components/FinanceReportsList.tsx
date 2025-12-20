@@ -26,7 +26,7 @@ const FinanceReportsList = () => {
               startIcon={<Add />}
               onClick={addReportDialog.onTrue}
             >
-              Add Report
+              Report
             </Button>
           }
           sx={{ mb: 1 }}

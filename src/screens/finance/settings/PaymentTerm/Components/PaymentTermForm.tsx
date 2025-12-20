@@ -354,48 +354,57 @@ const PaymentTermForm: React.FC<IFeeStructureFormProps> = ({ open, onClose, edit
                               !!(formik.errors.installments?.[row.index] as any)?.reminderDate;
 
                             return (
-                              <DatePicker
-                                name={`installments.${row.index}.reminderDate`}
-                                label="Reminder Date *"
-                                value={formik.values.installments[row.index]?.reminderDate}
-                                minDate={dayjs(currentYear?.startDate)}
-                                maxDate={dayjs(currentYear?.endDate)}
-                                onChange={(newValue) => {
-                                  const updated = [...installments];
-                                  updated[row.index].reminderDate = newValue;
-                                  setInstallments(updated);
-                                  formik.setFieldValue(
-                                    `installments.${row.index}.reminderDate`,
-                                    newValue
-                                  );
-                                }}
-                                format="DD-MM-YYYY"
-                                slotProps={{
-                                  textField: {
-                                    fullWidth: true,
-                                    size: 'small',
-                                    variant: 'outlined',
-                                    sx: {
-                                      width: '100%',
-                                      padding: '0',
-                                      borderRadius: 1,
-                                      mb: 1.5,
-                                    },
-                                    error: hasError,
-                                    helperText: hasError
-                                      ? (formik.errors.installments?.[row.index] as any)
-                                          ?.reminderDate
-                                      : undefined,
-                                    FormHelperTextProps: {
+                              <ShakingTextField
+                                error={
+                                  !!(
+                                    formik.touched.installments?.[row.index]?.reminderDate &&
+                                    (formik.errors.installments?.[row.index] as any)
+                                  )?.reminderDate
+                                }
+                              >
+                                <DatePicker
+                                  name={`installments.${row.index}.reminderDate`}
+                                  label="Reminder Date *"
+                                  value={formik.values.installments[row.index]?.reminderDate}
+                                  minDate={dayjs(currentYear?.startDate)}
+                                  maxDate={dayjs(currentYear?.endDate)}
+                                  onChange={(newValue) => {
+                                    const updated = [...installments];
+                                    updated[row.index].reminderDate = newValue;
+                                    setInstallments(updated);
+                                    formik.setFieldValue(
+                                      `installments.${row.index}.reminderDate`,
+                                      newValue
+                                    );
+                                  }}
+                                  format="DD-MM-YYYY"
+                                  slotProps={{
+                                    textField: {
+                                      fullWidth: true,
+                                      size: 'small',
+                                      variant: 'outlined',
                                       sx: {
-                                        margin: 0,
-                                        position: 'static',
-                                        whiteSpace: 'normal',
+                                        width: '100%',
+                                        padding: '0',
+                                        borderRadius: 1,
+                                        mb: 1.5,
+                                      },
+                                      error: hasError,
+                                      helperText: hasError
+                                        ? (formik.errors.installments?.[row.index] as any)
+                                            ?.reminderDate
+                                        : undefined,
+                                      FormHelperTextProps: {
+                                        sx: {
+                                          margin: 0,
+                                          position: 'static',
+                                          whiteSpace: 'normal',
+                                        },
                                       },
                                     },
-                                  },
-                                }}
-                              />
+                                  }}
+                                />
+                              </ShakingTextField>
                             );
                           },
                         },

@@ -28,7 +28,7 @@ const ViewExpenseData = ({
   });
 
   return (
-    <Box>
+    <Box sx={{ overflow: 'auto' }}>
       <DialogScrollContent>
         {/* Expense Information Card */}
         <Card

@@ -67,7 +67,7 @@ export default function CommonReport({ categories, subCategories }: CommonReport
               subCategories={subCategories}
             />
           </Box>
-          <Box sx={{ flexGrow: 1, height: '100%', minWidth: 0 }}>
+          <Box sx={{ flexGrow: 1, height: '100%', minWidth: 0, overflow: 'auto' }}>
             <RightPanel selectedReport={selectedReport} />
           </Box>
         </Box>

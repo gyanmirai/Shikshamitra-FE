@@ -39,9 +39,6 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
     (state: RootState) => state.globalState
   );
 
-  useEffect(() => {
-    setBoards(currentYear?.boards || []);
-  }, [currentYear?.boards]);
   // Memoized initial values for the form based on whether editing existing or creating new
   const initialValues = useMemo<IReceiptBook>(
     () => ({
@@ -85,6 +82,28 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
       }
     },
   });
+
+  useEffect(() => {
+    setBoards(currentYear?.boards || []);
+  }, [currentYear?.boards]);
+
+  useEffect(() => {
+    if (formik.values.board) {
+      const selectedBoard = boards.find((b) => b.name === formik.values.board);
+      setMediums(selectedBoard?.educationMediums || []);
+    } else {
+      setMediums([]);
+    }
+  }, [formik.values.board, boards]);
+
+  useEffect(() => {
+    if (formik.values.medium) {
+      const selectedMedium = mediums.find((m) => m.name === formik.values.medium);
+      setAllOrganization(selectedMedium?.educationMediumStages || []);
+    } else {
+      setAllOrganization([]);
+    }
+  }, [formik.values.medium, mediums]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>

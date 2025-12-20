@@ -20,7 +20,7 @@ const ViewIncomeData = ({
   incomeDetailedData: any;
   onClose: () => void;
 }) => (
-  <Box>
+  <Box sx={{ overflow: 'auto' }}>
     <DialogScrollContent>
       <Card
         sx={{

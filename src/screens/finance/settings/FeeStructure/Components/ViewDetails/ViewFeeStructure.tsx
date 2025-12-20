@@ -29,18 +29,18 @@ const ViewFeeStructure = ({
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ViewBasicDetailsOfStructure feeStructure={feeStructure} />
       {/* Class Selection */}
-      <Grid container spacing={2}>
-        <ClassSelectionView
-          feeStructureClasses={feeStructure.feeStructureClasses}
-          selectedClass={selectedClass}
-          onSelectClass={setSelectedClass}
-        />
+      <Scrollbar sx={{ maxHeight: '290px' }}>
+        <Grid container spacing={2}>
+          <ClassSelectionView
+            feeStructureClasses={feeStructure.feeStructureClasses}
+            selectedClass={selectedClass}
+            onSelectClass={setSelectedClass}
+          />
 
-        {/* Fee Structure Details */}
-        {selectedClass && (
-          <Grid size={{ xs: 10.6 }} mb={2}>
-            <SectionCard title={`Fee Structure For Class : ${selectedClass}`}>
-              <Scrollbar sx={{ maxHeight: '290px' }}>
+          {/* Fee Structure Details */}
+          {selectedClass && (
+            <Grid size={{ xs: 10.6 }} mb={2}>
+              <SectionCard title={`Fee Structure For Class : ${selectedClass}`}>
                 {feeStructure.feeStructureClasses[selectedClass]?.length ? (
                   feeStructure.feeStructureClasses[selectedClass].map((structure, idx) => (
                     <FeeStructureViewCard
@@ -56,11 +56,11 @@ const ViewFeeStructure = ({
                 ) : (
                   <EmptyContent title="No Fee Structure Created" />
                 )}
-              </Scrollbar>
-            </SectionCard>
-          </Grid>
-        )}
-      </Grid>
+              </SectionCard>
+            </Grid>
+          )}
+        </Grid>
+      </Scrollbar>
     </Box>
   );
 };
