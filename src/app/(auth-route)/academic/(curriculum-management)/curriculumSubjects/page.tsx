@@ -1,5 +1,5 @@
 import React from 'react';
-import Subject from 'src/screens/academic/curriculum-management/subjectAssignment/subject';
+import Subject from 'src/screens/academic/curriculum-management/subjectAssignment';
 
 const Subjects = () => <Subject />;
 

@@ -8,9 +8,9 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -66,65 +66,70 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         {/* <form onSubmit={formik.handleSubmit}> */}
-        <DialogScrollContent>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12 }}>
-              <Box display="flex" gap={2}>
-                <Typography variant="body2">
-                  <strong>Name : </strong>
-                  {data?.studentName}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Roll No : </strong>
-                  {data?.rollNumber}
-                </Typography>
-              </Box>
-            </Grid>
+        <Box
+          component="form"
+          sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2 }}
+          onSubmit={formik.handleSubmit}
+        >
+          <Scrollbar sx={{ height: '250px' }}>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12 }}>
+                <Box display="flex" gap={2}>
+                  <Typography variant="body2">
+                    <strong>Name : </strong>
+                    {data?.studentName}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Roll No : </strong>
+                    {data?.rollNumber}
+                  </Typography>
+                </Box>
+              </Grid>
 
-            <Grid size={{ xs: 12 }} mb={-2}>
-              {/* <Typography variant="subtitle2">Student Submission</Typography> */}
-            </Grid>
+              <Grid size={{ xs: 12 }} mb={-2}>
+                {/* <Typography variant="subtitle2">Student Submission</Typography> */}
+              </Grid>
 
-            <Grid size={{ xs: 12 }} mb={-1}>
-              <Editor
-                editable={false}
-                onChange={() => {}}
-                isToolbarShow={false}
-                value={`
+              <Grid size={{ xs: 12 }} mb={-1}>
+                <Editor
+                  editable={false}
+                  onChange={() => {}}
+                  isToolbarShow={false}
+                  value={`
 1. The sun rises in the east.
 2. Water boils at 100°C.
 3. Plants need water to grow.
 
 I have completed all answers as per the instructions.`}
-              />
-            </Grid>
+                />
+              </Grid>
 
-            <Grid size={{ xs: 12 }} mb={-2}>
-              <Typography variant="subtitle2">Homework Description</Typography>
-            </Grid>
+              <Grid size={{ xs: 12 }} mb={-2}>
+                <Typography variant="subtitle2">Homework Description</Typography>
+              </Grid>
 
-            <Grid size={{ xs: 12 }}>
-              <Box
-                sx={{
-                  border: '1px solid #e0e0e0',
-                  borderRadius: 1,
-                  p: 2,
-                  bgcolor: '#fafafa',
-                  minHeight: '100px',
-                  maxHeight: '200px',
-                  overflow: 'auto',
-                }}
-              >
-                <Typography
-                  component="pre"
+              <Grid size={{ xs: 12 }}>
+                <Box
                   sx={{
-                    whiteSpace: 'pre-wrap',
-                    m: 0,
-                    fontSize: '1rem',
-                    lineHeight: 1.5,
+                    border: '1px solid #e0e0e0',
+                    borderRadius: 1,
+                    p: 2,
+                    bgcolor: '#fafafa',
+                    minHeight: '100px',
+                    maxHeight: '200px',
+                    overflow: 'auto',
                   }}
                 >
-                  {`Homework Assignment: Science Fundamentals
+                  <Typography
+                    component="pre"
+                    sx={{
+                      whiteSpace: 'pre-wrap',
+                      m: 0,
+                      fontSize: '1rem',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {`Homework Assignment: Science Fundamentals
 
 Due Date: Friday, March 15th, 2024
 Instructions: Write detailed explanations for the following scientific facts.
@@ -136,31 +141,32 @@ Questions:
 
 Additional Notes:
 I have completed all answers according to the given instructions and provided scientific explanations for each point.`}
-                </Typography>
-              </Box>
-            </Grid>
+                  </Typography>
+                </Box>
+              </Grid>
 
-            <Grid size={{ xs: 12 }}>
-              <ShakingTextField
-                error={!!(formik.touched.feedback && formik.errors.feedback) || false}
-              >
-                <TextField
-                  label="Feedback *"
-                  multiline
-                  size="small"
-                  disabled={!isEdit}
-                  rows={3}
-                  fullWidth
-                  name="feedback"
-                  value={formik.values.feedback}
-                  onChange={formik.handleChange}
-                  error={formik.touched.feedback && Boolean(formik.errors.feedback)}
-                  helperText={formik.touched.feedback && formik.errors.feedback}
-                />
-              </ShakingTextField>
+              <Grid size={{ xs: 12 }}>
+                <ShakingTextField
+                  error={!!(formik.touched.feedback && formik.errors.feedback) || false}
+                >
+                  <TextField
+                    label="Feedback *"
+                    multiline
+                    size="small"
+                    disabled={!isEdit}
+                    rows={3}
+                    fullWidth
+                    name="feedback"
+                    value={formik.values.feedback}
+                    onChange={formik.handleChange}
+                    error={formik.touched.feedback && Boolean(formik.errors.feedback)}
+                    helperText={formik.touched.feedback && formik.errors.feedback}
+                  />
+                </ShakingTextField>
+              </Grid>
             </Grid>
-          </Grid>
-        </DialogScrollContent>
+          </Scrollbar>
+        </Box>
         <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             variant="outlined"
