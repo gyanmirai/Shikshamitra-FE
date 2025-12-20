@@ -25,6 +25,8 @@ import InquiryTable from './inquiry-table';
 import { CommunicationForm } from '../follow-up';
 import IssueRegistrationForm from '../issue-registration-form/issueRegistrationForm';
 
+import type { IInquiryResponse } from './type';
+
 export interface IInquiryData {
   id: string;
   userId: string;
@@ -104,6 +106,7 @@ export interface IInquiryData {
   groupMembership: IGroupMembership;
   formNo: string;
   lastClassPassed: string;
+  studentId?: string;
 }
 
 export interface ParentBankDetails {
@@ -246,7 +249,7 @@ const InquiryScreen = () => {
   const inquiryDialog = useBoolean();
 
   // State to store inquiry data being edited
-  const [editData, setEditData] = useState<null | IInquiryData>(null);
+  const [editData, setEditData] = useState<null | IInquiryResponse>(null);
 
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -356,7 +359,7 @@ const InquiryScreen = () => {
             setEditData(null);
             followUpDialog.onFalse();
           }}
-          studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+          studentEnrollmentId={(editData as IInquiryResponse)?.studentId || ''}
           selectedStudent={editData}
         />{' '}
       </CustomDialog>
@@ -386,7 +389,7 @@ const InquiryScreen = () => {
             setEditData(null);
             issueRegistrationFormDialog.onFalse();
           }}
-          editData={editData as IInquiryData}
+          editData={editData as IInquiryResponse}
         />
       </CustomDialog>
     </Box>

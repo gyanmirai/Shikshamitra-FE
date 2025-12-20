@@ -23,7 +23,7 @@ export const StudentDocumentTypeApi = createApi({
         query = query.replace('?&', '?');
 
         return {
-          url: `/document-types${query}`,
+          url: `/student-enrollment/settings/document-types${query}`,
           method: 'GET',
         };
       },
@@ -31,7 +31,7 @@ export const StudentDocumentTypeApi = createApi({
     }),
     addStudentDocumentType: builder.mutation({
       query: (data) => ({
-        url: '/document-types',
+        url: '/student-enrollment/settings/document-types',
         method: 'POST',
         data,
       }),
@@ -39,7 +39,7 @@ export const StudentDocumentTypeApi = createApi({
     }),
     updateStudentDocumentType: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/document-types/${id}`,
+        url: `/student-enrollment/settings/document-types/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -47,7 +47,7 @@ export const StudentDocumentTypeApi = createApi({
     }),
     deleteStudentDocumentType: builder.mutation({
       query: (id) => ({
-        url: `/document-types/${id}`,
+        url: `/student-enrollment/settings/document-types/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Student-Document-Type'],

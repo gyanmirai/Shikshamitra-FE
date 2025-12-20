@@ -825,7 +825,7 @@ export const ExamForm = ({
         open={dialog.value}
         handleClose={dialog.onFalse}
       >
-        <SlotsForm handleClose={dialog.onFalse} editData={null} />
+        <SlotsForm handleClose={dialog.onFalse} editData={null} date={null} />
       </CustomDialog>
 
       <CustomDialog

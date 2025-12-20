@@ -188,8 +188,8 @@ const StudentDocumentType = () => {
           }));
         }}
         columns={[
-          { id: 'name', label: 'Document Name', align: 'left' },
-          { id: 'maxSizeMB', label: 'Document Size', align: 'left' },
+          { id: 'name', label: 'Document Name' },
+          { id: 'maxSizeMB', label: 'Document Size' },
           {
             id: 'acceptedFormats',
             label: 'Accepted Format',
@@ -466,7 +466,6 @@ export const DocumentForm = ({
   handleClose?: (e: any, isSubmit: boolean) => void;
 }) => {
   const dispatch = useDispatch();
-  const [, setShowSuccessMessage] = useState(false);
 
   const [addDocument, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -524,10 +523,9 @@ export const DocumentForm = ({
         shikshaMitraToast.success({
           message: `${payload.name} document added successfully`,
         });
-        setShowSuccessMessage(true);
+        // setShowSuccessMessage(true);
         resetForm();
         dispatch(setIsChanges(false));
-        setTimeout(() => setShowSuccessMessage(false), 3000);
       } catch (error) {
         console.error('Error saving document:', error);
       } finally {

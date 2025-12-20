@@ -10,7 +10,7 @@ export const StudentInquiryApi = createApi({
   endpoints: (builder) => ({
     getStudentInquiry: builder.query({
       query: ({ academicMediumId }) => ({
-        url: `/inquiries/${academicMediumId}`,
+        url: `/academic-mediums/${academicMediumId}/inquiries`,
         method: 'GET',
       }),
       providesTags: ['Student-Inquiry'],
@@ -23,9 +23,16 @@ export const StudentInquiryApi = createApi({
       }),
       invalidatesTags: ['Student-Inquiry'],
     }),
+    getStudentInquiryById: builder.query({
+      query: ({ studentId }) => ({
+        url: `/inquiries/${studentId}`,
+        method: 'GET',
+      }),
+      providesTags: ['Student-Inquiry'],
+    }),
     updateStudentInquiry: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/api/students/${id}/inquiries`,
+        url: `/inquiries/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -39,6 +46,15 @@ export const StudentInquiryApi = createApi({
       }),
       invalidatesTags: ['Student-Inquiry'],
     }),
+
+    registrationFormDetails: builder.mutation({
+      query: ({ studentId, body }) => ({
+        url: `/student-enrollment/registration/${studentId}/forms`,
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['Student-Inquiry'],
+    }),
   }),
 });
 
@@ -47,4 +63,6 @@ export const {
   useDeleteStudentInquiryMutation,
   useGetStudentInquiryQuery,
   useUpdateStudentInquiryMutation,
+  useRegistrationFormDetailsMutation,
+  useGetStudentInquiryByIdQuery,
 } = StudentInquiryApi;

@@ -176,6 +176,8 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                     if (!file) return;
                     const acceptableFileFormats: string[] = [];
 
+                    console.log(row, 'row');
+
                     row.documentTypes.forEach((item: number) => {
                       acceptableFileFormats.push(
                         DocumentFileType[DocumentType[item] as keyof typeof DocumentFileType]

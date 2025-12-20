@@ -11,7 +11,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
 import { Box, MenuItem, MenuList, Typography, CircularProgress } from '@mui/material';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
   useMoveToAdmissionMutation,
   useGetStudentRegistrationQuery,
@@ -104,32 +103,20 @@ const RegistrationTable = ({
     },
   });
 
-  const [selectedStudents] = useState<any>([]);
-
   const tableData = useMemo(
     () =>
-      registrationData?.items.map((item: IInquiryData) => ({
+      registrationData?.data?.items.map((item: IInquiryData) => ({
         ...item,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
 
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
       })) || [],
-    [registrationData?.items]
+    [registrationData?.data?.items]
   );
-
-  const sendInstantNotificationDialogValue = useBoolean();
-
-  const handlerSendNotification = () => {
-    if (!sendInstantNotificationDialogValue.value) {
-      sendInstantNotificationDialogValue.onTrue();
-    }
-  };
 
   return (
     <>
       <CustomizableTable
-        onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudents.length !== 0}
         tableId="student-registration-table"
         noDataText={
           <>
@@ -358,15 +345,6 @@ const RegistrationTable = ({
           setMoveId(null);
         }}
       />
-
-      {sendInstantNotificationDialogValue.value && (
-        <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
-          data={[]}
-          userList={selectedStudents}
-        />
-      )}
     </>
   );
 };

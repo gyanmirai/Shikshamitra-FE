@@ -28,11 +28,13 @@ export default function Permission({
   setPermissionData,
   permissionData,
   providerName,
+  initialData,
 }: {
   editData: any;
   setPermissionData: (data: { name: string; isGranted: boolean }[]) => void;
   permissionData: { name: string; isGranted: boolean }[];
   providerName: string;
+  initialData: any;
 }) {
   const { data: _permissionData, isLoading: isPermissionLoading } = useQueryAndMutation({
     type: 'query',
@@ -43,12 +45,13 @@ export default function Permission({
     },
   });
 
-  // const [visibility, setVisibility] = useState<{ name: string; isGranted: boolean }[]>();
   useEffect(() => {
     if (_permissionData?.groups?.length > 0) {
-      setPermissionData(extractGrantedPermissions(_permissionData?.groups));
+      const init = extractGrantedPermissions(_permissionData?.groups);
+      setPermissionData(init);
+      initialData.current = init;
     }
-  }, [_permissionData, setPermissionData]);
+  }, [_permissionData, initialData, setPermissionData]);
 
   const { mainModuleVisibility } = useSelector((state: any) => state.auth);
 

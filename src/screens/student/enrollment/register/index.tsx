@@ -22,7 +22,7 @@ import type { IInquiryData } from '../Inquiry';
 
 const RegisterScreen = () => {
   // State to store and manage the selected inquiry data for editing
-  const [editData, setEditData] = useState<null | IInquiryData>(null);
+  const [editData, setEditData] = useState<any>(null);
 
   // Custom boolean hook to manage form dialog visibility
   const formDialog = useBoolean();

@@ -57,7 +57,7 @@ export const RenderDocuments = (props: any) => {
   });
 
   // Query hook to fetch student's uploaded documents using student ID
-  const { data: employeeDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
+  const { data: studentsDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentsQuery,
     params: id,
@@ -69,19 +69,19 @@ export const RenderDocuments = (props: any) => {
       documents?.items?.map((item: any) => ({
         ...item,
         // Check if document is uploaded by comparing file names
-        statusVal: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
+        statusVal: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName)
           ? 'Uploaded'
           : 'Not Uploaded',
         // Convert document type enum to readable string
         docType: item.documentTypes.map((ite: number) => DocumentType[ite]).join(', '),
         // Set status color based on document upload status
-        statusColor: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName)
+        statusColor: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName)
           ? 'success'
           : 'warning',
         // Store the uploaded document details if found
-        uploadDocument: employeeDocuments?.find((doc: any) => doc.fileName === item.documentName),
+        uploadDocument: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName),
       })) || [],
-    [documents?.items, employeeDocuments]
+    [documents?.items, studentsDocuments]
   );
 
   // Get the isChanges state from the Redux store

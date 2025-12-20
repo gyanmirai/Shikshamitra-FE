@@ -33,6 +33,7 @@ import {
 import type { IInquiryPreference } from './type';
 
 const InquiryPreference = () => {
+  const { currentYear } = useSelector((state: any) => state.globalState);
   // Dialog state for add/edit inquiry preference form
   // const dialog = useBoolean();
   // Dialog state for delete confirmation
@@ -47,6 +48,12 @@ const InquiryPreference = () => {
   const { data: inquiryPreference, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetInquiryPreferenceQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+    options: {
+      skip: !currentYear?.id,
+    },
   });
 
   const [deletePreference, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -215,11 +222,12 @@ export const InquiryPreferenceForm = ({
   editData: null | IInquiryPreference;
   handleClose?: (e: any, isSubmit: boolean) => void;
 }) => {
-  const [addDocument, { isLoading }] = useQueryAndMutation({
+  const { currentYear } = useSelector((state: any) => state.globalState);
+  const [addPreference, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddInquiryPreferenceMutation,
   });
-  const [updateDocument, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+  const [updatePreference, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateInquiryPreferenceMutation,
   });
@@ -235,20 +243,23 @@ export const InquiryPreferenceForm = ({
     }),
     onSubmit: async (formikValues) => {
       if (editData) {
-        await updateDocument({
+        await updatePreference({
           id: editData.id,
           body: {
             preferenceName: formikValues.fieldName,
           },
         });
         shikshaMitraToast.success({
-          message: `${formikValues.fieldName} Inquiry preference added successfully`,
+          message: `${formikValues.fieldName} Inquiry preference updated successfully`,
         });
         handleClose?.(null, true);
         return;
       }
-      await addDocument({
-        preferenceName: formikValues.fieldName,
+      await addPreference({
+        academicYearId: currentYear?.id,
+        data: {
+          preferenceName: formikValues.fieldName,
+        },
       });
       shikshaMitraToast.success({
         message: `${formikValues.fieldName} Inquiry preference added successfully`,
