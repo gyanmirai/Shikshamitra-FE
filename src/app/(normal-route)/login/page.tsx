@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { signInUser } from 'src/redux/auth/authActions';
 
@@ -10,7 +11,10 @@ import { signInUser } from 'src/redux/auth/authActions';
 
 const LoginPage = () => {
   const dispatch = useDispatch();
-  dispatch(signInUser() as any);
+
+  useEffect(() => {
+    dispatch(signInUser() as any);
+  }, [dispatch]);
 
   return null;
 };

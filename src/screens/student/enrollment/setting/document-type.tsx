@@ -123,7 +123,7 @@ const StudentDocumentType = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <strong>{editData?.documentName}</strong> document?
+            Are you sure you want to delete <strong>{editData?.name}</strong> document?
           </>
         }
         action={
@@ -135,7 +135,7 @@ const StudentDocumentType = () => {
             onClick={async () => {
               await deleteDocument(editData?.id);
               shikshaMitraToast.success({
-                message: `${editData?.documentName} document deleted successfully`,
+                message: `${editData?.name} document deleted successfully`,
               });
               confirm.onFalse();
               setEditData(null);
@@ -184,10 +184,10 @@ const StudentDocumentType = () => {
           }));
         }}
         columns={[
-          { id: 'documentName', label: 'Document Name' },
-          { id: 'documentSize', label: 'Document Size' },
+          { id: 'name', label: 'Document Name' },
+          { id: 'maxSizeMB', label: 'Document Size' },
           {
-            id: 'documentTypes',
+            id: 'acceptedFormats',
             label: 'Accepted Format',
             render(value, row) {
               return value.map((item: number) => DocumentType[item]).join(', ');
@@ -461,7 +461,6 @@ export const DocumentForm = ({
   handleClose?: (e: any, isSubmit: boolean) => void;
 }) => {
   const dispatch = useDispatch();
-  const [, setShowSuccessMessage] = useState(false);
 
   const [addDocument, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -480,11 +479,13 @@ export const DocumentForm = ({
     isRequired: boolean;
   }>({
     initialValues: {
-      title: editData?.documentName || '',
+      title: editData?.name || '',
       documentType:
-        editData?.documentTypes?.map((item: any) => ({ label: DocumentType[item], value: item })) ||
-        [],
-      documentSize: editData?.documentSize || '',
+        editData?.acceptedFormats?.map((item: any) => ({
+          label: DocumentType[item],
+          value: item,
+        })) || [],
+      documentSize: editData?.maxSizeMB || '',
       isRequired: editData?.isRequired || false,
     },
     validationSchema: Yup.object({
@@ -498,16 +499,16 @@ export const DocumentForm = ({
       try {
         setSubmitting(true);
         const payload = {
-          documentName: values.title,
-          documentTypes: values.documentType.map((d) => d.value),
-          documentSize: values.documentSize,
+          name: values.title,
+          acceptedFormats: values.documentType.map((d) => d.value),
+          maxSizeMB: values.documentSize,
           isRequired: values.isRequired,
         };
 
         if (editData) {
           await updateDocument({ id: editData.id, body: payload }).unwrap();
           shikshaMitraToast.success({
-            message: `${payload.documentName} document updated successfully`,
+            message: `${payload.name} document updated successfully`,
           });
           handleClose?.(null, true);
           return;
@@ -515,12 +516,11 @@ export const DocumentForm = ({
 
         await addDocument(payload).unwrap();
         shikshaMitraToast.success({
-          message: `${payload.documentName} document added successfully`,
+          message: `${payload.name} document added successfully`,
         });
-        setShowSuccessMessage(true);
+        // setShowSuccessMessage(true);
         resetForm();
         dispatch(setIsChanges(false));
-        setTimeout(() => setShowSuccessMessage(false), 3000);
       } catch (error) {
         console.error('Error saving document:', error);
       } finally {

@@ -2,41 +2,50 @@ import dayjs from 'dayjs';
 import { GenderType } from 'src/enums/gender';
 import calculateAge from 'src/utils/calculate-age';
 import { Category } from 'src/enums/studnet-category';
+import { EmployeeCastType } from 'src/enums/employee-cast';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { validatePhoneNumber } from 'src/utils/validate-phone-number';
 
-import type { IInquiryData } from '../Inquiry';
+import type {
+  IBankDetailsResponse,
+  IPreviousSchoolResponse,
+  IFamilyInformationResponse,
+  IGeneralInformationResponse,
+  IMedicalInformationResponse,
+  IAdditionalInformationResponse,
+  ICommunicationInformationResponse,
+} from './type';
 
-export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
-  inquiryNo: editData?.inquiryNumber || '',
-  formNo: editData?.formNumber || '',
+export const generalFieldsInitialValues = (editData?: IGeneralInformationResponse | null) => ({
+  inquiryNo: editData?.inquiryNo || '',
+  formNo: editData?.formNo || '',
   firstName: editData?.firstName || '',
   lastName: editData?.lastName || '',
   middleName: editData?.middleName || '',
   dob: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
   age: editData?.dateOfBirth ? calculateAge(dayjs(editData.dateOfBirth).format()) : '',
-  gender: editData?.genderType || GenderType.Male,
-  adharNo: editData?.aadhaarNo || '',
+  gender: GenderType[editData?.gender || GenderType.Male],
+  adharNo: editData?.aadharNo || '',
   religion: editData?.religion || '',
   familyCast: editData ? editData?.familyCast : '',
-  castCategory: editData ? editData?.castType : null,
+  castCategory: editData ? EmployeeCastType[editData?.castCategory] : null,
   motherTongue: editData?.motherTongue || '',
   nationality: editData?.nationality || 'Indian',
   birthPlace: editData?.birthPlace || '',
-  temporaryGr: editData?.temporaryGr || '',
-  remarks: editData?.remarks || '',
-  primaryContactNumber: editData?.primaryContactNumber || '',
-  secondaryContactNumber: editData?.secondaryContactNumber
-    ? validatePhoneNumber(editData?.secondaryContactNumber)
+  // temporaryGr: editData?.temporaryGr || '',
+  // remarks: editData?.remarks || '',
+  primaryContactNumber: editData?.primaryContactNo || '',
+  secondaryContactNumber: editData?.secondaryContactNo
+    ? validatePhoneNumber(editData?.secondaryContactNo)
     : '',
   email: editData?.email || '',
-  userId: editData?.userId || null,
-  id: editData?.id || null,
-  medium: editData?.educationMediumId || '',
-  board: editData?.educationBoardId || '',
+  userId: editData?.studentId || null,
+  id: editData?.studentId || null,
+  medium: editData?.academicMediumId || '',
+  board: editData?.academicBoardId || '',
   academicYear: editData?.academicYearId || '',
   class: editData?.standardId || '',
-  previousSchool: editData?.previousSchoolName || '',
+  previousSchool: editData?.previousSchool || '',
   photo: editData?.profilePicture ? convertBase64Format(editData?.profilePicture) : '',
   city: editData?.city ? { name: editData?.city } : { name: '' },
   state: editData?.state
@@ -45,21 +54,21 @@ export const generalFieldsInitialValues = (editData?: IInquiryData | null) => ({
   country: editData?.country
     ? { name: editData?.country?.name, isoCode: editData?.country?.isoCode }
     : { name: 'India', isoCode: 'IN' },
-  addressLine1: editData?.addressLine1 || '',
+  addressLine1: editData?.address1 || '',
 
-  addressLine2: editData?.addressLine2 || '',
-  addressLine3: editData?.addressLine3 || '',
+  addressLine2: editData?.address2 || '',
+  addressLine3: editData?.address3 || '',
   pinCode: editData?.pinCode || '',
   inquiryPreference: editData?.inquiryPreferenceId || null,
   apparId: editData?.apparId || '',
   panNo: editData?.panNo || '',
   lastClassPassed: editData?.lastClassPassed || '',
 });
-export const documentFieldsInitialValues = (editData?: IInquiryData | null) => ({
+export const documentFieldsInitialValues = () => ({
   documents: [],
 });
 
-export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
+export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse | null) => ({
   fatherName: editData?.fatherDetails?.name || '',
   fatherDob: editData?.fatherDetails?.dateOfBirth
     ? dayjs(editData?.fatherDetails.dateOfBirth)
@@ -76,42 +85,42 @@ export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
   fatherOrganization: editData?.fatherDetails?.organisation || '',
   fatherAadharNo: editData?.fatherDetails?.aadhaarNo || '',
   fatherRemarks: editData?.fatherDetails?.remarks || '',
-  fatherAddress1: editData?.fatherDetails?.address1 || '',
-  fatherAddress2: editData?.fatherDetails?.address2 || '',
-  fatherAddress3: editData?.fatherDetails?.address3 || '',
-  fatherOfficeAddress1: editData?.fatherDetails?.officeAddress1 || '',
-  fatherOfficeAddress2: editData?.fatherDetails?.officeAddress2 || '',
-  fatherOfficeAddress3: editData?.fatherDetails?.officeAddress3 || '',
-  fatherLocalCountry: editData?.fatherDetails?.localCountry?.name
+  fatherAddress1: editData?.fatherDetails?.localAddress.address1 || '',
+  fatherAddress2: editData?.fatherDetails?.localAddress.address2 || '',
+  fatherAddress3: editData?.fatherDetails?.localAddress.address3 || '',
+  fatherOfficeAddress1: editData?.fatherDetails?.officeAddress.address1 || '',
+  fatherOfficeAddress2: editData?.fatherDetails?.officeAddress.address2 || '',
+  fatherOfficeAddress3: editData?.fatherDetails?.officeAddress.address3 || '',
+  fatherLocalCountry: editData?.fatherDetails?.localAddress.country?.name
     ? {
-        name: editData?.fatherDetails?.localCountry?.name || '',
-        isoCode: editData?.fatherDetails?.localCountry?.isoCode || '',
+        name: editData?.fatherDetails?.localAddress.country?.name || '',
+        isoCode: editData?.fatherDetails?.localAddress.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
-  fatherLocalState: editData?.fatherDetails?.localState?.name
+  fatherLocalState: editData?.fatherDetails?.localAddress.state?.name
     ? {
-        name: editData?.fatherDetails?.localState?.name || '',
-        isoCode: editData?.fatherDetails?.localState?.isoCode || '',
+        name: editData?.fatherDetails?.localAddress.state?.name || '',
+        isoCode: editData?.fatherDetails?.localAddress.state?.isoCode || '',
       }
     : { name: '', isoCode: '' },
   fatherLocalCity: {
-    name: editData?.fatherDetails?.localCity || '',
+    name: editData?.fatherDetails?.localAddress.city || '',
   },
-  fatherLocalPincode: editData?.fatherDetails?.localPincode || '',
-  fatherOfficeCountry: editData?.fatherDetails?.officeCountry?.name
+  fatherLocalPincode: editData?.fatherDetails?.localAddress.pincode || '',
+  fatherOfficeCountry: editData?.fatherDetails?.officeAddress.country?.name
     ? {
-        name: editData?.fatherDetails?.officeCountry?.name || '',
-        isoCode: editData?.fatherDetails?.officeCountry?.isoCode || '',
+        name: editData?.fatherDetails?.officeAddress.country?.name || '',
+        isoCode: editData?.fatherDetails?.officeAddress.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
   fatherOfficeState: {
-    name: editData?.fatherDetails?.officeState?.name || '',
-    isoCode: editData?.fatherDetails?.officeState?.isoCode || '',
+    name: editData?.fatherDetails?.officeAddress.state?.name || '',
+    isoCode: editData?.fatherDetails?.officeAddress.state?.isoCode || '',
   },
   fatherOfficeCity: {
-    name: editData?.fatherDetails?.officeCity || '',
+    name: editData?.fatherDetails?.officeAddress.city || '',
   },
-  fatherOfficePincode: editData?.fatherDetails?.officePincode || '',
+  fatherOfficePincode: editData?.fatherDetails?.officeAddress.pincode || '',
 
   motherName: editData?.motherDetails?.name || '',
   motherDob: editData?.motherDetails?.dateOfBirth
@@ -125,46 +134,46 @@ export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
   motherEmail: editData?.motherDetails?.email || '',
   motherPassOutYear: editData?.motherDetails?.passOutYear || '',
   motherOfficeNo: editData?.motherDetails?.officeNo || '',
-  motherOfficeAddress1: editData?.motherDetails?.officeAddress1 || '',
-  motherOfficeAddress2: editData?.motherDetails?.officeAddress2 || '',
-  motherOfficeAddress3: editData?.motherDetails?.officeAddress3 || '',
+  motherOfficeAddress1: editData?.motherDetails?.officeAddress.address1 || '',
+  motherOfficeAddress2: editData?.motherDetails?.officeAddress.address2 || '',
+  motherOfficeAddress3: editData?.motherDetails?.officeAddress.address3 || '',
   motherDesignation: editData?.motherDetails?.designation || '',
   motherOrganization: editData?.motherDetails?.organisation || '',
   motherAadharNo: editData?.motherDetails?.aadhaarNo || '',
   motherRemarks: editData?.motherDetails?.remarks || '',
-  motherAddress1: editData?.motherDetails?.address1 || '',
-  motherAddress2: editData?.motherDetails?.address2 || '',
-  motherAddress3: editData?.motherDetails?.address3 || '',
-  motherLocalCountry: editData?.motherDetails?.localCountry?.name
+  motherAddress1: editData?.motherDetails?.localAddress.address1 || '',
+  motherAddress2: editData?.motherDetails?.localAddress.address2 || '',
+  motherAddress3: editData?.motherDetails?.localAddress.address3 || '',
+  motherLocalCountry: editData?.motherDetails?.localAddress.country?.name
     ? {
-        name: editData?.motherDetails?.localCountry?.name || '',
-        isoCode: editData?.motherDetails?.localCountry?.isoCode || '',
+        name: editData?.motherDetails?.localAddress.country?.name || '',
+        isoCode: editData?.motherDetails?.localAddress.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
-  motherLocalState: editData?.motherDetails?.localState?.name
+  motherLocalState: editData?.motherDetails?.localAddress.state?.name
     ? {
-        name: editData?.motherDetails?.localState?.name || '',
-        isoCode: editData?.motherDetails?.localState?.isoCode || '',
+        name: editData?.motherDetails?.localAddress.state?.name || '',
+        isoCode: editData?.motherDetails?.localAddress.state?.isoCode || '',
       }
     : { name: '', isoCode: '' },
   motherLocalCity: {
-    name: editData?.motherDetails?.localCity || '',
+    name: editData?.motherDetails?.localAddress.city || '',
   },
-  motherLocalPincode: editData?.motherDetails?.localPincode || '',
-  motherOfficeCountry: editData?.motherDetails?.officeCountry?.name
+  motherLocalPincode: editData?.motherDetails?.localAddress.pincode || '',
+  motherOfficeCountry: editData?.motherDetails?.officeAddress.country?.name
     ? {
-        name: editData?.motherDetails?.officeCountry?.name || '',
-        isoCode: editData?.motherDetails?.officeCountry?.isoCode || '',
+        name: editData?.motherDetails?.officeAddress.country?.name || '',
+        isoCode: editData?.motherDetails?.officeAddress.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
   motherOfficeState: {
-    name: editData?.motherDetails?.officeState?.name || '',
-    isoCode: editData?.motherDetails?.officeState?.isoCode || '',
+    name: editData?.motherDetails?.officeAddress.state?.name || '',
+    isoCode: editData?.motherDetails?.officeAddress.state?.isoCode || '',
   },
   motherOfficeCity: {
-    name: editData?.motherDetails?.officeCity || '',
+    name: editData?.motherDetails?.officeAddress.city || '',
   },
-  motherOfficePincode: editData?.motherDetails?.officePincode || '',
+  motherOfficePincode: editData?.motherDetails?.officeAddress.pincode || '',
   guardianName: editData?.guardianDetails?.name || '',
   guardianDob: editData?.guardianDetails?.dateOfBirth
     ? dayjs(editData?.guardianDetails.dateOfBirth)
@@ -177,161 +186,157 @@ export const familyFieldsInitialValues = (editData?: IInquiryData | null) => ({
   guardianEmail: editData?.guardianDetails?.email || '',
   guardianPassOutYear: editData?.guardianDetails?.passOutYear || '',
   guardianOfficeNo: editData?.guardianDetails?.officeNo || '',
-  guardianOfficeAddress1: editData?.guardianDetails?.officeAddress1 || '',
-  guardianOfficeAddress2: editData?.guardianDetails?.officeAddress2 || '',
-  guardianOfficeAddress3: editData?.guardianDetails?.officeAddress3 || '',
+  guardianOfficeAddress1: editData?.guardianDetails?.officeAddress.address1 || '',
+  guardianOfficeAddress2: editData?.guardianDetails?.officeAddress.address2 || '',
+  guardianOfficeAddress3: editData?.guardianDetails?.officeAddress.address3 || '',
   guardianDesignation: editData?.guardianDetails?.designation || '',
   guardianOrganization: editData?.guardianDetails?.organisation || '',
   guardianAadharNo: editData?.guardianDetails?.aadhaarNo || '',
   guardianRemarks: editData?.guardianDetails?.remarks || '',
-  guardianAddress1: editData?.guardianDetails?.address1 || '',
-  guardianAddress2: editData?.guardianDetails?.address2 || '',
-  guardianAddress3: editData?.guardianDetails?.address3 || '',
-  guardianLocalCountry: editData?.guardianDetails?.localCountry?.name
+  guardianAddress1: editData?.guardianDetails?.localAddress.address1 || '',
+  guardianAddress2: editData?.guardianDetails?.localAddress.address2 || '',
+  guardianAddress3: editData?.guardianDetails?.localAddress.address3 || '',
+  guardianLocalCountry: editData?.guardianDetails?.localAddress.country?.name
     ? {
-        name: editData?.guardianDetails?.localCountry?.name || '',
-        isoCode: editData?.guardianDetails?.localCountry?.isoCode || '',
+        name: editData?.guardianDetails?.localAddress.country?.name || '',
+        isoCode: editData?.guardianDetails?.localAddress.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
   guardianLocalState: {
-    name: editData?.guardianDetails?.localState?.name || '',
-    isoCode: editData?.guardianDetails?.localState?.isoCode || '',
+    name: editData?.guardianDetails?.localAddress.state?.name || '',
+    isoCode: editData?.guardianDetails?.localAddress.state?.isoCode || '',
   },
   guardianLocalCity: {
-    name: editData?.guardianDetails?.localCity || '',
+    name: editData?.guardianDetails?.localAddress.city || '',
   },
-  guardianLocalPincode: editData?.guardianDetails?.localPincode || '',
+  guardianLocalPincode: editData?.guardianDetails?.localAddress.pincode || '',
 
-  guardianOfficeCountry: editData?.guardianDetails?.officeCountry?.name
+  guardianOfficeCountry: editData?.guardianDetails?.officeAddress.country?.name
     ? {
-        name: editData?.guardianDetails?.officeCountry?.name || '',
-        isoCode: editData?.guardianDetails?.officeCountry?.isoCode || '',
+        name: editData?.guardianDetails?.officeAddress.country?.name || '',
+        isoCode: editData?.guardianDetails?.officeAddress.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
   guardianOfficeState: {
-    name: editData?.guardianDetails?.officeState?.name || '',
-    isoCode: editData?.guardianDetails?.officeState?.isoCode || '',
+    name: editData?.guardianDetails?.officeAddress.state?.name || '',
+    isoCode: editData?.guardianDetails?.officeAddress.state?.isoCode || '',
   },
   guardianOfficeCity: {
-    name: editData?.guardianDetails?.officeCity || '',
+    name: editData?.guardianDetails?.officeAddress.city || '',
   },
-  guardianOfficePincode: editData?.guardianDetails?.officePincode || '',
+  guardianOfficePincode: editData?.guardianDetails?.officeAddress.pincode || '',
 });
 
-export const CommunicationFieldsInitialValues = (editData?: IInquiryData | null) => ({
-  commPrimaryContactNumber: editData?.studentCommunicationDetails?.primaryContactNo || '',
-  parentContactNumber: editData?.studentCommunicationDetails?.parentContactNo
-    ? validatePhoneNumber(editData?.studentCommunicationDetails?.parentContactNo)
+export const CommunicationFieldsInitialValues = (
+  editData?: ICommunicationInformationResponse | null
+) => ({
+  commPrimaryContactNumber: editData?.primaryContactNo || '',
+  parentContactNumber: editData?.parentContactNo
+    ? validatePhoneNumber(editData?.parentContactNo)
     : '',
-  parentEmail: editData?.studentCommunicationDetails?.parentEmail || '',
-  studentContactNo: editData?.studentCommunicationDetails?.studentContactNo || '',
-  studentEmail: editData?.studentCommunicationDetails?.studentEmail || '',
-  whatsAppContactNo: editData?.studentCommunicationDetails?.whatsAppNo
-    ? validatePhoneNumber(editData?.studentCommunicationDetails?.whatsAppNo)
-    : '',
+  parentEmail: editData?.parentEmail || '',
+  whatsAppContactNo: editData?.whatsappNo ? validatePhoneNumber(editData?.whatsappNo) : '',
 
-  localCountry: editData?.studentCommunicationDetails?.localCountry?.name
+  localCountry: editData?.localAddress?.country?.name
     ? {
-        name: editData?.studentCommunicationDetails?.localCountry?.name || '',
-        isoCode: editData?.studentCommunicationDetails?.localCountry?.isoCode || '',
+        name: editData?.localAddress?.country?.name || '',
+        isoCode: editData?.localAddress?.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
   localState: {
-    name: editData?.studentCommunicationDetails?.localState?.name || '',
-    isoCode: editData?.studentCommunicationDetails?.localState?.isoCode || '',
+    name: editData?.localAddress?.state?.name || '',
+    isoCode: editData?.localAddress?.state?.isoCode || '',
   },
   localCity: {
-    name: editData?.studentCommunicationDetails?.localCity?.name || '',
+    name: editData?.localAddress?.city || '',
   },
-  localPincode: editData?.studentCommunicationDetails?.localPinCode || '',
-  localAddressLine1: editData?.studentCommunicationDetails?.localAddressLine1 || '',
-  localAddressLine2: editData?.studentCommunicationDetails?.localAddressLine2 || '',
-  localAddressLine3: editData?.studentCommunicationDetails?.localAddressLine3 || '',
+  localPincode: editData?.localAddress?.pincode || '',
+  localAddressLine1: editData?.localAddress?.address1 || '',
+  localAddressLine2: editData?.localAddress?.address2 || '',
+  localAddressLine3: editData?.localAddress?.address3 || '',
   isOpenLocalAddress: true,
   sameAsStudentForLocal: false,
-  emergencyCountry: editData?.studentCommunicationDetails?.emergencyCountry?.name
+  emergencyCountry: editData?.emergencyAddress?.country?.name
     ? {
-        name: editData?.studentCommunicationDetails?.emergencyCountry?.name || '',
-        isoCode: editData?.studentCommunicationDetails?.emergencyCountry?.isoCode || '',
+        name: editData?.emergencyAddress?.country?.name || '',
+        isoCode: editData?.emergencyAddress?.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
   emergencyState: {
-    name: editData?.studentCommunicationDetails?.emergencyState?.name || '',
-    isoCode: editData?.studentCommunicationDetails?.emergencyState?.isoCode || '',
+    name: editData?.emergencyAddress?.state?.name || '',
+    isoCode: editData?.emergencyAddress?.state?.isoCode || '',
   },
-  emergencyCity: { name: editData?.studentCommunicationDetails?.emergencyCity?.name || '' },
-  emergencyPincode: editData?.studentCommunicationDetails?.emergencyPinCode || '',
-  emergencyAddressLine1: editData?.studentCommunicationDetails?.emergencyAddressLine1 || '',
-  emergencyAddressLine2: editData?.studentCommunicationDetails?.emergencyAddressLine2 || '',
-  emergencyAddressLine3: editData?.studentCommunicationDetails?.emergencyAddressLine3 || '',
+  emergencyCity: { name: editData?.emergencyAddress?.city || '' },
+  emergencyPincode: editData?.emergencyAddress?.pincode || '',
+  emergencyAddressLine1: editData?.emergencyAddress?.address1 || '',
+  emergencyAddressLine2: editData?.emergencyAddress?.address2 || '',
+  emergencyAddressLine3: editData?.emergencyAddress?.address3 || '',
   emergencySameAsLocal: false,
   isOpenEmergencyAddress: true,
 
-  permanentAddress: editData?.studentCommunicationDetails?.permanentAddressLine1 || '',
-  permanentAddressLine2: editData?.studentCommunicationDetails?.permanentAddressLine2 || '',
-  permanentAddressLine3: editData?.studentCommunicationDetails?.permanentAddressLine3 || '',
-  permanentCountry: editData?.studentCommunicationDetails?.permanentCountry?.name
+  permanentAddress: editData?.permanentAddress?.address1 || '',
+  permanentAddressLine2: editData?.permanentAddress?.address2 || '',
+  permanentAddressLine3: editData?.permanentAddress?.address3 || '',
+  permanentCountry: editData?.permanentAddress?.country?.name
     ? {
-        name: editData?.studentCommunicationDetails?.permanentCountry?.name || '',
-        isoCode: editData?.studentCommunicationDetails?.permanentCountry?.isoCode || '',
+        name: editData?.permanentAddress?.country?.name || '',
+        isoCode: editData?.permanentAddress?.country?.isoCode || '',
       }
     : { name: 'India', isoCode: 'IN' },
   permanentState: {
-    name: editData?.studentCommunicationDetails?.permanentState?.name || '',
-    isoCode: editData?.studentCommunicationDetails?.permanentState?.isoCode || '',
+    name: editData?.permanentAddress?.state?.name || '',
+    isoCode: editData?.permanentAddress?.state?.isoCode || '',
   },
-  permanentCity: { name: editData?.studentCommunicationDetails?.permanentCity?.name || '' },
-  permanentPincode: editData?.studentCommunicationDetails?.permanentPinCode || '',
+  permanentCity: { name: editData?.permanentAddress?.city || '' },
+  permanentPincode: editData?.permanentAddress?.pincode || '',
   sameAsLocalForPermanent: false,
   isOpenPermanentAddress: true,
-
-  remarks: editData?.studentCommunicationDetails?.remarks || '',
 });
 
-export const additionalDetailsInitialValues = (editData?: IInquiryData | null) => ({
-  category: editData?.studentAdditionalDetails?.category || Category.General,
-  RTE: editData?.studentAdditionalDetails?.category !== Category.General,
-  bplStudent: editData?.studentAdditionalDetails?.bplStudent || false,
-  bplCardNo: editData?.studentAdditionalDetails?.bplCardNo || '',
-  personWithDisability: editData?.studentAdditionalDetails?.personWithDisability || false,
-  secondLanguage: editData?.studentAdditionalDetails?.secondLanguage || '',
-  emergencyContactNo: editData?.studentAdditionalDetails?.emergencyContactNo
-    ? validatePhoneNumber(editData?.studentAdditionalDetails?.emergencyContactNo)
+export const additionalDetailsInitialValues = (
+  editData?: IAdditionalInformationResponse | null
+) => ({
+  category: editData?.category || Category.General,
+  RTE: editData?.category !== Category.General,
+  bplStudent: editData?.isBPLStudent || false,
+  bplCardNo: editData?.bplCardNo || '',
+  personWithDisability: editData?.haveDisability || false,
+  secondLanguage: editData?.secondLanguage || '',
+  emergencyContactNo: editData?.emergencyContactNo
+    ? validatePhoneNumber(editData?.emergencyContactNo)
     : '',
-  relationName: editData?.studentAdditionalDetails?.relationName || '',
-  relation: editData?.studentAdditionalDetails?.relation || '',
-  singleParentChild: editData?.studentAdditionalDetails?.singleParentChild || false,
-  singleChild: editData?.studentAdditionalDetails?.singleChild || false,
-  sponsorStudent: '',
-  sponsorName: editData?.studentAdditionalDetails?.sponsorName || '',
+  relationName: editData?.emergencyRelativeName || '',
+  relation: editData?.emergencyRelation || '',
+  singleParentChild: editData?.isSingleParentChild || false,
+  singleChild: editData?.isSingleChild || false,
 });
 
-export const medicalFieldsInitialValues = (editData?: IInquiryData | null) => ({
-  weight: editData?.studentMedicalRecords?.weight || '',
-  height: editData?.studentMedicalRecords?.height || '',
-  bmi: editData?.studentMedicalRecords?.bodyMassIndex || '',
+export const medicalFieldsInitialValues = (editData?: IMedicalInformationResponse | null) => ({
+  weight: editData?.weightKg || '',
+  height: editData?.heightCm || '',
+  bmi: editData?.bodyMassIndex || '',
   pulseRate: '',
-  haemoglobin: editData?.studentMedicalRecords?.haemoglobin || '',
-  allergies: editData?.studentMedicalRecords?.allergies || '',
-  covidVaccination: editData?.studentMedicalRecords?.covidVaccination || '',
-  childImmunisation: editData?.studentMedicalRecords?.childImmunisation || '',
-  immunisationRemarks: editData?.studentMedicalRecords?.immunisationRemarks || '',
+  haemoglobin: editData?.hemoglobin || '',
+  allergies: editData?.allergies || '',
+  covidVaccination: editData?.covidVaccinationDoses || '',
+  childImmunisation: editData?.childImmunization || '',
+  immunisationRemarks: editData?.immunizationRemarks || '',
 });
 
-export const previousSchoolFieldsInitialValues = (editData?: IInquiryData | null) => ({
-  schoolName: editData?.previousSchoolDetails?.previousSchoolName || '',
-  schoolAddress: editData?.previousSchoolDetails?.previousSchoolAddress || '',
-  schoolBoard: editData?.previousSchoolDetails?.previousSchoolBoard || '',
-  schoolMedium: editData?.previousSchoolDetails?.previousSchoolMedium || '',
-  tcNumber: editData?.previousSchoolDetails?.tcNo || '',
-  lastClassPassed: editData?.previousSchoolDetails?.lastClassPassed || '',
-  percentage: editData?.previousSchoolDetails?.percentage || '',
+export const previousSchoolFieldsInitialValues = (editData?: IPreviousSchoolResponse | null) => ({
+  schoolName: editData?.schoolName || '',
+  schoolAddress: editData?.schoolAddress || '',
+  schoolBoard: editData?.board || '',
+  schoolMedium: editData?.medium || '',
+  tcNumber: editData?.tcNumber || '',
+  lastClassPassed: editData?.lastClassAttended || '',
+  percentage: editData?.percentageObtained || '',
 });
 
-export const bankDetailsInitialValues = (editData?: IInquiryData | null) => ({
-  bankName: editData?.parentBankDetails?.bankName || '',
-  accountNo: editData?.parentBankDetails?.accountNumber || '',
-  ifscCode: editData?.parentBankDetails?.ifscCode || '',
-  branchName: editData?.parentBankDetails?.branchName || '',
-  accountHolderName: editData?.parentBankDetails?.accountHolderName || '',
+export const bankDetailsInitialValues = (editData?: IBankDetailsResponse | null) => ({
+  bankName: editData?.bankName || '',
+  accountNo: editData?.accountNo || '',
+  ifscCode: editData?.ifscCode || '',
+  branchName: editData?.branchName || '',
+  accountHolderName: editData?.accountHolderName || '',
 });

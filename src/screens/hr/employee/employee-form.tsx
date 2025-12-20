@@ -263,9 +263,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           firstName: values.firstName,
           middleName: values.middleName,
           shortName: values.shortName,
-
           employeeStatusType: values.employeeStatusType,
-
           dateOfBirth: values.dob.format('YYYY-MM-DD'),
           familyCast: values.familyCast,
           castType: values.castType,
@@ -274,21 +272,17 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           maritalStatus: values.maritalStatus,
           bloodGroup: values.bloodGroup,
           mobileNo: values.mobileNo,
+          secondaryMobileNo: values.secondaryMobileNo,
           email: values.email,
-
           department: values.department,
-          // designation: values.designation,
           dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
-
           employeeGroup: values.employeeGroup,
           qualification: values.qualification,
           roleId: values.role,
           identificationMark1: values.identificationMark1,
-
           address1: values.addressLine1,
           address2: values.addressLine2,
           address3: values.addressLine3,
-
           country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
           city: values?.city?.name,
           state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
@@ -440,6 +434,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             maritalStatus: values.maritalStatus,
             bloodGroup: values.bloodGroup,
             mobileNo: values.mobileNo,
+            secondaryMobileNo: values.secondaryMobileNo,
             email: values.email,
 
             department: values.department,
@@ -476,6 +471,16 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     },
     [updateEmployee]
   );
+
+  // const handleReportingManager= useCallback(async (values: any, formik: any, id: any)=>{
+  //   const res = await updateReportingManager({
+  //     employeeId: values.employeeId,
+  //     body: {
+  //       reportingManagerId: values.reportingManagerId,
+  //     },
+  //   }).unwrap();
+  //   return res;
+  // },[updateReportingManager])
 
   const handleSave = useCallback(
     async (
@@ -519,6 +524,11 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           // }
         } else if (activeStep === 5) {
           await handleBankDetailsInformation(values, formik);
+          // if (isSaveButton) {
+          shikshaMitraToast.success({ message: 'Bank details updated successfully' });
+          // }
+        } else if (activeStep === 6) {
+          // await handleBankDetailsInformation(values, formik);
           // if (isSaveButton) {
           shikshaMitraToast.success({ message: 'Bank details updated successfully' });
           // }
