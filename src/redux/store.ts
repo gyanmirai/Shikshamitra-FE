@@ -47,7 +47,6 @@ import { paymentHistoryApi } from './feeCollection/paymentHistory';
 import { bookIssuedApi } from './bookIssuedData/bookIssuedDataApi';
 import { bookCategoryApi } from './bookCategoryApi/bookCategoryApi';
 import { issueReturnFormApi } from './issueRetunApi/issueReturnApi';
-import { communicationApi } from './communication/communicationApi';
 import { budgetSubCategoryApi } from './budgetApi/budgetSubCategory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
@@ -72,6 +71,7 @@ import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { memberManagementApi } from './memberManagement/memberManagementApi';
 import { reservationDataApi } from './reservationDataApi/reservationDataApi';
 import { bookConditionOptionsApi } from './library/setting/bookConditionApi';
+import { classManagementApi } from './classManagementApi/classManagementApi';
 import { quizManagementApi } from './academics/examination/quiz-management-api';
 import { LibraryChargeApi } from './library/charges-management/charges-get-api';
 import { StudentRegistrationApi } from './student/registration/registration-api';
@@ -181,13 +181,14 @@ const reducers = combineReducers({
   [LibraryChargeApi.reducerPath]: LibraryChargeApi.reducer,
   [libraryChargeCategoryOptionsApi.reducerPath]: libraryChargeCategoryOptionsApi.reducer,
   [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
-  [communicationApi.reducerPath]: communicationApi.reducer,
+  // [communicationApi.reducerPath]: communicationApi.reducer,
   [roleOptionsApi.reducerPath]: roleOptionsApi.reducer,
   [transportApi.reducerPath]: transportApi.reducer,
   [libraryModuleApi.reducerPath]: libraryModuleApi.reducer,
   [openLibraryApi.reducerPath]: openLibraryApi.reducer,
   [academicApi.reducerPath]: academicApi.reducer,
   [instituteSetupApi.reducerPath]: instituteSetupApi.reducer,
+  [classManagementApi.reducerPath]: classManagementApi.reducer,
   // [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
 });
 
@@ -282,7 +283,7 @@ const store = configureStore({
       LibraryChargeApi.middleware,
       libraryChargeCategoryOptionsApi.middleware,
       bookConditionOptionsApi.middleware,
-      communicationApi.middleware,
+      // communicationApi.middleware,
       // meetingDetailsApi.middleware,
       // holidayApi.middleware,
       roleOptionsApi.middleware,
@@ -290,6 +291,7 @@ const store = configureStore({
       libraryModuleApi.middleware,
       openLibraryApi.middleware,
       instituteSetupApi.middleware,
+      classManagementApi.middleware,
     ]),
 });
 

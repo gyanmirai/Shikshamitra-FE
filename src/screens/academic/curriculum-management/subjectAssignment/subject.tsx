@@ -16,17 +16,102 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import electiveSubjectData from 'src/json/academic/curriculum/electiveSubjectData.json';
 
 import SubjectTable from './component/subjectTable';
-import SubjectForm from './component/subjectFormComponent';
 import { ViewSubject } from './component/viewDetailComponents/viewSubjectComponent';
+import SubjectAssignmentForm from './component/subjectAssignmentForm/subjectAssignmentForm';
 
 import type { ISubjectFormValues } from './component/type';
 
 const Subject = () => {
   // State to manage subject table data and filtered data
-  const [subjectTableData, setSubjectTableData] = useState<any[]>(electiveSubjectData);
+  const [subjectTableData, setSubjectTableData] = useState<any[]>([
+    {
+      subjectType: 1,
+      electiveGroupId: 'EG-01',
+      electiveGroupName: 'Tech & Fitness Group',
+      color: '#4CAF50', // Green
+      subjects: [
+        {
+          subjectId: 'sub-01',
+          subjectName: 'Computer',
+          subjectCode: 'CS-12',
+          status: 1,
+          color: '#80f261ff',
+        },
+        {
+          subjectId: 'sub-02',
+          subjectName: 'Physical Training',
+          subjectCode: 'PE-12',
+          status: 1,
+          color: '#e87025ff',
+        },
+      ],
+    },
+
+    {
+      subjectType: 1,
+      electiveGroupId: 'EG-02',
+      electiveGroupName: 'Language Enrichment Group',
+      color: '#FF9800', // Orange
+      subjects: [
+        {
+          subjectId: 'sub-03',
+          subjectName: 'Hindi',
+          subjectCode: 'HIN-12',
+          status: 1,
+          color: '#f261b1ff',
+        },
+        {
+          subjectId: 'sub-04',
+          subjectName: 'Sanskrit',
+          subjectCode: 'SAN-12',
+          status: 1,
+          color: '#61d7f2ff',
+        },
+      ],
+    },
+    {
+      subjectType: 0,
+      subjectId: 'sub-05',
+      subjectName: 'Mathematics',
+      subjectCode: 'MATH-10',
+      status: 1,
+      color: '#2196F3', // Blue
+    },
+    {
+      subjectType: 0,
+      subjectId: 'sub-06',
+      subjectName: 'Science',
+      subjectCode: 'SCI-12',
+      status: 1,
+      color: '#9C27B0', // Purple
+    },
+    {
+      subjectType: 0,
+      subjectId: 'sub-07',
+      subjectName: 'Social Science',
+      subjectCode: 'SOC-12',
+      status: 1,
+      color: '#3F51B5', // Indigo
+    },
+    {
+      subjectType: 0,
+      subjectId: 'sub-08',
+      subjectName: 'Gujarati',
+      subjectCode: 'GUJ-12',
+      status: 1,
+      color: '#795548', // Brown
+    },
+    {
+      subjectType: 0,
+      subjectId: 'sub-09',
+      subjectName: 'English',
+      subjectCode: 'ENG-12',
+      status: 1,
+      color: '#E91E63', // Pink
+    },
+  ]);
 
   // Query hook to fetch class data
   // State to store all classes/standards for the selected organization
@@ -194,7 +279,7 @@ const Subject = () => {
         <>
           {/* Subject form card for creating/editing subjects */}
           <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-            <SubjectForm
+            <SubjectAssignmentForm
               onClose={handleClose}
               data={selectedSubject}
               isEdit={isEdit}

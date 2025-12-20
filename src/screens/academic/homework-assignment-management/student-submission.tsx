@@ -171,7 +171,11 @@ const StudentSubmission = (props: TabComponentType) => {
           }}
         />
       </Box>
-      <StudentSubmissions />
+      <StudentSubmissions
+        selectedClass={classes}
+        selectedDivision={division}
+        selectedSubject={subject}
+      />
     </Box>
   );
 };

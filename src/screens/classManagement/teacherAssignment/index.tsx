@@ -3,6 +3,8 @@
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
+// import { useGetClassQuery } from 'src/redux/class/classApi';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Save } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
@@ -12,10 +14,9 @@ import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
-// import { useGetClassQuery } from 'src/redux/class/classApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
-// import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
@@ -28,14 +29,18 @@ import {
   Typography,
   Autocomplete,
 } from '@mui/material';
+import {
+  useGetTeacherAssignmentsQuery,
+  useUpdateTeacherAssignmentsMutation,
+} from 'src/redux/classManagementApi/teacherAssignmentApi/teacherAssignmentApi';
 
 // import { TeacherListPopover } from '../../subject/component/subjectCardComponent/teacherListPopover.';
 
-import { TeacherListPopover } from '../../subject/component/subjectCardComponent';
+import { TeacherListPopover } from '../../academic/curriculum-management/subjectAssignment/component/subjectAssignmentForm/subjectCardComponent';
 
-import type { ITeacherOption } from '../../subject/component/type';
+import type { ITeacherOption } from '../../academic/curriculum-management/subjectAssignment/component/type';
 
-const Teacher = ({
+const TeacherAssignment = ({
   searchParams,
   setSearchParams,
 }: {
@@ -84,87 +89,75 @@ const Teacher = ({
 
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [classes, setClasses] = useState<string>('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [subjectList, setSubjectList] = useState<any[]>([]);
+  const [tableData, setTableData] = useState<any[]>([]);
+  const [originalTableData, setOriginalTableData] = useState<any[]>([]);
 
-  // const { data: classData, isLoading } = useQueryAndMutation({
+  const selectedClass = useMemo(
+    () => allClass.find((cls) => cls.id === classes),
+    [allClass, classes]
+  );
+
+  const divisions = useMemo(() => selectedClass?.divisions || [], [selectedClass]);
+
+  // // Fetch Subjects
+  // const { data: subjectsData } = useQueryAndMutation({
   //   type: 'query',
-  //   currentQueryAndMutation: useGetClassQuery,
+  //   currentQueryAndMutation: useGetSubjectsQuery,
+  //   params: {
+  //     academicMediumId: medium?.id,
+  //     classId: classes,
+  //   },
   // });
 
-  const initialTableData = [
-    {
-      division: 'A',
-      subjects: {
-        Math: [],
-        English: [],
-        Science: [],
-        History: [],
-        Geography: [],
-        Computer: [],
-        Physics: [],
-        Chemistry: [],
-        Biology: [],
-      },
-    },
-    {
-      division: 'B',
-      subjects: {
-        Math: [],
-        English: [],
-        Science: [],
-        History: [],
-        Geography: [],
-        Computer: [],
-        Physics: [],
-        Chemistry: [],
-        Biology: [],
-      },
-    },
-    {
-      division: 'C',
-      subjects: {
-        Math: [],
-        English: [],
-        Science: [],
-        History: [],
-        Geography: [],
-        Computer: [],
-        Physics: [],
-        Chemistry: [],
-        Biology: [],
-      },
-    },
-    {
-      division: 'D',
-      subjects: {
-        Math: [],
-        English: [],
-        Science: [],
-        History: [],
-        Geography: [],
-        Computer: [],
-        Physics: [],
-        Chemistry: [],
-        Biology: [],
-      },
-    },
-    {
-      division: 'E',
-      subjects: {
-        Math: [],
-        English: [],
-        Science: [],
-        History: [],
-        Geography: [],
-        Computer: [],
-        Physics: [],
-        Chemistry: [],
-        Biology: [],
-      },
-    },
-  ];
+  // useEffect(() => {
+  //   if (subjectsData) {
+  //     setSubjectList(subjectsData);
+  //   }
+  // }, [subjectsData]);
 
-  const [tableData, setTableData] = useState(initialTableData);
-  const [originalTableData, setOriginalTableData] = useState(initialTableData);
+  // Fetch Assignments
+  const { data: assignmentsData, refetch } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetTeacherAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      classId: classes,
+    },
+  });
+
+  // Initialize Table Data
+  useEffect(() => {
+    if (divisions.length > 0 && subjectList.length > 0) {
+      const newTableData = divisions.map((div: any) => {
+        const row: any = {
+          divisionId: div.id,
+          divisionName: div.name,
+          subjects: {},
+        };
+
+        // Initialize subject buckets
+        subjectList.forEach((sub: any) => {
+          row.subjects[sub.id] = [];
+        });
+
+        // Fill with assignments if available
+        if (assignmentsData && assignmentsData.length > 0) {
+          assignmentsData.forEach((assignment: any) => {
+            if (assignment.divisionId === div.id) {
+              row.subjects[assignment.subjectId] = assignment.teacherIds || [];
+            }
+          });
+        }
+
+        return row;
+      });
+
+      setTableData(newTableData);
+      setOriginalTableData(JSON.parse(JSON.stringify(newTableData))); // Deep copy
+    }
+  }, [divisions, subjectList, assignmentsData]);
 
   const hasChanges = useMemo(
     () => JSON.stringify(tableData) !== JSON.stringify(originalTableData),
@@ -183,14 +176,11 @@ const Teacher = ({
     const modifiedSubjects = new Set<string>();
 
     tableData.forEach((division, divIndex) => {
-      Object.entries(division.subjects).forEach(([subject, teachers]) => {
-        if (
-          JSON.stringify(teachers) !==
-          JSON.stringify(
-            originalTableData[divIndex].subjects[subject as keyof typeof division.subjects]
-          )
-        ) {
-          modifiedSubjects.add(subject);
+      Object.entries(division.subjects).forEach(([subjectId, teachers]) => {
+        const originalTeachers = originalTableData[divIndex]?.subjects[subjectId];
+        if (JSON.stringify(teachers) !== JSON.stringify(originalTeachers)) {
+          const subjectName = subjectList.find((s) => s.id === subjectId)?.name;
+          if (subjectName) modifiedSubjects.add(subjectName);
         }
       });
     });
@@ -199,32 +189,52 @@ const Teacher = ({
   };
 
   const handleReset = () => {
-    setTableData(originalTableData);
+    setTableData(JSON.parse(JSON.stringify(originalTableData)));
     setFocusedCells([]);
     resetConfirmDialog.onFalse();
     shikshaMitraToast.success({ message: 'Teachers assignment reset successfully' });
   };
 
-  const handleSave = () => {
-    setOriginalTableData(tableData);
-    setFocusedCells([]);
-    saveConfirmDialog.onFalse();
-    shikshaMitraToast.success({ message: 'Teachers assignment saved successfully' });
+  const [updateTeacherAssignments, { isLoading: isSaving }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateTeacherAssignmentsMutation,
+  });
+
+  const handleSave = async () => {
+    if (!medium?.id || !classes) return;
+
+    try {
+      const assignments: any[] = [];
+
+      tableData.forEach((row) => {
+        Object.entries(row.subjects).forEach(([subjectId, teacherIds]) => {
+          if (Array.isArray(teacherIds) && teacherIds.length > 0) {
+            assignments.push({
+              divisionId: row.divisionId,
+              subjectId,
+              teacherIds,
+            });
+          }
+        });
+      });
+
+      const payload = {
+        academicMediumId: medium.id,
+        classId: classes,
+        assignments,
+      };
+
+      await updateTeacherAssignments(payload).unwrap();
+      refetch();
+      setOriginalTableData(JSON.parse(JSON.stringify(tableData)));
+      setFocusedCells([]);
+      saveConfirmDialog.onFalse();
+      shikshaMitraToast.success({ message: 'Teachers assignment saved successfully' });
+    } catch (error) {
+      console.error(error);
+      shikshaMitraToast.error({ message: 'Failed to save assignments' });
+    }
   };
-
-  const subjectList = [
-    { name: 'math', code: 'MTH', color: '#FF5733' },
-    { name: 'english', code: 'ENG', color: '#33FF57' },
-    { name: 'science', code: 'SCI', color: '#3357FF' },
-    { name: 'social science', code: 'SST', color: '#FF33F5' },
-    { name: 'computer', code: 'COM', color: '#33FFF5' },
-    { name: 'gujarati', code: 'GUJ', color: '#FFB533' },
-    { name: 'hindi', code: 'HIN', color: '#FF3333' },
-    { name: 'marathi', code: 'MAR', color: '#33FF33' },
-    { name: 'sanskrit', code: 'SNS', color: '#3333FF' },
-  ];
-
-  const divisionList = ['A', 'B', 'C', 'D', 'E'];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -265,18 +275,19 @@ const Teacher = ({
           >
             Reset
           </Button>
-          <Button
+          <LoadingButton
             startIcon={<Save />}
             variant="contained"
             size="small"
             onClick={() => {
               saveConfirmDialog.onTrue();
             }}
+            loading={isSaving}
             disabled={!hasChanges}
             sx={{ px: '32px' }}
           >
             Save
-          </Button>
+          </LoadingButton>
         </Box>
       </Box>
 
@@ -293,20 +304,23 @@ const Teacher = ({
             align: 'left',
             minWidth: '90px',
             sticky: true,
-            render: (value: string) => (
+            render: (value: any, row: any) => (
               <Typography variant="caption" fontSize="13px">
-                {value}
+                {row.divisionName}
               </Typography>
             ),
           },
           ...subjectList.map((subject) => ({
-            id: subject.name,
-            label: `${subject.name.charAt(0).toUpperCase() + subject.name.slice(1)} (${subject.code})`,
+            id: subject.id,
+            label: `${subject.name.charAt(0).toUpperCase() + subject.name.slice(1)} ${
+              subject.code ? `(${subject.code})` : ''
+            }`,
             isFilter: false,
             isSort: false,
             render: (_value: any, row: any) => {
+              const currentTeachers = row.subjects[subject.id] || [];
               const isCellFocused = focusedCells.some(
-                (cell) => cell.division === row.division && cell.subject === subject.name
+                (cell) => cell.division === row.divisionId && cell.subject === subject.id
               );
               return (
                 <Autocomplete
@@ -314,15 +328,11 @@ const Teacher = ({
                   disableCloseOnSelect
                   options={teacherOptions}
                   getOptionLabel={(option) => option.name}
-                  value={
-                    row[subject.name]
-                      ? teacherOptions.filter((opt) => row[subject.name].includes(opt.value))
-                      : []
-                  }
+                  value={teacherOptions.filter((opt) => currentTeachers.includes(opt.value))}
                   onChange={(_, newValue) => {
                     const updatedTableData = [...tableData];
                     const divisionIndex = updatedTableData.findIndex(
-                      (d) => d.division === row.division
+                      (d) => d.divisionId === row.divisionId
                     );
 
                     if (divisionIndex !== -1) {
@@ -330,14 +340,13 @@ const Teacher = ({
                         ...updatedTableData[divisionIndex],
                         subjects: {
                           ...updatedTableData[divisionIndex].subjects,
-                          [subject.name.charAt(0).toUpperCase() + subject.name.slice(1)]:
-                            newValue.map((teacher) => teacher.value),
+                          [subject.id]: newValue.map((teacher) => teacher.value),
                         },
                       };
                       setTableData(updatedTableData);
                     }
 
-                    const newFocus = { division: row.division, subject: subject.name };
+                    const newFocus = { division: row.divisionId, subject: subject.id };
                     setFocusedCells((prev) => {
                       const exists = prev.some(
                         (cell) =>
@@ -430,18 +439,7 @@ const Teacher = ({
             },
           })),
         ]}
-        data={divisionList.map((division) => {
-          const divisionData = tableData.find((d) => d.division === division);
-          const row: any = { division };
-
-          subjectList.forEach((subject) => {
-            const formattedSubject = subject.name.charAt(0).toUpperCase() + subject.name.slice(1);
-            row[subject.name] =
-              divisionData?.subjects[formattedSubject as keyof typeof divisionData.subjects] || [];
-          });
-
-          return row;
-        })}
+        data={tableData}
       />
 
       <ConfirmDialog
@@ -472,18 +470,19 @@ const Teacher = ({
           </>
         }
         action={
-          <Button
+          <LoadingButton
             size="small"
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             onClick={handleSave}
+            loading={isSaving}
           >
             Save
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>
   );
 };
 
-export default Teacher;
+export default TeacherAssignment;

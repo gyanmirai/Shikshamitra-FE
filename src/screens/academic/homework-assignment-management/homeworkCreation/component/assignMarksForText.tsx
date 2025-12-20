@@ -1,14 +1,20 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { useUpdateHomeworkSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 
 import { assignGradeValidationSchema } from './validationSchema';
 
@@ -24,6 +30,11 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
   data,
   onClose,
 }: IAssignGradeProps) => {
+  const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
+  });
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   /**
    * Initialize formik form with grade and feedback fields
    * @param initialValues Object containing initial grade and feedback values from data prop
@@ -35,8 +46,17 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     },
     validationSchema: assignGradeValidationSchema,
     onSubmit(values) {
+      const isUpdate = typeof data?.totalMarks === 'number' || Boolean(data?.feedback);
+      updateSubmissionFeedback({
+        homeworkId: data?.id, // Assuming data.assignmentId is available
+        studentId: data?.studentName, // Assuming data.studentId is available
+        academicMediumId: medium?.id, // Assuming data.academicMediumId is available
+        body: {
+          feedback: values.feedback,
+        },
+      });
       shikshaMitraToast.success({
-        message: `Feedback have been ${data?.feedback ? 'updated' : 'added'} successfully for ${data?.studentName}.`,
+        message: `Feedback and marks have been ${isUpdate ? 'updated' : 'added'} successfully for ${data?.studentName ?? 'the student'}.`,
       });
       onClose(null, true);
     },
@@ -46,7 +66,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         {/* <form onSubmit={formik.handleSubmit}> */}
-        <Scrollbar sx={{ p: 2, height: '500px' }}>
+        <DialogScrollContent>
           <Grid container spacing={3}>
             <Grid size={{ xs: 12 }}>
               <Box display="flex" gap={2}>
@@ -140,7 +160,7 @@ I have completed all answers according to the given instructions and provided sc
               </ShakingTextField>
             </Grid>
           </Grid>
-        </Scrollbar>
+        </DialogScrollContent>
         <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             variant="outlined"
@@ -152,10 +172,10 @@ I have completed all answers according to the given instructions and provided sc
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             variant="contained"
             size="small"
-            type="submit"
+            loading={isUpdateLoading}
             onClick={(e: any) => formik.handleSubmit(e)}
             startIcon={
               <Iconify
@@ -166,7 +186,7 @@ I have completed all answers according to the given instructions and provided sc
             }
           >
             {data?.feedback ? 'Update' : 'Submit'}
-          </Button>
+          </LoadingButton>
         </DialogActions>
         {/* </form> */}
       </BackPopUpChecked>

@@ -1,17 +1,21 @@
 'use client';
 
-import type { IDocument } from 'src/screens/academic/curriculum-management/subject/component/type';
+import type { RootState } from 'src/redux/store';
+import type { IDocument } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 // eslint-disable-next-line import/extensions
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { getFileIconByType } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/documentList';
+import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
 import {
   Box,
   Grid,
@@ -23,6 +27,7 @@ import {
   IconButton,
   DialogActions,
 } from '@mui/material';
+import { useUpdateSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 
 import type { IAssignGradeProps } from '../../homeworkCreation/type';
 
@@ -45,6 +50,12 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
    * @param initialValues Object containing initial grade and feedback values from data prop
    * @param onSubmit Handler function that gets called when form is submitted
    */
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateSubmissionFeedbackMutation,
+  });
   const formik = useFormik({
     initialValues: {
       marks: typeof data?.marks === 'number' ? data.marks : '',
@@ -58,6 +69,16 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
     }),
     onSubmit(values) {
       const isUpdate = typeof data?.marks === 'number' || Boolean(data?.feedback);
+      updateSubmissionFeedback({
+        assignmentId: data?.id, // Assuming data.assignmentId is available
+        studentId: data?.studentName, // Assuming data.studentId is available
+        academicMediumId: medium?.id, // Assuming data.academicMediumId is available
+        body: {
+          marks: values.marks,
+          totalMarks: values.totalMarks,
+          feedback: values.feedback,
+        },
+      });
       shikshaMitraToast.success({
         message: `Feedback and marks have been ${isUpdate ? 'updated' : 'added'} successfully for ${data?.studentName ?? 'the student'}.`,
       });
@@ -200,9 +221,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             variant="contained"
-            type="submit"
+            loading={isUpdateLoading}
             size="small"
             onClick={(e: any) => formik.handleSubmit(e)}
             startIcon={
@@ -214,7 +235,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
             }
           >
             {data?.marks ? 'Update' : 'Submit'}
-          </Button>
+          </LoadingButton>
         </DialogActions>
         {/* </form> */}
       </BackPopUpChecked>

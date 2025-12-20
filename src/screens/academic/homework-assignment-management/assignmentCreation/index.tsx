@@ -3,20 +3,26 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
+import { Box, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import assignmentTableData from 'src/json/academic/homeworkAssignment/assignment-table-data.json';
+import {
+  useDeleteAssignmentMutation,
+  usePublishAssignmentMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 
 import AssignmentForm from './components/assignmentForm';
 import AssignmentTable from './components/assignmentTable';
@@ -26,6 +32,8 @@ import { StudentSubmissions } from './studentSubmission/studentSubmission';
 import type { IAssignment } from './type';
 
 const AssignmentCreation = ({ addAssignmentDialog }: any) => {
+  // State to store list of all assignments
+  const [assignmentData] = useState<any[]>(assignmentTableData);
   // Dialog state for add/edit assignment form
   // const addAssignmentDialog = useBoolean();
   // Dialog state for delete assignment confirmation
@@ -40,8 +48,6 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // State to store currently selected assignment for edit/delete/publish
   const [selectedAssignment, setSelectedAssignment] = useState<IAssignment | null>(null);
-  // State to store list of all assignments
-  const [assignmentData] = useState<any[]>(assignmentTableData);
   // Redux dispatch function
   const dispatch = useDispatch();
   // const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
@@ -60,6 +66,16 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
+  const [deleteAssignment, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteAssignmentMutation,
+  });
+
+  const [publishAssignment, { isLoading: isPublishLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePublishAssignmentMutation,
+  });
+
   // Update classes when organization changes
   useEffect(() => {
     // Flatten the list of standards from all stages
@@ -67,13 +83,13 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
 
     setAllClass(allClasses);
-    setClass(allClasses[0]?.name || '');
+    setClass(allClasses[0]?.id || '');
   }, [medium]);
 
   // Update divisions when class changes
   useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.name === classes)?.divisions?.[0]?.name || '');
+    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
+    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.name || '');
   }, [allClass, classes]);
 
   /**
@@ -121,7 +137,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           value={classes}
           onChange={(val) => setClass(val as string)}
           labelKey="name"
-          valueKey="name"
+          valueKey="id"
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
         <CustomSelect
@@ -215,9 +231,10 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       </CustomDialog>
 
       <AssignmentTable
-        data={assignmentData || []}
+        assignmentData={assignmentData}
         dialog={addAssignmentDialog}
         selectedDivision={division}
+        selectedClass={classes}
         onSwitchToggle={(row) => {
           setSelectedAssignment(row);
           publishAssignmentDialog.onTrue();
@@ -253,19 +270,35 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              deleteAssignmentDialog.onFalse();
-              shikshaMitraToast.success({
-                message: `Assignment for ${selectedAssignment?.subjects} has been successfully deleted from Class ${classes} - ${division}.`,
-              });
+            loading={isDeleteLoading}
+            onClick={async () => {
+              try {
+                const payload = {
+                  academicMediumId: medium?.id,
+                  id: selectedAssignment?.id,
+                };
+
+                await deleteAssignment(payload).unwrap();
+
+                shikshaMitraToast.success({
+                  message: `Assignment for "${selectedAssignment?.subjectName}" has been successfully deleted from Class ${classes} - ${division}.`,
+                });
+
+                deleteAssignmentDialog.onFalse();
+                setSelectedAssignment(null);
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete assignment.',
+                });
+              }
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
 
@@ -283,20 +316,35 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             size="small"
+            loading={isPublishLoading}
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {
-              publishAssignmentDialog.onFalse();
-              shikshaMitraToast.success({
-                message: `Assignment has been successfully published for ${selectedAssignment?.subjects} subject in Class ${classes} - ${division}.`,
-              });
-              // publish logic here
+            onClick={async () => {
+              try {
+                const payload = {
+                  id: selectedAssignment?.id,
+                  academicMediumId: medium?.id,
+                };
+
+                await publishAssignment(payload).unwrap();
+
+                shikshaMitraToast.success({
+                  message: `Assignment has been successfully published for "${selectedAssignment?.subjectName}" subject in Class ${classes} - ${division}.`,
+                });
+
+                publishAssignmentDialog.onFalse();
+                setSelectedAssignment(null);
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to publish assignment.',
+                });
+              }
             }}
           >
             Publish
-          </Button>
+          </LoadingButton>
         }
       />
 
@@ -310,7 +358,12 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
         maxWidth="lg"
       >
         <Box sx={{ p: 2 }}>
-          <StudentSubmissions selectedAssignment={selectedAssignment} />
+          <StudentSubmissions
+            selectedAssignment={selectedAssignment}
+            selectedClass={classes}
+            selectedDivision={division}
+            selectedSubject={subject}
+          />
         </Box>
       </CustomDialog>
 

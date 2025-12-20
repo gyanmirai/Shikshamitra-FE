@@ -40,12 +40,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   initialValues = null,
   className,
   subject,
+  classId,
+  subjectId,
 }: IAddNewChapterProps) => {
   // State for managing uploaded documents and their metadata
   // const [documents, setDocuments] = useState<IDocument[]>(initialValues?.documents || []);
   // State for tracking files that have been uploaded but not yet processed
   const theme = useTheme();
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
 
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const previewDialog = useBoolean();
@@ -61,23 +63,43 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   const formik = useFormik<IChapterFormValues>({
     initialValues: getChapterInitialValues(initialValues),
     validationSchema: getChapterValidationSchema(currentYear),
-    onSubmit: (values) => {
-      onSubmit({
-        ...values,
-        startDate: values.startDate,
-        endDate: values.endDate,
-        // documents,
-      });
-      if (initialValues) {
-        shikshaMitraToast.success({
-          message: `Chapter ${values.chapterNo} : ${values.chapterName} has been updated successfully for ${subject} in Class ${className}`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Chapter ${values.chapterNo} : ${values.chapterName} has been successfully added to ${subject} for Class ${className}`,
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          standardId: classId, // Assuming standardId is part of IChapterFormValues
+          subjectId, // Assuming subjectId is part of IChapterFormValues
+          educationMediumId: currentMedium?.id, // Assuming educationMediumId is part of IChapterFormValues
+          chapterNumber: values.chapterNo,
+          chapterName: values.chapterName,
+          chapterStartTime: values?.startDate?.toISOString(),
+          chapterEndTime: values?.endDate?.toISOString(),
+          description: values.description,
+          documents: [], // Assuming documents are managed separately or will be added here
+        };
+
+        if (initialValues) {
+          // For update, include the chapter ID
+          const updatePayload = {
+            id: initialValues.id, // Assuming initialValues has an 'id' for the chapter
+            body: payload,
+          };
+          await updateChapter(updatePayload).unwrap();
+          shikshaMitraToast.success({
+            message: `Chapter ${values.chapterNo} : ${values.chapterName} has been updated successfully for ${subject} in Class ${className}`,
+          });
+        } else {
+          await addChapter(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `Chapter ${values.chapterNo} : ${values.chapterName} has been successfully added to ${subject} for Class ${className}`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to save chapter', error);
+        shikshaMitraToast.error({
+          message: `Failed to save chapter: ${error.message || 'Unknown error'}`,
         });
       }
-      onClose(null, true);
     },
   });
 
@@ -262,6 +284,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   height={initialValues ? 16 : 20}
                 />
               }
+              loading={isUpdateLoading || isAddLoading}
               type="submit"
               size="small"
               variant="contained"

@@ -1,7 +1,7 @@
 import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import type { TeacherProfile } from '../../curriculum-management/subject/component/type';
+import type { TeacherProfile } from '../../curriculum-management/subjectAssignment/component/type';
 
 export interface UploadedFile {
   name: string;
@@ -12,6 +12,7 @@ export interface UploadedFile {
 
 export interface DivisionHomeworkMeta {
   divisionId: string; // ID or name of the division
+  divisionName: string;
   createdAt: Dayjs | null; // When the homework was assigned
   publishDate: Dayjs | null; // When the homework is published
   dueDate: Dayjs | null; // When the homework is due
@@ -19,12 +20,16 @@ export interface DivisionHomeworkMeta {
 }
 
 export interface IHomework {
+  id: string;
   title: string;
   description: string;
+  classId: string;
   class: string; // class ID or name
   subject: string; // subject ID or name
   chapter: string; // list of chapter IDs or names
+  homeworkTypeId: string;
   homeworkType: string;
+  subjectId: string;
   submissionType: number; // 0 = Offline, 1 = Online
   attachments?: File[]; // optional file uploads
   content?: string | null;
@@ -50,6 +55,9 @@ export interface IHomeworkDetail {
 }
 
 export interface IStudentSubmissionsProps {
+  selectedClass: string;
+  selectedDivision: string;
+  selectedSubject: string;
   selectedStudents?: TStudentGrade[];
   selectedHomework?: any | null;
   handleBulkUpdate?: (data: TStudentGrade[]) => void;

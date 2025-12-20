@@ -5,7 +5,7 @@ import * as Yup from 'yup';
 export const assignmentValidationSchema = (currentYear: any) =>
   Yup.object({
     title: Yup.string().required('Assignment Title is required'),
-    class: Yup.string().required('Class is required'),
+    classId: Yup.string().required('Class is required'),
     divisions: Yup.array()
       .of(
         Yup.object().shape({
@@ -68,9 +68,9 @@ export const assignmentValidationSchema = (currentYear: any) =>
         if (!value || value.length === 0) return true; // Let .min(1) handle empty case
         return value.every((div) => div.publishDate && div.dueDate);
       }),
-    subjects: Yup.string().required('Subject is required'),
+    totalMarks: Yup.number().required('Total Marks is required'),
+    subjectId: Yup.string().required('Subject is required'),
     submissionType: Yup.string().required('Submission type is required'),
-    endDate: Yup.date().required('End Date is required'),
     startDate: Yup.date().required('Start Date is required'),
-    assignmentType: Yup.string().required('Assignment Type is required'),
+    assignmentTypeId: Yup.string().required('Assignment Type is required'),
   });

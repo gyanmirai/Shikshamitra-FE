@@ -1,6 +1,11 @@
 import type { FormikProps } from 'formik';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import type {
+  ISubjectAssignmentSubject,
+  ISubjectAssignmentFormValues,
+} from './subjectAssignmentForm/type';
+
 export interface ISubject {
   id: number;
   subjectName: string;
@@ -98,13 +103,13 @@ export interface ITeacherOption {
 
 export interface ISubjectCardProps {
   index: number; // add index to access nested Formik data
-  formik: FormikProps<ISubjectFormValues>;
-  subject: ISubjectDetail;
+  formik: FormikProps<ISubjectAssignmentFormValues>;
+  subject: ISubjectAssignmentSubject;
   isCore: boolean;
   isPublished: boolean;
   // isPublishing: boolean;
   teacherOptions: TeacherProfile[];
-  onSubjectChange: (subjectId: string | number, field: string, value: any) => void;
+  onSubjectChange: (subjectId: string, field: string, value: any) => void;
 }
 
 export type IDocType =

@@ -30,7 +30,7 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
-import type { TeacherProfile, ISubjectCardProps } from './type';
+import type { TeacherProfile, ISubjectCardProps } from '../type';
 
 const SubjectCard: React.FC<ISubjectCardProps> = ({
   formik,
@@ -64,7 +64,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   // @param field - The field name to update
   // @param value - The new value to set
   const handleChange = (field: string, value: any) => {
-    onSubjectChange(subject.subjectNo, field, value);
+    if (!subject?.subjectNo) return;
+    onSubjectChange(subject?.subjectNo, field, value);
   };
 
   useEffect(() => {

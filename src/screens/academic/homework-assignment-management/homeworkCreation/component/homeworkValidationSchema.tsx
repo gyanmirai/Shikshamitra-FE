@@ -60,7 +60,7 @@ export const homeworkValidationSchema = (currentYear: any) =>
       }),
     subject: Yup.string().required('Subject is required'),
     chapters: Yup.array().of(Yup.string()),
-    homeworkType: Yup.string().required('Homework Type is required'),
+    homeworkTypeId: Yup.string().required('Homework Type is required'),
     submissionType: Yup.string().required('Submission type is required'),
     attachments: Yup.array(),
     createdBy: Yup.object(),

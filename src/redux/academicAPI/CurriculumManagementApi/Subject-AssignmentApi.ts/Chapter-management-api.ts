@@ -4,9 +4,10 @@ export const chaptersApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // GET - Fetch all chapters of a subject under a standard
     getChapters: builder.query({
-      query: ({ standardId, subjectId }) => ({
-        url: `/academic/standards/${standardId}/subjects/${subjectId}/chapters`,
+      query: ({ academicMediumId, standardId, subjectId }) => ({
+        url: `/chapters`,
         method: 'GET',
+        params: { academicMediumId, standardId, subjectId }, // ✔ QUERY param
       }),
       providesTags: ['Chapter'],
     }),
@@ -14,7 +15,7 @@ export const chaptersApi = academicApi.injectEndpoints({
     // POST - Create new chapter
     addChapter: builder.mutation({
       query: (body) => ({
-        url: `/academic/chapters`,
+        url: `/chapters`,
         method: 'POST',
         data: body,
       }),
@@ -24,7 +25,7 @@ export const chaptersApi = academicApi.injectEndpoints({
     // PUT - Update chapter
     updateChapter: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/academic/chapters/${id}`,
+        url: `/chapters/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -34,7 +35,7 @@ export const chaptersApi = academicApi.injectEndpoints({
     // DELETE - Remove chapter
     deleteChapter: builder.mutation({
       query: (id) => ({
-        url: `/academic/chapters/${id}`,
+        url: `/chapters/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Chapter'],

@@ -2,7 +2,7 @@ import { Box, Grid } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { getFileIconData } from 'src/enums/file-icons-map';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
-import { documentsList } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/subjectDocument';
+import { documentsList } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/subjectDocument';
 
 import type { IHomework } from '../../type';
 

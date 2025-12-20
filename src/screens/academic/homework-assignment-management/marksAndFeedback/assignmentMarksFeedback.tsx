@@ -151,6 +151,9 @@ const AssignmentMarksAndFeedback = (props: TabComponentType) => {
       </Box>
       {assignmentTitle && (
         <StudentSubmissions
+          selectedClass={classes}
+          selectedDivision={division}
+          selectedSubject={subject}
           selectedAssignment={selectedAssignment}
           selectedStudents={[]}
           handleBulkUpdate={() => {}}
