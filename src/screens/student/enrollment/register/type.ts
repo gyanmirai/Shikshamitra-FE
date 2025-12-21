@@ -210,13 +210,6 @@ export interface IFamilyInformationResponse {
 
 export interface ICommunicationInformationResponse {
   studentId: string;
-  primaryContactNo: string;
-  parentContactNo: string;
-  parentEmail: string;
-  parentAddress1: string;
-  parentAddress2: string;
-  parentAddress3: string;
-  whatsappNo: string;
   localAddress: {
     address1: string;
     address2: string;

@@ -8,9 +8,9 @@ import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { GenderOptions } from 'src/enums/gender';
 import calculateAge from 'src/utils/calculate-age';
 import { Box, MenuItem, MenuList } from '@mui/material';
+import { GenderType, GenderOptions } from 'src/enums/gender';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -21,7 +21,6 @@ import {
   FollowUpStatusTypeOptions,
 } from 'src/enums/inquiry-status-type';
 
-import type { IInquiryData } from '.';
 import type { IInquiryResponse } from './type';
 
 const InquiryTable = ({
@@ -53,16 +52,14 @@ const InquiryTable = ({
 
   const tableData = useMemo(
     () =>
-      inquiryData?.data?.items.map((item: IInquiryData) => ({
+      inquiryData?.data?.items.map((item: IInquiryResponse) => ({
         ...item,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-        secondaryContactNumber: item.secondaryContactNumber
-          ? item.secondaryContactNumber
-          : undefined,
+        secondaryContactNumber: item.secondaryContactNo ? item.secondaryContactNo : undefined,
         // studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
-        // genderValue: GenderType[item?.genderType as any],
+        genderValue: GenderType[item?.gender as any],
         // address: [
         //   item.addressLine1,
         //   item.addressLine2,
@@ -159,7 +156,7 @@ const InquiryTable = ({
             isDateRangeFilter: true,
           },
           {
-            id: 'gender',
+            id: 'genderValue',
             label: 'Gender',
             align: 'left',
             filterType: 'enum',

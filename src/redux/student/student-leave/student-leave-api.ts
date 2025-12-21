@@ -17,7 +17,7 @@ export const StudentLeaveApi = createApi({
     }),
     addStudentLeave: builder.mutation({
       query: (data) => ({
-        url: `/app/student-leave`,
+        url: `/students/attendance/leaves`,
         method: 'POST',
         data,
       }),
