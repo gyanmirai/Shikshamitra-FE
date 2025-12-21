@@ -12,7 +12,7 @@ import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
-import { TeacherHoverProfile } from 'src/screens/academic/curriculum-management/subject/component/viewDetailComponents/subjectOverview';
+import { TeacherHoverProfile } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/subjectOverview';
 import {
   Box,
   Grid,

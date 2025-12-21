@@ -2,16 +2,19 @@ import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import type { TStudentGrade, DivisionHomeworkMeta } from '../homeworkCreation/type';
-import type { TeacherProfile } from '../../curriculum-management/subject/component/type';
+import type { TeacherProfile } from '../../curriculum-management/subjectAssignment/component/type';
 
 export interface IAssignment {
+  id: string;
   title: string;
   description: string;
-  class: string;
+  className: string;
+  classId: string;
   divisions: DivisionHomeworkMeta[]; // ✅ Each division with its own dates
   divisionMeta?: DivisionHomeworkMeta;
   students?: [];
-  subjects: string;
+  subjectName: string;
+  subjectId: string;
   submissionType: number;
   totalMarks?: number;
   // dueDate: Dayjs | null | string;
@@ -19,7 +22,9 @@ export interface IAssignment {
   endDate: Dayjs | null | string;
   attachments: File[];
   createdBy: TeacherProfile;
-  assignmentType: string;
+  assignmentTypeId: string;
+  assignmentsType: string;
+
   // isScheduled: boolean;
   // scheduleDate: Dayjs | null | string;
   // todaysDate: Dayjs | string;
@@ -35,8 +40,9 @@ export interface IAssignmentFormProps {
 }
 
 export interface IAssignmentTableProps {
-  data: IAssignment[];
+  assignmentData: IAssignment[];
   selectedDivision: string;
+  selectedClass: string;
   dialog: UseBooleanReturn;
   onSwitchToggle: (row: IAssignment) => void;
   onEdit: (row: IAssignment) => void;
@@ -46,6 +52,9 @@ export interface IAssignmentTableProps {
 }
 
 export interface IStudentSubmissionsProps {
+  selectedClass: string;
+  selectedDivision: string;
+  selectedSubject: string;
   selectedStudents?: TStudentGrade[];
   selectedAssignment?: IAssignment | null;
   handleBulkUpdate?: (data: TStudentGrade[]) => void;

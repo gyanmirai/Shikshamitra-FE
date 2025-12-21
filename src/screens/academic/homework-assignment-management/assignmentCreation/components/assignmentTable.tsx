@@ -16,26 +16,37 @@ import type { IAssignment, IAssignmentTableProps } from '../type';
 import type { DivisionHomeworkMeta } from '../../homeworkCreation/type';
 
 const AssignmentTable: React.FC<IAssignmentTableProps> = ({
-  data,
+  assignmentData,
   selectedDivision,
+  selectedClass,
   onSwitchToggle,
   onEdit,
   onDelete,
   onView,
   dialog,
-  onViewSubmission,
 }) => {
+  // const {
+  //   data: assignmentData,
+  //   isLoading,
+  //   isFetching,
+  // } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetAssignmentsQuery,
+  //   params: { academicMediumId: (currentMedium as Medium)?.id, classId: selectedClass },
+  //   options: {
+  //     skip: !(currentMedium as Medium)?.id,
+  //   },
+  // });
   // Get the theme object from MUI theme provider
   const theme = useTheme();
-
   const filteredData = useMemo(() => {
-    if (!selectedDivision) return data || [];
+    if (!selectedDivision) return assignmentData || [];
 
-    return (data || [])
-      .filter((hw) =>
+    return (assignmentData || [])
+      .filter((hw: IAssignment) =>
         hw.divisions?.some((d: DivisionHomeworkMeta) => d.divisionId === selectedDivision)
       )
-      .map((hw) => {
+      .map((hw: IAssignment) => {
         const currentDivision = hw.divisions.find(
           (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
         );
@@ -48,45 +59,12 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           status: currentDivision?.status,
         };
       });
-  }, [selectedDivision, data]);
+  }, [assignmentData, selectedDivision]);
 
-  // Memoized callback function to render action menu items
-  // Returns different menu items based on assignment status
-  // const actions = useCallback(
-  //   ({ popover: pop, row }: any) => (
-  //     <MenuList>
-  //       {/* Show Publish option if status is Draft (1) */}
-  //       {row.status === 1 ? (
-  //         <MenuItem
-  //           onClick={() => {
-  //             // Toggle publish status and close popover
-  //             onSwitchToggle(row as IAssignment);
-  //             pop.onClose();
-  //           }}
-  //         >
-  //           <Iconify icon={GlobalIcons.publish} />
-  //           Publish
-  //         </MenuItem>
-  //       ) : (
-  //         // Show View Submission option if status is Published (0)
-  //         <MenuItem
-  //           onClick={() => {
-  //             // View submission details and close popover
-  //             onViewSubmission(row as IAssignment);
-  //             pop.onClose();
-  //           }}
-  //         >
-  //           <Iconify icon={GlobalIcons.eye} />
-  //           View Submission
-  //         </MenuItem>
-  //       )}
-  //     </MenuList>
-  //   ),
-  //   [onSwitchToggle, onViewSubmission] // Dependencies for useCallback
-  // );
   return (
     <CustomizableTable
       tableId="assignment-management"
+      // isLoading={isLoading || isFetching}
       noDataText={
         <>
           Assignment Data Not Found

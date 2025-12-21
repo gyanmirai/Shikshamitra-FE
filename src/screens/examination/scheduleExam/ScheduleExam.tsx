@@ -2,16 +2,21 @@
 
 import type { RootState } from 'src/redux/store';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import examTableData from 'src/json/examination/examTableData.json';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+// import examTableData from 'src/json/examination/examTableData.json';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import {
+  useGetExamsQuery,
+  useDeleteExamMutation,
+} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import NewExamForm from './components/examFormComponent';
 import ViewTimetableComp from './components/viewTimetableComp';
@@ -24,16 +29,49 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
   const [open, setOpen] = useState(false);
   // State to store currently selected exam for editing
   const [selectedExam, setSelectedExam] = useState<IExamFormValues | null>(null);
-  // State to store all exam data, initialized with data from JSON
-  const [examData] = useState<IExamFormValues[]>(examTableData);
+
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
   // Boolean hook to control delete confirmation dialog
   const deleteDialog = useBoolean();
   // Redux dispatch hook for state management
   const dispatch = useDispatch();
   // Boolean hook to control time view dialog
   const viewTimeDialog = useBoolean(); // Dynamic breadcrumb navigation links based on current view (form or list)
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const getExams = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExamsQuery,
+    params: {
+      academicMediumId: medium?.id,
+    },
+  });
+
+  const [deleteExam] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteExamMutation,
+  });
+
+  const handleDeleteExam = async () => {
+    try {
+      if (selectedExam?.id) {
+        await deleteExam({
+          examId: selectedExam.id,
+          academicMediumId: medium?.id,
+        }).unwrap();
+        shikshaMitraToast.success({
+          message: `Exam ${selectedExam?.examName} deleted successfully`,
+        });
+        deleteDialog.onFalse();
+        setSelectedExam(null);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   /**
    * Handles closing the exam form with confirmation if there are unsaved changes
@@ -102,7 +140,6 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           setOpenDialog={setOpen}
           editData={selectedExam}
           setEditData={setSelectedExam}
-          data={examData}
           onViewTimetable={(data) => {
             viewTimeDialog.onTrue();
             setSelectedExam(data);
@@ -122,17 +159,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           </>
         }
         action={
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            onClick={() => {
-              deleteDialog.onFalse();
-              shikshaMitraToast.success({
-                message: `Exam ${selectedExam?.examName} deleted successfully`,
-              });
-            }}
-          >
+          <Button variant="contained" color="error" size="small" onClick={handleDeleteExam}>
             Yes
           </Button>
         }

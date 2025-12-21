@@ -4,20 +4,20 @@ import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 export const EntranceExamSlotApi = createApi({
   reducerPath: 'EntranceExamSlotApi',
   baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
+    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/student-enrollment/settings`,
   }),
   tagTypes: ['Entrance-Exam-Slot'],
   endpoints: (builder) => ({
     getEntranceExamSlot: builder.query({
       query: () => ({
-        url: '/app/entrance-exam-slot',
+        url: '/entrance-exam-slots',
         method: 'GET',
       }),
       providesTags: ['Entrance-Exam-Slot'],
     }),
     addEntranceExamSlot: builder.mutation({
       query: (data) => ({
-        url: '/app/entrance-exam-slot',
+        url: '/entrance-exam-slots',
         method: 'POST',
         data,
       }),
@@ -25,7 +25,7 @@ export const EntranceExamSlotApi = createApi({
     }),
     updateEntranceExamSlot: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/entrance-exam-slot/${id}`,
+        url: `/entrance-exam-slots/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -33,7 +33,7 @@ export const EntranceExamSlotApi = createApi({
     }),
     deleteEntranceExamSlot: builder.mutation({
       query: (id) => ({
-        url: `/app/entrance-exam-slot/${id}`,
+        url: `/entrance-exam-slots/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Entrance-Exam-Slot'],

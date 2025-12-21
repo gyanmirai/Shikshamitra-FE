@@ -1,5 +1,5 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
-import type { IDocument } from 'src/screens/academic/curriculum-management/subject/component/type';
+import type { IDocument } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
 export interface IFacilityQuantities {
   id: string; // e.g., 'wifi', 'gym'

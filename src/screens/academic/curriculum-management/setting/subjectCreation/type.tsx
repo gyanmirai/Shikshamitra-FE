@@ -1,8 +1,9 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface ISubject {
-  subjectName: string;
-  subjectColor: string;
+  id: string;
+  name: string;
+  color: string;
   createdBy: string;
 }
 
@@ -13,7 +14,6 @@ export interface ISubjectFormProps {
 }
 
 export interface ISubjectTableProps {
-  data: ISubject[];
   onAddSubject: UseBooleanReturn;
   editData?: ISubject | null;
   open: boolean;

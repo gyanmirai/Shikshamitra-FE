@@ -1,6 +1,6 @@
 import React from 'react';
-import AssignTeacher from 'src/screens/academic/assignTeacher/assignTeacher';
+import ClassTeacherAssignment from 'src/screens/classManagement/assignClassTeacher/assignClassTeacher';
 
-const AssignTeacherPage = () => <AssignTeacher />;
+const AssignTeacherPage = () => <ClassTeacherAssignment />;
 
 export default AssignTeacherPage;

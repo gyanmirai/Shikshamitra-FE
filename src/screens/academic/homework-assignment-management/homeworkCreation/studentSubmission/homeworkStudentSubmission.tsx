@@ -13,6 +13,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, MenuList, MenuItem, Checkbox, Typography } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -21,6 +22,7 @@ import {
   ScheduleExamStatusColor,
   ScheduleExamStatusOptions,
 } from 'src/enums/schedule-exam-status';
+import { useGetHomeworkSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/HomeworkAssessmentAndFeedbackApi';
 
 import AssignGrade from '../component/assignGradeForm';
 import AssignMarksForText from '../component/assignMarksForText';
@@ -28,12 +30,34 @@ import AssignMarksForText from '../component/assignMarksForText';
 import type { TStudentGrade, IStudentSubmissionsProps } from '../type';
 
 export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
+  selectedClass,
+  selectedDivision,
+  selectedSubject,
   selectedHomework,
   handleBulkUpdate,
 }) => {
   // Local state for selected students
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  // Local state for selected students
   const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
-
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: homeworkSubmissions,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isLoading: isSubmissionsLoading,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    refetch: refetchHomeworkSubmissions,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetHomeworkSubmissionsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      ClassId: selectedClass,
+      DivisionId: selectedDivision,
+      SubjectId: selectedSubject,
+      HomeworkId: selectedHomework?.id,
+    },
+  });
   // State to track the currently selected student for individual grading
   const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>();
 

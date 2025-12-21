@@ -21,6 +21,7 @@ import { documentApi } from './document/documentApi';
 import { feeTermsApi } from './feeCollection/feeTerms';
 import { PaymentTermApi } from './finance/paymentTerm';
 import { transportApi } from './transport/transportApi';
+import { academicApi } from './academicAPI/academicApi';
 import { librarySettingsApi } from './library/settingApi';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
@@ -35,9 +36,7 @@ import { incomeCategoryApi } from './finance/incomeCategory';
 import { openLibraryApi } from './library/LibraryDataSearch';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { feeRefundsTermsApi } from './finance/feeRefundTerms';
-import { financeModuleApi } from './finance/financeModuleApi';
 import { libraryModuleApi } from './library/libraryModuleApi';
-import { ExpenseCategoryApi } from './finance/expenseCategory';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { feeConcessionApi } from './feeCollection/feeConcession';
@@ -48,12 +47,12 @@ import { paymentHistoryApi } from './feeCollection/paymentHistory';
 import { bookIssuedApi } from './bookIssuedData/bookIssuedDataApi';
 import { bookCategoryApi } from './bookCategoryApi/bookCategoryApi';
 import { issueReturnFormApi } from './issueRetunApi/issueReturnApi';
-import { communicationApi } from './communication/communicationApi';
 import { budgetSubCategoryApi } from './budgetApi/budgetSubCategory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
 import { FinanceFeeStructureApi } from './finance/financeFeeStructure';
 import { bookManagementApi } from './bookManagement/bookManagementApi';
+import { instituteSetupApi } from './InstituteSetup/instituteSetupApi';
 import { StudentAdmissionApi } from './student/admission/admission-api';
 import { studentGroupApi } from './student/student-group/student-group';
 import { financeFeeCollectionApi } from './feeCollection/feeCollection';
@@ -72,6 +71,7 @@ import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { memberManagementApi } from './memberManagement/memberManagementApi';
 import { reservationDataApi } from './reservationDataApi/reservationDataApi';
 import { bookConditionOptionsApi } from './library/setting/bookConditionApi';
+import { classManagementApi } from './classManagementApi/classManagementApi';
 import { quizManagementApi } from './academics/examination/quiz-management-api';
 import { LibraryChargeApi } from './library/charges-management/charges-get-api';
 import { StudentRegistrationApi } from './student/registration/registration-api';
@@ -158,8 +158,8 @@ const reducers = combineReducers({
   [studentReceiptApi.reducerPath]: studentReceiptApi.reducer,
   [feeCategoryApi.reducerPath]: feeCategoryApi.reducer,
   [ChargeCategoryApi.reducerPath]: ChargeCategoryApi.reducer,
-  [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
-  [financeModuleApi.reducerPath]: financeModuleApi.reducer,
+  // [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
+  // [financeModuleApi.reducerPath]: financeModuleApi.reducer,
   [expenseApi.reducerPath]: expenseApi.reducer,
   [expenseDetailsApi.reducerPath]: expenseDetailsApi.reducer,
   [incomeApi.reducerPath]: incomeApi.reducer,
@@ -181,11 +181,14 @@ const reducers = combineReducers({
   [LibraryChargeApi.reducerPath]: LibraryChargeApi.reducer,
   [libraryChargeCategoryOptionsApi.reducerPath]: libraryChargeCategoryOptionsApi.reducer,
   [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
-  [communicationApi.reducerPath]: communicationApi.reducer,
+  // [communicationApi.reducerPath]: communicationApi.reducer,
   [roleOptionsApi.reducerPath]: roleOptionsApi.reducer,
   [transportApi.reducerPath]: transportApi.reducer,
   [libraryModuleApi.reducerPath]: libraryModuleApi.reducer,
   [openLibraryApi.reducerPath]: openLibraryApi.reducer,
+  [academicApi.reducerPath]: academicApi.reducer,
+  [instituteSetupApi.reducerPath]: instituteSetupApi.reducer,
+  [classManagementApi.reducerPath]: classManagementApi.reducer,
   // [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
 });
 
@@ -256,9 +259,10 @@ const store = configureStore({
       studentReceiptApi.middleware,
       feeCategoryApi.middleware,
       ChargeCategoryApi.middleware,
-      ExpenseCategoryApi.middleware,
-      financeModuleApi.middleware,
+      // ExpenseCategoryApi.middleware,
+      // financeModuleApi.middleware,
       expenseApi.middleware,
+      academicApi.middleware,
       expenseDetailsApi.middleware,
       incomeApi.middleware,
       incomeDetailsApi.middleware,
@@ -279,13 +283,15 @@ const store = configureStore({
       LibraryChargeApi.middleware,
       libraryChargeCategoryOptionsApi.middleware,
       bookConditionOptionsApi.middleware,
-      communicationApi.middleware,
+      // communicationApi.middleware,
       // meetingDetailsApi.middleware,
       // holidayApi.middleware,
       roleOptionsApi.middleware,
       transportApi.middleware,
       libraryModuleApi.middleware,
       openLibraryApi.middleware,
+      instituteSetupApi.middleware,
+      classManagementApi.middleware,
     ]),
 });
 
