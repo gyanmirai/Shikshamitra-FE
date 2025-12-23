@@ -59,7 +59,7 @@ const RegistrationTable = ({
               confirmMovePopup.onTrue();
               setEditData(row);
               // dialog.onTrue();
-              setMoveId(row.id);
+              setMoveId(row.studentId);
               pop.onClose();
             }}
           >

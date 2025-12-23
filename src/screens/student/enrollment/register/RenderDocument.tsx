@@ -1,22 +1,19 @@
 import type { RootState } from 'src/redux/store';
 
 import { toast } from 'sonner';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import UploadButton from 'src/components/upload-button';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { DocumentStatusOptions } from 'src/enums/document-statusType';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { DocumentType, DocumentFileType } from 'src/enums/documnet-type';
 import { Box, Tooltip, Skeleton, IconButton, Typography } from '@mui/material';
-import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
 import {
   useUploadDocumentsMutation,
   useGetStudentDocumentsQuery,
@@ -50,39 +47,33 @@ export const RenderDocuments = (props: any) => {
     currentQueryAndMutation: useStudentUpdateDocumentMutation,
   });
 
-  // Query hook to fetch all document types
-  const { data: documents, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentDocumentTypeQuery,
-  });
-
   // Query hook to fetch student's uploaded documents using student ID
   const { data: studentsDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentsQuery,
     params: id,
   });
-
+  console.log(studentsDocuments, 'studentsDocuments');
   // Memoized table data that combines document types with uploaded documents status
-  const tableData = useMemo(
-    () =>
-      documents?.items?.map((item: any) => ({
-        ...item,
-        // Check if document is uploaded by comparing file names
-        statusVal: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName)
-          ? 'Uploaded'
-          : 'Not Uploaded',
-        // Convert document type enum to readable string
-        docType: item.documentTypes.map((ite: number) => DocumentType[ite]).join(', '),
-        // Set status color based on document upload status
-        statusColor: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName)
-          ? 'success'
-          : 'warning',
-        // Store the uploaded document details if found
-        uploadDocument: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName),
-      })) || [],
-    [documents?.items, studentsDocuments]
-  );
+  // const tableData = useMemo(
+  //   () =>
+  //     documents?.items?.map((item: any) => ({
+  //       ...item,
+  //       // Check if document is uploaded by comparing file names
+  //       statusVal: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName)
+  //         ? 'Uploaded'
+  //         : 'Not Uploaded',
+  //       // Convert document type enum to readable string
+  //       docType: item.documentTypes.map((ite: number) => DocumentType[ite]).join(', '),
+  //       // Set status color based on document upload status
+  //       statusColor: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName)
+  //         ? 'success'
+  //         : 'warning',
+  //       // Store the uploaded document details if found
+  //       uploadDocument: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName),
+  //     })) || [],
+  //   [documents?.items, studentsDocuments]
+  // );
 
   // Get the isChanges state from the Redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -99,7 +90,7 @@ export const RenderDocuments = (props: any) => {
     }
   };
   return (
-    <>
+    <Box sx={{ height: '100%', minHeight: 0 }}>
       {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
         <Button
           size="small"
@@ -113,12 +104,12 @@ export const RenderDocuments = (props: any) => {
         </Button>
       </Box> */}
       <CustomizableTable
-        isLoading={isLoading || isEmployeeDocLoading}
+        isLoading={isEmployeeDocLoading}
         tableId="documents"
         columns={[
-          { id: 'documentName', label: 'Name' },
+          { id: 'documentTypeName', label: 'Name' },
           {
-            id: 'statusVal',
+            id: 'isUploaded',
             label: 'Status',
             enumOptions: DocumentStatusOptions,
             filterType: 'enum',
@@ -127,16 +118,13 @@ export const RenderDocuments = (props: any) => {
             align: 'left',
             render(value, row) {
               return (
-                <Tooltip title={row.statusVal}>
+                <Tooltip title={value ? 'Uploaded' : 'Not Uploaded'}>
                   <Iconify
-                    icon={row.statusVal === 'Uploaded' ? 'mdi:approve' : 'mage:file-cross-fill'}
+                    icon={value ? 'mdi:approve' : 'mage:file-cross-fill'}
                     height={20}
                     width={20}
                     sx={{
-                      color: (theme) =>
-                        row.statusVal === 'Uploaded'
-                          ? 'success.main'
-                          : theme.vars.palette.grey[500],
+                      color: (theme) => (value ? 'success.main' : theme.vars.palette.grey[500]),
                       cursor: 'pointer',
                     }}
                   />
@@ -171,30 +159,26 @@ export const RenderDocuments = (props: any) => {
                     if (!file) return;
                     const acceptableFileFormats: string[] = [];
 
-                    row.documentTypes.forEach((item: number) => {
-                      acceptableFileFormats.push(
-                        DocumentFileType[DocumentType[item] as keyof typeof DocumentFileType]
-                      );
-                    });
-                    if (!acceptableFileFormats.includes(file?.type)) {
-                      shikshaMitraToast.error({ message: `Please upload ${row.docType} file` });
-                      return;
-                    }
+                    // row.documentTypes.forEach((item: number) => {
+                    //   acceptableFileFormats.push(
+                    //     DocumentFileType[DocumentType[item] as keyof typeof DocumentFileType]
+                    //   );
+                    // });
+                    // if (!acceptableFileFormats.includes(file?.type)) {
+                    //   shikshaMitraToast.error({ message: `Please upload ${row.docType} file` });
+                    //   return;
+                    // }
                     const myNewFile = new File([file], row.documentName, { type: file.type });
                     const formData = new FormData();
-                    formData.append(row.uploadDocument ? 'file' : 'files', myNewFile);
+                    formData.append('DocumentTypeId ', row.documentTypeId);
+                    formData.append('File', myNewFile);
 
-                    toast.promise(
-                      row.uploadDocument
-                        ? updateDocument({ documentId: row.uploadDocument.id, id, body: formData })
-                        : uploadDocument({ id, body: formData }),
-                      {
-                        loading: `Uploading Document ${row.documentName}...`,
-                        success: () => `Document ${row.documentName} uploaded successfully`,
-                        error: `Failed to upload ${row.documentName}`,
-                        closeButton: true,
-                      }
-                    );
+                    toast.promise(uploadDocument({ id, body: formData }), {
+                      loading: `Uploading Document ${row.documentTypeName}...`,
+                      success: () => `Document ${row.documentTypeName} uploaded successfully`,
+                      error: `Failed to upload ${row.documentTypeName}`,
+                      closeButton: true,
+                    });
                   }}
                 >
                   <Iconify icon="ci:file-upload" />
@@ -265,7 +249,7 @@ export const RenderDocuments = (props: any) => {
             },
           },
         ]}
-        data={tableData}
+        data={studentsDocuments?.data || []}
       />
       <CustomDialog
         title={
@@ -308,7 +292,7 @@ export const RenderDocuments = (props: any) => {
       >
         <DocumentForm handleClose={handleClose} editData={null} />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {

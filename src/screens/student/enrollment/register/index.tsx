@@ -125,11 +125,11 @@ const RegisterScreen = () => {
         }
       >
         <ExamForm
-          studentEnrollmentId={(editData as IInquiryData)?.id || ''}
-          studentName={`${(editData as IInquiryData)?.firstName || ''} ${(editData as IInquiryData)?.middleName || ''} ${(editData as IInquiryData)?.lastName || ''}`.trim()}
-          standardName={(editData as IInquiryData)?.standard.name || ''}
-          educationBoard={(editData as IInquiryData)?.educationBoard || { name: '' }}
-          educationMedium={(editData as IInquiryData)?.educationMedium || { name: '' }}
+          studentEnrollmentId={editData?.studentId || ''}
+          studentName={`${editData?.firstName || ''} ${editData?.middleName || ''} ${editData?.lastName || ''}`.trim()}
+          standardName={editData?.standard || ''}
+          educationBoard={editData?.academicBoardName || { name: '' }}
+          educationMedium={editData?.academicMediumName || { name: '' }}
           handleClose={handleClose}
         />{' '}
       </CustomDialog>

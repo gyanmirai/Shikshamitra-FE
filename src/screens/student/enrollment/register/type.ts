@@ -37,7 +37,7 @@ export interface IGeneralInformationResponse {
   secondaryContactNo: string;
   email: string;
 
-  aadharNo: string;
+  adharNo: string;
   apparId: 'string';
   panNo: 'string';
   religion: 0;
@@ -59,7 +59,7 @@ export interface IGeneralInformationResponse {
     name: string;
     isoCode: string;
   };
-  pinCode: string;
+  pincode: string;
 
   previousSchool: 'string';
   lastClassPassed: 'string';
@@ -206,6 +206,13 @@ export interface IFamilyInformationResponse {
       pincode: string;
     };
   };
+  siblingStudents: {
+    studentId: string;
+    fullName: string;
+    standardName: string;
+    divisionName: string;
+    grNo: number;
+  }[];
 }
 
 export interface ICommunicationInformationResponse {

@@ -82,6 +82,7 @@ const EntranceExamScreen = () => {
   const [endDate, setEndDate] = useState<Dayjs | null>(dayjs());
   // Redux state and dispatch hooks
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   // useDispatch hook for dispatching Redux actions
   const dispatch = useDispatch();
 
@@ -94,6 +95,14 @@ const EntranceExamScreen = () => {
   const { data: entranceExamData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamQuery,
+    params: {
+      startDate: dateConvertor(startDate?.format(dateFormat) || '', true),
+      endDate: dateConvertor(endDate?.format(dateFormat) || '', true),
+      educationMediumId: currentMedium.id,
+    },
+    options: {
+      skip: !currentMedium.id,
+    },
   });
 
   // Mutation hook for moving students to admission
@@ -111,20 +120,20 @@ const EntranceExamScreen = () => {
       entranceExamData?.items?.map((item: any) => ({
         ...item,
         date: dayjs(item.examDate).format('DD-MM-YYYY'),
-        examTime: `${dayjs(item.entranceExamSlot.startDate).format('hh:mm A')} to ${dayjs(
-          item.entranceExamSlot.endDate
+        examTime: `${dayjs(item.examStartTime).format('hh:mm A')} to ${dayjs(
+          item.examEndTime
         ).format('hh:mm A')}`,
-        name: `${item.studentEnrollment.lastName} ${item.studentEnrollment.firstName} ${item.studentEnrollment.middleName}`,
-        medium: item.studentEnrollment.educationMedium.name,
-        class: item.studentEnrollment.standard.name,
-        board: item.studentEnrollment.educationBoard.name,
-        status: item.marksObtained === null ? 0 : item.marksObtained >= item.passingMark ? 1 : 2,
-        progress: (item.studentEnrollment.onboardingProgressState / 8) * 100,
-        percentage:
-          item.marksObtained === null
-            ? 0
-            : +((item.marksObtained / item.totalMarks) * 100 || 0).toFixed(2),
-        obtainMarks: item.marksObtained ?? '-',
+        // name: `${item.studentEnrollment.lastName} ${item.studentEnrollment.firstName} ${item.studentEnrollment.middleName}`,
+        // medium: item.studentEnrollment.educationMedium,
+        class: item.standard,
+        // board: item.studentEnrollment.educationBoard,
+        status: item.examStatus,
+        // progress: (item.studentEnrollment.onboardingProgressState / 8) * 100,
+        // percentage:
+        //   item.marksObtained === null
+        //     ? 0
+        //     : +((item.marksObtained / item.totalMarks) * 100 || 0).toFixed(2),
+        // obtainMarks: item.marksObtained ?? '-',
       })),
     [entranceExamData]
   );
@@ -204,7 +213,7 @@ const EntranceExamScreen = () => {
             confirmMovePopup.onTrue();
             setEditData(row);
             // dialog.onTrue();
-            setMoveId(row.id);
+            setMoveId(row.studentId);
             popover.onClose();
           }}
         >
@@ -288,10 +297,10 @@ const EntranceExamScreen = () => {
         noDataText={<>No Entrance Exam Data Found </>}
         isLoading={isLoading}
         columns={[
-          { id: 'name', label: 'Student Name', align: 'left', sticky: true, minWidth: 180 },
+          { id: 'studentName', label: 'Student Name', align: 'left', sticky: true, minWidth: 180 },
 
-          { id: 'board', label: 'Board', align: 'left' },
-          { id: 'medium', label: 'Medium', align: 'left' },
+          // { id: 'board', label: 'Board', align: 'left' },
+          // { id: 'medium', label: 'Medium', align: 'left' },
           { id: 'class', label: 'Class', align: 'left' },
           { id: 'date', label: 'Date', filterType: 'date' },
           { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
@@ -312,7 +321,7 @@ const EntranceExamScreen = () => {
             render: (value) => value || '-',
           },
           {
-            id: 'obtainMarks',
+            id: 'obtainedMarks',
             label: 'Obtained Marks',
             filterType: 'number',
             align: 'left',
@@ -531,8 +540,8 @@ export const ExamForm = ({
   handleClose,
 }: {
   studentName: string;
-  educationBoard: { name: string };
-  educationMedium: { name: string };
+  educationBoard: string;
+  educationMedium: string;
   standardName: string;
   studentEnrollmentId: string;
   handleClose: (_e: any, isSubmit: boolean) => void;
@@ -667,7 +676,7 @@ export const ExamForm = ({
                 Board :
               </Typography>
               <Typography variant="subtitle2" color="text.secondary">
-                {educationBoard?.name}
+                {educationBoard}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -675,7 +684,7 @@ export const ExamForm = ({
                 Medium :
               </Typography>
               <Typography variant="subtitle2" color="text.secondary">
-                {educationMedium?.name}
+                {educationMedium}
               </Typography>
             </Box>
 
@@ -895,20 +904,15 @@ const ResultForm = ({
     onSubmit: async (values) => {
       try {
         await updateMarks({
-          id: editData.id,
+          id: editData.studentId,
           body: {
-            entranceExamSlotId: editData.entranceExamSlotId,
-            studentEnrollmentId: editData.studentEnrollmentId,
-            examDate: editData.examDate,
-            // examType: editData.examType,
-            passingMark: values.passingMarks,
-            marksObtained: values.obtainedMarks,
             totalMarks: values.totalMarks,
-            // examScheduleType: editData.examScheduleType,
+            passingMarks: values.passingMarks,
+            obtainedMarks: values.obtainedMarks,
           },
         }).unwrap();
         shikshaMitraToast.success({
-          message: `${editData?.name || ''}'s marks updated successfully`,
+          message: `${editData?.studentName || ''}'s marks updated successfully`,
         });
         handleClose(null, true);
       } catch (error) {

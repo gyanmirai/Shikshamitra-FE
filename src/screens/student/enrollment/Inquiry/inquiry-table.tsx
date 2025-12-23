@@ -48,8 +48,6 @@ const InquiryTable = ({
     },
   });
 
-  console.log(inquiryData, 'inquiryData');
-
   const tableData = useMemo(
     () =>
       inquiryData?.data?.items.map((item: IInquiryResponse) => ({

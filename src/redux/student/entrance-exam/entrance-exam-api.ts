@@ -9,8 +9,8 @@ export const EntranceExamApi = createApi({
   tagTypes: ['Entrance-Exam'],
   endpoints: (builder) => ({
     getEntranceExam: builder.query({
-      query: () => ({
-        url: '/app/entrance-exam',
+      query: ({ startDate, endDate, educationMediumId }) => ({
+        url: `/student-enrollment/entrance-exam?StartDate=${startDate}&EndDate=${endDate}&EducationMediumId=${educationMediumId}`,
         method: 'GET',
       }),
       providesTags: ['Entrance-Exam'],
@@ -25,7 +25,7 @@ export const EntranceExamApi = createApi({
     }),
     updateEntranceExam: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/entrance-exam/${id}`,
+        url: `/student-enrollment/entrance-exam/${id}/result`,
         method: 'PUT',
         data: body,
       }),

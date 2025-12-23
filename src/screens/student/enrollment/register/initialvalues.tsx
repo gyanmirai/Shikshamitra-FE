@@ -1,9 +1,9 @@
 import type { GenderType } from 'src/enums/gender';
 
 import dayjs from 'dayjs';
+import { ReligionType } from 'src/enums/religion';
 import calculateAge from 'src/utils/calculate-age';
 import { Category } from 'src/enums/studnet-category';
-import { EmployeeCastType } from 'src/enums/employee-cast';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import { validatePhoneNumber } from 'src/utils/validate-phone-number';
 
@@ -26,10 +26,10 @@ export const generalFieldsInitialValues = (editData?: IGeneralInformationRespons
   dob: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
   age: editData?.dateOfBirth ? calculateAge(dayjs(editData.dateOfBirth).format()) : '',
   gender: editData?.gender as GenderType,
-  adharNo: editData?.aadharNo || '',
-  religion: editData?.religion || '',
+  adharNo: editData?.adharNo || '',
+  religion: editData?.religion ?? ReligionType.Hinduism,
   familyCast: editData ? editData?.familyCast : '',
-  castCategory: editData ? EmployeeCastType[editData?.castCategory] : null,
+  castCategory: editData ? editData?.castCategory : null,
   motherTongue: editData?.motherTongue || '',
   nationality: editData?.nationality || 'Indian',
   birthPlace: editData?.birthPlace || '',
@@ -59,7 +59,7 @@ export const generalFieldsInitialValues = (editData?: IGeneralInformationRespons
 
   addressLine2: editData?.address2 || '',
   addressLine3: editData?.address3 || '',
-  pinCode: editData?.pinCode || '',
+  pinCode: editData?.pincode || '',
   inquiryPreference: editData?.inquiryPreferenceId || null,
   apparId: editData?.apparId || '',
   panNo: editData?.panNo || '',
