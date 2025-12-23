@@ -9,21 +9,21 @@ export const StudentApi = createApi({
   tagTypes: ['Student'],
   endpoints: (builder) => ({
     getFilterStudents: builder.query({
-      query: ({ educationMediumStageId, standardId, divisionId }) => {
+      query: ({ academicYearId, standardId, divisionId }) => {
         let queryString = '';
-        if (educationMediumStageId) {
-          queryString += `educationMediumStageId=${educationMediumStageId}&`;
+        if (academicYearId) {
+          queryString += `AcademicYearId=${academicYearId}&`;
         }
         if (standardId) {
-          queryString += `standardId=${standardId}&`;
+          queryString += `StandardId=${standardId}&`;
         }
         if (divisionId) {
-          queryString += `divisionId=${divisionId}&`;
+          queryString += `DivisionId=${divisionId}&`;
         }
         queryString = queryString ? `?${queryString.slice(0, -1)}` : '';
 
         return {
-          url: `/app/student/filtered-list${queryString}`,
+          url: `/students/admissions${queryString}`,
           method: 'GET',
         };
       },

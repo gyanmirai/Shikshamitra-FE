@@ -1,5 +1,6 @@
+import type { GenderType } from 'src/enums/gender';
+
 import dayjs from 'dayjs';
-import { GenderType } from 'src/enums/gender';
 import calculateAge from 'src/utils/calculate-age';
 
 import type { IInquiryResponse, IInquiryFormValues } from './type';
@@ -23,7 +24,7 @@ export const inquiryInitialValues: (
   age: editData?.dateOfBirth ? calculateAge(dayjs(editData?.dateOfBirth).format()) : '',
 
   dateOfInquiry: editData?.dateOfInquiry ? dayjs(editData?.dateOfInquiry) : dayjs(new Date()),
-  gender: GenderType[(editData?.gender || 'MALE') as GenderType] ?? '',
+  gender: editData?.gender as GenderType,
   address: editData?.address || '',
   primaryContactNumber: editData?.primaryContactNo || '',
   secondaryContactNumber: editData?.secondaryContactNo || '',

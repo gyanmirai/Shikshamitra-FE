@@ -55,14 +55,14 @@ export const StudentRegistrationApi = createApi({
     }),
     getBasicDetails: builder.query({
       query: ({ studentId }) => ({
-        url: `/student-enrollment/registration/${studentId}`,
+        url: `/student/enrollment/registrations/${studentId}/general-details`,
         method: 'GET',
       }),
       providesTags: ['Student-Registration'],
     }),
     updateBasicDetails: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/student-enrollment/registration/${id}/general`,
+        url: `/student/enrollment/registrations/${id}/general-details`,
         method: 'PUT',
         data: body,
       }),
@@ -77,7 +77,7 @@ export const StudentRegistrationApi = createApi({
     }),
     updateFamilyDetails: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/student-enrollment/family-details/${id}`,
+        url: `/student-enrollment/registration/${id}/family`,
         method: 'PUT',
         data: body,
       }),
@@ -115,14 +115,14 @@ export const StudentRegistrationApi = createApi({
     }),
     getStudentAdditionalDetails: builder.query({
       query: ({ studentId }) => ({
-        url: `/student-enrollment/registration/${studentId}/student-additional`,
+        url: `/student-enrollment/registration/${studentId}/additional-details`,
         method: 'GET',
       }),
       providesTags: ['Student-Registration'],
     }),
     updateStudentAdditionalDetails: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/student-enrollment/student-additional-details/${id}`,
+        url: `student-enrollment/registration/${id}/additional-details`,
         method: 'PUT',
         data: body,
       }),
@@ -130,14 +130,14 @@ export const StudentRegistrationApi = createApi({
     }),
     getStudentCommunicationDetails: builder.query({
       query: ({ studentId }) => ({
-        url: `/student-enrollment/registration/${studentId}/student-communication`,
+        url: `/student-enrollment/registration/${studentId}/communication`,
         method: 'GET',
       }),
       providesTags: ['Student-Registration'],
     }),
     updateStudentCommunicationDetails: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/student-enrollment/student-communication-details/${id}`,
+        url: `/student-enrollment/registration/${id}/communication`,
         method: 'PUT',
         data: body,
       }),
@@ -145,14 +145,14 @@ export const StudentRegistrationApi = createApi({
     }),
     getStudentMedicalDetails: builder.query({
       query: ({ studentId }) => ({
-        url: `/student-enrollment/registration/${studentId}/student-medical`,
+        url: `/student-enrollment/registration/${studentId}/medical-records`,
         method: 'GET',
       }),
       providesTags: ['Student-Registration'],
     }),
     updateStudentMedicalDetails: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/student-enrollment/student-medical-records/${id}`,
+        url: `/student-enrollment/registration/${id}/medical-records`,
         method: 'PUT',
         data: body,
       }),

@@ -19,4 +19,5 @@ export interface ILeaveAbsent {
   creationTime: string;
   creatorId: string;
   id: string;
+  leaveTypeName: string;
 }
