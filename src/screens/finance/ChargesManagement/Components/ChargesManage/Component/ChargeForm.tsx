@@ -249,7 +249,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                     valueKey="id"
                     disabled={!values.class}
                     options={
-                      allClass?.find((i: Standards) => i.name === values.class)?.divisions || []
+                      allClass?.find((i: Standards) => i.id === values.class)?.divisions || []
                     }
                     value={values.division}
                     onChange={(value) => {
