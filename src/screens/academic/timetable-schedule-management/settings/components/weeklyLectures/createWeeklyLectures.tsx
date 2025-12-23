@@ -38,7 +38,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   const formik = useFormik<ISubjectFormValues>({
-    initialValues: getNoOfLectureInitialValues(editData, selectedClass || classes),
+    initialValues: getNoOfLectureInitialValues(editData, selectedClass),
     enableReinitialize: true, // important when using useMemo
     validationSchema: noOfLectureValidationSchema,
     onSubmit: (values) => {
@@ -72,6 +72,18 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     setClasses(allClasses[0]?.name || '');
   }, [medium]);
 
+  const { values, setFieldValue } = formik;
+
+  useEffect(() => {
+    if (editData?.className && allClass.length > 0) {
+      const matchingClass = allClass.find((cls) => cls.name === editData.className);
+
+      if (matchingClass) {
+        setFieldValue('className', matchingClass.id);
+      }
+    }
+  }, [editData, allClass, setFieldValue]);
+
   useEffect(() => {
     if (!editData && selectedClass) {
       const dummySubjects = generateDummySubjects().map((subj, index) => ({
@@ -86,6 +98,19 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedClass, editData, classes]); // only run when selectedClass or editData changes
+
+  useEffect(() => {
+    if (!editData && (!values.subjects || values.subjects.length === 0)) {
+      const dummySubjects = generateDummySubjects().map((subj, index) => ({
+        id: `subject-${index}`,
+        ...subj,
+        noOfLecture: null,
+      }));
+
+      setFieldValue('subjects', dummySubjects);
+      setFieldValue('totalLectures', 0);
+    }
+  }, [editData, values.subjects, setFieldValue]);
 
   // const initialValues = useMemo(() => {
   //   const base = getNoOfLectureInitialValues(editData, selectedClass);
@@ -190,42 +215,40 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
             </ShakingTextField>
           </Grid>
 
-          {formik.values.className && (
-            <Grid size={{ xs: 12 }}>
-              <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
-                <CustomizableTable
-                  tableId="table-subject-list"
-                  isSearch={false}
-                  isShowedDense={false}
-                  noDataText={<>No Subject&apos;s weekly lectures Found </>}
-                  isFilter={false}
-                  columns={[
-                    {
-                      id: 'name',
-                      label: 'Subject',
-                      isFilter: false,
-                      render: (value, row) => (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <SubjectColorIndicator color={row.subjectColor} />
-                          <Typography variant="caption" fontSize="13px">
-                            {value} ({row.subjectCode})
-                          </Typography>
-                        </Box>
-                      ),
-                    },
-                    {
-                      id: 'noOfLecture',
-                      label: 'Weekly Lectures',
-                      isSort: false,
-                      isFilter: false,
-                      render: subjectColumnRender,
-                    },
-                  ]}
-                  data={formik.values.subjects}
-                />
-              </Box>
-            </Grid>
-          )}
+          <Grid size={{ xs: 12 }}>
+            <Box display="flex" flexDirection="column" gap={2} maxHeight="500px" height="100%">
+              <CustomizableTable
+                tableId="table-subject-list"
+                isSearch={false}
+                isShowedDense={false}
+                noDataText={<>No Subject&apos;s weekly lectures Found </>}
+                isFilter={false}
+                columns={[
+                  {
+                    id: 'name',
+                    label: 'Subject',
+                    isFilter: false,
+                    render: (value, row) => (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <SubjectColorIndicator color={row.subjectColor} />
+                        <Typography variant="caption" fontSize="13px">
+                          {value} ({row.subjectCode})
+                        </Typography>
+                      </Box>
+                    ),
+                  },
+                  {
+                    id: 'noOfLecture',
+                    label: 'Weekly Lectures',
+                    isSort: false,
+                    isFilter: false,
+                    render: subjectColumnRender,
+                  },
+                ]}
+                data={formik.values.subjects}
+              />
+            </Box>
+          </Grid>
         </Grid>
 
         {/* </Scrollbar> */}

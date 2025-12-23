@@ -12,4 +12,5 @@ export interface IAssignmentTypeTableProps {
   data: IAssignmentType[];
   onEdit: (data: IAssignmentType) => void;
   onDelete: (data: IAssignmentType) => void;
+  onCreate?: () => void;
 }

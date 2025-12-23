@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Box, Card } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
 import { useTheme } from '@mui/material/styles';
+import { Box, Card, Tooltip, IconButton } from '@mui/material';
 
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
@@ -18,6 +19,12 @@ export default function CommonReport({ categories, subCategories }: CommonReport
 
   const [selectedCategory, setSelectedCategory] = useState(categories[0]?.id);
   const [selectedReport, setSelectedReport] = useState<ReportSubCategory | null>(null);
+  const [leftPanelVisible, setLeftPanelVisible] = useState(true);
+
+  const toggleLeftPanel = () => {
+    setLeftPanelVisible(!leftPanelVisible);
+  };
+
   console.log('selectedCategory---', selectedCategory);
   console.log('selectedReport---', selectedReport);
 
@@ -32,24 +39,60 @@ export default function CommonReport({ categories, subCategories }: CommonReport
           boxShadow: theme.shadows[3],
         }}
       >
-        <Box sx={{ display: 'flex', width: '100%', height: '100%' }}>
+        <Box sx={{ display: 'flex', width: '100%', height: '100%', position: 'relative' }}>
+          {leftPanelVisible && (
+            <Box
+              sx={{
+                width: 280,
+                flexShrink: 0,
+                height: '100%',
+                borderRight: '1px solid',
+                borderColor: 'divider',
+                transition: 'all 0.3s ease-in-out',
+              }}
+            >
+              <LeftPanel
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onSelectCategory={(id) => {
+                  setSelectedCategory(id);
+                  setSelectedReport(null);
+                }}
+              />
+            </Box>
+          )}
           <Box
             sx={{
-              width: 280,
-              flexShrink: 0,
-              height: '100%',
-              borderRight: '1px solid',
-              borderColor: 'divider',
+              position: 'absolute',
+              top: '50%',
+              left: leftPanelVisible ? 268 : 0,
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              transition: 'left 0.3s ease-in-out',
             }}
           >
-            <LeftPanel
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={(id) => {
-                setSelectedCategory(id);
-                setSelectedReport(null);
-              }}
-            />
+            <Tooltip title={leftPanelVisible ? 'Collapse Categories' : 'Expand Categories'}>
+              <IconButton
+                onClick={toggleLeftPanel}
+                sx={{
+                  bgcolor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  boxShadow: theme.shadows[2],
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                  },
+                }}
+                size="small"
+              >
+                <Iconify
+                  icon={
+                    leftPanelVisible ? 'solar:alt-arrow-left-bold' : 'solar:alt-arrow-right-bold'
+                  }
+                  width={16}
+                />
+              </IconButton>
+            </Tooltip>
           </Box>
           <Box
             sx={{
@@ -67,7 +110,7 @@ export default function CommonReport({ categories, subCategories }: CommonReport
               subCategories={subCategories}
             />
           </Box>
-          <Box sx={{ flexGrow: 1, height: '100%', minWidth: 0 }}>
+          <Box sx={{ flexGrow: 1, height: '100%', minWidth: 0, overflow: 'auto' }}>
             <RightPanel selectedReport={selectedReport} />
           </Box>
         </Box>

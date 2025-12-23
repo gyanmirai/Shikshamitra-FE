@@ -712,6 +712,23 @@ const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => 
     }
   };
 
+  const isEditorEmpty = (value?: string) => {
+    if (!value) return true;
+
+    const cleaned = value
+      .replace(/<p><br><\/p>/g, '')
+      .replace(/<[^>]+>/g, '')
+      .trim();
+
+    return cleaned.length === 0;
+  };
+  const [touched, setTouched] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const handleBlur = () => {
+    setTouched(true);
+  };
+  const showQuestionError = (touched || isSubmitted) && isEditorEmpty(formState.question);
+
   return (
     <BackPopUpChecked initialValues={initial} currentValues={formState}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '200x' }}>
@@ -776,13 +793,16 @@ const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => 
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <Editor
-                value={formState.question}
-                onChange={(val) => handleChange('question', val)}
-                placeholder="Question *"
-                error={!!errors.question}
-                helperText={errors.question}
-              />
+              <ShakingTextField error={!!errors.question}>
+                <Editor
+                  value={formState.question}
+                  onChange={(val) => handleChange('question', val)}
+                  placeholder="Question *"
+                  onBlur={handleBlur}
+                  error={Boolean(errors.question) || showQuestionError}
+                  helperText={errors.question ? 'Question is required' : ''}
+                />
+              </ShakingTextField>
             </Grid>
 
             {formState.questionType === 'Multiple Choice' && (
@@ -829,7 +849,7 @@ const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => 
                   disabled={formState.options.length >= 5}
                   sx={{ mt: 3 }}
                 >
-                  Add Option
+                  Option
                 </Button>
 
                 <ConfirmDialog

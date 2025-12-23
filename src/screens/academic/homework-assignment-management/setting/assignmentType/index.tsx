@@ -95,6 +95,10 @@ const AssignmentTypeCreation = () => {
           setSelectedData(data);
           deleteDialog.onTrue();
         }}
+        onCreate={() => {
+          setSelectedData(null);
+          addAssignmentTypeDialog.onTrue();
+        }}
       />
 
       <CustomDialog

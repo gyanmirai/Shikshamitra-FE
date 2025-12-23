@@ -47,7 +47,6 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
     const [showToolbar, setShowToolbar] = useState(isToolbarShow);
     const [isHovering, setIsHovering] = useState(false);
 
-    // Mention state
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const anchorSpanRef = useRef<HTMLSpanElement | null>(null);
     const [mentionOpen, setMentionOpen] = useState(false);
@@ -85,8 +84,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
         }).configure({ lowlight }),
       ],
       onUpdate({ editor: _editor }) {
-        const html = _editor.getHTML();
-        onChange?.(html);
+        onChange?.(_editor.getHTML());
         if (!mentionable) return;
         const { from } = _editor.state.selection;
         const textBeforeCursor = _editor.state.doc.textBetween(0, from, '\n', '\ufffc');
@@ -132,6 +130,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
       immediatelyRender: false,
       ...other,
     });
+    useEffect(() => () => cleanupAnchorSpan(), []);
 
     const cleanupAnchorSpan = () => {
       if (anchorSpanRef.current) {
@@ -144,7 +143,6 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
         setAnchorEl(null);
       }
     };
-
     const handleSelectMention = useCallback(
       (item: { id: string; label: string }) => {
         if (!editor) return;
@@ -213,7 +211,25 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
             disabled={!editable}
             fullScreen={fullScreen}
             className={editorClasses.root}
-            sx={sx}
+            sx={{
+              ...sx,
+
+              '& .ProseMirror': {
+                caretColor: '#1976d2',
+                userSelect: 'text',
+              },
+              '& .ProseMirror ::selection': {
+                backgroundColor: 'rgba(25, 118, 210, 0.25)',
+              },
+              '& .ProseMirror ul': {
+                listStyleType: 'disc',
+                paddingLeft: '1.5rem',
+              },
+              '& .ProseMirror ol': {
+                listStyleType: 'decimal',
+                paddingLeft: '1.5rem',
+              },
+            }}
           >
             {isHovering && (
               <div
@@ -248,7 +264,7 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
 
             <EditorContent
               ref={ref}
-              spellCheck="false"
+              spellCheck={false}
               autoComplete="off"
               autoCapitalize="off"
               editor={editor}
@@ -256,16 +272,15 @@ export const Editor = forwardRef<HTMLDivElement, EditorProps>(
               className={editorClasses.content.root}
             />
 
-            {/* Mention Popper */}
             {mentionable && (
               <Popover
                 open={mentionOpen}
                 anchorEl={anchorEl}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                style={{ zIndex: 1600 }}
+                sx={{ zIndex: 1600 }}
               >
                 <Paper elevation={3}>
-                  <List dense sx={{ minWidth: 200, maxHeight: 220, overflow: 'auto' }}>
+                  <List dense sx={{ minWidth: 200, maxHeight: 220 }}>
                     {filteredItems.length > 0 ? (
                       filteredItems.map((item, index) => (
                         <ListItemButton

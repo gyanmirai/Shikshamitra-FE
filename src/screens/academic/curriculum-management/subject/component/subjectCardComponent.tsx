@@ -100,7 +100,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   return (
     <>
       <Accordion
-        expanded={isExpanded}
+        expanded={!isExpanded}
         onChange={() => setIsExpanded(!isExpanded)}
         sx={{
           border: '1px solid #ccc',

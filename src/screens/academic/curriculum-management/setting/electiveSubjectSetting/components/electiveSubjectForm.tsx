@@ -77,28 +77,30 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
           </Grid>
 
           <Grid size={{ xs: 12 }}>
-            <ResponsiveMultiSelect
-              label="Select Subjects *"
-              options={['Sanskrit', 'Hindi', 'Physical Training', 'Computer']}
-              value={formik.values.subjects.map((s) => s.name)}
-              getOptionLabel={(opt: any) => opt}
-              getOptionValue={(opt: any) => opt}
-              onChange={(selected: string[]) => {
-                formik.setFieldValue(
-                  'subjects',
-                  selected.map((item) => ({
-                    name: item,
-                    subjectColor: '#000000', // default or from mapping
-                  }))
-                );
-              }}
-              error={!!(formik.touched.subjects && formik.errors.subjects)}
-              helperText={
-                Array.isArray(formik.errors.subjects)
-                  ? formik.errors.subjects.join(', ')
-                  : (formik.touched.subjects && formik.errors.subjects) || undefined
-              }
-            />
+            <ShakingTextField error={!!(formik.touched.subjects && formik.errors.subjects)}>
+              <ResponsiveMultiSelect
+                label="Select Subjects *"
+                options={['Sanskrit', 'Hindi', 'Physical Training', 'Computer']}
+                value={formik.values.subjects.map((s) => s.name)}
+                getOptionLabel={(opt: any) => opt}
+                getOptionValue={(opt: any) => opt}
+                onChange={(selected: string[]) => {
+                  formik.setFieldValue(
+                    'subjects',
+                    selected.map((item) => ({
+                      name: item,
+                      subjectColor: '#000000', // default or from mapping
+                    }))
+                  );
+                }}
+                error={!!(formik.touched.subjects && formik.errors.subjects)}
+                helperText={
+                  Array.isArray(formik.errors.subjects)
+                    ? formik.errors.subjects.join(', ')
+                    : (formik.touched.subjects && formik.errors.subjects) || undefined
+                }
+              />
+            </ShakingTextField>
           </Grid>
 
           <Grid size={{ xs: 12 }}>

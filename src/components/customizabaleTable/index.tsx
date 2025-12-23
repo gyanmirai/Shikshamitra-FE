@@ -165,7 +165,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   // const [dense, setDense] = useState(true);
   const { dense } = tableConfig;
 
-  const [expandedRows, setExpandedRows] = useState<{ [key: number]: boolean }>({});
+  const [expandedRows, setExpandedRows] = useState<{ [key: string]: boolean }>({});
   const [searchValue, setSearchValue] = useState(searchTerm);
 
   // const [columnSearchTerm, setColumnSearchTerm] = useState<string>('');
@@ -462,8 +462,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   //   setAnchorEl(null);
   // };
 
-  const handleExpandRow = (index: number) => {
-    setExpandedRows((prev) => ({ ...prev, [index]: !prev[index] }));
+  const handleExpandRow = (rowId: string) => {
+    setExpandedRows((prev) => ({ ...prev, [rowId]: !prev[rowId] }));
   };
 
   const handleExport = useCallback(
@@ -918,8 +918,15 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                         >
                           {columns.some((column) => column.children) && (
                             <TableCell sx={{ fontSize: '13px' }}>
-                              <IconButton size="small" onClick={() => handleExpandRow(index)}>
-                                {expandedRows[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                              <IconButton
+                                size="small"
+                                onClick={() => handleExpandRow(row.id || index)}
+                              >
+                                {expandedRows[row.id || index] ? (
+                                  <ExpandLessIcon />
+                                ) : (
+                                  <ExpandMoreIcon />
+                                )}
                               </IconButton>
                             </TableCell>
                           )}
@@ -957,7 +964,11 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                               style={{ paddingBottom: 0, paddingTop: 0 }}
                               colSpan={columns.length + 1}
                             >
-                              <Collapse in={expandedRows[index]} timeout="auto" unmountOnExit>
+                              <Collapse
+                                in={expandedRows[row.id || index]}
+                                timeout="auto"
+                                unmountOnExit
+                              >
                                 <Box sx={{ margin: 1 }}>
                                   {columns.map((column) => column.children && column.children(row))}
                                 </Box>

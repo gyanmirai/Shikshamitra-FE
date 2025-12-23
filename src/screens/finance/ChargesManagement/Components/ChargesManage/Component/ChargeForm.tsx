@@ -150,13 +150,19 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   // Fetch students when class and divisions are selected
   useEffect(() => {
     if (values.class && values.division) {
-      const filterCriteria = {
-        classIds: [values.class],
-        divisionIds: [values.division],
-      };
-      getStudents(filterCriteria);
+      const selectedClass = allClass.find((cls) => cls.name === values.class);
+      const selectedDivision = selectedClass?.divisions?.find(
+        (div) => div.name === values.division
+      );
+      if (selectedClass && selectedDivision) {
+        const filterCriteria = {
+          classIds: [selectedClass.id],
+          divisionIds: [selectedDivision.id],
+        };
+        getStudents(filterCriteria);
+      }
     }
-  }, [values.class, values.division, getStudents]);
+  }, [values.class, values.division, allClass, getStudents]);
 
   // Student table data
   const tableData = useMemo(
@@ -243,7 +249,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                     valueKey="id"
                     disabled={!values.class}
                     options={
-                      allClass?.find((i: Standards) => i.id === values.class)?.divisions || []
+                      allClass?.find((i: Standards) => i.name === values.class)?.divisions || []
                     }
                     value={values.division}
                     onChange={(value) => {

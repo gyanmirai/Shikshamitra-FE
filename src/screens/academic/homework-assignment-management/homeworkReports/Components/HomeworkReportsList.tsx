@@ -44,7 +44,7 @@ const HomeworkReportsList = () => {
               onClick={addReportDialog.onTrue}
               sx={{ px: '32px' }}
             >
-              Add Report
+              Report
             </Button>
           }
           sx={{ mb: 1 }}
