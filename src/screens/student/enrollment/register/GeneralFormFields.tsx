@@ -1,4 +1,5 @@
 import { capitalize } from 'lodash';
+import { useRef, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -7,12 +8,15 @@ import { UploadAvatar } from 'src/components/upload';
 import { fileToBase64 } from 'src/utils/file-to-base64';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingScreen } from 'src/components/loading-screen';
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
+import { useGetBasicDetailsQuery } from 'src/redux/student/registration/registration-api';
 import {
   CardActions,
   SectionCard,
@@ -34,18 +38,43 @@ import RenderBoard from './RenderBoard';
 import RenderClass from './RenderClass';
 import RenderMedium from './RenderMedium';
 import RenderAcademicYear from './RenderAcademicYear';
+import { generalFieldsInitialValues } from './initialvalues';
 import RenderInquiryPrefrance from './RenderInquiryPrefrance';
 
 import type { FieldsType } from './type';
 
 const RenderGeneralFormFields = (props: any) => {
-  const { formik, isMainForm = false } = props;
+  const { formik, isMainForm = false, editData } = props;
+
+  const { resetForm, initialValues } = formik;
   const isGeneralFormEditable = useBoolean(isMainForm);
   const isStudentDetailsEditable = useBoolean(isMainForm);
   const isContactDetailsEditable = useBoolean(isMainForm);
   const isIdentificationEditable = useBoolean(isMainForm);
   const isAddressEditable = useBoolean(isMainForm);
   const isPreviousSchoolEditable = useBoolean(isMainForm);
+
+  const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBasicDetailsQuery,
+    params: {
+      studentId: editData?.studentId,
+    },
+    options: {
+      skip: !editData?.studentId,
+    },
+  });
+  const hasInitialized = useRef(false);
+  useEffect(() => {
+    if (!hasInitialized.current && basicDetails?.data && !basicDetailsLoading) {
+      console.log('=========called=======');
+      resetForm({ values: { ...generalFieldsInitialValues(basicDetails.data) } });
+      hasInitialized.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [basicDetails?.data?.standardId, basicDetailsLoading]);
+
+  console.log(basicDetails, 'basicDetails', formik);
 
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
@@ -59,7 +88,9 @@ const RenderGeneralFormFields = (props: any) => {
     formik.resetForm();
   };
 
-  return (
+  return basicDetailsLoading ? (
+    <LoadingScreen />
+  ) : (
     <Box>
       <SectionCard
         title="Inquiry & Admission"
@@ -262,12 +293,12 @@ const RenderGeneralFormFields = (props: any) => {
                   value={formik.values.gender}
                   onChange={formik.handleChange}
                 >
-                  {GenderTypeArray.map((i, index) => (
+                  {GenderTypeArray.map((i) => (
                     <FormControlLabel
                       key={i}
-                      value={index}
+                      value={i}
                       control={<Radio size="small" />}
-                      label={GenderType[index]}
+                      label={GenderType[i]}
                       disabled={!isStudentDetailsEditable.value}
                     />
                   ))}
@@ -470,7 +501,7 @@ const RenderGeneralFormFields = (props: any) => {
               size="small"
               label="Pan No."
               name="panNo"
-              value={formik.values.panNo.toUpperCase()}
+              value={formik.values.panNo?.toUpperCase()}
               onBlur={formik.handleBlur}
               error={formik.touched.panNo && Boolean(formik.errors.panNo)}
               helperText={formik.touched.panNo && formik.errors.panNo}

@@ -7,6 +7,7 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
@@ -25,6 +26,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { Add, Cancel, CheckCircleOutline } from '@mui/icons-material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -33,14 +35,15 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { useGetStudentAttendanceTypeQuery } from 'src/redux/student/attendance-type/attendance-type-api';
 import {
-  useGetStudentLeaveQuery,
-  useChangeLeaveStatusMutation,
-} from 'src/redux/student/student-leave/student-leave-api';
-import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusOptions,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
+import {
+  useGetStudentLeaveQuery,
+  useAddStudentLeaveMutation,
+  useChangeLeaveStatusMutation,
+} from 'src/redux/student/student-leave/student-leave-api';
 import {
   Box,
   Grid,
@@ -421,6 +424,11 @@ const LeaveRequestForm = ({
     currentQueryAndMutation: useGetStudentAttendanceTypeQuery,
   });
 
+  const [addLeaveRequest, { isLoading: addStudentLeaveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddStudentLeaveMutation,
+  });
+
   const { initialValues, errors, touched, setFieldValue, values, handleSubmit } =
     useFormik<IFormValues>({
       initialValues: {
@@ -486,19 +494,22 @@ const LeaveRequestForm = ({
       onSubmit: async (val) => {
         try {
           // this will after so, i'm commenting this code
-          // const res = await addLeaveRequest({
-          //   studentId: student?.id,
-          //   leaveTypeId: val.leaveType,
-          //   halfDay: val.isHalfDay,
-          //   startDate: dateConvertor(val?.startDate?.format(dateFormat) || ''),
-          //   ...(!val.isHalfDay
-          //     ? {
-          //         endDate: dateConvertor(val?.endDate?.format(dateFormat) || ''),
-          //       }
-          //     : {}),
-          //   description: val.description,
-          //   attachment: val.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-          // }).unwrap();
+          const res = await addLeaveRequest({
+            studentId: student?.studentId,
+            studentLeaveTypeId: val.leaveType,
+            isHalfDay: val.isHalfDay,
+            description: val.description,
+            attachment: val.docs.replace(/^data:\w+\/\w+;base64,/, ''),
+            attachmentFileName: `${student?.firstName} ${student?.lastName} ${val.leaveType} ${val.startDate?.format(dateFormat)}`,
+            attachmentContentType: 'string',
+
+            leaveDate: dateConvertor(val?.startDate?.format(dateFormat) || ''),
+            ...(!val.isHalfDay
+              ? {
+                  endDate: dateConvertor(val?.endDate?.format(dateFormat) || ''),
+                }
+              : {}),
+          }).unwrap();
           shikshaMitraToast.success({
             message: `Leave request added by ${student?.firstName} ${student?.lastName} for ${values.startDate?.format('')}`,
           });
@@ -567,7 +578,7 @@ const LeaveRequestForm = ({
                   <TextField {...params} size="small" label="Student" fullWidth />
                 )}
                 renderOption={(prop: any, option: any) => (
-                  <li {...prop} key={option.id}>
+                  <li {...prop} key={option?.studentId}>
                     {option.firstName || ''} {option.lastName || ''}
                   </li>
                 )}
@@ -576,7 +587,7 @@ const LeaveRequestForm = ({
           </Grid>
         </Grid>
 
-        {student?.id && (
+        {student?.studentId && (
           <Box component="form" mt={3}>
             <Grid container spacing={3}>
               {/* Row 1: Leave Type and Half Day Button */}
@@ -594,8 +605,8 @@ const LeaveRequestForm = ({
                     helperText={touched.leaveType && errors.leaveType}
                   >
                     {attendanceTypes?.items?.map((option: ILeaveAbsent) => (
-                      <MenuItem key={option.type} value={option.id}>
-                        {option.type}
+                      <MenuItem key={option.id} value={option.id}>
+                        {option.leaveTypeName}
                       </MenuItem>
                     ))}
                   </TextField>
@@ -638,6 +649,7 @@ const LeaveRequestForm = ({
                   <DatePicker
                     label={values.isHalfDay ? 'Date *' : 'Start Date *'}
                     onChange={(value) => setFieldValue('startDate', value)}
+                    format="DD-MM-YYYY"
                     slotProps={{
                       textField: {
                         size: 'small',
@@ -656,6 +668,7 @@ const LeaveRequestForm = ({
                   <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
                     <DatePicker
                       label="End Date *"
+                      format="DD-MM-YYYY"
                       onChange={(value) => setFieldValue('endDate', value)}
                       slotProps={{
                         textField: {
@@ -733,15 +746,16 @@ const LeaveRequestForm = ({
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           type="submit"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={(e: any) => handleSubmit(e)}
           variant="contained"
           size="small"
+          loading={addStudentLeaveLoading}
         >
           Submit
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

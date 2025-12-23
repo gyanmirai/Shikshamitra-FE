@@ -1,13 +1,19 @@
 export interface IRoom {
-  id: number;
+  id: string;
   roomName: string;
   capacity: number;
-  building: string;
-  floor: string;
-  roomType: string;
+  buildingId: string;
+  buildingName: string;
+  floor: number;
+  roomTypeId: string;
+  roomTypeName: string;
   totalBenches: number;
   benchCapacity: number;
-  rows: number;
-  columns: number;
+  benchesPerRow: number;
+  benchesPerColumn: number;
   features: string[];
+  lastModificationTime: string | null;
+  lastModifierId: string | null;
+  creationTime: string;
+  creatorId: string;
 }

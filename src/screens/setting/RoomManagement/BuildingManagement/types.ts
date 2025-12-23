@@ -1,5 +1,5 @@
 export interface IFloor {
-  id: number;
+  floorNo: number;
   floorName: string;
   totalRoom: number | string;
 }
@@ -13,7 +13,6 @@ export interface IBuilding {
 }
 
 export interface IBuildingTableProps {
-  data: IBuilding[];
   onAddBuilding: {
     onTrue: () => void;
     onFalse: () => void;

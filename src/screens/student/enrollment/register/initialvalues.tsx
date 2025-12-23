@@ -1,5 +1,6 @@
+import type { GenderType } from 'src/enums/gender';
+
 import dayjs from 'dayjs';
-import { GenderType } from 'src/enums/gender';
 import calculateAge from 'src/utils/calculate-age';
 import { Category } from 'src/enums/studnet-category';
 import { EmployeeCastType } from 'src/enums/employee-cast';
@@ -24,7 +25,7 @@ export const generalFieldsInitialValues = (editData?: IGeneralInformationRespons
   middleName: editData?.middleName || '',
   dob: editData?.dateOfBirth ? dayjs(editData?.dateOfBirth) : null,
   age: editData?.dateOfBirth ? calculateAge(dayjs(editData.dateOfBirth).format()) : '',
-  gender: GenderType[editData?.gender || GenderType.Male],
+  gender: editData?.gender as GenderType,
   adharNo: editData?.aadharNo || '',
   religion: editData?.religion || '',
   familyCast: editData ? editData?.familyCast : '',
@@ -230,12 +231,12 @@ export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse 
 export const CommunicationFieldsInitialValues = (
   editData?: ICommunicationInformationResponse | null
 ) => ({
-  commPrimaryContactNumber: editData?.primaryContactNo || '',
-  parentContactNumber: editData?.parentContactNo
-    ? validatePhoneNumber(editData?.parentContactNo)
-    : '',
-  parentEmail: editData?.parentEmail || '',
-  whatsAppContactNo: editData?.whatsappNo ? validatePhoneNumber(editData?.whatsappNo) : '',
+  // commPrimaryContactNumber: editData?.primaryContactNo || '',
+  // parentContactNumber: editData?.parentContactNo
+  //   ? validatePhoneNumber(editData?.parentContactNo)
+  //   : '',
+  // parentEmail: editData?.parentEmail || '',
+  // whatsAppContactNo: editData?.whatsappNo ? validatePhoneNumber(editData?.whatsappNo) : '',
 
   localCountry: editData?.localAddress?.country?.name
     ? {

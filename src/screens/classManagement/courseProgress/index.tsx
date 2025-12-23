@@ -22,10 +22,7 @@ const CourseProgress = () => {
   // State to store selected division ID
   const [division, setDivision] = useState<string>('');
 
-  const {
-    currentMedium: medium,
-    // setCurrentMedium: setMedium,
-  } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
   // Update classes when organization changes
   useEffect(() => {
@@ -76,7 +73,12 @@ const CourseProgress = () => {
           disabled={!classes}
         />
       </Box>
-      <CourseProgressComponent courseData={courseProgressTableData} isAction />
+      <CourseProgressComponent
+        courseData={courseProgressTableData}
+        isAction
+        selectedClass={classes}
+        selectedDivision={division}
+      />
     </Box>
   );
 };

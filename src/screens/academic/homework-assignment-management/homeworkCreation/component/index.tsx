@@ -3,25 +3,30 @@ import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
+import { Box, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import homeworkTableData from 'src/json/academic/homeworkAssignment/homework-table-data.json';
+import {
+  useDeleteHomeworkMutation,
+  useUpdateHomeworkMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 
 import HomeworkForm from './homeworkForm';
 import HomeworkTable from './homeworkTable';
 import ViewHomeworkDetails from './viewHomeworkDetails';
-import { StudentSubmissions } from '../studentSubmission/homeworkStudentSubmission';
 
 import type { IHomework, IHomeworkDetail } from '../type';
 
@@ -49,7 +54,15 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   const [division, setDivision] = useState<string>('');
   // State to store and update the selected date using dayjs
   const [date, setDate] = useState<Dayjs | null>(dayjs());
+  const [deleteHomework, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteHomeworkMutation,
+  });
 
+  const [publishHomework, { isLoading: isPublishLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHomeworkMutation,
+  });
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -235,36 +248,6 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       />
 
       <ConfirmDialog
-        open={deleteHomeworkDialog.value}
-        onClose={() => {
-          setSelectedHomework(null);
-          deleteHomeworkDialog.onFalse();
-        }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to Delete Homework <strong>{selectedHomework?.title}</strong>?
-          </>
-        }
-        action={
-          <Button
-            variant="contained"
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
-            color="error"
-            onClick={() => {
-              deleteHomeworkDialog.onFalse();
-              shikshaMitraToast.success({
-                message: `Homework "${selectedHomework?.title}" has been successfully deleted for Class ${classes} - ${division} of ${selectedHomework?.subject}.`,
-              });
-            }}
-            size="small"
-          >
-            Yes
-          </Button>
-        }
-      />
-
-      <ConfirmDialog
         open={publishHomeworkDialog.value}
         onClose={() => {
           publishHomeworkDialog.onFalse();
@@ -273,23 +256,84 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         title="Publish"
         content={
           <>
-            Are you sure you want to Publish Homework <strong>{selectedHomework?.title}</strong>?
+            Are you sure you want to publish homework <strong>{selectedHomework?.title}</strong>?
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {
-              publishHomeworkDialog.onFalse();
-              shikshaMitraToast.success({
-                message: `Homework Published successfully for Class ${classes} - ${division} of Subject ${selectedHomework?.subject}.`,
-              });
-            }}
             size="small"
+            loading={isPublishLoading}
+            startIcon={<Iconify icon={GlobalIcons.publish} />}
+            onClick={async () => {
+              try {
+                const payload = {
+                  id: selectedHomework?.id,
+                  academicMediumId: medium?.id,
+                };
+
+                await publishHomework(payload).unwrap();
+
+                shikshaMitraToast.success({
+                  message: `Homework has been successfully published for "${selectedHomework?.title}" subject in Class ${classes} - ${division}.`,
+                });
+
+                publishHomeworkDialog.onFalse();
+                setSelectedHomework(null);
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to publish homework.',
+                });
+              }
+            }}
           >
             Publish
-          </Button>
+          </LoadingButton>
+        }
+      />
+
+      <ConfirmDialog
+        open={deleteHomeworkDialog.value}
+        onClose={() => {
+          setSelectedHomework(null);
+          deleteHomeworkDialog.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete homework <strong>{selectedHomework?.title}</strong>?
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            color="error"
+            size="small"
+            loading={isDeleteLoading}
+            onClick={async () => {
+              try {
+                const payload = {
+                  academicMediumId: medium?.id,
+                  id: selectedHomework?.id,
+                };
+
+                await deleteHomework(payload).unwrap();
+
+                shikshaMitraToast.success({
+                  message: `Homework for "${selectedHomework?.title}" has been successfully deleted from Class ${classes} - ${division}.`,
+                });
+
+                deleteHomeworkDialog.onFalse();
+                setSelectedHomework(null);
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete homework.',
+                });
+              }
+            }}
+          >
+            Yes
+          </LoadingButton>
         }
       />
 
@@ -318,7 +362,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         <ViewHomeworkDetails homework={selectedHomework} />
       </CustomDialog>
 
-      <CustomDialog
+      {/* <CustomDialog
         title={selectedHomework?.title || 'Homework Details'}
         open={viewHomeworkSubmissionDialog.value}
         handleClose={() => {
@@ -330,7 +374,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
         <Box sx={{ p: 2 }}>
           <StudentSubmissions selectedHomework={selectedHomework} />
         </Box>
-      </CustomDialog>
+      </CustomDialog> */}
     </Box>
   );
 };

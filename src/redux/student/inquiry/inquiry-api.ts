@@ -10,14 +10,14 @@ export const StudentInquiryApi = createApi({
   endpoints: (builder) => ({
     getStudentInquiry: builder.query({
       query: ({ academicMediumId }) => ({
-        url: `/academic-mediums/${academicMediumId}/inquiries`,
+        url: `/student/enrollment/${academicMediumId}/inquiries`,
         method: 'GET',
       }),
       providesTags: ['Student-Inquiry'],
     }),
     addStudentInquiry: builder.mutation({
       query: (body) => ({
-        url: '/inquiries',
+        url: '/student/enrollment/inquiries',
         method: 'POST',
         data: body,
       }),
@@ -25,14 +25,14 @@ export const StudentInquiryApi = createApi({
     }),
     getStudentInquiryById: builder.query({
       query: ({ studentId }) => ({
-        url: `/inquiries/${studentId}`,
+        url: `/student/enrollment/inquiries/${studentId}`,
         method: 'GET',
       }),
       providesTags: ['Student-Inquiry'],
     }),
     updateStudentInquiry: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/inquiries/${id}`,
+        url: `/student/enrollment/inquiries/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -49,7 +49,7 @@ export const StudentInquiryApi = createApi({
 
     registrationFormDetails: builder.mutation({
       query: ({ studentId, body }) => ({
-        url: `/student-enrollment/registration/${studentId}/forms`,
+        url: `/student/enrollment/registrations/${studentId}/forms`,
         method: 'POST',
         data: body,
       }),

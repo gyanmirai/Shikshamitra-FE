@@ -5,9 +5,9 @@ import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 
@@ -49,7 +49,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     <Box>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         {/* <form onSubmit={formik.handleSubmit}> */}
-        <Scrollbar sx={{ p: 2, height: '280px' }}>
+        <DialogScrollContent>
           <Grid container spacing={2}>
             {/* Student Info */}
             <Grid size={{ xs: 12 }}>
@@ -127,7 +127,7 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
               </ShakingTextField>
             </Grid>
           </Grid>
-        </Scrollbar>
+        </DialogScrollContent>
         <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             variant="outlined"

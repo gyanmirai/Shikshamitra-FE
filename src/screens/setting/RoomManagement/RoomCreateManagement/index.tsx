@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -10,8 +11,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useDeleteRoomMutation } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 
 import RoomTable from './components/roomTable';
 import RoomForm from './components/AddRoomForm';
@@ -22,41 +25,15 @@ const RoomCreateManagement = () => {
   // Dialog control hooks for add/edit and delete room modals
   const addRoomDialog = useBoolean();
   const deleteRoomDialog = useBoolean();
-
+  const [deleteRoom, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteRoomMutation,
+  });
   // Get changes state from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // State for managing selected room and room data
   const [selectedRoom, setSelectedRoom] = useState<IRoom | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [roomData, setRoomData] = useState<IRoom[]>([
-    {
-      id: 1,
-      roomName: '101',
-      capacity: 50,
-      building: 'Building A',
-      floor: '1',
-      roomType: 'Lecture',
-      totalBenches: 25,
-      benchCapacity: 2,
-      rows: 5,
-      columns: 5,
-      features: ['Projector', 'AC', 'Whiteboard'],
-    },
-    {
-      id: 2,
-      roomName: '102',
-      capacity: 40,
-      building: 'Building B',
-      floor: '1',
-      roomType: 'Lab',
-      totalBenches: 20,
-      benchCapacity: 2,
-      rows: 4,
-      columns: 5,
-      features: ['Computers', 'AC', 'Whiteboard'],
-    },
-  ]);
 
   // Redux dispatch hook
   const dispatch = useDispatch();
@@ -135,7 +112,6 @@ const RoomCreateManagement = () => {
           setSelectedRoom(data);
           addRoomDialog.onTrue();
         }}
-        data={roomData}
       />
 
       <ConfirmDialog
@@ -151,21 +127,22 @@ const RoomCreateManagement = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
+            onClick={async () => {
+              await deleteRoom(selectedRoom?.id);
+              shikshaMitraToast.success({
+                message: `Room "${selectedRoom?.roomName}" deleted successfully`,
+              });
               deleteRoomDialog.onFalse();
               setSelectedRoom(null);
-              shikshaMitraToast.success({
-                message: `Room ${selectedRoom?.roomName} deleted successfully`,
-              });
-              // handle delete action
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

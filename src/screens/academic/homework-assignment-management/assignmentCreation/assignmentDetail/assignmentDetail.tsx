@@ -31,7 +31,7 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
             }}
           />
           <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
-            {assignment?.subjects}
+            {assignment?.subjectName}
           </Typography>
         </Box>
 
@@ -46,7 +46,7 @@ const ViewAssignmentDetails = ({ assignment }: { assignment: IAssignment | null 
             }}
           />
           <Typography variant="body2" component="span" sx={{ color: 'text.primary' }}>
-            {assignment?.class} - {assignment?.divisionMeta?.divisionId}
+            {assignment?.className}
           </Typography>
         </Box>
       </Box>

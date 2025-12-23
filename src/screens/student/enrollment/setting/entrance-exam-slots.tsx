@@ -257,6 +257,8 @@ export const SlotsForm = ({
   editData: ISlot | null;
   date: Dayjs | null;
 }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   // Hook for adding a new entrance exam slot
   const [addSlot, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -318,9 +320,11 @@ export const SlotsForm = ({
           await updateSlot({
             id: editData.id,
             body: {
+              academicYearId: currentYear?.id,
               slotName: values.slotName,
-              startDate: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
-              endDate: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
+              startTime: values.startTime ? dayjs(values.startTime).format('HH:mm:ss') : null,
+              endTime: values.endTime ? dayjs(values.endTime).format('HH:mm:ss') : null,
+              duration: values.duration,
               studentLimit: values.studentLimit,
               roomNo: values.roomNo,
             },
@@ -330,6 +334,7 @@ export const SlotsForm = ({
           });
         } else {
           await addSlot({
+            academicYearId: currentYear?.id,
             slotName: values.slotName,
             startTime: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
             endTime: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
