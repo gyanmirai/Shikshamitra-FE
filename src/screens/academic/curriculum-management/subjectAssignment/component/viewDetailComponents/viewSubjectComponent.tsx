@@ -131,7 +131,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
 
           <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
             <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
-              {subjectAssignmentData?.subjects?.map((sub, index) => (
+              {subjectAssignmentData?.subjects?.map((sub: any, index: number) => (
                 <Box
                   key={sub.subjectCode}
                   onClick={() => setExpandedSubject(sub.subjectCode)}
@@ -161,7 +161,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
       <Grid size={{ xs: 9 }} height="100%">
         <Paper elevation={3} sx={{ height: '100%', p: 2 }}>
           {subjectAssignmentData?.subjects?.map(
-            (sub) =>
+            (sub: any) =>
               expandedSubject === sub.subjectCode && (
                 <Box
                   key={sub.subjectCode}
