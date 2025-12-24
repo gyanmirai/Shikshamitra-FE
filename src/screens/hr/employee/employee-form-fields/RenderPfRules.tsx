@@ -18,7 +18,13 @@ export const RenderPfRules = ({ disabled, formik }: RenderPfRulesProps) => {
   return (
     <Autocomplete
       options={PFData?.items || []}
-      getOptionLabel={(option) => option.name}
+      getOptionLabel={(option) => option?.name ?? ''}
+      isOptionEqualToValue={(option, value) => option.id === value.id}
+      value={formik.values.pfRule ?? null}
+      onChange={(_, value) => {
+        formik.setFieldValue('pfRule', value);
+      }}
+      disabled={isLoading || disabled}
       renderInput={(params) => (
         <TextField
           {...params}
@@ -29,11 +35,6 @@ export const RenderPfRules = ({ disabled, formik }: RenderPfRulesProps) => {
           sx={{ width: '100%', minWidth: 'unset' }}
         />
       )}
-      value={formik?.values?.pfRule || {}}
-      onChange={(e, value) => {
-        formik.setFieldValue('pfRule', value);
-      }}
-      disabled={isLoading || disabled}
     />
   );
 };

@@ -481,6 +481,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   //   }).unwrap();
   //   return res;
   // },[updateReportingManager])
+  const getEmployeeName = (values: any) =>
+    `${values.firstName || ''} ${values.lastName || ''}`.trim();
 
   const handleSave = useCallback(
     async (
@@ -492,50 +494,65 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     ) => {
       try {
         setIsLoading(true);
+        const employeeName = getEmployeeName(values) || 'Employee';
+
         if (editData && activeStep === 0) {
           await handelUpdateEmployee(values, formik, editData.id);
-          // if (isSaveButton) {
-          shikshaMitraToast.success({ message: 'Employee details updated successfully' });
-          // }
+
+          shikshaMitraToast.success({
+            message: `${employeeName}'s data updated successfully`,
+          });
         } else if (activeStep === 0) {
           if (values.employeeId) {
             await handelUpdateEmployee(values, formik, values.employeeId);
-            // if (isSaveButton) {
-            shikshaMitraToast.success({ message: 'Employee details updated successfully' });
-            // }
+
+            shikshaMitraToast.success({
+              message: `${employeeName}'s data updated successfully`,
+            });
           } else {
             await handleBasicInformation(values, formik);
-            // if (isSaveButton) {
-            shikshaMitraToast.success({ message: 'Employee added successfully' });
-            // }
+
+            shikshaMitraToast.success({
+              message: `${employeeName}'s data added successfully`,
+            });
           }
         } else if (activeStep === 1) {
           await handleFamilyInformation(values, formik);
           // if (isSaveButton) {
-          shikshaMitraToast.success({ message: 'Family information updated successfully' });
+          shikshaMitraToast.success({
+            message: `${employeeName}'s Family information updated successfully`,
+          });
           // }
         } else if (activeStep === 2) {
           await handleAdditionalDetails(values, formik);
-          shikshaMitraToast.success({ message: 'Additional details updated successfully' });
+          shikshaMitraToast.success({
+            message: `${employeeName}'s Additional details updated successfully`,
+          });
         } else if (activeStep === 4) {
           await handleWorkExperience(values, formik);
           // if (isSaveButton) {
-          shikshaMitraToast.success({ message: 'Work experience updated successfully' });
+          shikshaMitraToast.success({
+            message: `${employeeName}'s Work experience updated successfully`,
+          });
           // }
         } else if (activeStep === 5) {
           await handleBankDetailsInformation(values, formik);
           // if (isSaveButton) {
-          shikshaMitraToast.success({ message: 'Bank details updated successfully' });
+          shikshaMitraToast.success({
+            message: `${employeeName}'s Bank details updated successfully`,
+          });
           // }
         } else if (activeStep === 6) {
           // await handleBankDetailsInformation(values, formik);
           // if (isSaveButton) {
-          shikshaMitraToast.success({ message: 'Bank details updated successfully' });
+          shikshaMitraToast.success({
+            message: `${employeeName}'s Bank details updated successfully`,
+          });
           // }
         }
         if (isLastStep && !isSaveButton) {
           shikshaMitraToast.success({
-            message: `Employee ${editData ? 'updated' : 'added'}  successfully`,
+            message: `${employeeName}'s data ${editData ? 'updated' : 'added'}  successfully`,
           });
         }
         if (!isSaveButton && !isLastStep) {

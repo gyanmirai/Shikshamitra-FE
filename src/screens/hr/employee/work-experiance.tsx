@@ -29,6 +29,8 @@ const WorkExperiences = (props: any) => {
   const handleCancel = () => {
     formik.resetForm();
   };
+  const selectedExperienceData =
+    typeof selectedExperience === 'number' ? values.experiences[selectedExperience] : null;
   return (
     <Box>
       {!isMainForm && (
@@ -400,7 +402,17 @@ const WorkExperiences = (props: any) => {
           deleteExperienceDialog.onFalse();
         }}
         title="Delete"
-        content={<>Are you sure you want to delete experience?</>}
+        content={
+          <>
+            Are you sure you want to delete{' '}
+            <strong>
+              {selectedExperienceData?.organizationName
+                ? selectedExperienceData.organizationName
+                : 'this organization '}
+            </strong>{' '}
+            experience ?
+          </>
+        }
         action={
           <Button
             variant="contained"
@@ -412,9 +424,8 @@ const WorkExperiences = (props: any) => {
                 'experiences',
                 values.experiences.filter((_e: any, i: number) => i !== selectedExperience)
               );
-              // handle delete action
+              setSelectedExperience(null);
             }}
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </Button>

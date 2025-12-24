@@ -510,6 +510,8 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     },
     [filters, handelChangeParams]
   );
+  const ROW_HEIGHT = dense ? 40 : 52; // MUI default approx
+  const MIN_ROWS = 5;
   const tableContent = useMemo(
     () => (
       <Box
@@ -969,7 +971,13 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={columns.length} sx={{ p: 0 }}>
+                      <TableCell
+                        colSpan={columns.length + (columns.some((c) => c.children) ? 1 : 0)}
+                        sx={{
+                          height: ROW_HEIGHT * MIN_ROWS,
+                          p: 0,
+                        }}
+                      >
                         <EmptyContent
                           title={noDataText}
                           sx={{
@@ -1034,6 +1042,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       columnVisibility,
       columns,
       dense,
+      ROW_HEIGHT,
       expandedRows,
       exportAnchorEl,
       filterAnchorEl,

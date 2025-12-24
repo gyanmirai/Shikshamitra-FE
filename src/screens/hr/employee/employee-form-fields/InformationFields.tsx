@@ -249,13 +249,29 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   fullWidth
                   size="small"
                   label="First Name *"
-                  {...formik.getFieldProps('firstName')}
+                  name="firstName"
+                  value={formik.values.firstName}
                   onChange={(e) => {
-                    const newName = capitalize(e.target.value);
-                    if (/^[A-Za-z ]*$/.test(newName)) {
-                      formik.setFieldValue('firstName', newName);
-                    }
+                    const input = e.target;
+                    const rawValue = input.value;
+
+                    // Allow only letters & space
+                    if (!/^[A-Za-z ]*$/.test(rawValue)) return;
+
+                    // Save cursor position
+                    const cursorPosition = input.selectionStart ?? rawValue.length;
+
+                    // Capitalize first character only
+                    const formattedValue = rawValue.charAt(0).toUpperCase() + rawValue.slice(1);
+
+                    formik.setFieldValue('firstName', formattedValue);
+
+                    // Restore cursor position
+                    requestAnimationFrame(() => {
+                      input.setSelectionRange(cursorPosition, cursorPosition);
+                    });
                   }}
+                  onBlur={formik.handleBlur}
                   error={formik.touched.firstName && Boolean(formik.errors.firstName)}
                   helperText={formik.touched.firstName && formik.errors.firstName}
                   disabled={!isBasicDetailsEditable.value}
@@ -354,6 +370,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 <FormControl
                   disabled={!isBasicDetailsEditable.value}
                   fullWidth
+                  error={Boolean(formik.touched.gender && formik.errors.gender)}
                   sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'center' }}
                 >
                   <FormLabel
@@ -374,10 +391,63 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     name="gender"
                     value={formik.values.gender}
                     onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
                   >
-                    <FormControlLabel value={0} control={<Radio size="small" />} label="Male" />
-                    <FormControlLabel value={1} control={<Radio size="small" />} label="Female" />
+                    <FormControlLabel
+                      value={0}
+                      label="Male"
+                      control={
+                        <Radio
+                          size="small"
+                          sx={{
+                            color:
+                              formik.touched.gender && formik.errors.gender
+                                ? 'error.main'
+                                : undefined,
+                            '&.Mui-checked': {
+                              color:
+                                formik.touched.gender && formik.errors.gender
+                                  ? 'error.main'
+                                  : undefined,
+                            },
+                          }}
+                        />
+                      }
+                      sx={{
+                        color:
+                          formik.touched.gender && formik.errors.gender ? 'error.main' : undefined,
+                      }}
+                    />
+
+                    <FormControlLabel
+                      value={1}
+                      label="Female"
+                      control={
+                        <Radio
+                          size="small"
+                          sx={{
+                            color:
+                              formik.touched.gender && formik.errors.gender
+                                ? 'error.main'
+                                : undefined,
+                            '&.Mui-checked': {
+                              color:
+                                formik.touched.gender && formik.errors.gender
+                                  ? 'error.main'
+                                  : undefined,
+                            },
+                          }}
+                        />
+                      }
+                      sx={{
+                        color:
+                          formik.touched.gender && formik.errors.gender ? 'error.main' : undefined,
+                      }}
+                    />
                   </RadioGroup>
+                  {formik.touched.gender && formik.errors.gender && (
+                    <FormHelperText>{formik.errors.gender}</FormHelperText>
+                  )}
                 </FormControl>
               </ShakingTextField>
             </Grid>

@@ -227,6 +227,14 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
     </Box>
   );
 };
+// format number for display
+const formatNumber = (value: string | number) => {
+  if (!value) return '';
+  return Number(value).toLocaleString('en-IN'); // Indian format
+};
+
+// remove commas before storing
+const parseNumber = (value: string) => value.replace(/,/g, '');
 
 const RenderPayrollFields = (props: any) => {
   const { formik, isMainForm } = props;
@@ -344,13 +352,24 @@ const RenderPayrollFields = (props: any) => {
         <Grid size={{ xs: 12, sm: 4 }}>
           <TextField
             size="small"
-            // type="number"
             fullWidth
             disabled={!isEditable.value}
             label="Basic Salary"
             name="basicSalary"
-            value={values.basicSalary || ''}
-            onChange={handleChange}
+            value={formatNumber(values.basicSalary)}
+            onChange={(e) => {
+              const rawValue = parseNumber(e.target.value);
+
+              // allow only numbers
+              if (!/^\d*$/.test(rawValue)) return;
+
+              handleChange({
+                target: {
+                  name: 'basicSalary',
+                  value: rawValue,
+                },
+              } as any);
+            }}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
