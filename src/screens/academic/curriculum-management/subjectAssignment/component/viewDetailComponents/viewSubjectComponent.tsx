@@ -55,7 +55,6 @@ const TABS = [
 ];
 
 export const ViewSubject = ({ subject }: IViewSubjectProps) => {
-  // const [tabValue, setTabValue] = useState(0);
   const tabs = useTabs('overview');
   const {
     data: subjectAssignmentData,
