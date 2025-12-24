@@ -396,37 +396,74 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       width: '100%',
-                      gap: 1,
+                      gap: 2,
                     },
                   }}
                 >
-                  <Stack
-                    direction="row"
-                    spacing={2}
-                    alignItems="center"
-                    sx={{ flexWrap: 'wrap', width: '100%' }}
-                  >
+                  {/* Show detailed info when collapsed, simple title when expanded */}
+                  {!config.expanded ? (
+                    <Stack
+                      direction="row"
+                      spacing={3}
+                      alignItems="center"
+                      sx={{ flexWrap: 'wrap', width: '100%' }}
+                    >
+                      {/* Total Slots */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 120 }}>
+                        <Iconify icon="mdi:clock-outline" width={18} color="text.secondary" />
+                        <Box>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            Total Slots:
+                          </Typography>
+                          <Typography variant="body2" fontWeight={600}>
+                            {String(config.totalSlots || 0)}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Active Days */}
+                      {Array.isArray(config.weekRange) && config.weekRange.length === 2 && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 120 }}>
+                          <Iconify icon="mdi:calendar-week" width={18} color="text.secondary" />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              Active Days:
+                            </Typography>
+                            <Typography variant="body2" fontWeight={600}>
+                              {getDayLabel(config.weekRange[0])} -{' '}
+                              {getDayLabel(config.weekRange[1])}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
+
+                      {/* Time Range */}
+                      {config.timeSlots?.length > 0 && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 150 }}>
+                          <Iconify
+                            icon="mdi:clock-time-four-outline"
+                            width={18}
+                            color="text.secondary"
+                          />
+                          <Box>
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              Time Range:
+                            </Typography>
+                            <Typography variant="body2" fontWeight={600}>
+                              {dayjs(config.timeSlots[0].startTime).format('hh:mm A')} -{' '}
+                              {dayjs(config.timeSlots[config.timeSlots.length - 1].endTime).format(
+                                'hh:mm A'
+                              )}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
+                    </Stack>
+                  ) : (
                     <Typography variant="subtitle2" fontWeight={600}>
-                      {String(config.totalSlots || 0)} slot
-                      {String(config.totalSlots) === '1' ? '' : 's'}
+                      Slot Configuration
                     </Typography>
-
-                    {Array.isArray(config.weekRange) && config.weekRange.length === 2 && (
-                      <Typography variant="caption" color="text.secondary">
-                        Days: {getDayLabel(config.weekRange[0])} -{' '}
-                        {getDayLabel(config.weekRange[1])}
-                      </Typography>
-                    )}
-
-                    {config.timeSlots?.length > 0 && (
-                      <Typography variant="caption" color="text.secondary">
-                        {dayjs(config.timeSlots[0].startTime).format('hh:mm A')} -{' '}
-                        {dayjs(config.timeSlots[config.timeSlots.length - 1].endTime).format(
-                          'hh:mm A'
-                        )}
-                      </Typography>
-                    )}
-                  </Stack>
+                  )}
 
                   {formik.values.slotConfigurations.length > 1 && !disabled && (
                     <IconButton
@@ -444,7 +481,7 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
                 <AccordionDetails sx={{ pt: 0 }}>
                   <Box width="100%">
                     <Grid container spacing={3}>
-                      <Grid size={{ xs: 12, md: 6 }}>
+                      <Grid size={{ xs: 12, md: 5 }}>
                         <Box
                           sx={{
                             px: 2,

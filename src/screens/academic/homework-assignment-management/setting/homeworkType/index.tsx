@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,8 +12,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useDeleteHomeworkTypeMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 
 import HomeworkTypeForm from './homeworkTypeForm';
 import HomeworkTypeTable from './homeworkTypeTable';
@@ -32,14 +35,20 @@ const HomeworkTypeCreation = () => {
   // Track unsaved changes from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
+  // Get current medium from global state
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
   // Currently selected homework type for edit/delete
   const [selectedData, setSelectedData] = useState<IHomeworkType | null>(null);
 
-  // Table data state containing list of homework types
-  const [tableData] = useState<IHomeworkType[]>([]);
-
   // Redux dispatch function
   const dispatch = useDispatch();
+
+  // Delete mutation hook
+  const [deleteHomeworkType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteHomeworkTypeMutation,
+  });
 
   /**
    * Handles closing of the add/edit dialog
@@ -89,7 +98,6 @@ const HomeworkTypeCreation = () => {
       />
 
       <HomeworkTypeTable
-        data={tableData}
         onEdit={(data) => {
           setSelectedData(data);
           addHomeworkTypeDialog.onTrue();
@@ -149,21 +157,30 @@ const HomeworkTypeCreation = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             size="small"
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
             color="error"
-            onClick={() => {
-              deleteDialog.onFalse();
-              shikshaMitraToast.success({
-                message: `${selectedData?.homeworkTypeName} Homework Type has been successfully deleted.`,
-              });
-              setSelectedData(null);
+            onClick={async () => {
+              try {
+                const payload = {
+                  academicMediumId: (currentMedium as any).id,
+                  id: selectedData?.id,
+                };
+                await deleteHomeworkType(payload).unwrap();
+                deleteDialog.onFalse();
+                setSelectedData(null);
+                shikshaMitraToast.success({
+                  message: `Homework Type "${selectedData?.homeworkTypeName}" deleted successfully`,
+                });
+              } catch (error) {
+                console.error('Failed to delete homework type', error);
+              }
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>
