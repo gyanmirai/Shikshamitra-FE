@@ -77,7 +77,7 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
       roomName: Yup.string().required('Room Name/No. is required'),
       capacity: Yup.number().required('Capacity (Total) is required'),
       building: Yup.string().required('Building is required'),
-      floor: Yup.number().required('Floor is required'),
+      floor: Yup.string().required('Floor is required'),
       roomType: Yup.string().required('Room Type is required'),
       totalBenches: Yup.number().required('Total Benches is required'),
       benchCapacity: Yup.number().required('Bench Capacity is required'),
