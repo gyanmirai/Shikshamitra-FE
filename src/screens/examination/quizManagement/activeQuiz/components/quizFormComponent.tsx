@@ -549,6 +549,7 @@ const defaultValues = {
 };
 
 const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => {
+  console.log('formik values---', formik.values);
   // Initialize form state with provided initial data or default values
   const initial = initialData || defaultValues;
   const [formState, setFormState] = useState(initial);
