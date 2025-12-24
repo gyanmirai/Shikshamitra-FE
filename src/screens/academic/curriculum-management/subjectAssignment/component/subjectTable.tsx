@@ -1,6 +1,10 @@
 // SubjectTable.tsx
 
+import type { Medium } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+
 import { useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -8,16 +12,19 @@ import { RemoveCircle } from '@mui/icons-material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuList, MenuItem, IconButton, Typography } from '@mui/material';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusOptions,
 } from 'src/enums/publishUnpublish-status';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import type { ISubjectTableProps } from './type';
 
 const SubjectTable = ({
+  classId,
   addSubjectDialog,
   data,
   setEditData,
@@ -26,21 +33,32 @@ const SubjectTable = ({
   onDelete,
   onToggleStatus,
 }: ISubjectTableProps) => {
-  const theme = useTheme();
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
+  const {
+    data: subjectTableData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { academicMediumId: (medium as Medium)?.id, classId },
+  });
+  const theme = useTheme();
+  console.log('data---', data);
   function getSubjectTableData(formDataArray: any[]) {
     return formDataArray.map((item: any) => {
       // Core Subject
       if (item.subjectType === 0) {
         return {
-          id: item.subjectId,
+          id: item.subjects[0]?.assignedId || item.subjects[0]?.subjectId,
           type: 'Core', // For UI display
           subjectTypeRaw: 0,
-          subjectName: item.subjectName,
-          subjectCode: item.subjectCode,
-          status: item.status,
+          subjectName: item.subjects[0]?.subject?.name || item.subjects[0]?.subjectName,
+          subjectCode: item.subjects[0]?.subjectCode,
+          status: item?.status,
           // Generate a color if not present
-          color: item.color,
+          color: item.subjects[0]?.subject?.color || item.subjects[0]?.color,
           originalData: item,
         };
       }
@@ -48,13 +66,19 @@ const SubjectTable = ({
       if (item.subjectType === 1) {
         return {
           // Use electiveGroupId or generate a unique ID
-          id: item.electiveGroupId,
+          id: item.subjects?.[0]?.electiveGroupId || item.electiveGroupId,
           type: 'Elective',
           subjectTypeRaw: 1,
+
           subjectName: item.electiveGroupName,
           // Extract sub-subjects
-          subjects: item.subjects || [],
-          status: item.subjects?.[0]?.status ?? 1, // Assume group status based on first item or default
+          subjects:
+            item.subjects?.map((sub: any) => ({
+              ...sub,
+              subjectName: sub.subject?.name || sub.subjectName,
+              color: sub.subject?.color || sub.color,
+            })) || [],
+          status: item?.status,
           color: item.color,
           originalData: item,
         };

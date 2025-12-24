@@ -279,7 +279,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               },
             },
           ]}
-          data={tableData}
+          data={tableData || []}
         />
       ) : (
         <CustomizableTable
@@ -327,7 +327,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             },
             { id: 'createdBy', label: 'Created By', align: 'left' },
           ]}
-          data={tableData}
+          data={tableData || []}
         />
       )}
 
