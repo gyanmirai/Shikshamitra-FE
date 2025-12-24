@@ -20,7 +20,6 @@ import { employeeApi } from './employee/employeeApi';
 import { documentApi } from './document/documentApi';
 import { feeTermsApi } from './feeCollection/feeTerms';
 import { PaymentTermApi } from './finance/paymentTerm';
-import { transportApi } from './transport/transportApi';
 import { academicApi } from './academicAPI/academicApi';
 import { librarySettingsApi } from './library/settingApi';
 import globalStateReducer from './globalState/globalSlice';
@@ -29,7 +28,6 @@ import { payElementApi } from './payElement/payElementApi';
 import { invoiceApi } from './invoiceAndReceipt/invoiceApi';
 import { receiptApi } from './invoiceAndReceipt/receiptApi';
 import { ReconciliationApi } from './finance/reconciliation';
-import { ConcessionTypeApi } from './finance/concessionType';
 import { ChargeCategoryApi } from './finance/chargeCategory';
 import { expenseApi } from './finance/expenseApi/expenseApi';
 import { incomeCategoryApi } from './finance/incomeCategory';
@@ -37,6 +35,7 @@ import { openLibraryApi } from './library/LibraryDataSearch';
 import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { feeRefundsTermsApi } from './finance/feeRefundTerms';
 import { libraryModuleApi } from './library/libraryModuleApi';
+import { financeModuleApi } from './finance/financeModuleApi';
 import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { feeConcessionApi } from './feeCollection/feeConcession';
@@ -151,7 +150,6 @@ const reducers = combineReducers({
   [FinanceFeeStructureApi.reducerPath]: FinanceFeeStructureApi.reducer,
   [PaymentTermApi.reducerPath]: PaymentTermApi.reducer,
   [ReconciliationApi.reducerPath]: ReconciliationApi.reducer,
-  [ConcessionTypeApi.reducerPath]: ConcessionTypeApi.reducer,
   [invoiceApi.reducerPath]: invoiceApi.reducer,
   [receiptApi.reducerPath]: receiptApi.reducer,
   [studentInvoiceApi.reducerPath]: studentInvoiceApi.reducer,
@@ -159,7 +157,7 @@ const reducers = combineReducers({
   [feeCategoryApi.reducerPath]: feeCategoryApi.reducer,
   [ChargeCategoryApi.reducerPath]: ChargeCategoryApi.reducer,
   // [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
-  // [financeModuleApi.reducerPath]: financeModuleApi.reducer,
+  [financeModuleApi.reducerPath]: financeModuleApi.reducer,
   [expenseApi.reducerPath]: expenseApi.reducer,
   [expenseDetailsApi.reducerPath]: expenseDetailsApi.reducer,
   [incomeApi.reducerPath]: incomeApi.reducer,
@@ -183,7 +181,7 @@ const reducers = combineReducers({
   [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
   // [communicationApi.reducerPath]: communicationApi.reducer,
   [roleOptionsApi.reducerPath]: roleOptionsApi.reducer,
-  [transportApi.reducerPath]: transportApi.reducer,
+  // [transportApi.reducerPath]: transportApi.reducer,
   [libraryModuleApi.reducerPath]: libraryModuleApi.reducer,
   [openLibraryApi.reducerPath]: openLibraryApi.reducer,
   [academicApi.reducerPath]: academicApi.reducer,
@@ -251,7 +249,6 @@ const store = configureStore({
       FinanceFeeStructureApi.middleware,
       PaymentTermApi.middleware,
       ReconciliationApi.middleware,
-      ConcessionTypeApi.middleware,
       invoiceApi.middleware,
       receiptApi.middleware,
       studentInvoiceApi.middleware,
@@ -260,7 +257,7 @@ const store = configureStore({
       feeCategoryApi.middleware,
       ChargeCategoryApi.middleware,
       // ExpenseCategoryApi.middleware,
-      // financeModuleApi.middleware,
+      financeModuleApi.middleware,
       expenseApi.middleware,
       academicApi.middleware,
       expenseDetailsApi.middleware,
@@ -287,7 +284,7 @@ const store = configureStore({
       // meetingDetailsApi.middleware,
       // holidayApi.middleware,
       roleOptionsApi.middleware,
-      transportApi.middleware,
+      // transportApi.middleware,
       libraryModuleApi.middleware,
       openLibraryApi.middleware,
       instituteSetupApi.middleware,

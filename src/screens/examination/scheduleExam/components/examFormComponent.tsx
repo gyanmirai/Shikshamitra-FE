@@ -151,14 +151,14 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         setIsLoading(true);
 
         if (activeStep === 0) {
-          await handleBasicDetails(values, formik);
+          // await handleBasicDetails(values, formik);
           shikshaMitraToast.success({ message: 'Basic details saved successfully' });
         } else if (activeStep === 1) {
-          await handleExamSchedule(values, formik);
+          // await handleExamSchedule(values, formik);
           shikshaMitraToast.success({ message: 'Exam schedule saved successfully' });
         } else if (activeStep === 2) {
           if (values.isRoomAssign) {
-            await handleRoomAssignment(values, formik);
+            // await handleRoomAssignment(values, formik);
             shikshaMitraToast.success({ message: 'Room assignments saved successfully' });
           }
         }
@@ -175,7 +175,7 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
         setIsLoading(false);
       }
     },
-    [activeStep, handleBasicDetails, handleExamSchedule, handleRoomAssignment, onClose]
+    [activeStep, onClose]
   );
 
   // Array of step components that correspond to each step in the exam creation process
