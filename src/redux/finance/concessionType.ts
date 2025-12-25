@@ -1,36 +1,16 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { financeModuleApi } from './financeModuleApi';
 
-import financeData from '../../../financeData.json';
-
-const isDev = process.env.NODE_ENV === 'development';
-
-export const ConcessionTypeApi = createApi({
-  reducerPath: 'ConcessionTypeApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/concessionTypeSetting') {
-          return { data: financeData.concessionTypeSetting };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['Concession-Type'],
+export const concessionTypeApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
-    getConcessionType: builder.query({
+    getConcessionTypes: builder.query({
       query: () => ({
-        url: '/concessionTypeSetting',
+        url: '/concessionTypeData',
         method: 'GET',
       }),
       providesTags: ['Concession-Type'],
     }),
   }),
+  overrideExisting: false,
 });
 
-export const { useGetConcessionTypeQuery } = ConcessionTypeApi;
+export const { useGetConcessionTypesQuery } = concessionTypeApi;
