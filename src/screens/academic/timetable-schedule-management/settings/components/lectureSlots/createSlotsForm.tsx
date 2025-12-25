@@ -257,8 +257,6 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
     formik.setFieldValue(`slotConfigurations[${configIndex}].expanded`, !currentExpanded);
   };
 
-  const getDayLabel = (v: number) => dayMarks.find((d) => d.value === v)?.label || '';
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box
@@ -826,3 +824,5 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
 };
 
 export default CreateSlotsForm;
+
+export const getDayLabel = (v: number) => dayMarks.find((d) => d.value === v)?.label || '';

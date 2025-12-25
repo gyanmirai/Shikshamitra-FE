@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import expenseCategoryData from 'src/json/finance/settings/expense-category/expenseCategoryData.json';
 
 import chargesData from '../../../chargesData.json';
 import financeData from '../../../feeRefundData.json';
@@ -29,6 +30,12 @@ export const financeModuleApi = createApi({
             return { data: concessionData.concessionRequestData };
           case '/bankAccountData':
             return { data: financeModuleData.bankAccountData };
+          case '/concessionTypeData':
+            return { data: financeModuleData.concessionTypeSetting };
+          case '/expenseCategories':
+            return { data: expenseCategoryData.expenseCategories };
+          case '/budgetOptions':
+            return { data: expenseCategoryData.budgetOptions };
           default:
             return {
               error: {
@@ -46,6 +53,9 @@ export const financeModuleApi = createApi({
     'ConcessionRequest',
     'IncomeCategories',
     'BankAccounts',
+    'Concession-Type',
+    'expense-category',
+    'budget-options',
   ],
   endpoints: () => ({}), // inject later
 });

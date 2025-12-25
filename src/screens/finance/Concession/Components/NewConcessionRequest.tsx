@@ -17,7 +17,7 @@ import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import { useGetConcessionTypeQuery } from 'src/redux/finance/concessionType';
+import { useGetConcessionTypesQuery } from 'src/redux/finance/concessionType';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -58,7 +58,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   // Fetch concession type data
   const { data: concessionTypes } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetConcessionTypeQuery,
+    currentQueryAndMutation: useGetConcessionTypesQuery,
   });
 
   // queries
