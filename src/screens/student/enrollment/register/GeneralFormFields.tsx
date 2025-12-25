@@ -29,6 +29,7 @@ import {
   TextField,
   FormLabel,
   RadioGroup,
+  FormControl,
   FormHelperText,
   InputAdornment,
   FormControlLabel,
@@ -274,38 +275,63 @@ const RenderGeneralFormFields = (props: any) => {
               </ShakingTextField>
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Box display="flex" alignItems="center">
-                <FormLabel
-                  sx={{
-                    color: 'black',
-                    marginRight: 2,
-                    whiteSpace: 'nowrap',
-                    '&.Mui-focused': { color: 'black' },
-                    '&.Mui-error': { color: 'error.main' },
-                  }}
+              <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
+                <FormControl
+                  fullWidth
+                  disabled={!isStudentDetailsEditable.value}
+                  error={Boolean(formik.touched.gender && formik.errors.gender)}
+                  sx={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}
                 >
-                  Gender *
-                </FormLabel>
-
-                <RadioGroup
-                  row
-                  name="gender"
-                  value={formik.values.gender}
-                  onChange={formik.handleChange}
-                >
-                  {GenderTypeArray.map((i) => (
-                    <FormControlLabel
-                      key={i}
-                      value={i}
-                      control={<Radio size="small" />}
-                      label={GenderType[i]}
-                      disabled={!isStudentDetailsEditable.value}
-                    />
-                  ))}
-                </RadioGroup>
-              </Box>
-
-              <FormHelperText error>{formik.touched.gender && formik.errors.gender}</FormHelperText>
+                  <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <FormLabel
+                      id="gender-radio-group"
+                      sx={{
+                        color: (theme) =>
+                          formik.touched.gender && formik.errors.gender
+                            ? 'error.main'
+                            : 'text.primary',
+                        mr: 1,
+                      }}
+                    >
+                      Gender *
+                    </FormLabel>
+                    <RadioGroup
+                      row
+                      aria-labelledby="gender-radio-group"
+                      name="gender"
+                      value={formik.values.gender}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
+                      {GenderTypeArray.map((i) => (
+                        <FormControlLabel
+                          key={i}
+                          value={i}
+                          control={
+                            <Radio
+                              size="small"
+                              color={
+                                formik.touched.gender && formik.errors.gender ? 'error' : 'primary'
+                              }
+                            />
+                          }
+                          label={GenderType[i]}
+                          disabled={!isStudentDetailsEditable.value}
+                          sx={{
+                            color:
+                              formik.touched.gender && formik.errors.gender
+                                ? 'error.main'
+                                : 'inherit',
+                          }}
+                        />
+                      ))}
+                    </RadioGroup>
+                  </Box>
+                  {formik.touched.gender && formik.errors.gender && (
+                    <FormHelperText sx={{ m: 0 }}>{formik.errors.gender as string}</FormHelperText>
+                  )}
+                </FormControl>
+              </ShakingTextField>
             </Grid>
           </Grid>
         </Grid>

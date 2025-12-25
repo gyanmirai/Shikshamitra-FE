@@ -48,6 +48,7 @@ import {
   FormControl,
   DialogActions,
   InputAdornment,
+  FormHelperText,
   FormControlLabel,
 } from '@mui/material';
 
@@ -501,41 +502,63 @@ const InquiryForm = ({
                     </ShakingTextField>
                   </Grid>
                   <Grid size={{ xs: 12, md: 4 }}>
-                    <ShakingTextField error={!!(touched.gender && errors.gender) || false}>
+                    <ShakingTextField error={!!(touched.gender && errors.gender)}>
                       <FormControl
                         fullWidth
-                        sx={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}
+                        error={!!(touched.gender && errors.gender)}
+                        sx={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}
                       >
-                        <FormLabel
-                          id="gender-radio-group"
-                          sx={{
-                            color: (theme) =>
-                              touched.gender && errors.gender
-                                ? '#ff563d !important'
-                                : `${theme.vars.palette.text.primary} !important`,
-                            mr: 1,
-                          }}
-                        >
-                          Gender *
-                        </FormLabel>
-                        <RadioGroup
-                          row
-                          aria-labelledby="gender-radio-group"
-                          name="gender"
-                          value={values.gender}
-                          onChange={handleChange}
-                        >
-                          <FormControlLabel
-                            value={0}
-                            control={<Radio size="small" />}
-                            label="Male"
-                          />
-                          <FormControlLabel
-                            value={1}
-                            control={<Radio size="small" />}
-                            label="Female"
-                          />
-                        </RadioGroup>
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                          <FormLabel
+                            id="gender-radio-group"
+                            sx={{
+                              color: (theme) =>
+                                touched.gender && errors.gender ? 'error.main' : 'inherit',
+                              mr: 1,
+                            }}
+                          >
+                            Gender *
+                          </FormLabel>
+                          <RadioGroup
+                            row
+                            aria-labelledby="gender-radio-group"
+                            name="gender"
+                            value={values.gender}
+                            onChange={handleChange}
+                          >
+                            <FormControlLabel
+                              value={0}
+                              control={
+                                <Radio
+                                  size="small"
+                                  sx={{ color: touched.gender && errors.gender ? 'error' : '' }}
+                                />
+                              }
+                              label="Male"
+                              sx={{
+                                color: touched.gender && errors.gender ? 'error' : '',
+                              }}
+                            />
+                            <FormControlLabel
+                              value={1}
+                              control={
+                                <Radio
+                                  size="small"
+                                  sx={{
+                                    color: touched.gender && errors.gender ? 'error' : '',
+                                  }}
+                                />
+                              }
+                              label="Female"
+                              sx={{
+                                color: touched.gender && errors.gender ? 'error' : '',
+                              }}
+                            />
+                          </RadioGroup>
+                        </Box>
+                        {touched.gender && errors.gender && (
+                          <FormHelperText sx={{ m: 0 }}>{errors.gender as string}</FormHelperText>
+                        )}
                       </FormControl>
                     </ShakingTextField>
                   </Grid>

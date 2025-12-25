@@ -18,7 +18,10 @@ const MuiFormLabel: Components<Theme>['MuiFormLabel'] = {
         color: theme.vars.palette.text.secondary,
         [`&.${inputLabelClasses.focused}`]: { color: theme.vars.palette.text.primary },
         [`&.${inputLabelClasses.error}`]: { color: theme.palette.error.main },
-        [`&.${inputLabelClasses.disabled}`]: { color: theme.vars.palette.text.disabled },
+        [`&.${inputLabelClasses.disabled}`]: {
+          color: theme.vars.palette.text.disabled,
+          [`&.${inputLabelClasses.error}`]: { color: theme.palette.error.main },
+        },
         [`&.${inputLabelClasses.filled}`]: { transform: 'translate(12px, 6px) scale(0.75)' },
       },
       '&.Mui-disabled': {

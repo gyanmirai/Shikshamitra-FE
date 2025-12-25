@@ -62,7 +62,10 @@ export const SectionCard = ({
   paperProps?: PaperProps;
   gridProps?: GridProps;
 }) => (
-  <Paper sx={{ p: 2, mb: 3, position: 'relative', ...paperProps.sx }} elevation={6}>
+  <Paper
+    sx={{ p: 2, mb: 3, position: 'relative', outline: 'none', ...paperProps.sx }}
+    elevation={6}
+  >
     {isLoading && <LinearProgress sx={{ position: 'absolute', left: 0, top: 0, width: '100%' }} />}
     <Box
       display="flex"
@@ -352,32 +355,73 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={formik.touched.gender && Boolean(formik.errors.gender)}>
                 <FormControl
-                  disabled={!isBasicDetailsEditable.value}
                   fullWidth
-                  sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'center' }}
+                  disabled={!isBasicDetailsEditable.value}
+                  error={Boolean(formik.touched.gender && formik.errors.gender)}
+                  sx={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}
                 >
-                  <FormLabel
-                    id="gender-radio-group"
-                    sx={{
-                      color: (theme) =>
-                        formik.touched.gender && formik.errors.gender
-                          ? '#ff563d !important'
-                          : `${theme.vars.palette.common.black} !important`,
-                      mr: 1,
-                    }}
-                  >
-                    Gender *
-                  </FormLabel>
-                  <RadioGroup
-                    row
-                    aria-labelledby="gender-radio-group"
-                    name="gender"
-                    value={formik.values.gender}
-                    onChange={formik.handleChange}
-                  >
-                    <FormControlLabel value={0} control={<Radio size="small" />} label="Male" />
-                    <FormControlLabel value={1} control={<Radio size="small" />} label="Female" />
-                  </RadioGroup>
+                  <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <FormLabel
+                      id="gender-radio-group"
+                      sx={{
+                        color: (theme) =>
+                          formik.touched.gender && formik.errors.gender
+                            ? 'error.main'
+                            : 'text.primary',
+                        mr: 1,
+                      }}
+                    >
+                      Gender *
+                    </FormLabel>
+                    <RadioGroup
+                      row
+                      aria-labelledby="gender-radio-group"
+                      name="gender"
+                      value={formik.values.gender}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                    >
+                      <FormControlLabel
+                        value={0}
+                        label="Male"
+                        control={
+                          <Radio
+                            size="small"
+                            color={
+                              formik.touched.gender && formik.errors.gender ? 'error' : 'primary'
+                            }
+                          />
+                        }
+                        sx={{
+                          color:
+                            formik.touched.gender && formik.errors.gender
+                              ? 'error.main'
+                              : 'inherit',
+                        }}
+                      />
+                      <FormControlLabel
+                        value={1}
+                        label="Female"
+                        control={
+                          <Radio
+                            size="small"
+                            color={
+                              formik.touched.gender && formik.errors.gender ? 'error' : 'primary'
+                            }
+                          />
+                        }
+                        sx={{
+                          color:
+                            formik.touched.gender && formik.errors.gender
+                              ? 'error.main'
+                              : 'inherit',
+                        }}
+                      />
+                    </RadioGroup>
+                  </Box>
+                  {formik.touched.gender && formik.errors.gender && (
+                    <FormHelperText sx={{ m: 0 }}>{formik.errors.gender as string}</FormHelperText>
+                  )}
                 </FormControl>
               </ShakingTextField>
             </Grid>

@@ -80,6 +80,11 @@ const MuiOutlinedInput: Components<Theme>['MuiOutlinedInput'] = {
           borderColor: varAlpha(theme.vars.palette.common.onBackgroundChannel, 0.3),
           color: theme.vars.palette.text.primary,
         },
+        [`&.${outlinedInputClasses.error}`]: {
+          [`& .${outlinedInputClasses.notchedOutline}`]: {
+            borderColor: theme.vars.palette.error.main,
+          },
+        },
       },
       '& .MuiInputBase-root.Mui-disabled': {
         cursor: 'no-drop',
