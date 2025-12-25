@@ -12,7 +12,7 @@ export interface ISubjectAssignmentSubject {
   learningGoal: string;
   prerequisites: string;
   description: string;
-  documents: File[];
+  documents: (File | string)[];
 
   // UI specific fields
   subjectColor?: string;
@@ -38,3 +38,13 @@ export interface ISubjectAssignmentFormProps {
   selectedClass: string;
   classId: string;
 }
+
+// export interface ISubjectCardProps {
+//   formik: any;
+//   subject: ISubjectAssignmentSubject;
+//   isCore: boolean;
+//   isPublished: boolean;
+//   onSubjectChange: (subjectId: string, field: string, value: any) => void;
+//   index: number;
+//   onFileUpload: (files: (File | string)[], index: number) => Promise<void>;
+// }

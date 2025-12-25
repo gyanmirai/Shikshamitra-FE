@@ -1,4 +1,5 @@
 import * as Yup from 'yup';
+import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 
 import type { ISubjectAssignmentSubject, ISubjectAssignmentFormValues } from './type';
 
@@ -31,7 +32,7 @@ export const getSubjectAssignmentInitialValues = (
     return {
       classId,
       className: selectedClass,
-      status: 1,
+      status: PublishUnpublishStatusType.Draft,
       subjects: [],
       subjectName: '',
       subjectType: 0,

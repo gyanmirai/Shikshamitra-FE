@@ -4,10 +4,9 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all subject assignments - academicMediumId passed in query params
     getSubjectAssignments: builder.query({
-      query: ({ academicMediumId }) => ({
-        url: `/subject-assignments`,
+      query: ({ academicMediumId, classId }) => ({
+        url: `/academics/curriculum/${academicMediumId}/subjects/${classId}`,
         method: 'GET',
-        params: { academicMediumId }, // ✔ QUERY param
       }),
       providesTags: ['SubjectAssignment'],
     }),
@@ -15,7 +14,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
     // Get one assignment - academicMediumId also optional in query param
     getSubjectAssignmentById: builder.query({
       query: ({ assignmentId, academicMediumId }) => ({
-        url: `/subject-assignments/${assignmentId}`,
+        url: `/academics/curriculum/${assignmentId}`,
         method: 'GET',
         params: academicMediumId ? { academicMediumId } : undefined, // Optional param
       }),
@@ -25,7 +24,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
     // Create assignment
     addSubjectAssignment: builder.mutation({
       query: ({ academicMediumId, body }) => ({
-        url: `/subject-assignments`,
+        url: `/academics/curriculum`,
         method: 'POST',
         params: { academicMediumId }, // QUERY param again
         data: body,
@@ -36,7 +35,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
     // Update assignment
     updateSubjectAssignment: builder.mutation({
       query: ({ assignmentId, academicMediumId, body }) => ({
-        url: `/subject-assignments/${assignmentId}`,
+        url: `/academics/curriculum/${assignmentId}`,
         method: 'PUT',
         params: { academicMediumId }, // passing query again
         data: body,
@@ -46,22 +45,34 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
 
     // Delete assignment
     deleteSubjectAssignment: builder.mutation({
-      query: ({ assignmentId, academicMediumId }) => ({
-        url: `/subject-assignments/${assignmentId}`,
+      query: ({ assignmentId }) => ({
+        url: `/academics/curriculum/${assignmentId}`,
         method: 'DELETE',
-        params: { academicMediumId }, // passed in query
       }),
       invalidatesTags: ['SubjectAssignment'],
     }),
 
     // Publish assignment
     publishSubjectAssignment: builder.mutation({
-      query: ({ assignmentId, academicMediumId }) => ({
-        url: `/subject-assignments/${assignmentId}/publish`,
+      query: ({ assignmentId, status }) => ({
+        url: `/academics/curriculum/${assignmentId}/publish`,
         method: 'PATCH',
-        params: { academicMediumId }, // query param
+        data: { status },
       }),
       invalidatesTags: ['SubjectAssignment'],
+    }),
+
+    // Upload Curriculum File
+    uploadCurriculumFile: builder.mutation({
+      query: (body) => ({
+        url: `/academics/curriculum/files`,
+        method: 'POST',
+        data: body,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }),
+      invalidatesTags: ['CurriculumFile'],
     }),
   }),
 
@@ -75,4 +86,5 @@ export const {
   useUpdateSubjectAssignmentMutation,
   useDeleteSubjectAssignmentMutation,
   usePublishSubjectAssignmentMutation,
+  useUploadCurriculumFileMutation,
 } = subjectAssignmentsApi;

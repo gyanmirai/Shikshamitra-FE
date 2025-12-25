@@ -21,6 +21,8 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { Box, Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 import {
   useAddSubjectAssignmentMutation,
+  useUploadCurriculumFileMutation,
+  useGetSubjectAssignmentByIdQuery,
   useUpdateSubjectAssignmentMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
@@ -29,7 +31,6 @@ import SettingSubjectForm from '../../../setting/subjectCreation/subjectForm';
 import { validationSchema, getSubjectAssignmentInitialValues } from './initialValues';
 import SettingElectiveSubjectForm from '../../../setting/electiveSubjectSetting/components/electiveSubjectForm';
 
-import type { TeacherProfile } from '../type';
 import type { ISubjectAssignmentFormProps, ISubjectAssignmentFormValues } from './type';
 
 // Enhanced subject options with Core and Elective groups
@@ -59,55 +60,6 @@ const subjectOptions = [
   },
 ];
 
-// Reusing the teacherProfiles (mock data)
-const teacherProfiles: TeacherProfile[] = [
-  {
-    id: '1',
-    name: 'Sharma Riya Kumar',
-    avatarUrl: 'https://yourcdn.com/riya.png',
-    designation: 'Senior Mathematics Teacher',
-    department: 'Mathematics Department',
-    class: '8',
-    division: 'A',
-    status: 'Active',
-    dailyStatus: 'Present',
-    email: 'riya.sharma@example.com',
-    experience: '10 years',
-    qualification: 'M.Sc. Mathematics, B.Ed',
-    subjects: ['Algebra', 'Geometry'],
-  },
-  {
-    id: '2',
-    name: 'Patel Ankit Rajesh',
-    avatarUrl: 'https://yourcdn.com/ankit.png',
-    designation: 'Science Teacher',
-    department: 'Science Department',
-    class: '9',
-    division: 'B',
-    status: 'Active',
-    dailyStatus: 'Present',
-    email: 'ankit.patel@example.com',
-    experience: '7 years',
-    qualification: 'M.Sc. Physics, B.Ed',
-    subjects: ['Physics', 'Chemistry'],
-  },
-  {
-    id: '3',
-    name: 'Desai Priya Mahesh',
-    avatarUrl: 'https://yourcdn.com/priya.png',
-    designation: 'English Lecturer',
-    department: 'English Department',
-    class: '10',
-    division: 'C',
-    status: 'Active',
-    dailyStatus: 'On Leave',
-    email: 'priya.desai@example.com',
-    experience: '5 years',
-    qualification: 'M.A. English, B.Ed',
-    subjects: ['Literature', 'Grammar'],
-  },
-];
-
 const SubjectAssignmentForm = ({
   onClose,
   data,
@@ -115,9 +67,15 @@ const SubjectAssignmentForm = ({
   selectedClass,
   classId,
 }: ISubjectAssignmentFormProps) => {
-  // State to track if the form is in draft mode - determined by edit status or existing data status
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isDraft, setIsDraft] = useState<boolean>(false);
+  const {
+    data: subjectAssignmentData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentByIdQuery,
+    params: { assignmentId: data?.id },
+  });
   // Flag to check if the subject is already published
   const isPublished: boolean =
     PublishUnpublishStatusType[data?.status as PublishUnpublishStatusType] === 'Published';
@@ -139,9 +97,14 @@ const SubjectAssignmentForm = ({
     currentQueryAndMutation: useUpdateSubjectAssignmentMutation,
   });
 
+  const [uploadCurriculumFile] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
+
   // Initialize formik form with initial values from data prop or default values
   const formik = useFormik<ISubjectAssignmentFormValues>({
-    initialValues: getSubjectAssignmentInitialValues(data, selectedClass, classId),
+    initialValues: getSubjectAssignmentInitialValues(subjectAssignmentData, selectedClass, classId),
     validationSchema,
     enableReinitialize: true,
     // Handle form submission
@@ -149,20 +112,17 @@ const SubjectAssignmentForm = ({
       try {
         // Transform the form values to the payload structure
         const subjectsPayload = values.subjects.map((subj) => ({
-          subjectId: subj.subjectId,
+          assignedSubjectId: subj.subjectId,
           subjectType: subj.subjectType,
           electiveGroupId: subj.electiveGroupId,
-          subjectName: subj.subjectName,
+          // subjectName: subj.subjectName,
           subjectCode: subj.subjectCode,
-          primaryTeacherId: subj.primaryTeacher, // Map back to Id
-          secondaryTeacherIds: subj.secondaryTeacher, // Map back to Ids
+          primaryTeacher: subj.primaryTeacher, // Map back to Id
+          secondaryTeachers: subj.secondaryTeacher, // Map back to Ids
           learningGoal: subj.learningGoal,
           prerequisites: subj.prerequisites,
           description: subj.description,
           documents: subj.documents,
-          // Optional: include UI fields if the API ignores them, otherwise exclude
-          // subjectColor is often needed for display in lists later
-          subjectColor: subj.subjectColor,
         }));
 
         const payload = {
@@ -176,7 +136,7 @@ const SubjectAssignmentForm = ({
           body: payload,
         };
 
-        if (isEdit && data) {
+        if (isEdit && subjectAssignmentData) {
           await updateSubjectAssignment(finalPayload).unwrap();
 
           shikshaMitraToast.success({
@@ -327,6 +287,18 @@ const SubjectAssignmentForm = ({
     formik.setFieldValue('subjects', updatedSubjects);
   };
 
+  const handleFileUpload = async (files: (File | string)[], index: number) => {
+    console.log('files', files);
+    const uploadedFiles: (string | File)[] = [];
+    const formData = new FormData();
+    formData.append('FileName', (files[0] as File)?.name);
+    formData.append('File', files[0] as File);
+    const response = await uploadCurriculumFile(formData).unwrap();
+    uploadedFiles.push(response.data);
+
+    formik.setFieldValue(`subjects.${index}.documents`, uploadedFiles);
+  };
+
   console.log('formik values---', formik.values);
   console.log('formik erroes---', formik.errors);
 
@@ -374,21 +346,25 @@ const SubjectAssignmentForm = ({
                     ListboxProps={{
                       style: { maxHeight: 200, overflow: 'auto' },
                     }}
-                    renderOption={(props, option) => (
-                      <li {...props}>
-                        <Box
-                          sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                        >
-                          {option.label}
-                          <Chip
-                            size="small"
-                            label={option.type === 0 ? 'Core' : 'Elective'}
-                            color={option.type === 0 ? 'primary' : 'secondary'}
-                            sx={{ ml: 1, height: 20 }}
-                          />
-                        </Box>
-                      </li>
-                    )}
+                    renderOption={(props, option) => {
+                      const { key, ...restProps } = props;
+
+                      return (
+                        <li key={key} {...restProps}>
+                          <Box
+                            sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                          >
+                            {option.label}
+                            <Chip
+                              size="small"
+                              label={option.type === 0 ? 'Core' : 'Elective'}
+                              color={option.type === 0 ? 'primary' : 'secondary'}
+                              sx={{ ml: 1, height: 20 }}
+                            />
+                          </Box>
+                        </li>
+                      );
+                    }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -441,8 +417,9 @@ const SubjectAssignmentForm = ({
                       subject={subject}
                       isCore={formik.values.subjectType === 0}
                       isPublished={isPublished}
-                      teacherOptions={teacherProfiles}
+                      // teacherOptions={teacherProfiles}
                       onSubjectChange={handleSubjectFieldChange}
+                      onFileUpload={handleFileUpload}
                     />
                   ))}
                 </Grid>
@@ -468,7 +445,6 @@ const SubjectAssignmentForm = ({
                   size="small"
                   variant="contained"
                   onClick={() => {
-                    setIsDraft(true);
                     formik.handleSubmit();
                   }}
                   loading={isUpdateLoading}
@@ -484,11 +460,12 @@ const SubjectAssignmentForm = ({
                   type="submit"
                   variant="outlined"
                   onClick={() => {
-                    setIsDraft(true);
-                    formik.setFieldValue('status', 0); // Draft
+                    formik.setFieldValue('status', PublishUnpublishStatusType.Draft); // Draft
                     formik.handleSubmit();
                   }}
-                  loading={isAddLoading}
+                  loading={
+                    isAddLoading && formik.values.status === PublishUnpublishStatusType.Draft
+                  }
                   startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 >
                   Save Draft
@@ -498,11 +475,12 @@ const SubjectAssignmentForm = ({
                   type="submit"
                   variant="contained"
                   onClick={() => {
-                    setIsDraft(false);
-                    formik.setFieldValue('status', 1); // Publish
+                    formik.setFieldValue('status', PublishUnpublishStatusType.Published); // Publish
                     formik.handleSubmit();
                   }}
-                  loading={isAddLoading}
+                  loading={
+                    isAddLoading && formik.values.status === PublishUnpublishStatusType.Published
+                  }
                   startIcon={<Iconify icon={GlobalIcons.publish} />}
                 >
                   Publish

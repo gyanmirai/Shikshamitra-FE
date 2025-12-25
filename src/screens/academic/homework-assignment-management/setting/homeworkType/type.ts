@@ -1,5 +1,5 @@
 export interface IHomeworkType {
-  id: any;
+  id?: string;
   homeworkTypeName: string;
 }
 
@@ -10,7 +10,6 @@ export interface IHomeworkTypeFormProps {
 }
 
 export interface IHomeworkTypeTableProps {
-  data: IHomeworkType[];
   onEdit: (data: IHomeworkType) => void;
   onDelete: (data: IHomeworkType) => void;
 }

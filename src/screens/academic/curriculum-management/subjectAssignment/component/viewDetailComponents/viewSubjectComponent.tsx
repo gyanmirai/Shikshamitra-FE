@@ -7,12 +7,13 @@ import { Iconify } from 'src/components/iconify';
 import { SubjectType } from 'src/enums/subject-type';
 import { Scrollbar } from 'src/components/scrollbar';
 import React, { useMemo, useState, useEffect } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Tab, Tabs, Grid, Paper, Divider, Typography } from '@mui/material';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   PublishUnpublishStatusType,
   PublishUnpublishStatusTypeColors,
 } from 'src/enums/publishUnpublish-status';
+import { useGetSubjectAssignmentByIdQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import SubjectOverview from './subjectOverview';
 import SubjectSyllabus from './subjectSyllabus';
@@ -54,9 +55,16 @@ const TABS = [
 ];
 
 export const ViewSubject = ({ subject }: IViewSubjectProps) => {
-  // const [tabValue, setTabValue] = useState(0);
   const tabs = useTabs('overview');
-
+  const {
+    data: subjectAssignmentData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentByIdQuery,
+    params: { assignmentId: subject?.id },
+  });
   // Find the currently active tab component based on selected tab value
   const currentActiveComponent = useMemo(
     () => TABS.find((tab) => tab.value === tabs.value),
@@ -86,15 +94,17 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
             sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
           >
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.4 }}>
-              {subject?.subjectType === 1 ? (
-                <Typography fontWeight="bold">{subject.subjectName}</Typography>
-              ) : (
-                <Typography fontWeight="bold">Subject</Typography>
+              {subjectAssignmentData?.subjectType === 1 && (
+                <Typography fontWeight="bold">
+                  {subjectAssignmentData?.electiveGroupName}
+                </Typography>
               )}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Typography variant="body2" component="span">
-                  {subject?.className}-{' '}
-                  {subject?.subjectType !== undefined ? SubjectType[subject.subjectType] : ''}
+                  {subjectAssignmentData?.className}-{' '}
+                  {subjectAssignmentData?.subjectType !== undefined
+                    ? SubjectType[subjectAssignmentData.subjectType]
+                    : ''}
                 </Typography>
               </Box>
             </Box>
@@ -104,14 +114,14 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                 variant="soft"
                 color={
                   PublishUnpublishStatusTypeColors[
-                    subject?.status as PublishUnpublishStatusType
+                    subjectAssignmentData?.status as PublishUnpublishStatusType
                   ] as LabelColor
                 }
                 sx={{ ml: 'auto', p: 2 }}
               >
                 {
                   PublishUnpublishStatusType[
-                    subject?.status as PublishUnpublishStatusType
+                    subjectAssignmentData?.status as PublishUnpublishStatusType
                   ] as string
                 }
               </Label>
@@ -120,7 +130,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
 
           <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
             <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
-              {subject?.subjects?.map((sub, index) => (
+              {subjectAssignmentData?.subjects?.map((sub: any, index: number) => (
                 <Box
                   key={sub.subjectCode}
                   onClick={() => setExpandedSubject(sub.subjectCode)}
@@ -136,7 +146,7 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
                     '&:hover': { backgroundColor: 'action.hover' },
                   }}
                 >
-                  <SubjectColorIndicator color={sub?.subjectColor} />
+                  {/* <SubjectColorIndicator color={sub?.} /> */}
                   <Typography variant="subtitle2" fontWeight={600}>
                     {sub.subjectName || 'CHEMISTRY'}
                   </Typography>
@@ -149,8 +159,8 @@ export const ViewSubject = ({ subject }: IViewSubjectProps) => {
 
       <Grid size={{ xs: 9 }} height="100%">
         <Paper elevation={3} sx={{ height: '100%', p: 2 }}>
-          {subject?.subjects?.map(
-            (sub) =>
+          {subjectAssignmentData?.subjects?.map(
+            (sub: any) =>
               expandedSubject === sub.subjectCode && (
                 <Box
                   key={sub.subjectCode}
