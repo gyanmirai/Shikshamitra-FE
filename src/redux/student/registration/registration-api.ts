@@ -161,19 +161,16 @@ export const StudentRegistrationApi = createApi({
 
     // document
     uploadDocuments: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/student/enrollment/registrations/${id}/documents`,
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      query: ({ studentId, body }) => ({
+        url: `/app/student-document/upload-document/${studentId}`,
+        method: 'POST',
         data: body,
       }),
       invalidatesTags: ['Student-Document'],
     }),
     studentUpdateDocument: builder.mutation({
-      query: ({ id, documentId, body }) => ({
-        url: `/student-enrollment/${id}/documents/${documentId}`,
+      query: ({ studentId, documentId, body }) => ({
+        url: `/student-enrollment/${studentId}/documents/${documentId}`,
         method: 'PUT',
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -183,14 +180,20 @@ export const StudentRegistrationApi = createApi({
       invalidatesTags: ['Student-Document'],
     }),
     getStudentDocuments: builder.query({
-      query: (id) => ({
-        url: `/student/enrollment/registrations/${id}/documents`,
+      query: ({ studentId }) => ({
+        url: `/app/student-document/required-documents-status/${studentId}`,
+      }),
+      providesTags: ['Student-Document'],
+    }),
+    getStudentDocumentList: builder.query({
+      query: ({ studentId }) => ({
+        url: `/app/student-document/document-list/${studentId}`,
       }),
       providesTags: ['Student-Document'],
     }),
     getStudentDocumentById: builder.query({
-      query: ({ id, documentId }) => ({
-        url: `/student-enrollment/${id}/documents/${documentId}`,
+      query: ({ studentId, documentId }) => ({
+        url: `/app/student-document/document?studentId=${studentId}&documentId=${documentId}`,
       }),
       providesTags: ['Student-Document'],
     }),
@@ -215,6 +218,7 @@ export const {
   useUploadDocumentsMutation,
   useStudentUpdateDocumentMutation,
   useGetStudentDocumentsQuery,
+  useGetStudentDocumentListQuery,
   useGetStudentDocumentByIdQuery,
 
   useGetBasicDetailsQuery,

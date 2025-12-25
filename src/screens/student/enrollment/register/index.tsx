@@ -124,14 +124,16 @@ const RegisterScreen = () => {
           </Box>
         }
       >
-        <ExamForm
-          studentEnrollmentId={editData?.studentId || ''}
-          studentName={`${editData?.firstName || ''} ${editData?.middleName || ''} ${editData?.lastName || ''}`.trim()}
-          standardName={editData?.standard || ''}
-          educationBoard={editData?.academicBoardName || { name: '' }}
-          educationMedium={editData?.academicMediumName || { name: '' }}
-          handleClose={handleClose}
-        />{' '}
+        {editData && (
+          <ExamForm
+            studentEnrollmentId={editData.studentId || ''}
+            studentName={`${editData.firstName || ''} ${editData.middleName || ''} ${editData.lastName || ''}`.trim()}
+            standardName={editData.standard || ''}
+            educationBoard={editData.academicBoardName?.name || 'N/A'}
+            educationMedium={editData.academicMediumName?.name || 'N/A'}
+            handleClose={handleClose}
+          />
+        )}{' '}
       </CustomDialog>
 
       <CustomDialog
@@ -161,7 +163,7 @@ const RegisterScreen = () => {
             followUpDialog.onFalse();
           }}
           selectedStudent={editData}
-          studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+          studentEnrollmentId={(editData as IInquiryData)?.studentId || ''}
         />{' '}
       </CustomDialog>
     </Box>

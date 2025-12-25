@@ -112,81 +112,33 @@ const EntranceExamScreen = () => {
     popupConfig: { successMessage: 'Student moved to Admission successfully.', success: true },
   });
 
-  /**
-   * Memoized table data transformation
-   */
   const tableData = useMemo(
     () =>
       entranceExamData?.items?.map((item: any) => ({
+        // Spread original item to preserve all backend fields
         ...item,
-        date: dayjs(item.examDate).format('DD-MM-YYYY'),
+
+        // Field mappings: Backend → Frontend
+        class: item.standard, // standard → class
+        date: dayjs(item.examDate).format('DD-MM-YYYY'), // examDate → date (formatted)
+        passingMark: item.passingMarks, // passingMarks → passingMark
+        status: item.examStatus, // examStatus → status
+
+        // Computed fields
         examTime: `${dayjs(item.examStartTime).format('hh:mm A')} to ${dayjs(
           item.examEndTime
         ).format('hh:mm A')}`,
-        // name: `${item.studentEnrollment.lastName} ${item.studentEnrollment.firstName} ${item.studentEnrollment.middleName}`,
-        // medium: item.studentEnrollment.educationMedium,
-        class: item.standard,
-        // board: item.studentEnrollment.educationBoard,
-        status: item.examStatus,
-        // progress: (item.studentEnrollment.onboardingProgressState / 8) * 100,
-        // percentage:
-        //   item.marksObtained === null
-        //     ? 0
-        //     : +((item.marksObtained / item.totalMarks) * 100 || 0).toFixed(2),
-        // obtainMarks: item.marksObtained ?? '-',
+
+        // Pass-through fields (already match column IDs):
+        // - studentName
+        // - totalMarks
+        // - obtainedMarks
+        // - percentage
+        // - progress
       })),
     [entranceExamData]
   );
 
-  /**
-   * Memoized calendar data transformation
-   */
-  // const calendarData = useMemo(
-  //   () =>
-  //     entranceExamData?.items.map((i: any) => {
-  //       const startTime = dayjs(i.entranceExamSlot.startDate).format('hh:mm A');
-  //       const endTime = dayjs(i.entranceExamSlot.endDate).format('hh:mm A');
-
-  //       const startExamDate = dayjs(
-  //         dayjs(
-  //           `${dayjs(i.examDate).format('DD-MM-YYYY')} ${startTime}`,
-  //           'DD-MM-YYYY hh:mm A'
-  //         ).format('YYYY-MM-DD hh:mm A')
-  //       ).format();
-  //       const endExamDate = dayjs(
-  //         dayjs(
-  //           `${dayjs(i.examDate).format('DD-MM-YYYY')} ${endTime}`,
-  //           'DD-MM-YYYY hh:mm A'
-  //         ).format('YYYY-MM-DD hh:mm A')
-  //       ).format();
-
-  //       const status =
-  //         i.marksObtained === null ? 'Pending' : i.marksObtained >= i.passingMark ? 'Pass' : 'Fail';
-  //       let color: LabelColor = 'error';
-  //       if (status === 'Pending') {
-  //         color = 'warning';
-  //       } else if (status === 'Pass') {
-  //         color = 'success';
-  //       } else {
-  //         color = 'error';
-  //       }
-  //       return {
-  //         ...i,
-  //         start: startExamDate,
-  //         end: endExamDate,
-  //         color: theme.vars.palette[color].main,
-  //         allDay: false,
-  //         textColor: theme.vars.palette[color].main,
-  //         title: `${i.studentEnrollment.lastName} ${i.studentEnrollment.firstName} `,
-  //         description: i.reason,
-  //       };
-  //     }) || [],
-  //   [entranceExamData?.items, theme.vars.palette]
-  // );
-
-  /**
-   * Callback for handling row actions
-   */
   const actions = useCallback(
     ({ popover }: any, row: any) => (
       <MenuList>
@@ -548,6 +500,7 @@ export const ExamForm = ({
 }) => {
   // State to store all available exam slots
   const [allSlots, setAllSlots] = useState<any[]>([]);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Dialog state for slot management
   const dialog = useBoolean();
@@ -566,11 +519,37 @@ export const ExamForm = ({
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
+  const formik = useFormik({
+    initialValues: { examDate: dayjs(), isConfirmed: false, slots: allSlots || [], slot: '' },
+    validationSchema,
+    onSubmit: async (values) => {
+      try {
+        await scheduleExam({
+          studentId: studentEnrollmentId,
+          body: {
+            entranceExamSlotId: values.slot,
+          },
+        }).unwrap();
+        shikshaMitraToast.success({
+          message: `Extrance Exam Schedule of ${studentName} on ${dayjs(values.examDate).format('DD-MM-YYYY')}`,
+        });
+        handleClose(null, true);
+      } catch (error) {
+        console.error(error);
+      }
+    },
+  });
+
   // Fetch entrance exam slots using a custom hook
   // Query hook to fetch exam slots
-  const { data: slots } = useQueryAndMutation({
+  const { data: slots, isLoading: isSlotsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamSlotQuery,
+    params: {
+      academicYearId: currentYear?.id || '',
+      startDate: dateConvertor(dayjs(formik.values.examDate).format(dateFormat), true),
+      endDate: dateConvertor(dayjs(formik.values.examDate).format(dateFormat), true),
+    },
   });
 
   // Mutation hook for scheduling exams
@@ -599,25 +578,6 @@ export const ExamForm = ({
   );
 
   // Formik instance for form handling
-  const formik = useFormik({
-    initialValues: { examDate: null, isConfirmed: false, slots: allSlots || [], slot: '' },
-    validationSchema,
-    onSubmit: async (values) => {
-      try {
-        await scheduleExam({
-          entranceExamSlotId: values.slot,
-          studentEnrollmentId,
-          examDate: dateConvertor(dayjs(values.examDate).format(dateFormat)),
-        }).unwrap();
-        shikshaMitraToast.success({
-          message: `Extrance Exam Schedule of ${studentName} on ${dayjs(values.examDate).format('DD-MM-YYYY')}`,
-        });
-        handleClose(null, true);
-      } catch (error) {
-        console.error(error);
-      }
-    },
-  });
 
   const handleGetAllStudentCount = useCallback(
     async (date: string) => {
@@ -645,9 +605,9 @@ export const ExamForm = ({
 
   // Effect to update form slots when allSlots changes
   useEffect(() => {
-    formik.setFieldValue('slots', allSlots || []);
+    formik.setFieldValue('slots', slots?.items || []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allSlots]);
+  }, [slots]);
 
   const handleCloseExamType = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
@@ -728,7 +688,7 @@ export const ExamForm = ({
               </Paper>
               {formik.touched.examDate && formik.errors.examDate && (
                 <Typography variant="caption" color="error">
-                  {formik.errors.examDate}
+                  {formik.errors.examDate as string}
                 </Typography>
               )}
             </Grid>
@@ -748,12 +708,12 @@ export const ExamForm = ({
                       </Box>
 
                       <Grid container spacing={2}>
-                        {isStudentCountLoading ? (
+                        {isStudentCountLoading || isSlotsLoading ? (
                           <Grid size={{ xs: 12 }}>
                             <Box className="loader" height={24} />
                           </Grid>
                         ) : formik.values.slots.length === 0 ? (
-                          <EmptyContent title="Please select the date." />
+                          <EmptyContent title="No slots available." />
                         ) : (
                           formik.values.slots.map((slot: any, index: number) => (
                             <Grid size={{ xs: 6 }} key={index}>
@@ -761,18 +721,18 @@ export const ExamForm = ({
                                 sx={{ marginLeft: 1 }}
                                 control={
                                   <Radio
-                                    checked={slot.value === formik.values.slot}
+                                    checked={slot.id === formik.values.slot}
                                     size="small"
                                     onChange={(e) => {
                                       if (e.target.checked) {
-                                        formik.setFieldValue('slot', slot.value);
+                                        formik.setFieldValue('slot', slot.id);
                                       } else {
                                         formik.setFieldValue('slot', '');
                                       }
                                     }}
                                   />
                                 }
-                                label={slot.label}
+                                label={`${slot.slotName} (${slot.startTime} - ${slot.endTime})`}
                               />
                               <Label variant="soft" color="success">
                                 {slot.studentCount} / {slot.studentLimit}

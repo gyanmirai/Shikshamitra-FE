@@ -226,7 +226,7 @@ const InquiryTable = ({
             align: 'left',
           },
           {
-            id: 'lastFollowUpDate',
+            id: 'nextReminderDate',
             label: 'Next Reminder Date',
             minWidth: '180px',
             align: 'left',

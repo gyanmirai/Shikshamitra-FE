@@ -70,7 +70,7 @@ export const documentFieldsInitialValues = () => ({
 });
 
 export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse | null) => ({
-  fatherName: editData?.fatherDetails?.name || '',
+  fatherName: editData?.fatherDetails?.fullName || '',
   fatherDob: editData?.fatherDetails?.dateOfBirth
     ? dayjs(editData?.fatherDetails.dateOfBirth)
     : null,
@@ -80,11 +80,11 @@ export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse 
     ? validatePhoneNumber(editData?.fatherDetails?.contactNo)
     : '',
   fatherEmail: editData?.fatherDetails?.email || '',
-  fatherPassOutYear: editData?.fatherDetails?.passOutYear || '',
+  fatherPassOutYear: editData?.fatherDetails?.yearOfPassing || '',
   fatherOfficeNo: editData?.fatherDetails?.officeNo || '',
   fatherDesignation: editData?.fatherDetails?.designation || '',
-  fatherOrganization: editData?.fatherDetails?.organisation || '',
-  fatherAadharNo: editData?.fatherDetails?.aadhaarNo || '',
+  fatherOrganization: editData?.fatherDetails?.organization || '',
+  fatherAadharNo: editData?.fatherDetails?.aadharNo || '',
   fatherRemarks: editData?.fatherDetails?.remarks || '',
   fatherAddress1: editData?.fatherDetails?.localAddress.address1 || '',
   fatherAddress2: editData?.fatherDetails?.localAddress.address2 || '',
@@ -123,7 +123,7 @@ export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse 
   },
   fatherOfficePincode: editData?.fatherDetails?.officeAddress.pincode || '',
 
-  motherName: editData?.motherDetails?.name || '',
+  motherName: editData?.motherDetails?.fullName || '',
   motherDob: editData?.motherDetails?.dateOfBirth
     ? dayjs(editData?.motherDetails.dateOfBirth)
     : null,
@@ -133,14 +133,14 @@ export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse 
     ? validatePhoneNumber(editData?.motherDetails?.contactNo)
     : '',
   motherEmail: editData?.motherDetails?.email || '',
-  motherPassOutYear: editData?.motherDetails?.passOutYear || '',
+  motherPassOutYear: editData?.motherDetails?.yearOfPassing || '',
   motherOfficeNo: editData?.motherDetails?.officeNo || '',
   motherOfficeAddress1: editData?.motherDetails?.officeAddress.address1 || '',
   motherOfficeAddress2: editData?.motherDetails?.officeAddress.address2 || '',
   motherOfficeAddress3: editData?.motherDetails?.officeAddress.address3 || '',
   motherDesignation: editData?.motherDetails?.designation || '',
-  motherOrganization: editData?.motherDetails?.organisation || '',
-  motherAadharNo: editData?.motherDetails?.aadhaarNo || '',
+  motherOrganization: editData?.motherDetails?.organization || '',
+  motherAadharNo: editData?.motherDetails?.aadharNo || '',
   motherRemarks: editData?.motherDetails?.remarks || '',
   motherAddress1: editData?.motherDetails?.localAddress.address1 || '',
   motherAddress2: editData?.motherDetails?.localAddress.address2 || '',
@@ -175,7 +175,7 @@ export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse 
     name: editData?.motherDetails?.officeAddress.city || '',
   },
   motherOfficePincode: editData?.motherDetails?.officeAddress.pincode || '',
-  guardianName: editData?.guardianDetails?.name || '',
+  guardianName: editData?.guardianDetails?.fullName || '',
   guardianDob: editData?.guardianDetails?.dateOfBirth
     ? dayjs(editData?.guardianDetails.dateOfBirth)
     : null,
@@ -185,14 +185,14 @@ export const familyFieldsInitialValues = (editData?: IFamilyInformationResponse 
     ? validatePhoneNumber(editData?.guardianDetails?.contactNo)
     : '',
   guardianEmail: editData?.guardianDetails?.email || '',
-  guardianPassOutYear: editData?.guardianDetails?.passOutYear || '',
+  guardianPassOutYear: editData?.guardianDetails?.yearOfPassing || '',
   guardianOfficeNo: editData?.guardianDetails?.officeNo || '',
   guardianOfficeAddress1: editData?.guardianDetails?.officeAddress.address1 || '',
   guardianOfficeAddress2: editData?.guardianDetails?.officeAddress.address2 || '',
   guardianOfficeAddress3: editData?.guardianDetails?.officeAddress.address3 || '',
   guardianDesignation: editData?.guardianDetails?.designation || '',
-  guardianOrganization: editData?.guardianDetails?.organisation || '',
-  guardianAadharNo: editData?.guardianDetails?.aadhaarNo || '',
+  guardianOrganization: editData?.guardianDetails?.organization || '',
+  guardianAadharNo: editData?.guardianDetails?.aadharNo || '',
   guardianRemarks: editData?.guardianDetails?.remarks || '',
   guardianAddress1: editData?.guardianDetails?.localAddress.address1 || '',
   guardianAddress2: editData?.guardianDetails?.localAddress.address2 || '',
@@ -316,7 +316,7 @@ export const medicalFieldsInitialValues = (editData?: IMedicalInformationRespons
   weight: editData?.weightKg || '',
   height: editData?.heightCm || '',
   bmi: editData?.bodyMassIndex || '',
-  pulseRate: '',
+  pulseRate: editData?.pulseRate || '',
   haemoglobin: editData?.hemoglobin || '',
   allergies: editData?.allergies || '',
   covidVaccination: editData?.covidVaccinationDoses || '',
@@ -330,7 +330,7 @@ export const previousSchoolFieldsInitialValues = (editData?: IPreviousSchoolResp
   schoolBoard: editData?.board || '',
   schoolMedium: editData?.medium || '',
   tcNumber: editData?.tcNumber || '',
-  lastClassPassed: editData?.lastClassAttended || '',
+  previousClass: editData?.lastClassAttended || '',
   percentage: editData?.percentageObtained || '',
 });
 

@@ -43,8 +43,6 @@ import type { FieldsType } from './type';
 const RenderGeneralFormFields = (props: any) => {
   const { formik, isMainForm = false, editData } = props;
 
-  console.log(formik, 'formik');
-
   const { resetForm, initialValues } = formik;
   const isGeneralFormEditable = useBoolean(isMainForm);
   const isStudentDetailsEditable = useBoolean(isMainForm);
@@ -287,13 +285,15 @@ const RenderGeneralFormFields = (props: any) => {
                 <RadioGroup
                   row
                   name="gender"
-                  value={formik.values.gender}
-                  onChange={formik.handleChange}
+                  value={formik.values.gender?.toString()}
+                  onChange={(e) => {
+                    formik.setFieldValue('gender', Number(e.target.value));
+                  }}
                 >
                   {GenderTypeArray.map((i) => (
                     <FormControlLabel
                       key={i}
-                      value={i}
+                      value={i.toString()}
                       control={<Radio size="small" />}
                       label={GenderType[i]}
                       disabled={!isStudentDetailsEditable.value}

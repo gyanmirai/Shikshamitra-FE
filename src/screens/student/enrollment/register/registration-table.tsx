@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { GenderType, GenderOptions } from 'src/enums/gender';
 import React, { useMemo, useState, useCallback } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -108,8 +109,8 @@ const RegistrationTable = ({
       registrationData?.data?.items.map((item: IInquiryData) => ({
         ...item,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
-
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
+        genderValue: GenderType[(item as any)?.gender],
       })) || [],
     [registrationData?.data?.items]
   );
@@ -177,15 +178,12 @@ const RegistrationTable = ({
             isDateRangeFilter: true,
           },
           {
-            id: 'gender',
+            id: 'genderValue',
             label: 'Gender',
             align: 'left',
             filterType: 'enum',
             minWidth: '90px',
-            enumOptions: [
-              { value: 'Male', label: 'Male' },
-              { value: 'Female', label: 'Female' },
-            ],
+            enumOptions: GenderOptions,
           },
           { id: 'address', label: 'Address', minWidth: '150px', align: 'left' },
           {

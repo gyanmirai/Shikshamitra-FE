@@ -381,6 +381,7 @@ const RegisterForm = ({
             weightKg: +values.weight,
             heightCm: +values.height,
             bodyMassIndex: +values.bmi,
+            pulseRate: +values.pulseRate,
             hemoglobin: +values.haemoglobin,
             allergies: values.allergies,
             covidVaccinationDoses: values.covidVaccination,
@@ -405,7 +406,7 @@ const RegisterForm = ({
             board: values.schoolBoard,
             medium: values.schoolMedium,
             tcNumber: values.tcNumber,
-            lastClassAttended: String(values.lastClassPassed),
+            lastClassAttended: String(values.previousClass),
             percentageObtained: +values.percentage,
           },
         }).unwrap();

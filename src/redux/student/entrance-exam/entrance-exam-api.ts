@@ -16,10 +16,10 @@ export const EntranceExamApi = createApi({
       providesTags: ['Entrance-Exam'],
     }),
     addEntranceExam: builder.mutation({
-      query: (data) => ({
-        url: '/app/entrance-exam',
+      query: ({ body, studentId }) => ({
+        url: `/student-enrollment/entrance-exam/${studentId}/schedule`,
         method: 'POST',
-        data,
+        data: body,
       }),
       invalidatesTags: ['Entrance-Exam'],
     }),
