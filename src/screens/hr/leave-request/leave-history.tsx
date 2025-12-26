@@ -119,26 +119,28 @@ const LeaveHistory = (props: any) => {
 
   const tableData = useMemo(
     () =>
-      data?.items?.map((item: any) => ({
-        ...item,
-        start: dayjs(item.startDate).format('DD-MM-YYYY'),
-        end: dayjs(item.endDate).format('DD-MM-YYYY'),
-        statusValue: item.status,
-        viewStartDate: item.startDate,
-        color: item.leavePolicy.color,
-        viewEndDate: item.endDate,
-        allDay: false,
-        textColor: item.leavePolicy.color,
-        title: `${item.leavePolicy.leaveType} [${item.employee.firstName} ${item.employee.lastName}]`,
-        description: item.description.replace(/<[^>]+>/g, ''),
-        totalDays: item.isHalfDay
-          ? 0.5
-          : dayjs(item.endDate).diff(dayjs(item.startDate), 'day') + 1 < 0
-            ? 0
-            : dayjs(item.endDate).diff(dayjs(item.startDate), 'day') + 1,
-      })) || [],
+      data?.items?.map((item: any) => {
+        const start = dayjs(item.startDate);
+        const end = dayjs(item.endDate);
+
+        return {
+          id: item.id,
+          name: item.name,
+          employeeIdentifier: item.employeeIdentifier,
+          leaveType: item.leaveType,
+          startDate: start.format('DD-MM-YYYY'),
+          endDate: end.format('DD-MM-YYYY'),
+          totalDays: item.totalDays,
+          organization: item.organization,
+          description: item.description,
+          remarks: item.remarks,
+          status: item.status,
+        };
+      }) || [],
     [data]
   );
+
+  console.log('tableData', tableData);
 
   const handleClose = (_e?: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -216,15 +218,12 @@ const LeaveHistory = (props: any) => {
           <>
             No Leave Request Found{' '}
             <Box
-              onClick={() => {
-                modal?.onTrue?.();
-              }}
+              onClick={() => modal?.onTrue?.()}
               color="primary.main"
               fontWeight={600}
               sx={{
                 '&:hover': {
                   cursor: 'pointer',
-                  color: 'primary.main',
                   textDecoration: 'underline',
                 },
               }}
@@ -237,26 +236,24 @@ const LeaveHistory = (props: any) => {
         showCheckbox={selectedStudents.length !== 0}
         isLoading={isLoading}
         tableId="leave-history-table"
+        data={tableData}
         columns={[
           {
             label: 'Name',
+            id: 'name',
             sticky: true,
-            id: 'employee.firstName',
             minWidth: '12vw',
             align: 'left',
-            render(value, row) {
-              return `${value} ${row.employee.lastName}`;
-            },
           },
           {
             label: 'Employee Code',
-            id: 'employee.employeeCode',
+            id: 'employeeIdentifier',
             minWidth: '9.5vw',
             align: 'left',
           },
           {
             label: 'Start Date',
-            id: 'start',
+            id: 'startDate',
             filterType: 'date',
             minWidth: '120px',
             align: 'left',
@@ -264,7 +261,7 @@ const LeaveHistory = (props: any) => {
           },
           {
             label: 'End Date',
-            id: 'end',
+            id: 'endDate',
             filterType: 'date',
             minWidth: '100px',
             align: 'left',
@@ -278,7 +275,7 @@ const LeaveHistory = (props: any) => {
           },
           {
             label: 'Organization',
-            id: 'employee.educationMediumStage.name',
+            id: 'organization',
             align: 'left',
             minWidth: '14vw',
           },
@@ -290,25 +287,26 @@ const LeaveHistory = (props: any) => {
           },
           {
             label: 'Remarks',
-            id: 'rejectionReason',
+            id: 'remarks',
             align: 'left',
             minWidth: '12vw',
-            render(value, row) {
+            render(value) {
               return value || '-';
             },
           },
           {
             label: 'Status',
-            id: 'statusValue',
+            id: 'status',
             filterType: 'enum',
             align: 'left',
             enumOptions: EmployeeLeaveStatusOptions,
             sticky: true,
             minWidth: '100px',
-            render(value, row) {
+            render(value) {
               const color = EmployeeLeaveStatusTypeColor[
                 value as EmployeeLeaveStatusType
               ] as LabelColor;
+
               return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
             },
           },
@@ -316,17 +314,17 @@ const LeaveHistory = (props: any) => {
             label: 'Action',
             id: 'action',
             isFilter: false,
-            sticky: true,
             isSort: false,
-            render(value, row) {
+            sticky: true,
+            render(_value, row) {
               return (
                 <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />
               );
             },
           },
         ]}
-        data={tableData}
       />
+
       <ConfirmDialog
         open={approveConfirmation.value}
         onClose={() => {
@@ -470,7 +468,7 @@ export const ApproveRejectForm = ({
           id: editData?.id,
           body: {
             status: editData.type,
-            rejectionReason: formikValues.rejectionReason,
+            remarks: formikValues.rejectionReason,
           },
         }).unwrap();
         handleClose(null, true);

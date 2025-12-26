@@ -1,36 +1,36 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { employeeApi } from '../employee/employeeApi';
 
-export const PFApi = createApi({
-  reducerPath: 'PFApi',
-  baseQuery: axiosBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
-  }),
-  tagTypes: ['PF'],
+export const pfApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     getPF: builder.query({
-      query: () => ({ url: '/app/provident-fund' }),
+      query: () => ({
+        url: '/payroll/pf-rules',
+        method: 'GET',
+      }),
       providesTags: ['PF'],
     }),
+
     addPF: builder.mutation({
       query: (body) => ({
-        url: '/app/provident-fund',
+        url: '/payroll/pf-rules',
         method: 'POST',
         data: body,
       }),
       invalidatesTags: ['PF'],
     }),
+
     updatePF: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/provident-fund/${id}`,
+        url: `/payroll/pf-rules/${id}`,
         method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['PF'],
     }),
+
     deletePF: builder.mutation({
       query: (id) => ({
-        url: `/app/provident-fund/${id}`,
+        url: `/payroll/pf-rules/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['PF'],
@@ -38,4 +38,4 @@ export const PFApi = createApi({
   }),
 });
 
-export const { useGetPFQuery, useAddPFMutation, useUpdatePFMutation, useDeletePFMutation } = PFApi;
+export const { useGetPFQuery, useAddPFMutation, useUpdatePFMutation, useDeletePFMutation } = pfApi;
