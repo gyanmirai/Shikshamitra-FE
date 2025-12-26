@@ -18,6 +18,8 @@ export const employeeApi = createApi({
     'Employee-Payroll',
     'Earning-Components',
     'Salary-Slip',
+    'PF',
+    'Run-Payroll',
   ],
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
@@ -166,7 +168,7 @@ export const employeeApi = createApi({
     // Leave Management
     addEmployeeLeave: builder.mutation({
       query: (body) => ({
-        url: '/app/employee-leave',
+        url: '/v1/leave-management',
         method: 'POST',
         data: body,
       }),
@@ -174,14 +176,21 @@ export const employeeApi = createApi({
     }),
     getEmployeeLeave: builder.query({
       query: () => ({
-        url: `/app/employee-leave`,
+        url: `/leave-management`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
+    getEmployeeLeaveById: builder.query({
+      query: (id) => ({
+        url: `/leave-management/${id}`,
         redirect: 'follow',
       }),
       providesTags: ['Employee'],
     }),
     employeeLeaveRequestStatus: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/employee-leave/${id}/leave-request-status`,
+        url: `/leave-management/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -353,6 +362,7 @@ export const {
   useAddEmployeeLeavePolicyMutation,
   useUpdateEmployeeLeavePolicyMutation,
   useDeleteEmployeeLeavePolicyMutation,
+  useGetEmployeeLeaveByIdQuery,
   useGetEmployeeTypeQuery,
   useAddEmployeeTypeMutation,
   useUpdateEmployeeTypeMutation,

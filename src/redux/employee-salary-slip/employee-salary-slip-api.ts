@@ -5,7 +5,7 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     getEmployeeSalarySlip: builder.query({
       query: ({ id, monthYear }) => ({
-        url: `/salary-slip/by-employee?employeeId=${id}&monthYear=${monthYear}`,
+        url: `/payroll/salary-slips?employeeId=${id}&monthYear=${monthYear}`,
         method: 'GET',
       }),
       providesTags: ['Salary-Slip'],

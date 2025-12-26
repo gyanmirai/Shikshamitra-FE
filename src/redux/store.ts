@@ -2,7 +2,6 @@ import storage from 'redux-persist/lib/storage';
 import { persistStore, persistReducer } from 'redux-persist';
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 
-import { PFApi } from './PF/PFApi';
 import { StudentApi } from './student';
 import { userApi } from './user/userApi';
 import { roleApi } from './role/roleApi';
@@ -24,7 +23,6 @@ import { academicApi } from './academicAPI/academicApi';
 import { librarySettingsApi } from './library/settingApi';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
-import { payElementApi } from './payElement/payElementApi';
 import { invoiceApi } from './invoiceAndReceipt/invoiceApi';
 import { receiptApi } from './invoiceAndReceipt/receiptApi';
 import { ReconciliationApi } from './finance/reconciliation';
@@ -65,7 +63,7 @@ import { EntranceExamApi } from './student/entrance-exam/entrance-exam-api';
 import { shiftManagementApi } from './shiftManagement/shift-management-api';
 import { StudentLeaveApi } from './student/student-leave/student-leave-api';
 import { expenseDetailsApi } from './finance/expenseApi/expenseDetailedApi';
-import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
+// import { payrollStructureApi } from './payrollStructure/payrollStructureApi';
 import { organizationUnitApi } from './organizationUnit/organizationUnitApi';
 import { memberManagementApi } from './memberManagement/memberManagementApi';
 import { reservationDataApi } from './reservationDataApi/reservationDataApi';
@@ -112,9 +110,7 @@ const reducers = combineReducers({
   [tenantApi.reducerPath]: tenantApi.reducer,
   [employeeApi.reducerPath]: employeeApi.reducer,
   [documentApi.reducerPath]: documentApi.reducer,
-  [payElementApi.reducerPath]: payElementApi.reducer,
-  [payrollStructureApi.reducerPath]: payrollStructureApi.reducer,
-  [PFApi.reducerPath]: PFApi.reducer,
+  // [payrollStructureApi.reducerPath]: payrollStructureApi.reducer,
   [ProfessionalApi.reducerPath]: ProfessionalApi.reducer,
   [StudentAttendanceRuleApi.reducerPath]: StudentAttendanceRuleApi.reducer,
   [StudentAttendanceTypeApi.reducerPath]: StudentAttendanceTypeApi.reducer,
@@ -211,9 +207,7 @@ const store = configureStore({
       tenantApi.middleware,
       employeeApi.middleware,
       documentApi.middleware,
-      payElementApi.middleware,
-      payrollStructureApi.middleware,
-      PFApi.middleware,
+      // payrollStructureApi.middleware,
       // EventHolidayApi.middleware,
       ProfessionalApi.middleware,
       StudentAttendanceRuleApi.middleware,
