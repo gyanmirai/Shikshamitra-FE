@@ -13,6 +13,7 @@ export const employeeApi = createApi({
     'AttendanceRule',
     'EmployeeDocument',
     'Employee-Leave-Policy',
+    'Employee-Type',
   ],
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
@@ -274,6 +275,38 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee-Leave-Policy'],
     }),
+
+    // Employee Type
+    getEmployeeType: builder.query({
+      query: () => ({
+        url: `/app/employee-type`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee-Type'],
+    }),
+    addEmployeeType: builder.mutation({
+      query: (body) => ({
+        url: '/app/employee-type',
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['Employee-Type'],
+    }),
+    updateEmployeeType: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/app/employee-type/${id}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee-Type'],
+    }),
+    deleteEmployeeType: builder.mutation({
+      query: (id) => ({
+        url: `/app/employee-type/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Employee-Type'],
+    }),
   }),
 });
 
@@ -316,4 +349,8 @@ export const {
   useAddEmployeeLeavePolicyMutation,
   useUpdateEmployeeLeavePolicyMutation,
   useDeleteEmployeeLeavePolicyMutation,
+  useGetEmployeeTypeQuery,
+  useAddEmployeeTypeMutation,
+  useUpdateEmployeeTypeMutation,
+  useDeleteEmployeeTypeMutation,
 } = employeeApi;
