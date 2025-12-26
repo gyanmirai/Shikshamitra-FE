@@ -10,14 +10,14 @@ export const StudentRegistrationApi = createApi({
   endpoints: (builder) => ({
     getStudentRegistration: builder.query({
       query: (params) => ({
-        url: `/student-enrollment/registration?academicMediumId=${params.academicMediumId}`,
+        url: `/student/enrollment/registrations?academicMediumId=${params.academicMediumId}`,
         method: 'GET',
       }),
       providesTags: ['Student-Registration'],
     }),
     addStudentRegistration: builder.mutation({
       query: (body) => ({
-        url: '/student-enrollment/registration',
+        url: '/student/enrollment/registrations/general-details',
         method: 'POST',
         data: body,
       }),
@@ -47,8 +47,8 @@ export const StudentRegistrationApi = createApi({
       invalidatesTags: ['Student-Registration'],
     }),
     moveToAdmission: builder.mutation({
-      query: (enrollmentId) => ({
-        url: `/app/student-enrollment/move-to-admission/${enrollmentId}`,
+      query: (studentId) => ({
+        url: `/student-enrollment/entrance-exam/${studentId}/move-to-admission`,
         method: 'POST',
       }),
       invalidatesTags: ['Student-Registration'],
@@ -70,14 +70,14 @@ export const StudentRegistrationApi = createApi({
     }),
     getFamilyDetails: builder.query({
       query: ({ studentId }) => ({
-        url: `/student-enrollment/registration/${studentId}/family`,
+        url: `/student/enrollment/registrations/${studentId}/family-details`,
         method: 'GET',
       }),
       providesTags: ['Student-Registration'],
     }),
     updateFamilyDetails: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/student-enrollment/registration/${id}/family`,
+        url: `/student/enrollment/registrations/${id}/family-details`,
         method: 'PUT',
         data: body,
       }),
@@ -85,14 +85,14 @@ export const StudentRegistrationApi = createApi({
     }),
     getParentBankDetails: builder.query({
       query: ({ studentId }) => ({
-        url: `/student-enrollment/registration/${studentId}/parent-bank`,
+        url: `/student/enrollment/registrations/${studentId}/bank-details`,
         method: 'GET',
       }),
       providesTags: ['Student-Registration'],
     }),
     updateParentBankDetails: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/student-enrollment/parent-bank-details/${id}`,
+        url: `/student/enrollment/registrations/${id}/bank-details`,
         method: 'PUT',
         data: body,
       }),
@@ -100,14 +100,14 @@ export const StudentRegistrationApi = createApi({
     }),
     getPreviousSchoolDetails: builder.query({
       query: ({ studentId }) => ({
-        url: `/student-enrollment/registration/${studentId}/previous-school`,
+        url: `/student/enrollment/registrations/${studentId}/previous-school-details`,
         method: 'GET',
       }),
       providesTags: ['Student-Registration'],
     }),
     updatePreviousSchoolDetails: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/student-enrollment/previous-school-details/${id}`,
+        url: `/student/enrollment/registrations/${id}/previous-school-details`,
         method: 'PUT',
         data: body,
       }),
@@ -115,14 +115,14 @@ export const StudentRegistrationApi = createApi({
     }),
     getStudentAdditionalDetails: builder.query({
       query: ({ studentId }) => ({
-        url: `/student-enrollment/registration/${studentId}/additional-details`,
+        url: `/student/enrollment/registrations/${studentId}/additional-details`,
         method: 'GET',
       }),
       providesTags: ['Student-Registration'],
     }),
     updateStudentAdditionalDetails: builder.mutation({
       query: ({ id, body }) => ({
-        url: `student-enrollment/registration/${id}/additional-details`,
+        url: `/student/enrollment/registrations/${id}/additional-details`,
         method: 'PUT',
         data: body,
       }),
@@ -130,14 +130,14 @@ export const StudentRegistrationApi = createApi({
     }),
     getStudentCommunicationDetails: builder.query({
       query: ({ studentId }) => ({
-        url: `/student-enrollment/registration/${studentId}/communication`,
+        url: `/student/enrollment/registrations/${studentId}/communication-details`,
         method: 'GET',
       }),
       providesTags: ['Student-Registration'],
     }),
     updateStudentCommunicationDetails: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/student-enrollment/registration/${id}/communication`,
+        url: `/student/enrollment/registrations/${id}/communication-details`,
         method: 'PUT',
         data: body,
       }),
@@ -145,14 +145,14 @@ export const StudentRegistrationApi = createApi({
     }),
     getStudentMedicalDetails: builder.query({
       query: ({ studentId }) => ({
-        url: `/student-enrollment/registration/${studentId}/medical-records`,
+        url: `/student/enrollment/registrations/${studentId}/medical-records`,
         method: 'GET',
       }),
       providesTags: ['Student-Registration'],
     }),
     updateStudentMedicalDetails: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/student-enrollment/registration/${id}/medical-records`,
+        url: `/student/enrollment/registrations/${id}/medical-records`,
         method: 'PUT',
         data: body,
       }),
@@ -161,19 +161,16 @@ export const StudentRegistrationApi = createApi({
 
     // document
     uploadDocuments: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/student-enrollment/${id}/documents`,
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      query: ({ studentId, body }) => ({
+        url: `/app/student-document/upload-document/${studentId}`,
+        method: 'POST',
         data: body,
       }),
       invalidatesTags: ['Student-Document'],
     }),
     studentUpdateDocument: builder.mutation({
-      query: ({ id, documentId, body }) => ({
-        url: `/student-enrollment/${id}/documents/${documentId}`,
+      query: ({ studentId, documentId, body }) => ({
+        url: `/student-enrollment/${studentId}/documents/${documentId}`,
         method: 'PUT',
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -183,14 +180,20 @@ export const StudentRegistrationApi = createApi({
       invalidatesTags: ['Student-Document'],
     }),
     getStudentDocuments: builder.query({
-      query: (id) => ({
-        url: `/student-enrollment/${id}/documents`,
+      query: ({ studentId }) => ({
+        url: `/app/student-document/required-documents-status/${studentId}`,
+      }),
+      providesTags: ['Student-Document'],
+    }),
+    getStudentDocumentList: builder.query({
+      query: ({ studentId }) => ({
+        url: `/app/student-document/document-list/${studentId}`,
       }),
       providesTags: ['Student-Document'],
     }),
     getStudentDocumentById: builder.query({
-      query: ({ id, documentId }) => ({
-        url: `/student-enrollment/${id}/documents/${documentId}`,
+      query: ({ studentId, documentId }) => ({
+        url: `/app/student-document/document?studentId=${studentId}&documentId=${documentId}`,
       }),
       providesTags: ['Student-Document'],
     }),
@@ -215,6 +218,7 @@ export const {
   useUploadDocumentsMutation,
   useStudentUpdateDocumentMutation,
   useGetStudentDocumentsQuery,
+  useGetStudentDocumentListQuery,
   useGetStudentDocumentByIdQuery,
 
   useGetBasicDetailsQuery,

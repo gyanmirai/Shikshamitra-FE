@@ -13,6 +13,13 @@ export const employeeApi = createApi({
     'AttendanceRule',
     'EmployeeDocument',
     'Employee-Leave-Policy',
+    'Employee-Type',
+    'Deduction-Components',
+    'Employee-Payroll',
+    'Earning-Components',
+    'Salary-Slip',
+    'PF',
+    'Run-Payroll',
   ],
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
@@ -161,7 +168,7 @@ export const employeeApi = createApi({
     // Leave Management
     addEmployeeLeave: builder.mutation({
       query: (body) => ({
-        url: '/app/employee-leave',
+        url: '/v1/leave-management',
         method: 'POST',
         data: body,
       }),
@@ -169,14 +176,21 @@ export const employeeApi = createApi({
     }),
     getEmployeeLeave: builder.query({
       query: () => ({
-        url: `/app/employee-leave`,
+        url: `/leave-management`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
+    getEmployeeLeaveById: builder.query({
+      query: (id) => ({
+        url: `/leave-management/${id}`,
         redirect: 'follow',
       }),
       providesTags: ['Employee'],
     }),
     employeeLeaveRequestStatus: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/employee-leave/${id}/leave-request-status`,
+        url: `/leave-management/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -274,6 +288,38 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee-Leave-Policy'],
     }),
+
+    // Employee Type
+    getEmployeeType: builder.query({
+      query: () => ({
+        url: `/app/employee-type`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee-Type'],
+    }),
+    addEmployeeType: builder.mutation({
+      query: (body) => ({
+        url: '/app/employee-type',
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['Employee-Type'],
+    }),
+    updateEmployeeType: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/app/employee-type/${id}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee-Type'],
+    }),
+    deleteEmployeeType: builder.mutation({
+      query: (id) => ({
+        url: `/app/employee-type/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Employee-Type'],
+    }),
   }),
 });
 
@@ -316,4 +362,9 @@ export const {
   useAddEmployeeLeavePolicyMutation,
   useUpdateEmployeeLeavePolicyMutation,
   useDeleteEmployeeLeavePolicyMutation,
+  useGetEmployeeLeaveByIdQuery,
+  useGetEmployeeTypeQuery,
+  useAddEmployeeTypeMutation,
+  useUpdateEmployeeTypeMutation,
+  useDeleteEmployeeTypeMutation,
 } = employeeApi;

@@ -1,5 +1,4 @@
 import { capitalize } from 'lodash';
-import { useRef, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -8,15 +7,14 @@ import { UploadAvatar } from 'src/components/upload';
 import { fileToBase64 } from 'src/utils/file-to-base64';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { LoadingScreen } from 'src/components/loading-screen';
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
-import { useGetBasicDetailsQuery } from 'src/redux/student/registration/registration-api';
+import { MotherTongueType, MotherTongueTypeArray } from 'src/enums/mother-tongue';
 import {
   CardActions,
   SectionCard,
@@ -38,7 +36,6 @@ import RenderBoard from './RenderBoard';
 import RenderClass from './RenderClass';
 import RenderMedium from './RenderMedium';
 import RenderAcademicYear from './RenderAcademicYear';
-import { generalFieldsInitialValues } from './initialvalues';
 import RenderInquiryPrefrance from './RenderInquiryPrefrance';
 
 import type { FieldsType } from './type';
@@ -54,27 +51,27 @@ const RenderGeneralFormFields = (props: any) => {
   const isAddressEditable = useBoolean(isMainForm);
   const isPreviousSchoolEditable = useBoolean(isMainForm);
 
-  const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetBasicDetailsQuery,
-    params: {
-      studentId: editData?.studentId,
-    },
-    options: {
-      skip: !editData?.studentId,
-    },
-  });
-  const hasInitialized = useRef(false);
-  useEffect(() => {
-    if (!hasInitialized.current && basicDetails?.data && !basicDetailsLoading) {
-      console.log('=========called=======');
-      resetForm({ values: { ...generalFieldsInitialValues(basicDetails.data) } });
-      hasInitialized.current = true;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [basicDetails?.data?.standardId, basicDetailsLoading]);
+  // const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetBasicDetailsQuery,
+  //   params: {
+  //     studentId: editData?.studentId,
+  //   },
+  //   options: {
+  //     skip: !editData?.studentId,
+  //   },
+  // });
+  // const hasInitialized = useRef(false);
+  // useEffect(() => {
+  //   if (!hasInitialized.current && basicDetails?.data && !basicDetailsLoading) {
+  //     console.log('=========called=======');
+  //     resetForm({ values: { ...generalFieldsInitialValues(basicDetails.data) } });
+  //     hasInitialized.current = true;
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [basicDetails?.data?.standardId, basicDetailsLoading]);
 
-  console.log(basicDetails, 'basicDetails', formik);
+  // console.log(basicDetails, 'basicDetails', formik);
 
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
@@ -88,9 +85,7 @@ const RenderGeneralFormFields = (props: any) => {
     formik.resetForm();
   };
 
-  return basicDetailsLoading ? (
-    <LoadingScreen />
-  ) : (
+  return (
     <Box>
       <SectionCard
         title="Inquiry & Admission"
@@ -290,13 +285,15 @@ const RenderGeneralFormFields = (props: any) => {
                 <RadioGroup
                   row
                   name="gender"
-                  value={formik.values.gender}
-                  onChange={formik.handleChange}
+                  value={formik.values.gender?.toString()}
+                  onChange={(e) => {
+                    formik.setFieldValue('gender', Number(e.target.value));
+                  }}
                 >
                   {GenderTypeArray.map((i) => (
                     <FormControlLabel
                       key={i}
-                      value={i}
+                      value={i.toString()}
                       control={<Radio size="small" />}
                       label={GenderType[i]}
                       disabled={!isStudentDetailsEditable.value}
@@ -543,18 +540,12 @@ const RenderGeneralFormFields = (props: any) => {
               onBlur={formik.handleBlur}
               label="Religion "
               name="religion"
-              options={[
-                { id: 'Hinduism', name: 'Hinduism' },
-                { id: 'Islam', name: 'Islam' },
-                { id: 'Christianity', name: 'Christianity' },
-                { id: 'Sikhism', name: 'Sikhism' },
-                { id: 'Buddhism', name: 'Buddhism' },
-                { id: 'Jainism', name: 'Jainism' },
-                { id: 'Judaism', name: 'Judaism' },
-                { id: 'Zoroastrianism', name: 'Zoroastrianism' },
-              ]}
-              valueKey="id"
-              labelKey="name"
+              options={ReligionTypeArray.map((i, index) => ({
+                value: index,
+                label: ReligionType[index],
+              }))}
+              valueKey="value"
+              labelKey="label"
               error={formik?.touched?.religion && formik.errors?.religion}
               helperText={formik?.touched?.religion && formik?.errors?.religion}
             />
@@ -591,8 +582,8 @@ const RenderGeneralFormFields = (props: any) => {
             error={formik.touched.castCategory && Boolean(formik.errors.castCategory)}
           >
             <CustomSelect
-              labelId="dropdown-label"
-              id="dropdown"
+              // id="dropdown"
+              labelId="castCategory-label"
               value={formik.values.castCategory}
               onChange={(val) => {
                 formik.setFieldValue('castCategory', val);
@@ -679,14 +670,12 @@ const RenderGeneralFormFields = (props: any) => {
                 formik.setFieldValue('motherTongue', value);
               }}
               onBlur={formik.handleBlur}
-              options={[
-                { id: 'English', name: 'English' },
-                { id: 'Gujarati', name: 'Gujarati' },
-                { id: 'Marathi', name: 'Marathi' },
-                { id: 'Hindi', name: 'Hindi' },
-              ]}
-              valueKey="id"
-              labelKey="name"
+              options={MotherTongueTypeArray.map((i, index) => ({
+                value: index,
+                label: MotherTongueType[index],
+              }))}
+              valueKey="value"
+              labelKey="label"
               error={formik?.touched?.motherTongue && formik.errors?.motherTongue}
               helperText={formik?.touched?.motherTongue && formik?.errors?.motherTongue}
             />
