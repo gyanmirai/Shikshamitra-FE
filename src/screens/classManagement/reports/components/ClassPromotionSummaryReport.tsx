@@ -1,7 +1,11 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Grid } from '@mui/material';
+import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
@@ -26,6 +30,7 @@ export default function ClassPromotionSummaryReport() {
   });
 
   const allClassIds = classOptions;
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   return (
     <ReportForm onSubmit={formik.handleSubmit}>
@@ -74,6 +79,8 @@ export default function ClassPromotionSummaryReport() {
           <ShakingTextField error={!!(formik.touched.academicYear && formik.errors.academicYear)}>
             <DatePicker
               label="Select Academic Year *"
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               views={['year']}
               value={formik.values.academicYear}
               onChange={(newValue) => formik.setFieldValue('academicYear', newValue)}

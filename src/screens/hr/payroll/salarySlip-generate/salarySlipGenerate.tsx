@@ -34,7 +34,9 @@ const PaySlipGenerationScreen = () => {
   const [, setAllOrganization] = useState<Organization[]>([]);
   const [, setOrganization] = useState<string>('');
 
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
@@ -99,6 +101,8 @@ const PaySlipGenerationScreen = () => {
           disabled={!medium}
         /> */}
         <DatePicker
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           value={monthYear}
           onChange={(val) => setMonthYear(val)}
           views={['month', 'year']}

@@ -115,6 +115,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
     }
   };
 
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box
@@ -172,6 +174,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           label="Homework Date"
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
           name="date"
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           value={date}
           onChange={(val) => {
             setDate(val);

@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
@@ -234,6 +235,8 @@ const LeavingForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
       })) || [],
     [StudentsData?.items]
   );
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <DialogScrollContent>
@@ -382,6 +385,8 @@ const LeavingForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => void
                 label="LC Date *"
                 value={values.lcDate}
                 format="DD-MM-YYYY"
+                minDate={dayjs(currentYear?.startDate)}
+                maxDate={dayjs(currentYear?.endDate)}
                 onChange={(newValue) => setFieldValue('lcDate', newValue)}
                 slotProps={{
                   textField: {

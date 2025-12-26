@@ -89,6 +89,7 @@ const EntranceExamSlots = () => {
       }, 200);
     }
   };
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -153,6 +154,8 @@ const EntranceExamSlots = () => {
         <DatePicker
           label="Select Date"
           format="DD-MM-YYYY"
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           value={selectedDate}
           onChange={(newValue) => setSelectedDate(newValue)}
           slotProps={{ textField: { size: 'small', fullWidth: true } }}

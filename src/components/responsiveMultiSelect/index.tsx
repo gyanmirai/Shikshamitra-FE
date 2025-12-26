@@ -156,7 +156,16 @@ export function ResponsiveMultiSelect<T>({
             size="small"
             error={error}
             helperText={helperText}
-            sx={{
+            sx={(theme) => ({
+              ...(error &&
+                disabled && {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: `${theme.palette.error.main} !important`,
+                  },
+                  '& .MuiInputLabel-root.Mui-disabled': {
+                    color: `${theme.palette.error.main} !important`,
+                  },
+                }),
               '& .MuiInputBase-root': {
                 alignItems: 'center',
                 minHeight: '40px',
@@ -175,7 +184,7 @@ export function ResponsiveMultiSelect<T>({
                 marginTop: '2px',
                 color: error ? 'error' : undefined,
               },
-            }}
+            })}
           />
         )}
       />

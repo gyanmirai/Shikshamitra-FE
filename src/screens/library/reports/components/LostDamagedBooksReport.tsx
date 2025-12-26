@@ -1,7 +1,11 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Grid } from '@mui/material';
+import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
@@ -27,6 +31,8 @@ export default function LostDamagedBooksReport() {
 
   const allCategoryIds = categoryOptions;
   const allDamageTypeIds = damageTypeOptions;
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   return (
     <ReportForm onSubmit={formik.handleSubmit}>
@@ -115,6 +121,8 @@ export default function LostDamagedBooksReport() {
           <ShakingTextField error={!!(formik.touched.startDate && formik.errors.startDate)}>
             <DatePicker
               label="Start Date"
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               value={formik.values.startDate}
               onChange={(newValue) => formik.setFieldValue('startDate', newValue)}
               slotProps={{
@@ -130,6 +138,8 @@ export default function LostDamagedBooksReport() {
           <ShakingTextField error={!!(formik.touched.endDate && formik.errors.endDate)}>
             <DatePicker
               label="End Date"
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               value={formik.values.endDate}
               onChange={(newValue) => formik.setFieldValue('endDate', newValue)}
               slotProps={{

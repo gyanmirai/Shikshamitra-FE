@@ -1,7 +1,11 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Grid } from '@mui/material';
+import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
@@ -23,6 +27,8 @@ export default function LibraryStockSummaryReport() {
       console.info('Generate Library Stock Summary Report', values);
     },
   });
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const allCategoryIds = categoryOptions;
 
@@ -73,6 +79,8 @@ export default function LibraryStockSummaryReport() {
           <ShakingTextField error={!!(formik.touched.startDate && formik.errors.startDate)}>
             <DatePicker
               label="Start Date"
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               value={formik.values.startDate}
               onChange={(newValue) => formik.setFieldValue('startDate', newValue)}
               slotProps={{
@@ -89,6 +97,8 @@ export default function LibraryStockSummaryReport() {
             <DatePicker
               label="End Date"
               value={formik.values.endDate}
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               onChange={(newValue) => formik.setFieldValue('endDate', newValue)}
               slotProps={{
                 textField: {

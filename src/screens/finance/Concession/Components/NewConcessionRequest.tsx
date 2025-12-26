@@ -245,6 +245,17 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         helperText={
                           (formik.touched.studentName && formik.errors.studentName) as string
                         }
+                        sx={(theme) => ({
+                          ...(!!(formik.touched.studentName && formik.errors.studentName) &&
+                            !formik.values.division && {
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: `${theme.palette.error.main} !important`,
+                              },
+                              '& .MuiInputLabel-root.Mui-disabled': {
+                                color: `${theme.palette.error.main} !important`,
+                              },
+                            }),
+                        })}
                       />
                     )}
                     renderOption={(props, option) => (

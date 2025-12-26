@@ -24,6 +24,7 @@ import {
 
 import type { RootState } from 'src/redux/store';
 
+import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 
 import { infoValidations } from './employee-form-validation';
@@ -310,6 +311,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       setSubmitting(false);
     },
   });
+  const currentYear = useSelector((state: RootState) => state.currentYear);
   return (
     <Box
     // sx={{
@@ -376,6 +378,8 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                           name={field.name}
                           value={formik.values[field.name as keyof typeof formik.values]}
                           format="DD-MM-YYYY"
+                          minDate={dayjs(currentYear?.startDate)}
+                          maxDate={dayjs(currentYear?.endDate)}
                           onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
                           sx={{
                             ...((field?.sx as any) || {}),

@@ -42,7 +42,7 @@ export default function EmployeeContactListReport() {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Select Departments"
+                label="Select Departments *"
                 error={formik.touched.departments && Boolean(formik.errors.departments)}
                 helperText={formik.touched.departments && (formik.errors.departments as string)}
               />
@@ -66,7 +66,7 @@ export default function EmployeeContactListReport() {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Select Status"
+                label="Select Status *"
                 error={formik.touched.statuses && Boolean(formik.errors.statuses)}
                 helperText={formik.touched.statuses && (formik.errors.statuses as string)}
               />

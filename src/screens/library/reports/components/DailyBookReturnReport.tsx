@@ -1,7 +1,11 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Grid } from '@mui/material';
+import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
@@ -26,6 +30,8 @@ export default function DailyBookReturnReport() {
 
   const allClassIds = classOptions;
   const allDepartmentIds = departmentOptions;
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   return (
     <ReportForm onSubmit={formik.handleSubmit}>
@@ -114,6 +120,8 @@ export default function DailyBookReturnReport() {
           <ShakingTextField error={!!(formik.touched.returnDate && formik.errors.returnDate)}>
             <DatePicker
               label="Return Date"
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               value={formik.values.returnDate}
               onChange={(newValue) => formik.setFieldValue('returnDate', newValue)}
               slotProps={{
