@@ -110,7 +110,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   });
 
   const handleFileUpload = async (files: (File | string)[]) => {
-    console.log('files', files);
     const uploadedFiles: (string | File)[] = [];
     const formData = new FormData();
     formData.append('FileName', (files[0] as File)?.name);

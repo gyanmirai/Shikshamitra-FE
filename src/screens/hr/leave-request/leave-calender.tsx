@@ -1,4 +1,5 @@
 import type { RootState } from 'src/redux/store';
+import type { Organization } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 import type { EventClickArg } from '@fullcalendar/core';
 
@@ -9,12 +10,16 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CommonCalender from 'src/components/calender';
 import CustomDialog from 'src/components/customDialog';
+import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetEmployeeLeaveQuery } from 'src/redux/employee/employeeApi';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { usePopover, CustomPopover } from 'src/components/custom-popover';
-import { Box, Grid, Button, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Grid, TableRow, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
+import {
+  useGetEmployeeLeaveQuery,
+  useGetEmployeeLeaveByIdQuery,
+} from 'src/redux/employee/employeeApi';
 import {
   EmployeeLeaveStatusType,
   EmployeeLeaveStatusTypeColor,
@@ -34,11 +39,14 @@ import type { TabComponentType } from '.';
 // }
 
 const LeaveCalender = (props: TabComponentType) => {
-  const [organization, setOrganization] = useState<string | null>(null);
+  const [organization, setOrganization] = useState<string>('');
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
   const popover = usePopover();
   const { employee } = useSelector((state: any) => state.auth);
-
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
+  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
@@ -48,6 +56,11 @@ const LeaveCalender = (props: TabComponentType) => {
   //   setOrganization(event?.target?.value);
   // };
 
+  useEffect(() => {
+    setAllOrganization(medium?.educationMediumStages || []);
+    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
+  }, [medium]);
+
   const calendarData = useMemo(
     () =>
       data?.items.map((i: any) => ({
@@ -56,8 +69,9 @@ const LeaveCalender = (props: TabComponentType) => {
         color: i.leavePolicy.color,
         end: i.endDate,
         allDay: false,
+        employeeCode: i.employeeCode,
         textColor: i.leavePolicy.color,
-        title: `${i.leavePolicy.leaveType} [${i.employee.firstName} ${i.employee.lastName}] ${EmployeeLeaveStatusType[i?.status]}`,
+        title: `${i.leaveType} [${i.name}] ${i.status}`,
         description: i.description.replace(/<[^>]+>/g, ''),
         viewStartDate: i.startDate,
         viewEndDate: i.endDate,
@@ -71,25 +85,23 @@ const LeaveCalender = (props: TabComponentType) => {
     }
     return null;
   }, [calendarData, currentDateClick]);
-  const { currentMedium: medium, currentYear } = useSelector(
-    (state: RootState) => state.globalState
-  );
+
   const onChangeView = useCallback((newView: any) => {
     setOrganization(newView);
   }, []);
   return (
     <>
-      <Button
-        size="small"
-        color="inherit"
-        onClick={popover.onOpen}
-        variant="outlined"
-        // startIcon={<Iconify icon={selectedItem.icon} />}
-        endIcon={<Iconify icon="eva:arrow-ios-downward-fill" sx={{ ml: -0.5 }} />}
-        sx={{ display: { xs: 'none', sm: 'inline-flex' }, maxWidth: '170px', width: '100%', mb: 1 }}
-      >
-        {organization || 'Organization'}
-      </Button>
+      <CustomSelect
+        options={allOrganization}
+        label="Organization"
+        value={organization}
+        onChange={(val) => setOrganization(val as string)}
+        labelKey="name"
+        valueKey="id"
+        formControlProps={{ sx: { maxWidth: '250px', width: '100%', pl: 1, mt: 1, mb: 1 } }}
+        disabled={!medium}
+      />
+
       <CommonCalender
         data={calendarData}
         isLoading={isLoading}
@@ -171,112 +183,114 @@ export default LeaveCalender;
 
 export const LeaveRequestForm = ({ editData }: any) => {
   const isView = useBoolean();
-  return (
+  const { data: leavePolicyData, isLoading: isLeavePolicyLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeLeaveByIdQuery,
+    params: { id: editData?.id },
+  });
+  return isLeavePolicyLoading ? (
+    <TableRow>
+      <TableCell sx={{ height: '50px' }}>
+        <Box className="loader" height={24} />
+      </TableCell>
+    </TableRow>
+  ) : (
     <Box sx={{ p: 2 }} bgcolor="background.neutral">
       <Grid container spacing={3}>
-        <Grid size={4}>
+        <Grid size={{ xs: 4 }}>
           <Typography variant="body2" fontWeight={600}>
-            {' '}
             Employee
           </Typography>
         </Grid>
-        <Grid size={8}>
+        <Grid size={{ xs: 8 }}>
           <Typography variant="body2">
-            {editData?.employee?.firstName} {editData?.employee?.lastName}{' '}
+            {editData?.employee?.firstName} {editData?.employee?.lastName}
           </Typography>
         </Grid>
-        <Grid size={4}>
+
+        <Grid size={{ xs: 4 }}>
           <Typography variant="body2" fontWeight={600}>
-            {' '}
             Organization
           </Typography>
         </Grid>
-        <Grid size={8}>
+        <Grid size={{ xs: 8 }}>
           <Typography variant="body2">{editData?.employee?.educationMediumStage?.name}</Typography>
         </Grid>
-        <Grid size={4}>
+
+        <Grid size={{ xs: 4 }}>
           <Typography variant="body2" fontWeight={600}>
-            {' '}
             Leave Type
           </Typography>
         </Grid>
-        <Grid size={8}>
+        <Grid size={{ xs: 8 }}>
           {editData?.leavePolicy?.leaveType && (
-            <Typography
-              variant="body2"
-
-              // color={editData?.leavePolicy?.color}
-            >
-              {editData?.leavePolicy?.leaveType}
-            </Typography>
+            <Typography variant="body2">{editData.leavePolicy.leaveType}</Typography>
           )}
         </Grid>
-        <Grid size={4}>
+
+        <Grid size={{ xs: 4 }}>
           <Typography variant="body2" fontWeight={600}>
-            {' '}
             Half Day
           </Typography>
         </Grid>
-        <Grid size={8}>
-          <Typography variant="body2"> {editData?.halfDay ? 'Yes' : 'No'} </Typography>
+        <Grid size={{ xs: 8 }}>
+          <Typography variant="body2">{editData?.halfDay ? 'Yes' : 'No'}</Typography>
         </Grid>
-        <Grid size={4}>
+
+        <Grid size={{ xs: 4 }}>
           <Typography variant="body2" fontWeight={600}>
-            {' '}
             Start Date
           </Typography>
         </Grid>
-        <Grid size={8}>
+        <Grid size={{ xs: 8 }}>
           <Typography variant="body2">
-            {' '}
-            {dayjs(editData?.viewStartDate).format('DD-MM-YYYY')}{' '}
+            {dayjs(editData?.viewStartDate).format('DD-MM-YYYY')}
           </Typography>
         </Grid>
+
         {!editData?.halfDay && (
           <>
-            {' '}
-            <Grid size={4}>
+            <Grid size={{ xs: 4 }}>
               <Typography variant="body2" fontWeight={600}>
-                {' '}
                 End Date
               </Typography>
             </Grid>
-            <Grid size={8}>
+            <Grid size={{ xs: 8 }}>
               <Typography variant="body2">
                 {dayjs(editData?.viewEndDate).format('DD-MM-YYYY')}
               </Typography>
-            </Grid>{' '}
+            </Grid>
           </>
         )}
-        <Grid size={4}>
+
+        <Grid size={{ xs: 4 }}>
           <Typography variant="body2" fontWeight={600}>
-            {' '}
             Description
           </Typography>
         </Grid>
-        <Grid size={8}>
+        <Grid size={{ xs: 8 }}>
           <Typography variant="body2" dangerouslySetInnerHTML={{ __html: editData?.description }} />
         </Grid>
+
         {editData?.rejectionReason && (
           <>
-            <Grid size={4}>
+            <Grid size={{ xs: 4 }}>
               <Typography variant="body2" fontWeight={600}>
-                {' '}
                 Rejection Reason
               </Typography>
             </Grid>
-            <Grid size={8}>
-              <Typography variant="body2"> {editData.rejectionReason}</Typography>
+            <Grid size={{ xs: 8 }}>
+              <Typography variant="body2">{editData.rejectionReason}</Typography>
             </Grid>
           </>
         )}
-        <Grid size={4}>
+
+        <Grid size={{ xs: 4 }}>
           <Typography variant="body2" fontWeight={600}>
-            {' '}
             Status
           </Typography>
         </Grid>
-        <Grid size={8}>
+        <Grid size={{ xs: 8 }}>
           <Label
             color={
               EmployeeLeaveStatusTypeColor[
@@ -287,16 +301,15 @@ export const LeaveRequestForm = ({ editData }: any) => {
             {EmployeeLeaveStatusType[editData?.status]}
           </Label>
         </Grid>
+
         {editData?.attachment && (
           <>
-            {' '}
-            <Grid size={4}>
+            <Grid size={{ xs: 4 }}>
               <Typography variant="body2" fontWeight={600}>
-                {' '}
                 Document
               </Typography>
             </Grid>
-            <Grid size={8}>
+            <Grid size={{ xs: 8 }}>
               <Iconify
                 icon="eva:eye-fill"
                 sx={{ mr: 0.5, cursor: 'pointer' }}
@@ -306,16 +319,6 @@ export const LeaveRequestForm = ({ editData }: any) => {
           </>
         )}
       </Grid>
-      {/* <CustomDialog open={isView.value} handleClose={isView.onFalse} title="Document">
-        <Box sx={{ p: 2 }} bgcolor="background.neutral">
-          <iframe
-            src={convertBase64Format(editData?.attachment)}
-            width="100%"
-            height="400px"
-            title="Document"
-          />
-        </Box>
-      </CustomDialog> */}
     </Box>
   );
 };

@@ -1,5 +1,7 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -8,6 +10,7 @@ import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -16,7 +19,9 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -71,6 +76,26 @@ const DeductionComponent = () => {
     type: 'query',
     currentQueryAndMutation: useGetDeductionComponentsQuery,
   });
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+  // Handles closing the incident form
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      isDeductionComponentOpen.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      isDeductionComponentOpen.onFalse();
+      setTimeout(() => {
+        setEditData(null);
+      }, 200);
+    }
+  };
 
   console.log(getDeductionComponentsData, 'getDeductionComponentsData');
 
@@ -200,13 +225,7 @@ const DeductionComponent = () => {
           </Box>
         }
       >
-        <DeductionComponentForm
-          editData={editData}
-          handleClose={() => {
-            isDeductionComponentOpen.onFalse();
-            setEditData(null);
-          }}
-        />
+        <DeductionComponentForm editData={editData} handleClose={handleClose} />
       </CustomDialog>
     </Box>
   );
@@ -280,7 +299,7 @@ const DeductionComponentForm = ({
   handleClose,
 }: {
   editData: any;
-  handleClose: () => void;
+  handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
   const [addDeductionComponent, { isLoading: addDeductionComponentLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -331,7 +350,7 @@ const DeductionComponentForm = ({
             isFixed: values.isFixed,
           }).unwrap();
         }
-        handleClose();
+        handleClose(null, true);
       } catch (error) {
         console.error(error);
       }
@@ -339,7 +358,7 @@ const DeductionComponentForm = ({
   });
 
   return (
-    <>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         {/* General Information */}
         <SectionCard
@@ -531,7 +550,7 @@ const DeductionComponentForm = ({
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"
           variant="outlined"
-          onClick={handleClose}
+          onClick={(e: any) => handleClose(e, false)}
         >
           Cancel
         </Button>
@@ -546,6 +565,6 @@ const DeductionComponentForm = ({
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
-    </>
+    </BackPopUpChecked>
   );
 };
