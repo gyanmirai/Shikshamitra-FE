@@ -8,6 +8,7 @@ import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -16,7 +17,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { useDeletePayElementMutation } from 'src/redux/payElement/payElementApi';
 import {
   Box,
   Grid,
@@ -28,11 +28,17 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetEarningComponentsQuery,
+  useAddEarningComponentMutation,
+  useDeleteEarningComponentMutation,
+  useUpdateEarningComponentMutation,
+} from 'src/redux/employee-payroll/employee-payroll-api';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 interface PayElement {
-  name: string;
+  componentName: string;
   componentType: string;
   id: string;
   description: string;
@@ -56,9 +62,15 @@ const EarningComponent = () => {
   const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
   const isEarningComponentOpen = useBoolean();
 
-  const [deletePayElement] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeletePayElementMutation,
+  const [deleteEarningComponent, { isLoading: deleteEarningComponentLoading }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useDeleteEarningComponentMutation,
+    });
+
+  const { data: getEarningComponentsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEarningComponentsQuery,
   });
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -87,28 +99,37 @@ const EarningComponent = () => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete <b>{deleteInformation?.componentName}</b> Earning
+            Component?
+          </>
+        }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
             size="small"
+            loading={deleteEarningComponentLoading}
             onClick={async () => {
-              await deletePayElement(deleteInformation?.id);
+              await deleteEarningComponent(deleteInformation?.id).unwrap();
+              shikshaMitraToast.success({
+                message: ` ${deleteInformation?.componentName} Earning Component deleted successfully`,
+              });
               confirm.onFalse();
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
       <CustomizableTable
         tableId="earning-component"
         columns={[
-          { id: 'name', label: 'Name', align: 'left', minWidth: '10vw' },
+          { id: 'componentName', label: 'Name', align: 'left', minWidth: '10vw' },
           { id: 'description', label: 'Description', align: 'left', minWidth: '10vw' },
-          { id: 'componentType', label: 'Component Type', align: 'left', minWidth: '11vw' },
-          { id: 'dependOn', label: 'Depend On', align: 'left', minWidth: '10vw' },
+          { id: 'componentType', label: 'Component Type', align: 'left', minWidth: '10vw' },
+          { id: 'dependOn', label: 'Depends On', align: 'left', minWidth: '10vw' },
           { id: 'amount', label: 'Amount', align: 'left', minWidth: '10vw' },
           {
             id: 'visibleInPayslip',
@@ -119,6 +140,7 @@ const EarningComponent = () => {
               return value ? 'Yes' : 'No';
             },
           },
+
           {
             id: 'action',
             label: 'Action',
@@ -146,48 +168,7 @@ const EarningComponent = () => {
             },
           },
         ]}
-        data={[
-          {
-            name: 'Basic Salary',
-            description: 'Base salary component',
-            componentType: 'Fixed',
-            dependOn: 'None',
-            amount: '30000',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'House Rent Allowance',
-            description: 'HRA component',
-            componentType: 'Fixed',
-            dependOn: 'Basic',
-            amount: '40%',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'Performance Bonus',
-            description: 'Quarterly performance bonus',
-            componentType: 'Variable',
-            dependOn: 'Basic',
-            amount: '15%',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'Transport Allowance',
-            description: 'Monthly transport allowance',
-            componentType: 'Fixed',
-            dependOn: 'None',
-            amount: '3000',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'Special Allowance',
-            description: 'Additional benefits',
-            componentType: 'Variable',
-            dependOn: 'Gross',
-            amount: '10%',
-            visibleInPayslip: false,
-          },
-        ]}
+        data={getEarningComponentsData?.data || []}
       />
       <CustomDialog
         maxWidth="md"
@@ -297,9 +278,18 @@ const EarningComponentForm = ({
   editData: any;
   handleClose: () => void;
 }) => {
+  const [addEarningComponent, { isLoading: addEarningComponentLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddEarningComponentMutation,
+  });
+  const [updateEarningComponent, { isLoading: updateEarningComponentLoading }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useUpdateEarningComponentMutation,
+    });
   const formik = useFormik({
     initialValues: {
-      componentName: editData?.name || '',
+      componentName: editData?.componentName || '',
       description: editData?.description || '',
       componentType: editData?.componentType || '',
       dependOn: editData?.dependOn || '',
@@ -309,8 +299,38 @@ const EarningComponentForm = ({
       isFixed: editData ? editData?.isFixed : true,
     },
     validationSchema,
-    onSubmit: (values) => {
-      handleClose();
+    onSubmit: async (values) => {
+      try {
+        if (editData) {
+          await updateEarningComponent({
+            id: editData.id,
+            body: {
+              componentName: values.componentName,
+              description: values.description,
+              componentType: values.componentType,
+              dependOn: values.dependOn,
+              customComponent: values.customComponent,
+              amount: values.amount,
+              visibleInPayslip: values.visibleInPayslip,
+              isFixed: values.isFixed,
+            },
+          }).unwrap();
+        } else {
+          await addEarningComponent({
+            componentName: values.componentName,
+            description: values.description,
+            componentType: values.componentType,
+            dependOn: values.dependOn,
+            customComponent: values.customComponent,
+            amount: values.amount,
+            visibleInPayslip: values.visibleInPayslip,
+            isFixed: values.isFixed,
+          }).unwrap();
+        }
+        handleClose();
+      } catch (error) {
+        console.error(error);
+      }
     },
   });
 
@@ -517,6 +537,7 @@ const EarningComponentForm = ({
           type="submit"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={(e: any) => formik.handleSubmit(e)}
+          loading={addEarningComponentLoading || updateEarningComponentLoading}
         >
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>

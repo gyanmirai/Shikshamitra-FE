@@ -1,7 +1,6 @@
 import type { RootState } from 'src/redux/store';
 
-import { toast } from 'sonner';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -14,14 +13,11 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { DocumentStatusOptions } from 'src/enums/document-statusType';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { DocumentType, DocumentFileType } from 'src/enums/documnet-type';
 import { Box, Tooltip, Skeleton, IconButton, Typography } from '@mui/material';
-import { useGetStudentDocumentTypeQuery } from 'src/redux/student/document-type/document-type-api';
 import {
   useUploadDocumentsMutation,
   useGetStudentDocumentsQuery,
   useGetStudentDocumentByIdQuery,
-  useStudentUpdateDocumentMutation,
 } from 'src/redux/student/registration/registration-api';
 
 import { DocumentForm } from '../setting/document-type';
@@ -44,45 +40,12 @@ export const RenderDocuments = (props: any) => {
     currentQueryAndMutation: useUploadDocumentsMutation,
   });
 
-  // Mutation hook for updating existing documents
-  const [updateDocument] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useStudentUpdateDocumentMutation,
-  });
-
-  // Query hook to fetch all document types
-  const { data: documents, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentDocumentTypeQuery,
-  });
-
   // Query hook to fetch student's uploaded documents using student ID
   const { data: studentsDocuments, isLoading: isEmployeeDocLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentsQuery,
-    params: id,
+    params: { studentId: id },
   });
-
-  // Memoized table data that combines document types with uploaded documents status
-  const tableData = useMemo(
-    () =>
-      documents?.items?.map((item: any) => ({
-        ...item,
-        // Check if document is uploaded by comparing file names
-        statusVal: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName)
-          ? 'Uploaded'
-          : 'Not Uploaded',
-        // Convert document type enum to readable string
-        docType: item.documentTypes.map((ite: number) => DocumentType[ite]).join(', '),
-        // Set status color based on document upload status
-        statusColor: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName)
-          ? 'success'
-          : 'warning',
-        // Store the uploaded document details if found
-        uploadDocument: studentsDocuments?.find((doc: any) => doc.fileName === item.documentName),
-      })) || [],
-    [documents?.items, studentsDocuments]
-  );
 
   // Get the isChanges state from the Redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -99,26 +62,14 @@ export const RenderDocuments = (props: any) => {
     }
   };
   return (
-    <>
-      {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-        <Button
-          size="small"
-          variant="contained"
-          startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-          onClick={() => {
-            addDocumentDialog.onTrue();
-          }}
-        >
-          Add Document
-        </Button>
-      </Box> */}
+    <Box sx={{ height: '100%', minHeight: 0 }}>
       <CustomizableTable
-        isLoading={isLoading || isEmployeeDocLoading}
+        isLoading={isEmployeeDocLoading}
         tableId="documents"
         columns={[
-          { id: 'documentName', label: 'Name' },
+          { id: 'documentTypeName', label: 'Name' },
           {
-            id: 'statusVal',
+            id: 'isUploaded',
             label: 'Status',
             enumOptions: DocumentStatusOptions,
             filterType: 'enum',
@@ -127,16 +78,13 @@ export const RenderDocuments = (props: any) => {
             align: 'left',
             render(value, row) {
               return (
-                <Tooltip title={row.statusVal}>
+                <Tooltip title={value ? 'Uploaded' : 'Not Uploaded'}>
                   <Iconify
-                    icon={row.statusVal === 'Uploaded' ? 'mdi:approve' : 'mage:file-cross-fill'}
+                    icon={value ? 'mdi:approve' : 'mage:file-cross-fill'}
                     height={20}
                     width={20}
                     sx={{
-                      color: (theme) =>
-                        row.statusVal === 'Uploaded'
-                          ? 'success.main'
-                          : theme.vars.palette.grey[500],
+                      color: (theme) => (value ? 'success.main' : theme.vars.palette.grey[500]),
                       cursor: 'pointer',
                     }}
                   />
@@ -169,32 +117,33 @@ export const RenderDocuments = (props: any) => {
                   onChange={async (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
-                    const acceptableFileFormats: string[] = [];
+                    // Convert file to base64
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                      const base64Content = reader.result as string;
+                      // Remove the data URL prefix (e.g., "data:image/png;base64,")
+                      const base64String = base64Content.split(',')[1];
 
-                    row.documentTypes.forEach((item: number) => {
-                      acceptableFileFormats.push(
-                        DocumentFileType[DocumentType[item] as keyof typeof DocumentFileType]
-                      );
-                    });
-                    if (!acceptableFileFormats.includes(file?.type)) {
-                      shikshaMitraToast.error({ message: `Please upload ${row.docType} file` });
-                      return;
-                    }
-                    const myNewFile = new File([file], row.documentName, { type: file.type });
-                    const formData = new FormData();
-                    formData.append(row.uploadDocument ? 'file' : 'files', myNewFile);
+                      const requestBody = {
+                        documenttypeId: row.documentTypeId,
+                        filename: file.name,
+                        contenttype: file.type,
+                        size: file.size,
+                        content: base64String,
+                      };
 
-                    toast.promise(
-                      row.uploadDocument
-                        ? updateDocument({ documentId: row.uploadDocument.id, id, body: formData })
-                        : uploadDocument({ id, body: formData }),
-                      {
-                        loading: `Uploading Document ${row.documentName}...`,
-                        success: () => `Document ${row.documentName} uploaded successfully`,
-                        error: `Failed to upload ${row.documentName}`,
-                        closeButton: true,
+                      try {
+                        await uploadDocument({ studentId: id, body: requestBody }).unwrap();
+                        shikshaMitraToast.success({
+                          message: `${row.documentTypeName} uploaded successfully`,
+                        });
+                      } catch (error) {
+                        shikshaMitraToast.error({
+                          message: `Failed to upload ${row.documentTypeName}`,
+                        });
                       }
-                    );
+                    };
+                    reader.readAsDataURL(file);
                   }}
                 >
                   <Iconify icon="ci:file-upload" />
@@ -219,10 +168,10 @@ export const RenderDocuments = (props: any) => {
                     justifyContent: 'flex-start',
                     display: 'flex',
                   }}
-                  disabled={!row.uploadDocument}
+                  disabled={!row.isUploaded}
                   onClick={() => {
-                    setDocId(row.uploadDocument.id);
-                    setSelectedDocName(row.documentName);
+                    setDocId(row.uploadedDocumentId);
+                    setSelectedDocName(row.documentTypeName);
                     viewDialog.onTrue();
                   }}
                 >
@@ -248,15 +197,11 @@ export const RenderDocuments = (props: any) => {
                     justifyContent: 'flex-start',
                     display: 'flex',
                   }}
-                  disabled={!row.uploadDocument}
-                  onClick={() => {
-                    // Handle download logic here
-                    if (row.uploadDocument) {
-                      const link = document.createElement('a');
-                      link.href = convertBase64Format(row.uploadDocument.content);
-                      link.download = row.documentName;
-                      link.click();
-                    }
+                  disabled={!row.isUploaded}
+                  onClick={async () => {
+                    // TODO: Implement download functionality
+                    // Fetch document content using getStudentDocumentById
+                    // Create download link with base64 content
                   }}
                 >
                   <Iconify icon="material-symbols:download" width={20} height={20} />
@@ -265,7 +210,7 @@ export const RenderDocuments = (props: any) => {
             },
           },
         ]}
-        data={tableData}
+        data={studentsDocuments || []}
       />
       <CustomDialog
         title={
@@ -308,7 +253,7 @@ export const RenderDocuments = (props: any) => {
       >
         <DocumentForm handleClose={handleClose} editData={null} />
       </CustomDialog>
-    </>
+    </Box>
   );
 };
 export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null }) => {
@@ -317,7 +262,7 @@ export const ViewDocuments = ({ id, docId }: { id: string; docId: string | null 
   const { data: documents, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentByIdQuery,
-    params: { id, documentId: docId },
+    params: { studentId: id, documentId: docId },
   });
 
   return (

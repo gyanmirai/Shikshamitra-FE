@@ -14,6 +14,10 @@ export const employeeApi = createApi({
     'EmployeeDocument',
     'Employee-Leave-Policy',
     'Employee-Type',
+    'Deduction-Components',
+    'Employee-Payroll',
+    'Earning-Components',
+    'Salary-Slip',
   ],
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations

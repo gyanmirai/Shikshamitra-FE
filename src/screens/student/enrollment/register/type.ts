@@ -37,7 +37,7 @@ export interface IGeneralInformationResponse {
   secondaryContactNo: string;
   email: string;
 
-  aadharNo: string;
+  adharNo: string;
   apparId: 'string';
   panNo: 'string';
   religion: 0;
@@ -59,7 +59,7 @@ export interface IGeneralInformationResponse {
     name: string;
     isoCode: string;
   };
-  pinCode: string;
+  pincode: string;
 
   previousSchool: 'string';
   lastClassPassed: 'string';
@@ -71,17 +71,17 @@ export interface IGeneralInformationResponse {
 export interface IFamilyInformationResponse {
   studentId: string;
   fatherDetails: {
-    name: string;
+    fullName: string;
     dateOfBirth: string;
     occupation: string;
     qualification: string;
     contactNo: string;
     email: string;
-    passOutYear: string;
+    yearOfPassing: string;
     officeNo: string;
     designation: string;
-    organisation: string;
-    aadhaarNo: string;
+    organization: string;
+    aadharNo: string;
     remarks: string;
 
     localAddress: {
@@ -117,17 +117,17 @@ export interface IFamilyInformationResponse {
     };
   };
   motherDetails: {
-    name: string;
+    fullName: string;
     dateOfBirth: string;
     occupation: string;
     qualification: string;
     contactNo: string;
     email: string;
-    passOutYear: string;
+    yearOfPassing: string;
     officeNo: string;
     designation: string;
-    organisation: string;
-    aadhaarNo: string;
+    organization: string;
+    aadharNo: string;
     remarks: string;
 
     localAddress: {
@@ -162,17 +162,17 @@ export interface IFamilyInformationResponse {
     };
   };
   guardianDetails: {
-    name: string;
+    fullName: string;
     dateOfBirth: string;
     occupation: string;
     qualification: string;
     contactNo: string;
     email: string;
-    passOutYear: string;
+    yearOfPassing: string;
     officeNo: string;
     designation: string;
-    organisation: string;
-    aadhaarNo: string;
+    organization: string;
+    aadharNo: string;
     remarks: string;
 
     localAddress: {
@@ -206,6 +206,13 @@ export interface IFamilyInformationResponse {
       pincode: string;
     };
   };
+  siblingStudents: {
+    studentId: string;
+    fullName: string;
+    standardName: string;
+    divisionName: string;
+    grNo: number;
+  }[];
 }
 
 export interface ICommunicationInformationResponse {
