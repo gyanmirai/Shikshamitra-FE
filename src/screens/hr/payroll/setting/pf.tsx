@@ -271,7 +271,7 @@ const PFForm = ({
     <>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <DialogScrollContent>
-          <Stack spacing={2}>
+          <Stack spacing={3}>
             <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
               <TextField
                 size="small"

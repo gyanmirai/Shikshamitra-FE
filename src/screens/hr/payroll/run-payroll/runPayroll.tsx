@@ -1,246 +1,165 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
-import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { convertBase64Format } from 'src/utils/base64Formate';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Card, Alert, Avatar, Button, Typography } from '@mui/material';
 import {
-  Box,
-  Card,
-  Grid,
-  Alert,
-  Button,
-  Select,
-  MenuItem,
-  InputLabel,
-  Typography,
-  FormControl,
-} from '@mui/material';
+  useGetRunPayrollPreviewQuery,
+  useGenerateAndLockPayrollMutation,
+} from 'src/redux/runPayroll/runPayrollApi';
 
-import VerifyPayrollComponent from './component/verifyPayrollComponent';
+import { salaryData } from './component/verifyPayrollComponent';
 
 const RunPayroll = () => {
-  const [open, setOpen] = useState(false);
+  const isPayrollOpen = useBoolean();
   const [month, setMonth] = useState<Dayjs | null>(null);
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  const [organization, setOrganization] = useState<null | string>(null);
 
   // const organizationValue = medium?.educationMediumStages?.find(
   //   (org: any) => org?.id === organization
   // );
+  const { data: getRunPayrollPreviewData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRunPayrollPreviewQuery,
+  });
+  const [generateAndLockPayroll, { isLoading: generateAndLockPayrollLoading }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useGenerateAndLockPayrollMutation,
+    });
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {open ? (
-        <>
-          <CustomBreadcrumbs
-            heading="Run Payroll"
-            links={[
-              { name: 'HR/Staff' },
-              { name: 'Payroll Management' },
-              { name: 'Verify Payroll' },
-            ]}
-            sx={{ mb: 2 }}
-            action={
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="eva:arrow-back-fill" />}
-                onClick={() => {
-                  setOpen(false);
-                }}
-              >
-                Back
-              </Button>
-            }
+      <CustomBreadcrumbs
+        heading="Run Payroll"
+        links={[{ name: 'HR/Staff' }, { name: 'Payroll' }, { name: 'Run Payroll' }]}
+        sx={{ mb: 2 }}
+        description="Run payroll by selecting a date and organization, and verify details before processing."
+      />
+      {/* <StepsForPayroll /> */}
+
+      <Card sx={{ p: 2 }}>
+        <Typography variant="h6">Process Payroll For</Typography>
+        <Box sx={{ display: 'flex', gap: 2, mt: 2, mb: 2, alignItems: 'center' }}>
+          <DatePicker
+            label="Select Month *"
+            views={['month']}
+            format="MMMM"
+            value={month}
+            onChange={(newValue) => setMonth(newValue)}
+            slotProps={{ textField: { size: 'small' } }}
+            sx={{ width: '100%', maxWidth: '200px' }}
           />
-          <Card sx={{ height: '100%' }}>
-            <VerifyPayrollComponent
-              // onSubmit={handleSubmit}
-              onClose={() => {
-                setOpen(false);
+
+          {/* Button aligned to the right */}
+          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              startIcon={<Iconify icon="uiw:pay" />}
+              disabled={!month}
+              onClick={() => {
+                isPayrollOpen.onTrue();
               }}
-            />
-          </Card>
-        </>
-      ) : (
-        <>
-          <CustomBreadcrumbs
-            heading="Run Payroll"
-            links={[{ name: 'HR/Staff' }, { name: 'Payroll' }, { name: 'Run Payroll' }]}
-            sx={{ mb: 2 }}
-            description="Run payroll by selecting a date and organization, and verify details before processing."
-          />
-          {/* <StepsForPayroll /> */}
-
-          <Card sx={{ p: 2 }}>
-            <Typography variant="h6">Process Payroll For</Typography>
-            <Box sx={{ display: 'flex', gap: 2, mt: 2, mb: 2, alignItems: 'center' }}>
-              <DatePicker
-                label="Select Month *"
-                views={['month']}
-                format="MMMM"
-                value={month}
-                onChange={(newValue) => setMonth(newValue)}
-                slotProps={{ textField: { size: 'small' } }}
-                sx={{ width: '100%', maxWidth: '200px' }}
-              />
-              <FormControl sx={{ width: '100%', maxWidth: '200px' }}>
-                <InputLabel id="Roles-select-label" size="small">
-                  Organization *
-                </InputLabel>
-                <Select
-                  labelId="Roles-select-label"
-                  id="Roles-select"
-                  value={organization}
-                  label="Organization *"
-                  name="organization"
-                  size="small"
-                  onChange={(e) => setOrganization(e.target.value)}
-                >
-                  {medium?.educationMediumStages.length ? (
-                    medium?.educationMediumStages?.map((org: any) => (
-                      <MenuItem key={org.id} value={org.id}>
-                        {org.name}
-                      </MenuItem>
-                    ))
-                  ) : (
-                    <MenuItem value="">
-                      <em>No Organization Found</em>
-                    </MenuItem>
-                  )}
-                </Select>
-              </FormControl>
-
-              {/* Button aligned to the right */}
-              <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                <Button
-                  variant="contained"
-                  startIcon={<Iconify icon="uiw:pay" />}
-                  disabled={!month || !organization}
-                  onClick={() => {
-                    setOpen(true);
-                  }}
-                  size="small"
-                  sx={{ px: '32px' }}
-                >
-                  Run Payroll
-                </Button>
-              </Box>
-            </Box>
-            <Alert variant="outlined" severity="warning">
-              Please ensure all payroll data is accurate and verified before proceeding. Once
-              payroll is processed, any modifications may require additional steps.
-            </Alert>
-          </Card>
-          <Card sx={{ p: 2, mt: 2 }}>
+              size="small"
+              sx={{ px: '32px' }}
+            >
+              Run Payroll
+            </Button>
+          </Box>
+        </Box>
+        <Alert variant="outlined" severity="warning">
+          Please ensure all payroll data is accurate and verified before proceeding. Once payroll is
+          processed, any modifications may require additional steps.
+        </Alert>
+      </Card>
+      {month && (
+        <Card sx={{ p: 2, mt: 2 }}>
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'space-between' }}
+          >
             <Typography variant="h6">Employee Payable</Typography>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <CustomizableTable
-                  isFilter={false}
-                  isShowedDense={false}
-                  isPagination={false}
-                  isSearch={false}
-                  tableId="employee-payble-id"
-                  noDataText={<>No Employee Payble found</>}
-                  columns={[
-                    {
-                      id: 'employeePayble',
-                      label: 'Employee Payble',
-                      align: 'left',
-                      isFilter: false,
-                      isSort: false,
-                      render(value, row) {
-                        if (!value || typeof value !== 'object') return null; // Ensure value is an object
-                        return (
-                          <Box sx={{ display: 'flex', mt: 1, gap: 6 }}>
-                            {Object.entries(value).map(([key, val]) => (
-                              <Box
-                                key={key}
-                                sx={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'left',
-                                }}
-                              >
-                                <Typography variant="subtitle2">{key}</Typography>
-                                <Typography variant="caption">{String(val)}</Typography>
-                              </Box>
-                            ))}
-                          </Box>
-                        );
-                      },
-                    },
-                  ]}
-                  data={[
-                    {
-                      employeePayble: {
-                        BankTransfer: '₹68,0407.0',
-                        Cheques: '₹0.0',
-                        Cash: '₹68,0407.0',
-                        Total: '₹68,0407.0',
-                      },
-                    },
-                  ]}
-                />
-              </Grid>
+            <LoadingButton
+              variant="contained"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              onClick={() => {
+                generateAndLockPayroll({
+                  message: 'Payroll generated and locked successfully',
+                  month: month?.format('YYYY-MM'),
+                });
+              }}
+              loading={generateAndLockPayrollLoading}
+              size="small"
+              sx={{ px: '32px' }}
+            >
+              Submit
+            </LoadingButton>
+          </Box>
 
-              <Grid size={{ xs: 12, md: 6 }}>
-                <CustomizableTable
-                  noDataText={<>No PF Deduction found</>}
-                  isFilter={false}
-                  isShowedDense={false}
-                  isPagination={false}
-                  isSearch={false}
-                  tableId="pfDeduction-table-id"
-                  columns={[
-                    {
-                      id: 'pfDeduction',
-                      label: 'PF Deduction',
-                      align: 'left',
-                      isFilter: false,
-                      isSort: false,
-                      render(value, row) {
-                        if (!value || typeof value !== 'object') return null; // Ensure value is an object
-                        return (
-                          <Box sx={{ display: 'flex', mt: 1, gap: 6 }}>
-                            {Object.entries(value).map(([key, val]) => (
-                              <Box
-                                key={key}
-                                sx={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'left',
-                                }}
-                              >
-                                <Typography variant="subtitle2">{key}</Typography>
-                                <Typography variant="caption">{String(val)}</Typography>
-                              </Box>
-                            ))}
-                          </Box>
-                        );
-                      },
-                    },
-                  ]}
-                  data={[
-                    {
-                      pfDeduction: {
-                        Employee: '₹65',
-                        Employer: '₹40',
-                        Total: '₹98',
-                      },
-                    },
-                  ]}
-                />
-              </Grid>
-            </Grid>
-          </Card>
-        </>
+          <CustomizableTable
+            noDataText={<>No Data Found For Payroll</>}
+            tableId="employee-salary-table"
+            columns={[
+              {
+                id: 'employeeName',
+                label: 'Employee Name',
+                minWidth: '160px',
+                align: 'left',
+                render(value, row) {
+                  return (
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Avatar
+                        alt={value}
+                        src={convertBase64Format(row.profilePicture)}
+                        sx={{ height: 32, width: 32 }}
+                      />{' '}
+                      {value}
+                    </Box>
+                  );
+                },
+              },
+              { id: 'employeeId', label: 'Employee Code', minWidth: '150px', align: 'left' },
+              { id: 'employeeGroup', label: 'Employee Group', minWidth: '160px', align: 'left' },
+              {
+                id: 'basicSalary',
+                label: 'Basic Salary',
+                minWidth: '130px',
+                align: 'left',
+                filterType: 'number',
+              },
+              {
+                id: 'grossSalary',
+                label: 'Gross Salary',
+                minWidth: '130px',
+                align: 'left',
+                filterType: 'number',
+              },
+              {
+                id: 'totalDeduction',
+                label: 'Total Deduction',
+                minWidth: '150px',
+                align: 'left',
+                filterType: 'number',
+              },
+              {
+                id: 'netPayble',
+                label: 'Net Payble',
+                filterType: 'number',
+                minWidth: '130px',
+                align: 'left',
+              },
+            ]}
+            data={salaryData}
+          />
+        </Card>
       )}
 
       {/* <CustomDialog

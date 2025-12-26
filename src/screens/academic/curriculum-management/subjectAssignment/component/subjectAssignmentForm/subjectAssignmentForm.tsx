@@ -299,9 +299,6 @@ const SubjectAssignmentForm = ({
     formik.setFieldValue(`subjects.${index}.documents`, uploadedFiles);
   };
 
-  console.log('formik values---', formik.values);
-  console.log('formik erroes---', formik.errors);
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>

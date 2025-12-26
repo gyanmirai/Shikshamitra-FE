@@ -1,5 +1,7 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -8,6 +10,7 @@ import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -16,7 +19,9 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -72,6 +77,27 @@ const EarningComponent = () => {
     type: 'query',
     currentQueryAndMutation: useGetEarningComponentsQuery,
   });
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+  // Handles closing the incident form
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      isEarningComponentOpen.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      isEarningComponentOpen.onFalse();
+      setTimeout(() => {
+        setEditData(null);
+      }, 200);
+    }
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -196,13 +222,7 @@ const EarningComponent = () => {
           </Box>
         }
       >
-        <EarningComponentForm
-          editData={editData}
-          handleClose={() => {
-            isEarningComponentOpen.onFalse();
-            setEditData(null);
-          }}
-        />
+        <EarningComponentForm editData={editData} handleClose={handleClose} />
       </CustomDialog>
     </Box>
   );
@@ -276,7 +296,7 @@ const EarningComponentForm = ({
   handleClose,
 }: {
   editData: any;
-  handleClose: () => void;
+  handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
   const [addEarningComponent, { isLoading: addEarningComponentLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -327,15 +347,20 @@ const EarningComponentForm = ({
             isFixed: values.isFixed,
           }).unwrap();
         }
-        handleClose();
+        handleClose(null, true);
       } catch (error) {
         console.error(error);
       }
     },
   });
 
+  const { data: getEarningComponentsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEarningComponentsQuery,
+  });
+
   return (
-    <>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         {/* General Information */}
         <SectionCard
@@ -527,7 +552,7 @@ const EarningComponentForm = ({
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"
           variant="outlined"
-          onClick={handleClose}
+          onClick={(e: any) => handleClose(e, false)}
         >
           Cancel
         </Button>
@@ -542,6 +567,6 @@ const EarningComponentForm = ({
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
-    </>
+    </BackPopUpChecked>
   );
 };

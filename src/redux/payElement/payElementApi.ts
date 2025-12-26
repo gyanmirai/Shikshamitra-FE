@@ -1,46 +1,49 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
 
-export const payElementApi = createApi({
-  reducerPath: 'payElementApi',
+export const earningComponentApi = createApi({
+  reducerPath: 'earningComponentApi',
   baseQuery: axiosBaseQuery({
     baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/api`,
   }),
-  tagTypes: ['PayElement'],
+  tagTypes: ['EarningComponent'],
   endpoints: (builder) => ({
-    getPayElements: builder.query({
-      query: () => ({ url: '/app/pay-element' }),
-      providesTags: ['PayElement'],
+    getEarningComponents: builder.query({
+      query: () => ({ url: '/payroll/earning-components' }),
+      providesTags: ['EarningComponent'],
     }),
-    addPayElement: builder.mutation({
+
+    createEarningComponent: builder.mutation({
       query: (body) => ({
-        url: '/app/pay-element',
+        url: '/payroll/earning-components',
         method: 'POST',
         data: body,
       }),
-      invalidatesTags: ['PayElement'],
+      invalidatesTags: ['EarningComponent'],
     }),
-    updatePayElement: builder.mutation({
+
+    updateEarningComponent: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/pay-element/${id}`,
+        url: `/payroll/earning-components/${id}`,
         method: 'PUT',
         data: body,
       }),
-      invalidatesTags: ['PayElement'],
+      invalidatesTags: ['EarningComponent'],
     }),
-    deletePayElement: builder.mutation({
+
+    deleteEarningComponent: builder.mutation({
       query: (id) => ({
-        url: `/app/pay-element/${id}`,
+        url: `/payroll/earning-components/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['PayElement'],
+      invalidatesTags: ['EarningComponent'],
     }),
   }),
 });
 
 export const {
-  useAddPayElementMutation,
-  useDeletePayElementMutation,
-  useUpdatePayElementMutation,
-  useGetPayElementsQuery,
-} = payElementApi;
+  useGetEarningComponentsQuery,
+  useCreateEarningComponentMutation,
+  useUpdateEarningComponentMutation,
+  useDeleteEarningComponentMutation,
+} = earningComponentApi;

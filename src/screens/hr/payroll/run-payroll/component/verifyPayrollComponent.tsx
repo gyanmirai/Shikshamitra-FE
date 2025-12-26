@@ -193,7 +193,7 @@ const Attendance = ({ isFirstStep }: any) => {
     />
   );
 };
-const salaryData = [
+export const salaryData = [
   {
     employeeName: 'John Doe',
     profilePicture: '', // Provide a valid base64 string or image URL
