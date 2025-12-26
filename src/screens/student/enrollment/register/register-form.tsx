@@ -1,22 +1,30 @@
 import type { BoxProps } from '@mui/material';
 
 import { DatePicker } from '@mui/x-date-pickers';
-import React, { useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Grid, Slide, TextField } from '@mui/material';
 import { getBase64String } from 'src/utils/get-base64-string';
+import { LoadingScreen } from 'src/components/loading-screen';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
+  useGetBasicDetailsQuery,
+  useGetFamilyDetailsQuery,
+  useGetParentBankDetailsQuery,
   useUpdateBasicDetailsMutation,
   useUpdateFamilyDetailsMutation,
+  useGetPreviousSchoolDetailsQuery,
+  useGetStudentMedicalDetailsQuery,
   useAddStudentRegistrationMutation,
   useUpdateParentBankDetailsMutation,
+  useGetStudentAdditionalDetailsQuery,
   useUpdatePreviousSchoolDetailsMutation,
   useUpdateStudentMedicalDetailsMutation,
+  useGetStudentCommunicationDetailsQuery,
   useUpdateStudentAdditionalDetailsMutation,
   useUpdateStudentCommunicationDetailsMutation,
 } from 'src/redux/student/registration/registration-api';
@@ -120,7 +128,7 @@ const RegisterForm = ({
               middleName: values.middleName,
               lastName: values.lastName,
               dateOfBirth: dateConvertor(values.dob?.format(dateFormat) || '') || '',
-              gender: values.gender,
+              gender: +values.gender,
               profilePictureUrl: values.photo ? getBase64String(values.photo) : '',
               primaryContactNo: values.primaryContactNumber,
               secondaryContactNo: values.secondaryContactNumber,
@@ -143,7 +151,7 @@ const RegisterForm = ({
               pincode: String(values.pinCode),
               previousSchool: values.previousSchool,
               lastClassPassed: values.lastClassPassed,
-              educationMediumId: values.medium,
+              academicMediumId: values.medium,
               standardId: values.class,
 
               formNumber: values.formNo,
@@ -179,19 +187,19 @@ const RegisterForm = ({
             address2: values.addressLine2,
             address3: values.addressLine3,
             city: values?.city?.name,
-            state: values?.state?.name,
-            country: values?.country?.name,
+            state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+            country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
             pincode: String(values.pinCode),
             previousSchool: values.previousSchool,
             lastClassPassed: values.lastClassPassed,
-            educationMediumId: values.medium,
+            academicMediumId: values.medium,
             standardId: values.class,
 
             formNumber: values.formNo,
             // academicYearId: values.academicYear,
             // educationBoardId: values.board,
           }).unwrap();
-          formik.setFieldValue('id', resp?.id);
+          formik.setFieldValue('id', resp?.studentId);
         }
       } catch (error) {
         throw new Error(error);
@@ -373,6 +381,7 @@ const RegisterForm = ({
             weightKg: +values.weight,
             heightCm: +values.height,
             bodyMassIndex: +values.bmi,
+            pulseRate: +values.pulseRate,
             hemoglobin: +values.haemoglobin,
             allergies: values.allergies,
             covidVaccinationDoses: values.covidVaccination,
@@ -397,7 +406,7 @@ const RegisterForm = ({
             board: values.schoolBoard,
             medium: values.schoolMedium,
             tcNumber: values.tcNumber,
-            lastClassAttended: String(values.lastClassPassed),
+            lastClassAttended: String(values.previousClass),
             percentageObtained: +values.percentage,
           },
         }).unwrap();
@@ -594,202 +603,215 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
   // // Custom boolean hook to manage form dialog visibility
   // const formDialog = useBoolean();
 
-  const a = null;
+  const initializedStepsRef = useRef<Record<number, boolean>>({});
 
-  // const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetBasicDetailsQuery,
-  //   params: {
-  //     studentId: editData?.studentId,
-  //   },
-  //   options: {
-  //     skip: !(editData?.studentId && step === 0),
-  //   },
-  // });
+  const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBasicDetailsQuery,
+    params: {
+      studentId: editData?.studentId,
+    },
+    options: {
+      skip: !(editData?.studentId && step === 0),
+    },
+  });
 
-  // const { data: familyDetails, isLoading: familyDetailsLoading } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetFamilyDetailsQuery,
-  //   params: {
-  //     studentId: editData?.studentId,
-  //   },
-  //   options: {
-  //     skip: !(editData?.studentId && step === 2),
-  //   },
-  // });
-  // const { data: studentCommunicationDetails, isLoading: studentCommunicationDetailsLoading } =
-  //   useQueryAndMutation({
-  //     type: 'query',
-  //     currentQueryAndMutation: useGetStudentCommunicationDetailsQuery,
-  //     params: {
-  //       studentId: editData?.studentId,
-  //     },
-  //     options: {
-  //       skip: !(editData?.studentId && step === 3),
-  //     },
-  //   });
+  const { data: familyDetails, isLoading: familyDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFamilyDetailsQuery,
+    params: {
+      studentId: editData?.studentId,
+    },
+    options: {
+      skip: !(editData?.studentId && step === 2),
+    },
+  });
+  const { data: studentCommunicationDetails, isLoading: studentCommunicationDetailsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetStudentCommunicationDetailsQuery,
+      params: {
+        studentId: editData?.studentId,
+      },
+      options: {
+        skip: !(editData?.studentId && step === 3),
+      },
+    });
 
-  // const { data: studentAdditionalDetails, isLoading: studentAdditionalDetailsLoading } =
-  //   useQueryAndMutation({
-  //     type: 'query',
-  //     currentQueryAndMutation: useGetStudentAdditionalDetailsQuery,
-  //     params: {
-  //       studentId: editData?.studentId,
-  //     },
-  //     options: {
-  //       skip: !(editData?.studentId && step === 4),
-  //     },
-  //   });
+  const { data: studentAdditionalDetails, isLoading: studentAdditionalDetailsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetStudentAdditionalDetailsQuery,
+      params: {
+        studentId: editData?.studentId,
+      },
+      options: {
+        skip: !(editData?.studentId && step === 4),
+      },
+    });
 
-  // const { data: studentMedicalDetails, isLoading: studentMedicalDetailsLoading } =
-  //   useQueryAndMutation({
-  //     type: 'query',
-  //     currentQueryAndMutation: useGetStudentMedicalDetailsQuery,
-  //     params: {
-  //       studentId: editData?.studentId,
-  //     },
-  //     options: {
-  //       skip: !(editData?.studentId && step === 5),
-  //     },
-  //   });
-  // const { data: previousSchoolDetails, isLoading: previousSchoolDetailsLoading } =
-  //   useQueryAndMutation({
-  //     type: 'query',
-  //     currentQueryAndMutation: useGetPreviousSchoolDetailsQuery,
-  //     params: {
-  //       studentId: editData?.studentId,
-  //     },
-  //     options: {
-  //       skip: !(editData?.studentId && step === 6),
-  //     },
-  //   });
+  const { data: studentMedicalDetails, isLoading: studentMedicalDetailsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetStudentMedicalDetailsQuery,
+      params: {
+        studentId: editData?.studentId,
+      },
+      options: {
+        skip: !(editData?.studentId && step === 5),
+      },
+    });
+  const { data: previousSchoolDetails, isLoading: previousSchoolDetailsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetPreviousSchoolDetailsQuery,
+      params: {
+        studentId: editData?.studentId,
+      },
+      options: {
+        skip: !(editData?.studentId && step === 6),
+      },
+    });
 
-  // const { data: parentBankDetails, isLoading: parentBankDetailsLoading } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetParentBankDetailsQuery,
-  //   params: {
-  //     studentId: editData?.studentId,
-  //   },
-  //   options: {
-  //     skip: !(editData?.studentId && step === 7),
-  //   },
-  // });
+  const { data: parentBankDetails, isLoading: parentBankDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetParentBankDetailsQuery,
+    params: {
+      studentId: editData?.studentId,
+    },
+    options: {
+      skip: !(editData?.studentId && step === 7),
+    },
+  });
 
-  // useEffect(() => {
-  //   if (basicDetails?.data && step === 0) {
-  //     formik.resetForm({
-  //       values: { ...formik.initialValues, ...generalFieldsInitialValues(basicDetails?.data) },
-  //     });
-  //   } else if (familyDetails?.data && step === 2) {
-  //     formik.resetForm({
-  //       values: { ...formik.initialValues, ...familyFieldsInitialValues(familyDetails?.data) },
-  //     });
-  //   } else if (studentCommunicationDetails?.data && step === 3) {
-  //     formik.resetForm({
-  //       values: {
-  //         ...formik.initialValues,
-  //         ...CommunicationFieldsInitialValues(studentCommunicationDetails?.data),
-  //       },
-  //     });
-  //   } else if (studentAdditionalDetails?.data && step === 4) {
-  //     formik.resetForm({
-  //       values: {
-  //         ...formik.initialValues,
-  //         ...additionalDetailsInitialValues(studentAdditionalDetails?.data),
-  //       },
-  //     });
-  //   } else if (studentMedicalDetails?.data && step === 5) {
-  //     formik.resetForm({
-  //       values: {
-  //         ...formik.initialValues,
-  //         ...medicalFieldsInitialValues(studentMedicalDetails?.data),
-  //       },
-  //     });
-  //   } else if (previousSchoolDetails?.data && step === 6) {
-  //     formik.resetForm({
-  //       values: {
-  //         ...formik.initialValues,
-  //         ...previousSchoolFieldsInitialValues(previousSchoolDetails?.data),
-  //       },
-  //     });
-  //   } else if (parentBankDetails?.data && step === 7) {
-  //     formik.resetForm({
-  //       values: { ...formik.initialValues, ...bankDetailsInitialValues(parentBankDetails?.data) },
-  //     });
-  //   }
+  useEffect(() => {
+    if (initializedStepsRef.current[step]) return;
+    if (basicDetails?.data && step === 0) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...generalFieldsInitialValues(basicDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (familyDetails?.data && step === 2) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...familyFieldsInitialValues(familyDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (studentCommunicationDetails?.data && step === 3) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...CommunicationFieldsInitialValues(studentCommunicationDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (studentAdditionalDetails?.data && step === 4) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...additionalDetailsInitialValues(studentAdditionalDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (studentMedicalDetails?.data && step === 5) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...medicalFieldsInitialValues(studentMedicalDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (previousSchoolDetails?.data && step === 6) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...previousSchoolFieldsInitialValues(previousSchoolDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (parentBankDetails?.data && step === 7) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...bankDetailsInitialValues(parentBankDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    }
 
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [
-  //   basicDetails?.data,
-  //   familyDetails?.data,
-  //   parentBankDetails?.data,
-  //   previousSchoolDetails?.data,
-  //   step,
-  //   studentAdditionalDetails?.data,
-  //   studentCommunicationDetails?.data,
-  //   studentMedicalDetails?.data,
-  // ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    basicDetails?.data,
+    familyDetails?.data,
+    parentBankDetails?.data,
+    previousSchoolDetails?.data,
+    step,
+    studentAdditionalDetails?.data,
+    studentCommunicationDetails?.data,
+    studentMedicalDetails?.data,
+  ]);
 
-  // console.log(formik, 'basicDetails');
+  console.log(formik, 'basicDetails');
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
-        <Grid container spacing={2.5}>
-          {allFields[step].map((field: FieldsType) => (
-            <Grid size={4} key={field.name} {...(field.gridProps || {})}>
-              {field.renderComp ? (
-                field.renderComp({
-                  formik,
-                  field,
-                  isEdit: true,
-                  isMainForm: true,
-                  editData,
-                })
-              ) : field.type === 'date' ? (
-                <DatePicker
-                  label={field.label}
-                  name={field.name}
-                  value={formik.values[field.name]}
-                  format="DD-MM-YYYY"
-                  onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                  slotProps={{
-                    textField: {
-                      placeholder: field.placeholder,
-                      fullWidth: true,
-                      size: 'small',
-                      helperText: formik.touched[field.name] && formik.errors[field.name],
-                      error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
-                    },
-                  }}
-                />
-              ) : (
-                <ShakingTextField
-                  error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                >
-                  <TextField
-                    key={field.name}
-                    type={field.type}
-                    size="small"
+        {basicDetailsLoading ||
+        familyDetailsLoading ||
+        studentCommunicationDetailsLoading ||
+        studentAdditionalDetailsLoading ||
+        studentMedicalDetailsLoading ||
+        previousSchoolDetailsLoading ||
+        parentBankDetailsLoading ? (
+          <LoadingScreen />
+        ) : (
+          <Grid container spacing={2.5} sx={{ height: '100%' }}>
+            {allFields[step].map((field: FieldsType) => (
+              <Grid size={4} key={field.name} {...(field.gridProps || {})}>
+                {field.renderComp ? (
+                  field.renderComp({
+                    formik,
+                    field,
+                    isEdit: true,
+                    isMainForm: true,
+                    editData,
+                  })
+                ) : field.type === 'date' ? (
+                  <DatePicker
                     label={field.label}
                     name={field.name}
-                    placeholder={field.placeholder}
                     value={formik.values[field.name]}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                    helperText={formik.touched[field.name] && formik.errors[field.name]}
-                    fullWidth
-                    // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                    {...((typeof field?.otherProps === 'function'
-                      ? field?.otherProps({ formik })
-                      : field?.otherProps) || {})}
+                    format="DD-MM-YYYY"
+                    onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                    slotProps={{
+                      textField: {
+                        placeholder: field.placeholder,
+                        fullWidth: true,
+                        size: 'small',
+                        helperText: formik.touched[field.name] && formik.errors[field.name],
+                        error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
+                      },
+                    }}
                   />
-                </ShakingTextField>
-              )}
-            </Grid>
-          ))}
-        </Grid>
+                ) : (
+                  <ShakingTextField
+                    error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                  >
+                    <TextField
+                      key={field.name}
+                      type={field.type}
+                      size="small"
+                      label={field.label}
+                      name={field.name}
+                      placeholder={field.placeholder}
+                      value={formik.values[field.name]}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                      helperText={formik.touched[field.name] && formik.errors[field.name]}
+                      fullWidth
+                      // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                      {...((typeof field?.otherProps === 'function'
+                        ? field?.otherProps({ formik })
+                        : field?.otherProps) || {})}
+                    />
+                  </ShakingTextField>
+                )}
+              </Grid>
+            ))}
+          </Grid>
+        )}
       </FormSlider>
     </BackPopUpChecked>
   );

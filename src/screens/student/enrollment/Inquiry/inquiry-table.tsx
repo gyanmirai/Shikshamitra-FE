@@ -48,8 +48,6 @@ const InquiryTable = ({
     },
   });
 
-  console.log(inquiryData, 'inquiryData');
-
   const tableData = useMemo(
     () =>
       inquiryData?.data?.items.map((item: IInquiryResponse) => ({
@@ -228,7 +226,7 @@ const InquiryTable = ({
             align: 'left',
           },
           {
-            id: 'lastFollowUpDate',
+            id: 'nextReminderDate',
             label: 'Next Reminder Date',
             minWidth: '180px',
             align: 'left',

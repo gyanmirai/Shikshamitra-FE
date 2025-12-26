@@ -11,8 +11,8 @@ export interface IStudentDocument {
 export interface ISlot {
   id?: string;
   slotName?: string | null;
-  startDate?: string | Date | null;
-  endDate?: string | Date | null;
+  startTime?: string | Date | null;
+  endTime?: string | Date | null;
   studentLimit?: number | null;
   duration?: number | null; // Duration in minutes
   roomNo?: string | null;
