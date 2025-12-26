@@ -1,6 +1,5 @@
 // SubjectTable.tsx
 
-import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import { useCallback } from 'react';
@@ -42,7 +41,6 @@ const SubjectTable = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
-    params: { academicMediumId: (medium as Medium)?.id, classId },
   });
   const theme = useTheme();
   console.log('data---', data);

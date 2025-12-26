@@ -1,5 +1,7 @@
 import { Box, Grid } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
+import { useGetSubjectAssignmentDocumentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import type { ISubjectDetail } from '../type';
 
@@ -42,22 +44,26 @@ export const documentsList = [
   },
 ];
 // Documents panel content
-const SubjectDocument = ({ subject }: { subject: ISubjectDetail | null }) => (
-  // State to manage subject documents data
-
-  // const [] = useState(subjectDocumentsData);
-  // <Card sx={{ height: '100%' }}>
-  //   <CardContent sx={{ p: 2 }}>
-  <Box>
-    <Grid container spacing={2}>
-      {documentsList.map((doc: any, index: number) => (
-        <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
-          <DocumentCard file={doc} />
-        </Grid>
-      ))}
-    </Grid>
-  </Box>
-  //   </CardContent>
-  // </Card>
-);
+const SubjectDocument = ({ subject }: { subject: ISubjectDetail | null }) => {
+  const {
+    data: documents,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentDocumentsQuery,
+    params: { subjectAssignmentId: subject?.subjectAssignmentId, subjectId: subject?.id },
+  });
+  return (
+    <Box>
+      <Grid container spacing={2}>
+        {documentsList.map((doc: any, index: number) => (
+          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={index}>
+            <DocumentCard file={doc} />
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
+  );
+};
 export default SubjectDocument;

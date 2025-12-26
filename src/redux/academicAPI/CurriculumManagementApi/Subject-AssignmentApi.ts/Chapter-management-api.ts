@@ -2,12 +2,11 @@ import { academicApi } from '../../academicApi';
 
 export const chaptersApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
-    // GET - Fetch all chapters of a subject under a standard
+    // GET - Fetch all chapters of a subject
     getChapters: builder.query({
-      query: ({ academicMediumId, standardId, subjectId }) => ({
-        url: `/chapters`,
+      query: ({ subjectId }) => ({
+        url: `/subjects/${subjectId}/chapters`,
         method: 'GET',
-        params: { academicMediumId, standardId, subjectId }, // ✔ QUERY param
       }),
       providesTags: ['Chapter'],
     }),
@@ -15,9 +14,10 @@ export const chaptersApi = academicApi.injectEndpoints({
     // POST - Create new chapter
     addChapter: builder.mutation({
       query: (body) => ({
-        url: `/chapters`,
+        url: `/subjects/${body.subjectId}/chapters`,
         method: 'POST',
         data: body,
+        params: { subjectId: body.subjectId, classId: body.classId },
       }),
       invalidatesTags: ['Chapter'],
     }),

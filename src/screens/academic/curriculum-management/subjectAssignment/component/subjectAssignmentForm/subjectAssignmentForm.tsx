@@ -110,19 +110,16 @@ const SubjectAssignmentForm = ({
     // Handle form submission
     onSubmit: async (values, formikHelpers) => {
       try {
-        // Transform the form values to the payload structure
         const subjectsPayload = values.subjects.map((subj) => ({
-          assignedSubjectId: subj.subjectId,
-          subjectType: subj.subjectType,
-          electiveGroupId: subj.electiveGroupId,
-          // subjectName: subj.subjectName,
+          subjectId: subj.subjectId, // ✅ required
+          electiveGroupId: subj.electiveGroupId || null, // ✅ UUID or null
           subjectCode: subj.subjectCode,
-          primaryTeacher: subj.primaryTeacher, // Map back to Id
-          secondaryTeachers: subj.secondaryTeacher, // Map back to Ids
+          documents: subj.documents || [],
           learningGoal: subj.learningGoal,
           prerequisites: subj.prerequisites,
           description: subj.description,
-          documents: subj.documents,
+          primaryTeacherId: subj.primaryTeacher || null,
+          secondaryTeacherId: subj.secondaryTeacher || [],
         }));
 
         const payload = {
@@ -145,15 +142,12 @@ const SubjectAssignmentForm = ({
         } else {
           await addSubjectAssignment(finalPayload).unwrap();
 
-          if (values.status === 0) {
-            shikshaMitraToast.success({
-              message: `Subject Assignment saved as draft for class ${values.className}`,
-            });
-          } else {
-            shikshaMitraToast.success({
-              message: `Subject Assignment published successfully for class ${values.className}`,
-            });
-          }
+          shikshaMitraToast.success({
+            message:
+              values.status === 0
+                ? `Subject Assignment saved as draft for class ${values.className}`
+                : `Subject Assignment published successfully for class ${values.className}`,
+          });
         }
 
         onClose(null, true);

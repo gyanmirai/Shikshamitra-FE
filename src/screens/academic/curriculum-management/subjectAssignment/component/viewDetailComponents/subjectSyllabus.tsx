@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -41,19 +40,14 @@ const chapters = [
 ];
 
 const SubjectSyllabus = ({ subject }: { subject: ISubjectDetail }) => {
-  const queryParams = useMemo(
-    () => ({ subjectId: subject?.id, classId: subject?.classId }),
-    [subject]
-  );
-
   const {
-    data: chapterResponse,
+    data: chaptersData,
     isLoading,
     isFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChaptersQuery,
-    params: queryParams,
+    params: { subjectId: subject?.id },
   });
   return (
     <Box sx={{ height: '100%', overflow: 'hidden' }}>

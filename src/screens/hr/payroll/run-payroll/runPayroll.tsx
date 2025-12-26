@@ -24,13 +24,16 @@ const RunPayroll = () => {
   const isPayrollOpen = useBoolean();
   const [month, setMonth] = useState<Dayjs | null>(null);
 
-  // const organizationValue = medium?.educationMediumStages?.find(
-  //   (org: any) => org?.id === organization
-  // );
-  const { data: getRunPayrollPreviewData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetRunPayrollPreviewQuery,
-  });
+  const { data: getRunPayrollPreviewData, isLoading: getRunPayrollPreviewLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetRunPayrollPreviewQuery,
+      params: { month: month?.format('MMMM-YYYY').toUpperCase() },
+      options: {
+        skip: !month,
+      },
+    });
+  // console.log("getRunPayrollPreviewData---", getRunPayrollPreviewData)
   const [generateAndLockPayroll, { isLoading: generateAndLockPayrollLoading }] =
     useQueryAndMutation({
       type: 'mutation',
@@ -43,7 +46,7 @@ const RunPayroll = () => {
         heading="Run Payroll"
         links={[{ name: 'HR/Staff' }, { name: 'Payroll' }, { name: 'Run Payroll' }]}
         sx={{ mb: 2 }}
-        description="Run payroll by selecting a date and organization, and verify details before processing."
+        description="Run payroll by selecting a month, and verify details before processing."
       />
       {/* <StepsForPayroll /> */}
 
@@ -55,25 +58,29 @@ const RunPayroll = () => {
             views={['month']}
             format="MMMM"
             value={month}
-            onChange={(newValue) => setMonth(newValue)}
+            onChange={(newValue) => {
+              setMonth(newValue);
+            }}
             slotProps={{ textField: { size: 'small' } }}
             sx={{ width: '100%', maxWidth: '200px' }}
           />
 
           {/* Button aligned to the right */}
           <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              variant="contained"
-              startIcon={<Iconify icon="uiw:pay" />}
-              disabled={!month}
-              onClick={() => {
-                isPayrollOpen.onTrue();
-              }}
-              size="small"
-              sx={{ px: '32px' }}
-            >
-              Run Payroll
-            </Button>
+            {!getRunPayrollPreviewData?.data?.isGenerated && (
+              <Button
+                variant="contained"
+                startIcon={<Iconify icon="uiw:pay" />}
+                disabled={!month}
+                onClick={() => {
+                  isPayrollOpen.onTrue();
+                }}
+                size="small"
+                sx={{ px: '32px' }}
+              >
+                Run Payroll
+              </Button>
+            )}
           </Box>
         </Box>
         <Alert variant="outlined" severity="warning">
@@ -93,7 +100,7 @@ const RunPayroll = () => {
               onClick={() => {
                 generateAndLockPayroll({
                   message: 'Payroll generated and locked successfully',
-                  month: month?.format('YYYY-MM'),
+                  month: month?.format('MMMM-YYYY').toUpperCase(),
                 });
               }}
               loading={generateAndLockPayrollLoading}
@@ -107,6 +114,7 @@ const RunPayroll = () => {
           <CustomizableTable
             noDataText={<>No Data Found For Payroll</>}
             tableId="employee-salary-table"
+            isLoading={getRunPayrollPreviewLoading}
             columns={[
               {
                 id: 'employeeName',
