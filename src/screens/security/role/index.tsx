@@ -1,16 +1,17 @@
 'use client';
 
+import _ from 'lodash';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useRef, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -31,7 +32,6 @@ import {
 import {
   Box,
   Button,
-  Divider,
   MenuList,
   MenuItem,
   TextField,
@@ -56,6 +56,8 @@ const RoleScreen = () => {
   const [editData, setEditData] = useState<any>(null);
   // State for storing role data being deleted
   const [deleteInformation, setDeleteInformation] = useState<any>(null);
+
+  const visibilityDialog = useBoolean();
 
   // Query hook for fetching all roles
   const { data: roles, isLoading } = useQueryAndMutation({
@@ -99,6 +101,7 @@ const RoleScreen = () => {
             variant="contained"
             onClick={() => setOpen(true)}
             size="small"
+            sx={{ px: '32px' }}
           >
             Role
           </Button>
@@ -178,6 +181,16 @@ const RoleScreen = () => {
                     <MenuItem
                       onClick={() => {
                         setEditData(data);
+                        pop.onClose();
+                        visibilityDialog.onTrue();
+                      }}
+                    >
+                      <Iconify icon="material-symbols:beenhere-outline" />
+                      Set Visibility
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        setEditData(data);
                         permissionDialog.onTrue();
                         pop.onClose();
                       }}
@@ -210,7 +223,6 @@ const RoleScreen = () => {
         }
         handleClose={handleClose}
         open={open}
-        fullScreen
       >
         <RoleForm handleClose={handleClose} editData={editData} />
       </CustomDialog>
@@ -240,6 +252,14 @@ const RoleScreen = () => {
           providerName="R"
         />
       </CustomDialog>
+      <CustomDialog
+        fullScreen
+        title={`Set Visibility for ${editData?.name}`}
+        open={visibilityDialog.value}
+        handleClose={visibilityDialog.onFalse}
+      >
+        <VisibilityForm editData={editData} handleClose={visibilityDialog.onFalse} />
+      </CustomDialog>
     </Box>
   );
 };
@@ -260,24 +280,24 @@ export function extractGrantedPermissions(groups: any): { name: string; isGrante
 const RoleForm = ({ handleClose, editData }: any) => {
   // State to store all permissions data
 
-  const [visibility, setVisibility] = useState<{ name: string; isGranted: boolean }[]>([]);
+  // const [visibility, setVisibility] = useState<{ name: string; isGranted: boolean }[]>([]);
 
   // Query hook to fetch permission data based on role name
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: _permissionData, isLoading: isPermissionLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetPermissionsQuery,
-    params: { providerName: 'R', providerKey: editData?.name },
-    options: {
-      skip: !editData,
-    },
-  });
+  // const { data: _permissionData, isLoading: isPermissionLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetPermissionsQuery,
+  //   params: { providerName: 'R', providerKey: editData?.name },
+  //   options: {
+  //     skip: !editData,
+  //   },
+  // });
 
-  useEffect(() => {
-    if (_permissionData?.groups?.length > 0) {
-      setVisibility(extractGrantedPermissions(_permissionData?.groups));
-    }
-  }, [_permissionData]);
+  // useEffect(() => {
+  //   if (_permissionData?.groups?.length > 0) {
+  //     setVisibility(extractGrantedPermissions(_permissionData?.groups));
+  //   }
+  // }, [_permissionData]);
 
   // Mutation hook to update permissions
   const [updatePermission, { isLoading: isUpdatePermissionLoading }] = useQueryAndMutation({
@@ -289,10 +309,6 @@ const RoleForm = ({ handleClose, editData }: any) => {
   const [addRole, { isLoading, isSuccess }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddRoleMutation,
-    popupConfig: {
-      successMessage: 'Role Created successfully',
-      success: true,
-    },
   });
 
   // Mutation hook to update existing role with success message
@@ -327,20 +343,20 @@ const RoleForm = ({ handleClose, editData }: any) => {
             isPublic: false,
           });
         }
-        await updatePermission({
-          providerName: 'R',
-          providerKey: values.role,
-          data: {
-            permissions: visibility,
-          },
-        });
+        // await updatePermission({
+        //   providerName: 'R',
+        //   providerKey: values.role,
+        //   data: {
+        //     permissions: visibility,
+        //   },
+        // });
         if (editData) {
           shikshaMitraToast.success({
-            message: 'Updated role and its visibility successfully',
+            message: `${editData.name} to ${values.role} role updated successfully`,
           });
         } else {
           shikshaMitraToast.success({
-            message: 'Created role and its visibility successfully',
+            message: `${values.role} role created successfully`,
           });
         }
         handleClose();
@@ -357,49 +373,26 @@ const RoleForm = ({ handleClose, editData }: any) => {
           flexDirection: 'column',
           minHeight: '0',
           height: '100%',
-        }}
-        scrollBarProps={{
-          sx: {
-            '& .simplebar-content': {
-              height: '100%',
-            },
-          },
+          py: 2,
         }}
       >
-        <Box sx={{ pt: 2 }}>
-          <ShakingTextField error={formik.touched.role && !!formik.errors.role}>
-            <TextField
-              label="Role Name"
-              name="role"
-              size="small"
-              disabled={isSuccess}
-              value={formik.values.role}
-              onChange={formik.handleChange}
-              error={formik.touched.role && !!formik.errors.role}
-              helperText={(formik.touched.role && formik.errors.role) || ''}
-              sx={{ maxWidth: 300, width: '100%' }}
-              onBlur={formik.handleBlur}
-            />
-          </ShakingTextField>
-        </Box>
-        <Divider sx={{ mt: 1 }} />
-        {/* <AssignModule allPermissions={allPermissions} setAllPermissions={setAllPermissions} /> */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 2 }}>
-          <Typography color="primary.main" variant="subtitle1">
-            Set Module Visibility
-          </Typography>
-          <Button
-            variant="outlined"
+        <ShakingTextField error={formik.touched.role && !!formik.errors.role}>
+          <TextField
+            label="Role Name"
+            name="role"
             size="small"
-            startIcon={<Iconify icon="fluent:bot-sparkle-24-filled" />}
-            onClick={() => {
-              // setVisibilityOpen(true);
-            }}
-          >
-            MIRU Visibility
-          </Button>
-        </Box>
-        {isPermissionLoading ? (
+            disabled={isSuccess}
+            value={formik.values.role}
+            onChange={formik.handleChange}
+            error={formik.touched.role && !!formik.errors.role}
+            helperText={(formik.touched.role && formik.errors.role) || ''}
+            fullWidth
+            sx={{ width: '100%' }}
+            onBlur={formik.handleBlur}
+          />
+        </ShakingTextField>
+
+        {/* {isPermissionLoading ? (
           <Box
             sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}
           >
@@ -407,7 +400,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
           </Box>
         ) : (
           <Visibility visibility={visibility} setVisibility={setVisibility} />
-        )}
+        )} */}
       </DialogScrollContent>
       <DialogActions>
         <CancelButton onClick={handleClose} />
@@ -417,6 +410,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
           loading={isLoading || isUpdateLoading || isUpdatePermissionLoading}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={() => formik.handleSubmit()}
+          type="submit"
         >
           Submit
         </LoadingButton>
@@ -434,6 +428,7 @@ export const PermissionForm = ({
   editData: any;
   providerName: string;
 }) => {
+  const initialData = useRef<{ name: string; isGranted: boolean }[]>([]);
   const [permissioNData, setPermissionData] = useState<{ name: string; isGranted: boolean }[]>([]);
 
   // Mutation hook to update permissions
@@ -452,6 +447,7 @@ export const PermissionForm = ({
           permissionData={permissioNData}
           setPermissionData={setPermissionData}
           providerName={providerName}
+          initialData={initialData}
         />
       </DialogScrollContent>
       <DialogActions>
@@ -462,15 +458,107 @@ export const PermissionForm = ({
           loading={isUpdatePermissionLoading}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={async () => {
+            const diff = _.differenceWith(permissioNData, initialData.current, _.isEqual);
             await updatePermission({
               providerName,
               providerKey: providerName === 'R' ? editData?.name : editData?.id,
               data: {
-                permissions: permissioNData,
+                permissions: diff,
               },
             });
             shikshaMitraToast.success({
               message: 'Updated Permissions successfully',
+            });
+            handleClose();
+          }}
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
+    </>
+  );
+};
+
+const VisibilityForm = ({ editData, handleClose }: any) => {
+  const initialData = useRef<{ name: string; isGranted: boolean }[]>([]);
+  const [visibilityData, setVisibilityData] = useState<{ name: string; isGranted: boolean }[]>([]);
+  // Mutation hook to update permissions
+  const [updatePermission, { isLoading: isUpdatePermissionLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdatePermissionMutation,
+  });
+
+  // Query hook to fetch permission data based on role name
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: _permissionData, isLoading: isPermissionLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetPermissionsQuery,
+    params: { providerName: 'R', providerKey: editData?.name },
+    options: {
+      skip: !editData,
+    },
+  });
+
+  useEffect(() => {
+    if (_permissionData?.groups?.length > 0) {
+      const init = extractGrantedPermissions(_permissionData?.groups);
+      setVisibilityData(init);
+      initialData.current = init;
+    }
+  }, [_permissionData]);
+
+  return (
+    <>
+      <DialogScrollContent
+        sx={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+        scrollBarProps={{
+          sx: {
+            overflow: 'hidden',
+            '.simplebar-content': {
+              height: '100%',
+            },
+          },
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 2 }}>
+          <Typography color="primary.main" variant="subtitle1">
+            Set Module Visibility
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Iconify icon="fluent:bot-sparkle-24-filled" />}
+            onClick={() => {
+              // setVisibilityOpen(true);
+            }}
+          >
+            MIRU Visibility
+          </Button>
+        </Box>
+        {isPermissionLoading ? (
+          <CircularProgress />
+        ) : (
+          <Visibility setVisibility={setVisibilityData} visibility={visibilityData} />
+        )}
+      </DialogScrollContent>
+      <DialogActions>
+        <CancelButton onClick={handleClose} />
+        <LoadingButton
+          size="small"
+          variant="contained"
+          loading={isUpdatePermissionLoading}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          onClick={async () => {
+            const diff = _.differenceWith(visibilityData, initialData.current, _.isEqual);
+            await updatePermission({
+              providerName: 'R',
+              providerKey: editData?.name,
+              data: {
+                permissions: diff,
+              },
+            });
+            shikshaMitraToast.success({
+              message: 'Updated Visibility successfully',
             });
             handleClose();
           }}

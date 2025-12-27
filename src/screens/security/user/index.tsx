@@ -1,13 +1,14 @@
 'use client';
 
+import _ from 'lodash';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetUsersQuery } from 'src/redux/user/userApi';
+import React, { useRef, useState, useEffect } from 'react';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -150,7 +151,7 @@ const UserManagementScreen = () => {
         <PermissionForm editData={user} handleClose={dialog.onFalse} providerName="U" />
       </CustomDialog>
       <CustomDialog
-        maxWidth="md"
+        fullScreen
         title="Academic Permission"
         open={academicDialog.value}
         handleClose={academicDialog.onFalse}
@@ -171,6 +172,7 @@ const UserManagementScreen = () => {
 export default UserManagementScreen;
 
 const VisibilityForm = ({ editData, handleClose }: any) => {
+  const initialData = useRef<{ name: string; isGranted: boolean }[]>([]);
   const [visibilityData, setVisibilityData] = useState<{ name: string; isGranted: boolean }[]>([]);
   // Mutation hook to update permissions
   const [updatePermission, { isLoading: isUpdatePermissionLoading }] = useQueryAndMutation({
@@ -190,7 +192,9 @@ const VisibilityForm = ({ editData, handleClose }: any) => {
   });
   useEffect(() => {
     if (_permissionData?.groups?.length > 0) {
-      setVisibilityData(extractGrantedPermissions(_permissionData?.groups));
+      const init = extractGrantedPermissions(_permissionData?.groups);
+      setVisibilityData(init);
+      initialData.current = init;
     }
   }, [_permissionData]);
   return (
@@ -213,11 +217,12 @@ const VisibilityForm = ({ editData, handleClose }: any) => {
           loading={isUpdatePermissionLoading}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={async () => {
+            const diff = _.differenceWith(visibilityData, initialData.current, _.isEqual);
             await updatePermission({
               providerName: 'U',
               providerKey: editData?.id,
               data: {
-                permissions: visibilityData,
+                permissions: diff,
               },
             });
             shikshaMitraToast.success({

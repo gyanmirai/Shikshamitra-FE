@@ -92,6 +92,7 @@ const TemplatesManagement = (props: TabComponentType) => {
               startIcon={<Add />}
               variant="contained"
               onClick={() => setOpen(true)}
+              sx={{ px: '32px' }}
             >
               Template
             </Button>
@@ -100,7 +101,7 @@ const TemplatesManagement = (props: TabComponentType) => {
       )}
 
       {open ? (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-10)', minHeight: 0 }}>
           <NotificationTemplateForm
             editData={editingTemplate}
             open={open}

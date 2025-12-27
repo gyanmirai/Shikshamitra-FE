@@ -1,18 +1,25 @@
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useCallback } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ScheduleExamStatus } from 'src/enums/schedule-exam-status';
 import { Box, Tab, Tabs, Button, MenuList, MenuItem } from '@mui/material';
+import {
+  useGetExamsQuery,
+  usePublishExamMutation,
+} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import ViewTimetableComp from './viewTimetableComp';
 
@@ -24,26 +31,57 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   editData,
   setEditData,
   onDelete,
-  data,
   onViewTimetable,
   isScheduleExamButton = true,
   isAction = true,
 }) => {
   const publishExamDialog = useBoolean();
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const getExams = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExamsQuery,
+    params: {
+      academicMediumId: medium?.id,
+    },
+  });
 
+  const [publishExam] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePublishExamMutation,
+  });
   // Initialize tabs with default value of 'Pending'
   const tabs = useTabs(ScheduleExamStatus.Pending);
   // Add this outside your component
   // const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
-  const [selectedTimetableName, setSelectedTimetableName] = useState<string | null>(null);
+  const [selectedTimetable, setSelectedTimetable] = useState<IExamFormValues | null>(null);
+
+  const handlePublishExam = async () => {
+    try {
+      if (selectedTimetable?.id) {
+        await publishExam({
+          examId: selectedTimetable.id,
+          body: { status: 1 }, // Published status
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Exam Time Table Published Successfully' });
+        publishExamDialog.onFalse();
+        setSelectedTimetable(null);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   // Calculate counts of exams by status
   const examCounts = useMemo(
     () => ({
-      pending: data?.filter((i) => i.status === ScheduleExamStatus.Pending)?.length || 0,
-      completed: data?.filter((i) => i.status === ScheduleExamStatus.Completed)?.length || 0,
+      pending:
+        getExams?.data?.data?.filter((i: any) => i.status === ScheduleExamStatus.Pending)?.length ||
+        0,
+      completed:
+        getExams?.data?.data?.filter((i: any) => i.status === ScheduleExamStatus.Completed)
+          ?.length || 0,
     }),
-    [data]
+    [getExams?.data?.data]
   );
 
   // Define tab configuration with labels, values, counts and colors
@@ -61,8 +99,16 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         count: examCounts.completed,
         color: 'success',
       },
+      {
+        label: 'Published',
+        value: ScheduleExamStatus.Published,
+        count:
+          getExams?.data?.data?.filter((i: any) => i.status === ScheduleExamStatus.Published)
+            ?.length || 0,
+        color: 'info',
+      },
     ],
-    [examCounts]
+    [examCounts, getExams?.data?.data]
   );
 
   // Handle tab change event
@@ -72,8 +118,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
   // Filter table data based on selected tab value
   const tableData = useMemo(
-    () => data?.filter((i: any) => i.status === tabs.value),
-    [data, tabs.value]
+    () => getExams?.data?.data?.filter((i: any) => i.status === tabs.value),
+    [getExams?.data?.data, tabs.value]
   );
 
   // Actions component for the three dots menu
@@ -96,16 +142,18 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
           {/* Menu item for publishing the timetable 
               Sets the selected timetable name and shows confirmation dialog */}
-          <MenuItem
-            onClick={() => {
-              publishExamDialog.onTrue();
-              setSelectedTimetableName(row.examName);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon={GlobalIcons.publish} />
-            Publish Timetable
-          </MenuItem>
+          {row.status === ScheduleExamStatus.Pending && (
+            <MenuItem
+              onClick={() => {
+                publishExamDialog.onTrue();
+                setSelectedTimetable(row);
+                pop.onClose();
+              }}
+            >
+              <Iconify icon={GlobalIcons.publish} />
+              Publish Timetable
+            </MenuItem>
+          )}
         </MenuList>
       </>
     ),
@@ -151,9 +199,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             onClick={() => {
               setOpenDialog?.(true);
             }}
-            sx={{
-              mt: 2,
-            }}
+            sx={{ px: '32px' }}
           >
             Schedule Exam
           </Button>
@@ -162,6 +208,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       {isAction ? (
         <CustomizableTable
           tableId="schedule-exam-table"
+          isLoading={getExams?.isLoading}
           noDataText={
             <>
               Exam Data Not Found{' '}
@@ -200,7 +247,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               id: 'divisions',
               label: 'Divisions',
               align: 'left',
-              render: (value) => <Box>{value.join(', ')}</Box>,
+              render: (value) => <Box>{(value || []).join(', ')}</Box>,
             },
             { id: 'createdBy', label: 'Created By', align: 'left' },
             {
@@ -219,7 +266,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                     // showViewIcon
                     showDeleteIcon
                     showEditIcon
-                    handleDeleteClick={() => {}}
+                    handleDeleteClick={() => {
+                      onDelete?.(row as IExamFormValues);
+                    }}
                     handleEditClick={() => {
                       setOpenDialog?.(true);
                       setEditData?.(row as IExamFormValues);
@@ -229,11 +278,12 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               },
             },
           ]}
-          data={tableData}
+          data={tableData || []}
         />
       ) : (
         <CustomizableTable
           tableId="schedule-exam-table"
+          isLoading={getExams?.isLoading}
           noDataText={
             <>
               Exam Data Not Found{' '}
@@ -272,11 +322,11 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               id: 'divisions',
               label: 'Divisions',
               align: 'left',
-              render: (value) => <Box>{value.join(', ')}</Box>,
+              render: (value) => <Box>{(value || []).join(', ')}</Box>,
             },
             { id: 'createdBy', label: 'Created By', align: 'left' },
           ]}
-          data={tableData}
+          data={tableData || []}
         />
       )}
 
@@ -285,14 +335,14 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         onClose={() => {
           publishExamDialog.onFalse();
           // setSelectedAssignment(null);
-          setSelectedTimetableName(null);
+          setSelectedTimetable(null);
         }}
         title="Publish"
         content={
           <>
             Are you sure you want to publish{' '}
             <Box component="span" fontWeight="bold" color="text.primary">
-              {selectedTimetableName}
+              {selectedTimetable?.examName}
             </Box>
             ?
           </>
@@ -301,11 +351,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           <Button
             variant="contained"
             startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {
-              shikshaMitraToast.success({ message: 'Exam Time Table Published Successfully' });
-              publishExamDialog.onFalse();
-              setSelectedTimetableName(null);
-            }}
+            onClick={handlePublishExam}
             size="small"
           >
             Publish

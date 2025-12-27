@@ -4,9 +4,9 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/employee/employeeApi';
 import {
@@ -70,8 +70,8 @@ const ChangeStatusForm = ({
   const theme = useTheme();
 
   return (
-    <Box component="form" onSubmit={formik.handleSubmit}>
-      <Scrollbar sx={{ p: 2, bgcolor: 'background.neutral' }}>
+    <>
+      <DialogScrollContent>
         <Stack spacing={2}>
           <Autocomplete
             options={options}
@@ -126,7 +126,7 @@ const ChangeStatusForm = ({
             rows={4}
           />
         </Stack>
-      </Scrollbar>
+      </DialogScrollContent>
       <DialogActions>
         <Button
           variant="outlined"
@@ -142,11 +142,12 @@ const ChangeStatusForm = ({
           variant="contained"
           type="submit"
           size="small"
+          onClick={(e: any) => formik.handleSubmit(e)}
         >
           Update
         </LoadingButton>
       </DialogActions>
-    </Box>
+    </>
   );
 };
 

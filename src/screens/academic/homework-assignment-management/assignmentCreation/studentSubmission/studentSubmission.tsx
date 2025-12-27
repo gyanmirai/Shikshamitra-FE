@@ -13,6 +13,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, MenuList, MenuItem, Checkbox, Typography } from '@mui/material';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
@@ -21,6 +22,7 @@ import {
   ScheduleExamStatusColor,
   ScheduleExamStatusOptions,
 } from 'src/enums/schedule-exam-status';
+import { useGetAssignmentSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 
 import AssignGrade from './assignMarksForm';
 import AssignMarksForText from './assignMarksForText';
@@ -30,11 +32,29 @@ import type { TStudentGrade } from '../../homeworkCreation/type';
 
 export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   selectedAssignment,
-  handleBulkUpdate,
+  selectedClass,
+  selectedDivision,
+  selectedSubject,
 }) => {
   // Local state for selected students
-  const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
+  const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
+  const {
+    data: assignmentSubmissions,
+    isLoading: isSubmissionsLoading,
+    refetch: refetchAssignmentSubmissions,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignmentSubmissionsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      ClassId: selectedClass,
+      DivisionId: selectedDivision,
+      SubjectId: selectedSubject,
+      AssignmentId: selectedAssignment?.id,
+    },
+  });
   // State to track the currently selected student for individual grading
   const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>(null);
 

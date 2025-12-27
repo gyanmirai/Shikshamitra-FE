@@ -10,17 +10,28 @@ import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
+import { Scrollbar } from 'src/components/scrollbar';
 import React, { useMemo, useState, useEffect } from 'react';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Chip, Button, Checkbox, Typography } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetAccessControlQuery,
   useAddAccessControlMutation,
 } from 'src/redux/employee/employeeApi';
+import {
+  Box,
+  Card,
+  Chip,
+  Grid,
+  Button,
+  Checkbox,
+  Typography,
+  CardHeader,
+  DialogActions,
+} from '@mui/material';
 
 // Main screen component for access control functionality
 const AccessControlScreen = () => {
@@ -43,12 +54,12 @@ const AccessControlScreen = () => {
         tableId="access-control"
         columns={[
           { id: 'employee', label: 'Employee Name' },
-          { id: 'board', label: 'Employee Name' },
+          { id: 'board', label: 'Board' },
         ]}
         data={[]}
       />
       <CustomDialog
-        maxWidth="md"
+        maxWidth="lg"
         title="Access Control"
         open={dialog.value}
         handleClose={dialog.onFalse}
@@ -75,6 +86,20 @@ export const AccessControlForm = ({
     standards: string[];
     divisions: string[];
   }>({ boards: [], mediums: [], organizations: [], standards: [], divisions: [] });
+
+  const [selectedData, setSelectedData] = useState<{
+    boards: string[];
+    mediums: string[];
+    organizations: string[];
+    standards: string[];
+    divisions: string[];
+  }>({
+    boards: [],
+    mediums: [],
+    organizations: [],
+    standards: [],
+    divisions: [],
+  });
 
   // Get current academic year from global state
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -104,6 +129,7 @@ export const AccessControlForm = ({
         standards: accessControl.effectiveScope.standardIds,
         divisions: accessControl.effectiveScope.divisionIds,
       };
+      console.log(data, 'data');
       setCheckedItem(data);
     }
   }, [accessControl?.effectiveScope]);
@@ -114,10 +140,11 @@ export const AccessControlForm = ({
       await addAccessControl({
         academicYearIds: [currentYear.id],
         userIds: [user.id],
-        educationBoardIds: checkedItem.boards,
-        educationMediumIds: checkedItem.mediums,
-        educationMediumStageIds: checkedItem.organizations,
-        standardIds: checkedItem.standards,
+        educationBoardIds: selectedData.boards,
+        educationMediumIds: selectedData.mediums,
+        educationMediumStageIds: selectedData.organizations,
+        standardIds: selectedData.standards,
+        divisionIds: selectedData.divisions,
       });
       handleClose?.();
     } catch (error) {
@@ -126,28 +153,32 @@ export const AccessControlForm = ({
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
-        {isLoading ? (
-          <Box className="loader" />
-        ) : (
-          <BoardScreenStep checkedItem={checkedItem} setCheckedItem={setCheckedItem} />
-        )}
-      </Box>
-
-      <Box
-        sx={{
-          position: 'sticky',
-          bottom: 0,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          p: 2,
-          bgcolor: 'background.paper',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 2,
+    <>
+      <DialogScrollContent
+        sx={{ overflow: 'hidden', height: '100%', p: 1 }}
+        scrollBarProps={{
+          sx: {
+            '.simplebar-content': {
+              height: '100%',
+            },
+          },
         }}
       >
+        <Box sx={{ flex: 1, overflow: 'hidden', p: 2, height: '100%' }}>
+          {isLoading ? (
+            <Box className="loader" />
+          ) : (
+            <BoardScreenStep
+              checkedItem={checkedItem}
+              setCheckedItem={setCheckedItem}
+              selectedData={selectedData}
+              setSelectedData={setSelectedData}
+            />
+          )}
+        </Box>
+      </DialogScrollContent>
+
+      <DialogActions>
         <Button
           size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -165,8 +196,8 @@ export const AccessControlForm = ({
         >
           Submit
         </LoadingButton>
-      </Box>
-    </Box>
+      </DialogActions>
+    </>
   );
 };
 
@@ -196,74 +227,96 @@ const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0
     <Box
       key={node.id}
       sx={{
-        ml: `${28}px`,
         position: 'relative',
-        ...(hasChildren && isExpanded.value
-          ? {
-              '&::before': {
-                borderLeft: (theme) => `1px dashed ${theme.palette.primary.main}`,
-                content: '""',
-                height: '80%',
-                width: '100%',
-                position: 'absolute',
-                top: '24px',
-                left: `8px`,
-              },
-            }
-          : {}),
+        pl: 3, // Indentation
       }}
     >
+      {/* Connector Line */}
+      {hasChildren && isExpanded.value && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 28, // Start below the icon/checkbox row
+            left: 11 + 24, // Align with the center of the arrow/checkbox area (approx)
+            bottom: 0,
+            width: '1px',
+            borderLeft: (theme) => `1px dashed ${theme.palette.divider}`,
+            zIndex: 0,
+          }}
+        />
+      )}
+
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
+          py: 0.5,
           position: 'relative',
-          '&:hover': { bgcolor: 'action.hover', borderRadius: 1 },
+          zIndex: 1,
+          borderRadius: 1,
+          '&:hover': { bgcolor: 'action.hover' },
         }}
       >
+        {/* Expand/Collapse Toggle */}
         <Box
-          onClick={() => isExpanded.onToggle()}
+          onClick={hasChildren ? isExpanded.onToggle : undefined}
           sx={{
-            cursor: 'pointer',
+            mr: 1,
+            width: 24,
+            height: 24,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: '50%',
-            p: 0.2,
-            backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.2),
-            visibility: hasChildren ? 'initial' : 'hidden',
+            cursor: hasChildren ? 'pointer' : 'default',
+            color: 'text.secondary',
+            '&:hover': { color: 'primary.main' },
           }}
         >
-          <Iconify
-            icon={isExpanded.value ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
-            width={16}
-            height={16}
-          />
+          {hasChildren && (
+            <Iconify
+              icon={isExpanded.value ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
+              width={18}
+              height={18}
+            />
+          )}
         </Box>
 
-        <Checkbox checked={isSelected} onChange={() => handleNodeSelect(node)} size="small" />
+        <Checkbox
+          checked={isSelected}
+          onChange={() => handleNodeSelect(node)}
+          size="small"
+          sx={{ p: 0.5, mr: 1 }}
+        />
+
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="body2">{node.name}</Typography>
+          <Typography variant="body2" sx={{ fontWeight: hasChildren ? 600 : 400 }}>
+            {node.name}
+          </Typography>
           <Chip
             label={node.type}
             size="small"
-            variant="outlined"
+            variant="soft"
             color={color[node.type as keyof typeof color] as LabelColor}
-            sx={{ height: 20, fontSize: '0.75rem' }}
+            sx={{ height: 20, fontSize: '0.7rem', borderRadius: 0.5 }}
           />
         </Box>
       </Box>
-      {hasChildren &&
-        isExpanded.value &&
-        node.children?.map((child: any) => (
-          <RenderNode
-            node={child}
-            checkedItem={checkedItem}
-            toggleNode={toggleNode}
-            handleNodeSelect={handleNodeSelect}
-            level={level + 1}
-          />
-        ))}
+
+      {/* Children */}
+      {hasChildren && isExpanded.value && (
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          {node.children.map((child: any) => (
+            <RenderNode
+              key={child.id}
+              node={child}
+              checkedItem={checkedItem}
+              toggleNode={toggleNode}
+              handleNodeSelect={handleNodeSelect}
+              level={level + 1}
+            />
+          ))}
+        </Box>
+      )}
     </Box>
   );
 };
@@ -272,6 +325,8 @@ const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0
 const BoardScreenStep = ({
   checkedItem,
   setCheckedItem,
+  selectedData,
+  setSelectedData,
 }: {
   checkedItem: {
     boards: string[];
@@ -287,20 +342,29 @@ const BoardScreenStep = ({
     standards: string[];
     divisions: string[];
   }) => void;
+  selectedData: {
+    boards: string[];
+    mediums: string[];
+    organizations: string[];
+    standards: string[];
+    divisions: string[];
+  };
+  setSelectedData: (selectedData: {
+    boards: string[];
+    mediums: string[];
+    organizations: string[];
+    standards: string[];
+    divisions: string[];
+  }) => void;
 }) => {
   // Get current academic year from global state
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  console.log(currentYear, 'currentYear');
-
   // Query hook for fetching boards data
-  const { data: boards, isLoading } = useQueryAndMutation({
+  const { data: boards } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
   });
-
-  // State for tracking expanded nodes
-  const [expandedNodes, setExpandedNodes] = React.useState<Set<string>>(new Set());
 
   // Filter boards for current academic year
   const allBoards = boards?.items?.filter(
@@ -342,7 +406,7 @@ const BoardScreenStep = ({
       })),
     [allBoards]
   );
-  console.log(nodeData, 'nodeData');
+
   // Helper function to find all child nodes
   const findAllChildren = (node: any, step = 0): any[] => {
     let childIds: string[] = step > 0 ? [node] : [];
@@ -371,160 +435,154 @@ const BoardScreenStep = ({
         }
       }
     }
-
     return null;
   }
+
+  const generateFinalSelection = (uiState: any) => {
+    const output: any = {
+      boards: [],
+      mediums: [],
+      organizations: [],
+      standards: [],
+      divisions: [],
+    };
+
+    const processNode = (node: any) => {
+      const childNodes = node.children || [];
+
+      if (childNodes.length === 0) {
+        // leaf node
+        if (uiState[node.type].includes(node.id)) {
+          output[node.type].push(node.id);
+        }
+        return;
+      }
+
+      // check if all children are selected
+      const allChildrenSelected = childNodes.every((c: any) => uiState[c.type].includes(c.id));
+
+      if (allChildrenSelected) {
+        // store parent only
+        output[node.type].push(node.id);
+      } else {
+        // store parent + individually selected children
+        if (uiState[node.type].includes(node.id)) {
+          output[node.type].push(node.id);
+        }
+
+        childNodes.forEach((child: any) => processNode(child));
+      }
+    };
+
+    nodeData.forEach((root: any) => processNode(root));
+    setSelectedData(output);
+  };
 
   // Handler for node selection/deselection
   const handleNodeSelect = (node: any) => {
     const { id, type } = node;
+    const updated: any = { ...checkedItem };
 
-    const childIds = findAllChildren(node);
-    const parentIds = findParents(nodeData, id);
+    const isChecked = updated[type].includes(id);
 
-    const isCurrentlyChecked = checkedItem[type as keyof typeof checkedItem]?.includes(id);
+    if (!isChecked) {
+      // check parent + children
+      updated[type] = [...updated[type], id];
 
-    const updatedValues = { ...checkedItem };
-
-    if (!isCurrentlyChecked) {
-      updatedValues[type as keyof typeof checkedItem] = [
-        ...(updatedValues[type as keyof typeof checkedItem] || []),
-        id,
-      ];
-
-      parentIds?.forEach((parent) => {
-        const parentType = parent.type as keyof typeof checkedItem;
-        updatedValues[parentType] = [...(updatedValues[parentType] || []), parent.id];
+      const childNodes = findAllChildren(node);
+      childNodes.forEach((c) => {
+        updated[c.type] = [...new Set([...updated[c.type], c.id])];
       });
 
-      childIds.forEach((child) => {
-        const childType = child.type as keyof typeof checkedItem;
-        updatedValues[childType] = [...(updatedValues[childType] || []), child.id];
+      // parents
+      const parentNodes = findParents(nodeData, id);
+      parentNodes?.forEach((p) => {
+        updated[p.type] = [...new Set([...updated[p.type], p.id])];
       });
-
-      setCheckedItem(updatedValues);
     } else {
-      updatedValues[type as keyof typeof checkedItem] =
-        updatedValues[type as keyof typeof checkedItem]?.filter((ids) => ids !== id) || [];
+      // uncheck
+      updated[type] = updated[type].filter((x: any) => x !== id);
 
-      childIds.forEach((child) => {
-        const childType = child.type as keyof typeof checkedItem;
-        updatedValues[childType] =
-          updatedValues[childType]?.filter((item) => item !== child.id) || [];
+      const childNodes = findAllChildren(node);
+      childNodes.forEach((c: any) => {
+        updated[c.type] = updated[c.type].filter((x: any) => x !== c.id);
       });
-
-      setCheckedItem(updatedValues);
     }
+
+    setCheckedItem(updated);
+    generateFinalSelection(updated);
   };
 
   // Handler for expanding/collapsing nodes
-  const toggleNode = (nodeId: string) => {
-    setExpandedNodes((prevExpanded) => {
-      const newExpanded = new Set(prevExpanded);
-      if (newExpanded.has(nodeId)) {
-        newExpanded.delete(nodeId);
-      } else {
-        newExpanded.add(nodeId);
-      }
-      return newExpanded;
-    });
-  };
-
-  // Function to render individual nodes
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const renderNode = (node: any, level: number = 0) => {
-    const isSelected = checkedItem[`${node.type}` as keyof typeof checkedItem]?.includes(node.id);
-    const isExpanded = expandedNodes.has(node.id);
-    const hasChildren = node.children && node.children.length > 0;
-
-    return (
-      <Box
-        key={node.id}
-        sx={{
-          ml: `${28}px`,
-          position: 'relative',
-          ...(hasChildren && isExpanded
-            ? {
-                '&::before': {
-                  borderLeft: (theme) => `1px dashed ${theme.palette.primary.main}`,
-                  content: '""',
-                  height: '80%',
-                  width: '100%',
-                  position: 'absolute',
-                  top: '24px',
-                  left: `8px`,
-                },
-              }
-            : {}),
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            position: 'relative',
-            '&:hover': { bgcolor: 'action.hover', borderRadius: 1 },
-          }}
-        >
-          <Box
-            onClick={() => toggleNode(node.id)}
-            sx={{
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '50%',
-              p: 0.2,
-              backgroundColor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.2),
-              visibility: hasChildren ? 'initial' : 'hidden',
-            }}
-          >
-            <Iconify
-              icon={isExpanded ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
-              width={16}
-              height={16}
-            />
-          </Box>
-
-          <Checkbox checked={isSelected} onChange={() => handleNodeSelect(node)} size="small" />
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2">{node.name}</Typography>
-            <Chip
-              label={node.type}
-              size="small"
-              variant="outlined"
-              color={color[node.type as keyof typeof color] as LabelColor}
-              sx={{ height: 20, fontSize: '0.75rem' }}
-            />
-          </Box>
-        </Box>
-        {hasChildren &&
-          isExpanded &&
-          node.children?.map((child: any) => renderNode(child, level + 1))}
-      </Box>
-    );
-  };
+  const toggleNode = (nodeId: string) => {};
 
   return (
-    <Box sx={{ width: '100%', maxHeight: '70vh', overflow: 'auto' }}>
+    <>
       <Typography variant="body2" fontWeight={600} color="text.secondary" mb={2}>
         Academic Year: {currentYear?.name}
       </Typography>
 
-      {isLoading ? (
-        <Typography>Loading...</Typography>
-      ) : (
-        <Box sx={{ mt: 2, position: 'relative', display: 'flex', gap: 2 }}>
-          {nodeData.map((node: any) => (
-            <RenderNode
-              node={node}
-              checkedItem={checkedItem}
-              toggleNode={toggleNode}
-              handleNodeSelect={handleNodeSelect}
-            />
-          ))}
+      <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ flex: 1, minHeight: 0 }}>
+          <Grid container spacing={3} sx={{ height: '100%' }}>
+            {nodeData.map((boardNode: any) => (
+              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={boardNode.id} sx={{ height: '100%' }}>
+                <Card
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    boxShadow: (theme) => theme.customShadows.z4,
+                  }}
+                >
+                  <CardHeader
+                    title={boardNode.name}
+                    subheader="Board"
+                    action={
+                      <Checkbox
+                        checked={checkedItem.boards.includes(boardNode.id)}
+                        onChange={() => handleNodeSelect(boardNode)}
+                      />
+                    }
+                    sx={{
+                      py: 2,
+                      px: 2.5,
+                      bgcolor: (theme) => varAlpha(theme.vars.palette.primary.lighterChannel, 0.4),
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                    }}
+                  />
+                  <Scrollbar>
+                    <Box sx={{ p: 2 }}>
+                      {/* Render only children of the board here, effectively unrolling the first level */}
+                      {boardNode.children?.map((child: any) => (
+                        <RenderNode
+                          key={child.id}
+                          node={child}
+                          checkedItem={checkedItem}
+                          toggleNode={toggleNode}
+                          handleNodeSelect={handleNodeSelect}
+                          level={1}
+                        />
+                      ))}
+                      {(!boardNode.children || boardNode.children.length === 0) && (
+                        <Typography
+                          variant="caption"
+                          color="text.disabled"
+                          sx={{ fontStyle: 'italic', pl: 1 }}
+                        >
+                          No details available
+                        </Typography>
+                      )}
+                    </Box>
+                  </Scrollbar>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
         </Box>
-      )}
-    </Box>
+      </Box>
+    </>
   );
 };

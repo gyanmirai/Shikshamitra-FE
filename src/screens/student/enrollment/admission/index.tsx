@@ -1,7 +1,7 @@
 'use client';
 
+import type { Standards } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
-import type { Division, Standards } from 'src/types/school';
 import type { EntranceExamStatusType } from 'src/enums/entranceExam-type';
 
 import dayjs from 'dayjs';
@@ -107,6 +107,9 @@ const AdmissionScreen = () => {
   const { data: admissionData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentAdmissionQuery,
+    params: {
+      approvalStatus: tabs.value,
+    },
   });
   const counts = useMemo(
     () => ({
@@ -155,20 +158,10 @@ const AdmissionScreen = () => {
           dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
           ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
           doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-          studentName: ` ${item.lastName}  ${item.firstName} ${item.middleName}`,
+          // studentName: ` ${item.lastName}  ${item.firstName} ${item.middleName}`,
           secondaryContactNumber: item.secondaryContactNumber || undefined,
           genderValue: GenderType[item?.genderType as any],
           remarks: item?.remarks || '-',
-          address: [
-            item.addressLine1,
-            item.addressLine2,
-            item.addressLine3,
-            item.city,
-            item.state?.name,
-            item.country?.name,
-          ]
-            .filter(Boolean)
-            .join(', '),
         })) || [],
     [admissionData?.items, tabs.value]
   );
@@ -234,6 +227,7 @@ const AdmissionScreen = () => {
           disabled={!selectedStudents.length}
           onClick={statusDialog.onTrue}
           startIcon={<Iconify icon="mdi:exchange" />}
+          sx={{ px: '32px' }}
         >
           Change Status
         </Button>
@@ -289,10 +283,10 @@ const AdmissionScreen = () => {
             align: 'left',
             sticky: true,
           },
-          { id: 'educationBoard.name', label: 'Board', align: 'left' },
-          { id: 'educationMedium.name', label: 'Medium', align: 'left' },
-          { id: 'standard.name', label: 'Class', align: 'left' },
-          { id: 'division.name', label: 'Division', align: 'left' },
+          // { id: 'educationBoard.name', label: 'Board', align: 'left' },
+          // { id: 'educationMedium.name', label: 'Medium', align: 'left' },
+          { id: 'standard', label: 'Class', align: 'left' },
+          { id: 'division', label: 'Division', align: 'left' },
           {
             id: 'dobValue',
             label: 'Date of Birth',
@@ -301,11 +295,11 @@ const AdmissionScreen = () => {
             isFilter: true,
             filterType: 'date',
           },
-          { id: 'ageValue', label: 'Age', align: 'left' },
+          { id: 'age', label: 'Age', align: 'left' },
           { id: 'genderValue', label: 'Gender', align: 'left' },
-          { id: 'formNumber', label: 'Form No', minWidth: '110px', align: 'left' },
+          { id: 'formNo', label: 'Form No', minWidth: '110px', align: 'left' },
           {
-            id: 'inquiryNumber',
+            id: 'inquiryNo',
             label: 'Inquiry No.',
             minWidth: '120px',
             isFilter: true,
@@ -361,20 +355,20 @@ const AdmissionScreen = () => {
             },
           },
           {
-            id: 'primaryContactNumber',
+            id: 'primaryContactNo',
             label: 'Primary Contact No.',
             minWidth: '185px',
             align: 'left',
           },
           {
-            id: 'secondaryContactNumber',
+            id: 'secondaryContactNo',
             label: 'Secondary Contact No.',
             minWidth: '220px',
             align: 'left',
           },
-          { id: 'previousSchoolName', label: 'Previous School', minWidth: '170px', align: 'left' },
+          { id: 'previousSchool', label: 'Previous School', minWidth: '170px', align: 'left' },
           {
-            id: 'inquiryPreference.preferenceName',
+            id: 'inquiryPreference',
             label: 'Inquiry Preference',
             minWidth: '200px',
             align: 'left',
@@ -519,7 +513,7 @@ const AdmissionScreen = () => {
         }
       >
         <RegisterForm
-          editData={editData}
+          editData={editData as any}
           handleClose={() => {
             setEditData(null);
             setOpen(false);
@@ -549,8 +543,8 @@ const AdmissionScreen = () => {
         <AssignDivisionForm
           handleClose={divisionDialog.onFalse}
           standard={editData?.standard}
-          studentID={editData?.id}
-          division={editData?.division}
+          studentID={editData?.studentId}
+          division={editData?.divisionId}
           selectedStudent={editData}
         />
       </CustomDialog>
@@ -607,7 +601,7 @@ const AdmissionScreen = () => {
             setEditData(null);
             followUpDialog.onFalse();
           }}
-          selectedStudent={editData}
+          selectedStudent={editData as any}
           studentEnrollmentId={(editData as IInquiryData)?.id || ''}
           isStatus={false}
         />
@@ -977,7 +971,7 @@ const AssignDivisionForm = ({
   handleClose: () => void;
   standard?: Standards;
   studentID?: string;
-  division?: Division;
+  division?: string;
   selectedStudent?: IInquiryData | null;
 }) => {
   const [selectedDivision, setSelectedDivision] = useState('');
@@ -990,7 +984,7 @@ const AssignDivisionForm = ({
     standardName: string;
   }>({
     initialValues: {
-      division: division?.id || '',
+      division: division || '',
       standardName: standard?.name || '',
     },
     validationSchema: Yup.object({
@@ -999,12 +993,10 @@ const AssignDivisionForm = ({
     onSubmit: async (values) => {
       try {
         await assignDivision({
-          studentDivisionUpdates: [
-            {
-              studentId: studentID as string,
-              divisionId: values.division,
-            },
-          ],
+          studentId: studentID as string,
+          body: {
+            divisionId: values.division,
+          },
         }).unwrap();
         shikshaMitraToast.success({
           message: `${selectedDivision} division assign to ${selectedStudent?.firstName} ${selectedStudent?.lastName}`,
@@ -1111,7 +1103,11 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
         }
         await changeStatus({
           approvalStatus: values.status,
-          body: selectedStudents.map((i: any) => i.id),
+          body: selectedStudents.map((i: any) => ({
+            studentId: i.studentId,
+            action: values.status,
+            remarks: '',
+          })),
         }).unwrap();
         shikshaMitraToast.success({
           message: `${selectedStudents.length} admission marked as ${RegistrationStatusType[values.status]} on ${dayjs().format('DD-MM-YYYY')}.`,

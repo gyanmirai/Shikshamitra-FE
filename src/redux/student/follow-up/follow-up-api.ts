@@ -9,8 +9,8 @@ export const FollowUpApi = createApi({
   tagTypes: ['Follow-Up'],
   endpoints: (builder) => ({
     getFollowUp: builder.query({
-      query: (studentEnrollmentId) => ({
-        url: `/student-enrollment/${studentEnrollmentId}/follow-up`,
+      query: (studentId) => ({
+        url: `/student/enrollment/${studentId}/notes`,
         method: 'GET',
       }),
       providesTags: ['Follow-Up'],
@@ -23,8 +23,8 @@ export const FollowUpApi = createApi({
       providesTags: ['Follow-Up'],
     }),
     addFollowUp: builder.mutation({
-      query: ({ studentEnrollmentId, body }) => ({
-        url: `/student-enrollment/${studentEnrollmentId}/add-follow-up`,
+      query: ({ studentId, body }) => ({
+        url: `/student/enrollment/${studentId}/notes`,
         method: 'POST',
         data: body,
       }),

@@ -106,26 +106,7 @@ const ElectiveSubjectSetting = () => {
         setOpenDialog={setOpen}
         editData={selected}
         setEditData={setSelected}
-        data={[
-          {
-            title: 'Tech & Fitness Group',
-            subjectColor: '#1E90FF',
-            subjects: [
-              { name: 'Computer', subjectColor: '#4169E1' },
-              { name: 'Physical Training', subjectColor: '#FF69B4' },
-            ],
-            createdBy: 'Patel Jeena Rajeshbhai',
-          },
-          {
-            title: 'Language Enrichment Group',
-            subjectColor: '#FF4500',
-            subjects: [
-              { name: 'Hindi', subjectColor: '#FF4500' },
-              { name: 'Sanskrit', subjectColor: '#DA70D6' },
-            ],
-            createdBy: 'Shah Meena Prakashbhai',
-          },
-        ]}
+        data={[]}
       />
 
       <CustomDialog
@@ -172,7 +153,7 @@ const ElectiveSubjectSetting = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete elective subject <strong>{selected?.title}</strong>?
+            Are you sure you want to delete elective subject <strong>{selected?.name}</strong>?
           </>
         }
         action={
@@ -185,7 +166,7 @@ const ElectiveSubjectSetting = () => {
               deleteDialog.onFalse();
               setSelected(null);
               shikshaMitraToast.success({
-                message: `Subject ${selected?.title} deleted successfully`,
+                message: `Subject ${selected?.name} deleted successfully`,
               });
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}

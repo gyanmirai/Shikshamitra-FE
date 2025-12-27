@@ -1,3 +1,4 @@
+import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
@@ -7,9 +8,16 @@ import { useGetInquiryPreferenceQuery } from 'src/redux/student/inquiry-preferen
 import { InquiryPreferenceForm } from '../setting/inquiryPreference';
 
 const RenderInquiryPrefrance = ({ formik, ...props }: { formik: any } & any) => {
+  const { currentYear } = useSelector((state: any) => state.globalState);
   const { data: inquiryPreference, isLoading: inquiryPrefrenceLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetInquiryPreferenceQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+    options: {
+      skip: !currentYear?.id,
+    },
   });
   const dialog = useBoolean();
 

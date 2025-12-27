@@ -9,23 +9,23 @@ export const EntranceExamApi = createApi({
   tagTypes: ['Entrance-Exam'],
   endpoints: (builder) => ({
     getEntranceExam: builder.query({
-      query: () => ({
-        url: '/app/entrance-exam',
+      query: ({ startDate, endDate, educationMediumId }) => ({
+        url: `/student-enrollment/entrance-exam?StartDate=${startDate}&EndDate=${endDate}&EducationMediumId=${educationMediumId}`,
         method: 'GET',
       }),
       providesTags: ['Entrance-Exam'],
     }),
     addEntranceExam: builder.mutation({
-      query: (data) => ({
-        url: '/app/entrance-exam',
+      query: ({ body, studentId }) => ({
+        url: `/student-enrollment/entrance-exam/${studentId}/schedule`,
         method: 'POST',
-        data,
+        data: body,
       }),
       invalidatesTags: ['Entrance-Exam'],
     }),
     updateEntranceExam: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/entrance-exam/${id}`,
+        url: `/student-enrollment/entrance-exam/${id}/result`,
         method: 'PUT',
         data: body,
       }),

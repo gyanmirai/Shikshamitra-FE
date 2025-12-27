@@ -7,6 +7,7 @@ import type { Standards, Organization } from 'src/types/school';
 // Import necessary types
 // import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import { LoadingButton } from '@mui/lab';
 // Import Material-UI icons and components
 import { Add } from '@mui/icons-material';
 // Import custom components
@@ -28,6 +29,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import chapterTableData from 'src/json/academic/syllabus/chapterTableData.json';
 import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { useDeleteChapterMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import { AddNewChapter } from './addChapterForm';
 // Import mock data
@@ -40,8 +42,16 @@ import type { IChapter } from './type';
 const Subjects = () => {
   // State to store all classes/standards for the selected organization
   const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [deleteChapter, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteChapterMutation,
+  });
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
+  const [classId, setClassId] = useState<string>('');
+  const [subjectId, setSubjectId] = useState<string>('');
 
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -140,6 +150,7 @@ const Subjects = () => {
 
     setAllClass(allClasses);
     setClasses(allClasses[0]?.name || '');
+    setClassId(allClasses[0]?.id || '');
   }, [medium]);
 
   const handleDelete = (id: string | undefined) => {
@@ -206,6 +217,8 @@ const Subjects = () => {
             isEdit={isEditMode}
             className={classes}
             subject={subject}
+            classId={classId}
+            subjectId={subjectId}
           />
         </Card>
       ) : (
@@ -226,12 +239,14 @@ const Subjects = () => {
                 label="Class"
                 name="class"
                 options={allClass}
-                valueKey="name"
+                valueKey="id"
                 labelKey="name"
                 formControlProps={{ sx: { minWidth: '248px', width: '100%' } }}
-                value={classes}
+                value={classId}
                 onChange={(value) => {
-                  setClasses(value as string);
+                  const standard = allClass.find((std) => std.id === value);
+                  setClasses(standard?.name || '');
+                  setClassId(value as string);
                 }}
               />
               <CustomSelect
@@ -246,6 +261,7 @@ const Subjects = () => {
                 disabled={!classes}
                 onChange={(val) => {
                   setSubject(val as string);
+                  setSubjectId(val as string);
                 }}
                 label="Subject"
                 valueKey="value"
@@ -262,6 +278,7 @@ const Subjects = () => {
                 addChapterDialog.onTrue();
               }}
               disabled={!classes || !subject}
+              sx={{ px: '32px' }}
             >
               Chapter
             </Button>
@@ -281,6 +298,8 @@ const Subjects = () => {
               setSelectedChapter(chapter as IChapter);
               viewDocumentDialog.onTrue();
             }}
+            subjectId={subjectId}
+            standardId={classId}
           />
         </>
       )}
@@ -288,27 +307,38 @@ const Subjects = () => {
       <ConfirmDialog
         open={deleteDialog.value}
         onClose={() => {
-          deleteDialog.onFalse();
           setSelectedChapter(null);
+          deleteDialog.onFalse();
         }}
         title="Delete"
         content={
           <>
-            Are you sure you want to delete chapter <strong>{selectedChapter?.chapterName}</strong>?
+            Are you sure you want to delete chapter{' '}
+            <strong>&quot;{selectedChapter?.chapterName}&quot;</strong>?
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
-            onClick={() => {
-              handleDelete(selectedChapter?.id);
+            onClick={async () => {
+              try {
+                await deleteChapter((selectedChapter as any).id).unwrap();
+                deleteDialog.onFalse();
+                setSelectedChapter(null);
+                shikshaMitraToast.success({
+                  message: `Chapter &quot;${selectedChapter?.chapterName}&quot; deleted successfully`,
+                });
+              } catch (error) {
+                console.error('Failed to delete chapter', error);
+              }
             }}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
 

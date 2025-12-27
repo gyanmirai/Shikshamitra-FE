@@ -15,7 +15,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetConcessionTypeQuery } from 'src/redux/finance/concessionType';
+import { useGetConcessionTypesQuery } from 'src/redux/finance/concessionType';
 
 import ConcessionTypeTable from './Components/ConcessionTable';
 import ConcessionTypeForm from './Components/ConcessionTypeForm';
@@ -37,7 +37,7 @@ const ConcessionType = () => {
   // Fetch concession type data
   const { data: concessionTypes } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetConcessionTypeQuery,
+    currentQueryAndMutation: useGetConcessionTypesQuery,
   });
 
   // Redux state and dispatch
@@ -78,6 +78,7 @@ const ConcessionType = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Concession Type
           </Button>

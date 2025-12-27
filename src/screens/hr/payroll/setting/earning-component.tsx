@@ -1,5 +1,7 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -8,6 +10,9 @@ import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -15,8 +20,9 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { useDeletePayElementMutation } from 'src/redux/payElement/payElementApi';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -28,11 +34,17 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetEarningComponentsQuery,
+  useAddEarningComponentMutation,
+  useDeleteEarningComponentMutation,
+  useUpdateEarningComponentMutation,
+} from 'src/redux/employee-payroll/employee-payroll-api';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 interface PayElement {
-  name: string;
+  componentName: string;
   componentType: string;
   id: string;
   description: string;
@@ -56,10 +68,38 @@ const EarningComponent = () => {
   const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
   const isEarningComponentOpen = useBoolean();
 
-  const [deletePayElement] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeletePayElementMutation,
-  });
+  const [deleteEarningComponent, { isLoading: deleteEarningComponentLoading }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useDeleteEarningComponentMutation,
+    });
+
+  const { data: getEarningComponentsData, isLoading: getEarningComponentsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetEarningComponentsQuery,
+    });
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+  // Handles closing the incident form
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      isEarningComponentOpen.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      isEarningComponentOpen.onFalse();
+      setTimeout(() => {
+        setEditData(null);
+      }, 200);
+    }
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -77,6 +117,7 @@ const EarningComponent = () => {
             startIcon={<Add />}
             size="small"
             onClick={isEarningComponentOpen.onTrue}
+            sx={{ px: '32px' }}
           >
             Earning Component
           </Button>
@@ -86,28 +127,38 @@ const EarningComponent = () => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete <b>{deleteInformation?.componentName}</b> Earning
+            Component?
+          </>
+        }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
             size="small"
+            loading={deleteEarningComponentLoading}
             onClick={async () => {
-              await deletePayElement(deleteInformation?.id);
+              await deleteEarningComponent(deleteInformation?.id).unwrap();
+              shikshaMitraToast.success({
+                message: ` ${deleteInformation?.componentName} Earning Component deleted successfully`,
+              });
               confirm.onFalse();
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
       <CustomizableTable
         tableId="earning-component"
+        isLoading={getEarningComponentsLoading}
         columns={[
-          { id: 'name', label: 'Name', align: 'left', minWidth: '10vw' },
+          { id: 'componentName', label: 'Name', align: 'left', minWidth: '10vw' },
           { id: 'description', label: 'Description', align: 'left', minWidth: '10vw' },
-          { id: 'componentType', label: 'Component Type', align: 'left', minWidth: '11vw' },
-          { id: 'dependOn', label: 'Depend On', align: 'left', minWidth: '10vw' },
+          { id: 'componentType', label: 'Component Type', align: 'left', minWidth: '10vw' },
+          { id: 'dependOn', label: 'Depends On', align: 'left', minWidth: '10vw' },
           { id: 'amount', label: 'Amount', align: 'left', minWidth: '10vw' },
           {
             id: 'visibleInPayslip',
@@ -145,48 +196,7 @@ const EarningComponent = () => {
             },
           },
         ]}
-        data={[
-          {
-            name: 'Basic Salary',
-            description: 'Base salary component',
-            componentType: 'Fixed',
-            dependOn: 'None',
-            amount: '30000',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'House Rent Allowance',
-            description: 'HRA component',
-            componentType: 'Fixed',
-            dependOn: 'Basic',
-            amount: '40%',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'Performance Bonus',
-            description: 'Quarterly performance bonus',
-            componentType: 'Variable',
-            dependOn: 'Basic',
-            amount: '15%',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'Transport Allowance',
-            description: 'Monthly transport allowance',
-            componentType: 'Fixed',
-            dependOn: 'None',
-            amount: '3000',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'Special Allowance',
-            description: 'Additional benefits',
-            componentType: 'Variable',
-            dependOn: 'Gross',
-            amount: '10%',
-            visibleInPayslip: false,
-          },
-        ]}
+        data={getEarningComponentsData?.items || []}
       />
       <CustomDialog
         maxWidth="md"
@@ -214,13 +224,7 @@ const EarningComponent = () => {
           </Box>
         }
       >
-        <EarningComponentForm
-          editData={editData}
-          handleClose={() => {
-            isEarningComponentOpen.onFalse();
-            setEditData(null);
-          }}
-        />
+        <EarningComponentForm editData={editData} handleClose={handleClose} />
       </CustomDialog>
     </Box>
   );
@@ -294,27 +298,72 @@ const EarningComponentForm = ({
   handleClose,
 }: {
   editData: any;
-  handleClose: () => void;
+  handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
+  console.log('editData----', editData);
+  const [addEarningComponent, { isLoading: addEarningComponentLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddEarningComponentMutation,
+  });
+  const [updateEarningComponent, { isLoading: updateEarningComponentLoading }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useUpdateEarningComponentMutation,
+    });
   const formik = useFormik({
     initialValues: {
-      componentName: editData?.name || '',
+      componentName: editData?.componentName || '',
       description: editData?.description || '',
       componentType: editData?.componentType || '',
-      dependOn: editData?.dependOn || '',
-      customComponent: editData?.customComponent || '',
+      dependOn: editData?.customComponent?.dependOn || '',
+      customComponent: editData?.customComponent?.id || null,
       amount: editData?.amount || '',
       visibleInPayslip: editData?.visibleInPayslip || true,
       isFixed: editData ? editData?.isFixed : true,
     },
     validationSchema,
-    onSubmit: (values) => {
-      handleClose();
+    onSubmit: async (values) => {
+      try {
+        if (editData) {
+          await updateEarningComponent({
+            id: editData.id,
+            body: {
+              componentName: values.componentName,
+              description: values.description,
+              componentType: values.componentType,
+              dependOn: values.dependOn,
+              customComponentId: values.customComponent,
+              amount: values.amount,
+              visibleInPayslip: values.visibleInPayslip,
+              isFixed: values.isFixed,
+            },
+          }).unwrap();
+        } else {
+          await addEarningComponent({
+            componentName: values.componentName,
+            description: values.description,
+            componentType: values.componentType,
+            dependOn: values.dependOn,
+            customComponentId: values.customComponent,
+            amount: values.amount,
+            visibleInPayslip: values.visibleInPayslip,
+            isFixed: values.isFixed,
+          }).unwrap();
+        }
+        handleClose(null, true);
+      } catch (error) {
+        console.error(error);
+      }
     },
   });
 
+  const { data: getEarningComponentsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEarningComponentsQuery,
+  });
+
   return (
-    <>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         {/* General Information */}
         <SectionCard
@@ -439,27 +488,23 @@ const EarningComponentForm = ({
                   <ShakingTextField
                     error={formik.touched.customComponent && Boolean(formik.errors.customComponent)}
                   >
-                    <TextField
-                      size="small"
-                      select
-                      fullWidth
-                      label="Select Custom Component *"
-                      name="customComponent"
+                    <CustomSelect
+                      options={getEarningComponentsData?.items || []}
+                      label="Component Type *"
                       value={formik.values.customComponent}
-                      onChange={formik.handleChange}
+                      onChange={(val) => {
+                        formik.setFieldValue('customComponent', val);
+                      }}
+                      labelKey="componentName"
+                      valueKey="id"
                       error={
                         formik.touched.customComponent && Boolean(formik.errors.customComponent)
                       }
                       helperText={
                         (formik.touched.customComponent && formik.errors.customComponent) as string
                       }
-                    >
-                      {customComponents.map((c) => (
-                        <MenuItem key={c} value={c}>
-                          {c}
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                      fullWidth
+                    />
                   </ShakingTextField>
                 </Grid>
               )}
@@ -506,7 +551,7 @@ const EarningComponentForm = ({
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"
           variant="outlined"
-          onClick={handleClose}
+          onClick={(e: any) => handleClose(e, false)}
         >
           Cancel
         </Button>
@@ -516,10 +561,11 @@ const EarningComponentForm = ({
           type="submit"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={(e: any) => formik.handleSubmit(e)}
+          loading={addEarningComponentLoading || updateEarningComponentLoading}
         >
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
-    </>
+    </BackPopUpChecked>
   );
 };

@@ -273,7 +273,7 @@ export const medicalDetailsValidations = Yup.object({
     .min(0, 'Only single digit are allowed')
     .max(9, 'Only single digit  are allowed')
     .typeError('Only single digit are allowed'),
-  childImmunisation: Yup.boolean(),
+  childImmunisation: Yup.string(),
   immunisationRemarks: Yup.string(),
 });
 export const previousSchoolValidation = Yup.object({
@@ -282,7 +282,7 @@ export const previousSchoolValidation = Yup.object({
   schoolBoard: Yup.string(),
   schoolMedium: Yup.string(),
   tcNumber: Yup.string(),
-  lastClassPassed: Yup.string(),
+  previousClass: Yup.string(),
   percentage: Yup.string(),
 });
 

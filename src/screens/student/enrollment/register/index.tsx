@@ -22,7 +22,7 @@ import type { IInquiryData } from '../Inquiry';
 
 const RegisterScreen = () => {
   // State to store and manage the selected inquiry data for editing
-  const [editData, setEditData] = useState<null | IInquiryData>(null);
+  const [editData, setEditData] = useState<any>(null);
 
   // Custom boolean hook to manage form dialog visibility
   const formDialog = useBoolean();
@@ -82,6 +82,7 @@ const RegisterScreen = () => {
               size="small"
               startIcon={<Add />}
               onClick={formDialog.onTrue}
+              sx={{ px: '32px' }}
             >
               Registration
             </Button>
@@ -123,14 +124,16 @@ const RegisterScreen = () => {
           </Box>
         }
       >
-        <ExamForm
-          studentEnrollmentId={(editData as IInquiryData)?.id || ''}
-          studentName={`${(editData as IInquiryData)?.firstName || ''} ${(editData as IInquiryData)?.middleName || ''} ${(editData as IInquiryData)?.lastName || ''}`.trim()}
-          standardName={(editData as IInquiryData)?.standard.name || ''}
-          educationBoard={(editData as IInquiryData)?.educationBoard || { name: '' }}
-          educationMedium={(editData as IInquiryData)?.educationMedium || { name: '' }}
-          handleClose={handleClose}
-        />{' '}
+        {editData && (
+          <ExamForm
+            studentEnrollmentId={editData.studentId || ''}
+            studentName={`${editData.firstName || ''} ${editData.middleName || ''} ${editData.lastName || ''}`.trim()}
+            standardName={editData.standard || ''}
+            educationBoard={editData.academicBoardName?.name || 'N/A'}
+            educationMedium={editData.academicMediumName?.name || 'N/A'}
+            handleClose={handleClose}
+          />
+        )}{' '}
       </CustomDialog>
 
       <CustomDialog
@@ -160,7 +163,7 @@ const RegisterScreen = () => {
             followUpDialog.onFalse();
           }}
           selectedStudent={editData}
-          studentEnrollmentId={(editData as IInquiryData)?.id || ''}
+          studentEnrollmentId={(editData as IInquiryData)?.studentId || ''}
         />{' '}
       </CustomDialog>
     </Box>

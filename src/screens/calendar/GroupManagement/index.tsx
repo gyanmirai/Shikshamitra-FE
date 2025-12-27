@@ -83,6 +83,7 @@ const GroupManagement = () => {
               startIcon={<Add />}
               variant="contained"
               onClick={() => setOpen(true)}
+              sx={{ px: '32px' }}
             >
               Group
             </Button>

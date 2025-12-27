@@ -172,7 +172,14 @@ const HomeworkMarksAndFeedback = (props: TabComponentType) => {
           />
         </CustomTooltip>
       </Box>
-      {homeworkTitle && <StudentSubmissions selectedHomework={selectedHomework} />}
+      {homeworkTitle && (
+        <StudentSubmissions
+          selectedClass={classes}
+          selectedDivision={division}
+          selectedSubject={subject}
+          selectedHomework={selectedHomework}
+        />
+      )}
     </Box>
   );
 };

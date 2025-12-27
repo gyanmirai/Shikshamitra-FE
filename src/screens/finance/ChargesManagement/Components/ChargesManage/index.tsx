@@ -186,6 +186,7 @@ const ChargesManagement = () => {
               variant="contained"
               onClick={addChargeDialog.onTrue}
               size="small"
+              sx={{ px: '32px' }}
             >
               Charge
             </Button>

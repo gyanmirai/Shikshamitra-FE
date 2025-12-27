@@ -76,6 +76,7 @@ const HolidayTypeCreation = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Holiday Type
           </Button>

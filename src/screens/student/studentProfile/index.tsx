@@ -38,7 +38,7 @@ import type { IInquiryData } from '../enrollment/Inquiry';
 
 export interface StudentTabsComponentType {
   tabs?: UseTabsReturn;
-  student?: IInquiryData;
+  student?: any;
   refetch?: any;
 }
 
@@ -154,7 +154,9 @@ export function StudentProfile() {
   // States for managing division selection
   const [allDivision, setAllDivision] = useState<Division[]>([]);
   const [division, setDivision] = useState<string>('');
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear: year } = useSelector(
+    (state: RootState) => state.globalState
+  );
 
   // Effect to update organizations when medium changes
   useEffect(() => {
@@ -185,12 +187,12 @@ export function StudentProfile() {
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
-
+  console.log(StudentsData, 'StudentsData');
   // Effect to fetch students when division, class and organization are selected
   useEffect(() => {
     if (division && classes && organization) {
       getStudents({
-        educationMediumStageId: organization,
+        // academicYearId: year?.id,
         standardId: classes,
         divisionId: division,
       });
@@ -208,7 +210,7 @@ export function StudentProfile() {
         address:
           [item.addressLine1, item.addressLine2, item.addressLine3].filter(Boolean).join(', ') ||
           '-',
-        RTE: item.studentAdditionalDetails.rightToEducation ? 'Yes' : 'No',
+        RTE: item?.studentAdditionalDetails?.rightToEducation ? 'Yes' : 'No',
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
       })) || [],
     [StudentsData?.items]
@@ -322,43 +324,6 @@ export function StudentProfile() {
             data={tableData}
             isLoading={isLoading}
             columns={[
-              // {
-              //   id: 'checkBox',
-              //   align: 'left',
-              //   minWidth: '60px',
-              //   sticky: true,
-              //   isSort: false,
-              //   isFilter: false,
-              //   label: '',
-              //   renderColumn() {
-              //     return (
-              //       <Checkbox
-              //         checked={tableData?.length && selectedStudents?.length === tableData?.length}
-              //         onChange={(e) => {
-              //           if (e.target.checked) {
-              //             setSelectedStudents(tableData || []);
-              //           } else {
-              //             setSelectedStudents([]);
-              //           }
-              //         }}
-              //       />
-              //     );
-              //   },
-              //   render(value, row) {
-              //     return (
-              //       <Checkbox
-              //         checked={selectedStudents.some((i: any) => i.id === row.id)}
-              //         onChange={(e) => {
-              //           if (e.target.checked) {
-              //             setSelectedStudents([...selectedStudents, row]);
-              //           } else {
-              //             setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-              //           }
-              //         }}
-              //       />
-              //     );
-              //   },
-              // },
               {
                 id: 'name',
                 label: 'Student Name',
@@ -386,7 +351,7 @@ export function StudentProfile() {
                 render: (value, row) => value || '-',
               },
               {
-                id: 'grNoRecord',
+                id: 'grNo',
                 label: 'Gr No.',
                 minWidth: '6vw',
                 align: 'left',
@@ -443,7 +408,7 @@ export function StudentProfile() {
                     showViewIcon
                     showThreeDots={false}
                     handleViewClick={() => {
-                      setSearchParams('student', row.id);
+                      setSearchParams('student', row.studentId);
                     }}
                   />
                 ),

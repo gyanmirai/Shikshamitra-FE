@@ -86,6 +86,7 @@ const FinanceReceiptBookSetting = () => {
               receiptBookDialog.onTrue();
             }}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Receipt Book
           </Button>

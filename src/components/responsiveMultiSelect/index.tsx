@@ -17,6 +17,7 @@ type ResponsiveMultiSelectProps<T> = {
   disabled?: boolean;
   error?: boolean;
   helperText?: string;
+  isLoading?: boolean;
 };
 
 export function ResponsiveMultiSelect<T>({
@@ -29,6 +30,7 @@ export function ResponsiveMultiSelect<T>({
   disabled,
   error,
   helperText,
+  isLoading,
 }: ResponsiveMultiSelectProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [, setMaxVisibleChips] = useState(1);
@@ -61,6 +63,7 @@ export function ResponsiveMultiSelect<T>({
         disableCloseOnSelect
         getOptionLabel={getOptionLabel}
         value={selectedOptions}
+        loading={isLoading}
         onChange={(_, newValue) => {
           onChange(newValue.map(getOptionValue));
         }}

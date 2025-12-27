@@ -42,6 +42,18 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
    * Used for accessing theme colors and other theme properties
    */
   const theme = useTheme();
+  // const {
+  //   data: assignmentData,
+  //   isLoading,
+  //   isFetching,
+  // } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetAssignmentsQuery,
+  //   params: { academicMediumId: (currentMedium as Medium)?.id, classId: selectedClass },
+  //   options: {
+  //     skip: !(currentMedium as Medium)?.id,
+  //   },
+  // });
   /**
    * Memoized actions menu renderer for the table
    * @param {Object} params - Action menu parameters

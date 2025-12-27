@@ -72,6 +72,7 @@ const FormNumberSeries = () => {
             onClick={formNumberSeriesDialog.onTrue}
             variant="contained"
             size="small"
+            sx={{ px: '32px' }}
           >
             Form Number Series
           </Button>

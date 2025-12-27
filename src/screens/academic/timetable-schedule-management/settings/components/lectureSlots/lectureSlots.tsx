@@ -2,7 +2,6 @@
 
 import type { RootState } from 'src/redux/store';
 
-import dayjs from 'dayjs';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -10,13 +9,13 @@ import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Card, Button, MenuList, MenuItem } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
 
-import CreateSlotsForm from './createSlotsForm';
 import ViewCreateSlots from './ViewCreateSlots';
 import AssignSlots from './assignSlotsComponent';
+import CreateSlotsForm, { getDayLabel } from './createSlotsForm';
 
 const LectureSlots = () => {
   const [editData, setEditData] = useState<any>(null);
@@ -77,64 +76,65 @@ const LectureSlots = () => {
       className: '1',
       schoolHours: '07:00 AM - 12:30 PM',
       previousClassSlots: '',
-      periodSlots: 6,
-      breakSlots: 2,
+      totalSlots: 15,
+      periodSlots: 12,
+      breakSlots: 3,
       slotConfigurations: [
         {
-          id: 'config-1',
-          totalSlots: '8',
-          weekRange: [0, 4] as [number, number],
+          id: 'c1-config-0-2',
+          totalSlots: 8,
+          periodSlots: 6,
+          breakSlots: 2,
+          weekRange: [0, 2],
           timeSlots: [
-            {
-              id: '0',
-              startTime: dayjs('2024-01-01T07:00'),
-              endTime: dayjs('2024-01-01T08:40'),
-              slotType: 'period',
-            },
-            {
-              id: '1',
-              startTime: dayjs('2024-01-01T08:40'),
-              endTime: dayjs('2024-01-01T09:20'),
-              slotType: 'period',
-            },
+            { id: '0', startTime: '07:00', endTime: '08:40', slotType: 'period' },
+            { id: '1', startTime: '08:40', endTime: '09:20', slotType: 'period' },
             {
               id: '2',
-              startTime: dayjs('2024-01-01T09:20'),
-              endTime: dayjs('2024-01-01T09:30'),
+              startTime: '09:20',
+              endTime: '09:30',
               slotType: 'break',
               breakType: 'short',
             },
-            {
-              id: '3',
-              startTime: dayjs('2024-01-01T09:30'),
-              endTime: dayjs('2024-01-01T10:10'),
-              slotType: 'period',
-            },
-            {
-              id: '4',
-              startTime: dayjs('2024-01-01T10:10'),
-              endTime: dayjs('2024-01-01T10:50'),
-              slotType: 'period',
-            },
-            {
-              id: '5',
-              startTime: dayjs('2024-01-01T10:50'),
-              endTime: dayjs('2024-01-01T11:30'),
-              slotType: 'period',
-            },
+            { id: '3', startTime: '09:30', endTime: '10:10', slotType: 'period' },
+            { id: '4', startTime: '10:10', endTime: '10:50', slotType: 'period' },
+            { id: '5', startTime: '10:50', endTime: '11:30', slotType: 'period' },
             {
               id: '6',
-              startTime: dayjs('2024-01-01T11:30'),
-              endTime: dayjs('2024-01-01T12:00'),
+              startTime: '11:30',
+              endTime: '12:00',
               slotType: 'break',
               breakType: 'lunch',
             },
+            { id: '7', startTime: '12:00', endTime: '12:30', slotType: 'period' },
+          ],
+        },
+        {
+          id: 'c1-config-3-5',
+          totalSlots: 7,
+          periodSlots: 5,
+          breakSlots: 2,
+          weekRange: [3, 5],
+          timeSlots: [
+            { id: '0', startTime: '07:30', endTime: '08:30', slotType: 'period' },
+            { id: '1', startTime: '08:30', endTime: '09:10', slotType: 'period' },
             {
-              id: '7',
-              startTime: dayjs('2024-01-01T12:00'),
-              endTime: dayjs('2024-01-01T12:30'),
-              slotType: 'period',
+              id: '2',
+              startTime: '09:10',
+              endTime: '09:25',
+              slotType: 'break',
+              breakType: 'short',
             },
+            { id: '3', startTime: '09:25', endTime: '10:05', slotType: 'period' },
+            { id: '4', startTime: '10:05', endTime: '10:45', slotType: 'period' },
+            {
+              id: '5',
+              startTime: '10:45',
+              endTime: '11:15',
+              slotType: 'break',
+              breakType: 'lunch',
+            },
+            { id: '6', startTime: '11:15', endTime: '12:00', slotType: 'period' },
           ],
         },
       ],
@@ -142,53 +142,53 @@ const LectureSlots = () => {
     {
       id: 2,
       className: '2',
-      schoolHours: '07:00 AM - 11:50 AM',
+      schoolHours: '07:30 AM - 01:00 PM',
       previousClassSlots: '1',
-      periodSlots: 5,
-      breakSlots: 1,
+      totalSlots: 13,
+      periodSlots: 11,
+      breakSlots: 2,
       slotConfigurations: [
         {
-          id: 'config-2',
-          totalSlots: '6',
-          weekRange: [0, 5] as [number, number],
+          id: 'c2-config-1-4',
+          totalSlots: 9,
+          periodSlots: 7,
+          breakSlots: 2,
+          weekRange: [0, 4],
           timeSlots: [
-            {
-              id: '0',
-              startTime: dayjs('2024-01-01T07:00'),
-              endTime: dayjs('2024-01-01T08:40'),
-              slotType: 'period',
-            },
-            {
-              id: '1',
-              startTime: dayjs('2024-01-01T08:40'),
-              endTime: dayjs('2024-01-01T09:20'),
-              slotType: 'period',
-            },
+            { id: '0', startTime: '07:30', endTime: '08:20', slotType: 'period' },
+            { id: '1', startTime: '08:20', endTime: '09:10', slotType: 'period' },
             {
               id: '2',
-              startTime: dayjs('2024-01-01T09:20'),
-              endTime: dayjs('2024-01-01T09:50'),
+              startTime: '09:10',
+              endTime: '09:30',
               slotType: 'break',
               breakType: 'short',
             },
+            { id: '3', startTime: '09:30', endTime: '10:20', slotType: 'period' },
+            { id: '4', startTime: '10:20', endTime: '11:10', slotType: 'period' },
+            { id: '5', startTime: '11:10', endTime: '12:00', slotType: 'period' },
             {
-              id: '3',
-              startTime: dayjs('2024-01-01T09:50'),
-              endTime: dayjs('2024-01-01T10:30'),
-              slotType: 'period',
+              id: '6',
+              startTime: '12:00',
+              endTime: '12:20',
+              slotType: 'break',
+              breakType: 'lunch',
             },
-            {
-              id: '4',
-              startTime: dayjs('2024-01-01T10:30'),
-              endTime: dayjs('2024-01-01T11:10'),
-              slotType: 'period',
-            },
-            {
-              id: '5',
-              startTime: dayjs('2024-01-01T11:10'),
-              endTime: dayjs('2024-01-01T11:50'),
-              slotType: 'period',
-            },
+            { id: '7', startTime: '12:20', endTime: '12:40', slotType: 'period' },
+            { id: '8', startTime: '12:40', endTime: '01:00', slotType: 'period' },
+          ],
+        },
+        {
+          id: 'c2-config-5-only',
+          totalSlots: 4,
+          periodSlots: 4,
+          breakSlots: 0,
+          weekRange: [5, 5],
+          timeSlots: [
+            { id: '0', startTime: '08:00', endTime: '08:45', slotType: 'period' },
+            { id: '1', startTime: '08:45', endTime: '09:30', slotType: 'period' },
+            { id: '2', startTime: '09:30', endTime: '10:15', slotType: 'period' },
+            { id: '3', startTime: '10:15', endTime: '11:00', slotType: 'period' },
           ],
         },
       ],
@@ -196,72 +196,59 @@ const LectureSlots = () => {
     {
       id: 3,
       className: '3',
-      schoolHours: '07:00 AM - 12:40 PM',
-      previousClassSlots: '',
-      periodSlots: 7,
+      schoolHours: '08:00 AM - 01:30 PM',
+      previousClassSlots: '2',
+      totalSlots: 14,
+      periodSlots: 12,
       breakSlots: 2,
       slotConfigurations: [
         {
-          id: 'config-3',
-          totalSlots: '9',
-          weekRange: [0, 4] as [number, number],
+          id: 'c3-config-0-1',
+          totalSlots: 8,
+          periodSlots: 6,
+          breakSlots: 2,
+          weekRange: [0, 1],
           timeSlots: [
-            {
-              id: '0',
-              startTime: dayjs('2024-01-01T07:00'),
-              endTime: dayjs('2024-01-01T08:40'),
-              slotType: 'period',
-            },
-            {
-              id: '1',
-              startTime: dayjs('2024-01-01T08:40'),
-              endTime: dayjs('2024-01-01T09:20'),
-              slotType: 'period',
-            },
+            { id: '0', startTime: '08:00', endTime: '08:50', slotType: 'period' },
+            { id: '1', startTime: '08:50', endTime: '09:40', slotType: 'period' },
             {
               id: '2',
-              startTime: dayjs('2024-01-01T09:20'),
-              endTime: dayjs('2024-01-01T09:30'),
+              startTime: '09:40',
+              endTime: '09:55',
               slotType: 'break',
               breakType: 'short',
             },
-            {
-              id: '3',
-              startTime: dayjs('2024-01-01T09:30'),
-              endTime: dayjs('2024-01-01T10:10'),
-              slotType: 'period',
-            },
-            {
-              id: '4',
-              startTime: dayjs('2024-01-01T10:10'),
-              endTime: dayjs('2024-01-01T10:50'),
-              slotType: 'period',
-            },
+            { id: '3', startTime: '09:55', endTime: '10:45', slotType: 'period' },
+            { id: '4', startTime: '10:45', endTime: '11:35', slotType: 'period' },
             {
               id: '5',
-              startTime: dayjs('2024-01-01T10:50'),
-              endTime: dayjs('2024-01-01T11:30'),
-              slotType: 'period',
-            },
-            {
-              id: '6',
-              startTime: dayjs('2024-01-01T11:30'),
-              endTime: dayjs('2024-01-01T12:00'),
+              startTime: '11:35',
+              endTime: '12:05',
               slotType: 'break',
               breakType: 'lunch',
             },
-            {
-              id: '7',
-              startTime: dayjs('2024-01-01T12:00'),
-              endTime: dayjs('2024-01-01T12:40'),
-              slotType: 'period',
-            },
+            { id: '6', startTime: '12:05', endTime: '12:45', slotType: 'period' },
+            { id: '7', startTime: '12:45', endTime: '01:30', slotType: 'period' },
+          ],
+        },
+        {
+          id: 'c3-config-2-5',
+          totalSlots: 6,
+          periodSlots: 6,
+          breakSlots: 0,
+          weekRange: [2, 5],
+          timeSlots: [
+            { id: '0', startTime: '08:30', endTime: '09:15', slotType: 'period' },
+            { id: '1', startTime: '09:15', endTime: '10:00', slotType: 'period' },
+            { id: '2', startTime: '10:00', endTime: '10:45', slotType: 'period' },
+            { id: '3', startTime: '10:45', endTime: '11:30', slotType: 'period' },
+            { id: '4', startTime: '11:30', endTime: '12:15', slotType: 'period' },
+            { id: '5', startTime: '12:15', endTime: '01:00', slotType: 'period' },
           ],
         },
       ],
     },
   ];
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Conditional Breadcrumbs */}
@@ -371,15 +358,30 @@ const LectureSlots = () => {
           columns={[
             { id: 'className', label: 'Class', filterType: 'number' },
             {
-              id: 'totalSlots',
-              label: 'Total Slots',
-              filterType: 'number',
-              render(value, row) {
-                return row.periodSlots + row.breakSlots;
-              },
+              id: 'slotConfiguration',
+              label: 'Slot Configuration',
+              isSort: false,
+              render: (_: any, row: any) => (
+                <Box>
+                  {row.slotConfigurations?.map((item: any, index: number) => {
+                    const [start, end] = item.weekRange;
+
+                    const startLabel = getDayLabel(start);
+                    const endLabel = getDayLabel(end);
+
+                    return (
+                      <Typography key={index} variant="body2">
+                        {start === end ? startLabel : `${startLabel} To ${endLabel}`}
+                        {' : '}
+                        {item.totalSlots}
+                      </Typography>
+                    );
+                  })}
+                </Box>
+              ),
             },
             {
-              id: 'actions',
+              id: 'action',
               label: 'Actions',
               sticky: true,
               align: 'left',

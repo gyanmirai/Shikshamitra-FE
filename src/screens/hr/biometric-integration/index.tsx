@@ -23,12 +23,21 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useGetEmployeeAttendanceByDateQuery,
+  useAddEmployeeCustomAttendanceRuleMutation,
+  useUpdateEmployeeCustomAttendanceRuleMutation,
+} from 'src/redux/employee/employeeApi';
 
 const BiometricIntegrationScreen = () => {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   const isDownLoadingTemplate = useBoolean();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
+  const { data: attendanceData, isLoading } = useGetEmployeeAttendanceByDateQuery({
+    date: date?.toISOString(),
+  });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const open = useBoolean();
@@ -102,31 +111,37 @@ const BiometricIntegrationScreen = () => {
             size="small"
             startIcon={<Iconify icon="eva:download-fill" />}
             onClick={handleDownloadTemplate}
+            sx={{ px: '32px' }}
           >
             Download Sample File
           </LoadingButton>
 
-          <Button variant="contained" size="small" startIcon={<Iconify icon="eva:upload-fill" />}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Iconify icon="eva:upload-fill" />}
+            sx={{ px: '32px' }}
+          >
             Upload File
           </Button>
         </Box>
       </Box>
 
       <CustomizableTable
-        // isLoading={isLoading}
+        isLoading={isLoading}
         noDataText={<>No Import Attendance Data Found </>}
         tableId="biometric-integration-table"
         columns={[
           { id: 'employeeName', label: 'Name', minWidth: '12vw', align: 'left', sticky: true },
-          { id: 'employeeCode', label: 'Employee Code', align: 'left', minWidth: '10vw' },
+          { id: 'employeeIdentifier', label: 'Employee Code', align: 'left', minWidth: '10vw' },
           {
-            id: 'contactNo',
+            id: 'phoneNo',
             label: 'Mobile No.',
             align: 'left',
             minWidth: '8vw',
           },
           {
-            id: 'timeIn',
+            id: 'inTime',
             label: 'In-Time',
             align: 'left',
             minWidth: '6vw',
@@ -135,7 +150,7 @@ const BiometricIntegrationScreen = () => {
             },
           },
           {
-            id: 'timeOut',
+            id: 'outTime',
             label: 'Out-Time',
             align: 'left',
             minWidth: '7vw',
@@ -209,98 +224,7 @@ const BiometricIntegrationScreen = () => {
           //   },
           // },
         ]}
-        data={[
-          {
-            employeeName: 'Kumar Rajesh Prakash',
-            hoursWorked: '08H 30M',
-            timeIn: '09:00 AM',
-            timeOut: '05:30 PM',
-            status: 'Present',
-            employeeCode: 'EMP001',
-            contactNo: '+91 98765 43210',
-          },
-          {
-            employeeName: 'Sharma Priya Rajesh',
-            hoursWorked: '07H 30M',
-            timeIn: '09:30 AM',
-            timeOut: '05:00 PM',
-            status: 'Present',
-            employeeCode: 'EMP002',
-            contactNo: '+91 98765 43211',
-          },
-          {
-            employeeName: 'Patel Amit Naresh',
-            hoursWorked: '__ __',
-            timeIn: '',
-            timeOut: '',
-            status: 'Leave',
-            employeeCode: 'EMP003',
-            contactNo: '+91 98765 43212',
-          },
-          {
-            employeeName: 'Gupta Neha Ramesh',
-            hoursWorked: '04H 20M',
-            timeIn: '09:00 AM',
-            timeOut: '01:00 PM',
-            status: 'Half Day',
-            employeeCode: 'EMP004',
-            contactNo: '+91 98765 43213',
-          },
-          {
-            employeeName: 'Verma Suresh Kumar',
-            hoursWorked: '08H 10M',
-            timeIn: '09:15 AM',
-            timeOut: '05:15 PM',
-            status: 'Present',
-            employeeCode: 'EMP005',
-            contactNo: '+91 98765 43214',
-          },
-          {
-            employeeName: 'Singh Anita Raj',
-            hoursWorked: '08H 15M',
-            timeIn: '09:00 AM',
-            timeOut: '05:15 PM',
-            status: 'Present',
-            employeeCode: 'EMP006',
-            contactNo: '+91 98765 43215',
-          },
-          {
-            employeeName: 'Mishra Deepak Shyam',
-            hoursWorked: '__ __',
-            timeIn: '',
-            timeOut: '',
-            status: 'Leave',
-            employeeCode: 'EMP007',
-            contactNo: '+91 98765 43216',
-          },
-          {
-            employeeName: 'Reddy Meera Krishna',
-            hoursWorked: '04H 30M',
-            timeIn: '09:00 AM',
-            timeOut: '01:30 PM',
-            status: 'Half Day',
-            employeeCode: 'EMP008',
-            contactNo: '+91 98765 43217',
-          },
-          {
-            employeeName: 'Malhotra Vikram Singh',
-            hoursWorked: '08H 30M',
-            timeIn: '09:00 AM',
-            timeOut: '05:30 PM',
-            status: 'Present',
-            employeeCode: 'EMP009',
-            contactNo: '+91 98765 43218',
-          },
-          {
-            employeeName: 'Iyer Pooja Venkat',
-            hoursWorked: '08H 00M',
-            timeIn: '09:30 AM',
-            timeOut: '05:30 PM',
-            status: 'Present',
-            employeeCode: 'EMP010',
-            contactNo: '+91 98765 43219',
-          },
-        ]}
+        data={attendanceData?.data || []}
       />
 
       <CustomDialog
@@ -334,10 +258,12 @@ const BiometricForm = ({
   handleClose: (e: any, isSubmit: boolean) => void;
   editData: any;
 }) => {
+  const [addEmployeeAttendance] = useAddEmployeeCustomAttendanceRuleMutation();
+  const [updateEmployeeAttendance] = useUpdateEmployeeCustomAttendanceRuleMutation();
+
   const formik = useFormik({
     initialValues: {
       name: editData ? editData.employeeName : '',
-
       inTime: editData ? dayjs(editData.timeIn, 'hh:mm A') : null,
       outTime: editData ? dayjs(editData.timeOut, 'hh:mm A') : null,
     },
@@ -346,8 +272,25 @@ const BiometricForm = ({
       inTime: Yup.mixed().required('In time is required'),
       outTime: Yup.mixed().required('Out time is required'),
     }),
-    onSubmit: (values) => {
-      handleClose(null, true);
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          employeeId: editData?.employeeId,
+          date: editData?.date,
+          timeIn: values.inTime?.format('hh:mm A'),
+          timeOut: values.outTime?.format('hh:mm A'),
+        };
+
+        if (editData) {
+          await updateEmployeeAttendance(payload).unwrap();
+        } else {
+          await addEmployeeAttendance(payload).unwrap();
+        }
+
+        handleClose(null, true);
+      } catch (error) {
+        console.error('Attendance submit failed:', error);
+      }
     },
   });
 

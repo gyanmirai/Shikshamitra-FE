@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,8 +12,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useDeleteAssignmentTypeMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
 
 import AssignmentTypeForm from './assignmentTypeForm';
 import AssignmentTypeTable from './assignmentTypeTable';
@@ -29,13 +32,20 @@ const AssignmentTypeCreation = () => {
   // Get changes status from redux store
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
+  // Get current medium from global state
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
   // Selected assignment type data for edit/delete operations
   const [selectedData, setSelectedData] = useState<IAssignmentType | null>(null);
-  // Table data containing list of assignment types
-  const [tableData] = useState<IAssignmentType[]>([]);
 
   // Redux dispatch function
   const dispatch = useDispatch();
+
+  // Delete mutation hook
+  const [deleteAssignmentType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteAssignmentTypeMutation,
+  });
 
   /**
    * Handles dialog close with form submission check
@@ -73,11 +83,11 @@ const AssignmentTypeCreation = () => {
         description="Create and manage assignment types for homework and assignments. Add, edit, or delete assignment types as needed."
         action={
           <Button
-            sx={{ width: '160px' }}
             startIcon={<Iconify icon="eva:plus-fill" />}
             variant="contained"
             onClick={addAssignmentTypeDialog.onTrue}
             size="small"
+            sx={{ px: '32px' }}
           >
             Assignment Type
           </Button>
@@ -86,7 +96,6 @@ const AssignmentTypeCreation = () => {
       />
 
       <AssignmentTypeTable
-        data={tableData}
         onEdit={(data) => {
           setSelectedData(data);
           addAssignmentTypeDialog.onTrue();
@@ -146,21 +155,30 @@ const AssignmentTypeCreation = () => {
           </>
         }
         action={
-          <Button
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              deleteDialog.onFalse();
-              shikshaMitraToast.success({
-                message: `${selectedData?.assignmentTypeName} Assignment Type deleted successfullly`,
-              });
-              setSelectedData(null);
+            onClick={async () => {
+              try {
+                const payload = {
+                  academicMediumId: (currentMedium as any).id,
+                  id: selectedData?.id,
+                };
+                await deleteAssignmentType(payload).unwrap();
+                deleteDialog.onFalse();
+                setSelectedData(null);
+                shikshaMitraToast.success({
+                  message: `Assignment Type "${selectedData?.assignmentTypeName}" deleted successfully`,
+                });
+              } catch (error) {
+                console.error('Failed to delete assignment type', error);
+              }
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

@@ -151,7 +151,13 @@ const FinanceChargeCategory = () => {
           { name: 'Charge Category', href: '/finance/settings/charge-category' },
         ]}
         action={
-          <Button variant="contained" size="small" startIcon={<Add />} onClick={handleAdd}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Add />}
+            onClick={handleAdd}
+            sx={{ px: '32px' }}
+          >
             Charge Type
           </Button>
         }

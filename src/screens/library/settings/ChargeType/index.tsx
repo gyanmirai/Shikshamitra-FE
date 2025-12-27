@@ -75,6 +75,7 @@ const ChargeTypeCreation = () => {
             size="small"
             startIcon={<Add />}
             variant="contained"
+            sx={{ px: '32px' }}
           >
             Charges Categories
           </Button>

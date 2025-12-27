@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Save } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
@@ -14,387 +15,362 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
-const electiveGroups = [
-  {
-    id: 'elective1',
-    name: 'Tech & Fitness Group',
-    subjects: [
-      { id: 'computer', name: 'Computer', color: '#2196F3' },
-      { id: 'pt', name: 'Physical Training', color: '#4CAF50' },
-    ],
-  },
-  {
-    id: 'elective2',
-    name: 'Language Enrichment Group',
-    subjects: [
-      { id: 'hindi', name: 'Hindi', color: '#FF5722' },
-      { id: 'sanskrit', name: 'Sanskrit', color: '#9C27B0' },
-    ],
-  },
-];
-
-const studentData = {
-  elective1: [
-    {
-      srNo: 1,
-      rollNo: 'R001',
-      name: 'Atre Prerna Bhanudas',
-      preference: 'Computer',
-      grNo: 'GR001',
-    },
-    {
-      srNo: 2,
-      rollNo: 'R002',
-      name: 'Mehta Divya Hitesh',
-      preference: 'Physical Training',
-      grNo: 'GR002',
-    },
-    { srNo: 3, rollNo: 'R003', name: 'Patel Jiya Ganesh', preference: 'Computer', grNo: 'GR003' },
-    { srNo: 4, rollNo: 'R004', name: 'Shah Rohan Nirav', preference: 'Computer', grNo: 'GR004' },
-    { srNo: 5, rollNo: 'R005', name: 'Desai Krisha Manoj', preference: 'Computer', grNo: 'GR005' },
-    {
-      srNo: 6,
-      rollNo: 'R006',
-      name: 'Joshi Aarav Mihir',
-      preference: 'Physical Training',
-      grNo: 'GR006',
-    },
-    {
-      srNo: 7,
-      rollNo: 'R007',
-      name: 'Kapadia Reeva Suresh',
-      preference: 'Computer',
-      grNo: 'GR007',
-    },
-    { srNo: 8, rollNo: 'R008', name: 'Trivedi Anaya Harsh', preference: 'Computer', grNo: 'GR008' },
-    { srNo: 9, rollNo: 'R009', name: 'Modi Parth Bhargav', preference: 'Computer', grNo: 'GR009' },
-    {
-      srNo: 10,
-      rollNo: 'R010',
-      name: 'Rathod Yashika Sanjay',
-      preference: 'Physical Training',
-      grNo: 'GR010',
-    },
-  ],
-  elective2: [
-    { srNo: 1, rollNo: 'R001', name: 'Atre Prerna Bhanudas', preference: 'Hindi', grNo: 'GR001' },
-    { srNo: 2, rollNo: 'R002', name: 'Mehta Divya Hitesh', preference: 'Sanskrit', grNo: 'GR002' },
-    { srNo: 3, rollNo: 'R003', name: 'Patel Jiya Ganesh', preference: 'Hindi', grNo: 'GR003' },
-    { srNo: 4, rollNo: 'R004', name: 'Shah Rohan Nirav', preference: 'Hindi', grNo: 'GR004' },
-    { srNo: 5, rollNo: 'R005', name: 'Desai Krisha Manoj', preference: 'Sanskrit', grNo: 'GR005' },
-    { srNo: 6, rollNo: 'R006', name: 'Joshi Aarav Mihir', preference: 'Hindi', grNo: 'GR006' },
-    {
-      srNo: 7,
-      rollNo: 'R007',
-      name: 'Kapadia Reeva Suresh',
-      preference: 'Hindi',
-      grNo: 'GR007',
-    },
-    { srNo: 8, rollNo: 'R008', name: 'Trivedi Anaya Harsh', preference: 'Sanskrit', grNo: 'GR008' },
-    { srNo: 9, rollNo: 'R009', name: 'Modi Parth Bhargav', preference: 'Hindi', grNo: 'GR009' },
-    {
-      srNo: 10,
-      rollNo: 'R010',
-      name: 'Rathod Yashika Sanjay',
-      preference: 'Sanskrit',
-      grNo: 'GR010',
-    },
-  ],
-};
+import { useGetElectiveGroupsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
+import {
+  useGetStudentElectiveAssignmentsQuery,
+  useUpdateStudentElectiveAssignmentsMutation,
+} from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
 
 const AssignElectiveSubject = () => {
-  // Theme hook for Material-UI styling
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const [classes, setClasses] = useState<string>('');
 
-  // State for managing class data
-  const [allClass, setAllClass] = useState<Standards[]>([]); // Stores all available classes
-  const [classes, setClasses] = useState<string>(''); // Currently selected class
+  const [allDivision, setAllDivision] = useState<Division[]>([]);
+  const [division, setDivision] = useState<string>('');
 
-  // State for managing division data
-  const [allDivision, setAllDivision] = useState<Division[]>([]); // Stores all divisions for selected class
-  const [division, setDivision] = useState<string>(''); // Currently selected division
+  const [electiveGroupId, setElectiveGroupId] = useState<string>('');
 
-  // State for managing student and subject selections
-  const [studentSelections, setStudentSelections] = useState<Record<string, string>>({}); // Maps student GR numbers to selected subjects
-  const [students, setStudents] = useState<any[]>([]); // List of students in current selection
-  const [electiveSubject, setElectiveSubject] = useState<string>(''); // Currently selected elective subject group
-  const [selectedElectiveSubject, setSelectedElectiveSubject] = useState<string>(''); // Subject selected for bulk assignment
+  const [students, setStudents] = useState<any[]>([]);
+  const [studentSelections, setStudentSelections] = useState<Record<string, string>>({});
+  const [selectedHeaderSubject, setSelectedHeaderSubject] = useState<string>('');
 
-  // Dialog control states
-  const resetDialog = useBoolean(); // Controls visibility of reset confirmation dialog
-  const saveDialog = useBoolean(); // Controls visibility of save confirmation dialog
+  const resetDialog = useBoolean();
+  const saveDialog = useBoolean();
 
-  // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
-  // Effect to initialize classes when medium changes
-  // Flattens education medium stages to get all available classes
+  // --------------------------------------------
+  // FETCH ELECTIVE GROUPS
+  // --------------------------------------------
+  const { data: electiveGroupsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetElectiveGroupsQuery,
+    params: { academicMediumId: medium?.id },
+  });
+
+  const electiveGroups = electiveGroupsData?.records || [];
+
+  // --------------------------------------------
+  // BUILD CLASS LIST FROM MEDIUM
+  // --------------------------------------------
   useEffect(() => {
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-    setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
+    const list =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage?.standards || []) || [];
+
+    setAllClass(list);
+    setClasses(list[0]?.id || '');
   }, [medium]);
 
-  // Effect to handle class selection changes
-  // Updates divisions, sets default division and elective subject, resets selections
+  // --------------------------------------------
+  // UPDATE DIVISIONS WHEN CLASS CHANGES
+  // --------------------------------------------
   useEffect(() => {
-    const selectedClass = allClass.find((org: any) => org?.id === classes);
+    const selectedClass = allClass.find((c) => c.id === classes);
     setAllDivision(selectedClass?.divisions || []);
     setDivision(selectedClass?.divisions?.[0]?.id || '');
-    setElectiveSubject(electiveGroups[0].id);
-    setStudentSelections({});
-  }, [allClass, classes, setDivision]);
 
-  // Effect to update student list when elective subject group changes
+    setStudents([]);
+    setStudentSelections({});
+    setSelectedHeaderSubject('');
+  }, [allClass, classes]);
+
+  // --------------------------------------------
+  // GET ELECTIVE ASSIGNMENTS USING useQueryAndMutation
+  // --------------------------------------------
+  const {
+    data: assignmentData,
+    isLoading: isElectiveLoading,
+    refetch: refetchElectives,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetStudentElectiveAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      classId: classes,
+      divisionId: division,
+      electiveGroupId,
+      search: '',
+    },
+  });
+
+  // --------------------------------------------
+  // PROCESS GET API RESPONSE
+  // --------------------------------------------
   useEffect(() => {
-    if (electiveSubject) {
-      setStudents(studentData[electiveSubject as keyof typeof studentData]);
+    if (assignmentData?.records) {
+      setStudents(assignmentData.records);
+
+      const initial: Record<string, string> = {};
+      assignmentData.records.forEach((st: any) => {
+        if (st.selectedSubjectId) {
+          initial[st.studentId] = st.selectedSubjectId;
+        }
+      });
+
+      // Prevent setState inside render → schedule after paint
+      requestAnimationFrame(() => {
+        setStudentSelections(initial);
+        setSelectedHeaderSubject('');
+      });
     }
-  }, [electiveSubject]);
+  }, [assignmentData]);
 
-  // Handles resetting all student elective selections
-  // Clears selected subject and student selections, closes dialog and shows success message
-  const handleReset = () => {
-    setSelectedElectiveSubject('');
-    setStudentSelections({});
-    resetDialog.onFalse();
-    shikshaMitraToast.success({
-      message: 'Student elective assignments have been reset successfully',
-    });
-  };
+  // --------------------------------------------
+  // BULK SELECT (HEADER)
+  // --------------------------------------------
+  const handleHeaderSubjectClick = (subjectId: string) => {
+    const isSame = selectedHeaderSubject === subjectId;
 
-  // Handles saving student elective selections
-  // Closes save dialog and shows success message
-  const handleSave = () => {
-    saveDialog.onFalse();
-    shikshaMitraToast.success({
-      message: 'Student elective subject assignments have been saved successfully',
-    });
-  };
-
-  // Handles clicking subject button in table header
-  // Toggles subject selection for all students
-  const handleHeaderSubjectClick = (subjId: string) => {
-    const isSame = selectedElectiveSubject === subjId;
-    setSelectedElectiveSubject(isSame ? '' : subjId);
-
-    if (!isSame) {
-      const newSelections = students.reduce(
-        (acc, student) => {
-          acc[student.grNo] = subjId;
-          return acc;
-        },
-        {} as Record<string, string>
-      );
-      setStudentSelections(newSelections);
-    } else {
+    if (isSame) {
+      setSelectedHeaderSubject('');
       setStudentSelections({});
+      return;
     }
+
+    setSelectedHeaderSubject(subjectId);
+
+    const selections: Record<string, string> = {};
+    students.forEach((s) => {
+      selections[s.studentId] = subjectId;
+    });
+
+    setStudentSelections(selections);
   };
 
-  // Handles clicking subject button for individual student
-  // Updates subject selection for single student and checks if all students have same selection
-  const handleStudentSubjectClick = (studentGrNo: string, subjId: string) => {
+  // --------------------------------------------
+  // INDIVIDUAL ROW CLICK
+  // --------------------------------------------
+  const handleStudentSubjectClick = (studentId: string, subjectId: string) => {
     setStudentSelections((prev) => {
-      const newSelections = { ...prev, [studentGrNo]: subjId };
+      const updated = { ...prev, [studentId]: subjectId };
 
-      // Check if all students have the same subject selected
-      const allSameSubject = students.every((student) => newSelections[student.grNo] === subjId);
-      setSelectedElectiveSubject(allSameSubject ? subjId : '');
+      const allSame = students.every((s) => updated[s.studentId] === subjectId);
+      setSelectedHeaderSubject(allSame ? subjectId : '');
 
-      return newSelections;
+      return updated;
     });
   };
 
-  // Helper to check if any student selections exist
-  const hasStudentSelections = Object.keys(studentSelections).length > 0;
+  const hasSelections = Object.keys(studentSelections).length > 0;
+
+  // --------------------------------------------
+  // PUT API USING useQueryAndMutation
+  // --------------------------------------------
+  const { updateStudentElectiveAssignments, isLoading: isSaving } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateStudentElectiveAssignmentsMutation,
+  });
+
+  const handleSave = async () => {
+    const payload = {
+      academicMediumId: medium?.id,
+      electiveGroupId,
+      assignments: Object.entries(studentSelections).map(([studentId, selectedSubjectId]) => ({
+        studentId,
+        selectedSubjectId,
+      })),
+    };
+
+    try {
+      await updateStudentElectiveAssignments(payload);
+      shikshaMitraToast.success({ message: 'Elective assignments saved!' });
+      saveDialog.onFalse();
+      refetchElectives();
+    } catch {
+      shikshaMitraToast.error({ message: 'Failed to save assignments.' });
+    }
+  };
+
+  // --------------------------------------------
+  // RESET
+  // --------------------------------------------
+  const handleReset = () => {
+    setStudentSelections({});
+    setSelectedHeaderSubject('');
+    resetDialog.onFalse();
+
+    shikshaMitraToast.success({ message: 'Selections reset successfully!' });
+  };
+
+  // --------------------------------------------
+  // UI
+  // --------------------------------------------
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Student Elective Assignment"
-        description="Assign elective subjects according to students preferences and academic needs. Also, manage selections through a centralized system. "
+        description="Assign elective subjects based on student preference."
         links={[
           { name: 'Class Management', href: '/classManagement/dashboard' },
           { name: 'Student Elective Assignment' },
         ]}
         sx={{ mb: 2 }}
       />
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-          ml: 1,
-        }}
-      >
+
+      {/* FILTER BAR */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <CustomSelect
-            options={allClass}
             label="Class"
+            options={allClass}
             value={classes}
-            onChange={(val) => setClasses(val as string)}
             labelKey="name"
             valueKey="id"
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+            onChange={(v) => setClasses(v as string)}
+            formControlProps={{ sx: { minWidth: '200px' } }}
           />
+
           <CustomSelect
-            options={allDivision}
             label="Division"
+            options={allDivision}
             value={division}
-            onChange={(val) => setDivision(val as string)}
             labelKey="name"
             valueKey="id"
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
             disabled={!classes}
+            onChange={(v) => setDivision(v as string)}
+            formControlProps={{ sx: { minWidth: '200px' } }}
           />
+
           <CustomSelect
             label="Elective Group"
+            value={electiveGroupId}
+            onChange={(v) => setElectiveGroupId(v as string)}
             labelKey="name"
             valueKey="id"
             options={electiveGroups}
-            value={electiveSubject}
-            onChange={(value) => {
-              setElectiveSubject(value as string);
-              setSelectedElectiveSubject('');
-              setStudentSelections({});
-            }}
-            formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
+            disabled={!division}
+            formControlProps={{ sx: { minWidth: '200px' } }}
           />
         </Box>
 
-        <Box display="flex" gap={2} justifyContent="flex-end">
+        <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
             variant="outlined"
             startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+            disabled={!hasSelections}
             onClick={() => resetDialog.onTrue()}
-            disabled={!classes || !division || !electiveSubject || !hasStudentSelections}
             size="small"
+            sx={{ px: '32px' }}
           >
             Reset
           </Button>
-          <Button
-            startIcon={<Save />}
+
+          <LoadingButton
             variant="contained"
+            startIcon={<Save />}
+            disabled={!hasSelections}
             onClick={() => saveDialog.onTrue()}
-            disabled={!classes || !division || !electiveSubject || !hasStudentSelections}
             size="small"
+            loading={isSaving}
+            sx={{ px: '32px' }}
           >
             Save
-          </Button>
+          </LoadingButton>
         </Box>
       </Box>
+
+      {/* TABLE */}
       <CustomizableTable
-        tableId="elective-subject-table"
+        tableId="elective-table"
+        data={students}
+        isLoading={isElectiveLoading}
         noDataText={<>No Students Found</>}
         columns={[
-          { id: 'name', label: 'Student Name', minWidth: '200px', align: 'left', sticky: true },
-          { id: 'rollNo', label: 'Roll No.', minWidth: '120px', align: 'left' },
-          { id: 'preference', label: 'Student Preference', minWidth: '200px', align: 'left' },
+          { id: 'studentName', label: 'Student Name', minWidth: '200px' },
+          { id: 'rollNo', label: 'Roll No.', minWidth: '120px' },
+          { id: 'studentPreference', label: 'Preference', minWidth: '200px' },
           {
-            id: 'electiveSubject',
+            id: 'electiveSubjects',
             label: '',
             minWidth: '500px',
-            align: 'left',
-            isSort: false,
-            isFilter: false,
             renderColumn: () => {
-              const group = electiveGroups.find((g) => g.id === electiveSubject);
-              const subjects = group?.subjects || [];
+              if (!students || students.length === 0) return null;
+
+              const subjects = students[0]?.selectableSubjects || [];
 
               return (
-                <Box display="flex" alignItems="center" gap={2}>
-                  {subjects.map((subj) => {
-                    const isSelected = selectedElectiveSubject === subj.id;
+                <Box display="flex" gap={2}>
+                  {subjects.map((s: any) => {
+                    const isSelected = selectedHeaderSubject === s.subjectId;
                     return (
                       <Button
-                        key={subj.id}
+                        key={s.subjectId}
                         variant={isSelected ? 'contained' : 'outlined'}
+                        onClick={() => handleHeaderSubjectClick(s.subjectId)}
                         size="small"
-                        onClick={() => handleHeaderSubjectClick(subj.id)}
                         sx={{
-                          color: isSelected ? '#fff' : subj.color,
-                          borderColor: subj.color,
-                          backgroundColor: isSelected ? subj.color : 'transparent',
+                          color: isSelected ? '#fff' : s.subjectColor,
+                          borderColor: s.subjectColor,
+                          backgroundColor: isSelected ? s.subjectColor : 'transparent',
                           '&:hover': {
-                            backgroundColor: isSelected ? subj.color : `${subj.color}20`,
+                            backgroundColor: isSelected ? s.subjectColor : `${s.subjectColor}20`,
                           },
                         }}
                       >
-                        {subj.name}
+                        {s.subjectName}
                       </Button>
                     );
                   })}
                 </Box>
               );
             },
-            render: (_, row: any) => {
-              const group = electiveGroups.find((g) => g.id === electiveSubject);
-              const subjects = group?.subjects || [];
 
-              return (
-                <Box display="flex" alignItems="center" gap={2}>
-                  {subjects.map((subj) => {
-                    const isSelected = studentSelections[row.grNo] === subj.id;
-                    return (
-                      <Button
-                        key={subj.id}
-                        variant={isSelected ? 'contained' : 'outlined'}
-                        size="small"
-                        onClick={() => handleStudentSubjectClick(row.grNo, subj.id)}
-                        sx={{
-                          color: isSelected ? '#fff' : subj.color,
-                          borderColor: subj.color,
-                          backgroundColor: isSelected ? subj.color : 'transparent',
-                          '&:hover': {
-                            backgroundColor: isSelected ? subj.color : `${subj.color}20`,
-                          },
-                        }}
-                      >
-                        {subj.name}
-                      </Button>
-                    );
-                  })}
-                </Box>
-              );
-            },
+            render: (_, row) => (
+              <Box display="flex" gap={2}>
+                {row.selectableSubjects?.map((s: any) => {
+                  const isSelected = studentSelections[row.studentId] === s.subjectId;
+
+                  return (
+                    <Button
+                      key={s.subjectId}
+                      variant={isSelected ? 'contained' : 'outlined'}
+                      onClick={() => handleStudentSubjectClick(row.studentId, s.subjectId)}
+                      size="small"
+                      sx={{
+                        color: isSelected ? '#fff' : s.subjectColor,
+                        borderColor: s.subjectColor,
+                        backgroundColor: isSelected ? s.subjectColor : 'transparent',
+                        '&:hover': {
+                          backgroundColor: isSelected ? s.subjectColor : `${s.subjectColor}20`,
+                        },
+                      }}
+                    >
+                      {s.subjectName}
+                    </Button>
+                  );
+                })}
+              </Box>
+            ),
           },
         ]}
-        data={students}
       />
+
+      {/* RESET DIALOG */}
       <ConfirmDialog
         open={resetDialog.value}
         onClose={() => resetDialog.onFalse()}
         title="Reset"
-        content="Are you sure you want to reset all selections ?"
+        content="Are you sure you want to clear all selections?"
         action={
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-            variant="contained"
-            size="small"
-            onClick={handleReset}
-          >
+          <Button variant="contained" onClick={handleReset} size="small">
             Reset
           </Button>
         }
       />
+
+      {/* SAVE DIALOG */}
       <ConfirmDialog
         open={saveDialog.value}
         onClose={() => saveDialog.onFalse()}
-        title="Save"
-        content="Are you sure you want to save these changes ?"
+        title="Save Changes"
+        content="Do you want to save elective assignments?"
         action={
-          <Button
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-            variant="contained"
-            size="small"
-            onClick={handleSave}
-          >
+          <LoadingButton variant="contained" onClick={handleSave} size="small" loading={isSaving}>
             Save
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

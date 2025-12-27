@@ -33,8 +33,9 @@ const SendNotification = () => {
               size="small"
               startIcon={<Add />}
               variant="contained"
+              sx={{ px: '32px' }}
             >
-              Sent Notification
+              Send Notification
             </Button>
           }
           sx={{ px: 1, mb: 1 }}
