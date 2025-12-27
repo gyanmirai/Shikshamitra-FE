@@ -3,17 +3,16 @@ import { employeeApi } from '../employee/employeeApi';
 export const runPayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     getRunPayrollPreview: builder.query({
-      query: (params) => ({
-        url: '/payroll/run',
+      query: ({ month }) => ({
+        url: `/payroll/run/?month=${month}`,
         method: 'GET',
-        params,
       }),
       providesTags: ['Run-Payroll'],
     }),
 
     generateAndLockPayroll: builder.mutation({
       query: (body) => ({
-        url: '/payroll/run',
+        url: `/payroll/run/?month=${body.month}`,
         method: 'POST',
         data: body,
       }),

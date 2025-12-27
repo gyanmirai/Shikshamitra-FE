@@ -37,6 +37,7 @@ export interface TeacherProfile {
 }
 
 export interface ISubjectDetail {
+  subjectAssignmentId?: string;
   id: string;
   classId: string;
   assignedId?: string; // New field
