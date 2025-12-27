@@ -17,6 +17,7 @@ type CustomDialogProps = Omit<DialogProps, 'title'> & {
   title: React.ReactNode | string;
   children: React.ReactNode;
   paperProps?: PaperProps;
+  hasForm?: boolean;
 };
 
 const CustomDialog = ({
@@ -25,6 +26,7 @@ const CustomDialog = ({
   title,
   children,
   paperProps,
+  hasForm = true,
   ...props
 }: CustomDialogProps) => {
   const theme = useTheme();
@@ -41,6 +43,7 @@ const CustomDialog = ({
       handleClose(e, reason);
     }
   };
+  const FormComponent = hasForm ? 'form' : Box;
   return (
     <Dialog
       open={open}
@@ -63,7 +66,7 @@ const CustomDialog = ({
       }}
       {...props}
     >
-      <form id="dialog-form">
+      <FormComponent id="dialog-form" style={{ height: '100%' }}>
         <Box display="flex" alignItems="center" justifyContent="space-between" py={1} px={2}>
           <Typography variant="h5">{title}</Typography>
           <IconButton
@@ -76,7 +79,7 @@ const CustomDialog = ({
         </Box>
         <Divider />
         {children}
-      </form>
+      </FormComponent>
     </Dialog>
   );
 };

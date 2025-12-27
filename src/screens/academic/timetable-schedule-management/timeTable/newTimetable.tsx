@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
@@ -149,74 +150,214 @@ export const subjectGroupsData: TSubjectGroup[] = [
   },
 ];
 
-const timetableData: TimetableSlot[] = [
+const mockDayScheduleData: any[] = [
   {
-    startTime: '08:00 AM',
-    endTime: '09:00 AM',
-    isBreak: false,
-    dayData: [
-      { day: 'Mon', subjects: [], subjectColor: '' },
-      { day: 'Tue', subjects: [], subjectColor: '' },
-      { day: 'Wed', subjects: [], subjectColor: '' },
-      { day: 'Thu', subjects: [], subjectColor: '' },
-      { day: 'Fri', subjects: [], subjectColor: '' },
-      { day: 'Sat', subjects: [], subjectColor: '' },
+    day: 'Mon',
+    timeSlots: [
+      { id: '0', startTime: '08:00', endTime: '08:40', slotType: 'period' },
+      {
+        id: '1',
+        startTime: '08:40',
+        endTime: '09:20',
+        slotType: 'break',
+        breakType: 'short',
+      },
+      { id: '2', startTime: '09:20', endTime: '10:10', slotType: 'period' },
+      { id: '3', startTime: '10:10', endTime: '10:50', slotType: 'period' },
+      { id: '4', startTime: '10:50', endTime: '11:30', slotType: 'period' },
+      {
+        id: '5',
+        startTime: '11:30',
+        endTime: '12:00',
+        slotType: 'break',
+        breakType: 'lunch',
+      },
+      { id: '6', startTime: '12:00', endTime: '12:30', slotType: 'period' },
     ],
   },
   {
-    startTime: '09:00 AM',
-    endTime: '10:00 AM',
-    isBreak: false,
-    dayData: [
-      { day: 'Mon', subjects: [], subjectColor: '' },
-      { day: 'Tue', subjects: [], subjectColor: '' },
-      { day: 'Wed', subjects: [], subjectColor: '' },
-      { day: 'Thu', subjects: [], subjectColor: '' },
-      { day: 'Fri', subjects: [], subjectColor: '' },
-      { day: 'Sat', subjects: [], subjectColor: '' },
+    day: 'Tue',
+    timeSlots: [
+      { id: '0', startTime: '07:00', endTime: '08:40', slotType: 'period' },
+      { id: '1', startTime: '08:40', endTime: '09:20', slotType: 'period' },
+      {
+        id: '2',
+        startTime: '09:20',
+        endTime: '09:30',
+        slotType: 'break',
+        breakType: 'short',
+      },
+      { id: '3', startTime: '09:30', endTime: '10:10', slotType: 'period' },
+      { id: '4', startTime: '10:10', endTime: '10:50', slotType: 'period' },
+      { id: '5', startTime: '10:50', endTime: '11:30', slotType: 'period' },
+      {
+        id: '6',
+        startTime: '11:30',
+        endTime: '12:00',
+        slotType: 'break',
+        breakType: 'lunch',
+      },
+      { id: '7', startTime: '12:00', endTime: '12:30', slotType: 'period' },
     ],
   },
   {
-    startTime: '10:00 AM',
-    endTime: '10:15 AM',
-    isBreak: true,
-    dayData: [],
-  },
-  {
-    startTime: '10:15 AM',
-    endTime: '11:15 AM',
-    isBreak: false,
-    dayData: [
-      { day: 'Mon', subjects: [], subjectColor: '' },
-      { day: 'Tue', subjects: [], subjectColor: '' },
-      { day: 'Wed', subjects: [], subjectColor: '' },
-      { day: 'Thu', subjects: [], subjectColor: '' },
-      { day: 'Fri', subjects: [], subjectColor: '' },
-      { day: 'Sat', subjects: [], subjectColor: '' },
+    day: 'Wed',
+    timeSlots: [
+      { id: '1', startTime: '08:40', endTime: '09:20', slotType: 'period' },
+      {
+        id: '2',
+        startTime: '09:20',
+        endTime: '09:30',
+        slotType: 'break',
+        breakType: 'short',
+      },
+      { id: '3', startTime: '09:30', endTime: '10:10', slotType: 'period' },
+      { id: '4', startTime: '10:10', endTime: '10:50', slotType: 'period' },
+      { id: '5', startTime: '10:50', endTime: '11:30', slotType: 'period' },
+      {
+        id: '6',
+        startTime: '11:30',
+        endTime: '12:00',
+        slotType: 'break',
+        breakType: 'lunch',
+      },
+      { id: '7', startTime: '12:00', endTime: '12:30', slotType: 'period' },
     ],
   },
   {
-    startTime: '11:15 AM',
-    endTime: '12:15 PM',
-    isBreak: false,
-    dayData: [
-      { day: 'Mon', subjects: [], subjectColor: '' },
-      { day: 'Tue', subjects: [], subjectColor: '' },
-      { day: 'Wed', subjects: [], subjectColor: '' },
-      { day: 'Thu', subjects: [], subjectColor: '' },
-      { day: 'Fri', subjects: [], subjectColor: '' },
-      { day: 'Sat', subjects: [], subjectColor: '' },
+    day: 'Thu',
+    timeSlots: [
+      { id: '0', startTime: '07:00', endTime: '08:40', slotType: 'period' },
+      { id: '1', startTime: '08:40', endTime: '09:20', slotType: 'period' },
+      {
+        id: '2',
+        startTime: '09:20',
+        endTime: '09:30',
+        slotType: 'break',
+        breakType: 'short',
+      },
+      { id: '3', startTime: '09:30', endTime: '10:10', slotType: 'period' },
+      { id: '4', startTime: '10:10', endTime: '10:50', slotType: 'period' },
+      { id: '5', startTime: '10:50', endTime: '11:30', slotType: 'period' },
+      {
+        id: '6',
+        startTime: '11:30',
+        endTime: '12:00',
+        slotType: 'break',
+        breakType: 'lunch',
+      },
+      { id: '7', startTime: '12:00', endTime: '12:30', slotType: 'period' },
+    ],
+  },
+  {
+    day: 'Fri',
+    timeSlots: [
+      { id: '0', startTime: '07:00', endTime: '08:40', slotType: 'period' },
+      { id: '1', startTime: '08:40', endTime: '09:20', slotType: 'period' },
+      {
+        id: '2',
+        startTime: '09:20',
+        endTime: '09:30',
+        slotType: 'break',
+        breakType: 'short',
+      },
+      { id: '3', startTime: '09:30', endTime: '10:10', slotType: 'period' },
+      { id: '4', startTime: '10:10', endTime: '10:50', slotType: 'period' },
+      { id: '5', startTime: '10:50', endTime: '11:30', slotType: 'period' },
+      {
+        id: '6',
+        startTime: '11:30',
+        endTime: '12:00',
+        slotType: 'break',
+        breakType: 'lunch',
+      },
+      { id: '7', startTime: '12:00', endTime: '12:30', slotType: 'period' },
+    ],
+  },
+  {
+    day: 'Sat',
+    timeSlots: [
+      { id: '0', startTime: '07:00', endTime: '08:40', slotType: 'period' },
+      { id: '1', startTime: '08:40', endTime: '09:20', slotType: 'period' },
+      {
+        id: '2',
+        startTime: '09:20',
+        endTime: '09:30',
+        slotType: 'break',
+        breakType: 'short',
+      },
+      { id: '3', startTime: '09:30', endTime: '10:10', slotType: 'period' },
+      { id: '4', startTime: '10:10', endTime: '10:50', slotType: 'period' },
     ],
   },
 ];
 
-const TimeTableGrid = ({
-  isClassVisible,
-  isDivisionVisible,
-  isRoomVisible,
-  isTeacherVisible,
-  timeTableData,
-}: any) => {
+const transformScheduleToGrid = (scheduleData: any[]): TimetableSlot[] => {
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  // 1. Fixed Time Range: 08:00 AM to 04:00 PM (16:00)
+  const minTime = dayjs('08:00', 'HH:mm');
+  const maxTime = dayjs('16:00', 'HH:mm');
+
+  // 2. Generate 30-min slots from Min to Max
+  const gridSlots: TimetableSlot[] = [];
+  let currentTime = minTime;
+
+  while (currentTime.isBefore(maxTime)) {
+    const slotStart = currentTime;
+    const slotEnd = currentTime.add(30, 'minute');
+
+    const dayData = weekDays.map((day) => {
+      const daySchedule = scheduleData.find((d) => d.day === day);
+      // Find if any slot in this day OVERLAPS with current grid slot
+      // Overlap: (ScheduleStart < GridEnd) && (ScheduleEnd > GridStart)
+      const overlappingSlot = daySchedule?.timeSlots.find((s: any) => {
+        const sStart = dayjs(s.startTime, 'HH:mm');
+        const sEnd = dayjs(s.endTime, 'HH:mm');
+        return sStart.isBefore(slotEnd) && sEnd.isAfter(slotStart);
+      });
+
+      let slotType: 'period' | 'break' | 'zed' = 'zed';
+      let isDisabled = true;
+      let slotId;
+
+      if (overlappingSlot) {
+        slotId = overlappingSlot.id;
+        if (overlappingSlot.slotType === 'break') {
+          slotType = 'break';
+          isDisabled = false; // Break is "enabled" in terms of existence, but handled specifically in UI
+        } else {
+          slotType = 'period';
+          isDisabled = false; // Lecture slot is enabled
+        }
+      }
+
+      return {
+        day,
+        subjectColor: '',
+        subjects: [],
+        isDisabled,
+        slotId,
+        slotType,
+      };
+    });
+
+    gridSlots.push({
+      startTime: slotStart.format('hh:mm A'),
+      endTime: slotEnd.format('hh:mm A'),
+      isBreak: false,
+      dayData,
+    });
+
+    currentTime = slotEnd;
+  }
+
+  return gridSlots;
+};
+
+const timetableData: TimetableSlot[] = transformScheduleToGrid(mockDayScheduleData);
+
+const TimeTableGrid = () => {
   // Dialog state for creating time slots modal
   // const createSlotsDialog = useBoolean();
   const [subjectsGroups, setSubjectsGroups] = useState<any>(subjectGroupsData);
@@ -273,7 +414,6 @@ const TimeTableGrid = ({
   //   '10:30 - 11:15', // Fourth period
   //   '11:15 - 12:00', // Fifth period
   // ];
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Initialize timetable as an array of arrays
   const defaultTimetableData = useMemo(() => cloneDeep(timetableData), []);
@@ -303,11 +443,76 @@ const TimeTableGrid = ({
       const cloneTimeTableData = cloneDeep(timetable);
       const cloneSubjectGroups = cloneDeep(subjectsGroups);
 
-      // Check if target slot is already occupied
+      // Check if target slot is already occupied or disabled
       const existingDayData = cloneTimeTableData[rowIndex].dayData[colIndex];
-      if (existingDayData?.subjects?.length > 0) {
+      if (existingDayData?.subjects?.length > 0 || existingDayData?.isDisabled) {
         return;
       }
+
+      // Helper to clear a slot block by slotId
+      const clearSlotBlock = (rowIdx: number, colIdx: number, data: TimetableSlot[]) => {
+        const { slotId } = data[rowIdx].dayData[colIdx];
+        if (!slotId) {
+          // Fallback for single slot
+          data[rowIdx].dayData[colIdx] = {
+            ...data[rowIdx].dayData[colIdx],
+            subjects: [],
+            subjectColor: '',
+            isDisabled: false,
+          };
+          return;
+        }
+
+        data.forEach((row) => {
+          const cell = row.dayData[colIdx];
+          if (cell.slotId === slotId) {
+            cell.subjects = [];
+            cell.subjectColor = '';
+            cell.isDisabled = false; // Re-enable all cells in the block
+          }
+        });
+      };
+
+      // Helper to occupy a slot block
+      const occupySlotBlock = (
+        rowIdx: number,
+        colIdx: number,
+        data: TimetableSlot[],
+        newSubject: any
+      ) => {
+        const targetCell = data[rowIdx].dayData[colIdx];
+        const { slotId } = targetCell;
+
+        if (!slotId) {
+          targetCell.subjects = newSubject.subjects;
+          targetCell.subjectColor = newSubject.subjectColor;
+          return;
+        }
+
+        // Find all rows for this slotId
+        const blockRows = data.filter((row) => row.dayData[colIdx].slotId === slotId);
+
+        if (blockRows.length === 0) return;
+
+        // Place subject in the FIRST row of the block
+        const firstRow = blockRows[0];
+        firstRow.dayData[colIdx] = {
+          ...firstRow.dayData[colIdx],
+          subjects: newSubject.subjects,
+          subjectColor: newSubject.subjectColor,
+          isDisabled: false,
+        };
+
+        // Disable remaining rows
+        blockRows.slice(1).forEach((row) => {
+          row.dayData[colIdx] = {
+            ...row.dayData[colIdx],
+            subjects: [],
+            subjectColor: '',
+            isDisabled: true,
+          };
+        });
+      };
 
       // Check if this is a move operation (has source coordinates and they are valid numbers)
       const isMove =
@@ -326,24 +531,28 @@ const TimeTableGrid = ({
           return;
         }
 
-        // Get the source slot data
-        const sourceSlotData = cloneTimeTableData[sourceRow].dayData[sourceCol];
-
-        // Move the data to the target slot
-        cloneTimeTableData[rowIndex].dayData[colIndex] = {
-          day: weekDays[colIndex],
-          subjectColor: sourceSlotData.subjectColor,
-          subjects: [...sourceSlotData.subjects], // Create a copy of subjects
+        // Get source data before clearing
+        const sourceCell = cloneTimeTableData[sourceRow].dayData[sourceCol];
+        const sourceSubject = {
+          subjects: [...sourceCell.subjects],
+          subjectColor: sourceCell.subjectColor,
         };
 
-        // Clear the source slot
-        cloneTimeTableData[sourceRow].dayData[sourceCol] = {
-          day: weekDays[sourceCol],
-          subjectColor: '',
-          subjects: [],
-        };
+        // Clear source block
+        clearSlotBlock(sourceRow, sourceCol, cloneTimeTableData);
 
-        // Update both timetable and subject groups for move operations
+        // Occupy target block
+        const cleanedSubjects = (sourceSubject.subjects || []).map((s: Subject) => ({
+          ...s,
+          // Keep teacher/room if needed? Or clear?
+          // Usually move keeps assignments.
+        }));
+
+        occupySlotBlock(rowIndex, colIndex, cloneTimeTableData, {
+          ...sourceSubject,
+          subjects: cleanedSubjects,
+        });
+
         setTimetable(cloneTimeTableData);
         setSubjectsGroups(cloneSubjectGroups);
       } else {
@@ -382,11 +591,10 @@ const TimeTableGrid = ({
           room: '',
         }));
 
-        cloneTimeTableData[rowIndex].dayData[colIndex] = {
-          day: weekDays[colIndex],
-          subjectColor: subject.subjectColor,
+        occupySlotBlock(rowIndex, colIndex, cloneTimeTableData, {
           subjects: cleanedSubjects,
-        };
+          subjectColor: subject.subjectColor,
+        });
 
         // Update subject group allocation count for new placements
         if (group) {
@@ -394,7 +602,6 @@ const TimeTableGrid = ({
           group.allocateLectures = usedLectures + 1;
         }
 
-        // Update both timetable and subject groups for new placements
         setTimetable(cloneTimeTableData);
         setSubjectsGroups(cloneSubjectGroups);
       }
@@ -404,14 +611,29 @@ const TimeTableGrid = ({
   const handleDeleteSlot = (rowIndex: number, colIndex: number) => {
     const cloneTimeTableData = cloneDeep(timetable);
     const cloneSubjectGroups = cloneDeep(subjectsGroups);
-    const cleanedSubjects = cloneTimeTableData[rowIndex]?.dayData?.[colIndex]?.subjects || [];
+    const targetCell = cloneTimeTableData[rowIndex]?.dayData?.[colIndex];
+    const cleanedSubjects = targetCell?.subjects || [];
+    const slotId = targetCell?.slotId;
 
-    // Clear the slot
-    cloneTimeTableData[rowIndex].dayData[colIndex] = {
-      day: weekDays[colIndex],
-      subjectColor: '',
-      subjects: [],
-    };
+    // Clear the slot block
+    if (slotId) {
+      cloneTimeTableData.forEach((row) => {
+        const cell = row.dayData[colIndex];
+        if (cell.slotId === slotId) {
+          cell.subjects = [];
+          cell.subjectColor = '';
+          cell.isDisabled = false; // Re-enable
+        }
+      });
+    } else {
+      // Fallback
+      cloneTimeTableData[rowIndex].dayData[colIndex] = {
+        ...targetCell,
+        subjects: [],
+        subjectColor: '',
+        isDisabled: false,
+      };
+    }
 
     // Update subject group allocation count
     if (cleanedSubjects.length > 0) {

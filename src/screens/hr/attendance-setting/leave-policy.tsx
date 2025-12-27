@@ -2,17 +2,17 @@
 
 import type { RootState } from 'src/redux/store';
 
-import dayjs from 'dayjs';
 // Removed dayjs since date fields are no longer part of simplified form
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -23,7 +23,12 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useDeleteEmployeeLeavePolicyMutation } from 'src/redux/employee/employeeApi';
+import {
+  useGetEmployeeLeavePolicyQuery,
+  useAddEmployeeLeavePolicyMutation,
+  useDeleteEmployeeLeavePolicyMutation,
+  useUpdateEmployeeLeavePolicyMutation,
+} from 'src/redux/employee/employeeApi';
 import {
   Box,
   Grid,
@@ -43,6 +48,8 @@ import {
 
 import { SectionCard } from '../employee/employee-form-fields/InformationFields';
 
+import type { ILeavePolicy } from './leave-type';
+
 // Interface removed due to simplified static table usage.
 
 const LeavePolicy = () => {
@@ -54,10 +61,17 @@ const LeavePolicy = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Removed leave policy fetch – using static sample data for simplified form.
 
+  const { data: leavePolicyData, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
+  });
+
   const [deleteLeavePolicy, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteEmployeeLeavePolicyMutation,
   });
+
+  const tableData = useMemo(() => leavePolicyData?.items || [], [leavePolicyData?.items]);
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -162,7 +176,7 @@ const LeavePolicy = () => {
             </Box>
           </>
         }
-        isLoading={false}
+        isLoading={isLoading}
         tableId="leave-policy-table"
         columns={[
           {
@@ -179,7 +193,7 @@ const LeavePolicy = () => {
             align: 'left',
           },
           {
-            id: 'maximumPerYear',
+            id: 'maxLeavePerYear',
             label: 'Maximum Per year',
             minWidth: '17vw',
             align: 'left',
@@ -189,14 +203,14 @@ const LeavePolicy = () => {
             label: 'Carry Forward',
             minWidth: '16vw',
             align: 'left',
-            filterType: 'date',
+            render: (value) => (value ? 'Yes' : 'No'),
           },
           {
-            id: 'encashble',
+            id: 'encashmentAllowed',
             label: 'Encashable',
             minWidth: '16vw',
             align: 'left',
-            filterType: 'date',
+            render: (value) => (value ? 'Yes' : 'No'),
           },
           {
             id: 'paidType',
@@ -237,58 +251,7 @@ const LeavePolicy = () => {
             },
           },
         ]}
-        data={[
-          {
-            id: 1,
-            title: 'Sick Leave Policy',
-            leaveType: 'Sick Leave',
-            maximumPerYear: 12,
-            carryForward: 'Yes',
-            encashble: 'No',
-            paidType: 'Paid',
-            requiresApproval: 'Yes',
-          },
-          {
-            id: 2,
-            title: 'Casual Leave Policy',
-            leaveType: 'Casual Leave',
-            maximumPerYear: 8,
-            carryForward: 'No',
-            encashble: 'No',
-            paidType: 'Paid',
-            requiresApproval: 'No',
-          },
-          {
-            id: 3,
-            title: 'Earned Leave Policy',
-            leaveType: 'Earned Leave',
-            maximumPerYear: 15,
-            carryForward: 'Yes',
-            encashble: 'Yes',
-            paidType: 'Paid',
-            requiresApproval: 'Yes',
-          },
-          {
-            id: 4,
-            title: 'Unpaid Leave Policy',
-            leaveType: 'Casual Leave',
-            maximumPerYear: 5,
-            carryForward: 'No',
-            encashble: 'No',
-            paidType: 'Unpaid',
-            requiresApproval: 'No',
-          },
-          {
-            id: 5,
-            title: 'Special Leave Policy',
-            leaveType: 'Sick Leave',
-            maximumPerYear: 3,
-            carryForward: 'No',
-            encashble: 'No',
-            paidType: 'Paid',
-            requiresApproval: 'Yes',
-          },
-        ]}
+        data={tableData}
       />
 
       <CustomDialog
@@ -334,49 +297,9 @@ const validationSchema = Yup.object({
     .integer('Must be an integer')
     .min(0, 'Cannot be negative')
     .required('Maximum leave per year is required'),
-  accrualMethod: Yup.string().required('Accrual method is required'),
 
-  accrualStartDate: Yup.mixed()
-    .required('Accrual start date is required')
-    .test(
-      'is-valid-dayjs',
-      'Accrual start date must be a valid date',
-      (value) => value && dayjs(value as any).isValid()
-    ),
-
-  accrualEndDate: Yup.mixed()
-    .required('Accrual end date is required')
-    .test(
-      'is-valid-dayjs',
-      'Accrual end date must be a valid date',
-      (value) => value && dayjs(value as any).isValid()
-    )
-    // eslint-disable-next-line func-names
-    .test('is-after-start', 'End date must be after start date', function (endDate) {
-      const startDate = this.parent.accrualStartDate;
-      return (
-        dayjs(endDate as any).isValid() &&
-        dayjs(startDate as any).isValid() &&
-        dayjs(endDate as any).isSameOrAfter(dayjs(startDate as any))
-      );
-    }),
-
-  probationRestriction: Yup.boolean(),
-
-  daysBeforeAllowed: Yup.number().required('Days before allowed is required'),
-
-  isPaid: Yup.boolean(),
   requiresApproval: Yup.boolean(),
 
-  maxDaysPerApplication: Yup.number().required('Max days per application is required'),
-
-  minLeaveDuration: Yup.number().required('Minimum leave duration is required'),
-
-  minDaysBetweenApplications: Yup.number().required(
-    'Minimum days between applications is required'
-  ),
-
-  allowHalfDay: Yup.boolean(),
   paidType: Yup.string().required('Paid type is required'),
   carryForward: Yup.boolean(),
   encashmentAllowed: Yup.boolean(),
@@ -389,13 +312,22 @@ export const LeavePolicyForm = ({
   editData,
 }: {
   handleClose: (e: any, isSubmit?: boolean) => void;
-  editData: any | null;
+  editData: ILeavePolicy | null;
 }) => {
+  const [addLeavePolicy, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddEmployeeLeavePolicyMutation,
+  });
+
+  const [updateLeavePolicy, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateEmployeeLeavePolicyMutation,
+  });
   const formik = useFormik({
     initialValues: {
       policyTitle: editData?.title || '',
       leaveType: editData?.leaveType || '',
-      maxLeavePerYear: editData?.leaveDays?.toString() || '',
+      maxLeavePerYear: editData?.maxLeavePerYear?.toString() || '',
       paidType: editData?.paidType || 'Paid',
       carryForward: editData?.carryForward ?? false,
       encashmentAllowed: editData?.encashmentAllowed ?? false,
@@ -403,8 +335,40 @@ export const LeavePolicyForm = ({
       description: editData?.description || '',
     },
     validationSchema,
-    onSubmit: (values) => {
-      handleClose(null, true);
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          policyTitle: values.policyTitle,
+          leaveType: values.leaveType,
+          maxLeavePerYear: Number(values.maxLeavePerYear),
+          paidType: values.paidType,
+          carryForward: values.carryForward,
+          encashmentAllowed: values.encashmentAllowed,
+          requiresApproval: values.requiresApproval,
+          description: values.description || undefined,
+        };
+
+        if (!editData) {
+          await addLeavePolicy(payload);
+          shikshaMitraToast.success({
+            message: `Leave policy ${values.policyTitle} added successfully`,
+          });
+        } else {
+          await updateLeavePolicy({
+            id: editData.id,
+            body: payload,
+          });
+          shikshaMitraToast.success({
+            message: `Leave policy ${values.policyTitle} updated successfully`,
+          });
+        }
+        handleClose(null, true);
+      } catch (error) {
+        console.error('Failed to save leave policy:', error);
+        shikshaMitraToast.error({
+          message: editData ? 'Failed to update leave policy' : 'Failed to add leave policy',
+        });
+      }
     },
   });
 
@@ -594,6 +558,7 @@ export const LeavePolicyForm = ({
           size="small"
           form="dialog-form"
           onClick={(e: any) => formik.handleSubmit(e)}
+          loading={isLoading || isUpdateLoading}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}

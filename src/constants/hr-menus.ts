@@ -252,14 +252,14 @@ const hrModule = (isDdvs: boolean) => ({
               shortcutKeyName: 'Alt+H+A+4',
               permissionName: hrPermissions.attendance.setting.root,
               children: [
-                {
-                  title: 'Shift Management',
-                  path: hrPaths.attendance.setting.shiftManagement,
-                  _action: 'shift-management',
-                  shortcutKey: 'Alt+H+A+4+1',
-                  shortcutKeyName: 'Alt+H+A+4+1',
-                  permissionName: hrPermissions.attendance.setting.shiftManagement,
-                },
+                // {
+                //   title: 'Shift Management',
+                //   path: hrPaths.attendance.setting.shiftManagement,
+                //   _action: 'shift-management',
+                //   shortcutKey: 'Alt+H+A+4+1',
+                //   shortcutKeyName: 'Alt+H+A+4+1',
+                //   permissionName: hrPermissions.attendance.setting.shiftManagement,
+                // },
                 {
                   title: 'Leave Type',
                   path: hrPaths.attendance.setting.leaveType,

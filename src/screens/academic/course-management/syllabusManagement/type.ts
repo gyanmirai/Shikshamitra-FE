@@ -41,6 +41,8 @@ export interface IAddNewChapterProps {
   initialValues?: IChapter | null;
   className?: string;
   subject?: string;
+  classId?: string;
+  subjectId?: string;
 }
 
 export interface IChapterTableProps {
@@ -51,4 +53,6 @@ export interface IChapterTableProps {
   actions: (params: { popover: any; row: IChapter }) => React.JSX.Element;
   handleEyeClick: (subjectName: string) => void;
   onViewDocuments: (chapter: IChapter) => void;
+  subjectId?: string;
+  standardId?: string;
 }

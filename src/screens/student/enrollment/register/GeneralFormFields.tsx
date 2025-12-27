@@ -9,10 +9,12 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { GenderType, GenderTypeArray } from 'src/enums/gender';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
 import { EmployeeCastType, EmployeeCastTypeArray } from 'src/enums/employee-cast';
+import { MotherTongueType, MotherTongueTypeArray } from 'src/enums/mother-tongue';
 import {
   CardActions,
   SectionCard,
@@ -39,13 +41,37 @@ import RenderInquiryPrefrance from './RenderInquiryPrefrance';
 import type { FieldsType } from './type';
 
 const RenderGeneralFormFields = (props: any) => {
-  const { formik, isMainForm = false } = props;
+  const { formik, isMainForm = false, editData } = props;
+
+  const { resetForm, initialValues } = formik;
   const isGeneralFormEditable = useBoolean(isMainForm);
   const isStudentDetailsEditable = useBoolean(isMainForm);
   const isContactDetailsEditable = useBoolean(isMainForm);
   const isIdentificationEditable = useBoolean(isMainForm);
   const isAddressEditable = useBoolean(isMainForm);
   const isPreviousSchoolEditable = useBoolean(isMainForm);
+
+  // const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetBasicDetailsQuery,
+  //   params: {
+  //     studentId: editData?.studentId,
+  //   },
+  //   options: {
+  //     skip: !editData?.studentId,
+  //   },
+  // });
+  // const hasInitialized = useRef(false);
+  // useEffect(() => {
+  //   if (!hasInitialized.current && basicDetails?.data && !basicDetailsLoading) {
+  //     console.log('=========called=======');
+  //     resetForm({ values: { ...generalFieldsInitialValues(basicDetails.data) } });
+  //     hasInitialized.current = true;
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [basicDetails?.data?.standardId, basicDetailsLoading]);
+
+  // console.log(basicDetails, 'basicDetails', formik);
 
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
@@ -259,15 +285,17 @@ const RenderGeneralFormFields = (props: any) => {
                 <RadioGroup
                   row
                   name="gender"
-                  value={formik.values.gender}
-                  onChange={formik.handleChange}
+                  value={formik.values.gender?.toString()}
+                  onChange={(e) => {
+                    formik.setFieldValue('gender', Number(e.target.value));
+                  }}
                 >
-                  {GenderTypeArray.map((i, index) => (
+                  {GenderTypeArray.map((i) => (
                     <FormControlLabel
                       key={i}
-                      value={index}
+                      value={i.toString()}
                       control={<Radio size="small" />}
-                      label={GenderType[index]}
+                      label={GenderType[i]}
                       disabled={!isStudentDetailsEditable.value}
                     />
                   ))}
@@ -470,7 +498,7 @@ const RenderGeneralFormFields = (props: any) => {
               size="small"
               label="Pan No."
               name="panNo"
-              value={formik.values.panNo.toUpperCase()}
+              value={formik.values.panNo?.toUpperCase()}
               onBlur={formik.handleBlur}
               error={formik.touched.panNo && Boolean(formik.errors.panNo)}
               helperText={formik.touched.panNo && formik.errors.panNo}
@@ -512,18 +540,12 @@ const RenderGeneralFormFields = (props: any) => {
               onBlur={formik.handleBlur}
               label="Religion "
               name="religion"
-              options={[
-                { id: 'Hinduism', name: 'Hinduism' },
-                { id: 'Islam', name: 'Islam' },
-                { id: 'Christianity', name: 'Christianity' },
-                { id: 'Sikhism', name: 'Sikhism' },
-                { id: 'Buddhism', name: 'Buddhism' },
-                { id: 'Jainism', name: 'Jainism' },
-                { id: 'Judaism', name: 'Judaism' },
-                { id: 'Zoroastrianism', name: 'Zoroastrianism' },
-              ]}
-              valueKey="id"
-              labelKey="name"
+              options={ReligionTypeArray.map((i, index) => ({
+                value: index,
+                label: ReligionType[index],
+              }))}
+              valueKey="value"
+              labelKey="label"
               error={formik?.touched?.religion && formik.errors?.religion}
               helperText={formik?.touched?.religion && formik?.errors?.religion}
             />
@@ -560,8 +582,8 @@ const RenderGeneralFormFields = (props: any) => {
             error={formik.touched.castCategory && Boolean(formik.errors.castCategory)}
           >
             <CustomSelect
-              labelId="dropdown-label"
-              id="dropdown"
+              // id="dropdown"
+              labelId="castCategory-label"
               value={formik.values.castCategory}
               onChange={(val) => {
                 formik.setFieldValue('castCategory', val);
@@ -648,14 +670,12 @@ const RenderGeneralFormFields = (props: any) => {
                 formik.setFieldValue('motherTongue', value);
               }}
               onBlur={formik.handleBlur}
-              options={[
-                { id: 'English', name: 'English' },
-                { id: 'Gujarati', name: 'Gujarati' },
-                { id: 'Marathi', name: 'Marathi' },
-                { id: 'Hindi', name: 'Hindi' },
-              ]}
-              valueKey="id"
-              labelKey="name"
+              options={MotherTongueTypeArray.map((i, index) => ({
+                value: index,
+                label: MotherTongueType[index],
+              }))}
+              valueKey="value"
+              labelKey="label"
               error={formik?.touched?.motherTongue && formik.errors?.motherTongue}
               helperText={formik?.touched?.motherTongue && formik?.errors?.motherTongue}
             />

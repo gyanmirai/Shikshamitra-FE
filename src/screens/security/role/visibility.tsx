@@ -231,8 +231,12 @@ const Visibility = ({
               const isSelected = currentSelected?.title === item.title;
               const totalSubmodules = countTotalSubmodules(item.submodule || []);
               const visibleSubmodules =
-                visibility?.filter((t) => getAllSubmoduleTitles(item.submodule || []).includes(t))
-                  .length || 0;
+                visibility?.filter(
+                  (t) =>
+                    getAllSubmoduleTitles(item.submodule || [])
+                      .map((sub) => sub.name)
+                      .includes(t.name) && t.isGranted
+                ).length || 0;
 
               const progress =
                 totalSubmodules > 0 ? (visibleSubmodules / totalSubmodules) * 100 : 0;

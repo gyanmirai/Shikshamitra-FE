@@ -11,7 +11,7 @@ import FinanceOutstandingByClass from './Components/FinanceOutstandingByClass';
 import FinanceExpectedVsCollected from './Components/FinanceExpectedVsCollected';
 import FinanceMonthlyFeesCollectionTrend from './Components/FinanceMonthlyFeesCollectionTrend';
 
-const FinanceDashboardScreen = () => (
+const FinanceAccountantDashboardScreen = () => (
   <Box>
     <Grid container spacing={2} sx={{ mb: 2 }}>
       <Grid size={{ xs: 12 }}>
@@ -244,4 +244,4 @@ const FinanceDashboardScreen = () => (
   </Box>
 );
 
-export default FinanceDashboardScreen;
+export default FinanceAccountantDashboardScreen;

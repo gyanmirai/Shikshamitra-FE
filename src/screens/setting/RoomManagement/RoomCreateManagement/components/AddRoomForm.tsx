@@ -2,18 +2,26 @@
 
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
-import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
+import { useGetRoomTypesQuery } from 'src/redux/InstituteSetup/RoomTypeApi/roomTypeApi';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { Grid, Button, Checkbox, TextField, DialogActions, FormControlLabel } from '@mui/material';
+import {
+  useAddRoomMutation,
+  useUpdateRoomMutation,
+} from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 
 interface IRoomFormProps {
   open: UseBooleanReturn;
@@ -35,18 +43,35 @@ const featureOptions = [
 ];
 
 const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
+  const [addRoom, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddRoomMutation,
+  });
+  const [updateRoom, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateRoomMutation,
+  });
+  const { data: buildings, isLoading: isBuldingLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBuildingsQuery,
+  });
+  const { data: roomTypes, isLoading: isRoomTypeLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetRoomTypesQuery,
+  });
+  const [floorsOptions, setFloorsOptions] = useState([]);
   const formik = useFormik({
     initialValues: {
       roomName: editData?.roomName || '',
       capacity: editData?.capacity || '',
-      building: editData?.building || '',
+      building: editData?.buildingId || '',
       floor: editData?.floor || '',
-      roomType: editData?.roomType || '',
+      roomType: editData?.roomTypeId || '',
       totalBenches: editData?.totalBenches || '',
       benchCapacity: editData?.benchCapacity || '',
-      rows: editData?.rows || '',
-      columns: editData?.columns || '',
-      features: editData?.features || [],
+      benchesPerRow: editData?.benchesPerRow || '',
+      benchesPerColumn: editData?.benchesPerColumn || '',
+      features: editData?.features ? editData.features : [],
     },
     validationSchema: Yup.object().shape({
       roomName: Yup.string().required('Room Name/No. is required'),
@@ -56,12 +81,46 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
       roomType: Yup.string().required('Room Type is required'),
       totalBenches: Yup.number().required('Total Benches is required'),
       benchCapacity: Yup.number().required('Bench Capacity is required'),
-      rows: Yup.number().required('Class Benches Rows is required'),
-      columns: Yup.number().required('Class Benches Columns is required'),
+      benchesPerRow: Yup.number().required('Class Benches Rows is required'),
+      benchesPerColumn: Yup.number().required('Class Benches Columns is required'),
     }),
     onSubmit: (values) => {
+      if (editData) {
+        updateRoom({
+          id: editData.id,
+          body: {
+            roomName: values.roomName,
+            capacity: values.capacity,
+            buildingId: values.building,
+            floor: values.floor,
+            roomTypeId: values.roomType,
+            totalBenches: values.totalBenches,
+            benchCapacity: values.benchCapacity,
+            benchesPerRow: values.benchesPerRow,
+            benchesPerColumn: values.benchesPerColumn,
+            features: values.features,
+          },
+        });
+        shikshaMitraToast.success({
+          message: `"${values.roomName}" Room updated successfully`,
+        });
+        onClose(null, true);
+        return;
+      }
+      addRoom({
+        roomName: values.roomName,
+        capacity: values.capacity,
+        buildingId: values.building,
+        floor: values.floor,
+        roomTypeId: values.roomType,
+        totalBenches: values.totalBenches,
+        benchCapacity: values.benchCapacity,
+        benchesPerRow: values.benchesPerRow,
+        benchesPerColumn: values.benchesPerColumn,
+        features: values.features,
+      });
       shikshaMitraToast.success({
-        message: `Room ${editData ? 'updated' : 'added'} successfully!`,
+        message: `"${values.roomName}" Room added successfully`,
       });
       onClose(null, true);
     },
@@ -78,6 +137,12 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
       formik.setFieldValue('features', [...current, feature]);
     }
   };
+
+  useEffect(() => {
+    setFloorsOptions(
+      buildings?.find((building: any) => building.id === formik.values.building)?.floors || []
+    );
+  }, [buildings, formik.values.building]);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -134,11 +199,17 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     label="Building *"
                     name="building"
                     size="small"
-                    options={[{ name: 'Building A' }, { name: 'Building B' }]}
-                    labelKey="name"
-                    valueKey="name"
+                    isLoading={isBuldingLoading}
+                    options={buildings}
+                    labelKey="buildingName"
+                    valueKey="id"
                     value={formik.values.building}
-                    onChange={(value) => formik.setFieldValue('building', value)}
+                    onChange={(value) => {
+                      formik.setFieldValue('building', value);
+                      setFloorsOptions(
+                        buildings?.find((building: any) => building.id === value)?.floors || []
+                      );
+                    }}
                     onBlur={formik.handleBlur}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     error={formik.touched.building && Boolean(formik.errors.building)}
@@ -153,9 +224,9 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     label="Floor *"
                     name="floor"
                     size="small"
-                    options={[{ name: '1' }, { name: '2' }, { name: '3' }]}
-                    labelKey="name"
-                    valueKey="name"
+                    options={floorsOptions}
+                    labelKey="floorName"
+                    valueKey="id"
                     value={formik.values.floor}
                     onChange={(value) => formik.setFieldValue('floor', value)}
                     onBlur={formik.handleBlur}
@@ -172,9 +243,10 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
                     label="Room Type *"
                     name="roomType"
                     size="small"
-                    options={[{ name: 'Lecture' }, { name: 'Lab' }]}
-                    labelKey="name"
-                    valueKey="name"
+                    isLoading={isRoomTypeLoading}
+                    options={roomTypes?.items || []}
+                    labelKey="roomTypeName"
+                    valueKey="id"
                     value={formik.values.roomType}
                     onChange={(value) => formik.setFieldValue('roomType', value)}
                     onBlur={formik.handleBlur}
@@ -232,35 +304,45 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
               </Grid>
 
               <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={formik.touched.rows && !!formik.errors.rows}>
+                <ShakingTextField
+                  error={formik.touched.benchesPerRow && !!formik.errors.benchesPerRow}
+                >
                   <TextField
                     fullWidth
                     size="small"
                     label="Class Benches Rows *"
-                    name="rows"
+                    name="benchesPerRow"
                     type="number"
-                    value={formik.values.rows}
+                    value={formik.values.benchesPerRow}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    error={formik.touched.rows && Boolean(formik.errors.rows)}
-                    helperText={(formik.touched.rows && formik.errors.rows) as string}
+                    error={formik.touched.benchesPerRow && Boolean(formik.errors.benchesPerRow)}
+                    helperText={
+                      (formik.touched.benchesPerRow && formik.errors.benchesPerRow) as string
+                    }
                   />
                 </ShakingTextField>
               </Grid>
 
               <Grid size={{ xs: 12, md: 6 }}>
-                <ShakingTextField error={formik.touched.columns && !!formik.errors.columns}>
+                <ShakingTextField
+                  error={formik.touched.benchesPerColumn && !!formik.errors.benchesPerColumn}
+                >
                   <TextField
                     fullWidth
                     size="small"
                     label="Class Benches Columns *"
-                    name="columns"
+                    name="benchesPerColumn"
                     type="number"
-                    value={formik.values.columns}
+                    value={formik.values.benchesPerColumn}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    error={formik.touched.columns && Boolean(formik.errors.columns)}
-                    helperText={(formik.touched.columns && formik.errors.columns) as string}
+                    error={
+                      formik.touched.benchesPerColumn && Boolean(formik.errors.benchesPerColumn)
+                    }
+                    helperText={
+                      (formik.touched.benchesPerColumn && formik.errors.benchesPerColumn) as string
+                    }
                   />
                 </ShakingTextField>
               </Grid>
@@ -298,7 +380,10 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
+          size="small"
+          variant="contained"
+          loading={isUpdateLoading || isLoading}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -306,12 +391,13 @@ const RoomForm: React.FC<IRoomFormProps> = ({ open, onClose, editData }) => {
               height={editData ? 16 : 20}
             />
           }
-          variant="contained"
-          size="small"
-          onClick={(e: any) => formik.handleSubmit(e)}
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
+          type="submit"
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

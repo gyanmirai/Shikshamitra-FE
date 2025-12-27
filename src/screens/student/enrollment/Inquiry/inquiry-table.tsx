@@ -21,7 +21,7 @@ import {
   FollowUpStatusTypeOptions,
 } from 'src/enums/inquiry-status-type';
 
-import type { IInquiryData } from '.';
+import type { IInquiryResponse } from './type';
 
 const InquiryTable = ({
   followUpDialog,
@@ -33,8 +33,8 @@ const InquiryTable = ({
   inquiryDialog: UseBooleanReturn;
   issueRegistrationFormDialog: UseBooleanReturn;
   followUpDialog: UseBooleanReturn;
-  editData: null | IInquiryData;
-  setEditData: React.Dispatch<React.SetStateAction<null | IInquiryData>>;
+  editData: null | IInquiryResponse;
+  setEditData: React.Dispatch<React.SetStateAction<null | IInquiryResponse>>;
 }) => {
   const { currentMedium } = useSelector((state: any) => state.globalState);
   const { data: inquiryData, isLoading } = useQueryAndMutation({
@@ -50,16 +50,14 @@ const InquiryTable = ({
 
   const tableData = useMemo(
     () =>
-      inquiryData?.items.map((item: IInquiryData) => ({
+      inquiryData?.data?.items.map((item: IInquiryResponse) => ({
         ...item,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
         ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-        secondaryContactNumber: item.secondaryContactNumber
-          ? item.secondaryContactNumber
-          : undefined,
-        studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
-        genderValue: GenderType[item?.genderType as any],
+        secondaryContactNumber: item.secondaryContactNo ? item.secondaryContactNo : undefined,
+        // studentName: `${item.lastName} ${item.firstName} ${item.middleName}`,
+        genderValue: GenderType[item?.gender as any],
         // address: [
         //   item.addressLine1,
         //   item.addressLine2,
@@ -71,7 +69,7 @@ const InquiryTable = ({
         //   .filter(Boolean)
         //   .join(', '),
       })),
-    [inquiryData?.items]
+    [inquiryData?.data?.items]
   );
   return (
     <Box sx={{ minHeight: 0, flexGrow: 1 }}>
@@ -156,7 +154,7 @@ const InquiryTable = ({
             isDateRangeFilter: true,
           },
           {
-            id: 'gender',
+            id: 'genderValue',
             label: 'Gender',
             align: 'left',
             filterType: 'enum',
@@ -228,7 +226,7 @@ const InquiryTable = ({
             align: 'left',
           },
           {
-            id: 'lastFollowUpDate',
+            id: 'nextReminderDate',
             label: 'Next Reminder Date',
             minWidth: '180px',
             align: 'left',
@@ -260,14 +258,14 @@ const InquiryTable = ({
                   showEditIcon
                   handleEditClick={() => {
                     inquiryDialog.onTrue();
-                    setEditData(row as IInquiryData);
+                    setEditData(row as IInquiryResponse);
                   }}
                   actions={({ popover }) => (
                     <MenuList>
                       <MenuItem
                         onClick={() => {
                           followUpDialog.onTrue();
-                          setEditData(row as IInquiryData);
+                          setEditData(row as IInquiryResponse);
                           popover.onClose();
                         }}
                       >
@@ -277,7 +275,7 @@ const InquiryTable = ({
                       <MenuItem
                         onClick={() => {
                           issueRegistrationFormDialog.onTrue();
-                          setEditData(row as IInquiryData);
+                          setEditData(row as IInquiryResponse);
                           popover.onClose();
                         }}
                       >

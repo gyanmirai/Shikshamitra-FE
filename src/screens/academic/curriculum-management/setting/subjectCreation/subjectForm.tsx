@@ -1,22 +1,41 @@
 'use client';
 
+import type { Medium } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useAddSubjectMutation,
+  useUpdateSubjectMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import { getSubjectInitialValues } from './initialValues';
 import { subjectValidationSchema } from './validationSchema';
 
-import type { ISubjectFormProps } from './type';
+import type { ISubject, ISubjectFormProps } from './type';
 
 const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editData }) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [addSubject, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddSubjectMutation,
+  });
+  const [updateSubject, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateSubjectMutation,
+  });
   // Initialize formik form handling with validation and submission logic
   const formik = useFormik({
     // Set initial form values, populated from editData if available
@@ -24,15 +43,41 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
     // Apply validation rules defined in incidentValidationSchema
     validationSchema: subjectValidationSchema,
     // Handle form submission
-    onSubmit: (values, formikHelpers) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `${values.subjectName} Subject updated successfully`,
-        });
-      } else {
-        shikshaMitraToast.success({ message: `${values.subjectName} Subject added successfully` });
+    onSubmit: async (values, formikHelpers) => {
+      try {
+        if (editData) {
+          const payload = {
+            academicMediumId: (currentMedium as Medium).id,
+            id: (editData as ISubject).id,
+            body: {
+              name: values.subjectName,
+              color: values.subjectColor,
+              educationMediumId: (currentMedium as Medium).id,
+            },
+          };
+          await updateSubject(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.subjectName}" Subject updated successfully`,
+          });
+        } else {
+          const payload = {
+            academicMediumId: (currentMedium as Medium).id,
+            body: {
+              name: values.subjectName,
+              color: values.subjectColor,
+              educationMediumId: (currentMedium as Medium).id,
+            },
+          };
+          await addSubject(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.subjectName}" Subject added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        // Error handling is managed by the API hook or global error handler if configured
+        console.error('Failed to save subject', error);
       }
-      onClose(null, true);
     },
   });
 
@@ -108,7 +153,10 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
+          size="small"
+          variant="contained"
+          loading={isUpdateLoading || isAddLoading}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -116,15 +164,13 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
               height={editData ? 16 : 20}
             />
           }
-          type="submit"
-          variant="contained"
-          size="small"
           onClick={(e: any) => {
             formik.handleSubmit(e);
           }}
+          type="submit"
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
       {/* </Box> */}
       {/* // </form> */}

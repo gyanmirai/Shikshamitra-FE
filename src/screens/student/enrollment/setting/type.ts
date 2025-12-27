@@ -1,9 +1,9 @@
 export interface IStudentDocument {
   id: string;
-  documentName: string;
+  name: string;
   isRequired: boolean;
-  documentSize: number;
-  documentTypes: { label: string; value: number }[];
+  maxSizeMB: number;
+  acceptedFormats: { label: string; value: number }[];
 }
 
 // types/slot.types.ts or within the same file
@@ -11,8 +11,8 @@ export interface IStudentDocument {
 export interface ISlot {
   id?: string;
   slotName?: string | null;
-  startDate?: string | Date | null;
-  endDate?: string | Date | null;
+  startTime?: string | Date | null;
+  endTime?: string | Date | null;
   studentLimit?: number | null;
   duration?: number | null; // Duration in minutes
   roomNo?: string | null;

@@ -10,6 +10,22 @@ export interface DayData {
   subjects: Subject[];
   class?: string;
   division?: string;
+  isDisabled?: boolean;
+  slotId?: string;
+  slotType?: 'period' | 'break' | 'zed';
+}
+
+export interface DaySchedule {
+  day: string;
+  timeSlots: TimeSlotConfig[];
+}
+
+export interface TimeSlotConfig {
+  id: string;
+  startTime: string;
+  endTime: string;
+  slotType: 'period' | 'break';
+  breakType?: string;
 }
 
 export interface TimetableSlot {

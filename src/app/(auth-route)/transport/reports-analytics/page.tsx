@@ -1,5 +1,5 @@
 import React from 'react';
-import TransportNewReportsScreen from 'src/screens/transport/reports/transport-new-reports';
+import TransportReportList from 'src/screens/transport/TransportReport/TransportReportList';
 
-const TransportReports = () => <TransportNewReportsScreen />;
+const TransportReports = () => <TransportReportList />;
 export default TransportReports;

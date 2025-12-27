@@ -11,7 +11,6 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetRolesQuery } from 'src/redux/role/roleApi';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
@@ -87,205 +86,200 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box display="flex" flexDirection="column" gap={2} height="100%">
-          <Scrollbar sx={{ height: '100%' }}>
-            <DialogScrollContent>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 6 }}>
-                  <SectionCard title="Basic Information">
-                    {/* Template Name */}
-                    <Grid size={12}>
-                      <ShakingTextField
-                        error={
-                          !!(formik.touched.templateName && formik.errors.templateName) || false
-                        }
-                      >
-                        <TextField
-                          fullWidth
-                          label="Template Name *"
-                          name="templateName"
-                          size="small"
-                          value={formik.values.templateName}
-                          onChange={(e) => {
-                            const value = e.target.value
-                              .replace(/[^a-zA-Z0-9\s]/g, '')
-                              .split(' ')
-                              .map((word) =>
-                                word
-                                  ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                                  : ''
-                              )
-                              .join(' ');
-                            formik.setFieldValue('templateName', value);
-                          }}
-                          error={formik.touched.templateName && Boolean(formik.errors.templateName)}
-                          helperText={
-                            (formik.touched.templateName && formik.errors.templateName) as string
-                          }
-                        />
-                      </ShakingTextField>
-                    </Grid>
-
-                    {/* Target Role */}
-                    <Grid size={12}>
-                      <CustomSelect
-                        options={roleOptions?.items || []}
-                        value={formik.values.targetRole}
-                        isLoading={roleLoading}
-                        name="targetRole"
-                        label="Role *"
-                        valueKey="name"
-                        labelKey="name"
-                        onChange={(val) => {
-                          formik.setFieldValue('targetRole', val);
-                        }}
-                        error={formik.touched.targetRole && Boolean(formik.errors.targetRole)}
-                        helperText={
-                          ((formik.touched.targetRole && formik.errors.targetRole) as string) || ''
-                        }
-                      />
-                    </Grid>
-
-                    {/* Subject */}
-                    <Grid size={12}>
-                      <ShakingTextField
-                        error={!!(formik.touched.subject && formik.errors.subject) || false}
-                      >
-                        <TextField
-                          fullWidth
-                          label="Subject *"
-                          name="subject"
-                          size="small"
-                          value={formik.values.subject}
-                          onChange={(e) => {
-                            const value = e.target.value
-                              .replace(/[^a-zA-Z\s]/g, '')
-                              .split(' ')
-                              .map((word) =>
-                                word
-                                  ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                                  : ''
-                              )
-                              .join(' ');
-                            formik.setFieldValue('subject', value);
-                          }}
-                          error={formik.touched.subject && Boolean(formik.errors.subject)}
-                          helperText={(formik.touched.subject && formik.errors.subject) as string}
-                        />
-                      </ShakingTextField>
-                    </Grid>
-
-                    {/* Message Body */}
-                    <Grid size={12}>
-                      <ShakingTextField
-                        error={!!(formik.touched.message && formik.errors.message) || false}
-                      >
-                        <Editor
-                          value={formik.values.message}
-                          onChange={(value) => handleEditorChange(value, formik.setFieldValue)}
-                          placeholder="Message"
-                          error={!!(formik.touched.message && formik.errors.message)}
-                          helperText={(formik.touched.message && formik.errors.message) || ''}
-                        />
-                      </ShakingTextField>
-                    </Grid>
-
-                    {/* Tags */}
-                    <Grid size={{ xs: 12 }}>
-                      {/* Render Chips */}
-
-                      {/* Input with Add Button */}
-
+        <Box display="flex" flexDirection="column" height="100%">
+          <Scrollbar
+            sx={{
+              p: 2,
+              height: '100%',
+              '& .simplebar-wrapper': {
+                display: 'flex',
+                flexDirection: 'column',
+              },
+            }}
+          >
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 6 }}>
+                <SectionCard title="Basic Information">
+                  {/* Template Name */}
+                  <Grid size={12}>
+                    <ShakingTextField
+                      error={!!(formik.touched.templateName && formik.errors.templateName) || false}
+                    >
                       <TextField
                         fullWidth
+                        label="Template Name *"
+                        name="templateName"
                         size="small"
-                        label="Tags"
-                        placeholder="Type a tag and press Enter"
-                        value={tag}
-                        onChange={(e) => setTag(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        InputProps={{
-                          startAdornment: (
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: 0.5,
-                                alignItems: 'center',
-                                maxWidth: '100%',
-                              }}
-                            >
-                              {formik.values.hashtags.map((t, index) => (
-                                <Chip
-                                  key={index}
-                                  label={t}
-                                  onDelete={() => handleDelete(t)}
-                                  size="small"
-                                />
-                              ))}
-                            </Box>
-                          ),
+                        value={formik.values.templateName}
+                        onChange={(e) => {
+                          const value = e.target.value
+                            .replace(/[^a-zA-Z0-9\s]/g, '')
+                            .split(' ')
+                            .map((word) =>
+                              word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                            )
+                            .join(' ');
+                          formik.setFieldValue('templateName', value);
                         }}
-                        sx={{
-                          '& .MuiInputBase-root': {
-                            flexWrap: 'wrap',
-                            alignItems: 'flex-start',
-                            minHeight: 'auto',
-                            pt: '10px',
-                          },
-                          '& .MuiInputBase-input': {
-                            flexGrow: 1,
-                            minWidth: '80px',
-                            mb: '4px',
-                          },
-                        }}
+                        error={formik.touched.templateName && Boolean(formik.errors.templateName)}
+                        helperText={
+                          (formik.touched.templateName && formik.errors.templateName) as string
+                        }
                       />
-                    </Grid>
-                  </SectionCard>
-                </Grid>
-                {formik.values && formik.values.templateName && (
-                  <Grid size={{ xs: 6 }}>
-                    <SectionCard title="Preview">
-                      {' '}
-                      <Grid size={12}>
-                        <Box
-                          display="flex"
-                          flexDirection="column"
-                          sx={{ p: 2, border: '1px solid grey', borderRadius: 2 }}
-                        >
-                          <Typography variant="subtitle1" fontWeight="bold">
-                            Subject : {formik.values.subject || 'No Subject'}
-                          </Typography>
-                          <Divider sx={{ my: 1 }} />
-                          {/* Message */}
-                          <Typography variant="subtitle1" fontWeight="bold">
-                            Dear {`{${formik.values.targetRole}_name}`},
-                          </Typography>
-                          <Box sx={{ mb: 2 }}>
-                            <Typography
-                              component="div"
-                              variant="body2"
-                              dangerouslySetInnerHTML={{ __html: formik.values.message || '' }}
-                            />
-                          </Box>
-                          {/* Hashtags */}
-                          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            {formik.values.hashtags?.map((value: string, index: number) => (
+                    </ShakingTextField>
+                  </Grid>
+
+                  {/* Target Role */}
+                  <Grid size={12}>
+                    <CustomSelect
+                      options={roleOptions?.items || []}
+                      value={formik.values.targetRole}
+                      isLoading={roleLoading}
+                      name="targetRole"
+                      label="Role *"
+                      valueKey="name"
+                      labelKey="name"
+                      onChange={(val) => {
+                        formik.setFieldValue('targetRole', val);
+                      }}
+                      error={formik.touched.targetRole && Boolean(formik.errors.targetRole)}
+                      helperText={
+                        ((formik.touched.targetRole && formik.errors.targetRole) as string) || ''
+                      }
+                    />
+                  </Grid>
+
+                  {/* Subject */}
+                  <Grid size={12}>
+                    <ShakingTextField
+                      error={!!(formik.touched.subject && formik.errors.subject) || false}
+                    >
+                      <TextField
+                        fullWidth
+                        label="Subject *"
+                        name="subject"
+                        size="small"
+                        value={formik.values.subject}
+                        onChange={(e) => {
+                          const value = e.target.value
+                            .replace(/[^a-zA-Z\s]/g, '')
+                            .split(' ')
+                            .map((word) =>
+                              word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
+                            )
+                            .join(' ');
+                          formik.setFieldValue('subject', value);
+                        }}
+                        error={formik.touched.subject && Boolean(formik.errors.subject)}
+                        helperText={(formik.touched.subject && formik.errors.subject) as string}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  {/* Message Body */}
+                  <Grid size={12}>
+                    <ShakingTextField
+                      error={!!(formik.touched.message && formik.errors.message) || false}
+                    >
+                      <Editor
+                        value={formik.values.message}
+                        onChange={(value) => handleEditorChange(value, formik.setFieldValue)}
+                        placeholder="Message"
+                        error={!!(formik.touched.message && formik.errors.message)}
+                        helperText={(formik.touched.message && formik.errors.message) || ''}
+                      />
+                    </ShakingTextField>
+                  </Grid>
+
+                  {/* Tags */}
+                  <Grid size={{ xs: 12 }}>
+                    {/* Render Chips */}
+
+                    {/* Input with Add Button */}
+
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Tags"
+                      placeholder="Type a tag and press Enter"
+                      value={tag}
+                      onChange={(e) => setTag(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      InputProps={{
+                        startAdornment: (
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 0.5,
+                              alignItems: 'center',
+                              maxWidth: '100%',
+                            }}
+                          >
+                            {formik.values.hashtags.map((t, index) => (
                               <Chip
                                 key={index}
-                                label={`#${value}`}
-                                variant="outlined"
+                                label={t}
+                                onDelete={() => handleDelete(t)}
                                 size="small"
                               />
                             ))}
                           </Box>
-                        </Box>
-                      </Grid>
-                    </SectionCard>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiInputBase-root': {
+                          flexWrap: 'wrap',
+                          alignItems: 'flex-start',
+                          minHeight: 'auto',
+                          pt: '10px',
+                        },
+                        '& .MuiInputBase-input': {
+                          flexGrow: 1,
+                          minWidth: '80px',
+                        },
+                      }}
+                    />
                   </Grid>
-                )}
+                </SectionCard>
               </Grid>
-            </DialogScrollContent>
+              {formik.values && formik.values.templateName && (
+                <Grid size={{ xs: 6 }}>
+                  <SectionCard title="Preview">
+                    {' '}
+                    <Grid size={12}>
+                      <Box
+                        display="flex"
+                        flexDirection="column"
+                        sx={{ p: 2, border: '1px solid grey', borderRadius: 2 }}
+                      >
+                        <Typography variant="subtitle1" fontWeight="bold">
+                          Subject : {formik.values.subject || 'No Subject'}
+                        </Typography>
+                        <Divider sx={{ my: 1 }} />
+                        {/* Message */}
+                        <Typography variant="subtitle1" fontWeight="bold">
+                          Dear {`{${formik.values.targetRole}_name}`},
+                        </Typography>
+                        <Box sx={{ mb: 2 }}>
+                          <Typography
+                            component="div"
+                            variant="body2"
+                            dangerouslySetInnerHTML={{ __html: formik.values.message || '' }}
+                          />
+                        </Box>
+                        {/* Hashtags */}
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          {formik.values.hashtags?.map((value: string, index: number) => (
+                            <Chip key={index} label={`#${value}`} variant="outlined" size="small" />
+                          ))}
+                        </Box>
+                      </Box>
+                    </Grid>
+                  </SectionCard>
+                </Grid>
+              )}
+            </Grid>
           </Scrollbar>
 
           {/* Actions */}

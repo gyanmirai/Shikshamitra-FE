@@ -67,7 +67,11 @@ const StudentDocumentType = () => {
     maxResultCount: 10,
   });
 
-  const { data: documents, isLoading } = useQueryAndMutation({
+  const {
+    data: documents,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentDocumentTypeQuery,
     params: { ...query },
@@ -123,7 +127,7 @@ const StudentDocumentType = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <strong>{editData?.documentName}</strong> document?
+            Are you sure you want to delete <strong>{editData?.name}</strong> document?
           </>
         }
         action={
@@ -135,7 +139,7 @@ const StudentDocumentType = () => {
             onClick={async () => {
               await deleteDocument(editData?.id);
               shikshaMitraToast.success({
-                message: `${editData?.documentName} document deleted successfully`,
+                message: `"${editData?.name}" document deleted successfully`,
               });
               confirm.onFalse();
               setEditData(null);
@@ -168,7 +172,7 @@ const StudentDocumentType = () => {
             </Box>
           </>
         }
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         serverSide
         onServerSort={(column, sortData) => {
           setQuery((prev) => ({
@@ -184,11 +188,12 @@ const StudentDocumentType = () => {
           }));
         }}
         columns={[
-          { id: 'documentName', label: 'Document Name' },
-          { id: 'documentSize', label: 'Document Size' },
+          { id: 'name', label: 'Document Name' },
+          { id: 'maxSizeMB', label: 'Document Size' },
           {
-            id: 'documentTypes',
+            id: 'acceptedFormats',
             label: 'Accepted Format',
+            align: 'left',
             render(value, row) {
               return value.map((item: number) => DocumentType[item]).join(', ');
             },
@@ -461,7 +466,6 @@ export const DocumentForm = ({
   handleClose?: (e: any, isSubmit: boolean) => void;
 }) => {
   const dispatch = useDispatch();
-  const [, setShowSuccessMessage] = useState(false);
 
   const [addDocument, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -474,53 +478,55 @@ export const DocumentForm = ({
   });
 
   const formik = useFormik<{
-    title: string;
-    documentType: { label: string; value: number }[];
-    documentSize: number | string;
+    name: string;
+    acceptedFormats: { label: string; value: number }[];
+    maxSizeMB: number | string;
     isRequired: boolean;
   }>({
     initialValues: {
-      title: editData?.documentName || '',
-      documentType:
-        editData?.documentTypes?.map((item: any) => ({ label: DocumentType[item], value: item })) ||
-        [],
-      documentSize: editData?.documentSize || '',
+      name: editData?.name || '',
+      acceptedFormats:
+        editData?.acceptedFormats?.map((item: any) => ({
+          label: DocumentType[item],
+          value: item,
+        })) || [],
+      maxSizeMB: editData?.maxSizeMB || '',
       isRequired: editData?.isRequired || false,
     },
     validationSchema: Yup.object({
-      title: Yup.string().required('Document name is required'),
-      documentType: Yup.array()
+      name: Yup.string().required('Document name is required'),
+      acceptedFormats: Yup.array()
         .min(1, 'At least one document type is required')
         .required('Document type is required'),
-      documentSize: Yup.number().required('Document size is required'),
+      maxSizeMB: Yup.number().required('Document size is required'),
     }),
     onSubmit: async (values, { resetForm, setSubmitting }) => {
       try {
         setSubmitting(true);
         const payload = {
-          documentName: values.title,
-          documentTypes: values.documentType.map((d) => d.value),
-          documentSize: values.documentSize,
+          name: values.name,
+          acceptedFormats: values.acceptedFormats.map((d) => d.value),
+          maxSizeMB: values.maxSizeMB,
           isRequired: values.isRequired,
         };
 
         if (editData) {
           await updateDocument({ id: editData.id, body: payload }).unwrap();
           shikshaMitraToast.success({
-            message: `${payload.documentName} document updated successfully`,
+            message: `${payload.name} document updated successfully`,
           });
-          handleClose?.(null, true);
+
           return;
         }
 
         await addDocument(payload).unwrap();
         shikshaMitraToast.success({
-          message: `${payload.documentName} document added successfully`,
+          message: `${payload.name} document added successfully`,
         });
-        setShowSuccessMessage(true);
+        handleClose?.(null, true);
+        // setShowSuccessMessage(true);
         resetForm();
         dispatch(setIsChanges(false));
-        setTimeout(() => setShowSuccessMessage(false), 3000);
       } catch (error) {
         console.error('Error saving document:', error);
       } finally {
@@ -537,30 +543,30 @@ export const DocumentForm = ({
       <DialogScrollContent>
         <Stack spacing={3}>
           {/* Document Name */}
-          <ShakingTextField error={Boolean(touched.title && errors.title)}>
+          <ShakingTextField error={Boolean(touched.name && errors.name)}>
             <TextField
               fullWidth
               size="small"
               label="Document Name *"
-              name="title"
-              value={values.title}
+              name="name"
+              value={values.name}
               onChange={(e) => {
                 const onlyText = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
-                setFieldValue('title', onlyText);
+                setFieldValue('name', onlyText);
               }}
-              error={Boolean(touched.title && errors.title)}
-              helperText={touched.title && errors.title}
+              error={Boolean(touched.name && errors.name)}
+              helperText={touched.name && errors.name}
             />
           </ShakingTextField>
 
           {/* Document Size */}
-          <ShakingTextField error={Boolean(touched.documentSize && errors.documentSize)}>
+          <ShakingTextField error={Boolean(touched.maxSizeMB && errors.maxSizeMB)}>
             <TextField
               label="Document Size (MB) *"
-              value={values.documentSize}
+              value={values.maxSizeMB}
               size="small"
               type="number"
-              name="documentSize"
+              name="maxSizeMB"
               fullWidth
               onKeyDown={(e) => {
                 if (['e', 'E', '+', '-', '.'].includes(e.key)) {
@@ -572,25 +578,25 @@ export const DocumentForm = ({
                 const { value } = e.target;
 
                 if (/^[1-9]$/.test(value)) {
-                  setFieldValue('documentSize', value);
+                  setFieldValue('maxSizeMB', value);
                 } else if (value === '') {
-                  setFieldValue('documentSize', '');
+                  setFieldValue('maxSizeMB', '');
                 }
               }}
-              error={Boolean(touched.documentSize && errors.documentSize)}
-              helperText={touched.documentSize && errors.documentSize}
+              error={Boolean(touched.maxSizeMB && errors.maxSizeMB)}
+              helperText={touched.maxSizeMB && errors.maxSizeMB}
             />
           </ShakingTextField>
 
           {/* Document Type */}
-          <ShakingTextField error={Boolean(touched.documentType && errors.documentType)}>
+          <ShakingTextField error={Boolean(touched.acceptedFormats && errors.acceptedFormats)}>
             <Autocomplete
               multiple
               options={DocumentTypeArray}
               disableCloseOnSelect
               getOptionLabel={(option) => option.label}
-              value={values.documentType}
-              onChange={(_, newValue) => setFieldValue('documentType', newValue)}
+              value={values.acceptedFormats}
+              onChange={(_, newValue) => setFieldValue('acceptedFormats', newValue)}
               isOptionEqualToValue={(option, value) => option.value === value.value}
               renderOption={(props, option, { selected }) => (
                 <li {...props}>
@@ -618,10 +624,10 @@ export const DocumentForm = ({
                 <TextField
                   {...params}
                   label="Accepted Format *"
-                  value={`${values.documentType?.length || 0} Document Selected`}
+                  value={`${values.acceptedFormats?.length || 0} Document Selected`}
                   size="small"
-                  error={Boolean(touched.documentType && errors.documentType)}
-                  helperText={(touched.documentType && errors.documentType) as string}
+                  error={Boolean(touched.acceptedFormats && errors.acceptedFormats)}
+                  helperText={(touched.acceptedFormats && errors.acceptedFormats) as string}
                 />
               )}
             />

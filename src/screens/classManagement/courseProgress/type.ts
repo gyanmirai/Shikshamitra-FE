@@ -20,6 +20,7 @@ export interface IChapterLog {
 }
 // Interface representing details of a course chapter
 export interface ICourseDetail {
+  id: string;
   chapterName: string; // Name of the chapter
   teacherName: string; // Name of the teacher assigned to the chapter
   progress: number; // Progress percentage completed for the chapter
@@ -55,4 +56,6 @@ export interface IAppWidgetProps {
 
 export interface IUpdateProgressProps {
   onClose: (e: any, isSubmit: boolean) => void;
+  selectedChapter?: ICourseDetail | null;
+  subjectId?: string;
 }

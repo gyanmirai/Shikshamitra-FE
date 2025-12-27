@@ -111,12 +111,17 @@ const PF = () => {
           confirm.onFalse();
         }}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete <b>{editData?.name}</b> PF Rule?
+          </>
+        }
         action={
           <LoadingButton
             variant="contained"
             loading={isPFDeleteLoading}
             color="error"
+            size="small"
             onClick={async () => {
               await deletePF(editData?.id || '');
               confirm.onFalse();
@@ -247,8 +252,14 @@ const PFForm = ({
     validationSchema: Yup.object().shape({
       code: Yup.string().required('Code is required'),
       name: Yup.string().required('Name is required'),
-      employeePercentage: Yup.number().required('Employee Percentage is required'),
-      employerPercentage: Yup.number().required('Employer Percentage is required'),
+      employeePercentage: Yup.number()
+        .typeError('Employee Percentage must be a number')
+        .required('Employee Percentage is required')
+        .min(0, 'Employee Percentage cannot be less than 0')
+        .max(100, 'Employee Percentage cannot be more than 100'),
+      employerPercentage: Yup.number()
+        .typeError('Employer Percentage must be a number')
+        .required('Employer Percentage is required'),
     }),
     onSubmit: async (values) => {
       try {
@@ -271,7 +282,7 @@ const PFForm = ({
     <>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
         <DialogScrollContent>
-          <Stack spacing={2}>
+          <Stack spacing={3}>
             <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
               <TextField
                 size="small"
@@ -293,7 +304,10 @@ const PFForm = ({
                 fullWidth
                 name="code"
                 value={formik.values.code}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  const value = e.target.value.toUpperCase().replace(/[^A-Z_]/g, '');
+                  formik.setFieldValue('code', value);
+                }}
                 error={formik.touched.code && Boolean(formik.errors.code)}
                 helperText={
                   formik.touched.code && formik.errors.code ? String(formik.errors.code) : ''

@@ -20,10 +20,13 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { AttendanceStatus } from 'src/enums/student-attendace-status';
 import { RestartAlt, CancelOutlined, CheckCircleOutlined } from '@mui/icons-material';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { Box, Chip, Stack, Avatar, Button, Divider, TextField, Typography } from '@mui/material';
-import { useGetAttendanceByFilterQuery } from 'src/redux/student/take-attendance/take-attendace-api';
+import {
+  useMarkAttendanceMutation,
+  useGetAttendanceByFilterQuery,
+} from 'src/redux/student/take-attendance/take-attendace-api';
 
 const TakeAttendanceScreen = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -48,7 +51,16 @@ const TakeAttendanceScreen = () => {
   // check if the attendance is saved
   const isSaved = useBoolean();
 
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium: medium } = useSelector(
+    (state: RootState) => state.globalState
+  );
+
+  // const [markAttendance] = useMarkAttendanceMutation();
+
+  const [markAttendance] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useMarkAttendanceMutation,
+  });
 
   useEffect(() => {
     setAllOrganization(medium?.educationMediumStages || []);
@@ -69,19 +81,26 @@ const TakeAttendanceScreen = () => {
 
   const handleSave = async () => {
     try {
-      // const response = await fillStudentAttendance({
-      //   attendanceDate: dateConvertor(dayjs(date).format(dateFormat), true), // Passing date as a query parameter
-      //   data: studentData.map((student: any) => ({
-      //     studentId: student?.student?.id,
-      //     isPresent: student.isPresent,
-      //     remarks: student.remarks,
-      //   })),
-      // }).unwrap();
+      const payload = {
+        academicYearId: currentYear?.id,
+        standardId: classes,
+        divisionId: division,
+        date: dateConvertor(date?.format(dateFormat) ?? ''),
+        entries: studentData.map((student: any) => ({
+          studentId: student.studentId,
+          status: student.isPresent,
+          remarks: student.remarks || '',
+        })),
+      };
+
+      await markAttendance(payload).unwrap();
+
       shikshaMitraToast.success({
-        message: `Attendance saved successfully of ${date?.format('DD-MM-YYYY')}`,
+        message: `Attendance saved successfully for ${date?.format('DD-MM-YYYY')}`,
       });
     } catch (error) {
-      console.error('Error saving attendance:', error);
+      console.error('Error marking attendance:', error);
+      shikshaMitraToast.error({ message: 'Failed to save attendance.' });
     }
   };
 
@@ -89,10 +108,10 @@ const TakeAttendanceScreen = () => {
     type: 'query',
     currentQueryAndMutation: useGetAttendanceByFilterQuery,
     params: {
-      attendanceDate: dateConvertor(dayjs(date).format(dateFormat), true),
-      educationMediumStageId: organization,
-      standardId: classes,
-      divisionId: division,
+      AcademicYearId: currentYear?.id,
+      StandardId: classes,
+      DivisionId: division,
+      Date: dateConvertor(dayjs(date).format(dateFormat)),
     },
     options: { skip: !(date && organization && classes && division) },
   });
@@ -100,17 +119,17 @@ const TakeAttendanceScreen = () => {
   const [studentData, setStudentData] = useState<any>([]);
 
   useEffect(() => {
-    if (data?.items) {
+    if (data?.students) {
       setStudentData(
-        data?.items?.map((item: any) => ({
+        data?.students?.map((item: any) => ({
           ...item,
-          rollNo: item?.student?.rollNo || '-',
-          name: `${item?.student?.firstName} ${item?.student?.lastName} ${item?.student?.middleName}`,
-          percentage: (item.presentDays / item.totalDays) * 100,
+          rollNo: item?.rollNo || '-',
+          name: `${item?.firstName} ${item?.lastName} ${item?.middleName}`,
+          // percentage: (item.presentDays / item.totalDays) * 100,
           // Ensure isPresent reflects the actual attendance data from API
           // If attendance is already marked for this date, use that value
           // Otherwise, set to null (unmarked)
-          isPresent: item.isPresent !== undefined ? item.isPresent : null,
+          isPresent: item.status,
           remarks: item.remarks || '',
         })) || []
       );
@@ -118,12 +137,12 @@ const TakeAttendanceScreen = () => {
       // Clear student data when no data is available
       setStudentData([]);
     }
-  }, [data?.items]);
+  }, [data?.students]);
 
-  // Reset student data when filters change to ensure fresh data
-  useEffect(() => {
-    setStudentData([]);
-  }, [date, organization, classes, division]);
+  // // Reset student data when filters change to ensure fresh data
+  // useEffect(() => {
+  //   setStudentData([]);
+  // }, [date, organization, classes, division]);
 
   const absentStudents = useMemo(
     () => studentData.filter((item: any) => item.isPresent === false),
@@ -136,7 +155,7 @@ const TakeAttendanceScreen = () => {
         heading="Mark Attendance"
         links={[
           { name: 'Student', href: '/student/enrollment/dashboard/' },
-          { name: 'Attendance', href: '/student/attendance/dashboard/' },
+          { name: 'Attendance', href: '' },
           { name: 'Mark Attendance' },
         ]}
         sx={{ mb: 1 }}
@@ -201,12 +220,15 @@ const TakeAttendanceScreen = () => {
         <Button
           variant="outlined"
           onClick={() => {
-            setStudentData((pre: any) => pre.map((item: any) => ({ ...item, isPresent: true })));
+            setStudentData((pre: any) =>
+              pre.map((item: any) => ({ ...item, isPresent: AttendanceStatus.Present }))
+            );
           }}
           size="small"
           startIcon={<CheckCircleOutlined sx={{ fontSize: '16px' }} />}
           disabled={
-            studentData.length === 0 || studentData.every((item: any) => item.isPresent === true)
+            studentData.length === 0 ||
+            studentData.every((item: any) => item.isPresent === AttendanceStatus.Present)
           }
           sx={{
             color: 'success.main',
@@ -224,12 +246,15 @@ const TakeAttendanceScreen = () => {
         <Button
           variant="outlined"
           onClick={() => {
-            setStudentData((pre: any) => pre.map((item: any) => ({ ...item, isPresent: false })));
+            setStudentData((pre: any) =>
+              pre.map((item: any) => ({ ...item, isPresent: AttendanceStatus.Absent }))
+            );
           }}
           size="small"
           startIcon={<CancelOutlined sx={{ fontSize: '16px' }} />}
           disabled={
-            studentData.length === 0 || studentData.every((item: any) => item.isPresent === false)
+            studentData.length === 0 ||
+            studentData.every((item: any) => item.isPresent === AttendanceStatus.Absent)
           }
           sx={{
             color: 'error.main',
@@ -250,12 +275,11 @@ const TakeAttendanceScreen = () => {
           startIcon={<RestartAlt sx={{ fontSize: '16px' }} />}
           onClick={() => {
             setStudentData(
-              data?.items?.map((item: any) => ({
+              data?.students?.map((item: any) => ({
                 ...item,
-                name: `${item?.student?.firstName} ${item?.student?.lastName} ${item?.student?.middleName}`,
-                percentage: (item.presentDays / item.totalDays) * 100,
-                isPresent: null,
-                remarks: '',
+                name: `${item?.firstName} ${item?.lastName} ${item?.middleName}`,
+                isPresent: item.status,
+                remarks: item.remarks,
               })) || []
             );
             shikshaMitraToast.success({ message: 'Attendance Data Reset Successfully' });
@@ -329,7 +353,8 @@ const TakeAttendanceScreen = () => {
               fontWeight: 600,
             }}
           >
-            Present : {studentData.filter((item: any) => item.isPresent === true).length}
+            Present :{' '}
+            {studentData.filter((item: any) => item.isPresent === AttendanceStatus.Present).length}
           </Label>
           <Label
             color="error"
@@ -345,7 +370,8 @@ const TakeAttendanceScreen = () => {
               fontWeight: 600,
             }}
           >
-            Absent : {absentStudents.length}
+            Absent :{' '}
+            {studentData.filter((item: any) => item.isPresent === AttendanceStatus.Absent).length}
           </Label>
           <Label
             color="warning"
@@ -360,7 +386,8 @@ const TakeAttendanceScreen = () => {
               fontWeight: 600,
             }}
           >
-            Pending : {studentData.filter((item: any) => item.isPresent === null).length}
+            Pending :{' '}
+            {studentData.filter((item: any) => item.isPresent === AttendanceStatus.Pending).length}
           </Label>
         </Box>
 
@@ -452,47 +479,6 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
           },
         })}
         columns={[
-          // {
-          //   id: 'checkBox',
-          //   label: '',
-          //   minWidth: '60px',
-          //   sticky: true,
-          //   isSort: false,
-          //   isFilter: false,
-          //   align: 'center',
-          //   renderColumn: (value) => (
-          //     <Checkbox
-          //       checked={data.length ? data.length === selectedStudent.length : false}
-          //       onChange={(e) => {
-          //         if (e.target.checked) {
-          //           setSelectedStudent(data);
-          //         } else {
-          //           setSelectedStudent([]);
-          //         }
-          //       }}
-          //     />
-          //   ),
-          //   render(value, row) {
-          //     return (
-          //       <Checkbox
-          //         checked={selectedStudent.some(
-          //           (student: any) => student.student.id === row.student.id
-          //         )}
-          //         onChange={(e) => {
-          //           if (!e.target.checked) {
-          //             setSelectedStudent(
-          //               selectedStudent.filter(
-          //                 (student: any) => student.student.id !== row.student.id
-          //               )
-          //             );
-          //           } else {
-          //             setSelectedStudent([...selectedStudent, row]);
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
           {
             id: 'rollNo',
             label: 'Roll No',
@@ -526,7 +512,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             },
           },
           {
-            id: 'student.grNoRecord',
+            id: 'grNo',
             label: 'Gr No',
             align: 'left',
             minWidth: '100px',
@@ -581,7 +567,9 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                     fontSize: '0.875rem',
                   }}
                 >
-                  {row.isPresent === true ? 'No remarks needed' : 'Mark attendance first'}
+                  {row.isPresent === AttendanceStatus.Present
+                    ? 'No remarks needed'
+                    : 'Mark attendance first'}
                 </Box>
               );
             },
@@ -596,8 +584,20 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
             isFilter: false,
             render(value, row) {
               return isSaved.value ? (
-                <Label color={value === true ? 'success' : value === false ? 'error' : 'warning'}>
-                  {value === true ? 'Present' : value === false ? 'Absent' : 'Not Yet Marked'}
+                <Label
+                  color={
+                    value === AttendanceStatus.Present
+                      ? 'success'
+                      : value === AttendanceStatus.Absent
+                        ? 'error'
+                        : 'warning'
+                  }
+                >
+                  {value === AttendanceStatus.Present
+                    ? 'Present'
+                    : value === AttendanceStatus.Absent
+                      ? 'Absent'
+                      : 'Not Yet Marked'}
                 </Label>
               ) : (
                 <Stack direction="column" spacing={1} sx={{ alignItems: 'center' }}>
@@ -662,12 +662,16 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 2,
+                        backgroundColor:
+                          value === AttendanceStatus.Present ? 'success.light' : 'transparent',
                         '&:hover': { backgroundColor: 'success.lighter' },
                       }}
                       onClick={() => {
                         setStudentData(
                           data.map((item: any) =>
-                            item.student.id === row.student.id ? { ...item, isPresent: true } : item
+                            item.studentId === row.studentId
+                              ? { ...item, isPresent: AttendanceStatus.Present }
+                              : item
                           )
                         );
                       }}
@@ -676,7 +680,8 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                         sx={{
                           fontSize: '16px',
                           fontWeight: 600,
-                          color: value === true ? 'success.dark' : 'text.secondary',
+                          color:
+                            value === AttendanceStatus.Present ? 'success.dark' : 'text.secondary',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -698,13 +703,15 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 2,
+                        backgroundColor:
+                          value === AttendanceStatus.Pending ? 'warning.light' : 'transparent',
                         '&:hover': { backgroundColor: 'warning.lighter' },
                       }}
                       onClick={() => {
                         setStudentData(
                           data.map((item: any) =>
-                            item.student.id === row.student.id
-                              ? { ...item, isPresent: null, remarks: '' }
+                            item.studentId === row.studentId
+                              ? { ...item, isPresent: AttendanceStatus.Pending, remarks: '' }
                               : item
                           )
                         );
@@ -714,7 +721,8 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                         sx={{
                           fontSize: '16px',
                           fontWeight: 600,
-                          color: value === null ? 'warning.dark' : 'text.secondary',
+                          color:
+                            value === AttendanceStatus.Pending ? 'warning.dark' : 'text.secondary',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -736,13 +744,15 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 2,
+                        backgroundColor:
+                          value === AttendanceStatus.Absent ? 'error.light' : 'transparent',
                         '&:hover': { backgroundColor: 'error.lighter' },
                       }}
                       onClick={() => {
                         setStudentData(
                           data.map((item: any) =>
-                            item.student.id === row.student.id
-                              ? { ...item, isPresent: false }
+                            item.studentId === row.studentId
+                              ? { ...item, isPresent: AttendanceStatus.Absent }
                               : item
                           )
                         );
@@ -752,7 +762,8 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
                         sx={{
                           fontSize: '16px',
                           fontWeight: 600,
-                          color: value === false ? 'error.dark' : 'text.secondary',
+                          color:
+                            value === AttendanceStatus.Absent ? 'error.dark' : 'text.secondary',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -769,14 +780,6 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
         ]}
         data={data}
       />{' '}
-      {sendInstantNotificationDialogValue.value && (
-        <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
-          data={[]}
-          userList={selectedStudent}
-        />
-      )}
     </>
   );
 };

@@ -310,7 +310,7 @@ const HrEmployee = () => {
                 isSort: false,
                 sticky: true,
                 isFilter: false,
-
+                minWidth: '80px',
                 render(value, row) {
                   return (
                     <ThreeDotsActions

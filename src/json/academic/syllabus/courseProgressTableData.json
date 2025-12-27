@@ -8,6 +8,7 @@
   "color": "#0056D2",
   "details": [
     {
+      "id": 1,
       "chapterNumber": 1,
       "chapterName": "Introduction to Programming",
       "teacherName": "Sharma Rajesh Kumar",
@@ -51,6 +52,7 @@
       ]
     },
     {
+      "id": 2,
       "chapterNumber": 2,
       "chapterName": "Data Types & Variables",
       "teacherName": "Sharma Rajesh Kumar",
@@ -94,6 +96,7 @@
       ]
     },
     {
+      "id": 3,
       "chapterNumber": 3,
       "chapterName": "Control Structures",
       "teacherName": "Patel Jaya Suresh",
@@ -129,6 +132,7 @@
       ]
     },
     {
+      "id": 4,
       "chapterNumber": 4,
       "chapterName": "Functions & Modules",
       "teacherName": "Patel Jaya Suresh",
@@ -156,6 +160,7 @@
       ]
     },
     {
+      "id": 5,
       "chapterNumber": 5,
       "chapterName": "Arrays & Lists",
       "teacherName": "Verma Jayant Prakash",
@@ -175,6 +180,7 @@
       ]
     },
     {
+      "id": 6,
       "chapterNumber": 6,
       "chapterName": "Object-Oriented Programming",
       "teacherName": "Verma Jayant Prakash",
@@ -194,6 +200,7 @@
       ]
     },
     {
+      "id": 7,
       "chapterNumber": 7,
       "chapterName": "File Handling",
       "teacherName": "Gupta Lakshmi Devi",
@@ -213,6 +220,7 @@
       ]
     },
     {
+      "id": 8,
       "chapterNumber": 8,
       "chapterName": "Error Handling & Debugging",
       "teacherName": "Gupta Lakshmi Devi",
@@ -242,6 +250,7 @@
   "color": "#E77DC1",
   "details": [
     {
+      "id": 1,
       "chapterNumber": 1,
       "chapterName": "Fitness Introduction",
       "teacherName": "Verma Sandeep Kumar",
@@ -285,6 +294,7 @@
       ]
     },
     {
+      "id" : 2,
       "chapterNumber": 2,
       "chapterName": "Yoga & Meditation",
       "teacherName": "Verma Sandeep Kumar",
@@ -320,6 +330,7 @@
       ]
     },
     {
+      "id" : 3,
       "chapterNumber": 3,
       "chapterName": "Endurance Training",
       "teacherName": "Rathod Lalit Rajesh",
@@ -355,6 +366,7 @@
       ]
     },
     {
+      "id" : 4,
       "chapterNumber": 4,
       "chapterName": "Strength Building",
       "teacherName": "Rathod Lalit Rajesh",
@@ -382,6 +394,7 @@
       ]
     },
     {
+      "id" : 5,
       "chapterNumber": 5,
       "chapterName": "Flexibility",
       "teacherName": "Sharma Anjali Meena",
@@ -401,6 +414,7 @@
       ]
     },
     {
+      "id" : 6,
       "chapterNumber": 6,
       "chapterName": "Team Sports",
       "teacherName": "Sharma Anjali Meena",
@@ -420,6 +434,7 @@
       ]
     },
     {
+      "id" : 7,
       "chapterNumber": 7,
       "chapterName": "Diet & Nutrition",
       "teacherName": "Sharma Anjali Meena",
@@ -449,6 +464,7 @@
   "color": "#E74C3C",
   "details": [
     {
+      "id" : 1,
       "chapterNumber": 1,
       "chapterName": "काव्य परिचय",
       "teacherName": "Sharma Rajesh Kumar",
@@ -484,6 +500,7 @@
       ]
     },
     {
+      "id" : 2,
       "chapterNumber": 2,
       "chapterName": "निबंध लेखन",
       "teacherName": "Sharma Rajesh Kumar",
@@ -519,6 +536,7 @@
       ]
     },
     {
+      "id" : 3,
       "chapterNumber": 3,
       "chapterName": "पत्र लेखन",
       "teacherName": "Rekha Suman Lalit",
@@ -554,6 +572,7 @@
       ]
     },
     {
+      "id" : 4,
       "chapterNumber": 4,
       "chapterName": "कहानी: 'दो बैलों की कथा'",
       "teacherName": "Rekha Suman Lalit",
@@ -599,6 +618,7 @@
   "color": "#D9A066",
   "details": [
     {
+      "id" : 1,
       "chapterNumber": 1,
       "chapterName": "Number Systems",
       "teacherName": "Kumar Ramesh Pratap",
@@ -634,6 +654,7 @@
       ]
     },
     {
+      "id" : 2,
       "chapterNumber": 2,
       "chapterName": "Linear Equations",
       "teacherName": "Mehta Meera Suresh",
@@ -669,6 +690,7 @@
       ]
     },
     {
+      "id" : 3,
       "chapterNumber": 3,
       "chapterName": "Polynomials",
       "teacherName": "Singh Aditya Narayan",
@@ -704,6 +726,7 @@
       ]
     },
     {
+      "id" : 4,
       "chapterNumber": 4,
       "chapterName": "Coordinate Geometry",
       "teacherName": "Mehta Meera Suresh",
@@ -731,6 +754,7 @@
       ]
     },
     {
+      "id" : 5,
       "chapterNumber": 5,
       "chapterName": "Trigonometry",
       "teacherName": "Arjun Vishal Mahesh",
@@ -758,6 +782,7 @@
       ]
     },
     {
+      "id" : 6,
       "chapterNumber": 6,
       "chapterName": "Mensuration",
       "teacherName": "Arjun Vishal Mahesh",
@@ -777,6 +802,7 @@
       ]
     },
     {
+      "id" : 7,
       "chapterNumber": 7,
       "chapterName": "Statistics",
       "teacherName": "Arjun Vishal Mahesh",
@@ -796,6 +822,7 @@
       ]
     },
     {
+      "id" : 8,
       "chapterNumber": 8,
       "chapterName": "Probability",
       "teacherName": "Mehta Meera Suresh",
@@ -825,6 +852,7 @@
   "color": "#00C9A7",
   "details": [
     {
+      "id" : 1,
       "chapterNumber": 1,
       "chapterName": "Matter and Its Properties",
       "teacherName": "Patel Nilesh Mahendra",
@@ -860,6 +888,7 @@
       ]
     },
     {
+      "id" : 2,
       "chapterNumber": 2,
       "chapterName": "Laws of Motion",
       "teacherName": "Rao Suresh Vinod",
@@ -895,6 +924,7 @@
       ]
     },
     {
+      "id" : 3,
       "chapterNumber": 3,
       "chapterName": "Acids, Bases and Salts",
       "teacherName": "Iyer Shruti Anand",
@@ -930,6 +960,7 @@
       ]
     },
     {
+      "id" : 4,
       "chapterNumber": 4,
       "chapterName": "Electricity",
       "teacherName": "Rao Suresh Vinod",
@@ -957,6 +988,7 @@
       ]
     },
     {
+      "id" : 5,
       "chapterNumber": 5,
       "chapterName": "Life Processes",
       "teacherName": "Patel Nilesh Mahendra",
@@ -984,6 +1016,7 @@
       ]
     },
     {
+      "id" : 6,
       "chapterNumber": 6,
       "chapterName": "Light: Reflection & Refraction",
       "teacherName": "Iyer Shruti Anand",
@@ -1003,6 +1036,7 @@
       ]
     },
     {
+      "id" : 7,
       "chapterNumber": 7,
       "chapterName": "Carbon Compounds",
       "teacherName": "Iyer Shruti Anand",
@@ -1022,6 +1056,7 @@
       ]
     },
     {
+      "id" : 8,
       "chapterNumber": 8,
       "chapterName": "Environmental Chemistry",
       "teacherName": "Rao Suresh Vinod",
@@ -1051,6 +1086,7 @@
   "color": "#8B0000",
   "details": [
     {
+      "id" : 1,
       "chapterNumber": 1,
       "chapterName": "The French Revolution",
       "teacherName": "Thomas Anjali Deepa",
@@ -1086,6 +1122,7 @@
       ]
     },
     {
+      "id" : 2,
       "chapterNumber": 2,
       "chapterName": "Indian National Movement",
       "teacherName": "Bose Amit Rajiv",
@@ -1121,6 +1158,7 @@
       ]
     },
     {
+      "id" : 3,
       "chapterNumber": 3,
       "chapterName": "Resources & Development",
       "teacherName": "Roy Nandini Shweta",
@@ -1148,6 +1186,7 @@
       ]
     },
     {
+      "id" : 4,
       "chapterNumber": 4,
       "chapterName": "Democratic Politics",
       "teacherName": "Mehta Rakesh Ajay",
@@ -1175,6 +1214,7 @@
       ]
     },
     {
+      "id" : 5,
       "chapterNumber": 5,
       "chapterName": "Globalization",
       "teacherName": "Roy Nandini Shweta",
@@ -1202,6 +1242,7 @@
       ]
     },
     {
+      "id" : 6,
       "chapterNumber": 6,
       "chapterName": "Economics: Development",
       "teacherName": "Bose Amit Rajiv",
@@ -1221,6 +1262,7 @@
       ]
     },
     {
+      "id" : 7,
       "chapterNumber": 7,
       "chapterName": "Climate and Weather",
       "teacherName": "Thomas Anjali Deepa",
@@ -1240,6 +1282,7 @@
       ]
     },
     {
+      "id" : 8,
       "chapterNumber": 8,
       "chapterName": "Working of Institutions",
       "teacherName": "Mehta Rakesh Ajay",
@@ -1269,6 +1312,7 @@
   "color": "#00B894",
   "details": [
     {
+      "id" : 1,
       "chapterNumber": 1,
       "chapterName": "વાર્તા લેખન",
       "teacherName": "Dave Ramesh Mahendra",
@@ -1304,6 +1348,7 @@
       ]
     },
     {
+      "id" : 2,
       "chapterNumber": 2,
       "chapterName": "નિબંધ લેખન",
       "teacherName": "Patel Bhavna Kirit",
@@ -1339,6 +1384,7 @@
       ]
     },
     {
+      "id" : 3,
       "chapterNumber": 3,
       "chapterName": "નાટક પરિચય",
       "teacherName": "Dave Ramesh Mahendra",
@@ -1366,6 +1412,7 @@
       ]
     },
     {
+      "id" : 4,
       "chapterNumber": 4,
       "chapterName": "કાવ્ય પાઠ",
       "teacherName": "Patel Bhavna Kirit",
@@ -1393,6 +1440,7 @@
       ]
     },
     {
+      "id" : 5,
       "chapterNumber": 5,
       "chapterName": "વ્યાકરણ",
       "teacherName": "Dave Ramesh Mahendra",
@@ -1420,6 +1468,7 @@
       ]
     },
     {
+      "id" : 6,
       "chapterNumber": 6,
       "chapterName": "મહુાવરા અને લોખૂક્તિ",
       "teacherName": "Dave Ramesh Mahendra",
@@ -1447,6 +1496,7 @@
       ]
     },
     {
+      "id" : 7,
       "chapterNumber": 7,
       "chapterName": "સાંસ્કૃતિક વારસો",
       "teacherName": "Patel Bhavna Kirit",
@@ -1466,6 +1516,7 @@
       ]
     },
     {
+      "id" : 8,
       "chapterNumber": 8,
       "chapterName": "પુનરાવર્તન",
       "teacherName": "Patel Bhavna Kirit",
@@ -1495,6 +1546,7 @@
   "color": "#2F80ED",
   "details": [
     {
+      "id" : 1,
       "chapterNumber": 1,
       "chapterName": "Prose: The Last Lesson",
       "teacherName": "Thomas Linda Mary",
@@ -1530,6 +1582,7 @@
       ]
     },
     {
+      "id" : 2,
       "chapterNumber": 2,
       "chapterName": "Poem: My Mother at Sixty-Six",
       "teacherName": "Fernandes George Joseph",
@@ -1565,6 +1618,7 @@
       ]
     },
     {
+      "id" : 3,
       "chapterNumber": 3,
       "chapterName": "Letter Writing",
       "teacherName": "Thomas Linda Mary",
@@ -1592,6 +1646,7 @@
       ]
     },
     {
+      "id" : 4,
       "chapterNumber": 4,
       "chapterName": "Report Writing",
       "teacherName": "Fernandes George Joseph",
@@ -1619,6 +1674,7 @@
       ]
     },
     {
+      "id" : 5,
       "chapterNumber": 5,
       "chapterName": "Reading Comprehension",
       "teacherName": "Thomas Linda Mary",
@@ -1646,6 +1702,7 @@
       ]
     },
     {
+      "id" : 6,
       "chapterNumber": 6,
       "chapterName": "Debate & Speech",
       "teacherName": "Fernandes George Joseph",
@@ -1673,6 +1730,7 @@
       ]
     },
     {
+      "id" : 7,
       "chapterNumber": 7,
       "chapterName": "Grammar Revision",
       "teacherName": "Thomas Linda Mary",
@@ -1692,6 +1750,7 @@
       ]
     },
     {
+      "id" : 8,
       "chapterNumber": 8,
       "chapterName": "Creative Writing",
       "teacherName": "Fernandes George Joseph",
@@ -1712,5 +1771,4 @@
     }
   ]
 }
-
 ]

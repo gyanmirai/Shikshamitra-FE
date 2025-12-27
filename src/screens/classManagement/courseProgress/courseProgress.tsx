@@ -1,24 +1,27 @@
 'use client';
 
+import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
 import { sliderClasses } from '@mui/material/Slider';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomDialog from 'src/components/customDialog';
 import CancelButton from 'src/components/cancel-button';
-import SubmitButton from 'src/components/submit-button';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ComponentBlock } from 'src/components/component-block';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
@@ -30,6 +33,11 @@ import {
   DialogActions,
   CircularProgress,
 } from '@mui/material';
+import {
+  useGetSubjectsQuery,
+  useGetChaptersProgressQuery,
+  useUpdateChapterProgressMutation,
+} from 'src/redux/classManagementApi/subjectProgressManageApi/subjectProgressManageApi';
 
 import CourseCardsGrid from './components/courseCardsGrid';
 import ViewChapterLogs from './components/viewChapterLogs';
@@ -67,18 +75,59 @@ const EndToolTip = () => (
   </CustomTooltip>
 );
 
-const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
+const CourseProgressComponent = ({
+  courseData,
+  isAction = true,
+  selectedClass,
+  selectedDivision,
+}: any) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [courses, setCourses] = useState<ICourse[]>(courseData);
+  const [courses, setCourses] = useState<ICourse[]>(courseData || []);
+
+  const { data: subjectData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectsQuery,
+    params: {
+      academicMediumId: (currentMedium as Medium)?.id,
+      classId: selectedClass,
+      divisionId: selectedDivision,
+    },
+  });
+
+  useEffect(() => {
+    if (subjectData) {
+      setCourses(subjectData);
+    }
+  }, [subjectData]);
 
   // State to store the selected course details
   const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
+
+  const { data: chaptersData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChaptersProgressQuery,
+    params: {
+      academicMediumId: (currentMedium as Medium)?.id,
+      classId: selectedClass?.id,
+      divisionId: selectedDivision?.id,
+      subjectId: selectedCourse?.id,
+    },
+  });
+
+  useEffect(() => {
+    if (chaptersData) {
+      setSelectedCourse((prev) => (prev ? { ...prev, details: chaptersData } : null));
+    }
+  }, [chaptersData]);
+
   // Dialog state for updating progress
   const updateProgressDialog = useBoolean();
   // Handler for when a course card is selected
   const handleCardDetails = (course: ICourse) => {
     setSelectedCourse(course);
   };
+
   const [selectedChapter, setSelectedChapter] = useState<ICourseDetail | null>(null);
   // Get isChanges state from Redux store to track if there are unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -115,6 +164,7 @@ const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
         <MenuItem
           onClick={() => {
             updateProgressDialog.onTrue();
+            setSelectedChapter(row);
             pop.onClose();
           }}
         >
@@ -393,7 +443,11 @@ const CourseProgressComponent = ({ courseData, isAction = true }: any) => {
           </Box>
         }
       >
-        <UpdateProgress onClose={handleClose} />
+        <UpdateProgress
+          onClose={handleClose}
+          selectedChapter={selectedChapter}
+          subjectId={String(selectedCourse?.id)}
+        />
       </CustomDialog>
 
       <CustomDialog
@@ -433,10 +487,19 @@ const marks = [
   { value: 100, label: '100' },
 ];
 
-const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProgressProps) => {
+const UpdateProgress: React.FC<IUpdateProgressProps> = ({
+  onClose,
+  selectedChapter,
+  subjectId,
+}: IUpdateProgressProps) => {
+  const [updateChapterProgress, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateChapterProgressMutation,
+  });
+
   const formik = useFormik({
     initialValues: {
-      completePercentage: 0, // Adjusted field name to match the input ID
+      completePercentage: selectedChapter?.progress || 0, // Adjusted field name to match the input ID
       description: '',
     },
     validationSchema: Yup.object({
@@ -445,14 +508,32 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
         .max(100, 'Percentage cannot exceed 100')
         .required('Complete Percentage is required'),
     }),
-    onSubmit: (values) => {
-      // Add submission logic here
+    onSubmit: async (values) => {
+      try {
+        if (!selectedChapter) return;
+
+        const payload = {
+          chapterId: (selectedChapter as any).id || (selectedChapter as any).chapterId,
+          data: {
+            progress: values.completePercentage,
+            description: values.description,
+            subjectId,
+          },
+        };
+
+        await updateChapterProgress(payload).unwrap();
+
+        shikshaMitraToast.success({ message: 'Progress updated successfully' });
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to update progress', error);
+      }
     },
   });
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-      <Box component="form" flexDirection="column" onSubmit={formik.handleSubmit} gap={3} p={2}>
+      <DialogScrollContent>
         <ShakingTextField
           error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
         >
@@ -484,14 +565,22 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({ onClose }: IUpdateProg
           error={!!(formik.touched.description && formik.errors.description)}
           helperText={formik.touched.description && formik.errors.description}
         />
-      </Box>
+      </DialogScrollContent>
       <DialogActions sx={{ flexShrink: 0, p: 2 }}>
         <CancelButton
           onClick={() => {
             onClose(null, false);
           }}
         />
-        <SubmitButton onClick={() => {}} />
+        <LoadingButton
+          onClick={(e: any) => formik.handleSubmit(e)}
+          loading={isUpdateLoading}
+          variant="contained"
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.edit} />}
+        >
+          Update
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

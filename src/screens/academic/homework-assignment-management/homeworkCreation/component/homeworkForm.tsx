@@ -5,6 +5,7 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
@@ -19,8 +20,13 @@ import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  useAddHomeworkMutation,
+  useUpdateHomeworkMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 import {
   Box,
   Grid,
@@ -49,6 +55,14 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   editData,
   onClose,
 }) => {
+  const [addHomework, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddHomeworkMutation,
+  });
+  const [updateHomework, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHomeworkMutation,
+  });
   // Get current academic year from global state for date validation and filtering
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State to control homework type dialog visibility
@@ -81,17 +95,42 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   const formik = useFormik({
     initialValues: getHomeworkInitialValues(editData, classes),
     validationSchema: homeworkValidationSchema(currentYear),
-    onSubmit: (values) => {
-      onClose(null, true);
-      const divisionNames = values.divisions.map((d) => d.divisionId).join(', ');
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Homework successfully updated for ${values.class} - ${divisionNames} of ${values.subject} subject.`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Homework successfully added for ${values.class} - ${divisionNames} of ${values.subject} subject.`,
-        });
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          classId: values.classId,
+          subjectId: values.subjectId,
+          title: values.title,
+          description: values.description,
+          assignmentTypeId: values.homeworkTypeId,
+          submissionType: values.submissionType,
+          attachments: values.attachments,
+          divisions: values.divisions.map((division: any) => ({
+            divisionId: division.divisionId,
+            publishDate: division.publishDate.toISOString(),
+            dueDate: division.dueDate.toISOString(),
+          })),
+        };
+
+        if (editData) {
+          // For update, include the assignment ID
+          const updatePayload = {
+            id: editData.id,
+            body: payload,
+          };
+          await updateHomework({ academicMediumId: medium?.id, ...updatePayload }).unwrap();
+          shikshaMitraToast.success({
+            message: `Homework "${values.title}" has been updated successfully.`,
+          });
+        } else {
+          await addHomework({ academicMediumId: medium?.id, ...payload }).unwrap();
+          shikshaMitraToast.success({
+            message: `Homework "${values.title}" has been created successfully.`,
+          });
+        }
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({ message: error?.data?.message || 'Failed to save assignment.' });
       }
     },
   });
@@ -253,7 +292,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 
               <Grid size={{ xs: 12, md: 6 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.homeworkType && formik.errors.homeworkType)}
+                  error={!!(formik.touched.homeworkTypeId && formik.errors.homeworkTypeId)}
                 >
                   <CustomSelect
                     label="Homework Type *"
@@ -273,11 +312,13 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                       { label: 'Creative Writing', value: 'creative_writing' },
                       { label: 'Revision Task', value: 'revision_task' },
                     ]}
-                    value={formik.values.homeworkType || ''}
-                    onChange={(val) => formik.setFieldValue('homeworkType', val)}
+                    value={formik.values.homeworkTypeId || ''}
+                    onChange={(val) => formik.setFieldValue('homeworkTypeId', val)}
                     formControlProps={{ fullWidth: true }}
-                    error={!!(formik.touched.homeworkType && formik.errors.homeworkType)}
-                    helperText={(formik.touched.homeworkType && formik.errors.homeworkType) || ''}
+                    error={!!(formik.touched.homeworkTypeId && formik.errors.homeworkTypeId)}
+                    helperText={
+                      (formik.touched.homeworkTypeId && formik.errors.homeworkTypeId) || ''
+                    }
                   />
                 </ShakingTextField>
 
@@ -461,13 +502,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
         >
           Cancel
         </Button>
-        <Button
-          variant="contained"
+        <LoadingButton
           size="small"
-          onClick={() => {
-            // formik.setFieldValue('status', 1);
-            formik.handleSubmit();
-          }}
+          variant="contained"
+          loading={isUpdateLoading || isAddLoading}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -475,9 +513,13 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
               height={editData ? 16 : 20}
             />
           }
+          onClick={(e: any) => {
+            formik.handleSubmit(e);
+          }}
+          type="submit"
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

@@ -24,6 +24,14 @@ export const StudentTakeAttendanceApi = createApi({
       }),
       invalidatesTags: ['Student-Take-Attendance'],
     }),
+    markAttendance: builder.mutation({
+      query: (data) => ({
+        url: `/students/attendance/mark`,
+        method: 'POST',
+        data,
+      }),
+      invalidatesTags: ['Student-Take-Attendance'],
+    }),
     getStudentsAttendance: builder.query({
       query: () => ({
         url: `/app/student-attendance/?Sorting=${'desc'}&SkipCount=${3}&MaxResultCount=${5}`,
@@ -54,24 +62,16 @@ export const StudentTakeAttendanceApi = createApi({
       providesTags: ['Student-Take-Attendance'],
     }),
     getAttendanceByFilter: builder.query({
-      query: ({ attendanceDate, educationMediumStageId, standardId, divisionId }) => {
-        let paramsString = '';
-        if (attendanceDate) {
-          paramsString += `attendanceDate=${attendanceDate}&`;
-        }
-        if (educationMediumStageId) {
-          paramsString += `educationMediumStageId=${educationMediumStageId}&`;
-        }
-        if (standardId) {
-          paramsString += `standardId=${standardId}&`;
-        }
-        if (divisionId) {
-          paramsString += `divisionId=${divisionId}&`;
-        }
-        paramsString = paramsString.slice(0, -1);
+      query: ({ AcademicYearId, StandardId, DivisionId, Date }) => {
+        const params = new URLSearchParams();
+
+        if (AcademicYearId) params.append('AcademicYearId', AcademicYearId);
+        if (StandardId) params.append('StandardId', StandardId);
+        if (DivisionId) params.append('DivisionId', DivisionId);
+        if (Date) params.append('Date', Date);
 
         return {
-          url: `/app/student-attendance/filtered-attendence-list?${paramsString}`,
+          url: `/students/attendance/students?${params.toString()}`,
           method: 'GET',
         };
       },
@@ -88,4 +88,5 @@ export const {
   useDeleteStudentAttendanceMutation,
   useUpdateStudentAttendanceMutation,
   useGetAttendanceByFilterQuery,
+  useMarkAttendanceMutation,
 } = StudentTakeAttendanceApi;

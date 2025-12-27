@@ -9,15 +9,15 @@ export const EntranceExamSlotApi = createApi({
   tagTypes: ['Entrance-Exam-Slot'],
   endpoints: (builder) => ({
     getEntranceExamSlot: builder.query({
-      query: () => ({
-        url: '/app/entrance-exam-slot',
+      query: ({ academicYearId, startDate, endDate }) => ({
+        url: `/student-enrollment/settings/entrance-exam-slots?AcademicYearId=${academicYearId}&StartDate=${startDate}&EndDate=${endDate}`,
         method: 'GET',
       }),
       providesTags: ['Entrance-Exam-Slot'],
     }),
     addEntranceExamSlot: builder.mutation({
       query: (data) => ({
-        url: '/app/entrance-exam-slot',
+        url: '/student-enrollment/settings/entrance-exam-slots',
         method: 'POST',
         data,
       }),
@@ -25,7 +25,7 @@ export const EntranceExamSlotApi = createApi({
     }),
     updateEntranceExamSlot: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/entrance-exam-slot/${id}`,
+        url: `/student-enrollment/settings/entrance-exam-slots/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -33,7 +33,7 @@ export const EntranceExamSlotApi = createApi({
     }),
     deleteEntranceExamSlot: builder.mutation({
       query: (id) => ({
-        url: `/app/entrance-exam-slot/${id}`,
+        url: `/student-enrollment/settings/entrance-exam-slots/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Entrance-Exam-Slot'],

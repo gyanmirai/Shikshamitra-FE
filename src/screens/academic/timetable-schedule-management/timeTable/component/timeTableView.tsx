@@ -61,7 +61,7 @@ const TimeTableView: React.FC<ITimeTableView> = ({
   return (
     <>
       {firstSlotWithDayData && firstSlotWithDayData.dayData.length > 0 ? (
-        <Paper elevation={2} sx={{ flexGrow: 1 }}>
+        <Paper elevation={2} sx={{ flexGrow: 1, height: '100%' }}>
           <TableContainer>
             <Table stickyHeader>
               <TableHead>
@@ -80,9 +80,7 @@ const TimeTableView: React.FC<ITimeTableView> = ({
                 {timetable.map((timeTableItem, index) => (
                   <TableRow key={index}>
                     <TableCell sx={{ boxShadow: 2 }}>
-                      {timeTableItem.startTime}
-                      <br />
-                      {timeTableItem.endTime}
+                      {timeTableItem.startTime}-{timeTableItem.endTime}
                     </TableCell>
                     {(timeTableItem.isBreak ? [''] : timeTableItem.dayData).map((dayItem, ind) => (
                       <TimeTableCell

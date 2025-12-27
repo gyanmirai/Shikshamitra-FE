@@ -18,9 +18,15 @@ import { fileData } from 'src/components/file-thumbnail';
 import { shikshaMitraToast } from 'src/components/toast';
 import { SingleFilePreview } from 'src/components/upload';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
+import {
+  useAddChapterMutation,
+  useUpdateChapterMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import { getChapterInitialValues } from './initialValues';
 import { getChapterValidationSchema } from './validationSchema';
@@ -35,39 +41,84 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   initialValues = null,
   className,
   subject,
+  classId,
+  subjectId,
 }: IAddNewChapterProps) => {
   // State for managing uploaded documents and their metadata
   // const [documents, setDocuments] = useState<IDocument[]>(initialValues?.documents || []);
   // State for tracking files that have been uploaded but not yet processed
   const theme = useTheme();
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
 
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const previewDialog = useBoolean();
+  const [addChapter, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddChapterMutation,
+  });
+  const [updateChapter, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateChapterMutation,
+  });
+  const [uploadCurriculumFile] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
 
   // Initialize formik for form handling
   const formik = useFormik<IChapterFormValues>({
     initialValues: getChapterInitialValues(initialValues),
     validationSchema: getChapterValidationSchema(currentYear),
-    onSubmit: (values) => {
-      onSubmit({
-        ...values,
-        startDate: values.startDate,
-        endDate: values.endDate,
-        // documents,
-      });
-      if (initialValues) {
-        shikshaMitraToast.success({
-          message: `Chapter ${values.chapterNo} : ${values.chapterName} has been updated successfully for ${subject} in Class ${className}`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Chapter ${values.chapterNo} : ${values.chapterName} has been successfully added to ${subject} for Class ${className}`,
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          standardId: classId, // Assuming standardId is part of IChapterFormValues
+          subjectId, // Assuming subjectId is part of IChapterFormValues
+          educationMediumId: currentMedium?.id, // Assuming educationMediumId is part of IChapterFormValues
+          chapterNumber: values.chapterNo,
+          chapterName: values.chapterName,
+          chapterStartTime: values?.startDate?.toISOString(),
+          chapterEndTime: values?.endDate?.toISOString(),
+          description: values.description,
+          documents: [], // Assuming documents are managed separately or will be added here
+        };
+
+        if (initialValues) {
+          // For update, include the chapter ID
+          const updatePayload = {
+            id: initialValues.id, // Assuming initialValues has an 'id' for the chapter
+            body: payload,
+          };
+          await updateChapter(updatePayload).unwrap();
+          shikshaMitraToast.success({
+            message: `Chapter ${values.chapterNo} : ${values.chapterName} has been updated successfully for ${subject} in Class ${className}`,
+          });
+        } else {
+          await addChapter(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `Chapter ${values.chapterNo} : ${values.chapterName} has been successfully added to ${subject} for Class ${className}`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to save chapter', error);
+        shikshaMitraToast.error({
+          message: `Failed to save chapter: ${error.message || 'Unknown error'}`,
         });
       }
-      onClose(null, true);
     },
   });
+
+  const handleFileUpload = async (files: (File | string)[]) => {
+    const uploadedFiles: (string | File)[] = [];
+    const formData = new FormData();
+    formData.append('FileName', (files[0] as File)?.name);
+    formData.append('File', files[0] as File);
+    const response = await uploadCurriculumFile(formData).unwrap();
+    uploadedFiles.push(response.data);
+
+    formik.setFieldValue(`documents`, uploadedFiles);
+  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -219,6 +270,16 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 <CustomUpload
                   multiple
                   previewCount={6}
+                  onChange={(files) => {
+                    handleFileUpload(files);
+                  }}
+                  value={formik.values.documents}
+                  label="Upload Your Subject Documents"
+                  outputFormat="file"
+                />
+                <CustomUpload
+                  multiple
+                  previewCount={6}
                   onChange={(files: any) => formik.setFieldValue('documents', files)}
                   value={formik.values.documents}
                   label="Upload Your Chapter Documents"
@@ -250,6 +311,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   height={initialValues ? 16 : 20}
                 />
               }
+              loading={isUpdateLoading || isAddLoading}
               type="submit"
               size="small"
               variant="contained"

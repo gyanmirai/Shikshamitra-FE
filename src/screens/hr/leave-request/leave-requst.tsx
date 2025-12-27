@@ -21,7 +21,6 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { Grid, Button, Typography, DialogActions } from '@mui/material';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { DatePicker, DateTimePicker, MobileTimePicker } from '@mui/x-date-pickers';
 import { info, error, primary, success, warning, secondary } from 'src/theme/core/palette';
 import {
   useAddEmployeeLeaveMutation,
@@ -50,7 +49,6 @@ type AddLeaveRequestProps = TabComponentType & {
 
 interface FormValues {
   leaveType: string;
-  isHalfDay: boolean;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
   description: string;
@@ -64,15 +62,11 @@ interface FormValues {
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
   const { editData, handleClose } = props;
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Mutation hook for changing leave request status
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
   });
-
-  // Get employee data from redux store
-  const { employee } = useSelector((state: RootState) => state.auth);
 
   // Mutation hook for adding new leave request
   const [addLeave, { isLoading }] = useQueryAndMutation({
@@ -90,6 +84,8 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
     currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
   });
 
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
   // Handler to remove a single file attachment
   // const handleRemoveFile = useCallback((setFieldValue: (field: string, value: any) => void) => {
   //   setFieldValue('docs', '');
@@ -102,12 +98,10 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
         description: editData?.description || '',
         startDate: editData?.startDate ? dayjs(editData?.startDate) : null,
         endDate: editData?.endDate ? dayjs(editData?.endDate) : null,
-        isHalfDay: editData?.halfDay || false,
         rejectionReason: editData?.rejectionReason || '',
         status: editData?.status || 0,
         startTime: editData?.startTime ? dayjs(editData?.startTime) : null,
         endTime: editData?.endTime ? dayjs(editData?.endTime) : null,
-
         docs: editData?.attachment ? convertBase64Format(editData?.attachment) : '',
       },
       validationSchema: Yup.object().shape({
@@ -180,25 +174,17 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
             });
           } else {
             await addLeave({
-              // userId: userInfo.sub,
-              employeeId: employee.id,
+              mediumStageId: medium?.id,
               leaveTypeId: formValues.leaveType,
-
-              halfDay: formValues.isHalfDay,
-              startDate: dateConvertor(
-                dayjs(formValues.startDate, 'DD-MM-YYYY HH:mm:ss').format(dateFormat)
-              ),
-              ...(!formValues.isHalfDay
-                ? {
-                    endDate: dateConvertor(
-                      dayjs(formValues.endDate, 'DD-MM-YYYY HH:mm:ss').format(dateFormat)
-                    ),
-                  }
-                : {}),
-              description: formValues.description,
-              attachment: formValues.docs.replace(/^data:\w+\/[\w-]+;base64,/, ''),
+              startDate: dateConvertor(dayjs(formValues.startDate).format(dateFormat)),
+              endDate: dateConvertor(dayjs(formValues.endDate).format(dateFormat)),
+              reason: formValues.description,
+              attachment: formValues.docs
+                ? formValues.docs.replace(/^data:\w+\/[\w-]+;base64,/, '')
+                : undefined,
             });
           }
+
           handleClose?.(null, true);
         } catch (e) {
           console.error(e);
@@ -249,121 +235,6 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 label="Half Day"
               />
             </Grid> */}
-            {values.isHalfDay ? (
-              <>
-                <Grid size={12}>
-                  <DatePicker
-                    label="Date *"
-                    onChange={(value) => setFieldValue('startDate', value)}
-                    format="DD-MM-YYYY"
-                    views={['year', 'month', 'day']}
-                    minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs(currentYear?.endDate)}
-                    value={values.startDate}
-                    disabled={editData}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        helperText: touched.startDate && errors.startDate,
-                        error: touched.startDate && Boolean(errors.startDate),
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField error={touched.startTime && Boolean(errors.startTime)}>
-                    <MobileTimePicker
-                      label="Start time *"
-                      onChange={(value) => setFieldValue('startTime', value)}
-                      value={values.startTime}
-                      disabled={editData}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          helperText: touched.startTime && errors.startTime,
-                          error: touched.startTime && Boolean(errors.startTime),
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField error={touched.endTime && Boolean(errors.endTime)}>
-                    <MobileTimePicker
-                      label="End Time *"
-                      onChange={(value) => setFieldValue('endTime', value)}
-                      format="HH:mm:ss"
-                      views={['hours', 'minutes', 'seconds']}
-                      value={values.endTime}
-                      disabled={editData}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          helperText: touched.endTime && errors.endTime,
-                          error: touched.endTime && Boolean(errors.endTime),
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-              </>
-            ) : (
-              <>
-                <Grid size={12}>
-                  <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
-                    <DateTimePicker
-                      label="Start Date *"
-                      disablePast
-                      onChange={(value) => setFieldValue('startDate', value)}
-                      format="DD-MM-YYYY HH:mm"
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      // views={['year', 'month', 'day']}
-                      value={values.startDate}
-                      disabled={editData}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          name: 'startDate',
-                          helperText: touched.startDate && errors.startDate,
-                          error: touched.startDate && Boolean(errors.startDate),
-                          onBlur: handleBlur,
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-                <Grid size={12}>
-                  <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
-                    <DateTimePicker
-                      label="End Date *"
-                      disablePast
-                      onChange={(value) => setFieldValue('endDate', value)}
-                      format="DD-MM-YYYY HH:mm"
-                      // views={['year', 'month', 'day']}
-                      minDate={dayjs(currentYear?.startDate)}
-                      maxDate={dayjs(currentYear?.endDate)}
-                      value={values.endDate}
-                      disabled={editData}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          size: 'small',
-                          name: 'endDate',
-                          onBlur: handleBlur,
-                          helperText: touched.endDate && errors.endDate,
-                          error: touched.endDate && Boolean(errors.endDate),
-                        },
-                      }}
-                    />
-                  </ShakingTextField>
-                </Grid>
-              </>
-            )}
 
             <Grid size={12}>
               <Typography variant="subtitle2" gutterBottom sx={{ pl: 0.5 }}>

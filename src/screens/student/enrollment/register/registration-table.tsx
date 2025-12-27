@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { GenderType, GenderOptions } from 'src/enums/gender';
 import React, { useMemo, useState, useCallback } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -11,7 +12,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useBoolean, type UseBooleanReturn } from 'src/hooks/use-boolean';
 import { Box, MenuItem, MenuList, Typography, CircularProgress } from '@mui/material';
-import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
   useMoveToAdmissionMutation,
   useGetStudentRegistrationQuery,
@@ -60,7 +60,7 @@ const RegistrationTable = ({
               confirmMovePopup.onTrue();
               setEditData(row);
               // dialog.onTrue();
-              setMoveId(row.id);
+              setMoveId(row.studentId);
               pop.onClose();
             }}
           >
@@ -104,32 +104,20 @@ const RegistrationTable = ({
     },
   });
 
-  const [selectedStudents] = useState<any>([]);
-
   const tableData = useMemo(
     () =>
-      registrationData?.items.map((item: IInquiryData) => ({
+      registrationData?.data?.items.map((item: IInquiryData) => ({
         ...item,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
-
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
+        genderValue: GenderType[(item as any)?.gender],
       })) || [],
-    [registrationData?.items]
+    [registrationData?.data?.items]
   );
-
-  const sendInstantNotificationDialogValue = useBoolean();
-
-  const handlerSendNotification = () => {
-    if (!sendInstantNotificationDialogValue.value) {
-      sendInstantNotificationDialogValue.onTrue();
-    }
-  };
 
   return (
     <>
       <CustomizableTable
-        onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudents.length !== 0}
         tableId="student-registration-table"
         noDataText={
           <>
@@ -190,15 +178,12 @@ const RegistrationTable = ({
             isDateRangeFilter: true,
           },
           {
-            id: 'gender',
+            id: 'genderValue',
             label: 'Gender',
             align: 'left',
             filterType: 'enum',
             minWidth: '90px',
-            enumOptions: [
-              { value: 'Male', label: 'Male' },
-              { value: 'Female', label: 'Female' },
-            ],
+            enumOptions: GenderOptions,
           },
           { id: 'address', label: 'Address', minWidth: '150px', align: 'left' },
           {
@@ -358,15 +343,6 @@ const RegistrationTable = ({
           setMoveId(null);
         }}
       />
-
-      {sendInstantNotificationDialogValue.value && (
-        <SendInstantNotificationDialog
-          open={sendInstantNotificationDialogValue.value}
-          onClose={sendInstantNotificationDialogValue.onFalse}
-          data={[]}
-          userList={selectedStudents}
-        />
-      )}
     </>
   );
 };
