@@ -37,8 +37,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   handleBulkUpdate,
 }) => {
   // Local state for selected students
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  // Local state for selected students
   const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
   const {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -51,11 +49,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     type: 'query',
     currentQueryAndMutation: useGetHomeworkSubmissionsQuery,
     params: {
-      academicMediumId: medium?.id,
-      ClassId: selectedClass,
-      DivisionId: selectedDivision,
-      SubjectId: selectedSubject,
-      HomeworkId: selectedHomework?.id,
+      homeworkId: selectedHomework?.id,
+      classId: selectedClass,
+      divisionId: selectedDivision,
+      subjectId: selectedSubject,
     },
   });
   // State to track the currently selected student for individual grading

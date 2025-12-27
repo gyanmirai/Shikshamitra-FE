@@ -1,13 +1,9 @@
 'use client';
 
-import type { Medium } from 'src/types/school';
-import type { RootState } from 'src/redux/store';
-
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -24,8 +20,6 @@ import {
 import type { IHomeworkTypeFormProps } from './type';
 
 const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, editData }) => {
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
-
   const [addHomeworkType, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddHomeworkTypeMutation,
@@ -48,11 +42,8 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
       try {
         if (editData) {
           const payload = {
-            academicMediumId: (currentMedium as Medium).id,
-            id: editData.id,
-            body: {
-              homeworkTypeName: values.homeworkTypeName,
-            },
+            homeworkTypeId: editData.id,
+            name: values.homeworkTypeName,
           };
           await updateHomeworkType(payload).unwrap();
           shikshaMitraToast.success({
@@ -60,10 +51,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
           });
         } else {
           const payload = {
-            academicMediumId: (currentMedium as Medium).id,
-            body: {
-              homeworkTypeName: values.homeworkTypeName,
-            },
+            name: values.homeworkTypeName,
           };
           await addHomeworkType(payload).unwrap();
           shikshaMitraToast.success({

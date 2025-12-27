@@ -20,6 +20,8 @@ export interface DivisionHomeworkMeta {
 }
 
 export interface IHomework {
+  chapterId: any;
+  homeworkId: any;
   id: string;
   title: string;
   description: string;

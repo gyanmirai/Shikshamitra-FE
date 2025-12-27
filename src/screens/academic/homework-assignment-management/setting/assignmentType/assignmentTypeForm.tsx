@@ -1,13 +1,9 @@
 'use client';
 
-import type { Medium } from 'src/types/school';
-import type { RootState } from 'src/redux/store';
-
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -24,8 +20,6 @@ import {
 import type { IAssignmentTypeFormProps } from './type';
 
 const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose, editData }) => {
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
-
   const [addAssignmentType, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddAssignmentTypeMutation,
@@ -48,11 +42,8 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
       try {
         if (editData) {
           const payload = {
-            academicMediumId: (currentMedium as Medium).id,
-            id: editData.id,
-            body: {
-              assignmentTypeName: values.assignmentTypeName,
-            },
+            assignmentTypeId: editData.id,
+            name: values.assignmentTypeName,
           };
           await updateAssignmentType(payload).unwrap();
           shikshaMitraToast.success({
@@ -60,10 +51,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
           });
         } else {
           const payload = {
-            academicMediumId: (currentMedium as Medium).id,
-            body: {
-              assignmentTypeName: values.assignmentTypeName,
-            },
+            name: values.assignmentTypeName,
           };
           await addAssignmentType(payload).unwrap();
           shikshaMitraToast.success({

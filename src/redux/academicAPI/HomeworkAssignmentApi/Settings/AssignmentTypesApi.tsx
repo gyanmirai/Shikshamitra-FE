@@ -4,60 +4,47 @@ export const assignmentTypesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all assignment types under academic medium
     getAssignmentTypes: builder.query({
-      query: ({ academicMediumId }: { academicMediumId: string }) => ({
+      query: () => ({
         url: `/assignment-type`,
         method: 'GET',
-        params: { academicMediumId },
       }),
       providesTags: ['AssignmentType'],
     }),
 
     // Get specific assignment type by ID
     getAssignmentTypeById: builder.query({
-      query: ({ academicMediumId, id }: { academicMediumId: string; id: string }) => ({
+      query: ({ id }: { id: string }) => ({
         url: `/assignment-type/${id}`,
         method: 'GET',
-        params: { academicMediumId },
       }),
       providesTags: ['AssignmentType'],
     }),
 
     // Add new assignment type
     addAssignmentType: builder.mutation({
-      query: ({ academicMediumId, body }: { academicMediumId: string; body: any }) => ({
+      query: ({ name }: { name: string }) => ({
         url: `/assignment-type`,
         method: 'POST',
-        params: { academicMediumId },
-        data: body,
+        params: { name },
       }),
       invalidatesTags: ['AssignmentType'],
     }),
 
     // Update assignment type
     updateAssignmentType: builder.mutation({
-      query: ({
-        academicMediumId,
-        id,
-        body,
-      }: {
-        academicMediumId: string;
-        id: string;
-        body: any;
-      }) => ({
-        url: `/assignment-type/${id}`,
+      query: ({ assignmentTypeId, name }: { assignmentTypeId: string; name: string }) => ({
+        url: `/assignment-type/${assignmentTypeId}`,
         method: 'PUT',
-        params: { academicMediumId },
-        data: body,
+        params: { name },
       }),
       invalidatesTags: ['AssignmentType'],
     }),
 
     // Delete assignment type
     deleteAssignmentType: builder.mutation({
-      query: ({ academicMediumId, id }: { academicMediumId: string; id: string }) => ({
-        url: `/assignment-type/${id}`,
+      query: ({ assignmentTypeId }: { assignmentTypeId: string }) => ({
+        url: `/assignment-type/${assignmentTypeId}`,
         method: 'DELETE',
-        params: { academicMediumId },
       }),
       invalidatesTags: ['AssignmentType'],
     }),

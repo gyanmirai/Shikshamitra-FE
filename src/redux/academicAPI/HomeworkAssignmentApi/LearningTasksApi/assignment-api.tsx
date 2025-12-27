@@ -4,12 +4,14 @@ export const assignmentApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // GET all assignments
     getAssignments: builder.query({
-      query: ({ academicMediumId, classId }) => ({
+      query: ({ classId, divisionId, subjectId, assignmentDate }) => ({
         url: `app/assignment`,
         method: 'GET',
         params: {
-          academicMediumId,
           classId,
+          divisionId,
+          subjectId,
+          assignmentDate,
         },
       }),
       providesTags: ['Assignment'],
@@ -17,34 +19,34 @@ export const assignmentApi = academicApi.injectEndpoints({
 
     // GET assignment by id
     getAssignmentById: builder.query({
-      query: ({ id, academicMediumId }) => ({
-        url: `app/assignment/${id}`,
+      query: (assignmentId) => ({
+        url: `app/assignment/${assignmentId}`,
         method: 'GET',
-        params: {
-          academicMediumId,
-        },
       }),
       providesTags: ['Assignment'],
     }),
 
     // CREATE assignment
     addAssignment: builder.mutation({
-      query: ({ academicMediumId, ...body }) => ({
+      query: ({ academicMediumId, body }) => ({
         url: `app/assignment?academicMediumId=${academicMediumId}`,
         method: 'POST',
         data: body,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       }),
       invalidatesTags: ['Assignment'],
     }),
 
     // UPDATE assignment
     updateAssignment: builder.mutation({
-      query: ({ id, academicMediumId, body }) => ({
-        url: `app/assignment/${id}`,
+      query: ({ assignmentId, body }) => ({
+        url: `app/assignment/${assignmentId}`,
         method: 'PUT',
         data: body,
-        params: {
-          academicMediumId,
+        headers: {
+          'Content-Type': 'multipart/form-data',
         },
       }),
       invalidatesTags: ['Assignment'],
@@ -52,21 +54,19 @@ export const assignmentApi = academicApi.injectEndpoints({
 
     // DELETE assignment
     deleteAssignment: builder.mutation({
-      query: ({ id, academicMediumId }) => ({
-        url: `app/assignment/${id}`,
+      query: (assignmentId) => ({
+        url: `app/assignment/${assignmentId}`,
         method: 'DELETE',
-        params: {
-          academicMediumId,
-        },
       }),
       invalidatesTags: ['Assignment'],
     }),
 
     // PUBLISH assignment
     publishAssignment: builder.mutation({
-      query: ({ id, academicMediumId }) => ({
-        url: `app/assignment/${id}/publish/${academicMediumId}`,
+      query: ({ assignmentId, status }) => ({
+        url: `app/assignment/${assignmentId}/publish`,
         method: 'POST',
+        data: { status },
       }),
       invalidatesTags: ['Assignment'],
     }),
