@@ -1,8 +1,10 @@
 'use client';
 
+import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -13,9 +15,14 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
+import {
+  useGetExaminationTypesQuery,
+  useDeleteExaminationTypeMutation,
+} from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 
 import ExamTypeForm from './examTypeForm';
 
@@ -27,7 +34,24 @@ const ExamTypeSettings = () => {
   // State for storing and managing the exam type table data.
   const [examTypeTable, setExamTypeTable] = useState<IExamType[]>(examTypeTableData);
   const addExamTypeDialog = useBoolean(false);
-
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const {
+    data: examTypeData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExaminationTypesQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id,
+    },
+  });
+  const [deleteExamType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteExaminationTypeMutation,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+  });
   // Dialog state for confirming the deletion of an exam type.
   const confirmDeleteDialog = useBoolean();
   // Redux state indicating if there are unsaved changes.
@@ -171,7 +195,7 @@ const ExamTypeSettings = () => {
             },
           },
         ]}
-        data={examTypeTable}
+        data={examTypeData?.data}
       />
 
       <CustomDialog
@@ -213,27 +237,42 @@ const ExamTypeSettings = () => {
       <ConfirmDialog
         open={confirmDeleteDialog.value}
         onClose={() => {
-          confirmDeleteDialog.onFalse();
           setSelectedExamType(null);
+          confirmDeleteDialog.onFalse();
         }}
         title="Delete"
         content={
           <>
-            Are you sure you want to delete exam type <strong>{selectedExamType?.examType}</strong>?
+            Are you sure you want to delete exam type{' '}
+            <strong>&quot;{selectedExamType?.examType}&quot;</strong>?
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
-            onClick={() => {
-              handleDelete(selectedExamType);
+            onClick={async () => {
+              try {
+                const payload = {
+                  academicMediumId: (currentMedium as any).id,
+                  id: (selectedExamType as any).id,
+                };
+                await deleteExamType(payload).unwrap();
+                confirmDeleteDialog.onFalse();
+                setSelectedExamType(null);
+                shikshaMitraToast.success({
+                  message: `Exam type &quot;${selectedExamType?.examType}&quot; deleted successfully`,
+                });
+              } catch (error) {
+                console.error('Failed to delete exam type', error);
+              }
             }}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

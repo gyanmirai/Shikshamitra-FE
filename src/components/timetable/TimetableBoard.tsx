@@ -1,7 +1,12 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import confetti from 'canvas-confetti';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import React, { useState } from 'react';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { DndProvider } from 'react-dnd';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { Box, Paper } from '@mui/material';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import { SlotType } from './types';

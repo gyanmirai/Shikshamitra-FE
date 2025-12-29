@@ -80,6 +80,14 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
       }),
       providesTags: ['CurriculumFile'],
     }),
+    // Get core-elective subjects by academicMediumId
+    getCoreElectiveSubjects: builder.query({
+      query: ({ academicMediumId }) => ({
+        url: `/academics/curriculum/${academicMediumId}/core-elective-subjects`,
+        method: 'GET',
+      }),
+      providesTags: ['SubjectAssignment'],
+    }),
   }),
 
   overrideExisting: false,
@@ -94,4 +102,5 @@ export const {
   usePublishSubjectAssignmentMutation,
   useUploadCurriculumFileMutation,
   useGetSubjectAssignmentDocumentsQuery,
+  useGetCoreElectiveSubjectsQuery,
 } = subjectAssignmentsApi;

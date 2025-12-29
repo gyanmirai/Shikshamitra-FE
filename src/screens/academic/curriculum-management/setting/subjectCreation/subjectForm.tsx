@@ -3,8 +3,8 @@
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import { useFormik } from 'formik';
+import React, { useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -18,6 +18,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useAddSubjectMutation,
+  useGetSubjectByIdQuery,
   useUpdateSubjectMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
@@ -32,14 +33,28 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
     type: 'mutation',
     currentQueryAndMutation: useAddSubjectMutation,
   });
+  const {
+    data: subjectById,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectByIdQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id, id: editData?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id || !editData?.id,
+    },
+  });
+
   const [updateSubject, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateSubjectMutation,
   });
+  const initialValues = useMemo(() => getSubjectInitialValues(editData), [editData]);
   // Initialize formik form handling with validation and submission logic
   const formik = useFormik({
     // Set initial form values, populated from editData if available
-    initialValues: getSubjectInitialValues(editData),
+    initialValues,
     // Apply validation rules defined in incidentValidationSchema
     validationSchema: subjectValidationSchema,
     // Handle form submission
@@ -80,6 +95,9 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
       }
     },
   });
+
+  console.log('subjectById---', subjectById);
+  console.log('formik values----', formik.values);
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
