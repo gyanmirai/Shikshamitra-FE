@@ -25,6 +25,8 @@ export const academicApi = createApi({
     'HomeworkType',
     'Exam',
     'CurriculumFile',
+    'ExaminationType',
+    'GradeScaling',
   ],
   endpoints: () => ({}), // inject endpoints later
 });

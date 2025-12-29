@@ -22,6 +22,7 @@ import { Box, Grid, Chip, Button, TextField, Autocomplete, DialogActions } from 
 import {
   useAddSubjectAssignmentMutation,
   useUploadCurriculumFileMutation,
+  useGetCoreElectiveSubjectsQuery,
   useGetSubjectAssignmentByIdQuery,
   useUpdateSubjectAssignmentMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -69,13 +70,27 @@ const SubjectAssignmentForm = ({
 }: ISubjectAssignmentFormProps) => {
   const {
     data: subjectAssignmentData,
-    isLoading,
-    isFetching,
+    isLoading: isSubjectAssignmentLoading,
+    isFetching: isSubjectAssignmentFetching,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentByIdQuery,
     params: { assignmentId: data?.id },
   });
+  console.log('subjectAssignmentData', subjectAssignmentData);
+
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetCoreElectiveSubjectsQuery,
+    params: { academicMediumId: (currentMedium as Medium).id },
+  });
+
   // Flag to check if the subject is already published
   const isPublished: boolean =
     PublishUnpublishStatusType[data?.status as PublishUnpublishStatusType] === 'Published';
@@ -87,7 +102,6 @@ const SubjectAssignmentForm = ({
   const [selectedOption, setSelectedOption] = useState<any[]>([]);
   // Flag to prevent infinite update loops
   const [isInitializing, setIsInitializing] = useState(true);
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const [addSubjectAssignment, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddSubjectAssignmentMutation,
@@ -330,8 +344,14 @@ const SubjectAssignmentForm = ({
                     fullWidth
                     size="small"
                     disabled={isPublished}
-                    options={subjectOptions}
-                    getOptionLabel={(option) => option.label}
+                    options={
+                      subjectOptionsData?.data?.map((item: any) => ({
+                        label: item.name,
+                        value: item.id,
+                        type: item.subjectType,
+                      })) || []
+                    }
+                    getOptionLabel={(option) => option.name}
                     value={selectedOption}
                     onChange={(_, newValue) => handleSubjectChange(newValue)}
                     ListboxProps={{

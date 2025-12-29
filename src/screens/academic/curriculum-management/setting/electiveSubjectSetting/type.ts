@@ -4,6 +4,7 @@ export type IElectiveSubject = {
   id: string;
   name: string;
   subjects: {
+    id: string;
     name: string;
     subjectColor: string;
   }[];
