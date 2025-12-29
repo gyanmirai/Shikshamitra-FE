@@ -19,16 +19,16 @@ import { useSearchParam } from 'src/hooks/use-search-param';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { EmployeeLeaveStatusType } from 'src/enums/employee-leave-status';
 import { EmployeeAttendanceStatus } from 'src/enums/employee-attendance-status';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
-  useGetEmployeeQuery,
-  useLazyGetAttendanceByEmployeeIdQuery,
-  useLazyGetEmployeeAttendanceByDateQuery,
-} from 'src/redux/employee/employeeApi';
+  useGetDateWiseAttendanceQuery,
+  useGetEmployeeWiseAttendanceQuery,
+} from 'src/redux/attendanceTracking/attendanceTrackingApi';
 import {
   Box,
   Tab,
@@ -253,10 +253,22 @@ const DateWise = ({
     [searchParams.date]
   );
   const tabs = useTabs(EmployeeAttendanceStatus.All);
-
-  const [getAttendance, { data: attendanceData, isLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetEmployeeAttendanceByDateQuery,
+  const {
+    data: attendanceData,
+    isLoading,
+    refetch: getDateWiseAttendance,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetDateWiseAttendanceQuery,
+    params: {
+      attendanceDate: dateValue?.format('DD-MM-YYYY'),
+      status: tabs.value,
+      page: 1,
+      pageSize: 10,
+    },
+    options: {
+      skip: !dateValue,
+    },
   });
 
   // const tableData = useMemo(
@@ -273,11 +285,11 @@ const DateWise = ({
         dayjs(searchParams.date, 'DD-MM-YYYY').format(dateFormat),
         true
       );
-      getAttendance(dateTimeOffset);
+      getDateWiseAttendance(dateTimeOffset);
     } else {
-      getAttendance(dateConvertor(dayjs().format(dateFormat), true));
+      getDateWiseAttendance(dateConvertor(dayjs().format(dateFormat), true));
     }
-  }, [searchParams.date, getAttendance]);
+  }, [getDateWiseAttendance, searchParams.date]);
 
   useEffect(
     () => () => {
@@ -756,6 +768,7 @@ const EmployeeWise = ({
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
   );
+
   const startDate = useMemo(
     () =>
       searchParams.startDate
@@ -772,47 +785,66 @@ const EmployeeWise = ({
   const tabs = useTabs('All');
 
   // const [employeeId, setEmployeeId] = useState<string>('');
-  const { data: employees, isLoading } = useQueryAndMutation({
+  const { data: employees, isLoading: employeeLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
   });
 
-  const [getAttendance, { data, isLoading: attendanceLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetAttendanceByEmployeeIdQuery,
+  const {
+    data: attendanceData,
+    isLoading: attendanceLoading,
+    refetch: getEmployeeWiseAttendance,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeWiseAttendanceQuery,
+    params: {
+      employeeId: searchParams.employeeId,
+      startDate: startDate.format('DD-MM-YYYY'),
+      endDate: endDate.format('DD-MM-YYYY'),
+      status: tabs.value,
+      page: 1,
+      pageSize: 10,
+    },
+    options: {
+      skip: !searchParams.employeeId,
+    },
   });
 
   useMemo(
     () => ({
-      all: data?.items?.length || 24,
+      all: attendanceData?.items?.length || 24,
       Present:
-        data?.items?.filter(
+        attendanceData?.items?.filter(
           (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
         ).length || 10,
       Absent:
-        data?.items?.filter(
+        attendanceData?.items?.filter(
           (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.FullDayLeave
         ).length || 8,
       'Half-Day':
-        data?.items?.filter(
+        attendanceData?.items?.filter(
           (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.HalfDayLeave
         ).length || 6,
       'Rejected Leave':
-        data?.items?.filter(
+        attendanceData?.items?.filter(
           (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.RejectedLeave
         ).length || 4,
     }),
-    [data?.items]
+    [attendanceData?.items]
   );
 
   useEffect(() => {
     if (searchParams?.employeeId && startDate) {
-      getAttendance({
+      getEmployeeWiseAttendance({
         employeeId: `${searchParams.employeeId}`,
-        month: dateConvertor(dayjs(startDate, 'DD-MM-YYYY').format(dateFormat), true),
+        startDate: startDate.format('DD-MM-YYYY'),
+        endDate: endDate.format('DD-MM-YYYY'),
+        status: tabs.value,
+        page: 1,
+        pageSize: 10,
       });
     }
-  }, [searchParams?.employeeId, getAttendance, startDate]);
+  }, [searchParams.employeeId, getEmployeeWiseAttendance, startDate, endDate, tabs.value]);
 
   useEffect(
     () => () => {
@@ -831,7 +863,7 @@ const EmployeeWise = ({
   };
 
   useState(
-    data?.[0]?.employeeAttendances?.items?.map((i: any) => ({
+    attendanceData?.items?.map((i: any) => ({
       ...i,
       status: EmployeeLeaveStatusType[i.statusType],
     })) || []
@@ -842,39 +874,39 @@ const EmployeeWise = ({
       {
         value: 'All',
         label: 'All',
-        count: data?.[0]?.presentDays || 10,
+        count: attendanceData?.[0]?.presentDays || 10,
         color: 'default',
       },
       {
         value: 'Present',
         label: 'Present',
-        count: data?.[0]?.presentDays || 6,
+        count: attendanceData?.[0]?.presentDays || 6,
         icon: 'fluent:person-available-16-regular',
         color: 'success',
       },
       {
         value: 'Absent',
         label: 'Absent',
-        count: data?.[0]?.leaveDays || 2,
+        count: attendanceData?.[0]?.leaveDays || 2,
         icon: 'fluent-mdl2:leave-user',
         color: 'error',
       },
       {
         value: 'Half day',
         label: 'Half day',
-        count: data?.[0]?.halfDayLeaves || 2,
+        count: attendanceData?.[0]?.halfDayLeaves || 2,
         icon: 'mdi:fraction-one-half',
         color: 'warning',
       },
       {
         value: 'RejectedLeave',
         label: 'Rejected Leave',
-        count: data?.[0]?.rejectedLeaves || 0,
+        count: attendanceData?.[0]?.rejectedLeaves || 0,
         icon: GlobalIcons.reject,
         color: 'error',
       },
     ],
-    [data]
+    [attendanceData]
   );
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
@@ -943,7 +975,7 @@ const EmployeeWise = ({
               : undefined
           }
         >
-          {isLoading ? (
+          {employeeLoading ? (
             <Box sx={{ width: '100%', maxWidth: 268 }}>
               <Skeleton height={40} width="100%" />
             </Box>

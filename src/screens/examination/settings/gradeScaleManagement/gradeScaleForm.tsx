@@ -1,33 +1,82 @@
+import type { Medium } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
 import type { FormikErrors, FormikTouched } from 'formik';
 
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, IconButton, DialogActions } from '@mui/material';
+import {
+  useAddGradeScalingMutation,
+  useUpdateGradeScalingMutation,
+} from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 
 import { getInitialValues } from './initialValues';
 import { validationSchema } from './validationSchema';
 
-import type { IGradingScale, IGradeFormProps } from './type';
+import type { IGrade, IGradingScale, IGradeFormProps } from './type';
 
 const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit, disabled }) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [addGradeScaling, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddGradeScalingMutation,
+  });
+  const [updateGradeScaling, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateGradeScalingMutation,
+  });
   const formik = useFormik({
     initialValues: getInitialValues(data),
     validationSchema,
-    onSubmit: (values) => {
-      if (data) {
-        shikshaMitraToast.success({ message: `${values.name} Grade scale updated successfully` });
-      } else {
-        shikshaMitraToast.success({ message: `${values.name} Grade scale created successfully` });
+    onSubmit: async (values, formikHelpers) => {
+      try {
+        if (data) {
+          const payload = {
+            academicMediumId: (currentMedium as Medium).id,
+            id: (data as IGrade).id,
+            body: {
+              name: values.name,
+              totalMarks: values.totalMarks,
+              gradingScale: values.gradingScale,
+              educationMediumId: (currentMedium as Medium).id,
+            },
+          };
+          await updateGradeScaling(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.name}" Grade scale updated successfully`,
+          });
+          onClose(null, true);
+        } else {
+          const payload = {
+            academicMediumId: (currentMedium as Medium).id,
+            body: {
+              name: values.name,
+              totalMarks: values.totalMarks,
+              gradingScale: values.gradingScale,
+              educationMediumId: (currentMedium as Medium).id,
+            },
+          };
+          await addGradeScaling(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.name}" Grade scale added successfully`,
+          });
+          onClose(null, true);
+        }
+      } catch (error) {
+        // Error handling is managed by the API hook or global error handler if configured
+        console.error('Failed to save subject', error);
       }
-      onClose(null, true);
     },
   });
 
@@ -294,7 +343,11 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
+              size="small"
+              variant="contained"
+              type="submit"
+              loading={isUpdateLoading || isAddLoading}
               startIcon={
                 <Iconify
                   icon={data ? GlobalIcons.edit : GlobalIcons.submit}
@@ -302,13 +355,12 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                   height={data ? 16 : 20}
                 />
               }
-              variant="contained"
-              type="submit"
-              size="small"
-              onClick={(e: any) => formik.handleSubmit(e)}
+              onClick={(e: any) => {
+                formik.handleSubmit(e);
+              }}
             >
               {data ? 'Update' : 'Submit'}
-            </Button>
+            </LoadingButton>
           </DialogActions>
         )}
         {/* </form> */}
