@@ -20,7 +20,7 @@ const personalInformationValidationSchema = Yup.object({
   //   code: Yup.string().required('Code is required'),
   lastName: Yup.string().required('Last Name is required'),
   firstName: Yup.string().required('First Name is required'),
-  middleName: Yup.string(),
+  middleName: Yup.string().nullable(),
   shortName: Yup.string(),
   // employeeStatusType: Yup.number().required('Employee status type is required'),
   //   subject: Yup.array().required('Subject is required'),
@@ -94,7 +94,7 @@ const personalInformationValidationSchema = Yup.object({
   //   identificationMark1: Yup.string().required('Identification mark is required'),
   addressLine1: Yup.string().required('Building No./Flat/House No. is required'),
   addressLine2: Yup.string().required('Area/Locality/Road Name is required'),
-  addressLine3: Yup.string(),
+  addressLine3: Yup.string().nullable(),
   country: Yup.object()
     .shape({ name: Yup.string().required('Country is required') })
     .default(() => ({ name: '' }))
@@ -198,36 +198,36 @@ const additionalDetailsValidationSchema = Yup.object({
 export const workExperienceValidationSchema = Yup.object({
   experiences: Yup.array().of(
     Yup.object({
-      organizationName: Yup.string().required('Organization Name is required'),
-      organizationAddress: Yup.string(),
-      organizationCountry: Yup.object().shape({
+      mediumStageName: Yup.string().required('Organization Name is required'),
+      // organizationAddress: Yup.string(),
+      country: Yup.object().shape({
         name: Yup.string(),
         isoCode: Yup.string(),
       }),
-      organizationState: Yup.object().shape({
+      state: Yup.object().shape({
         name: Yup.string(),
         isoCode: Yup.string(),
       }),
-      organizationCity: Yup.object().shape({
+      city: Yup.object().shape({
         name: Yup.string(),
       }),
-      fromDate: Yup.mixed()
+      startDate: Yup.mixed()
         .test(
           'is-valid-dayjs',
           'Start Date is required',
           (value) => value && dayjs(value as any).isValid()
         )
         .required('Start date is required'),
-      toDate: Yup.mixed()
+      endDate: Yup.mixed()
         .nullable()
         .test('is-valid-dayjs', 'End Date is required', (value) =>
           value ? dayjs(value as any).isValid() : false
         )
         // eslint-disable-next-line func-names
         .test('toDate', 'End Date must be greater than start date', function () {
-          const { fromDate, toDate } = this.parent as any;
-          if (fromDate && toDate) {
-            return dayjs(toDate).isAfter(dayjs(fromDate));
+          const { startDate, endDate } = this.parent as any;
+          if (startDate && endDate) {
+            return dayjs(endDate).isAfter(dayjs(startDate));
           }
           return true;
         }),

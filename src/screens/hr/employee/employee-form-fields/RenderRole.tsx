@@ -14,13 +14,18 @@ export const RenderRole = ({ formik, disabled }: RenderRoleProps) => {
     currentQueryAndMutation: useGetRolesQuery,
   });
 
+  console.log(data?.items, 'formik.values.role', formik.values.role);
+
+  const roleValue = data?.items?.find((item: any) => item.id === formik.values.role) ?? null;
+
   return (
     <ShakingTextField error={formik.touched.role && Boolean(formik.errors.role)}>
       <Autocomplete
         disabled={isLoading || !!disabled}
         options={data?.items || []}
-        value={formik.values.role || undefined}
-        getOptionLabel={(option: any) => option.name}
+        value={roleValue}
+        getOptionLabel={(option: any) => option?.name ?? ''}
+        isOptionEqualToValue={(option, value) => option.id === value.id}
         renderInput={(params) => (
           <TextField
             {...params}
@@ -33,7 +38,7 @@ export const RenderRole = ({ formik, disabled }: RenderRoleProps) => {
           />
         )}
         onChange={(e, value) => {
-          formik.setFieldValue('role', value?.id);
+          formik.setFieldValue('role', value?.id || null);
         }}
       />
     </ShakingTextField>

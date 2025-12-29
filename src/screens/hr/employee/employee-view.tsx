@@ -142,7 +142,7 @@ export function EmployeeCard({ employee }: any) {
             alignItems: 'center',
             justifyContent: 'space-between',
             borderLeft: (theme) =>
-              employee?.employeeStatusType === EmployeeStatusType.Active
+              employee?.status === EmployeeStatusType.Active
                 ? `4px solid ${theme.vars.palette.success.main}`
                 : `4px solid ${theme.palette.error.main}`,
             borderRadius: 1,
@@ -166,7 +166,7 @@ export function EmployeeCard({ employee }: any) {
                 Name
               </Typography>
               <Typography fontWeight={500} variant="body2">
-                {employee?.employeeName}
+                {employee?.fullName}
               </Typography>
             </Box>
             <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
@@ -175,7 +175,7 @@ export function EmployeeCard({ employee }: any) {
                 Employee Code
               </Typography>
               <Typography fontWeight={500} variant="body2">
-                {employee?.employeeCode}
+                {employee?.employeeIdentifier}
               </Typography>
             </Box>
             <Divider orientation="vertical" flexItem sx={{ my: '10px' }} />
@@ -184,7 +184,7 @@ export function EmployeeCard({ employee }: any) {
                 Role
               </Typography>
               <Typography fontWeight={500} variant="body2">
-                {employee?.role?.name}
+                {employee?.roleName}
               </Typography>
             </Box>
           </Box>

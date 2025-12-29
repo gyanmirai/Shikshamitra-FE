@@ -40,14 +40,6 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee'],
     }),
-    updateEmployee: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/app/employee-personal-info/${id}`,
-        method: 'PUT',
-        data: body,
-      }),
-      invalidatesTags: ['Employee'],
-    }),
     deleteEmployee: builder.mutation({
       query: (id) => ({
         url: `/app/employee/${id}`,
@@ -64,9 +56,17 @@ export const employeeApi = createApi({
     }),
 
     // Employee Information Management
+    updateEmployee: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/employees/${id}/personal-info`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
     addBasicInformation: builder.mutation({
       query: (body) => ({
-        url: `/app/employee-personal-info`,
+        url: `/employees/personal-info`,
         method: 'POST',
         data: body,
       }),
@@ -74,21 +74,21 @@ export const employeeApi = createApi({
     }),
     getBasicInformation: builder.query({
       query: (id) => ({
-        url: `/api/app/employee-personal-info/${id}`,
+        url: `/employees/${id}/personal-info`,
         redirect: 'follow',
       }),
       providesTags: ['Employee'],
     }),
     getFamilyInformation: builder.query({
       query: (id) => ({
-        url: `/app/employee-family-info?employeeId=${id}`,
+        url: `/employees/${id}/family-info`,
         redirect: 'follow',
       }),
       providesTags: ['Employee'],
     }),
     updateFamilyInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee-family-info/upsert/${employeeId}`,
+        url: `/employees/${employeeId}/family-info`,
         method: 'PUT',
         data: body,
       }),
@@ -96,30 +96,30 @@ export const employeeApi = createApi({
     }),
     getAdditionalInformation: builder.query({
       query: (id) => ({
-        url: `/app/employee-additional-details?employeeId=${id}`,
+        url: `/employees/${id}/additional-info`,
         redirect: 'follow',
       }),
       providesTags: ['Employee'],
     }),
     updateAdditionalInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee-additional-details?employeeId=${employeeId}`,
-        method: 'PATCH',
+        url: `/employees/${employeeId}/additional-info`,
+        method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee'],
     }),
     getWorkExperience: builder.query({
       query: (id) => ({
-        url: `/app/employee-work-experience?employeeId=${id}`,
+        url: `/employees/${id}/work-experience`,
         redirect: 'follow',
       }),
       providesTags: ['Employee'],
     }),
     updateExperienceInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee-work-experience/upsert/${employeeId}`,
-        method: 'POST',
+        url: `/employees/${employeeId}/work-experience`,
+        method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee'],

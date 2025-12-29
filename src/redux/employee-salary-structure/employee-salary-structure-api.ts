@@ -5,14 +5,14 @@ export const employeeSalaryStructureApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     getEmployeeSalaryStructure: builder.query({
       query: ({ id }) => ({
-        url: `/salary-structure/${id}`,
+        url: `/payroll/employees/${id}/salary-structure`,
         method: 'GET',
       }),
       providesTags: ['Salary-Structure'],
     }),
     updateEmployeeSalaryStructure: builder.mutation({
       query: ({ id, data }) => ({
-        url: `/salary-structure/${id}`,
+        url: `/payroll/employees/${id}/salary-structure`,
         method: 'PUT',
         body: data,
       }),

@@ -52,18 +52,10 @@ const RenderAssignReportingManager = ({ formik, isMainForm, editData = null }: a
       ) : (
         <Autocomplete
           options={employees?.items || []}
-          getOptionLabel={(option: any) =>
-            `${option.firstName || ''} ${option.middleName || ''} ${option.lastName || ''} (${option.employeeCode || ''})`
-          }
+          getOptionLabel={(option: any) => option?.fullName}
           disabled={!isEditable.value}
           renderInput={(params) => (
-            <CustomTooltip
-              placement="top"
-              title={
-                employeeValue &&
-                `${employeeValue?.firstName || ''} ${employeeValue?.middleName || ''} ${employeeValue?.lastName || ''} (${employeeValue?.employeeCode || ''})`
-              }
-            >
+            <CustomTooltip placement="top" title={employeeValue && employeeValue?.fullName}>
               <TextField
                 {...params}
                 label="Reporting Manager *"

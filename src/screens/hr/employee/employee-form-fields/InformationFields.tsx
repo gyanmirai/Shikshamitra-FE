@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BloodGroup, BloodGroupArray } from 'src/enums/blood-group';
+import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
@@ -400,14 +401,11 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     label="Religion *"
                     name="religion"
                   >
-                    <MenuItem value="Hinduism">Hinduism</MenuItem>
-                    <MenuItem value="Islam">Islam</MenuItem>
-                    <MenuItem value="Christianity">Christianity</MenuItem>
-                    <MenuItem value="Sikhism">Sikhism</MenuItem>
-                    <MenuItem value="Buddhism">Buddhism</MenuItem>
-                    <MenuItem value="Jainism">Jainism</MenuItem>
-                    <MenuItem value="Judaism">Judaism</MenuItem>
-                    <MenuItem value="Zoroastrianism">Zoroastrianism (Parsi)</MenuItem>
+                    {ReligionTypeArray.map((item, index) => (
+                      <MenuItem key={index} value={ReligionType[index]}>
+                        {item}
+                      </MenuItem>
+                    ))}
                   </Select>
                   {formik.touched.religion && formik.errors.religion && (
                     <FormHelperText>{formik.errors.religion}</FormHelperText>

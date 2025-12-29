@@ -8,12 +8,12 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import Add from '@mui/icons-material/Add';
 import { Label } from 'src/components/label';
-import { useState, useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { getRoleColor } from 'src/utils/role-colors';
 import { useDispatch, useSelector } from 'react-redux';
+import { useState, useEffect, useCallback } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { convertBase64Format } from 'src/utils/base64Formate';
@@ -360,7 +360,7 @@ const HrEmployee = () => {
               handleClose={handleCloseStatus}
               employeeId={editData?.id}
               employeeName={editData?.fullName}
-              status={editData?.employeeStatusType}
+              status={editData?.status}
             />
           </CustomDialog>
           {/* <CustomDialog maxWidth="xl" open={open} handleClose={handleClose} title="Add Employee"> */}
@@ -463,6 +463,16 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
       handleClose();
     },
   });
+
+  useEffect(() => {
+    if (salaryStructure) {
+      formik.setValues({
+        earningComponents: salaryStructure?.earningComponents,
+        deductionComponents: salaryStructure?.deductionComponents,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [salaryStructure]);
 
   return (
     <>

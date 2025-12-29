@@ -23,6 +23,7 @@ import {
   useUpdateFamilyInformationMutation,
   useUpdateAdditionalInformationMutation,
   useUpdateExperienceInformationMutation,
+  useGetReportingManagerByEmployeeIdQuery,
   useUpdateReportingManagerByEmployeeIdMutation,
 } from 'src/redux/employee/employeeApi';
 
@@ -80,7 +81,7 @@ export const personalInformationInitialValues = (editData?: IPersonalInformation
     : { name: '', isoCode: '' },
   city: editData?.city ? { name: editData?.city } : { name: '' },
   pincode: editData ? editData?.pinCode : '',
-  employeeId: '',
+  employeeId: editData ? editData.id : '',
   // organization: editData ? editData?.educationMediumStageId : '',
   shift: editData ? editData?.shiftId : '',
 });
@@ -164,7 +165,7 @@ export const familyInformationInitialValues = (editData?: IFamilyInformationResp
 
 export const additionalDetailsInitialValues = (editData?: IAdditionalInformationResponse) => ({
   bplCardNo: editData ? editData.bplCardNo : '',
-  personWithDisability: editData ? editData.personWithDisability : '',
+  personWithDisability: editData ? (editData.personWithDisability ? 'Yes' : 'No') : '',
   secondLanguage: editData ? editData.secondLanguage : '',
   libraryMember: editData ? editData.isLibraryMember : false,
   transportMember: editData ? editData.isTransportMember : false,
@@ -176,28 +177,28 @@ export const workExperienceInitialValues = (editData?: IWorkExperienceResponse[]
   experiences: editData
     ? editData.map((i: any) => ({
         ...i,
-        fromDate: i?.fromDate ? dayjs(i.fromDate, 'YYYY-MM-DD') : null,
-        toDate: i?.toDate ? dayjs(i.toDate, 'YYYY-MM-DD') : null,
+        startDate: i?.startDate ? dayjs(i.startDate) : null,
+        endDate: i?.endDate ? dayjs(i.endDate) : null,
       }))
     : [],
 });
 
 export const payrollInitialValues = (editData?: IPayrollInformation) => ({
-  bankName: editData ? editData.bankDetails.bankName : '',
-  branchName: editData ? editData.bankDetails.branchName : '',
-  accountHolderName: editData ? editData.bankDetails.accountHolderName : '',
-  accountNumber: editData ? editData.bankDetails.accountNumber : '',
-  ifscCode: editData ? editData.bankDetails.ifscCode : '',
-  pfRule: editData ? editData.salaryDetails.pfRuleId : '',
-  epfNumber: editData ? editData.salaryDetails.epfNumber : '',
-  uanNumber: editData ? editData.salaryDetails.uanNumber : '',
-  basicSalary: editData ? editData.salaryDetails.basicSalary : '',
-  punchId: editData ? editData.salaryDetails.punchId : '',
+  bankName: editData ? editData?.bankDetails?.bankName : '',
+  branchName: editData ? editData?.bankDetails?.branchName : '',
+  accountHolderName: editData ? editData?.bankDetails?.accountHolderName : '',
+  accountNumber: editData ? editData?.bankDetails?.accountNumber : '',
+  ifscCode: editData ? editData?.bankDetails?.ifscCode : '',
+  pfRule: editData ? editData?.salaryDetails?.pfRuleId : '',
+  epfNumber: editData ? editData?.salaryDetails?.epfNumber : '',
+  uanNumber: editData ? editData?.salaryDetails?.uanNumber : '',
+  basicSalary: editData ? editData?.salaryDetails?.basicSalary : '',
+  punchId: editData ? editData?.salaryDetails?.punchId : '',
   // shiftName: '',
   // tdsPercentage: '',
   // tdsAmount: '',
-  earningComponents: editData ? editData.earningComponents : [],
-  deductionComponents: editData ? editData.deductionComponents : [],
+  earningComponents: editData ? editData?.earningComponents || [] : [],
+  deductionComponents: editData ? editData?.deductionComponents || [] : [],
 });
 
 export const assignReportingManagerInitialValues = (editData?: IReportingInformationResponse) => ({
@@ -295,7 +296,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           mobileNo: values.mobileNo,
           secondaryMobileNo: values.secondaryMobileNo,
           email: values.email,
-          department: values.department,
+          departmentId: values.department,
           doj: values.dateOfJoining.format('YYYY-MM-DD'),
           isTeaching: values.employeeGroup === 0,
           // qualification: values.qualification,
@@ -373,7 +374,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         employeeId: values.employeeId,
         body: {
           bplCardNo: values.bplCardNo,
-          personWithDisability: values.personWithDisability,
+          personWithDisability: values.personWithDisability === 'Yes',
           secondLanguage: values.secondLanguage,
           isLibraryMember: values.libraryMember,
           isTransportMember: values.transportMember,
@@ -390,8 +391,20 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
         employeeId: values.employeeId,
         body: values.experiences.map((i: any) => ({
           ...i,
-          startDate: i.fromDate ? i.fromDate.format('YYYY-MM-DD') : null,
-          endDate: i.toDate ? i.toDate.format('YYYY-MM-DD') : null,
+          mediumStageName: i.mediumStageName,
+          designation: i.designation,
+          department: i.department,
+          country: {
+            name: i.country.name,
+            isoCode: i.country.isoCode,
+          },
+          state: {
+            name: i.state.name,
+            isoCode: i.state.isoCode,
+          },
+          city: i.city.name,
+          startDate: i.startDate ? i.startDate.format('YYYY-MM-DD') : null,
+          endDate: i.endDate ? i.endDate.format('YYYY-MM-DD') : null,
         })),
       }).unwrap();
       return res;
@@ -451,7 +464,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             mobileNo: values.mobileNo,
             secondaryMobileNo: values.secondaryMobileNo,
             email: values.email,
-            department: values.department,
+            departmentId: values.department,
             doj: values.dateOfJoining.format('YYYY-MM-DD'),
             isTeaching: values.employeeGroup === 0,
             // qualification: values.qualification,
@@ -656,10 +669,20 @@ const FormSlider = ({ step, formik, editData }: any) => {
     },
   });
 
-  const { data: workExperienceDetails, isLoading: workExperienceDetailsLoading } =
+  // const { data: workExperienceDetails, isLoading: workExperienceDetailsLoading } =
+  //   useQueryAndMutation({
+  //     type: 'query',
+  //     currentQueryAndMutation: useGetWorkExperienceQuery,
+  //     params: editData?.id,
+  //     options: {
+  //       skip: !(editData?.id && step === 6),
+  //     },
+  //   });
+
+  const { data: reportingManagerDetails, isLoading: reportingManagerDetailsLoading } =
     useQueryAndMutation({
       type: 'query',
-      currentQueryAndMutation: useGetWorkExperienceQuery,
+      currentQueryAndMutation: useGetReportingManagerByEmployeeIdQuery,
       params: editData?.id,
       options: {
         skip: !(editData?.id && step === 6),
@@ -668,52 +691,52 @@ const FormSlider = ({ step, formik, editData }: any) => {
 
   useEffect(() => {
     if (initializedStepsRef.current[step]) return;
-    if (basicDetails?.data && step === 0) {
+    if (basicDetails && step === 0) {
       formik.setValues((pre: any) => ({
         ...pre,
-        ...personalInformationInitialValues(basicDetails?.data),
+        ...personalInformationInitialValues(basicDetails),
       }));
       initializedStepsRef.current[step] = true;
-    } else if (familyDetails?.data && step === 1) {
+    } else if (familyDetails && step === 1) {
       formik.setValues((pre: any) => ({
         ...pre,
-        ...familyInformationInitialValues(familyDetails?.data),
+        ...familyInformationInitialValues(familyDetails),
       }));
       initializedStepsRef.current[step] = true;
-    } else if (additionalDetails?.data && step === 2) {
+    } else if (additionalDetails && step === 2) {
       formik.setValues((pre: any) => ({
         ...pre,
-        ...additionalDetailsInitialValues(additionalDetails?.data),
+        ...additionalDetailsInitialValues(additionalDetails),
       }));
       initializedStepsRef.current[step] = true;
-    } else if (workExperience?.data && step === 4) {
+    } else if (workExperience && step === 4) {
       formik.setValues((pre: any) => ({
         ...pre,
-        ...workExperienceInitialValues(workExperience?.data),
+        ...workExperienceInitialValues(workExperience),
       }));
       initializedStepsRef.current[step] = true;
-    } else if (bankDetails?.data && step === 5) {
+    } else if (bankDetails && step === 5) {
       formik.setValues((pre: any) => ({
         ...pre,
-        ...payrollInitialValues(bankDetails?.data),
+        ...payrollInitialValues(bankDetails),
       }));
       initializedStepsRef.current[step] = true;
-    } else if (workExperienceDetails?.data && step === 6) {
+    } else if (reportingManagerDetails && step === 6) {
       formik.setValues((pre: any) => ({
         ...pre,
-        ...workExperienceInitialValues(workExperienceDetails?.data),
+        ...assignReportingManagerInitialValues(reportingManagerDetails),
       }));
       initializedStepsRef.current[step] = true;
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    basicDetails?.data,
-    familyDetails?.data,
-    additionalDetails?.data,
-    workExperience?.data,
-    bankDetails?.data,
-    workExperienceDetails?.data,
+    basicDetails,
+    familyDetails,
+    additionalDetails,
+    workExperience,
+    bankDetails,
+    reportingManagerDetails,
     step,
   ]);
 
@@ -756,7 +779,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
                   additionalDetailsLoading ||
                   workExperienceLoading ||
                   bankDetailsLoading ||
-                  workExperienceDetailsLoading ? (
+                  reportingManagerDetailsLoading ? (
                     <LoadingScreen />
                   ) : (
                     <Grid container spacing={0}>
