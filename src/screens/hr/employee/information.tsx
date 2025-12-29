@@ -374,7 +374,8 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
                         <DatePicker
                           label={field.label}
                           name={field.name}
-                          value={formik.values[field.name as keyof typeof formik.values]}
+                          // @ts-ignore
+                          value={formik.values[field.name as number] as any}
                           format="DD-MM-YYYY"
                           onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
                           sx={{

@@ -9,7 +9,6 @@ import { useFormik } from 'formik';
 import Add from '@mui/icons-material/Add';
 import { Label } from 'src/components/label';
 import { useState, useCallback } from 'react';
-import { GenderType } from 'src/enums/gender';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -44,6 +43,10 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
+import {
+  useGetEmployeeSalaryStructureQuery,
+  useUpdateEmployeeSalaryStructureMutation,
+} from 'src/redux/employee-salary-structure/employee-salary-structure-api';
 
 import EmployeeFrom from './employee-form';
 import EmployeeView from './employee-view';
@@ -124,14 +127,12 @@ const HrEmployee = () => {
 
   const tableData = employee?.items?.map((item: any) => ({
     ...item,
-    dob: dayjs(item?.dateOfBirth, 'YYYY-MM-DD').format('DD-MM-YYYY'),
-    genderValue: GenderType[item?.genderType],
-    doi: dayjs(item?.dateOfJoining, 'YYYY-MM-DD').format('DD-MM-YYYY'),
-    roleValue: item?.role?.name || 'Not Assigned',
-    statusValue: item?.employeeStatusType,
-    fullName: `${item?.lastName} ${item?.firstName} ${item?.middleName}`,
-    shiftName: `${item?.shift?.shiftName} (${dayjs(item?.shift?.startTime, 'HH:mm:ss').format('hh:mm A')} - ${dayjs(item?.shift?.endTime, 'HH:mm:ss').format('hh:mm A')})`,
-    // employeeType: EmployeeGroupType[item?.employeeGroup],
+    dob: dayjs(item?.dob).format('DD-MM-YYYY'),
+    genderValue: item?.gender,
+    doi: dayjs(item?.doj).format('DD-MM-YYYY'),
+    roleValue: item?.roleName || 'Not Assigned',
+    statusValue: EmployeeStatusType[item?.status],
+    shiftName: `${item?.shift.name} (${dayjs(item?.shift?.startTime, 'HH:mm:ss').format('hh:mm A')} - ${dayjs(item?.shift?.endTime, 'HH:mm:ss').format('hh:mm A')})`,
     organization: item?.educationMediumStage?.name,
   }));
   const sendInstantNotificationDialogValue = useBoolean();
@@ -248,7 +249,12 @@ const HrEmployee = () => {
                   );
                 },
               },
-              { id: 'employeeCode', label: 'Employee Code', minWidth: '150px', align: 'left' },
+              {
+                id: 'employeeIdentifier',
+                label: 'Employee Code',
+                minWidth: '150px',
+                align: 'left',
+              },
 
               {
                 id: 'dob',
@@ -277,20 +283,20 @@ const HrEmployee = () => {
               { id: 'email', label: 'Email', align: 'left' },
               { id: 'mobileNo', label: 'Mobile No.', minWidth: 150, align: 'left' },
               {
-                id: 'employeeGroup',
+                id: 'isTeaching',
                 label: 'Employee Group',
                 minWidth: '10vw',
                 align: 'left',
                 filterType: 'enum',
                 enumOptions: EmployeeGroupTypeFilter,
                 render(value, row) {
-                  return EmployeeGroupType[row?.employeeGroup];
+                  return EmployeeGroupType[value === true ? 0 : 1];
                 },
               },
               { id: 'shiftName', label: 'Shift', align: 'left', minWidth: '12vw' },
-              { id: 'organization', label: 'Organization', align: 'left' },
+              // { id: 'organization', label: 'Organization', align: 'left' },
               {
-                id: 'statusValue',
+                id: 'status',
                 label: 'Status',
                 filterType: 'enum',
                 enumOptions: EmployeeStatusTypeOptions,
@@ -299,7 +305,7 @@ const HrEmployee = () => {
                 sticky: true,
                 render(value, row) {
                   const color = EmployeeStatusTypeColor[
-                    row.employeeStatusType as EmployeeStatusType
+                    row.status as EmployeeStatusType
                   ] as LabelColor;
                   return <Label color={color}>{EmployeeStatusType[value]}</Label>;
                 },
@@ -367,7 +373,7 @@ const HrEmployee = () => {
             title="Payroll Structure"
             paperProps={{ sx: { maxHeight: '70vh' } }}
           >
-            <SalaryStructure handleClose={handleClosePayroll} />
+            <SalaryStructure handleClose={handleClosePayroll} editData={editData} />
           </CustomDialog>
         </>
       ) : (
@@ -378,7 +384,17 @@ const HrEmployee = () => {
 };
 export default HrEmployee;
 
-const SalaryStructure = ({ handleClose }: { handleClose: () => void }) => {
+const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; editData: any }) => {
+  const { data: salaryStructure } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeSalaryStructureQuery,
+    params: { id: editData?.id },
+  });
+
+  const [updateSalaryStructure] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateEmployeeSalaryStructureMutation,
+  });
   const formik = useFormik({
     initialValues: {
       earningComponents: [],
@@ -414,10 +430,40 @@ const SalaryStructure = ({ handleClose }: { handleClose: () => void }) => {
         })
       ),
     }),
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
+      try {
+        await updateSalaryStructure({
+          id: editData?.id,
+          data: {
+            earningComponents: values.earningComponents.map((item: any) => ({
+              name: item.componentName,
+              description: item.description,
+              amount: item.amount,
+              isFixed: item.type === 'fixed',
+              isTemp: false,
+              componentType: item.componentType,
+              dependOn: item.dependOn,
+              id: item.id,
+            })),
+            deductionComponents: values.deductionComponents.map((item: any) => ({
+              name: item.componentName,
+              description: item.description,
+              amount: item.amount,
+              isFixed: item.type === 'fixed',
+              isTemp: false,
+              componentType: item.componentType,
+              dependOn: item.dependOn,
+              id: item.id,
+            })),
+          },
+        }).unwrap();
+      } catch (error) {
+        console.error(error);
+      }
       handleClose();
     },
   });
+
   return (
     <>
       <DialogScrollContent>

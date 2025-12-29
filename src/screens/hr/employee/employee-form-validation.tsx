@@ -22,7 +22,7 @@ const personalInformationValidationSchema = Yup.object({
   firstName: Yup.string().required('First Name is required'),
   middleName: Yup.string(),
   shortName: Yup.string(),
-  employeeStatusType: Yup.number().required('Employee status type is required'),
+  // employeeStatusType: Yup.number().required('Employee status type is required'),
   //   subject: Yup.array().required('Subject is required'),
   dob: Yup.mixed()
     .test(
@@ -89,7 +89,7 @@ const personalInformationValidationSchema = Yup.object({
     )
     .required('Date of Joining is required'),
   employeeGroup: Yup.string().required('Employee Group is required'),
-  qualification: Yup.string(),
+  // qualification: Yup.string(),
   role: Yup.string().required('Role is required'),
   //   identificationMark1: Yup.string().required('Identification mark is required'),
   addressLine1: Yup.string().required('Building No./Flat/House No. is required'),
@@ -111,7 +111,7 @@ const personalInformationValidationSchema = Yup.object({
   pincode: Yup.number().test('picode', 'Must be exactly 6 numbers', (value) =>
     value ? !!`${value}`.match(/\b\d{6}\b/) : true
   ),
-  organization: Yup.string().required('Organization is required'),
+  // organization: Yup.string().required('Organization is required'),
   shift: Yup.string().required('Shift is required'),
   //   employeeId: Yup.string().required('Employee ID is required'),
 });
