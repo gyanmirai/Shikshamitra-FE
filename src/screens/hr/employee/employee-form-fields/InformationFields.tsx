@@ -13,6 +13,7 @@ import { fileToBase64 } from 'src/utils/file-to-base64';
 import { motion, AnimatePresence } from 'framer-motion';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { BloodGroup, BloodGroupArray } from 'src/enums/blood-group';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
@@ -43,7 +44,6 @@ import {
 
 import RenderShift from './RenderShift';
 import { RenderRole } from './RenderRole';
-import { RenderOrganization } from './RenderOrganization';
 
 import type { FieldsType } from './types';
 
@@ -521,14 +521,11 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     label="Blood Group"
                     name="bloodGroup"
                   >
-                    <MenuItem value="A+">A+</MenuItem>
-                    <MenuItem value="A-">A-</MenuItem>
-                    <MenuItem value="B+">B+</MenuItem>
-                    <MenuItem value="B-">B-</MenuItem>
-                    <MenuItem value="AB+">AB+</MenuItem>
-                    <MenuItem value="AB-">AB-</MenuItem>
-                    <MenuItem value="O+">O+</MenuItem>
-                    <MenuItem value="O-">O-</MenuItem>
+                    {BloodGroupArray.map((item, index) => (
+                      <MenuItem key={item} value={index}>
+                        {BloodGroup[index]}
+                      </MenuItem>
+                    ))}
                   </Select>
                   {formik.touched.bloodGroup && formik.errors.bloodGroup && (
                     <FormHelperText>{formik.errors.bloodGroup}</FormHelperText>
@@ -725,9 +722,6 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
 
         <Grid size={{ xs: 12, md: 4 }}>
           <RenderRole formik={formik} disabled={!isProfessionalDetailsEditable.value} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <RenderOrganization formik={formik} disabled={!isProfessionalDetailsEditable.value} />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <RenderShift formik={formik} disabled={!isProfessionalDetailsEditable.value} />

@@ -3,32 +3,32 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { Division, Standards, Organization } from 'src/types/school';
+import type { TimeSlot, DayOfWeek } from 'src/components/timetable/types';
 
 import dayjs from 'dayjs';
+import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { isNaN, parseInt, cloneDeep } from 'lodash';
-import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import TimetableBoard from 'src/components/timetable/TimetableBoard';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { Box, Paper, Button, MenuList, MenuItem, Typography } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Button, Divider, MenuList, MenuItem, Typography } from '@mui/material';
+import { DEFAULT_CONFIG, generateWeeklySlots } from 'src/components/timetable/utils';
 import {
   TimetableStatusType,
   TimetableStatusColors,
   TimetableStatusOptions,
 } from 'src/enums/timatable-type';
-
-import SubjectList from './component/subjectList';
-import TimeTableView from './component/timeTableView';
 
 import type { DayData, Subject, TimetableSlot, TSubjectGroup } from './type';
 
@@ -797,91 +797,7 @@ const TimeTableGrid = () => {
         open={open}
         fullScreen
       >
-        <Box p={2}>
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 1,
-            }}
-          >
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <CustomSelect
-                options={allClass}
-                label="Class"
-                value={classes}
-                onChange={(val) => setClasses(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-              />
-              <CustomSelect
-                options={allDivision}
-                label="Division"
-                value={division}
-                onChange={(val) => setDivision(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { minWidth: '250px', width: '100%' } }}
-                disabled={!classes}
-              />
-            </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
-                variant="outlined"
-                size="small"
-                onClick={() => {
-                  draftTimetableDialog.onTrue();
-                }}
-              >
-                Draft
-              </Button>
-              <Button
-                startIcon={<Iconify icon={GlobalIcons.publish} />}
-                variant="contained"
-                size="small"
-                onClick={() => {
-                  publishTimetableDialog.onTrue();
-                }}
-              >
-                Publish
-              </Button>
-            </Box>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2, p: 2 }}>
-            <Paper
-              elevation={2}
-              sx={{
-                width: 200,
-                height: 'fit-content',
-              }}
-            >
-              <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                <Typography variant="h6">Subjects</Typography>
-              </Box>
-              <Box sx={{ p: 1 }}>
-                <SubjectList
-                  onDragStart={handleDragStart}
-                  subjectsGroups={subjectsGroups}
-                  selectedClass={classes}
-                  timetable={timetable}
-                />
-              </Box>
-            </Paper>
-            <BackPopUpChecked initialValues={initialTimetableData} currentValues={timetable}>
-              <TimeTableView
-                timeTableData={timetable}
-                onDrop={handleDrop}
-                onTeacherSelect={handleTeacherSelect}
-                onRoomSelect={handleRoomSelect}
-                handleDeleteSlot={handleDeleteSlot}
-                showThreeDots
-              />
-            </BackPopUpChecked>
-          </Box>
-        </Box>
+        <TImeTableForm />
       </CustomDialog>
 
       {!open && (
@@ -1026,3 +942,81 @@ const TimeTableGrid = () => {
 };
 
 export default TimeTableGrid;
+
+const TImeTableForm = () => {
+  const a = null;
+
+  const formik = useFormik<{ slots: Record<DayOfWeek, TimeSlot[]> }>({
+    initialValues: {
+      slots: generateWeeklySlots(DEFAULT_CONFIG),
+    },
+    onSubmit: (values) => {
+      console.log(values);
+    },
+  });
+
+  return (
+    <DialogScrollContent
+      sx={{ paddingBottom: '16px', height: '100%' }}
+      scrollBarProps={{
+        sx: {
+          height: '100%',
+          overflow: 'hidden',
+          '& .simplebar-content': {
+            height: '100%',
+          },
+        },
+      }}
+    >
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Typography>Class : Class 10</Typography>
+            <Typography>Division : A</Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
+              onClick={() => {}}
+            >
+              Draft
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.publish} />}
+              onClick={() => {}}
+            >
+              Publish
+            </Button>
+          </Box>
+        </Box>
+        <Divider sx={{ my: 2 }} />
+        <TimetableBoard
+          slots={formik.values.slots}
+          onChange={(value) => formik.setFieldValue('slots', value)}
+          subjects={[
+            { id: 'sub-1', name: 'Mathematics', color: '#e3f2fd', defaultDuration: 60 },
+            { id: 'sub-2', name: 'Science', color: '#e8f5e9', defaultDuration: 45 },
+            { id: 'sub-3', name: 'English', color: '#fff3e0', defaultDuration: 30 },
+            { id: 'sub-4', name: 'History', color: '#f3e5f5', defaultDuration: 45 },
+            { id: 'sub-5', name: 'Computer Sci', color: '#e0f2f1', defaultDuration: 60 },
+            { id: 'sub-6', name: 'Art', color: '#fbe9e7', defaultDuration: 90 }, // Long slot
+            { id: 'sub-7', name: 'Sports', color: '#fffde7', defaultDuration: 30 },
+          ]}
+          readOnly={false}
+        />
+      </Box>
+    </DialogScrollContent>
+  );
+};

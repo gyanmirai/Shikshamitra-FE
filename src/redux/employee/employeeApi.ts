@@ -20,15 +20,16 @@ export const employeeApi = createApi({
     'Salary-Slip',
     'PF',
     'Run-Payroll',
+    'Salary-Structure',
   ],
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
     getEmployee: builder.query({
-      query: () => ({ url: '/app/employee', redirect: 'follow' }),
+      query: () => ({ url: '/employees', redirect: 'follow' }),
       providesTags: ['Employee'],
     }),
     getEmployeeById: builder.query({
-      query: (id) => ({ url: `/app/employee/${id}`, redirect: 'follow' }),
+      query: (id) => ({ url: `/employees/${id}`, redirect: 'follow' }),
       providesTags: ['Employee'],
     }),
     addEmployee: builder.mutation({
@@ -41,7 +42,7 @@ export const employeeApi = createApi({
     }),
     updateEmployee: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/employee/basic-info/${id}`,
+        url: `/app/employee-personal-info/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -65,39 +66,74 @@ export const employeeApi = createApi({
     // Employee Information Management
     addBasicInformation: builder.mutation({
       query: (body) => ({
-        url: `/app/employee/basic-info`,
+        url: `/app/employee-personal-info`,
         method: 'POST',
         data: body,
       }),
       invalidatesTags: ['Employee'],
     }),
+    getBasicInformation: builder.query({
+      query: (id) => ({
+        url: `/api/app/employee-personal-info/${id}`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
+    getFamilyInformation: builder.query({
+      query: (id) => ({
+        url: `/app/employee-family-info?employeeId=${id}`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
     updateFamilyInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee/family-info/${employeeId}`,
+        url: `/app/employee-family-info/upsert/${employeeId}`,
         method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee'],
+    }),
+    getAdditionalInformation: builder.query({
+      query: (id) => ({
+        url: `/app/employee-additional-details?employeeId=${id}`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
     }),
     updateAdditionalInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee/additional-details/${employeeId}`,
-        method: 'PUT',
+        url: `/app/employee-additional-details?employeeId=${employeeId}`,
+        method: 'PATCH',
         data: body,
       }),
       invalidatesTags: ['Employee'],
+    }),
+    getWorkExperience: builder.query({
+      query: (id) => ({
+        url: `/app/employee-work-experience?employeeId=${id}`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
     }),
     updateExperienceInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee/experience-info/${employeeId}`,
-        method: 'PUT',
+        url: `/app/employee-work-experience/upsert/${employeeId}`,
+        method: 'POST',
         data: body,
       }),
       invalidatesTags: ['Employee'],
     }),
+    getBankDetails: builder.query({
+      query: (id) => ({
+        url: `/employees/${id}/payroll`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
     updateBankDetails: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee/bank-details/${employeeId}`,
+        url: `/employees/${employeeId}/payroll`,
         method: 'PUT',
         data: body,
       }),
@@ -113,8 +149,11 @@ export const employeeApi = createApi({
     }),
     updateEmployeeStatus: builder.mutation({
       query: ({ id, employeeStatusType }) => ({
-        url: `/app/employee/employee-status/${id}?employeeStatusType=${employeeStatusType}`,
-        method: 'PUT',
+        url: `/app/employee-status/change-status/${id}`,
+        method: 'POST',
+        data: {
+          employeeStatusType,
+        },
       }),
       invalidatesTags: ['Employee'],
     }),
@@ -320,6 +359,21 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee-Type'],
     }),
+    getReportingManagerByEmployeeId: builder.query({
+      query: (id) => ({
+        url: `/employees/${id}/reporting-manager`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
+    updateReportingManagerByEmployeeId: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/employees/${id}/reporting-manager`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
   }),
 });
 
@@ -347,11 +401,16 @@ export const {
   useUpdateEmployeeCustomAttendanceRuleMutation,
   useDeleteEmployeeCustomAttendanceRuleMutation,
   useGetEmployeeNotificationHistoryQuery,
+  useGetBankDetailsQuery,
   useUpdateBankDetailsMutation,
+  useGetWorkExperienceQuery,
   useUpdateExperienceInformationMutation,
+  useGetFamilyInformationQuery,
   useUpdateFamilyInformationMutation,
+  useGetAdditionalInformationQuery,
   useUpdateAdditionalInformationMutation,
   useAddBasicInformationMutation,
+  useGetBasicInformationQuery,
   useUploadDocumentsMutation,
   useGetEmployeeDocumentsQuery,
   useGetEmployeeDocumentByIdQuery,
@@ -367,4 +426,6 @@ export const {
   useAddEmployeeTypeMutation,
   useUpdateEmployeeTypeMutation,
   useDeleteEmployeeTypeMutation,
+  useGetReportingManagerByEmployeeIdQuery,
+  useUpdateReportingManagerByEmployeeIdMutation,
 } = employeeApi;

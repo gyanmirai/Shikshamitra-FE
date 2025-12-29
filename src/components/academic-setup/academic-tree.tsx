@@ -71,7 +71,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 }) => {
   const theme = useTheme();
   const [open, setOpen] = useState(true); // Default open for better visibility
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  // const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const isSelected = selectedNodeId === node.id;
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -86,12 +86,12 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   const handleMenuOpen = (event: React.MouseEvent) => {
     event.stopPropagation();
     // @ts-ignore
-    setAnchorEl(event.currentTarget);
+    // setAnchorEl(event.currentTarget);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
+  // const handleMenuClose = () => {
+  //   setAnchorEl(null);
+  // };
 
   const hasChildren = node.children && node.children.length > 0;
   // Increase indentation for better hierarchy visualization

@@ -19,7 +19,7 @@ export const RenderRole = ({ formik, disabled }: RenderRoleProps) => {
       <Autocomplete
         disabled={isLoading || !!disabled}
         options={data?.items || []}
-        value={data?.items?.find((item: any) => item.id === formik.values.role) || undefined}
+        value={formik.values.role || undefined}
         getOptionLabel={(option: any) => option.name}
         renderInput={(params) => (
           <TextField
