@@ -1,10 +1,7 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
@@ -34,7 +31,6 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkSubmissionFeedbackMutation,
   });
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   /**
    * Initialize formik form with grade and feedback fields
    * @param initialValues Object containing initial grade and feedback values from data prop
@@ -50,7 +46,6 @@ const AssignMarksForText: React.FC<IAssignGradeProps> = ({
       updateSubmissionFeedback({
         homeworkId: data?.id, // Assuming data.assignmentId is available
         studentId: data?.studentName, // Assuming data.studentId is available
-        academicMediumId: medium?.id, // Assuming data.academicMediumId is available
         body: {
           feedback: values.feedback,
         },
