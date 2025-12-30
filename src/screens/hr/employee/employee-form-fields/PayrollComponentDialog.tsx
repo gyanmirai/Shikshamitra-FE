@@ -10,24 +10,6 @@ import {
   useGetDeductionComponentsQuery,
 } from 'src/redux/employee-payroll/employee-payroll-api';
 
-// Static data for components
-const EARNING_COMPONENTS = [
-  'Basic Salary',
-  'House Rent Allowance (HRA)',
-  'Transport Allowance',
-  'Special Allowance',
-  'Medical Allowance',
-  'Bonus',
-];
-
-const DEDUCTION_COMPONENTS = [
-  'Provident Fund (PF)',
-  'Professional Tax',
-  'Income Tax (TDS)',
-  'Loan Recovery',
-  'Health Insurance',
-];
-
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -83,8 +65,8 @@ export default function PayrollComponentDialog({
           fullWidth
           loading={isLoading}
           size="small"
-          options={components?.data || []}
-          getOptionLabel={(option: any) => option?.componentName || ''}
+          options={components?.items || []}
+          getOptionLabel={(option: any) => option?.componentName || option?.name}
           slotProps={{
             chip: {
               size: 'small',

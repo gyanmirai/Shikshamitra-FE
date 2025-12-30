@@ -14,7 +14,7 @@ export const employeeSalaryStructureApi = employeeApi.injectEndpoints({
       query: ({ id, data }) => ({
         url: `/payroll/employees/${id}/salary-structure`,
         method: 'PUT',
-        body: data,
+        data,
       }),
       invalidatesTags: ['Salary-Structure'],
     }),

@@ -17,6 +17,7 @@ import { useState, useEffect, useCallback } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { convertBase64Format } from 'src/utils/base64Formate';
+import { LoadingScreen } from 'src/components/loading-screen';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -370,7 +371,7 @@ const HrEmployee = () => {
             maxWidth="lg"
             open={payrollDialog.value}
             handleClose={handleClosePayroll}
-            title="Payroll Structure"
+            title="Salary Structure"
             paperProps={{ sx: { maxHeight: '70vh' } }}
           >
             <SalaryStructure handleClose={handleClosePayroll} editData={editData} />
@@ -385,7 +386,7 @@ const HrEmployee = () => {
 export default HrEmployee;
 
 const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; editData: any }) => {
-  const { data: salaryStructure } = useQueryAndMutation({
+  const { data: salaryStructure, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeSalaryStructureQuery,
     params: { id: editData?.id },
@@ -403,64 +404,54 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
     validationSchema: Yup.object({
       earningComponents: Yup.array().of(
         Yup.object({
-          name: Yup.string().required('Name is required'),
-          type: Yup.string().required('Type is required'),
+          name: Yup.string(),
+          componentType: Yup.string(),
           // eslint-disable-next-line func-names
-          amount: Yup.string().test('amount', 'Amount is required', function (value) {
-            // eslint-disable-next-line react/no-this-in-sfc
-            if (this.parent.type === 'fixed') {
-              return !!value;
-            }
-            return true;
-          }),
+          amount: Yup.string().required('Amount is required'),
         })
       ),
       deductionComponents: Yup.array().of(
         Yup.object({
-          name: Yup.string().required('Name is required'),
-          type: Yup.string().required('Type is required'),
+          name: Yup.string(),
+          componentType: Yup.string(),
           // eslint-disable-next-line func-names
-          amount: Yup.string().test('amount', 'Amount is required', function (value) {
-            // eslint-disable-next-line react/no-this-in-sfc
-            if (this.parent.type === 'fixed') {
-              return !!value;
-            }
-            return true;
-          }),
+          amount: Yup.string().required('Amount is required'),
         })
       ),
     }),
     onSubmit: async (values) => {
+      const data = {
+        earningComponents: values.earningComponents.map((item: any) => ({
+          name: item?.name || item?.componentName,
+          description: item?.description,
+          amount: item?.amount,
+          isFixed: item?.isFixed,
+          isTemp: false,
+          componentType: item?.componentType,
+          dependOn: item?.dependOn,
+          id: item?.id || '',
+        })),
+        deductionComponents: values.deductionComponents.map((item: any) => ({
+          name: item?.name || item?.componentName,
+          description: item?.description,
+          amount: item?.amount,
+          isFixed: item?.isFixed,
+          isTemp: false,
+          componentType: item?.componentType,
+          dependOn: item?.dependOn,
+          id: item?.id || '',
+        })),
+      };
+
       try {
         await updateSalaryStructure({
           id: editData?.id,
-          data: {
-            earningComponents: values.earningComponents.map((item: any) => ({
-              name: item.componentName,
-              description: item.description,
-              amount: item.amount,
-              isFixed: item.type === 'fixed',
-              isTemp: false,
-              componentType: item.componentType,
-              dependOn: item.dependOn,
-              id: item.id,
-            })),
-            deductionComponents: values.deductionComponents.map((item: any) => ({
-              name: item.componentName,
-              description: item.description,
-              amount: item.amount,
-              isFixed: item.type === 'fixed',
-              isTemp: false,
-              componentType: item.componentType,
-              dependOn: item.dependOn,
-              id: item.id,
-            })),
-          },
+          data,
         }).unwrap();
+        handleClose();
       } catch (error) {
         console.error(error);
       }
-      handleClose();
     },
   });
 
@@ -477,28 +468,32 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
   return (
     <>
       <DialogScrollContent>
-        <Paper elevation={2} sx={{ p: 1 }}>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <RenderComponents
-                formik={formik}
-                name="earningComponents"
-                label="Earning Components"
-                type="earning"
-                showTempAdd
-              />
+        {isLoading ? (
+          <LoadingScreen />
+        ) : (
+          <Paper elevation={2} sx={{ p: 1 }}>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <RenderComponents
+                  formik={formik}
+                  name="earningComponents"
+                  label="Earning Components"
+                  type="earning"
+                  showTempAdd
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <RenderComponents
+                  formik={formik}
+                  name="deductionComponents"
+                  label="Deduction Components"
+                  type="deduction"
+                  showTempAdd
+                />
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <RenderComponents
-                formik={formik}
-                name="deductionComponents"
-                label="Deduction Components"
-                type="deduction"
-                showTempAdd
-              />
-            </Grid>
-          </Grid>
-        </Paper>
+          </Paper>
+        )}
       </DialogScrollContent>
 
       <DialogActions>

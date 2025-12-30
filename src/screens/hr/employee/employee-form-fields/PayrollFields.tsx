@@ -106,7 +106,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                     width={18}
                   />
                   <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                    {component?.componentName}
+                    {component?.componentName || component?.name}
                   </Typography>
 
                   {isFixed && (
