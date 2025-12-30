@@ -90,12 +90,12 @@ export const familyInformationInitialValues = (editData?: IFamilyInformationResp
   sameAsFatherAddressForMother: false,
   sameAsFatherAddressForSpouse: false,
   sameAsEmployeeAddressForFather: false,
-  fatherName: editData ? editData.fatherDetails.name : '',
-  fatherOccupation: editData ? editData.fatherDetails.occupation : '',
-  fatherContactNo: editData ? editData.fatherDetails.mobileNo : '',
-  fatherAddress1: editData ? editData.fatherDetails.address1 : '',
-  fatherAddress2: editData ? editData.fatherDetails.address2 : '',
-  fatherAddress3: editData ? editData.fatherDetails.address3 : '',
+  fatherName: editData ? editData?.fatherDetails?.name : '',
+  fatherOccupation: editData ? editData?.fatherDetails?.occupation : '',
+  fatherContactNo: editData ? editData?.fatherDetails?.mobileNo : '',
+  fatherAddress1: editData ? editData?.fatherDetails?.address1 : '',
+  fatherAddress2: editData ? editData?.fatherDetails?.address2 : '',
+  fatherAddress3: editData ? editData?.fatherDetails?.address3 : '',
 
   fatherCountry: editData?.fatherDetails?.country
     ? {
@@ -112,12 +112,12 @@ export const familyInformationInitialValues = (editData?: IFamilyInformationResp
   fatherCity: editData ? { name: editData?.fatherDetails?.city } : { name: '' },
 
   fatherPinCode: editData ? editData?.fatherDetails?.pincode : '',
-  motherName: editData ? editData.motherDetails.name : '',
-  motherOccupation: editData ? editData.motherDetails.occupation : '',
-  motherContactNo: editData ? editData.motherDetails.mobileNo : '',
-  motherAddress1: editData ? editData.motherDetails.address1 : '',
-  motherAddress2: editData ? editData.motherDetails.address2 : '',
-  motherAddress3: editData ? editData.motherDetails.address3 : '',
+  motherName: editData ? editData?.motherDetails?.name : '',
+  motherOccupation: editData ? editData?.motherDetails?.occupation : '',
+  motherContactNo: editData ? editData?.motherDetails?.mobileNo : '',
+  motherAddress1: editData ? editData?.motherDetails?.address1 : '',
+  motherAddress2: editData ? editData?.motherDetails?.address2 : '',
+  motherAddress3: editData ? editData?.motherDetails?.address3 : '',
 
   motherCountry: editData?.motherDetails?.country
     ? {
@@ -136,13 +136,13 @@ export const familyInformationInitialValues = (editData?: IFamilyInformationResp
     : { name: '' },
 
   motherPinCode: editData ? editData?.motherDetails?.pincode : '',
-  spouseName: editData ? editData.spouseDetails.name : '',
-  spouseOccupation: editData ? editData.spouseDetails.occupation : '',
-  spouseContactNo: editData ? editData.spouseDetails.mobileNo : '',
+  spouseName: editData ? editData?.spouseDetails?.name : '',
+  spouseOccupation: editData ? editData?.spouseDetails?.occupation : '',
+  spouseContactNo: editData ? editData?.spouseDetails?.mobileNo : '',
 
-  spouseAddress1: editData ? editData.spouseDetails.address1 : '',
-  spouseAddress2: editData ? editData.spouseDetails.address2 : '',
-  spouseAddress3: editData ? editData.spouseDetails.address3 : '',
+  spouseAddress1: editData ? editData?.spouseDetails?.address1 : '',
+  spouseAddress2: editData ? editData?.spouseDetails?.address2 : '',
+  spouseAddress3: editData ? editData?.spouseDetails?.address3 : '',
 
   spouseCountry: editData?.spouseDetails?.country
     ? {
@@ -175,7 +175,7 @@ export const documentsInitialValues = () => ({ documents: new FormData() });
 
 export const workExperienceInitialValues = (editData?: IWorkExperienceResponse[]) => ({
   experiences: editData
-    ? editData.map((i: any) => ({
+    ? editData?.map((i: any) => ({
         ...i,
         startDate: i?.startDate ? dayjs(i.startDate) : null,
         endDate: i?.endDate ? dayjs(i.endDate) : null,
@@ -296,7 +296,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           mobileNo: values.mobileNo,
           secondaryMobileNo: values.secondaryMobileNo,
           email: values.email,
-          departmentId: values.department,
+          department: values.department,
           doj: values.dateOfJoining.format('YYYY-MM-DD'),
           isTeaching: values.employeeGroup === 0,
           // qualification: values.qualification,
@@ -464,7 +464,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             mobileNo: values.mobileNo,
             secondaryMobileNo: values.secondaryMobileNo,
             email: values.email,
-            departmentId: values.department,
+            department: values.department,
             doj: values.dateOfJoining.format('YYYY-MM-DD'),
             isTeaching: values.employeeGroup === 0,
             // qualification: values.qualification,
@@ -668,16 +668,6 @@ const FormSlider = ({ step, formik, editData }: any) => {
       skip: !(editData?.id && step === 5),
     },
   });
-
-  // const { data: workExperienceDetails, isLoading: workExperienceDetailsLoading } =
-  //   useQueryAndMutation({
-  //     type: 'query',
-  //     currentQueryAndMutation: useGetWorkExperienceQuery,
-  //     params: editData?.id,
-  //     options: {
-  //       skip: !(editData?.id && step === 6),
-  //     },
-  //   });
 
   const { data: reportingManagerDetails, isLoading: reportingManagerDetailsLoading } =
     useQueryAndMutation({

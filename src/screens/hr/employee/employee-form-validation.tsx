@@ -51,6 +51,9 @@ const personalInformationValidationSchema = Yup.object({
   mobileNo: Yup.string()
     .test('valid-indian-mobile', 'Primary Contact No. is not valid', (value) => {
       if (!value) return false;
+      if (!value.includes('+')) {
+        value = `+91${value}`;
+      }
 
       const digits = value.replace(/\D/g, '');
       const national = digits.replace(/^91/, '');

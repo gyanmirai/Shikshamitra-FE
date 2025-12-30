@@ -37,7 +37,7 @@ const BiometricIntegrationScreen = () => {
   const dispatch = useDispatch();
 
   const { data: attendanceData, isLoading } = useQueryAndMutation({
-    type: 'mutation',
+    type: 'query',
     currentQueryAndMutation: useGetAttendanceEmployeeQuery,
   });
 
