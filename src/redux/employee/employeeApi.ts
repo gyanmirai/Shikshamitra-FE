@@ -178,8 +178,11 @@ export const employeeApi = createApi({
 
     addAttendanceEmployee: builder.mutation({
       query: (body) => ({
-        url: `/attendance/import`,
+        url: `${process.env.NEXT_PUBLIC_API_URL}/attendance/import`,
         method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
         data: body,
       }),
       invalidatesTags: ['Attendance'],
@@ -242,8 +245,9 @@ export const employeeApi = createApi({
     }),
 
     getEmployeeLeave: builder.query({
-      query: () => ({
-        url: `/leave-management`,
+      query: (mediumStageId) => ({
+        url: `/leave-management?mediumStageId=${mediumStageId}`,
+        method: 'GET',
         redirect: 'follow',
       }),
       providesTags: ['Employee'],

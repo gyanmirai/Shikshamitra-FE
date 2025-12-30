@@ -46,12 +46,15 @@ import AddLeaveRequest from './leave-requst';
 import { LeaveRequestForm } from './leave-calender';
 
 const LeaveHistory = (props: any) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium: mediumStageId } = useSelector(
+    (state: RootState) => state.globalState
+  );
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
+    params: mediumStageId?.id,
   });
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
     type: 'mutation',

@@ -124,7 +124,7 @@ const AttendanceTrackingScreen = () => {
 };
 
 export default AttendanceTrackingScreen;
-// Mock data removed - now using API data
+
 const DateWise = ({
   searchParams,
   setSearchParams,
@@ -139,7 +139,7 @@ const DateWise = ({
     () => (searchParams.date ? dayjs(searchParams.date, 'DD-MM-YYYY') : dayjs()),
     [searchParams.date]
   );
-  const tabs = useTabs(EmployeeAttendanceStatus.All);
+  const tabs = useTabs('Present');
   const {
     data: attendanceData,
     isLoading,
@@ -187,7 +187,6 @@ const DateWise = ({
 
   const counts = useMemo(
     () => ({
-      all: attendanceData?.items.length || 10,
       Present:
         attendanceData?.items.filter(
           (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
@@ -209,12 +208,6 @@ const DateWise = ({
   );
   const TABS = useMemo(
     () => [
-      {
-        value: 'All',
-        label: 'All',
-        count: counts.all || 0,
-        color: 'default',
-      },
       {
         value: 'Present',
         label: 'Present',
@@ -346,10 +339,7 @@ const DateWise = ({
               label={
                 <Box display="flex" justifyContent="center" gap={1} alignItems="center">
                   {tab.label}{' '}
-                  <Label
-                    variant={tab.value === 'All' ? 'filled' : 'soft'}
-                    color={(tab?.color as LabelColor) || 'default'}
-                  >
+                  <Label variant="soft" color={(tab?.color as LabelColor) || 'default'}>
                     {tab.count}
                   </Label>
                 </Box>
@@ -500,11 +490,7 @@ const DateWise = ({
             },
           },
         ]}
-        data={
-          tabs.value === 'All'
-            ? attendanceData?.items || []
-            : attendanceData?.items?.filter((item: any) => item.status === tabs.value) || []
-        }
+        data={attendanceData?.items?.filter((item: any) => item.status === tabs.value) || []}
       />
       {sendInstantNotificationDialogValue.value && (
         <SendInstantNotificationDialog
@@ -517,8 +503,6 @@ const DateWise = ({
     </Box>
   );
 };
-
-// Mock data removed - now using API data
 
 const EmployeeWise = ({
   searchParams,
@@ -544,9 +528,8 @@ const EmployeeWise = ({
     [searchParams.endDate]
   );
 
-  const tabs = useTabs('All');
+  const tabs = useTabs('Present');
 
-  // const [employeeId, setEmployeeId] = useState<string>('');
   const { data: employees, isLoading: employeeLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeQuery,
@@ -574,7 +557,6 @@ const EmployeeWise = ({
 
   useMemo(
     () => ({
-      all: attendanceData?.items?.length || 24,
       Present:
         attendanceData?.items?.filter(
           (i: EmployeeAttendance) => i.status === EmployeeAttendanceStatus.Present
@@ -634,12 +616,6 @@ const EmployeeWise = ({
   const TABS = useMemo(
     () => [
       {
-        value: 'All',
-        label: 'All',
-        count: attendanceData?.[0]?.presentDays || 10,
-        color: 'default',
-      },
-      {
         value: 'Present',
         label: 'Present',
         count: attendanceData?.[0]?.presentDays || 6,
@@ -676,8 +652,11 @@ const EmployeeWise = ({
     setSelectedStudents([]);
   };
   const employeeValue = useMemo(
-    () => employees?.items?.find((i: any) => i.id === searchParams.employeeId) || null,
-    [employees?.items, searchParams.employeeId]
+    () =>
+      employees?.items?.find(
+        (i: any) => i.employeeIdentifier === searchParams.employeeIdentifier
+      ) || null,
+    [employees?.items, searchParams.employeeIdentifier]
   );
   const [organization, setOrganization] = useState('');
   const handleChange = (event: any) => {
@@ -733,7 +712,7 @@ const EmployeeWise = ({
           placement="top"
           title={
             employeeValue
-              ? `${employeeValue.firstName || ''} ${employeeValue.middleName || ''} ${employeeValue.lastName || ''} (${employeeValue.employeeCode || ''})`
+              ? `${employeeValue.fullName || ''} (${employeeValue.employeeIdentifier || ''})`
               : undefined
           }
         >
@@ -745,7 +724,7 @@ const EmployeeWise = ({
             <Autocomplete
               options={employees?.items || []}
               getOptionLabel={(option: any) =>
-                `${option.firstName || ''} ${option.middleName || ''} ${option.lastName || ''} (${option.employeeCode || ''})`
+                `${option.fullName || ''} (${option.employeeIdentifier || ''})`
               }
               renderInput={(params) => (
                 <TextField
@@ -759,8 +738,18 @@ const EmployeeWise = ({
               )}
               value={employeeValue}
               onChange={(e, value) => {
-                setSearchParams({ employeeId: value?.id as string });
-                // formik.setFieldValue('examType', value?.id);
+                if (value) {
+                  setSearchParams({
+                    employeeId: value?.id as string,
+                    employeeIdentifier: value?.employeeIdentifier as string,
+                  });
+                } else {
+                  // Clear employee selection
+                  setSearchParams({
+                    employeeId: '',
+                    employeeIdentifier: '',
+                  });
+                }
               }}
             />
           )}
@@ -829,10 +818,7 @@ const EmployeeWise = ({
               label={
                 <Box display="flex" justifyContent="center" gap={1} alignItems="center">
                   {tab.label}{' '}
-                  <Label
-                    variant={tab.value === 'All' ? 'filled' : 'soft'}
-                    color={(tab?.color as LabelColor) || 'default'}
-                  >
+                  <Label variant="soft" color={(tab?.color as LabelColor) || 'default'}>
                     {tab.count}
                   </Label>
                 </Box>
@@ -958,11 +944,7 @@ const EmployeeWise = ({
               // },
             },
           ]}
-          data={
-            tabs.value === 'All'
-              ? attendanceData?.items || []
-              : attendanceData?.items?.filter((item: any) => item.status === tabs.value) || []
-          }
+          data={attendanceData?.items?.filter((item: any) => item.status === tabs.value) || []}
         />
       )}
       {sendInstantNotificationDialogValue.value && (
