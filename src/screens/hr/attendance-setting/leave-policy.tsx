@@ -61,9 +61,12 @@ const LeavePolicy = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Removed leave policy fetch – using static sample data for simplified form.
 
+  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
+
   const { data: leavePolicyData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
+    params: mediumStageId?.id,
   });
 
   const [deleteLeavePolicy, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -314,9 +317,12 @@ export const LeavePolicyForm = ({
   handleClose: (e: any, isSubmit?: boolean) => void;
   editData: ILeavePolicy | null;
 }) => {
+  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
+
   const [addLeavePolicy, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEmployeeLeavePolicyMutation,
+    params: mediumStageId?.id,
   });
 
   const [updateLeavePolicy, { isLoading: isUpdateLoading }] = useQueryAndMutation({
@@ -338,6 +344,7 @@ export const LeavePolicyForm = ({
     onSubmit: async (values) => {
       try {
         const payload = {
+          mediumStageId: mediumStageId?.id,
           policyTitle: values.policyTitle,
           leaveType: values.leaveType,
           maxLeavePerYear: Number(values.maxLeavePerYear),
@@ -349,13 +356,16 @@ export const LeavePolicyForm = ({
         };
 
         if (!editData) {
-          await addLeavePolicy(payload);
+          await addLeavePolicy({
+            mediumStageId: mediumStageId?.id,
+            body: payload,
+          });
           shikshaMitraToast.success({
             message: `Leave policy ${values.policyTitle} added successfully`,
           });
         } else {
           await updateLeavePolicy({
-            id: editData.id,
+            policyId: editData.id,
             body: payload,
           });
           shikshaMitraToast.success({

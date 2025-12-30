@@ -18,15 +18,16 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { DatePicker, TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
-  useGetEmployeeAttendanceByDateQuery,
-  useAddEmployeeCustomAttendanceRuleMutation,
-  useUpdateEmployeeCustomAttendanceRuleMutation,
+  useGetAttendanceEmployeeQuery,
+  useAddAttendanceEmployeeMutation,
+  useUpdateAttendanceEmployeeMutation,
 } from 'src/redux/employee/employeeApi';
 
 const BiometricIntegrationScreen = () => {
@@ -35,8 +36,9 @@ const BiometricIntegrationScreen = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
-  const { data: attendanceData, isLoading } = useGetEmployeeAttendanceByDateQuery({
-    date: date?.toISOString(),
+  const { data: attendanceData, isLoading } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useGetAttendanceEmployeeQuery,
   });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -258,8 +260,15 @@ const BiometricForm = ({
   handleClose: (e: any, isSubmit: boolean) => void;
   editData: any;
 }) => {
-  const [addEmployeeAttendance] = useAddEmployeeCustomAttendanceRuleMutation();
-  const [updateEmployeeAttendance] = useUpdateEmployeeCustomAttendanceRuleMutation();
+  const [addAttendanceEmployee] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddAttendanceEmployeeMutation,
+  });
+
+  const [updateAttendanceEmployee] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateAttendanceEmployeeMutation,
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -277,14 +286,14 @@ const BiometricForm = ({
         const payload = {
           employeeId: editData?.employeeId,
           date: editData?.date,
-          timeIn: values.inTime?.format('hh:mm A'),
-          timeOut: values.outTime?.format('hh:mm A'),
+          inTime: values.inTime?.format('hh:mm A'),
+          outTime: values.outTime?.format('hh:mm A'),
         };
 
         if (editData) {
-          await updateEmployeeAttendance(payload).unwrap();
+          await updateAttendanceEmployee(payload).unwrap();
         } else {
-          await addEmployeeAttendance(payload).unwrap();
+          await addAttendanceEmployee(payload).unwrap();
         }
 
         handleClose(null, true);

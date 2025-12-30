@@ -158,6 +158,33 @@ export const employeeApi = createApi({
       invalidatesTags: ['Employee'],
     }),
 
+    // Attendance Employee
+    getAttendanceEmployee: builder.query({
+      query: (date) => ({
+        url: `/attendance/employees?date=${date}`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Attendance'],
+    }),
+
+    updateAttendanceEmployee: builder.mutation({
+      query: (body) => ({
+        url: `/attendance/employees`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Attendance'],
+    }),
+
+    addAttendanceEmployee: builder.mutation({
+      query: (body) => ({
+        url: `/attendance/import`,
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['Attendance'],
+    }),
+
     // Attendance Management
     getEmployeeAttendanceByDate: builder.query({
       query: (date) => ({
@@ -213,6 +240,7 @@ export const employeeApi = createApi({
       }),
       invalidatesTags: ['Employee'],
     }),
+
     getEmployeeLeave: builder.query({
       query: () => ({
         url: `/leave-management`,
@@ -220,13 +248,24 @@ export const employeeApi = createApi({
       }),
       providesTags: ['Employee'],
     }),
+
     getEmployeeLeaveById: builder.query({
-      query: (id) => ({
-        url: `/leave-management/${id}`,
+      query: (leaveRequestId) => ({
+        url: `/leave-management/${leaveRequestId}`,
         redirect: 'follow',
       }),
       providesTags: ['Employee'],
     }),
+
+    updateEmployeeLeave: builder.mutation({
+      query: ({ leaveRequestId, body }) => ({
+        url: `/leave-management/${leaveRequestId}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
+
     employeeLeaveRequestStatus: builder.mutation({
       query: ({ id, body }) => ({
         url: `/leave-management/${id}`,
@@ -234,6 +273,32 @@ export const employeeApi = createApi({
         data: body,
       }),
       invalidatesTags: ['Employee'],
+    }),
+
+    deleteEmployeeLeave: builder.mutation({
+      query: (leaveRequestId) => ({
+        url: `/leave-management/${leaveRequestId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Employee'],
+    }),
+
+    // Attendacnce Tracking
+
+    getAttendanceEmployeeDateWise: builder.query({
+      query: () => ({
+        url: `/attendance-tracking/date-wise`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
+
+    getAttendanceEmployeeEmployeeWise: builder.query({
+      query: () => ({
+        url: `/api/attendance-tracking/employee-wise`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
     }),
 
     // Document Management
@@ -298,31 +363,35 @@ export const employeeApi = createApi({
 
     // Employee Leave Policy
     getEmployeeLeavePolicy: builder.query({
-      query: () => ({
-        url: `/app/leave-policy`,
+      query: (mediumStageId) => ({
+        url: `/leave-policies?mediumStageId=${mediumStageId}`,
         redirect: 'follow',
       }),
       providesTags: ['Employee-Leave-Policy'],
     }),
     addEmployeeLeavePolicy: builder.mutation({
-      query: (body) => ({
-        url: '/app/leave-policy',
+      query: ({ mediumStageId, body }) => ({
+        url: `/leave-policies?mediumStageId=${mediumStageId}`,
         method: 'POST',
         data: body,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }),
       invalidatesTags: ['Employee-Leave-Policy'],
     }),
+
     updateEmployeeLeavePolicy: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/app/leave-policy/${id}`,
+      query: ({ policyId, body }) => ({
+        url: `/leave-policies/${policyId}`,
         method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee-Leave-Policy'],
     }),
     deleteEmployeeLeavePolicy: builder.mutation({
-      query: (id) => ({
-        url: `/app/leave-policy/${id}`,
+      query: (policyId) => ({
+        url: `/leave-policies/${policyId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Employee-Leave-Policy'],
@@ -330,35 +399,42 @@ export const employeeApi = createApi({
 
     // Employee Type
     getEmployeeType: builder.query({
-      query: () => ({
-        url: `/app/employee-type`,
+      query: (mediumStageId) => ({
+        url: `/leave-types?mediumStageId=${mediumStageId}`,
         redirect: 'follow',
       }),
       providesTags: ['Employee-Type'],
     }),
+
     addEmployeeType: builder.mutation({
-      query: (body) => ({
-        url: '/app/employee-type',
+      query: ({ mediumStageId, body }) => ({
+        url: `/leave-types?mediumStageId=${mediumStageId}`,
         method: 'POST',
-        data: body,
+        data: {
+          mediumStageId,
+          ...body,
+        },
       }),
       invalidatesTags: ['Employee-Type'],
     }),
+
     updateEmployeeType: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/app/employee-type/${id}`,
+      query: ({ leaveTypeId, body }) => ({
+        url: `/leave-types/${leaveTypeId}`,
         method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee-Type'],
     }),
+
     deleteEmployeeType: builder.mutation({
-      query: (id) => ({
-        url: `/app/employee-type/${id}`,
+      query: (leaveTypeId) => ({
+        url: `/leave-types/${leaveTypeId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Employee-Type'],
     }),
+
     getReportingManagerByEmployeeId: builder.query({
       query: (id) => ({
         url: `/employees/${id}/reporting-manager`,
@@ -366,6 +442,7 @@ export const employeeApi = createApi({
       }),
       providesTags: ['Employee'],
     }),
+
     updateReportingManagerByEmployeeId: builder.mutation({
       query: ({ id, body }) => ({
         url: `/employees/${id}/reporting-manager`,
@@ -395,6 +472,13 @@ export const {
   useLazyGetEmployeeByUserIdQuery,
   useAddEmployeeLeaveMutation,
   useGetEmployeeLeaveQuery,
+  useGetAttendanceEmployeeQuery,
+  useUpdateAttendanceEmployeeMutation,
+  useAddAttendanceEmployeeMutation,
+  useDeleteEmployeeLeaveMutation,
+  useUpdateEmployeeLeaveMutation,
+  useGetAttendanceEmployeeDateWiseQuery,
+  useGetAttendanceEmployeeEmployeeWiseQuery,
   useEmployeeLeaveRequestStatusMutation,
   useGetEmployeeCustomAttendanceRuleQuery,
   useAddEmployeeCustomAttendanceRuleMutation,
