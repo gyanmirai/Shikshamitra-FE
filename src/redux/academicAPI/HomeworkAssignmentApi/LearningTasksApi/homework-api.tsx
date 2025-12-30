@@ -4,12 +4,14 @@ export const homeworkApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // GET all homework
     getHomeworks: builder.query({
-      query: ({ academicMediumId, classId }) => ({
+      query: ({ classId, divisionId, subjectId, homeworkDate }) => ({
         url: `app/homework`,
         method: 'GET',
         params: {
-          academicMediumId,
           classId,
+          divisionId,
+          subjectId,
+          homeworkDate,
         },
       }),
       providesTags: ['Homework'],
@@ -17,12 +19,9 @@ export const homeworkApi = academicApi.injectEndpoints({
 
     // GET homework by id
     getHomeworkById: builder.query({
-      query: ({ id, academicMediumId }) => ({
-        url: `app/homework/${id}`,
+      query: (homeworkId) => ({
+        url: `app/homework/${homeworkId}`,
         method: 'GET',
-        params: {
-          academicMediumId,
-        },
       }),
       providesTags: ['Homework'],
     }),
@@ -33,6 +32,9 @@ export const homeworkApi = academicApi.injectEndpoints({
         url: `app/homework?academicMediumId=${academicMediumId}`,
         method: 'POST',
         data: body,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       }),
       invalidatesTags: ['Homework'],
     }),
@@ -46,27 +48,28 @@ export const homeworkApi = academicApi.injectEndpoints({
         params: {
           academicMediumId,
         },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       }),
       invalidatesTags: ['Homework'],
     }),
 
     // DELETE homework
     deleteHomework: builder.mutation({
-      query: ({ id, academicMediumId }) => ({
-        url: `app/homework/${id}`,
+      query: (homeworkId) => ({
+        url: `app/homework/${homeworkId}`,
         method: 'DELETE',
-        params: {
-          academicMediumId,
-        },
       }),
       invalidatesTags: ['Homework'],
     }),
 
     // PUBLISH homework
     publishHomework: builder.mutation({
-      query: ({ id, academicMediumId }) => ({
-        url: `app/homework/${id}/publish/${academicMediumId}`,
+      query: ({ homeworkId, status }) => ({
+        url: `app/homework/${homeworkId}/publish`,
         method: 'POST',
+        data: { status },
       }),
       invalidatesTags: ['Homework'],
     }),

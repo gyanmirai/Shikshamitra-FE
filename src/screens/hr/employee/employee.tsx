@@ -8,16 +8,16 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import Add from '@mui/icons-material/Add';
 import { Label } from 'src/components/label';
-import { useState, useCallback } from 'react';
-import { GenderType } from 'src/enums/gender';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { getRoleColor } from 'src/utils/role-colors';
 import { useDispatch, useSelector } from 'react-redux';
+import { useState, useEffect, useCallback } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { convertBase64Format } from 'src/utils/base64Formate';
+import { LoadingScreen } from 'src/components/loading-screen';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -44,6 +44,10 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
+import {
+  useGetEmployeeSalaryStructureQuery,
+  useUpdateEmployeeSalaryStructureMutation,
+} from 'src/redux/employee-salary-structure/employee-salary-structure-api';
 
 import EmployeeFrom from './employee-form';
 import EmployeeView from './employee-view';
@@ -124,14 +128,12 @@ const HrEmployee = () => {
 
   const tableData = employee?.items?.map((item: any) => ({
     ...item,
-    dob: dayjs(item?.dateOfBirth, 'YYYY-MM-DD').format('DD-MM-YYYY'),
-    genderValue: GenderType[item?.genderType],
-    doi: dayjs(item?.dateOfJoining, 'YYYY-MM-DD').format('DD-MM-YYYY'),
-    roleValue: item?.role?.name || 'Not Assigned',
-    statusValue: item?.employeeStatusType,
-    fullName: `${item?.lastName} ${item?.firstName} ${item?.middleName}`,
-    shiftName: `${item?.shift?.shiftName} (${dayjs(item?.shift?.startTime, 'HH:mm:ss').format('hh:mm A')} - ${dayjs(item?.shift?.endTime, 'HH:mm:ss').format('hh:mm A')})`,
-    // employeeType: EmployeeGroupType[item?.employeeGroup],
+    dob: dayjs(item?.dob).format('DD-MM-YYYY'),
+    genderValue: item?.gender,
+    doi: dayjs(item?.doj).format('DD-MM-YYYY'),
+    roleValue: item?.roleName || 'Not Assigned',
+    statusValue: EmployeeStatusType[item?.status],
+    shiftName: `${item?.shift.name} (${dayjs(item?.shift?.startTime, 'HH:mm:ss').format('hh:mm A')} - ${dayjs(item?.shift?.endTime, 'HH:mm:ss').format('hh:mm A')})`,
     organization: item?.educationMediumStage?.name,
   }));
   const sendInstantNotificationDialogValue = useBoolean();
@@ -248,7 +250,12 @@ const HrEmployee = () => {
                   );
                 },
               },
-              { id: 'employeeCode', label: 'Employee Code', minWidth: '150px', align: 'left' },
+              {
+                id: 'employeeIdentifier',
+                label: 'Employee Code',
+                minWidth: '150px',
+                align: 'left',
+              },
 
               {
                 id: 'dob',
@@ -277,20 +284,20 @@ const HrEmployee = () => {
               { id: 'email', label: 'Email', align: 'left' },
               { id: 'mobileNo', label: 'Mobile No.', minWidth: 150, align: 'left' },
               {
-                id: 'employeeGroup',
+                id: 'isTeaching',
                 label: 'Employee Group',
                 minWidth: '10vw',
                 align: 'left',
                 filterType: 'enum',
                 enumOptions: EmployeeGroupTypeFilter,
                 render(value, row) {
-                  return EmployeeGroupType[row?.employeeGroup];
+                  return EmployeeGroupType[value === true ? 0 : 1];
                 },
               },
               { id: 'shiftName', label: 'Shift', align: 'left', minWidth: '12vw' },
-              { id: 'organization', label: 'Organization', align: 'left' },
+              // { id: 'organization', label: 'Organization', align: 'left' },
               {
-                id: 'statusValue',
+                id: 'status',
                 label: 'Status',
                 filterType: 'enum',
                 enumOptions: EmployeeStatusTypeOptions,
@@ -299,7 +306,7 @@ const HrEmployee = () => {
                 sticky: true,
                 render(value, row) {
                   const color = EmployeeStatusTypeColor[
-                    row.employeeStatusType as EmployeeStatusType
+                    row.status as EmployeeStatusType
                   ] as LabelColor;
                   return <Label color={color}>{EmployeeStatusType[value]}</Label>;
                 },
@@ -354,7 +361,7 @@ const HrEmployee = () => {
               handleClose={handleCloseStatus}
               employeeId={editData?.id}
               employeeName={editData?.fullName}
-              status={editData?.employeeStatusType}
+              status={editData?.status}
             />
           </CustomDialog>
           {/* <CustomDialog maxWidth="xl" open={open} handleClose={handleClose} title="Add Employee"> */}
@@ -364,10 +371,10 @@ const HrEmployee = () => {
             maxWidth="lg"
             open={payrollDialog.value}
             handleClose={handleClosePayroll}
-            title="Payroll Structure"
+            title="Salary Structure"
             paperProps={{ sx: { maxHeight: '70vh' } }}
           >
-            <SalaryStructure handleClose={handleClosePayroll} />
+            <SalaryStructure handleClose={handleClosePayroll} editData={editData} />
           </CustomDialog>
         </>
       ) : (
@@ -378,7 +385,17 @@ const HrEmployee = () => {
 };
 export default HrEmployee;
 
-const SalaryStructure = ({ handleClose }: { handleClose: () => void }) => {
+const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; editData: any }) => {
+  const { data: salaryStructure, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetEmployeeSalaryStructureQuery,
+    params: { id: editData?.id },
+  });
+
+  const [updateSalaryStructure] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateEmployeeSalaryStructureMutation,
+  });
   const formik = useFormik({
     initialValues: {
       earningComponents: [],
@@ -387,62 +404,96 @@ const SalaryStructure = ({ handleClose }: { handleClose: () => void }) => {
     validationSchema: Yup.object({
       earningComponents: Yup.array().of(
         Yup.object({
-          name: Yup.string().required('Name is required'),
-          type: Yup.string().required('Type is required'),
+          name: Yup.string(),
+          componentType: Yup.string(),
           // eslint-disable-next-line func-names
-          amount: Yup.string().test('amount', 'Amount is required', function (value) {
-            // eslint-disable-next-line react/no-this-in-sfc
-            if (this.parent.type === 'fixed') {
-              return !!value;
-            }
-            return true;
-          }),
+          amount: Yup.string().required('Amount is required'),
         })
       ),
       deductionComponents: Yup.array().of(
         Yup.object({
-          name: Yup.string().required('Name is required'),
-          type: Yup.string().required('Type is required'),
+          name: Yup.string(),
+          componentType: Yup.string(),
           // eslint-disable-next-line func-names
-          amount: Yup.string().test('amount', 'Amount is required', function (value) {
-            // eslint-disable-next-line react/no-this-in-sfc
-            if (this.parent.type === 'fixed') {
-              return !!value;
-            }
-            return true;
-          }),
+          amount: Yup.string().required('Amount is required'),
         })
       ),
     }),
-    onSubmit: (values) => {
-      handleClose();
+    onSubmit: async (values) => {
+      const data = {
+        earningComponents: values.earningComponents.map((item: any) => ({
+          name: item?.name || item?.componentName,
+          description: item?.description,
+          amount: item?.amount,
+          isFixed: item?.isFixed,
+          isTemp: false,
+          componentType: item?.componentType,
+          dependOn: item?.dependOn,
+          id: item?.id || '',
+        })),
+        deductionComponents: values.deductionComponents.map((item: any) => ({
+          name: item?.name || item?.componentName,
+          description: item?.description,
+          amount: item?.amount,
+          isFixed: item?.isFixed,
+          isTemp: false,
+          componentType: item?.componentType,
+          dependOn: item?.dependOn,
+          id: item?.id || '',
+        })),
+      };
+
+      try {
+        await updateSalaryStructure({
+          id: editData?.id,
+          data,
+        }).unwrap();
+        handleClose();
+      } catch (error) {
+        console.error(error);
+      }
     },
   });
+
+  useEffect(() => {
+    if (salaryStructure) {
+      formik.setValues({
+        earningComponents: salaryStructure?.earningComponents,
+        deductionComponents: salaryStructure?.deductionComponents,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [salaryStructure]);
+
   return (
     <>
       <DialogScrollContent>
-        <Paper elevation={2} sx={{ p: 1 }}>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <RenderComponents
-                formik={formik}
-                name="earningComponents"
-                label="Earning Components"
-                type="earning"
-                showTempAdd
-              />
+        {isLoading ? (
+          <LoadingScreen />
+        ) : (
+          <Paper elevation={2} sx={{ p: 1 }}>
+            <Grid container spacing={3}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <RenderComponents
+                  formik={formik}
+                  name="earningComponents"
+                  label="Earning Components"
+                  type="earning"
+                  showTempAdd
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <RenderComponents
+                  formik={formik}
+                  name="deductionComponents"
+                  label="Deduction Components"
+                  type="deduction"
+                  showTempAdd
+                />
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <RenderComponents
-                formik={formik}
-                name="deductionComponents"
-                label="Deduction Components"
-                type="deduction"
-                showTempAdd
-              />
-            </Grid>
-          </Grid>
-        </Paper>
+          </Paper>
+        )}
       </DialogScrollContent>
 
       <DialogActions>

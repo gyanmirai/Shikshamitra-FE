@@ -30,7 +30,7 @@ export const generalFieldsInitialValues = (editData?: IGeneralInformationRespons
   religion: editData?.religion ?? ReligionType.Hinduism,
   familyCast: editData ? editData?.familyCast : '',
   castCategory: editData ? editData?.castCategory : null,
-  motherTongue: editData?.motherTongue || '',
+  motherTongue: editData?.motherTongue ?? undefined,
   nationality: editData?.nationality || 'Indian',
   birthPlace: editData?.birthPlace || '',
   // temporaryGr: editData?.temporaryGr || '',

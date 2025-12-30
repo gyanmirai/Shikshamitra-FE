@@ -9,85 +9,100 @@ export const studentGroupApi = createApi({
   tagTypes: ['studentGroup'],
   endpoints: (builder) => ({
     getAllGroup: builder.query({
-      query: (params) =>
-        // const { page, limit, ...rest } = params;
-        ({
-          url: `/app/student-group`,
-          method: 'GET',
-        }),
+      query: (academicMediumId) => ({
+        url: `/students/records/academic-mediums/${academicMediumId}/house-settings`,
+        method: 'GET',
+      }),
+      providesTags: ['studentGroup'],
+    }),
+    getGroupById: builder.query({
+      query: (houseSettingId) => ({
+        url: `/students/records/house-settings/${houseSettingId}`,
+        method: 'GET',
+      }),
       providesTags: ['studentGroup'],
     }),
     addStudentGroup: builder.mutation({
-      query: (body) => ({
-        url: `/app/student-group`,
+      query: ({ academicMediumId, body }) => ({
+        url: `/students/records/academic-mediums/${academicMediumId}/house-settings`,
         method: 'POST',
         data: body,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }),
       invalidatesTags: ['studentGroup'],
     }),
     updateStudentGroup: builder.mutation({
-      query: ({ body, id }) => ({
-        url: `/app/student-group/${id}`,
+      query: ({ body, houseSettingId }) => ({
+        url: `/students/records/house-settings/${houseSettingId}`,
         method: 'PUT',
         data: body,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }),
       invalidatesTags: ['studentGroup'],
     }),
     deleteStudentGroup: builder.mutation({
-      query: (id) => ({
-        url: `/app/student-group/${id}`,
+      query: (houseSettingId) => ({
+        url: `/students/records/house-settings/${houseSettingId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['studentGroup'],
     }),
+    getAllStudentGroup: builder.query({
+      query: (divisionId) => ({
+        url: `/students/records/${divisionId}`,
+        method: 'GET',
+      }),
+      providesTags: ['studentGroup'],
+    }),
     assignStudentGroup: builder.mutation({
-      query: (body) => ({
-        url: `/app/student-group-member/assign-student-to-group`,
+      query: ({ houseId, studentId }) => ({
+        url: `/students/records/${studentId}/houses?houseId=${houseId}`,
         method: 'POST',
-        data: body,
       }),
       invalidatesTags: ['studentGroup'],
     }),
     setGroupLeader: builder.mutation({
-      query: (body) => ({
-        url: `/app/student-group-member/set-group-leader`,
+      query: (studentId) => ({
+        url: `/students/records/${studentId}/house-global-leader`,
         method: 'POST',
-        data: body,
       }),
       invalidatesTags: ['studentGroup'],
     }),
     setGroupLeaderAsDivision: builder.mutation({
-      query: (body) => ({
-        url: `/app/student-group-member/set-division-leader`,
+      query: (studentId) => ({
+        url: `/students/records/${studentId}/house-division-leader`,
         method: 'POST',
-        data: body,
       }),
       invalidatesTags: ['studentGroup'],
     }),
     removeDivisionLeader: builder.mutation({
-      query: (groupId) => ({
-        url: `/app/student-group-member/division-leader/${groupId}`,
+      query: (studentId) => ({
+        url: `/students/records/${studentId}/house-division-leader`,
         method: 'DELETE',
       }),
       invalidatesTags: ['studentGroup'],
     }),
     removeGroupLeader: builder.mutation({
-      query: (groupId) => ({
-        url: `/app/student-group-member/group-leader/${groupId}`,
+      query: (studentId) => ({
+        url: `/students/records/${studentId}/house-global-leader`,
         method: 'DELETE',
       }),
       invalidatesTags: ['studentGroup'],
     }),
     removeStudentFromGroup: builder.mutation({
-      query: ({ studentId, groupId }) => ({
-        url: `/app/student-group-member/student-from-group?studentId=${studentId}&groupId=${groupId}`,
+      query: ({ studentId }) => ({
+        url: `/students/records/${studentId}/houses`,
         method: 'DELETE',
       }),
       invalidatesTags: ['studentGroup'],
     }),
     deleteGroup: builder.mutation({
-      query: (groupId) => ({
-        url: `/app/student-group/${groupId}`,
+      query: (houseSettingId) => ({
+        url: `/students/records/house-settings/${houseSettingId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['studentGroup'],
@@ -99,6 +114,7 @@ export const {
   useAddStudentGroupMutation,
   useDeleteStudentGroupMutation,
   useGetAllGroupQuery,
+  useGetGroupByIdQuery,
   useUpdateStudentGroupMutation,
   useAssignStudentGroupMutation,
   useSetGroupLeaderMutation,
@@ -107,4 +123,5 @@ export const {
   useRemoveGroupLeaderMutation,
   useRemoveStudentFromGroupMutation,
   useDeleteGroupMutation,
+  useGetAllStudentGroupQuery,
 } = studentGroupApi;

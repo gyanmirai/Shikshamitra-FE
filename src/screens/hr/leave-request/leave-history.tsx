@@ -23,10 +23,6 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
-  useGetEmployeeLeaveQuery,
-  useEmployeeLeaveRequestStatusMutation,
-} from 'src/redux/employee/employeeApi';
-import {
   Box,
   Button,
   MenuItem,
@@ -40,22 +36,36 @@ import {
   EmployeeLeaveStatusOptions,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
+import {
+  useGetEmployeeLeaveQuery,
+  useDeleteEmployeeLeaveMutation,
+  useEmployeeLeaveRequestStatusMutation,
+} from 'src/redux/employee/employeeApi';
 
 import AddLeaveRequest from './leave-requst';
 import { LeaveRequestForm } from './leave-calender';
 
 const LeaveHistory = (props: any) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium: mediumStageId } = useSelector(
+    (state: RootState) => state.globalState
+  );
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
+    params: mediumStageId?.id,
   });
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
   });
+
+  const [deleteLeave, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteEmployeeLeaveMutation,
+  });
+
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
@@ -63,6 +73,7 @@ const LeaveHistory = (props: any) => {
 
   const approveConfirmation = useBoolean();
   const approveOrRejectConfirmation = useBoolean();
+  const cancelConfirmation = useBoolean();
 
   const [editData, setEditData] = useState<any>(null);
   const actions = useCallback(
@@ -112,9 +123,20 @@ const LeaveHistory = (props: any) => {
           <Iconify icon="mdi:close-circle" sx={{ height: '16px', width: '16px' }} />
           Reject
         </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setEditData(row);
+            cancelConfirmation.onTrue();
+            popover.onClose();
+          }}
+          sx={{ color: 'warning.main' }}
+        >
+          <Iconify icon="mdi:cancel" sx={{ height: '16px', width: '16px' }} />
+          Cancel
+        </MenuItem>
       </MenuList>
     ),
-    [changeStatus, modal, approveOrRejectConfirmation]
+    [changeStatus, modal, approveOrRejectConfirmation, cancelConfirmation]
   );
 
   const tableData = useMemo(
@@ -139,8 +161,6 @@ const LeaveHistory = (props: any) => {
       }) || [],
     [data]
   );
-
-  console.log('tableData', tableData);
 
   const handleClose = (_e?: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -351,6 +371,35 @@ const LeaveHistory = (props: any) => {
             }}
           >
             Approve
+          </LoadingButton>
+        }
+      />
+
+      <ConfirmDialog
+        open={cancelConfirmation.value}
+        onClose={() => {
+          setEditData(null);
+          cancelConfirmation.onFalse();
+        }}
+        title="Cancel Leave Request"
+        content={
+          <>
+            Are you sure you want to cancel this leave request for <strong>{editData?.name}</strong>
+            ?
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            color="warning"
+            loading={isDeleteLoading}
+            onClick={async () => {
+              await deleteLeave(editData?.id);
+              cancelConfirmation.onFalse();
+              setEditData(null);
+            }}
+          >
+            Yes, Cancel
           </LoadingButton>
         }
       />

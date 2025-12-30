@@ -11,6 +11,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -197,7 +198,7 @@ const DeductionComponent = () => {
             },
           },
         ]}
-        data={getDeductionComponentsData?.data || []}
+        data={getDeductionComponentsData?.items || []}
       />
       <CustomDialog
         maxWidth="md"
@@ -301,6 +302,10 @@ const DeductionComponentForm = ({
   editData: any;
   handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
+  const { data: getDeductionComponentsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetDeductionComponentsQuery,
+  });
   const [addDeductionComponent, { isLoading: addDeductionComponentLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddDeductionComponentMutation,
@@ -332,7 +337,7 @@ const DeductionComponentForm = ({
               description: values.description,
               componentType: values.componentType,
               dependOn: values.dependOn,
-              customComponent: values.customComponent,
+              customComponentId: values.customComponent,
               amount: values.amount,
               visibleInPayslip: values.visibleInPayslip,
               isFixed: values.isFixed,
@@ -344,7 +349,7 @@ const DeductionComponentForm = ({
             description: values.description,
             componentType: values.componentType,
             dependOn: values.dependOn,
-            customComponent: values.customComponent,
+            customComponentId: values.customComponent,
             amount: values.amount,
             visibleInPayslip: values.visibleInPayslip,
             isFixed: values.isFixed,
@@ -483,27 +488,23 @@ const DeductionComponentForm = ({
                   <ShakingTextField
                     error={formik.touched.customComponent && Boolean(formik.errors.customComponent)}
                   >
-                    <TextField
-                      size="small"
-                      select
-                      fullWidth
-                      label="Select Custom Component *"
-                      name="customComponent"
+                    <CustomSelect
+                      options={getDeductionComponentsData?.items || []}
+                      label="Component Type *"
                       value={formik.values.customComponent}
-                      onChange={formik.handleChange}
+                      onChange={(val) => {
+                        formik.setFieldValue('customComponent', val);
+                      }}
+                      labelKey="componentName"
+                      valueKey="id"
                       error={
                         formik.touched.customComponent && Boolean(formik.errors.customComponent)
                       }
                       helperText={
                         (formik.touched.customComponent && formik.errors.customComponent) as string
                       }
-                    >
-                      {customComponents.map((c) => (
-                        <MenuItem key={c} value={c}>
-                          {c}
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                      fullWidth
+                    />
                   </ShakingTextField>
                 </Grid>
               )}

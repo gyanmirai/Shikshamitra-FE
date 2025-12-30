@@ -25,7 +25,7 @@ import { info, error, primary, success, warning, secondary } from 'src/theme/cor
 import {
   useAddEmployeeLeaveMutation,
   useGetEmployeeLeavePolicyQuery,
-  useEmployeeLeaveRequestStatusMutation,
+  useUpdateEmployeeLeaveMutation,
 } from 'src/redux/employee/employeeApi';
 
 import type { TabComponentType } from '.';
@@ -62,20 +62,16 @@ interface FormValues {
 const AddLeaveRequest = (props: AddLeaveRequestProps) => {
   // Destructure props to get editData and handleClose
   const { editData, handleClose } = props;
-  // Mutation hook for changing leave request status
-  const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
+  // Mutation hook for updating leave request status
+  const [updateLeaveStatus, { isLoading: isUpdateStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
+    currentQueryAndMutation: useUpdateEmployeeLeaveMutation,
   });
 
   // Mutation hook for adding new leave request
   const [addLeave, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEmployeeLeaveMutation,
-    popupConfig: {
-      success: true,
-      successMessage: 'Leave request added successfully',
-    },
   });
 
   // Query hook to fetch employee leave policy data
@@ -165,11 +161,16 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       onSubmit: async (formValues: FormValues, { resetForm }) => {
         try {
           if (editData) {
-            await changeStatus({
-              id: editData.id,
+            await updateLeaveStatus({
+              leaveRequestId: editData.id,
               body: {
-                status: EmployeeLeaveStatusType.Rejected,
-                rejectionReason: formValues.rejectionReason,
+                status:
+                  formValues.status === EmployeeLeaveStatusType.Rejected
+                    ? 'REJECTED'
+                    : formValues.status === EmployeeLeaveStatusType.Approved
+                      ? 'APPROVED'
+                      : 'REVIEWED',
+                remarks: formValues.rejectionReason || undefined,
               },
             });
           } else {
@@ -428,12 +429,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
 
         {values.status === EmployeeLeaveStatusType.Rejected && (
           <LoadingButton
-            loading={isChangeStatusLoading}
+            loading={isUpdateStatusLoading}
             onClick={(e: any) => {
               handleSubmit(e);
             }}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
-            disabled={isChangeStatusLoading}
+            disabled={isUpdateStatusLoading}
             size="small"
           >
             Approve

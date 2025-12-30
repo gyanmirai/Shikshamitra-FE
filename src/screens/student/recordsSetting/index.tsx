@@ -1,5 +1,6 @@
 'use client';
 
+import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -39,9 +40,12 @@ import {
 import type { IGroup } from '../management/group-managemnet/type';
 
 const HouseSetting = () => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
   const { data: groupData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllGroupQuery,
+    params: (currentMedium as Medium)?.id,
   });
 
   const [deleteGroup, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -112,7 +116,7 @@ const HouseSetting = () => {
             </Box>{' '}
           </>
         }
-        totalCount={groupData?.totalCount || 0}
+        totalCount={groupData?.data?.length || 0}
         // isLoading={isLoading}
         // serverSide
         // onServerPagination={async (page, rowPerPage) => {
@@ -191,7 +195,7 @@ const HouseSetting = () => {
             },
           },
         ]}
-        data={groupData?.items || []}
+        data={groupData?.data || []}
       />{' '}
       <CustomDialog
         open={dialog.value}
@@ -268,6 +272,8 @@ const GroupManagementForm = ({
   editData: IGroup | null;
   handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
   // Hooks for adding and updating student groups using custom query and mutation hook
   const [addGroup, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -288,7 +294,7 @@ const GroupManagementForm = ({
     initialValues: {
       name: editData?.name || '',
       color: editData?.color || '#000000',
-      logo: editData?.logo ? base64ToFile(editData?.logo as string) : '',
+      logoUrl: editData?.logoUrl ? base64ToFile(editData?.logoUrl as string) : '',
       description: editData?.description || '',
     },
     validationSchema: Yup.object().shape({
@@ -298,32 +304,50 @@ const GroupManagementForm = ({
     // Handle form submission for both add and update operations
     onSubmit: async (values) => {
       try {
-        if (editData) {
-          // Update existing group if editData exists
-          await updateGroup({
-            id: editData.id,
-            body: {
-              name: values.name,
-              color: values.color,
-              logo: values.logo ? await fileToBase64(values.logo as File) : '',
-              description: values.description,
-            },
-          }).unwrap();
-          shikshaMitraToast.success({ message: `${values.name} House Updated Successfully` });
-        } else {
-          // Add new group if no editData
-          await addGroup({
-            name: values.name,
-            color: values.color,
-            logo: values.logo ? await fileToBase64(values.logo as File) : '',
-            description: values.description,
-          }).unwrap();
-          shikshaMitraToast.success({ message: `${values.name} House Added Successfully` });
+        // Helper: convert File → base64 (without data URI prefix)
+        const getBase64String = async (file?: File | string) => {
+          if (!file || typeof file === 'string') return undefined;
+          const base64WithPrefix = await fileToBase64(file);
+          return base64WithPrefix.split(',')[1];
+        };
+
+        // Build payload safely (no undefined fields)
+        const payload: any = {
+          name: values.name,
+          color: values.color,
+          description: values.description,
+        };
+
+        // Add logo ONLY if present
+        const logo = await getBase64String(values.logoUrl);
+        if (logo) {
+          payload.logo = logo;
         }
-        // Close dialog after successful operation
+
+        if (editData) {
+          await updateGroup({
+            houseSettingId: editData.id,
+            body: payload,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `${values.name} House Updated Successfully`,
+          });
+        } else {
+          await addGroup({
+            academicMediumId: (currentMedium as Medium).id,
+            body: payload,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `${values.name} House Added Successfully`,
+          });
+        }
+
+        // Close dialog after success
         handleClose(null, true);
       } catch (error) {
-        console.error(error);
+        console.error('House submit error:', error);
       }
     },
   });
@@ -353,11 +377,11 @@ const GroupManagementForm = ({
               initialColor={formik.values.color}
             />
             <FileUploader
-              value={formik.values.logo as File}
+              value={formik.values.logoUrl as File}
               multiple={false}
               onChange={(value) => {
                 // const reader = new FileReader();
-                formik.setFieldValue('logo', value);
+                formik.setFieldValue('logoUrl', value);
                 // reader.readAsDataURL(value as File);
                 // reader.readAsDataURL(value as File);
                 // reader.onload = () => {

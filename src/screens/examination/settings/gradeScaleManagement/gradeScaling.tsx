@@ -1,8 +1,10 @@
 'use client';
 
+import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -13,9 +15,14 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import gradeScalingData from 'src/json/academic/examination/gradeScalingData.json';
+import {
+  useGetGradeScalingsQuery,
+  useDeleteGradeScalingMutation,
+} from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 
 import GradeForm from './gradeScaleForm';
 
@@ -35,8 +42,27 @@ const GradingScale = () => {
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-  const addGradeScalingDialog = useBoolean(false);
 
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  const addGradeScalingDialog = useBoolean(false);
+  const [deleteGradeScaling, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteGradeScalingMutation,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+  });
+  const {
+    data: gradeScalings,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetGradeScalingsQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id,
+    },
+  });
   /**
    * Handles closing of all dialogs and resetting related states
    */
@@ -124,6 +150,7 @@ const GradingScale = () => {
 
       <CustomizableTable
         tableId="gradesTable"
+        isLoading={isLoading || isFetching}
         noDataText={
           <>
             No Grade Scaling Data Found{' '}
@@ -183,7 +210,7 @@ const GradingScale = () => {
             },
           },
         ]}
-        data={grades}
+        data={gradeScalings?.data || []}
       />
 
       <CustomDialog
@@ -258,28 +285,42 @@ const GradingScale = () => {
       <ConfirmDialog
         open={deleteConfirmDialog.value}
         onClose={() => {
-          handleCloseDialog();
+          setSelectedGrade(null);
+          deleteConfirmDialog.onFalse();
         }}
         title="Delete"
         content={
           <>
-            Are you sure you want to Delete Grade Scaling <strong>{selectedGrade?.name}</strong>?
+            Are you sure you want to delete grade scale{' '}
+            <strong>&quot;{selectedGrade?.name}&quot;</strong>?
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
-            onClick={() => {
-              if (selectedGrade) {
-                handleDelete(selectedGrade);
+            onClick={async () => {
+              try {
+                const payload = {
+                  academicMediumId: (currentMedium as any).id,
+                  id: (selectedGrade as any).id,
+                };
+                await deleteGradeScaling(payload).unwrap();
+                deleteConfirmDialog.onFalse();
+                setSelectedGrade(null);
+                shikshaMitraToast.success({
+                  message: `Grade scale &quot;${selectedGrade?.name}&quot; deleted successfully`,
+                });
+              } catch (error) {
+                console.error('Failed to delete grade scale', error);
               }
             }}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

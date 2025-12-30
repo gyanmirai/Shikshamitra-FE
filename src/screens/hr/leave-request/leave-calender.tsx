@@ -27,39 +27,25 @@ import {
 
 import type { TabComponentType } from '.';
 
-// {
-//     "id": "e99f09a7-dd88-49d5-b1c8-1daf80c2d7b2",
-//     "title": "Summer Music Festival",
-//     "allDay": false,
-//     "color": "#00A76F",
-//     "description": "Atque eaque ducimus minima distinctio velit. Laborum et veniam officiis. Delectus ex saepe hic id laboriosam officia. Odit nostrum qui illum saepe debitis ullam. Laudantium beatae modi fugit ut. Dolores consequatur beatae nihil voluptates rem maiores.",
-//     "start": "2024-10-23T06:50:11+00:00",
-//     "end": "2024-10-23T10:20:11+00:00",
-//     "textColor": "#00A76F"
-// }
-
 const LeaveCalender = (props: TabComponentType) => {
   const [organization, setOrganization] = useState<string>('');
   const [currentDateClick, setCurrentDateClick] = useState<EventClickArg | null>(null);
   const popover = usePopover();
   const { employee } = useSelector((state: any) => state.auth);
-  const { currentMedium: medium, currentYear } = useSelector(
+  const { currentMedium: mediumStageId, currentYear } = useSelector(
     (state: RootState) => state.globalState
   );
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
+    params: mediumStageId?.id,
   });
 
-  // const handleChange = (event: any) => {
-  //   setOrganization(event?.target?.value);
-  // };
-
   useEffect(() => {
-    setAllOrganization(medium?.educationMediumStages || []);
-    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
-  }, [medium]);
+    setAllOrganization(mediumStageId?.educationMediumStages || []);
+    setOrganization(mediumStageId?.educationMediumStages?.[0]?.id || '');
+  }, [mediumStageId]);
 
   const calendarData = useMemo(
     () =>
@@ -99,7 +85,7 @@ const LeaveCalender = (props: TabComponentType) => {
         labelKey="name"
         valueKey="id"
         formControlProps={{ sx: { maxWidth: '250px', width: '100%', pl: 1, mt: 1, mb: 1 } }}
-        disabled={!medium}
+        disabled={!mediumStageId}
       />
 
       <CommonCalender
@@ -161,7 +147,7 @@ const LeaveCalender = (props: TabComponentType) => {
         slotProps={{ arrow: { placement: 'top-left' } }}
       >
         <MenuList>
-          {medium?.educationMediumStages?.map((org: any) => (
+          {mediumStageId?.educationMediumStages?.map((org: any) => (
             <MenuItem
               key={org.id}
               value={org.id}

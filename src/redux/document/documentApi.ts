@@ -9,12 +9,12 @@ export const documentApi = createApi({
   tagTypes: ['Document'],
   endpoints: (builder) => ({
     getDocuments: builder.query({
-      query: () => ({ url: '/app/document-setting?Sorting=documentName' }),
+      query: () => ({ url: '/employees/documents' }),
       providesTags: ['Document'],
     }),
     addDocument: builder.mutation({
       query: (body) => ({
-        url: '/app/document-setting',
+        url: '/employees/documents',
         method: 'POST',
         data: body,
       }),
@@ -22,7 +22,7 @@ export const documentApi = createApi({
     }),
     updateDocument: builder.mutation({
       query: ({ id, body }) => ({
-        url: `/app/document-setting/${id}`,
+        url: `/employees/documents/${id}`,
         method: 'PUT',
         data: body,
       }),
@@ -30,7 +30,7 @@ export const documentApi = createApi({
     }),
     deleteDocument: builder.mutation({
       query: (id) => ({
-        url: `/app/document-setting/${id}`,
+        url: `/employees/documents/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Document'],

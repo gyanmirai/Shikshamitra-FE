@@ -4,10 +4,9 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all homework types under academic medium
     getHomeworkTypes: builder.query({
-      query: ({ academicMediumId }: { academicMediumId: string }) => ({
+      query: () => ({
         url: `/homework-type`,
         method: 'GET',
-        params: { academicMediumId },
       }),
       providesTags: ['HomeworkType'],
     }),
@@ -24,40 +23,29 @@ export const homeworkTypesApi = academicApi.injectEndpoints({
 
     // Add new homework type
     addHomeworkType: builder.mutation({
-      query: ({ academicMediumId, body }: { academicMediumId: string; body: any }) => ({
+      query: ({ name }: { name: string }) => ({
         url: `/homework-type`,
         method: 'POST',
-        params: { academicMediumId },
-        data: body,
+        params: { name },
       }),
       invalidatesTags: ['HomeworkType'],
     }),
 
     // Update homework type
     updateHomeworkType: builder.mutation({
-      query: ({
-        academicMediumId,
-        id,
-        body,
-      }: {
-        academicMediumId: string;
-        id: string;
-        body: any;
-      }) => ({
-        url: `/homework-type/${id}`,
+      query: ({ homeworkTypeId, name }: { homeworkTypeId: string; name: string }) => ({
+        url: `/homework-type/${homeworkTypeId}`,
         method: 'PUT',
-        params: { academicMediumId },
-        data: body,
+        params: { name },
       }),
       invalidatesTags: ['HomeworkType'],
     }),
 
     // Delete homework type
     deleteHomeworkType: builder.mutation({
-      query: ({ academicMediumId, id }: { academicMediumId: string; id: string }) => ({
-        url: `/homework-type/${id}`,
+      query: ({ homeworkTypeId }: { homeworkTypeId: string }) => ({
+        url: `/homework-type/${homeworkTypeId}`,
         method: 'DELETE',
-        params: { academicMediumId },
       }),
       invalidatesTags: ['HomeworkType'],
     }),

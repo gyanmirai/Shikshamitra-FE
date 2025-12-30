@@ -122,7 +122,7 @@ const GlobalAcademicSearch = () => {
 
   const pathname = usePathname();
 
-  const isShowOnlyYearModule = ['/finance', '/library', '/calendar'].some((route) =>
+  const isShowOnlyYearModule = ['/finance', '/library', '/calendar', '/hr/employee'].some((route) =>
     pathname.startsWith(route)
   );
 

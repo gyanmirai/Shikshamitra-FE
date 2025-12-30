@@ -68,7 +68,7 @@ const HrSetting = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <strong>{deleteInformation?.documentName}</strong> ?
+            Are you sure you want to delete <strong>{deleteInformation?.title}</strong> ?
           </>
         }
         action={
@@ -80,7 +80,7 @@ const HrSetting = () => {
             onClick={async () => {
               await deleteDocument(deleteInformation?.id);
               shikshaMitraToast.success({
-                message: `${deleteInformation?.documentName} Document deleted successfully`,
+                message: `${deleteInformation?.title} Document deleted successfully`,
               });
               setDeleteInformation(null);
               confirm.onFalse();
@@ -138,7 +138,7 @@ const HrSetting = () => {
         isLoading={isLoading}
         isFilter={false}
         columns={[
-          { id: 'documentName', label: 'Document Name' },
+          { id: 'title', label: 'Document Name' },
           { id: 'documentSize', label: 'Document Size (MB)', minWidth: '200px', align: 'left' },
           {
             id: 'documentTypesString',
@@ -225,7 +225,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
     documentSize: number;
   }>({
     initialValues: {
-      title: editData?.documentName || '',
+      title: editData?.title || '',
       documentType:
         editData?.documentTypes?.map((item: any) => ({ label: DocumentType[item], value: item })) ||
         [],
@@ -250,7 +250,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
         await updateDocument({
           id: editData.id,
           body: {
-            documentName: formikValues.title,
+            title: formikValues.title,
             documentTypes: formikValues.documentType.map((item: any) => item.value),
             documentSize: formikValues.documentSize,
           },
@@ -260,7 +260,7 @@ const DocumentForm = ({ handleClose, editData }: { handleClose?: () => void; edi
         return;
       }
       await addDocument({
-        documentName: formikValues.title,
+        title: formikValues.title,
         documentTypes: formikValues.documentType.map((item: any) => item.value),
         documentSize: formikValues.documentSize,
       }).unwrap();

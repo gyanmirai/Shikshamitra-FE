@@ -18,8 +18,6 @@ export default function CommonReport({ categories, subCategories }: CommonReport
 
   const [selectedCategory, setSelectedCategory] = useState(categories[0]?.id);
   const [selectedReport, setSelectedReport] = useState<ReportSubCategory | null>(null);
-  console.log('selectedCategory---', selectedCategory);
-  console.log('selectedReport---', selectedReport);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2, minHeight: 0 }}>

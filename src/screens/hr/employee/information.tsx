@@ -2,20 +2,27 @@
 
 import { useFormik } from 'formik';
 import { useTabs } from 'src/hooks/use-tabs';
-import { useMemo, useState, useCallback } from 'react';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Tab, Box, Card, Grid, TextField } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { FormSlider } from 'src/screens/student/enrollment/register/register-form';
 import {
+  useGetBankDetailsQuery,
   useUpdateEmployeeMutation,
+  useGetWorkExperienceQuery,
+  useGetBasicInformationQuery,
   useUpdateBankDetailsMutation,
+  useGetFamilyInformationQuery,
+  useGetAdditionalInformationQuery,
   useUpdateFamilyInformationMutation,
   useUpdateExperienceInformationMutation,
+  useUpdateAdditionalInformationMutation,
+  useGetReportingManagerByEmployeeIdQuery,
+  useUpdateReportingManagerByEmployeeIdMutation,
 } from 'src/redux/employee/employeeApi';
 
 // import {
@@ -26,6 +33,7 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
+import { LoadingScreen } from 'src/components/loading-screen';
 
 import { infoValidations } from './employee-form-validation';
 //   WorkExperienceFields,
@@ -105,56 +113,61 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     currentQueryAndMutation: useUpdateBankDetailsMutation,
     isThrowError: true,
   });
+  const [updateAdditionalInfo] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateAdditionalInformationMutation,
+    isThrowError: true,
+  });
+
+  const [updateReportingManager] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateReportingManagerByEmployeeIdMutation,
+    isThrowError: true,
+  });
 
   // Handler for updateFamilyInformation
   const handleFamilyInformation = useCallback(
-    async (values: any) => {
+    async (values: any, formik: any) => {
       const res = await updateFamilyInfo({
         employeeId: values.employeeId,
         body: {
           fatherDetails: {
             name: values.fatherName,
             occupation: values.fatherOccupation,
-            contactNo: values.fatherContactNo,
+            mobileNo: values.fatherContactNo,
             address1: values.fatherAddress1,
             address2: values.fatherAddress2,
             address3: values.fatherAddress3,
-            countryName: values?.fatherCountry?.name,
-            countryIsoCode: values?.fatherCountry?.isoCode,
-            stateName: values?.fatherState?.name,
-            stateIsoCode: values?.fatherState?.isoCode,
+            country: { name: values?.fatherCountry?.name, isoCode: values?.fatherCountry?.isoCode },
+            state: { name: values?.fatherState?.name, isoCode: values?.fatherState?.isoCode },
             city: values?.fatherCity?.name,
-            pincode: values.fatherPinCode,
+            pincode: String(values.fatherPinCode),
           },
           motherDetails: {
             name: values.motherName,
             occupation: values.motherOccupation,
-            contactNo: values.motherContactNo,
+            mobileNo: values.motherContactNo,
             address1: values.motherAddress1,
             address2: values.motherAddress2,
             address3: values.motherAddress3,
 
-            countryName: values?.motherCountry?.name,
-            countryIsoCode: values?.motherCountry?.isoCode,
-            stateName: values?.motherState?.name,
-            stateIsoCode: values?.motherState?.isoCode,
+            country: { name: values?.motherCountry?.name, isoCode: values?.motherCountry?.isoCode },
+            state: { name: values?.motherState?.name, isoCode: values?.motherState?.isoCode },
 
             city: values?.motherCity?.name,
-            pincode: values.motherPinCode,
+            pincode: String(values.motherPinCode),
           },
           spouseDetails: {
             name: values.spouseName,
             occupation: values.spouseOccupation,
-            contactNo: values.spouseContactNo,
+            mobileNo: values.spouseContactNo,
             address1: values.spouseAddress1,
             address2: values.spouseAddress2,
             address3: values.spouseAddress3,
-            countryName: values?.spouseCountry?.name,
-            countryIsoCode: values?.spouseCountry?.isoCode,
-            stateName: values?.spouseState?.name,
-            stateIsoCode: values?.spouseState?.isoCode,
+            country: { name: values?.spouseCountry?.name, isoCode: values?.spouseCountry?.isoCode },
+            state: { name: values?.spouseState?.name, isoCode: values?.spouseState?.isoCode },
             city: values?.spouseCity?.name,
-            pincode: values.spousePinCode,
+            pincode: String(values.spousePinCode),
           },
         },
       }).unwrap();
@@ -165,54 +178,40 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // Handler for updateEmployee
   const handelUpdateEmployee = useCallback(
-    async (values: any, id: any) => {
+    async (values: any, formik: any, id: any) => {
       try {
         const res = await updateEmployee({
           id,
           body: {
-            // userId: res.data.id,
-            profilePicture: values.photo.replace(/^data:\w+\/[\w-]+;base64,/, ''),
-            // employeeCode: values.code,
             lastName: values.lastName,
             firstName: values.firstName,
             middleName: values.middleName,
             shortName: values.shortName,
-
             employeeStatusType: values.employeeStatusType,
-
-            dateOfBirth: values.dob.format('YYYY-MM-DD'),
-            familyCast: values.familyCast,
-            castType: values.castType,
-            genderType: values.gender,
+            dob: values.dob.format('YYYY-MM-DD'),
+            familyCaste: values.familyCast,
+            casteType: values.castType,
+            gender: values.gender,
             religion: values.religion,
             maritalStatus: values.maritalStatus,
             bloodGroup: values.bloodGroup,
             mobileNo: values.mobileNo,
+            secondaryMobileNo: values.secondaryMobileNo,
             email: values.email,
-
             department: values.department,
-            designation: values.designation,
-            dateOfJoining: values.dateOfJoining.format('YYYY-MM-DD'),
-
-            employeeGroup: values.employeeGroup,
-            qualification: values.qualification,
+            doj: values.dateOfJoining.format('YYYY-MM-DD'),
+            isTeaching: values.employeeGroup === 0,
+            // qualification: values.qualification,
             roleId: values.role,
-            identificationMark1: values.identificationMark1,
-
+            // identificationMark1: values.identificationMark1,
             address1: values.addressLine1,
             address2: values.addressLine2,
             address3: values.addressLine3,
-
-            country: values?.country?.name
-              ? { name: values?.country?.name, isoCode: values?.country?.isoCode }
-              : undefined,
+            country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
             city: values?.city?.name,
-            state: values?.state?.name
-              ? { name: values?.state?.name, isoCode: values?.state?.isoCode }
-              : undefined,
-
+            state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
             pincode: `${values.pincode}`,
-            educationMediumStageId: values.organization,
+            // educationMediumStageId: values.organization,
             shiftId: values.shift,
           },
         }).unwrap();
@@ -240,13 +239,25 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // handler TO update experience
   const handleWorkExperience = useCallback(
-    async (values: any, work: any) => {
+    async (values: any, formik: any) => {
       const res = await updateExperienceInfo({
         employeeId: values.employeeId,
         body: values.experiences.map((i: any) => ({
           ...i,
-          fromDate: i.fromDate ? i.fromDate.format('YYYY-MM-DD') : null,
-          toDate: i.toDate ? i.toDate.format('YYYY-MM-DD') : null,
+          mediumStageName: i.mediumStageName,
+          designation: i.designation,
+          department: i.department,
+          country: {
+            name: i.country.name,
+            isoCode: i.country.isoCode,
+          },
+          state: {
+            name: i.state.name,
+            isoCode: i.state.isoCode,
+          },
+          city: i.city.name,
+          startDate: i.startDate ? i.startDate.format('YYYY-MM-DD') : null,
+          endDate: i.endDate ? i.endDate.format('YYYY-MM-DD') : null,
         })),
       }).unwrap();
       return res;
@@ -256,15 +267,30 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
 
   // Handler for updateBankDetailsInformation
   const handleBankDetailsInformation = useCallback(
-    async (values: any, bank: any) => {
+    async (values: any, formik: any) => {
       const res = updateBankDetails({
         employeeId: values.employeeId,
         body: {
-          bankName: values.bankName,
-          branchName: values.branchName,
-          accountHolderName: values.accountHolderName,
-          accountNumber: values.accountNumber,
-          ifscCode: values.ifscCode,
+          bankDetails: {
+            bankName: values.bankName,
+            branchName: values.branchName,
+            accountHolderName: values.accountHolderName,
+            accountNumber: values.accountNumber,
+            ifscCode: values.ifscCode,
+          },
+
+          salaryDetails: {
+            pfRuleId: values.pfRuleId,
+            epfNumber: values.epfNumber,
+            uanNumber: values.uanNumber,
+            basicSalary: values.basicSalary,
+            punchId: values.punchId,
+            tdsPercentage: values.tdsPercentage,
+            tdsAmount: values.tdsAmount,
+          },
+
+          earningComponents: values.earningComponents,
+          deductionComponents: values.deductionComponents,
         },
       }).unwrap();
       return res;
@@ -272,21 +298,57 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     [updateBankDetails]
   );
 
+  const handleAdditionalDetails = useCallback(
+    async (values: any, formik: any) => {
+      const res = await updateAdditionalInfo({
+        employeeId: values.employeeId,
+        body: {
+          bplCardNo: values.bplCardNo,
+          personWithDisability: values.personWithDisability === 'Yes',
+          secondLanguage: values.secondLanguage,
+          isLibraryMember: values.libraryMember,
+          isTransportMember: values.transportMember,
+        },
+      }).unwrap();
+      return res;
+    },
+    [updateAdditionalInfo]
+  );
+
+  const handleReportingManager = useCallback(
+    async (values: any, formik: any, id: any) => {
+      const res = await updateReportingManager({
+        id: values.employeeId,
+        body: {
+          reportingManagerId: values?.reportingManager?.id,
+        },
+      }).unwrap();
+      return res;
+    },
+    [updateReportingManager]
+  );
+
   // submit handler
   const onSubmit = async (_val: any) => {
     try {
       if (activeTabIndex === 0) {
-        await handelUpdateEmployee(formik.values, editData?.id);
+        await handelUpdateEmployee(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Employee Details updated successfully' });
       } else if (activeTabIndex === 1) {
-        await handleFamilyInformation(formik.values);
+        await handleFamilyInformation(formik.values, formik);
         shikshaMitraToast.success({ message: 'Family Details updated successfully' });
       } else if (activeTabIndex === 2) {
+        await handleAdditionalDetails(formik.values, formik);
+        shikshaMitraToast.success({ message: 'Additional Details updated successfully' });
+      } else if (activeTabIndex === 3) {
         await handleWorkExperience(formik.values, formik);
         shikshaMitraToast.success({ message: 'Work Experience  updated successfully' });
-      } else if (activeTabIndex === 3) {
+      } else if (activeTabIndex === 4) {
         await handleBankDetailsInformation(formik.values, formik);
         shikshaMitraToast.success({ message: 'Bank Details updated successfully' });
+      } else if (activeTabIndex === 5) {
+        await handleReportingManager(formik.values, formik, editData?.id);
+        shikshaMitraToast.success({ message: 'Assign Reporting Manager updated successfully' });
       }
     } catch (error) {
       console.error(error);
@@ -296,12 +358,12 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   // Initialize formik with combined initial values from all form sections
   const formik = useFormik({
     initialValues: {
-      ...personalInformationInitialValues(editData),
-      ...familyInformationInitialValues(editData),
-      ...additionalDetailsInitialValues(editData),
-      ...workExperienceInitialValues(editData),
-      ...payrollInitialValues(editData),
-      ...assignReportingManagerInitialValues(editData),
+      ...personalInformationInitialValues(),
+      ...familyInformationInitialValues(),
+      ...additionalDetailsInitialValues(),
+      ...workExperienceInitialValues(),
+      ...payrollInitialValues(),
+      ...assignReportingManagerInitialValues(),
     },
     // Use validation schema based on active tab
     validationSchema: infoValidations[activeTabIndex],
@@ -319,134 +381,266 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     //   '& label': { fontSize: '12px' },
     // }}
     >
-      <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-        <form onSubmit={formik.handleSubmit}>
-          <Card
-            sx={{
-              px: 0,
-              // '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-            }}
+      {/* <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}> */}
+      <form onSubmit={formik.handleSubmit}>
+        <Card
+          sx={{
+            px: 0,
+            // '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+          }}
+        >
+          <CustomTabs
+            value={tabs.value}
+            onChange={handleTabChange}
+            variant="fullWidth"
+            // slotProps={{ tab: { px: 0 } }}
           >
-            <CustomTabs
-              value={tabs.value}
-              onChange={handleTabChange}
-              variant="fullWidth"
-              // slotProps={{ tab: { px: 0 } }}
-            >
-              {TABS.map((tab) => (
-                <Tab key={tab.value} value={tab.value} label={tab.label} />
-              ))}
-            </CustomTabs>
+            {TABS.map((tab) => (
+              <Tab key={tab.value} value={tab.value} label={tab.label} />
+            ))}
+          </CustomTabs>
 
-            <FormSlider
-              steps={TABS}
-              isBackClick={isBackClick}
-              step={activeTabIndex}
-              containerProps={{
-                sx: {
-                  p: 0,
-                },
-              }}
-            >
-              <Grid container spacing={2} p={2}>
-                {' '}
-                {fields[activeTabIndex].map((field: FieldsType, index: number) => (
-                  <Grid
-                    size={{
-                      xs: [1, 2].includes(activeTabIndex) ? 12 : 4,
-                      md: [1, 2].includes(activeTabIndex) ? 12 : 4,
-                    }}
-                    key={field.name}
-                    {...field.gridProps}
-                    mb="15px"
-                  >
-                    {field.renderComp ? (
-                      field.renderComp({
-                        formik,
-                        field,
-                        editData,
-                      })
-                    ) : field.type === 'date' ? (
-                      <ShakingTextField
-                        error={
-                          formik.touched[field.name as keyof typeof formik.values] &&
-                          Boolean(formik.errors[field.name as keyof typeof formik.values])
-                        }
-                      >
-                        <DatePicker
-                          label={field.label}
-                          name={field.name}
-                          value={formik.values[field.name as keyof typeof formik.values]}
-                          format="DD-MM-YYYY"
-                          minDate={dayjs(currentYear?.startDate)}
-                          maxDate={dayjs(currentYear?.endDate)}
-                          onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                          sx={{
-                            ...((field?.sx as any) || {}),
-                          }}
-                          disabled={!isEdit}
-                          slotProps={{
-                            textField: {
-                              placeholder: field.placeholder,
-                              fullWidth: true,
-                              size: 'small',
-                              helperText:
-                                formik.touched[field.name as keyof typeof formik.values] &&
-                                formik.errors[field.name as keyof typeof formik.values]
-                                  ? String(formik.errors[field.name as keyof typeof formik.values])
-                                  : undefined,
-                              error:
-                                formik.touched[field.name as keyof typeof formik.values] &&
-                                Boolean(formik.errors[field.name as keyof typeof formik.values]),
-                            },
-                          }}
-                        />
-                      </ShakingTextField>
-                    ) : (
-                      <ShakingTextField
-                        error={
-                          formik.touched[field.name as keyof typeof formik.values] &&
-                          Boolean(formik.errors[field.name as keyof typeof formik.values])
-                        }
-                      >
-                        <TextField
-                          key={field.name}
-                          type={field.type}
-                          size="small"
-                          label={field.label}
-                          name={field.name}
-                          disabled={!isEdit}
-                          placeholder={field.placeholder}
-                          value={formik.values[field.name as keyof typeof formik.values]}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          error={
-                            formik.touched[field.name as keyof typeof formik.values] &&
-                            Boolean(formik.errors[field.name as keyof typeof formik.values])
-                          }
-                          helperText={
-                            formik.touched[field.name as keyof typeof formik.values] &&
-                            formik.errors[field.name as keyof typeof formik.values]
-                              ? String(formik.errors[field.name as keyof typeof formik.values])
-                              : undefined
-                          }
-                          fullWidth
-                          sx={{ ...(field?.sx || {}) }}
-                          {...(field?.otherProps || {})}
-                        />
-                      </ShakingTextField>
-                    )}
-                  </Grid>
-                ))}{' '}
-              </Grid>
-            </FormSlider>
-            {/* </CardContent>
+          <ViewInformationScreen
+            isBackClick={isBackClick}
+            activeTabIndex={activeTabIndex}
+            allFields={fields}
+            formik={formik}
+            editData={editData}
+            isEdit={isEdit}
+          />
+          {/* </CardContent>
           </Card> */}
-          </Card>
-        </form>
-      </BackPopUpChecked>
+        </Card>
+      </form>
+      {/* </BackPopUpChecked> */}
     </Box>
   );
 };
 
 export default EmployeeInformation;
+
+const ViewInformationScreen = ({
+  isBackClick,
+  activeTabIndex,
+  allFields,
+  formik,
+  editData,
+  isEdit,
+}: any) => {
+  const initializedStepsRef = React.useRef<Record<number, boolean>>({});
+  const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBasicInformationQuery,
+    params: editData?.id,
+    options: {
+      skip: !(editData?.id && activeTabIndex === 0),
+    },
+  });
+
+  const { data: familyDetails, isLoading: familyDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFamilyInformationQuery,
+    params: editData?.id,
+    options: {
+      skip: !(editData?.id && activeTabIndex === 1),
+    },
+  });
+  const { data: additionalDetails, isLoading: additionalDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAdditionalInformationQuery,
+    params: editData?.id,
+    options: {
+      skip: !(editData?.id && activeTabIndex === 2),
+    },
+  });
+  const { data: workExperience, isLoading: workExperienceLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetWorkExperienceQuery,
+    params: editData?.id,
+    options: {
+      skip: !(editData?.id && activeTabIndex === 3),
+    },
+  });
+  const { data: bankDetails, isLoading: bankDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBankDetailsQuery,
+    params: editData?.id,
+    options: {
+      skip: !(editData?.id && activeTabIndex === 4),
+    },
+  });
+
+  const { data: reportingManagerDetails, isLoading: reportingManagerDetailsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetReportingManagerByEmployeeIdQuery,
+      params: editData?.id,
+      options: {
+        skip: !(editData?.id && activeTabIndex === 5),
+      },
+    });
+
+  useEffect(() => {
+    if (initializedStepsRef.current[activeTabIndex]) return;
+    if (basicDetails && activeTabIndex === 0) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...personalInformationInitialValues(basicDetails),
+      }));
+      initializedStepsRef.current[activeTabIndex] = true;
+    } else if (familyDetails && activeTabIndex === 1) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...familyInformationInitialValues(familyDetails),
+      }));
+      initializedStepsRef.current[activeTabIndex] = true;
+    } else if (additionalDetails && activeTabIndex === 2) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...additionalDetailsInitialValues(additionalDetails),
+      }));
+      initializedStepsRef.current[activeTabIndex] = true;
+    } else if (workExperience && activeTabIndex === 3) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...workExperienceInitialValues(workExperience),
+      }));
+      initializedStepsRef.current[activeTabIndex] = true;
+    } else if (bankDetails && activeTabIndex === 4) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...payrollInitialValues(bankDetails),
+      }));
+      initializedStepsRef.current[activeTabIndex] = true;
+    } else if (reportingManagerDetails && activeTabIndex === 5) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...assignReportingManagerInitialValues(reportingManagerDetails),
+      }));
+      initializedStepsRef.current[activeTabIndex] = true;
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    basicDetails,
+    familyDetails,
+    additionalDetails,
+    workExperience,
+    bankDetails,
+    reportingManagerDetails,
+    activeTabIndex,
+  ]);
+
+  return (
+    <FormSlider
+      steps={TABS}
+      isBackClick={isBackClick}
+      step={activeTabIndex}
+      containerProps={{
+        sx: {
+          p: 0,
+        },
+      }}
+    >
+      {basicDetailsLoading ||
+      familyDetailsLoading ||
+      additionalDetailsLoading ||
+      workExperienceLoading ||
+      bankDetailsLoading ||
+      reportingManagerDetailsLoading ? (
+        <LoadingScreen />
+      ) : (
+        <Grid container spacing={2} p={2}>
+          {' '}
+          {allFields[activeTabIndex].map((field: FieldsType, index: number) => (
+            <Grid
+              size={{
+                xs: [1, 2, 3].includes(activeTabIndex) ? 12 : 4,
+                md: [1, 2, 3].includes(activeTabIndex) ? 12 : 4,
+              }}
+              key={field.name}
+              {...field.gridProps}
+              mb="15px"
+            >
+              {field.renderComp ? (
+                field.renderComp({
+                  formik,
+                  field,
+                  editData,
+                })
+              ) : field.type === 'date' ? (
+                <ShakingTextField
+                  error={
+                    formik.touched[field.name as keyof typeof formik.values] &&
+                    Boolean(formik.errors[field.name as keyof typeof formik.values])
+                  }
+                >
+                  <DatePicker
+                    label={field.label}
+                    name={field.name}
+                    // @ts-ignore
+                    value={formik.values[field.name as number] as any}
+                    format="DD-MM-YYYY"
+                    onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                    sx={{
+                      ...((field?.sx as any) || {}),
+                    }}
+                    disabled={!isEdit}
+                    slotProps={{
+                      textField: {
+                        placeholder: field.placeholder,
+                        fullWidth: true,
+                        size: 'small',
+                        helperText:
+                          formik.touched[field.name as keyof typeof formik.values] &&
+                          formik.errors[field.name as keyof typeof formik.values]
+                            ? String(formik.errors[field.name as keyof typeof formik.values])
+                            : undefined,
+                        error:
+                          formik.touched[field.name as keyof typeof formik.values] &&
+                          Boolean(formik.errors[field.name as keyof typeof formik.values]),
+                      },
+                    }}
+                  />
+                </ShakingTextField>
+              ) : (
+                <ShakingTextField
+                  error={
+                    formik.touched[field.name as keyof typeof formik.values] &&
+                    Boolean(formik.errors[field.name as keyof typeof formik.values])
+                  }
+                >
+                  <TextField
+                    key={field.name}
+                    type={field.type}
+                    size="small"
+                    label={field.label}
+                    name={field.name}
+                    disabled={!isEdit}
+                    placeholder={field.placeholder}
+                    value={formik.values[field.name as keyof typeof formik.values]}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={
+                      formik.touched[field.name as keyof typeof formik.values] &&
+                      Boolean(formik.errors[field.name as keyof typeof formik.values])
+                    }
+                    helperText={
+                      formik.touched[field.name as keyof typeof formik.values] &&
+                      formik.errors[field.name as keyof typeof formik.values]
+                        ? String(formik.errors[field.name as keyof typeof formik.values])
+                        : undefined
+                    }
+                    fullWidth
+                    sx={{ ...(field?.sx || {}) }}
+                    {...(field?.otherProps || {})}
+                  />
+                </ShakingTextField>
+              )}
+            </Grid>
+          ))}{' '}
+        </Grid>
+      )}
+    </FormSlider>
+  );
+};

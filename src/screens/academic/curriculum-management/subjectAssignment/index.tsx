@@ -46,7 +46,6 @@ const Subject = () => {
       id: 'math-assign-id',
       status: PublishUnpublishStatusType.Draft,
       subjectType: 0,
-      academicMediumId: 'medium-id',
       subjects: [
         {
           assignedId: 'math-assigned-01',
@@ -68,7 +67,6 @@ const Subject = () => {
       id: 'science-assign-id',
       status: PublishUnpublishStatusType.Draft,
       subjectType: 0,
-      academicMediumId: 'medium-id',
       subjects: [
         {
           assignedId: 'sci-assigned-01',
@@ -90,7 +88,6 @@ const Subject = () => {
       id: 'tech-fitness-group-id',
       status: PublishUnpublishStatusType.Draft,
       subjectType: 1,
-      academicMediumId: 'medium-id',
       electiveGroupName: 'Tech & Fitness Group',
       electiveGroupId: 'tech-fitness-group-id',
       color: '#4169E1',
@@ -129,7 +126,6 @@ const Subject = () => {
       id: 'lang-group-id',
       status: PublishUnpublishStatusType.Draft,
       subjectType: 1,
-      academicMediumId: 'medium-id',
       electiveGroupName: 'Language Enrichment Group',
       electiveGroupId: 'lang-group-id',
       color: '#FF4500',
