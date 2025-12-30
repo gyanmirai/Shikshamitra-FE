@@ -1,7 +1,11 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { Grid } from '@mui/material';
+import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
@@ -24,7 +28,7 @@ export default function ClassroomAvailabilityReport() {
   });
 
   const allRoomIds = roomOptions;
-
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   return (
     <ReportForm onSubmit={formik.handleSubmit}>
       <Grid container spacing={2}>
@@ -72,6 +76,8 @@ export default function ClassroomAvailabilityReport() {
           <ShakingTextField error={!!(formik.touched.date && formik.errors.date)}>
             <DatePicker
               label="Select Date"
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               value={formik.values.date}
               onChange={(newValue) => formik.setFieldValue('date', newValue)}
               slotProps={{

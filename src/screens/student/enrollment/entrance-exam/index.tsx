@@ -70,7 +70,7 @@ dayjs.extend(isoWeek);
 const EntranceExamScreen = () => {
   // Search params hook for view state management
   // const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
-
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State for managing edit data and move operations
   const [editData, setEditData] = useState<any | null>(null);
   // State for storing the ID of the student to be moved to admission
@@ -224,6 +224,8 @@ const EntranceExamScreen = () => {
             label="Start Date"
             format="DD-MM-YYYY"
             value={startDate}
+            minDate={dayjs(currentYear?.startDate)}
+            maxDate={dayjs(currentYear?.endDate)}
             slotProps={{ textField: { sx: { width: '250px' }, size: 'small' } }}
             views={['year', 'month', 'day']}
             onChange={(value) => {
@@ -234,6 +236,8 @@ const EntranceExamScreen = () => {
             label="End Date"
             value={endDate}
             format="DD-MM-YYYY"
+            minDate={dayjs(currentYear?.startDate)}
+            maxDate={dayjs(currentYear?.endDate)}
             views={['year', 'month', 'day']}
             slotProps={{ textField: { sx: { width: '250px' }, size: 'small' } }}
             onChange={(value) => {

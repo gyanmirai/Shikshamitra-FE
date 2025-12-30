@@ -1,6 +1,10 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Grid, TextField, Autocomplete } from '@mui/material';
 
@@ -28,6 +32,8 @@ export default function MonthlyPayrollSummaryReport() {
     },
   });
 
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   return (
     <ReportForm onSubmit={formik.handleSubmit}>
       <Grid container spacing={2}>
@@ -50,7 +56,7 @@ export default function MonthlyPayrollSummaryReport() {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Select Employees"
+                label="Select Employees *"
                 error={formik.touched.employees && Boolean(formik.errors.employees)}
                 helperText={formik.touched.employees && (formik.errors.employees as string)}
               />
@@ -73,7 +79,7 @@ export default function MonthlyPayrollSummaryReport() {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Select Departments"
+                label="Select Departments *"
                 error={formik.touched.departments && Boolean(formik.errors.departments)}
                 helperText={formik.touched.departments && (formik.errors.departments as string)}
               />
@@ -97,7 +103,7 @@ export default function MonthlyPayrollSummaryReport() {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Select Status"
+                label="Select Status *"
                 error={formik.touched.statuses && Boolean(formik.errors.statuses)}
                 helperText={formik.touched.statuses && (formik.errors.statuses as string)}
               />
@@ -107,6 +113,8 @@ export default function MonthlyPayrollSummaryReport() {
         <Grid size={{ xs: 12, md: 6 }}>
           <DatePicker
             label="Select Month"
+            minDate={dayjs(currentYear?.startDate)}
+            maxDate={dayjs(currentYear?.endDate)}
             views={['month', 'year']}
             value={formik.values.month}
             onChange={(newValue) => formik.setFieldValue('month', newValue)}

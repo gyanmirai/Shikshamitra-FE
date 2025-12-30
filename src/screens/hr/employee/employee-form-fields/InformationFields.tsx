@@ -1,8 +1,10 @@
+import type { RootState } from 'src/redux/store';
 import type { GridProps, PaperProps } from '@mui/material';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
+import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -202,6 +204,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
   const handleCancel = () => {
     // formik.resetForm();
   };
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   return (
     <Box>
@@ -622,6 +626,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             error={formik.touched.dateOfJoining && Boolean(formik.errors.dateOfJoining)}
           >
             <DatePicker
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               label="Date of Joining *"
               value={formik.values.dateOfJoining}
               onChange={(value) => formik.setFieldValue('dateOfJoining', value)}

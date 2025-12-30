@@ -45,7 +45,7 @@ export default function PayrollReconciliationReport() {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Select Employees"
+                label="Select Employees *"
                 error={formik.touched.employees && Boolean(formik.errors.employees)}
                 helperText={formik.touched.employees && (formik.errors.employees as string)}
               />
@@ -68,7 +68,7 @@ export default function PayrollReconciliationReport() {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Select Departments"
+                label="Select Departments *"
                 error={formik.touched.departments && Boolean(formik.errors.departments)}
                 helperText={formik.touched.departments && (formik.errors.departments as string)}
               />

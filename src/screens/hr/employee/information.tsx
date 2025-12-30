@@ -31,6 +31,7 @@ import {
 
 import type { RootState } from 'src/redux/store';
 
+import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { LoadingScreen } from 'src/components/loading-screen';
 
@@ -372,6 +373,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       setSubmitting(false);
     },
   });
+  const currentYear = useSelector((state: RootState) => state.currentYear);
   return (
     <Box
     // sx={{

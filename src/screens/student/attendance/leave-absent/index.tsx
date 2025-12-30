@@ -519,6 +519,8 @@ const LeaveRequestForm = ({
         }
       },
     });
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <DialogScrollContent>
@@ -650,6 +652,8 @@ const LeaveRequestForm = ({
                     label={values.isHalfDay ? 'Date *' : 'Start Date *'}
                     onChange={(value) => setFieldValue('startDate', value)}
                     format="DD-MM-YYYY"
+                    minDate={dayjs(currentYear?.startDate)}
+                    maxDate={dayjs(currentYear?.endDate)}
                     slotProps={{
                       textField: {
                         size: 'small',
@@ -669,6 +673,8 @@ const LeaveRequestForm = ({
                     <DatePicker
                       label="End Date *"
                       format="DD-MM-YYYY"
+                      minDate={dayjs(currentYear?.startDate)}
+                      maxDate={dayjs(currentYear?.endDate)}
                       onChange={(value) => setFieldValue('endDate', value)}
                       slotProps={{
                         textField: {

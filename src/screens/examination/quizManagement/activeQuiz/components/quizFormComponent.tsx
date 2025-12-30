@@ -53,10 +53,11 @@ const QuizInformation = ({ formik }: any) => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
   const [, setClasses] = useState<string>('');
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+  const { currentMedium: medium, currentYear } = useSelector(
+    (state: RootState) => state.globalState
+  );
 
   // Update classes when organization changes
   useEffect(() => {
