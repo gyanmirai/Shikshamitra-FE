@@ -49,7 +49,7 @@ const recentRequests = [
     name: 'Jinjala Dharmik',
     type: 'Casual Leave',
     days: '2 Days',
-    status: EmployeeAttendanceStatus.All, // 3
+    status: EmployeeAttendanceStatus.HalfDayLeave, // 3
   },
 ];
 export default function LeaveManagementCard() {
