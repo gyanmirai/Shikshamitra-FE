@@ -60,11 +60,12 @@ const LeaveType = () => {
   const dispatch = useDispatch();
   const leaveTypeDialog = useBoolean(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
   const { data: leavePolicyData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeTypeQuery,
+    params: mediumStageId?.id,
   });
-
   const [deleteLeavePolicy, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteEmployeeTypeMutation,
@@ -198,11 +199,11 @@ const LeaveType = () => {
               </Box>
             ),
           },
-          {
-            id: 'description',
-            label: 'Description',
-            render: (value) => value || '-',
-          },
+          // {
+          //   id: 'description',
+          //   label: 'Description',
+          //   render: (value) => value || '-',
+          // },
           //  {
           //   id: 'leaveTypeShortName',
           //   label: 'Leave Type Short Name',
@@ -312,6 +313,8 @@ const LeaveTypeForm = ({
     currentQueryAndMutation: useAddEmployeeTypeMutation,
   });
 
+  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
+
   const [updateLeavePolicy, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateEmployeeTypeMutation,
@@ -347,12 +350,15 @@ const LeaveTypeForm = ({
 
         if (editData) {
           await updateLeavePolicy({
-            id: editData.id,
+            leaveTypeId: editData.id,
             body: payload,
           });
           shikshaMitraToast.success({ message: 'Leave Type updated successfully' });
         } else {
-          await addLeavePolicy(payload);
+          await addLeavePolicy({
+            mediumStageId: mediumStageId?.id,
+            body: payload,
+          });
           shikshaMitraToast.success({ message: 'Leave Type added successfully' });
         }
         handleClose(null, true);

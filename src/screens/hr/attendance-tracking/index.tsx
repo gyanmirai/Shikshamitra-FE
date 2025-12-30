@@ -124,120 +124,7 @@ const AttendanceTrackingScreen = () => {
 };
 
 export default AttendanceTrackingScreen;
-const datewiseData = [
-  {
-    id: 1,
-    attendanceDate: '2024-03-01',
-    timeIn: '09:00 AM',
-    timeOut: '06:00 PM',
-    totalHoursWorked: '09H 00M',
-    status: 'Present',
-    employeeName: 'Kumar Rajesh Mohan',
-    contactNo: '+91 98765 43210',
-    employeeCode: 'EMP001',
-  },
-  {
-    id: 2,
-    attendanceDate: '2024-03-02',
-    timeIn: '09:30 AM',
-    timeOut: '05:30 PM',
-    totalHoursWorked: '08H 00M',
-    status: 'Present',
-    employeeName: 'Sharma Priya Raj',
-    contactNo: '+91 98765 43211',
-    employeeCode: 'EMP002',
-  },
-  {
-    id: 3,
-    attendanceDate: '2024-03-03',
-    timeIn: '',
-    timeOut: '',
-    totalHoursWorked: '__ __',
-    status: 'Absent',
-    employeeName: 'Patel Amit Naresh',
-    contactNo: '+91 98765 43212',
-    employeeCode: 'EMP003',
-    remarks:
-      'The employee was marked absent for the day without any prior communication. We are awaiting a response or formal leave request to update the records accordingly.',
-  },
-  {
-    id: 4,
-    attendanceDate: '2024-03-04',
-    timeIn: '09:15 AM',
-    timeOut: '02:15 PM',
-    totalHoursWorked: '05H 00M',
-    status: 'Half day',
-    employeeName: 'Gupta Sneha Ramesh',
-    contactNo: '+91 98765 43213',
-    employeeCode: 'EMP004',
-  },
-  {
-    id: 5,
-    attendanceDate: '2024-03-05',
-    timeIn: '09:00 AM',
-    timeOut: '06:00 PM',
-    totalHoursWorked: '09H 00M',
-    status: 'Present',
-    employeeName: 'Singh Vikram Pratap',
-    contactNo: '+91 98765 43214',
-    employeeCode: 'EMP005',
-  },
-  {
-    id: 6,
-    attendanceDate: '2024-03-06',
-    timeIn: '09:45 AM',
-    timeOut: '06:45 PM',
-    totalHoursWorked: '09H 00M',
-    status: 'Present',
-    employeeName: 'Verma Neha Suresh',
-    contactNo: '+91 98765 43215',
-    employeeCode: 'EMP006',
-  },
-  {
-    id: 7,
-    attendanceDate: '2024-03-07',
-    timeIn: '',
-    timeOut: '',
-    totalHoursWorked: '__ __',
-    status: 'Absent',
-    employeeName: 'Joshi Arun Kumar',
-    contactNo: '+91 98765 43216',
-    employeeCode: 'EMP007',
-  },
-  {
-    id: 8,
-    attendanceDate: '2024-03-08',
-    timeIn: '09:00 AM',
-    timeOut: '06:00 PM',
-    totalHoursWorked: '09H 00M',
-    status: 'Present',
-    employeeName: 'Reddy Meera Krishna',
-    contactNo: '+91 98765 43217',
-    employeeCode: 'EMP008',
-  },
-  {
-    id: 9,
-    attendanceDate: '2024-03-09',
-    timeIn: '09:30 AM',
-    timeOut: '02:30 PM',
-    totalHoursWorked: '05H 00M',
-    status: 'Half day',
-    employeeName: 'Malhotra Rahul Dinesh',
-    contactNo: '+91 98765 43218',
-    employeeCode: 'EMP009',
-  },
-  {
-    id: 10,
-    attendanceDate: '2024-03-10',
-    timeIn: '09:00 AM',
-    timeOut: '06:00 PM',
-    totalHoursWorked: '09H 00M',
-    status: 'Present',
-    employeeName: 'Desai Anita Mahesh',
-    contactNo: '+91 98765 43219',
-    employeeCode: 'EMP010',
-  },
-];
+// Mock data removed - now using API data
 const DateWise = ({
   searchParams,
   setSearchParams,
@@ -517,11 +404,11 @@ const DateWise = ({
           //     );
           //   },
           // },
-          { id: 'employeeName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
-          { id: 'employeeCode', label: 'Employee Code', align: 'left', minWidth: '150px' },
+          { id: 'fullName', label: 'Name', minWidth: '10vw', align: 'left', sticky: true },
+          { id: 'employeeIdentifier', label: 'Employee Code', align: 'left', minWidth: '150px' },
           { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '150px' },
           {
-            id: 'timeIn',
+            id: 'inTime',
             label: 'In-Time',
             align: 'left',
             minWidth: '120px',
@@ -530,7 +417,7 @@ const DateWise = ({
             },
           },
           {
-            id: 'timeOut',
+            id: 'outTime',
             label: 'Out-Time',
             align: 'left',
             minWidth: '120px',
@@ -615,8 +502,8 @@ const DateWise = ({
         ]}
         data={
           tabs.value === 'All'
-            ? datewiseData
-            : datewiseData.filter((item) => item.status === tabs.value)
+            ? attendanceData?.items || []
+            : attendanceData?.items?.filter((item: any) => item.status === tabs.value) || []
         }
       />
       {sendInstantNotificationDialogValue.value && (
@@ -631,132 +518,7 @@ const DateWise = ({
   );
 };
 
-const employeeWiseData = [
-  {
-    id: 1,
-    attendanceDate: '2024-03-01',
-    day: 'Friday',
-    timeIn: '08:30 AM',
-    timeOut: '05:30 PM',
-    totalHoursWorked: '09H 00M',
-    status: 'Present',
-    employeeName: 'Aditya Sharma',
-    contactNo: '+91 87654 32109',
-    employeeCode: 'EMP101',
-  },
-  {
-    id: 2,
-    attendanceDate: '2024-03-02',
-    day: 'Saturday',
-    timeIn: '09:15 AM',
-    timeOut: '06:15 PM',
-    totalHoursWorked: '09H 00M',
-    status: 'Present',
-    employeeName: 'Priya Patel',
-    contactNo: '+91 98765 43210',
-    employeeCode: 'EMP102',
-  },
-  {
-    id: 3,
-    attendanceDate: '2024-03-03',
-    day: 'Sunday',
-    timeIn: '',
-    timeOut: '',
-    totalHoursWorked: '__ __',
-    status: 'Absent',
-    employeeName: 'Rajesh Kumar',
-    contactNo: '+91 76543 21098',
-    employeeCode: 'EMP103',
-    description: 'Medical emergency - Family member hospitalized',
-  },
-  {
-    id: 4,
-    attendanceDate: '2024-03-04',
-    day: 'Monday',
-    timeIn: '08:45 AM',
-    timeOut: '02:45 PM',
-    totalHoursWorked: '08H 00M',
-    status: 'Half day',
-    employeeName: 'Sneha Gupta',
-    contactNo: '+91 65432 10987',
-    employeeCode: 'EMP104',
-    description: 'Doctor appointment in afternoon',
-  },
-  {
-    id: 5,
-    attendanceDate: '2024-03-05',
-    day: 'Tuesday',
-    timeIn: '09:00 AM',
-    timeOut: '06:00 PM',
-    totalHoursWorked: '12H 00M',
-    status: 'Present',
-    employeeName: 'Vikram Singh',
-    contactNo: '+91 54321 09876',
-    employeeCode: 'EMP105',
-  },
-  {
-    id: 6,
-    attendanceDate: '2024-03-06',
-    day: 'Wednesday',
-    timeIn: '08:15 AM',
-    timeOut: '05:15 PM',
-    totalHoursWorked: '09H 00M',
-    status: 'Present',
-    employeeName: 'Meera Reddy',
-    contactNo: '+91 43210 98765',
-    employeeCode: 'EMP106',
-  },
-  {
-    id: 7,
-    attendanceDate: '2024-03-07',
-    day: 'Thursday',
-    timeIn: '',
-    timeOut: '',
-    totalHoursWorked: '__ __',
-    status: 'Absent',
-    employeeName: 'Arjun Malhotra',
-    contactNo: '+91 32109 87654',
-    employeeCode: 'EMP107',
-    description: 'Personal leave - Family function',
-  },
-  {
-    id: 8,
-    attendanceDate: '2024-03-08',
-    day: 'Friday',
-    timeIn: '09:30 AM',
-    timeOut: '06:30 PM',
-    totalHoursWorked: '09H 00M',
-    status: 'Present',
-    employeeName: 'Neha Verma',
-    contactNo: '+91 21098 76543',
-    employeeCode: 'EMP108',
-  },
-  {
-    id: 9,
-    attendanceDate: '2024-03-09',
-    day: 'Saturday',
-    timeIn: '08:45 AM',
-    timeOut: '02:45 PM',
-    totalHoursWorked: '06H 00M',
-    status: 'Half day',
-    employeeName: 'Karan Joshi',
-    contactNo: '+91 10987 65432',
-    employeeCode: 'EMP109',
-    description: 'Left early due to personal emergency',
-  },
-  {
-    id: 10,
-    attendanceDate: '2024-03-10',
-    day: 'Sunday',
-    timeIn: '09:00 AM',
-    timeOut: '06:00 PM',
-    totalHoursWorked: '09H 00M',
-    status: 'Present',
-    employeeName: 'Anita Desai',
-    contactNo: '+91 09876 54321',
-    employeeCode: 'EMP110',
-  },
-];
+// Mock data removed - now using API data
 
 const EmployeeWise = ({
   searchParams,
@@ -1198,8 +960,8 @@ const EmployeeWise = ({
           ]}
           data={
             tabs.value === 'All'
-              ? employeeWiseData
-              : employeeWiseData.filter((item) => item.status === tabs.value)
+              ? attendanceData?.items || []
+              : attendanceData?.items?.filter((item: any) => item.status === tabs.value) || []
           }
         />
       )}
