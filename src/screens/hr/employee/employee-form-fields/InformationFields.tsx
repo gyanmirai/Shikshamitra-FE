@@ -9,12 +9,12 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
-import { ReligionTypeArray } from 'src/enums/religion';
 import { fileToBase64 } from 'src/utils/file-to-base64';
 import { motion, AnimatePresence } from 'framer-motion';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { BloodGroup, BloodGroupArray } from 'src/enums/blood-group';
+import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
@@ -402,8 +402,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     name="religion"
                   >
                     {ReligionTypeArray.map((item, index) => (
-                      <MenuItem key={index} value={item}>
-                        {item}
+                      <MenuItem key={index} value={ReligionType[index]}>
+                        {ReligionType[index]}
                       </MenuItem>
                     ))}
                   </Select>

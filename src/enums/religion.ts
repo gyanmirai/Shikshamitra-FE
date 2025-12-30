@@ -1,13 +1,13 @@
 export enum ReligionType {
-  Hinduism = 'Hinduism',
-  Islam = 'Islam',
-  Christianity = 'Christianity',
-  Sikhism = 'Sikhism',
-  Buddhism = 'Buddhism',
-  Jainism = 'Jainism',
-  Judaism = 'Judaism',
-  Zoroastrianism = 'Zoroastrianism',
-  Other = 'Other',
+  Hinduism,
+  Islam,
+  Christianity,
+  Sikhism,
+  Buddhism,
+  Jainism,
+  Judaism,
+  Zoroastrianism,
+  Other,
 }
 
 export const ReligionTypeArray = Object.values(ReligionType);
