@@ -41,9 +41,8 @@ import RenderInquiryPrefrance from './RenderInquiryPrefrance';
 import type { FieldsType } from './type';
 
 const RenderGeneralFormFields = (props: any) => {
-  const { formik, isMainForm = false, editData } = props;
+  const { formik, isMainForm = false } = props;
 
-  const { resetForm, initialValues } = formik;
   const isGeneralFormEditable = useBoolean(isMainForm);
   const isStudentDetailsEditable = useBoolean(isMainForm);
   const isContactDetailsEditable = useBoolean(isMainForm);
@@ -285,16 +284,18 @@ const RenderGeneralFormFields = (props: any) => {
                 <RadioGroup
                   row
                   name="gender"
-                  value={formik.values.gender?.toString()}
+                  value={formik.values.gender ?? ''}
                   onChange={(e) => {
                     formik.setFieldValue('gender', Number(e.target.value));
+                    formik.setFieldTouched('gender', true);
                   }}
+                  onBlur={formik.handleBlur}
                 >
                   {GenderTypeArray.map((i) => (
                     <FormControlLabel
                       key={i}
-                      value={i.toString()}
-                      control={<Radio size="small" />}
+                      value={i}
+                      control={<Radio size="small" checked={i === formik.values.gender} />}
                       label={GenderType[i]}
                       disabled={!isStudentDetailsEditable.value}
                     />

@@ -47,6 +47,7 @@ import {
   Typography,
   FormControl,
   DialogActions,
+  FormHelperText,
   InputAdornment,
   FormControlLabel,
 } from '@mui/material';
@@ -209,6 +210,7 @@ const InquiryForm = ({
     errors,
     touched,
     handleChange,
+    handleBlur,
     setFieldValue,
     values,
     handleSubmit,
@@ -219,6 +221,7 @@ const InquiryForm = ({
     initialValues: initialInquiryValues,
     validationSchema: inquiryValidationSchema,
     onSubmit,
+    enableReinitialize: true,
     validateOnChange: true,
     validateOnBlur: true,
   });
@@ -303,6 +306,18 @@ const InquiryForm = ({
               display: 'flex',
               flexDirection: 'column',
             },
+            '& .Mui-error .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#ff563d !important',
+            },
+            '& .Mui-disabled.Mui-error .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#ff563d !important',
+            },
+            '& .Mui-disabled.Mui-error .MuiInputLabel-root': {
+              color: '#ff563d !important',
+            },
+            '& .Mui-disabled.Mui-error .MuiFormHelperText-root': {
+              color: '#ff563d !important',
+            },
           }}
         >
           {/** Basic Details Section */}
@@ -340,6 +355,7 @@ const InquiryForm = ({
                           setFieldValue('class', '');
                           setFieldValue('academicYear', value);
                         }}
+                        onBlur={handleBlur}
                         error={!!(touched.academicYear && errors.academicYear) || false}
                         helperText={(touched.academicYear && errors.academicYear) || ''}
                         formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
@@ -361,6 +377,7 @@ const InquiryForm = ({
                           setFieldValue('class', '');
                           setFieldValue('board', value);
                         }}
+                        onBlur={handleBlur}
                         error={!!(touched.board && errors.board) || false}
                         helperText={(touched.board && errors.board) || ''}
                         formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
@@ -387,6 +404,7 @@ const InquiryForm = ({
                           setFieldTouched('medium', false);
                           await getClassByMedium(value);
                         }}
+                        onBlur={handleBlur}
                         error={!!(touched.medium && errors.medium) || false}
                         helperText={(touched.medium && errors.medium) || ''}
                         formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
@@ -407,6 +425,7 @@ const InquiryForm = ({
                         onChange={(value) => {
                           setFieldValue('class', value);
                         }}
+                        onBlur={handleBlur}
                         error={!!(touched.class && errors.class) || false}
                         helperText={(touched.class && errors.class) || ''}
                         formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
@@ -502,40 +521,61 @@ const InquiryForm = ({
                   </Grid>
                   <Grid size={{ xs: 12, md: 4 }}>
                     <ShakingTextField error={!!(touched.gender && errors.gender) || false}>
-                      <FormControl
-                        fullWidth
-                        sx={{ flexDirection: 'row', alignItems: 'center', gap: '8px' }}
-                      >
-                        <FormLabel
-                          id="gender-radio-group"
+                      <FormControl fullWidth error={!!(touched.gender && errors.gender)}>
+                        <Box
                           sx={{
-                            color: (theme) =>
-                              touched.gender && errors.gender
-                                ? '#ff563d !important'
-                                : `${theme.vars.palette.text.primary} !important`,
-                            mr: 1,
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: '8px',
                           }}
                         >
-                          Gender *
-                        </FormLabel>
-                        <RadioGroup
-                          row
-                          aria-labelledby="gender-radio-group"
-                          name="gender"
-                          value={values.gender}
-                          onChange={handleChange}
-                        >
-                          <FormControlLabel
-                            value={0}
-                            control={<Radio size="small" />}
-                            label="Male"
-                          />
-                          <FormControlLabel
-                            value={1}
-                            control={<Radio size="small" />}
-                            label="Female"
-                          />
-                        </RadioGroup>
+                          <FormLabel
+                            id="gender-radio-group"
+                            sx={{
+                              color: (theme) =>
+                                touched.gender && errors.gender
+                                  ? '#ff563d !important'
+                                  : `${theme.vars.palette.text.primary} !important`,
+                              mr: 1,
+                            }}
+                          >
+                            Gender *
+                          </FormLabel>
+                          <RadioGroup
+                            row
+                            aria-labelledby="gender-radio-group"
+                            name="gender"
+                            value={
+                              values.gender !== undefined && values.gender !== null
+                                ? String(values.gender)
+                                : ''
+                            }
+                            onChange={(e) => {
+                              setFieldValue('gender', e.target.value);
+                              setFieldTouched('gender', true);
+                            }}
+                            onBlur={handleBlur}
+                          >
+                            <FormControlLabel
+                              value="0"
+                              control={
+                                <Radio size="small" checked={String(values.gender) === '0'} />
+                              }
+                              label="Male"
+                            />
+                            <FormControlLabel
+                              value="1"
+                              control={
+                                <Radio size="small" checked={String(values.gender) === '1'} />
+                              }
+                              label="Female"
+                            />
+                          </RadioGroup>
+                        </Box>
+                        {touched.gender && errors.gender && (
+                          <FormHelperText sx={{ m: 0 }}>{errors.gender}</FormHelperText>
+                        )}
                       </FormControl>
                     </ShakingTextField>
                   </Grid>

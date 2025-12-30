@@ -16,10 +16,12 @@ import {
   Box,
   Grid,
   Divider,
+  Checkbox,
   TextField,
   Typography,
   Autocomplete,
   InputAdornment,
+  FormControlLabel,
 } from '@mui/material';
 
 function MotherOfficeAddressComponent(props: any) {
@@ -283,6 +285,42 @@ function MotherAddressComponent(props: any) {
     <Grid container spacing={2}>
       <Grid size={12}>
         <Typography variant="subtitle1">Local Address</Typography>
+        <FormControlLabel
+          disabled={!!disabled}
+          control={
+            <Checkbox
+              checked={formik.values.sameAsFatherForLocal}
+              size="small"
+              disabled={!!disabled}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              onChange={(e) => {
+                formik.setFieldValue('sameAsFatherForLocal', e.target.checked);
+                formik.setFieldValue('isOpenLocalMotherAddress', !e.target.checked);
+                if (e.target.checked) {
+                  formik.setFieldValue('motherAddress1', formik.values.fatherAddress1);
+                  formik.setFieldValue('motherAddress2', formik.values.fatherAddress2);
+                  formik.setFieldValue('motherAddress3', formik.values.fatherAddress3);
+                  formik.setFieldValue('motherLocalCountry', formik.values.fatherLocalCountry);
+                  formik.setFieldValue('motherLocalState', formik.values.fatherLocalState);
+                  formik.setFieldValue('motherLocalCity', formik.values.fatherLocalCity);
+                  formik.setFieldValue('motherLocalPincode', formik.values.fatherLocalPincode);
+                } else {
+                  formik.setFieldValue('motherAddress1', '');
+                  formik.setFieldValue('motherAddress2', '');
+                  formik.setFieldValue('motherAddress3', '');
+                  formik.setFieldValue('motherLocalCountry', null);
+                  formik.setFieldValue('motherLocalState', null);
+                  formik.setFieldValue('motherLocalCity', null);
+                  formik.setFieldValue('motherLocalPincode', '');
+                }
+              }}
+              name="sameAsLocal"
+            />
+          }
+          label="Same as Father Local Address"
+        />
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
@@ -397,6 +435,42 @@ function GuardianAddressComponent(props: any) {
     <Grid container spacing={2}>
       <Grid size={12}>
         <Typography variant="subtitle1">Local Address</Typography>
+        <FormControlLabel
+          disabled={!!disabled}
+          control={
+            <Checkbox
+              checked={formik.values.sameAsMotherForLocal}
+              size="small"
+              disabled={!!disabled}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              onChange={(e) => {
+                formik.setFieldValue('sameAsMotherForLocal', e.target.checked);
+                formik.setFieldValue('isOpenLocalMotherAddress', !e.target.checked);
+                if (e.target.checked) {
+                  formik.setFieldValue('guardianAddress1', formik.values.motherAddress1);
+                  formik.setFieldValue('guardianAddress2', formik.values.motherAddress2);
+                  formik.setFieldValue('guardianAddress3', formik.values.motherAddress3);
+                  formik.setFieldValue('guardianLocalCountry', formik.values.motherLocalCountry);
+                  formik.setFieldValue('guardianLocalState', formik.values.motherLocalState);
+                  formik.setFieldValue('guardianLocalCity', formik.values.motherLocalCity);
+                  formik.setFieldValue('guardianLocalPincode', formik.values.motherLocalPincode);
+                } else {
+                  formik.setFieldValue('guardianAddress1', '');
+                  formik.setFieldValue('guardianAddress2', '');
+                  formik.setFieldValue('guardianAddress3', '');
+                  formik.setFieldValue('guardianLocalCountry', null);
+                  formik.setFieldValue('guardianLocalState', null);
+                  formik.setFieldValue('guardianLocalCity', null);
+                  formik.setFieldValue('guardianLocalPincode', '');
+                }
+              }}
+              name="sameAsLocal"
+            />
+          }
+          label="Same as Mother Local Address"
+        />
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
@@ -885,6 +959,42 @@ function RenderFamilyInformation(props: any) {
         </Grid>
         <Grid size={12}>
           <Typography variant="subtitle1">Local Address</Typography>
+          <FormControlLabel
+            disabled={!isFatherDetailsEditable.value}
+            control={
+              <Checkbox
+                checked={formik.values.sameAsStudentForLocal}
+                size="small"
+                disabled={!isFatherDetailsEditable.value}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                onChange={(e) => {
+                  formik.setFieldValue('sameAsStudentForLocal', e.target.checked);
+                  formik.setFieldValue('isOpenLocalFatherAddress', !e.target.checked);
+                  if (e.target.checked) {
+                    formik.setFieldValue('fatherAddress1', formik.values.addressLine1);
+                    formik.setFieldValue('fatherAddress2', formik.values.addressLine2);
+                    formik.setFieldValue('fatherAddress3', formik.values.addressLine3);
+                    formik.setFieldValue('fatherLocalCountry', formik.values.country);
+                    formik.setFieldValue('fatherLocalState', formik.values.state);
+                    formik.setFieldValue('fatherLocalCity', formik.values.city);
+                    formik.setFieldValue('fatherLocalPincode', formik.values.pinCode);
+                  } else {
+                    formik.setFieldValue('fatherAddress1', '');
+                    formik.setFieldValue('fatherAddress2', '');
+                    formik.setFieldValue('fatherAddress3', '');
+                    formik.setFieldValue('fatherLocalCountry', null);
+                    formik.setFieldValue('fatherLocalState', null);
+                    formik.setFieldValue('fatherLocalCity', null);
+                    formik.setFieldValue('fatherLocalPincode', '');
+                  }
+                }}
+                name="sameAsLocal"
+              />
+            }
+            label="Same as Student Local Address"
+          />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <ShakingTextField
@@ -971,7 +1081,7 @@ function RenderFamilyInformation(props: any) {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <TextField
             disabled={!isFatherDetailsEditable.value}
-            name="localPincode"
+            name="fatherLocalPincode"
             value={formik.values.fatherLocalPincode || ''}
             onChange={(e) => {
               let value = e.target.value.replace(/\D/g, '');
