@@ -44,13 +44,13 @@ import {
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 interface PayElement {
-  componentName: string;
-  componentType: string;
+  earningName: string;
+  calculationType: string;
   id: string;
   description: string;
   isEmployeeSpecific: boolean;
   isDependent: boolean;
-  dependName: string;
+  dependName: string; // Keeping this as it might be used for display, though 'calculatePercentageBasedOn' is the new standard
   dependent: {
     amount: number;
     percentage: boolean;
@@ -58,7 +58,10 @@ interface PayElement {
   };
   amount: number;
   amountOfPercentage: number;
-  isVisibleInPaySlip: boolean;
+  showOnPayslip: boolean;
+  isSameAmountForAll: boolean;
+  calculatePercentageBasedOn: string;
+  selectedEarningComponent: string;
 }
 
 const EarningComponent = () => {
@@ -129,7 +132,7 @@ const EarningComponent = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <b>{deleteInformation?.componentName}</b> Earning
+            Are you sure you want to delete <b>{deleteInformation?.earningName}</b> Earning
             Component?
           </>
         }
@@ -142,7 +145,7 @@ const EarningComponent = () => {
             onClick={async () => {
               await deleteEarningComponent(deleteInformation?.id).unwrap();
               shikshaMitraToast.success({
-                message: ` ${deleteInformation?.componentName} Earning Component deleted successfully`,
+                message: ` ${deleteInformation?.earningName} Earning Component deleted successfully`,
               });
               confirm.onFalse();
             }}
@@ -155,13 +158,18 @@ const EarningComponent = () => {
         tableId="earning-component"
         isLoading={getEarningComponentsLoading}
         columns={[
-          { id: 'componentName', label: 'Name', align: 'left', minWidth: '10vw' },
+          { id: 'earningName', label: 'Name', align: 'left', minWidth: '10vw' },
           { id: 'description', label: 'Description', align: 'left', minWidth: '10vw' },
-          { id: 'componentType', label: 'Component Type', align: 'left', minWidth: '10vw' },
-          { id: 'dependOn', label: 'Depends On', align: 'left', minWidth: '10vw' },
+          { id: 'calculationType', label: 'Component Type', align: 'left', minWidth: '10vw' },
+          {
+            id: 'calculatePercentageBasedOn',
+            label: 'Depends On',
+            align: 'left',
+            minWidth: '10vw',
+          },
           { id: 'amount', label: 'Amount', align: 'left', minWidth: '10vw' },
           {
-            id: 'visibleInPayslip',
+            id: 'showOnPayslip',
             label: 'Visible In Payslip',
             align: 'left',
             minWidth: '10vw',
@@ -215,7 +223,7 @@ const EarningComponent = () => {
               placement="right"
               title={
                 editData
-                  ? `Edit ${editData.name} component settings including type, dependencies and visibility`
+                  ? `Edit ${editData.earningName} component settings including type, dependencies and visibility`
                   : 'Configure salary components like basic pay, allowances, and other earnings, including type, dependencies, and payslip visibility.'
               }
             >
@@ -233,64 +241,70 @@ const EarningComponent = () => {
 export default EarningComponent;
 
 const componentTypes = ['Fixed', 'Percentage'];
-// Updated dependsOnOptions as requested
-const dependsOnOptions = [
-  'Basic Salary',
-  'Gross Salary',
-  'Net Salary',
-  'CTC',
-  'Allowances',
-  'Any custom salary component',
-];
-// Sample custom salary components for the additional dropdown when last option selected
-const customComponents = [
-  'Overtime Pay',
-  'Shift Allowance',
-  'Leave Encashment',
-  'Project Incentive',
-  'Travel Reimbursement',
-];
+const dependsOnOptions = ['GROSS', 'BASIC', 'CUSTOM_COMPONENT'];
 
 const validationSchema = Yup.object({
-  componentName: Yup.string().required('Component Name is required'),
+  earningName: Yup.string().required('Earning Name is required'),
   description: Yup.string(),
-  componentType: Yup.string().test(
+  calculationType: Yup.string().test(
     'required-if-fixed',
-    'Component Type is required',
-    function componentTypeRequired(value) {
-      const { isFixed } = this.parent;
-      return !isFixed || !!value;
+    'Calculation Type is required',
+    function calculationTypeRequired(value) {
+      const { isSameAmountForAll } = this.parent;
+      return !isSameAmountForAll || !!value;
     }
   ),
-  dependOn: Yup.string().test(
+  calculatePercentageBasedOn: Yup.string().test(
     'required-if-percentage',
-    'Depend On is required',
-    function dependOnRequired(value) {
-      const { isFixed, componentType } = this.parent;
-      if (!isFixed) return true;
-      if (componentType !== 'Percentage') return true;
+    'Calculate Percentage Based On is required',
+    function calculatePercentageBasedOnRequired(value) {
+      const { isSameAmountForAll, calculationType } = this.parent;
+      if (!isSameAmountForAll) return true;
+      if (calculationType !== 'Percentage') return true;
       return !!value;
     }
   ),
-  customComponent: Yup.string().test(
-    'required-if-custom-depend',
-    'Custom component is required',
-    function customComponentRequired(value) {
-      const { dependOn, isFixed, componentType } = this.parent;
-      if (!isFixed) return true;
-      if (componentType !== 'Percentage') return true;
-      if (dependOn !== 'Any custom salary component') return true;
-      return !!value;
-    }
-  ),
-  amount: Yup.string().test(
-    'required-if-fixed',
-    'Amount is required',
-    function amountRequired(value) {
-      const { isFixed } = this.parent;
-      return !isFixed || !!value;
-    }
-  ),
+  selectedEarningComponent: Yup.string()
+    .test(
+      'required-if-custom-depend',
+      'Select Earning Component is required',
+      function selectedEarningComponentRequired(value) {
+        const { calculatePercentageBasedOn, isSameAmountForAll, calculationType } = this.parent;
+        if (!isSameAmountForAll) return true;
+        if (calculationType !== 'Percentage') return true;
+        if (calculatePercentageBasedOn !== 'CUSTOM_COMPONENT') return true;
+        return !!value;
+      }
+    )
+    .nullable(),
+  amount: Yup.string()
+    .test('required-if-fixed', 'Amount is required', function amountRequired(value) {
+      const { isSameAmountForAll, calculationType } = this.parent;
+      if (!isSameAmountForAll) return true;
+      if (!value) {
+        if (calculationType === 'Percentage') {
+          return this.createError({ message: 'Percentage is required' });
+        }
+        return this.createError({ message: 'Amount is required' });
+      }
+      return true;
+    })
+    .test(
+      'percentage-range',
+      'Percentage must be between 0 and 100',
+      function percentageRange(value) {
+        const { isSameAmountForAll, calculationType } = this.parent;
+        if (!isSameAmountForAll) return true;
+        if (calculationType !== 'Percentage') return true;
+        if (!value) return true;
+
+        const num = parseFloat(value);
+        if (Number.isNaN(num)) return false;
+        if (num <= 0) return this.createError({ message: 'Percentage must be at least 1' });
+        if (num > 100) return this.createError({ message: 'Percentage must be at most 100' });
+        return true;
+      }
+    ),
 });
 
 const EarningComponentForm = ({
@@ -300,7 +314,6 @@ const EarningComponentForm = ({
   editData: any;
   handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
-  console.log('editData----', editData);
   const [addEarningComponent, { isLoading: addEarningComponentLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEarningComponentMutation,
@@ -312,14 +325,14 @@ const EarningComponentForm = ({
     });
   const formik = useFormik({
     initialValues: {
-      componentName: editData?.componentName || '',
+      earningName: editData?.earningName || '',
       description: editData?.description || '',
-      componentType: editData?.componentType || '',
-      dependOn: editData?.customComponent?.dependOn || '',
-      customComponent: editData?.customComponent?.id || null,
+      calculationType: editData?.calculationType || '',
+      calculatePercentageBasedOn: editData?.calculatePercentageBasedOn || '',
+      selectedEarningComponent: editData?.selectedEarningComponent || null,
       amount: editData?.amount || '',
-      visibleInPayslip: editData?.visibleInPayslip || true,
-      isFixed: editData ? editData?.isFixed : true,
+      showOnPayslip: editData?.showOnPayslip || true,
+      isSameAmountForAll: editData ? editData?.isSameAmountForAll : true,
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -328,26 +341,26 @@ const EarningComponentForm = ({
           await updateEarningComponent({
             id: editData.id,
             body: {
-              componentName: values.componentName,
+              earningName: values.earningName,
               description: values.description,
-              componentType: values.componentType,
-              dependOn: values.dependOn,
-              customComponentId: values.customComponent,
+              calculationType: values.calculationType,
+              calculatePercentageBasedOn: values.calculatePercentageBasedOn,
+              selectedEarningComponent: values.selectedEarningComponent,
               amount: values.amount,
-              visibleInPayslip: values.visibleInPayslip,
-              isFixed: values.isFixed,
+              showOnPayslip: values.showOnPayslip,
+              isSameAmountForAll: values.isSameAmountForAll,
             },
           }).unwrap();
         } else {
           await addEarningComponent({
-            componentName: values.componentName,
+            earningName: values.earningName,
             description: values.description,
-            componentType: values.componentType,
-            dependOn: values.dependOn,
-            customComponentId: values.customComponent,
+            calculationType: values.calculationType,
+            calculatePercentageBasedOn: values.calculatePercentageBasedOn,
+            selectedEarningComponent: values.selectedEarningComponent,
             amount: values.amount,
-            visibleInPayslip: values.visibleInPayslip,
-            isFixed: values.isFixed,
+            showOnPayslip: values.showOnPayslip,
+            isSameAmountForAll: values.isSameAmountForAll,
           }).unwrap();
         }
         handleClose(null, true);
@@ -362,12 +375,28 @@ const EarningComponentForm = ({
     currentQueryAndMutation: useGetEarningComponentsQuery,
   });
 
+  const getComponentTypeLabel = (type: string) => {
+    switch (type) {
+      case 'Fixed':
+        return 'Fixed Amount';
+      case 'Percentage':
+        return 'Percentage Based';
+      default:
+        return type;
+    }
+  };
+
+  const getDependsOnLabel = (dep: string) => {
+    if (dep === 'CUSTOM_COMPONENT') return 'Another Earning Component';
+    return dep;
+  };
+
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        {/* General Information */}
+        {/* Earning Details */}
         <SectionCard
-          title="General Information"
+          title="Earning Details"
           gridProps={{
             sx: {
               alignItems: 'start',
@@ -376,17 +405,17 @@ const EarningComponentForm = ({
         >
           <Grid size={{ xs: 12, sm: 6 }}>
             <ShakingTextField
-              error={formik.touched.componentName && Boolean(formik.errors.componentName)}
+              error={formik.touched.earningName && Boolean(formik.errors.earningName)}
             >
               <TextField
                 size="small"
                 fullWidth
-                label="Component Name *"
-                name="componentName"
-                value={formik.values.componentName}
+                label="Earning Name *"
+                name="earningName"
+                value={formik.values.earningName}
                 onChange={formik.handleChange}
-                error={formik.touched.componentName && Boolean(formik.errors.componentName)}
-                helperText={(formik.touched.componentName && formik.errors.componentName) as string}
+                error={formik.touched.earningName && Boolean(formik.errors.earningName)}
+                helperText={(formik.touched.earningName && formik.errors.earningName) as string}
               />
             </ShakingTextField>
           </Grid>
@@ -397,7 +426,7 @@ const EarningComponentForm = ({
               <TextField
                 size="small"
                 fullWidth
-                label="Description"
+                label="Description (Optional)"
                 name="description"
                 multiline
                 rows={2}
@@ -411,70 +440,80 @@ const EarningComponentForm = ({
               control={
                 <Switch
                   size="small"
-                  name="isFixed"
-                  checked={formik.values.isFixed}
-                  onChange={(_e, value) => formik.setFieldValue('isFixed', value)}
+                  name="isSameAmountForAll"
+                  checked={formik.values.isSameAmountForAll}
+                  onChange={(_e, value) => formik.setFieldValue('isSameAmountForAll', value)}
                 />
               }
-              label="Is Fixed Component"
+              label="Same Amount for All Employees"
             />
           </Grid>
         </SectionCard>
 
-        {/* Earning Configuration */}
-        {formik.values.isFixed && (
-          <SectionCard title="Earning Configuration">
+        {/* Calculation Rules */}
+        {formik.values.isSameAmountForAll && (
+          <SectionCard title="Calculation Rules">
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <ShakingTextField
-                error={formik.touched.componentType && Boolean(formik.errors.componentType)}
+                error={formik.touched.calculationType && Boolean(formik.errors.calculationType)}
               >
                 <TextField
                   size="small"
                   select
                   fullWidth
-                  label="Component Type *"
-                  name="componentType"
-                  value={formik.values.componentType}
+                  label="Calculation Type *"
+                  name="calculationType"
+                  value={formik.values.calculationType}
                   onChange={(e) => {
                     formik.handleChange(e);
                     if (e.target.value !== 'Percentage') {
-                      formik.setFieldValue('dependOn', '');
-                      formik.setFieldValue('customComponent', '');
+                      formik.setFieldValue('calculatePercentageBasedOn', '');
+                      formik.setFieldValue('selectedEarningComponent', '');
                     }
+                    formik.setFieldTouched('calculationType', false);
                   }}
-                  error={formik.touched.componentType && Boolean(formik.errors.componentType)}
+                  error={formik.touched.calculationType && Boolean(formik.errors.calculationType)}
                   helperText={
-                    (formik.touched.componentType && formik.errors.componentType) as string
+                    (formik.touched.calculationType && formik.errors.calculationType) as string
                   }
                 >
                   {componentTypes.map((type) => (
                     <MenuItem key={type} value={type}>
-                      {type}
+                      {getComponentTypeLabel(type)}
                     </MenuItem>
                   ))}
                 </TextField>
               </ShakingTextField>
             </Grid>
 
-            {formik.values.componentType === 'Percentage' && (
+            {formik.values.calculationType === 'Percentage' && (
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <ShakingTextField
-                  error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}
+                  error={
+                    formik.touched.calculatePercentageBasedOn &&
+                    Boolean(formik.errors.calculatePercentageBasedOn)
+                  }
                 >
                   <TextField
                     size="small"
                     select
                     fullWidth
-                    label="Depend on *"
-                    name="dependOn"
-                    value={formik.values.dependOn}
+                    label="Calculate Percentage Based On *"
+                    name="calculatePercentageBasedOn"
+                    value={formik.values.calculatePercentageBasedOn}
                     onChange={formik.handleChange}
-                    error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}
-                    helperText={(formik.touched.dependOn && formik.errors.dependOn) as string}
+                    error={
+                      formik.touched.calculatePercentageBasedOn &&
+                      Boolean(formik.errors.calculatePercentageBasedOn)
+                    }
+                    helperText={
+                      (formik.touched.calculatePercentageBasedOn &&
+                        formik.errors.calculatePercentageBasedOn) as string
+                    }
                   >
                     {dependsOnOptions.map((dep) => (
                       <MenuItem key={dep} value={dep}>
-                        {dep}
+                        {getDependsOnLabel(dep)}
                       </MenuItem>
                     ))}
                   </TextField>
@@ -482,26 +521,31 @@ const EarningComponentForm = ({
               </Grid>
             )}
 
-            {formik.values.componentType === 'Percentage' &&
-              formik.values.dependOn === 'Any custom salary component' && (
+            {formik.values.calculationType === 'Percentage' &&
+              formik.values.calculatePercentageBasedOn === 'CUSTOM_COMPONENT' && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <ShakingTextField
-                    error={formik.touched.customComponent && Boolean(formik.errors.customComponent)}
+                    error={
+                      formik.touched.selectedEarningComponent &&
+                      Boolean(formik.errors.selectedEarningComponent)
+                    }
                   >
                     <CustomSelect
                       options={getEarningComponentsData?.items || []}
-                      label="Component Type *"
-                      value={formik.values.customComponent}
+                      label="Select Earning Component *"
+                      value={formik.values.selectedEarningComponent}
                       onChange={(val) => {
-                        formik.setFieldValue('customComponent', val);
+                        formik.setFieldValue('selectedEarningComponent', val);
                       }}
                       labelKey="componentName"
                       valueKey="id"
                       error={
-                        formik.touched.customComponent && Boolean(formik.errors.customComponent)
+                        formik.touched.selectedEarningComponent &&
+                        Boolean(formik.errors.selectedEarningComponent)
                       }
                       helperText={
-                        (formik.touched.customComponent && formik.errors.customComponent) as string
+                        (formik.touched.selectedEarningComponent &&
+                          formik.errors.selectedEarningComponent) as string
                       }
                       fullWidth
                     />
@@ -515,9 +559,7 @@ const EarningComponentForm = ({
                   size="small"
                   fullWidth
                   label={
-                    formik.values.componentType === 'Percentage'
-                      ? 'Amount Percentage *'
-                      : 'Amount *'
+                    formik.values.calculationType === 'Percentage' ? 'Percentage (%) *' : 'Amount *'
                   }
                   name="amount"
                   type="number"
@@ -534,12 +576,14 @@ const EarningComponentForm = ({
                 control={
                   <Switch
                     size="small"
-                    name="visibleInPayslip"
-                    checked={formik.values.visibleInPayslip}
-                    onChange={formik.handleChange}
+                    name="showOnPayslip"
+                    checked={Boolean(formik.values.showOnPayslip)}
+                    onChange={(_, checked) => {
+                      formik.setFieldValue('showOnPayslip', checked);
+                    }}
                   />
                 }
-                label="Visible in Payslip"
+                label="Show on Payslip"
               />
             </Grid>
           </SectionCard>

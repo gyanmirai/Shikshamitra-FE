@@ -22,7 +22,7 @@ export interface ISubject {
 
 export interface TeacherProfile {
   id?: string;
-  name?: string;
+  fullName?: string;
   avatarUrl?: string;
   designation?: string;
   department?: string;

@@ -141,6 +141,7 @@ const ExamTypeSettings = () => {
       />
       <CustomizableTable
         tableId="examTypeTable"
+        isLoading={isLoading || isFetching}
         noDataText={
           <>
             No Exam Type Data Found{' '}

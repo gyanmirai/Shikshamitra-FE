@@ -4,8 +4,8 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
   // tagTypes: ['Deduction-Components', 'Employee-Payroll', 'Earning-Components'],
   endpoints: (builder) => ({
     getEmployeeSalarySlip: builder.query({
-      query: ({ id, monthYear }) => ({
-        url: `/payroll/salary-slips?employeeId=${id}&monthYear=${monthYear}`,
+      query: ({ employeeId, monthYear }) => ({
+        url: `/payroll/salary-slips?employeeId=${employeeId}&monthYear=${monthYear}`,
         method: 'GET',
       }),
       providesTags: ['Salary-Slip'],
@@ -13,4 +13,5 @@ export const employeePayrollApi = employeeApi.injectEndpoints({
   }),
 });
 
-export const { useGetEmployeeSalarySlipQuery } = employeePayrollApi;
+export const { useGetEmployeeSalarySlipQuery, useLazyGetEmployeeSalarySlipQuery } =
+  employeePayrollApi;
