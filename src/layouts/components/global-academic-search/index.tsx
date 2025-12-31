@@ -163,6 +163,29 @@ const GlobalAcademicSearch = () => {
                   setSelectedDivision(newValue);
                 }
               }}
+              slotProps={{
+                listbox: {
+                  sx: {
+                    '& .MuiAutocomplete-option': {
+                      '&[aria-selected="true"]': {
+                        backgroundColor: 'action.hover',
+                      },
+                      '&:hover': {
+                        backgroundColor: 'action.hover !important',
+                      },
+                      '&.Mui-focused': {
+                        backgroundColor: 'transparent',
+                      },
+                      '&.Mui-focused:hover': {
+                        backgroundColor: 'action.hover !important',
+                      },
+                      '&[aria-selected="true"]:hover': {
+                        backgroundColor: 'action.hover !important',
+                      },
+                    },
+                  },
+                },
+              }}
               renderInput={(params) => (
                 <TextField {...params} variant="filled" size="small" label="Academic Year" />
               )}
@@ -191,6 +214,45 @@ const GlobalAcademicSearch = () => {
                   dispatch(setCurrentMedium(newValue?.medium));
                   setSelectedDivision(newValue);
                 }
+              }}
+              renderOption={(props, option) => {
+                const isSelected =
+                  option.academicYear.id === currentYear?.id &&
+                  option.board.id === currentBoard?.id &&
+                  option.medium.id === currentMedium?.id;
+                return (
+                  <Box
+                    component="li"
+                    {...props}
+                    data-selected={isSelected}
+                    sx={{
+                      backgroundColor: isSelected ? 'action.hover' : 'transparent',
+                      '&:hover': {
+                        backgroundColor: 'action.hover !important',
+                      },
+                    }}
+                  >
+                    {option.label}
+                  </Box>
+                );
+              }}
+              slotProps={{
+                listbox: {
+                  sx: {
+                    '& .MuiAutocomplete-option.Mui-focused': {
+                      backgroundColor: 'transparent',
+                    },
+                    '& .MuiAutocomplete-option.Mui-focused:hover': {
+                      backgroundColor: 'action.hover !important',
+                    },
+                    '& .MuiAutocomplete-option[data-selected="true"]': {
+                      backgroundColor: 'action.hover',
+                    },
+                    '& .MuiAutocomplete-option[data-selected="true"]:hover': {
+                      backgroundColor: 'action.hover !important',
+                    },
+                  },
+                },
               }}
               renderInput={(params) => (
                 <TextField
