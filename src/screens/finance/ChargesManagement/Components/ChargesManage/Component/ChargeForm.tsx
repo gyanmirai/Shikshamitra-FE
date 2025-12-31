@@ -298,6 +298,17 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         fullWidth
                         error={!!(touched.studentName && errors.studentName)}
                         helperText={(touched.studentName && errors.studentName) as string}
+                        sx={(theme) => ({
+                          ...(!!(touched.studentName && errors.studentName) &&
+                            !values.division && {
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: `${theme.palette.error.main} !important`,
+                              },
+                              '& .MuiInputLabel-root.Mui-disabled': {
+                                color: `${theme.palette.error.main} !important`,
+                              },
+                            }),
+                        })}
                       />
                     )}
                   />

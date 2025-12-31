@@ -2,40 +2,40 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-
-// Static data for components
-const EARNING_COMPONENTS = [
-  'Basic Salary',
-  'House Rent Allowance (HRA)',
-  'Transport Allowance',
-  'Special Allowance',
-  'Medical Allowance',
-  'Bonus',
-];
-
-const DEDUCTION_COMPONENTS = [
-  'Provident Fund (PF)',
-  'Professional Tax',
-  'Income Tax (TDS)',
-  'Loan Recovery',
-  'Health Insurance',
-];
+import {
+  useGetEarningComponentsQuery,
+  useGetDeductionComponentsQuery,
+} from 'src/redux/employee-payroll/employee-payroll-api';
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  onAdd: (selected: string[]) => void;
+  onAdd: (selected: any) => void;
   type: 'earning' | 'deduction';
+  employeeId?: string;
+  values?: any[];
 };
 
-export default function PayrollComponentDialog({ open, onClose, onAdd, type }: Props) {
-  const options = type === 'earning' ? EARNING_COMPONENTS : DEDUCTION_COMPONENTS;
+export default function PayrollComponentDialog({
+  values: componentValues,
+  open,
+  onClose,
+  onAdd,
+  type,
+  employeeId,
+}: Props) {
+  const { data: components, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation:
+      type === 'earning' ? useGetEarningComponentsQuery : useGetDeductionComponentsQuery,
+  });
 
   const formik = useFormik({
     initialValues: {
-      selectedComponents: [] as string[],
+      selectedComponents: componentValues || [],
     },
     validationSchema: Yup.object({
       selectedComponents: Yup.array().min(1, 'Please select at least one component'),
@@ -63,9 +63,10 @@ export default function PayrollComponentDialog({ open, onClose, onAdd, type }: P
         <Autocomplete
           multiple
           fullWidth
+          loading={isLoading}
           size="small"
-          options={options}
-          getOptionLabel={(option) => option}
+          options={components?.items || []}
+          getOptionLabel={(option: any) => option?.componentName || option?.name}
           slotProps={{
             chip: {
               size: 'small',

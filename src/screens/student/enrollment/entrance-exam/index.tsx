@@ -70,7 +70,7 @@ dayjs.extend(isoWeek);
 const EntranceExamScreen = () => {
   // Search params hook for view state management
   // const [searchParams, setSearchParam] = useSearchParam({ view: 'calender' });
-
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State for managing edit data and move operations
   const [editData, setEditData] = useState<any | null>(null);
   // State for storing the ID of the student to be moved to admission
@@ -82,6 +82,7 @@ const EntranceExamScreen = () => {
   const [endDate, setEndDate] = useState<Dayjs | null>(dayjs());
   // Redux state and dispatch hooks
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   // useDispatch hook for dispatching Redux actions
   const dispatch = useDispatch();
 
@@ -94,6 +95,14 @@ const EntranceExamScreen = () => {
   const { data: entranceExamData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamQuery,
+    params: {
+      startDate: dateConvertor(startDate?.format(dateFormat) || '', true),
+      endDate: dateConvertor(endDate?.format(dateFormat) || '', true),
+      educationMediumId: currentMedium.id,
+    },
+    options: {
+      skip: !currentMedium.id,
+    },
   });
 
   // Mutation hook for moving students to admission
@@ -103,81 +112,33 @@ const EntranceExamScreen = () => {
     popupConfig: { successMessage: 'Student moved to Admission successfully.', success: true },
   });
 
-  /**
-   * Memoized table data transformation
-   */
   const tableData = useMemo(
     () =>
       entranceExamData?.items?.map((item: any) => ({
+        // Spread original item to preserve all backend fields
         ...item,
-        date: dayjs(item.examDate).format('DD-MM-YYYY'),
-        examTime: `${dayjs(item.entranceExamSlot.startDate).format('hh:mm A')} to ${dayjs(
-          item.entranceExamSlot.endDate
+
+        // Field mappings: Backend → Frontend
+        class: item.standard, // standard → class
+        date: dayjs(item.examDate).format('DD-MM-YYYY'), // examDate → date (formatted)
+        passingMark: item.passingMarks, // passingMarks → passingMark
+        status: item.examStatus, // examStatus → status
+
+        // Computed fields
+        examTime: `${dayjs(item.examStartTime).format('hh:mm A')} to ${dayjs(
+          item.examEndTime
         ).format('hh:mm A')}`,
-        name: `${item.studentEnrollment.lastName} ${item.studentEnrollment.firstName} ${item.studentEnrollment.middleName}`,
-        medium: item.studentEnrollment.educationMedium.name,
-        class: item.studentEnrollment.standard.name,
-        board: item.studentEnrollment.educationBoard.name,
-        status: item.marksObtained === null ? 0 : item.marksObtained >= item.passingMark ? 1 : 2,
-        progress: (item.studentEnrollment.onboardingProgressState / 8) * 100,
-        percentage:
-          item.marksObtained === null
-            ? 0
-            : +((item.marksObtained / item.totalMarks) * 100 || 0).toFixed(2),
-        obtainMarks: item.marksObtained ?? '-',
+
+        // Pass-through fields (already match column IDs):
+        // - studentName
+        // - totalMarks
+        // - obtainedMarks
+        // - percentage
+        // - progress
       })),
     [entranceExamData]
   );
 
-  /**
-   * Memoized calendar data transformation
-   */
-  // const calendarData = useMemo(
-  //   () =>
-  //     entranceExamData?.items.map((i: any) => {
-  //       const startTime = dayjs(i.entranceExamSlot.startDate).format('hh:mm A');
-  //       const endTime = dayjs(i.entranceExamSlot.endDate).format('hh:mm A');
-
-  //       const startExamDate = dayjs(
-  //         dayjs(
-  //           `${dayjs(i.examDate).format('DD-MM-YYYY')} ${startTime}`,
-  //           'DD-MM-YYYY hh:mm A'
-  //         ).format('YYYY-MM-DD hh:mm A')
-  //       ).format();
-  //       const endExamDate = dayjs(
-  //         dayjs(
-  //           `${dayjs(i.examDate).format('DD-MM-YYYY')} ${endTime}`,
-  //           'DD-MM-YYYY hh:mm A'
-  //         ).format('YYYY-MM-DD hh:mm A')
-  //       ).format();
-
-  //       const status =
-  //         i.marksObtained === null ? 'Pending' : i.marksObtained >= i.passingMark ? 'Pass' : 'Fail';
-  //       let color: LabelColor = 'error';
-  //       if (status === 'Pending') {
-  //         color = 'warning';
-  //       } else if (status === 'Pass') {
-  //         color = 'success';
-  //       } else {
-  //         color = 'error';
-  //       }
-  //       return {
-  //         ...i,
-  //         start: startExamDate,
-  //         end: endExamDate,
-  //         color: theme.vars.palette[color].main,
-  //         allDay: false,
-  //         textColor: theme.vars.palette[color].main,
-  //         title: `${i.studentEnrollment.lastName} ${i.studentEnrollment.firstName} `,
-  //         description: i.reason,
-  //       };
-  //     }) || [],
-  //   [entranceExamData?.items, theme.vars.palette]
-  // );
-
-  /**
-   * Callback for handling row actions
-   */
   const actions = useCallback(
     ({ popover }: any, row: any) => (
       <MenuList>
@@ -204,7 +165,7 @@ const EntranceExamScreen = () => {
             confirmMovePopup.onTrue();
             setEditData(row);
             // dialog.onTrue();
-            setMoveId(row.id);
+            setMoveId(row.studentId);
             popover.onClose();
           }}
         >
@@ -263,6 +224,8 @@ const EntranceExamScreen = () => {
             label="Start Date"
             format="DD-MM-YYYY"
             value={startDate}
+            minDate={dayjs(currentYear?.startDate)}
+            maxDate={dayjs(currentYear?.endDate)}
             slotProps={{ textField: { sx: { width: '250px' }, size: 'small' } }}
             views={['year', 'month', 'day']}
             onChange={(value) => {
@@ -273,6 +236,8 @@ const EntranceExamScreen = () => {
             label="End Date"
             value={endDate}
             format="DD-MM-YYYY"
+            minDate={dayjs(currentYear?.startDate)}
+            maxDate={dayjs(currentYear?.endDate)}
             views={['year', 'month', 'day']}
             slotProps={{ textField: { sx: { width: '250px' }, size: 'small' } }}
             onChange={(value) => {
@@ -288,10 +253,10 @@ const EntranceExamScreen = () => {
         noDataText={<>No Entrance Exam Data Found </>}
         isLoading={isLoading}
         columns={[
-          { id: 'name', label: 'Student Name', align: 'left', sticky: true, minWidth: 180 },
+          { id: 'studentName', label: 'Student Name', align: 'left', sticky: true, minWidth: 180 },
 
-          { id: 'board', label: 'Board', align: 'left' },
-          { id: 'medium', label: 'Medium', align: 'left' },
+          // { id: 'board', label: 'Board', align: 'left' },
+          // { id: 'medium', label: 'Medium', align: 'left' },
           { id: 'class', label: 'Class', align: 'left' },
           { id: 'date', label: 'Date', filterType: 'date' },
           { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
@@ -312,7 +277,7 @@ const EntranceExamScreen = () => {
             render: (value) => value || '-',
           },
           {
-            id: 'obtainMarks',
+            id: 'obtainedMarks',
             label: 'Obtained Marks',
             filterType: 'number',
             align: 'left',
@@ -531,14 +496,15 @@ export const ExamForm = ({
   handleClose,
 }: {
   studentName: string;
-  educationBoard: { name: string };
-  educationMedium: { name: string };
+  educationBoard: string;
+  educationMedium: string;
   standardName: string;
   studentEnrollmentId: string;
   handleClose: (_e: any, isSubmit: boolean) => void;
 }) => {
   // State to store all available exam slots
   const [allSlots, setAllSlots] = useState<any[]>([]);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Dialog state for slot management
   const dialog = useBoolean();
@@ -557,11 +523,37 @@ export const ExamForm = ({
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
+  const formik = useFormik({
+    initialValues: { examDate: dayjs(), isConfirmed: false, slots: allSlots || [], slot: '' },
+    validationSchema,
+    onSubmit: async (values) => {
+      try {
+        await scheduleExam({
+          studentId: studentEnrollmentId,
+          body: {
+            entranceExamSlotId: values.slot,
+          },
+        }).unwrap();
+        shikshaMitraToast.success({
+          message: `Extrance Exam Schedule of ${studentName} on ${dayjs(values.examDate).format('DD-MM-YYYY')}`,
+        });
+        handleClose(null, true);
+      } catch (error) {
+        console.error(error);
+      }
+    },
+  });
+
   // Fetch entrance exam slots using a custom hook
   // Query hook to fetch exam slots
-  const { data: slots } = useQueryAndMutation({
+  const { data: slots, isLoading: isSlotsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamSlotQuery,
+    params: {
+      academicYearId: currentYear?.id || '',
+      startDate: dateConvertor(dayjs(formik.values.examDate).format(dateFormat), true),
+      endDate: dateConvertor(dayjs(formik.values.examDate).format(dateFormat), true),
+    },
   });
 
   // Mutation hook for scheduling exams
@@ -590,25 +582,6 @@ export const ExamForm = ({
   );
 
   // Formik instance for form handling
-  const formik = useFormik({
-    initialValues: { examDate: null, isConfirmed: false, slots: allSlots || [], slot: '' },
-    validationSchema,
-    onSubmit: async (values) => {
-      try {
-        await scheduleExam({
-          entranceExamSlotId: values.slot,
-          studentEnrollmentId,
-          examDate: dateConvertor(dayjs(values.examDate).format(dateFormat)),
-        }).unwrap();
-        shikshaMitraToast.success({
-          message: `Extrance Exam Schedule of ${studentName} on ${dayjs(values.examDate).format('DD-MM-YYYY')}`,
-        });
-        handleClose(null, true);
-      } catch (error) {
-        console.error(error);
-      }
-    },
-  });
 
   const handleGetAllStudentCount = useCallback(
     async (date: string) => {
@@ -636,9 +609,9 @@ export const ExamForm = ({
 
   // Effect to update form slots when allSlots changes
   useEffect(() => {
-    formik.setFieldValue('slots', allSlots || []);
+    formik.setFieldValue('slots', slots?.items || []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allSlots]);
+  }, [slots]);
 
   const handleCloseExamType = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
@@ -667,7 +640,7 @@ export const ExamForm = ({
                 Board :
               </Typography>
               <Typography variant="subtitle2" color="text.secondary">
-                {educationBoard?.name}
+                {educationBoard}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -675,7 +648,7 @@ export const ExamForm = ({
                 Medium :
               </Typography>
               <Typography variant="subtitle2" color="text.secondary">
-                {educationMedium?.name}
+                {educationMedium}
               </Typography>
             </Box>
 
@@ -719,7 +692,7 @@ export const ExamForm = ({
               </Paper>
               {formik.touched.examDate && formik.errors.examDate && (
                 <Typography variant="caption" color="error">
-                  {formik.errors.examDate}
+                  {formik.errors.examDate as string}
                 </Typography>
               )}
             </Grid>
@@ -739,12 +712,12 @@ export const ExamForm = ({
                       </Box>
 
                       <Grid container spacing={2}>
-                        {isStudentCountLoading ? (
+                        {isStudentCountLoading || isSlotsLoading ? (
                           <Grid size={{ xs: 12 }}>
                             <Box className="loader" height={24} />
                           </Grid>
                         ) : formik.values.slots.length === 0 ? (
-                          <EmptyContent title="Please select the date." />
+                          <EmptyContent title="No slots available." />
                         ) : (
                           formik.values.slots.map((slot: any, index: number) => (
                             <Grid size={{ xs: 6 }} key={index}>
@@ -752,18 +725,18 @@ export const ExamForm = ({
                                 sx={{ marginLeft: 1 }}
                                 control={
                                   <Radio
-                                    checked={slot.value === formik.values.slot}
+                                    checked={slot.id === formik.values.slot}
                                     size="small"
                                     onChange={(e) => {
                                       if (e.target.checked) {
-                                        formik.setFieldValue('slot', slot.value);
+                                        formik.setFieldValue('slot', slot.id);
                                       } else {
                                         formik.setFieldValue('slot', '');
                                       }
                                     }}
                                   />
                                 }
-                                label={slot.label}
+                                label={`${slot.slotName} (${slot.startTime} - ${slot.endTime})`}
                               />
                               <Label variant="soft" color="success">
                                 {slot.studentCount} / {slot.studentLimit}
@@ -895,20 +868,15 @@ const ResultForm = ({
     onSubmit: async (values) => {
       try {
         await updateMarks({
-          id: editData.id,
+          id: editData.studentId,
           body: {
-            entranceExamSlotId: editData.entranceExamSlotId,
-            studentEnrollmentId: editData.studentEnrollmentId,
-            examDate: editData.examDate,
-            // examType: editData.examType,
-            passingMark: values.passingMarks,
-            marksObtained: values.obtainedMarks,
             totalMarks: values.totalMarks,
-            // examScheduleType: editData.examScheduleType,
+            passingMarks: values.passingMarks,
+            obtainedMarks: values.obtainedMarks,
           },
         }).unwrap();
         shikshaMitraToast.success({
-          message: `${editData?.name || ''}'s marks updated successfully`,
+          message: `${editData?.studentName || ''}'s marks updated successfully`,
         });
         handleClose(null, true);
       } catch (error) {
@@ -922,7 +890,7 @@ const ResultForm = ({
    * Returns update function and loading state
    */
   const [updateMarks, { isLoading }] = useQueryAndMutation({
-    type: 'query',
+    type: 'mutation',
     currentQueryAndMutation: useUpdateEntranceExamMutation,
   });
 

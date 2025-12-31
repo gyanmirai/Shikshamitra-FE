@@ -44,23 +44,22 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       academicMediumId: medium?.id,
     },
   });
+
+  const [publishExam] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePublishExamMutation,
+  });
   // Initialize tabs with default value of 'Pending'
   const tabs = useTabs(ScheduleExamStatus.Pending);
   // Add this outside your component
   // const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [selectedTimetable, setSelectedTimetable] = useState<IExamFormValues | null>(null);
 
-  const [publishExam] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: usePublishExamMutation,
-  });
-
   const handlePublishExam = async () => {
     try {
       if (selectedTimetable?.id) {
         await publishExam({
           examId: selectedTimetable.id,
-          academicMediumId: medium?.id,
           body: { status: 1 }, // Published status
         }).unwrap();
         shikshaMitraToast.success({ message: 'Exam Time Table Published Successfully' });
@@ -279,7 +278,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               },
             },
           ]}
-          data={tableData}
+          data={tableData || []}
         />
       ) : (
         <CustomizableTable
@@ -327,7 +326,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             },
             { id: 'createdBy', label: 'Created By', align: 'left' },
           ]}
-          data={tableData}
+          data={tableData || []}
         />
       )}
 

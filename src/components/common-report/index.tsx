@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Iconify } from 'src/components/iconify';
 import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import { Box, Card, Tooltip, IconButton } from '@mui/material';
 
 import LeftPanel from './LeftPanel';
@@ -24,9 +24,6 @@ export default function CommonReport({ categories, subCategories }: CommonReport
   const toggleLeftPanel = () => {
     setLeftPanelVisible(!leftPanelVisible);
   };
-
-  console.log('selectedCategory---', selectedCategory);
-  console.log('selectedReport---', selectedReport);
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2, minHeight: 0 }}>

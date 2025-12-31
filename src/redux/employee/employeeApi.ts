@@ -13,29 +13,29 @@ export const employeeApi = createApi({
     'AttendanceRule',
     'EmployeeDocument',
     'Employee-Leave-Policy',
+    'Employee-Type',
+    'Deduction-Components',
+    'Employee-Payroll',
+    'Earning-Components',
+    'Salary-Slip',
+    'PF',
+    'Run-Payroll',
+    'Salary-Structure',
   ],
   endpoints: (builder) => ({
     // Basic Employee CRUD Operations
     getEmployee: builder.query({
-      query: () => ({ url: '/app/employee', redirect: 'follow' }),
+      query: () => ({ url: '/employees', redirect: 'follow' }),
       providesTags: ['Employee'],
     }),
     getEmployeeById: builder.query({
-      query: (id) => ({ url: `/app/employee/${id}`, redirect: 'follow' }),
+      query: (id) => ({ url: `/employees/${id}`, redirect: 'follow' }),
       providesTags: ['Employee'],
     }),
     addEmployee: builder.mutation({
       query: (body) => ({
         url: '/app/employee',
         method: 'POST',
-        data: body,
-      }),
-      invalidatesTags: ['Employee'],
-    }),
-    updateEmployee: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/app/employee/basic-info/${id}`,
-        method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee'],
@@ -56,41 +56,84 @@ export const employeeApi = createApi({
     }),
 
     // Employee Information Management
+    updateEmployee: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/employees/${id}/personal-info`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
     addBasicInformation: builder.mutation({
       query: (body) => ({
-        url: `/app/employee/basic-info`,
+        url: `/employees/personal-info`,
         method: 'POST',
         data: body,
       }),
       invalidatesTags: ['Employee'],
     }),
+    getBasicInformation: builder.query({
+      query: (id) => ({
+        url: `/employees/${id}/personal-info`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
+    getFamilyInformation: builder.query({
+      query: (id) => ({
+        url: `/employees/${id}/family-info`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
     updateFamilyInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee/family-info/${employeeId}`,
+        url: `/employees/${employeeId}/family-info`,
         method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee'],
+    }),
+    getAdditionalInformation: builder.query({
+      query: (id) => ({
+        url: `/employees/${id}/additional-info`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
     }),
     updateAdditionalInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee/additional-details/${employeeId}`,
+        url: `/employees/${employeeId}/additional-info`,
         method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee'],
+    }),
+    getWorkExperience: builder.query({
+      query: (id) => ({
+        url: `/employees/${id}/work-experience`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
     }),
     updateExperienceInformation: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee/experience-info/${employeeId}`,
+        url: `/employees/${employeeId}/work-experience`,
         method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee'],
     }),
+    getBankDetails: builder.query({
+      query: (id) => ({
+        url: `/employees/${id}/payroll`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
     updateBankDetails: builder.mutation({
       query: ({ employeeId, body }) => ({
-        url: `/app/employee/bank-details/${employeeId}`,
+        url: `/employees/${employeeId}/payroll`,
         method: 'PUT',
         data: body,
       }),
@@ -106,10 +149,43 @@ export const employeeApi = createApi({
     }),
     updateEmployeeStatus: builder.mutation({
       query: ({ id, employeeStatusType }) => ({
-        url: `/app/employee/employee-status/${id}?employeeStatusType=${employeeStatusType}`,
-        method: 'PUT',
+        url: `/app/employee-status/change-status/${id}`,
+        method: 'POST',
+        data: {
+          employeeStatusType,
+        },
       }),
       invalidatesTags: ['Employee'],
+    }),
+
+    // Attendance Employee
+    getAttendanceEmployee: builder.query({
+      query: (date) => ({
+        url: `/attendance/employees?date=${date}`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Attendance'],
+    }),
+
+    updateAttendanceEmployee: builder.mutation({
+      query: (body) => ({
+        url: `/attendance/employees`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Attendance'],
+    }),
+
+    addAttendanceEmployee: builder.mutation({
+      query: (body) => ({
+        url: `${process.env.NEXT_PUBLIC_API_URL}/attendance/import`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        data: body,
+      }),
+      invalidatesTags: ['Attendance'],
     }),
 
     // Attendance Management
@@ -161,26 +237,72 @@ export const employeeApi = createApi({
     // Leave Management
     addEmployeeLeave: builder.mutation({
       query: (body) => ({
-        url: '/app/employee-leave',
+        url: '/v1/leave-management',
         method: 'POST',
         data: body,
       }),
       invalidatesTags: ['Employee'],
     }),
+
     getEmployeeLeave: builder.query({
-      query: () => ({
-        url: `/app/employee-leave`,
+      query: (mediumStageId) => ({
+        url: `/leave-management?mediumStageId=${mediumStageId}`,
+        method: 'GET',
         redirect: 'follow',
       }),
       providesTags: ['Employee'],
     }),
-    employeeLeaveRequestStatus: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/app/employee-leave/${id}/leave-request-status`,
+
+    getEmployeeLeaveById: builder.query({
+      query: (leaveRequestId) => ({
+        url: `/leave-management/${leaveRequestId}`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
+
+    updateEmployeeLeave: builder.mutation({
+      query: ({ leaveRequestId, body }) => ({
+        url: `/leave-management/${leaveRequestId}`,
         method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee'],
+    }),
+
+    employeeLeaveRequestStatus: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/leave-management/${id}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
+    }),
+
+    deleteEmployeeLeave: builder.mutation({
+      query: (leaveRequestId) => ({
+        url: `/leave-management/${leaveRequestId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Employee'],
+    }),
+
+    // Attendacnce Tracking
+
+    getAttendanceEmployeeDateWise: builder.query({
+      query: () => ({
+        url: `/attendance-tracking/date-wise`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
+
+    getAttendanceEmployeeEmployeeWise: builder.query({
+      query: () => ({
+        url: `/api/attendance-tracking/employee-wise`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
     }),
 
     // Document Management
@@ -229,8 +351,8 @@ export const employeeApi = createApi({
       invalidatesTags: ['Employee'],
     }),
     getAccessControl: builder.query({
-      query: (userId) => ({
-        url: `/app/user-scope/user-scope/${userId}`,
+      query: ({ userId, academicYearId }) => ({
+        url: `/app/user-scope/user-scope-hierarchy?userId=${userId}&academicYearId=${academicYearId}`,
         redirect: 'follow',
       }),
       providesTags: ['Employee'],
@@ -245,34 +367,93 @@ export const employeeApi = createApi({
 
     // Employee Leave Policy
     getEmployeeLeavePolicy: builder.query({
-      query: () => ({
-        url: `/app/leave-policy`,
+      query: (mediumStageId) => ({
+        url: `/leave-policies?mediumStageId=${mediumStageId}`,
         redirect: 'follow',
       }),
       providesTags: ['Employee-Leave-Policy'],
     }),
     addEmployeeLeavePolicy: builder.mutation({
-      query: (body) => ({
-        url: '/app/leave-policy',
+      query: ({ mediumStageId, body }) => ({
+        url: `/leave-policies?mediumStageId=${mediumStageId}`,
         method: 'POST',
         data: body,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }),
       invalidatesTags: ['Employee-Leave-Policy'],
     }),
+
     updateEmployeeLeavePolicy: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/app/leave-policy/${id}`,
+      query: ({ policyId, body }) => ({
+        url: `/leave-policies/${policyId}`,
         method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Employee-Leave-Policy'],
     }),
     deleteEmployeeLeavePolicy: builder.mutation({
-      query: (id) => ({
-        url: `/app/leave-policy/${id}`,
+      query: (policyId) => ({
+        url: `/leave-policies/${policyId}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Employee-Leave-Policy'],
+    }),
+
+    // Employee Type
+    getEmployeeType: builder.query({
+      query: (mediumStageId) => ({
+        url: `/leave-types?mediumStageId=${mediumStageId}`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee-Type'],
+    }),
+
+    addEmployeeType: builder.mutation({
+      query: ({ mediumStageId, body }) => ({
+        url: `/leave-types?mediumStageId=${mediumStageId}`,
+        method: 'POST',
+        data: {
+          mediumStageId,
+          ...body,
+        },
+      }),
+      invalidatesTags: ['Employee-Type'],
+    }),
+
+    updateEmployeeType: builder.mutation({
+      query: ({ leaveTypeId, body }) => ({
+        url: `/leave-types/${leaveTypeId}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee-Type'],
+    }),
+
+    deleteEmployeeType: builder.mutation({
+      query: (leaveTypeId) => ({
+        url: `/leave-types/${leaveTypeId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Employee-Type'],
+    }),
+
+    getReportingManagerByEmployeeId: builder.query({
+      query: (id) => ({
+        url: `/employees/${id}/reporting-manager`,
+        redirect: 'follow',
+      }),
+      providesTags: ['Employee'],
+    }),
+
+    updateReportingManagerByEmployeeId: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/employees/${id}/reporting-manager`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Employee'],
     }),
   }),
 });
@@ -295,17 +476,29 @@ export const {
   useLazyGetEmployeeByUserIdQuery,
   useAddEmployeeLeaveMutation,
   useGetEmployeeLeaveQuery,
+  useGetAttendanceEmployeeQuery,
+  useUpdateAttendanceEmployeeMutation,
+  useAddAttendanceEmployeeMutation,
+  useDeleteEmployeeLeaveMutation,
+  useUpdateEmployeeLeaveMutation,
+  useGetAttendanceEmployeeDateWiseQuery,
+  useGetAttendanceEmployeeEmployeeWiseQuery,
   useEmployeeLeaveRequestStatusMutation,
   useGetEmployeeCustomAttendanceRuleQuery,
   useAddEmployeeCustomAttendanceRuleMutation,
   useUpdateEmployeeCustomAttendanceRuleMutation,
   useDeleteEmployeeCustomAttendanceRuleMutation,
   useGetEmployeeNotificationHistoryQuery,
+  useGetBankDetailsQuery,
   useUpdateBankDetailsMutation,
+  useGetWorkExperienceQuery,
   useUpdateExperienceInformationMutation,
+  useGetFamilyInformationQuery,
   useUpdateFamilyInformationMutation,
+  useGetAdditionalInformationQuery,
   useUpdateAdditionalInformationMutation,
   useAddBasicInformationMutation,
+  useGetBasicInformationQuery,
   useUploadDocumentsMutation,
   useGetEmployeeDocumentsQuery,
   useGetEmployeeDocumentByIdQuery,
@@ -316,4 +509,11 @@ export const {
   useAddEmployeeLeavePolicyMutation,
   useUpdateEmployeeLeavePolicyMutation,
   useDeleteEmployeeLeavePolicyMutation,
+  useGetEmployeeLeaveByIdQuery,
+  useGetEmployeeTypeQuery,
+  useAddEmployeeTypeMutation,
+  useUpdateEmployeeTypeMutation,
+  useDeleteEmployeeTypeMutation,
+  useGetReportingManagerByEmployeeIdQuery,
+  useUpdateReportingManagerByEmployeeIdMutation,
 } = employeeApi;

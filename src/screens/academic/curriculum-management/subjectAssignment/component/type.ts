@@ -22,7 +22,7 @@ export interface ISubject {
 
 export interface TeacherProfile {
   id?: string;
-  name?: string;
+  fullName?: string;
   avatarUrl?: string;
   designation?: string;
   department?: string;
@@ -37,30 +37,51 @@ export interface TeacherProfile {
 }
 
 export interface ISubjectDetail {
-  subjectNo: number;
-  subjectName: string;
+  subjectAssignmentId?: string;
+  id: string;
+  classId: string;
+  assignedId?: string; // New field
+  subjectId: string; // Changed from subjectNo (number) to string ID based on schema
   subjectCode: string;
-  subjectColor?: string;
+  // subjectColor?: string; // Moved to nested subject object
+  subject?: {
+    id: string;
+    name: string;
+    color: string;
+    educationMediumId: string;
+  };
+  subjectName?: string; // Kept optional for backward compatibility or flat structures if any
+
   primaryTeacher: string;
-  secondaryTeacher: string[] | null;
-  documents?: File[];
+  secondaryTeachers: string[] | null; // Renamed from secondaryTeacher
+  documents?: (File | string)[];
   prerequisites: string;
   learningGoal: string;
   description: string;
+
+  // Legacy fields that might still be used or need deprecation
+  subjectNo?: number;
+  secondaryTeacher?: string[] | null;
   isSubjectOpen?: boolean;
 }
 
 export interface ISubjectFormValues {
-  id?: number;
+  id?: number | string;
   status: number;
   classId: string;
   className: string;
   subjectName: string;
   subjects?: ISubjectDetail[];
   subjectType: number;
+
+  // New schema fields
+  academicMediumId?: string;
+  electiveGroupId?: string;
+  electiveGroupName?: string;
 }
 
 export interface ISubjectTableProps {
+  classId: string;
   addSubjectDialog: UseBooleanReturn;
   editData: ISubjectFormValues | null;
   setEditData: React.Dispatch<React.SetStateAction<ISubjectFormValues | null>>;
@@ -107,8 +128,9 @@ export interface ISubjectCardProps {
   subject: ISubjectAssignmentSubject;
   isCore: boolean;
   isPublished: boolean;
+  onFileUpload: (files: (File | string)[], index: number) => Promise<void>;
   // isPublishing: boolean;
-  teacherOptions: TeacherProfile[];
+  // teacherOptions: TeacherProfile[];
   onSubjectChange: (subjectId: string, field: string, value: any) => void;
 }
 

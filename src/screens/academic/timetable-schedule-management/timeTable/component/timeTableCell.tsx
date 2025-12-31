@@ -60,7 +60,7 @@ const TimeTableCell = ({
    * @param e - The drag over event object
    */
   const handleDragOver = (e: any) => {
-    if (!isBreak && isDrag) {
+    if (slotData?.slotType === 'period' && isDrag) {
       e.preventDefault();
     }
   };
@@ -72,7 +72,7 @@ const TimeTableCell = ({
    * @param e - The drop event object
    */
   const handleDrop = (e: any) => {
-    if (!isBreak && isDrag && (!slotData || !slotData.subjects?.length)) {
+    if (slotData?.slotType === 'period' && isDrag && (!slotData || !slotData.subjects?.length)) {
       e.preventDefault();
       onDrop(e, item, rowIndex, colIndex);
     }
@@ -100,7 +100,7 @@ const TimeTableCell = ({
    * @param e - The drag start event object
    */
   const handleDragStart = (e: any) => {
-    if (!isBreak && isDrag && slotData?.subjects?.length) {
+    if (slotData?.slotType === 'period' && isDrag && slotData?.subjects?.length) {
       e.dataTransfer.setData('subject', JSON.stringify(slotData));
       e.dataTransfer.setData('rowIndex', rowIndex.toString());
       e.dataTransfer.setData('colIndex', colIndex.toString());
@@ -112,20 +112,37 @@ const TimeTableCell = ({
    * Displays a non-interactive cell with "Break" text and grey background
    * @returns {JSX.Element} Break cell component
    */
-  if (isBreak) {
+  if (slotData?.slotType === 'break') {
     return (
       <TableCell
-        colSpan={6}
         sx={{
           bgcolor: 'grey.100',
+          backgroundImage:
+            'linear-gradient(45deg, #f5f5f5 25%, #eeeeee 25%, #eeeeee 50%, #f5f5f5 50%, #f5f5f5 75%, #eeeeee 75%, #eeeeee 100%)',
+          backgroundSize: '20px 20px',
           width: '14%',
           textAlign: 'center',
           padding: '4px',
           cursor: 'not-allowed',
         }}
       >
-        <Typography color="text.secondary">Break</Typography>
+        <Typography color="text.secondary" variant="caption">
+          Break
+        </Typography>
       </TableCell>
+    );
+  }
+
+  if (slotData?.slotType === 'zed') {
+    return (
+      <TableCell
+        sx={{
+          bgcolor: 'action.disabledBackground',
+          width: '14%',
+          padding: '4px',
+          cursor: 'not-allowed',
+        }}
+      />
     );
   }
 

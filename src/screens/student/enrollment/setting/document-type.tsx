@@ -523,6 +523,7 @@ export const DocumentForm = ({
         shikshaMitraToast.success({
           message: `${payload.name} document added successfully`,
         });
+        handleClose?.(null, true);
         // setShowSuccessMessage(true);
         resetForm();
         dispatch(setIsChanges(false));

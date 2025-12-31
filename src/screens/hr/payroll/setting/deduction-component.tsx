@@ -1,5 +1,7 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
@@ -8,6 +10,9 @@ import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useDispatch, useSelector } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -15,8 +20,9 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { useDeletePayElementMutation } from 'src/redux/payElement/payElementApi';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
   Grid,
@@ -28,12 +34,18 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetDeductionComponentsQuery,
+  useAddDeductionComponentMutation,
+  useUpdateDeductionComponentMutation,
+  useDeleteDeductionComponentMutation,
+} from 'src/redux/employee-payroll/employee-payroll-api';
 
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 interface PayElement {
-  name: string;
-  componentType: string;
+  deductionName: string;
+  calculationType: string;
   id: string;
   description: string;
   isEmployeeSpecific: boolean;
@@ -46,7 +58,10 @@ interface PayElement {
   };
   amount: number;
   amountOfPercentage: number;
-  isVisibleInPaySlip: boolean;
+  showOnPayslip: boolean;
+  isSameAmountForAll: boolean;
+  calculatePercentageBasedOn: string;
+  selectedDeductionComponent: string;
 }
 
 const DeductionComponent = () => {
@@ -55,10 +70,37 @@ const DeductionComponent = () => {
   const [deleteInformation, setDeleteInformation] = useState<PayElement | null>(null);
   const isDeductionComponentOpen = useBoolean();
 
-  const [deletePayElement] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeletePayElementMutation,
-  });
+  const [deleteDeductionComponent, { isLoading: deleteDeductionComponentLoading }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useDeleteDeductionComponentMutation,
+    });
+
+  const { data: getDeductionComponentsData, isLoading: getDeductionComponentsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetDeductionComponentsQuery,
+    });
+  const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const dispatch = useDispatch();
+  // Handles closing the incident form
+  const handleClose = (_e: any, isSubmit?: boolean) => {
+    const resetState = () => {
+      setTimeout(() => {
+        dispatch(setIsChanges(false));
+      }, 200); // Adjust timing based on your dialog close animation
+    };
+
+    if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
+      isDeductionComponentOpen.onFalse();
+      resetState();
+    } else if (!isChanges) {
+      isDeductionComponentOpen.onFalse();
+      setTimeout(() => {
+        setEditData(null);
+      }, 200);
+    }
+  };
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -89,26 +131,53 @@ const DeductionComponent = () => {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Delete"
-        content="Are you sure you want to delete?"
+        content={
+          <>
+            Are you sure you want to delete <b>{deleteInformation?.deductionName}</b> Deduction
+            Component?
+          </>
+        }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
             size="small"
+            loading={deleteDeductionComponentLoading}
             onClick={async () => {
-              await deletePayElement(deleteInformation?.id);
+              await deleteDeductionComponent(deleteInformation?.id).unwrap();
+              shikshaMitraToast.success({
+                message: ` ${deleteInformation?.deductionName} Deduction Component deleted successfully`,
+              });
               confirm.onFalse();
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
       <CustomizableTable
         tableId="earning-component"
+        isLoading={getDeductionComponentsLoading}
         columns={[
-          { id: 'name', label: 'Name', align: 'left', minWidth: '10vw' },
+          { id: 'deductionName', label: 'Name', align: 'left', minWidth: '10vw' },
           { id: 'description', label: 'Description', align: 'left', minWidth: '10vw' },
+          { id: 'calculationType', label: 'Component Type', align: 'left', minWidth: '10vw' },
+          {
+            id: 'calculatePercentageBasedOn',
+            label: 'Depends On',
+            align: 'left',
+            minWidth: '10vw',
+          },
+          { id: 'amount', label: 'Amount', align: 'left', minWidth: '10vw' },
+          {
+            id: 'showOnPayslip',
+            label: 'Visible In Payslip',
+            align: 'left',
+            minWidth: '10vw',
+            render(value, row) {
+              return value ? 'Yes' : 'No';
+            },
+          },
 
           {
             id: 'action',
@@ -137,48 +206,7 @@ const DeductionComponent = () => {
             },
           },
         ]}
-        data={[
-          {
-            name: 'Basic Salary',
-            description: 'Base salary component',
-            componentType: 'Fixed',
-            dependOn: 'None',
-            amount: '30000',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'House Rent Allowance',
-            description: 'HRA component',
-            componentType: 'Fixed',
-            dependOn: 'Basic',
-            amount: '40%',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'Performance Bonus',
-            description: 'Quarterly performance bonus',
-            componentType: 'Variable',
-            dependOn: 'Basic',
-            amount: '15%',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'Transport Allowance',
-            description: 'Monthly transport allowance',
-            componentType: 'Fixed',
-            dependOn: 'None',
-            amount: '3000',
-            visibleInPayslip: true,
-          },
-          {
-            name: 'Special Allowance',
-            description: 'Additional benefits',
-            componentType: 'Variable',
-            dependOn: 'Gross',
-            amount: '10%',
-            visibleInPayslip: false,
-          },
-        ]}
+        data={getDeductionComponentsData?.items || []}
       />
       <CustomDialog
         maxWidth="md"
@@ -197,7 +225,7 @@ const DeductionComponent = () => {
               placement="right"
               title={
                 editData
-                  ? `Edit ${editData.name} deduction settings including type and calculation rules`
+                  ? `Edit ${editData.deductionName} deduction settings including type and calculation rules`
                   : 'Configure deduction components like PF, PT, TDS, LWF and ESI. Set calculation rules, percentages and eligibility criteria.'
               }
             >
@@ -206,13 +234,7 @@ const DeductionComponent = () => {
           </Box>
         }
       >
-        <DeductionComponentForm
-          editData={editData}
-          handleClose={() => {
-            isDeductionComponentOpen.onFalse();
-            setEditData(null);
-          }}
-        />
+        <DeductionComponentForm editData={editData} handleClose={handleClose} />
       </CustomDialog>
     </Box>
   );
@@ -222,63 +244,70 @@ export default DeductionComponent;
 
 const componentTypes = ['Fixed', 'Percentage'];
 // Updated dependsOnOptions as requested
-const dependsOnOptions = [
-  'Basic Salary',
-  'Gross Salary',
-  'Net Salary',
-  'CTC',
-  'Allowances',
-  'Any custom salary component',
-];
-// Sample custom salary components for the additional dropdown when last option selected
-const customComponents = [
-  'Overtime Pay',
-  'Shift Allowance',
-  'Leave Encashment',
-  'Project Incentive',
-  'Travel Reimbursement',
-];
+const dependsOnOptions = ['GROSS', 'BASIC', 'CUSTOM_COMPONENT'];
 
 const validationSchema = Yup.object({
-  componentName: Yup.string().required('Component Name is required'),
+  deductionName: Yup.string().required('Deduction Name is required'),
   description: Yup.string(),
-  componentType: Yup.string().test(
+  calculationType: Yup.string().test(
     'required-if-fixed',
-    'Component Type is required',
-    function componentTypeRequired(value) {
-      const { isFixed } = this.parent;
-      return !isFixed || !!value;
+    'Calculation Type is required',
+    function calculationTypeRequired(value) {
+      const { isSameAmountForAll } = this.parent;
+      return !isSameAmountForAll || !!value;
     }
   ),
-  dependOn: Yup.string().test(
+  calculatePercentageBasedOn: Yup.string().test(
     'required-if-percentage',
-    'Depend On is required',
-    function dependOnRequired(value) {
-      const { isFixed, componentType } = this.parent;
-      if (!isFixed) return true;
-      if (componentType !== 'Percentage') return true;
+    'Calculate Percentage Based On is required',
+    function calculatePercentageBasedOnRequired(value) {
+      const { isSameAmountForAll, calculationType } = this.parent;
+      if (!isSameAmountForAll) return true;
+      if (calculationType !== 'Percentage') return true;
       return !!value;
     }
   ),
-  customComponent: Yup.string().test(
-    'required-if-custom-depend',
-    'Custom component is required',
-    function customComponentRequired(value) {
-      const { dependOn, isFixed, componentType } = this.parent;
-      if (!isFixed) return true;
-      if (componentType !== 'Percentage') return true;
-      if (dependOn !== 'Any custom salary component') return true;
-      return !!value;
-    }
-  ),
-  amount: Yup.string().test(
-    'required-if-fixed',
-    'Amount is required',
-    function amountRequired(value) {
-      const { isFixed } = this.parent;
-      return !isFixed || !!value;
-    }
-  ),
+  selectedDeductionComponent: Yup.string()
+    .test(
+      'required-if-custom-depend',
+      'Select Deduction Component is required',
+      function selectedDeductionComponentRequired(value) {
+        const { calculatePercentageBasedOn, isSameAmountForAll, calculationType } = this.parent;
+        if (!isSameAmountForAll) return true;
+        if (calculationType !== 'Percentage') return true;
+        if (calculatePercentageBasedOn !== 'CUSTOM_COMPONENT') return true;
+        return !!value;
+      }
+    )
+    .nullable(),
+  amount: Yup.string()
+    .test('required-if-fixed', 'Amount is required', function amountRequired(value) {
+      const { isSameAmountForAll, calculationType } = this.parent;
+      if (!isSameAmountForAll) return true;
+      if (!value) {
+        if (calculationType === 'Percentage') {
+          return this.createError({ message: 'Percentage is required' });
+        }
+        return this.createError({ message: 'Amount is required' });
+      }
+      return true;
+    })
+    .test(
+      'percentage-range',
+      'Percentage must be between 0 and 100',
+      function percentageRange(value) {
+        const { isSameAmountForAll, calculationType } = this.parent;
+        if (!isSameAmountForAll) return true;
+        if (calculationType !== 'Percentage') return true;
+        if (!value) return true;
+
+        const num = parseFloat(value);
+        if (Number.isNaN(num)) return false;
+        if (num <= 0) return this.createError({ message: 'Percentage must be at least 1' });
+        if (num > 100) return this.createError({ message: 'Percentage must be at most 100' });
+        return true;
+      }
+    ),
 });
 
 const DeductionComponentForm = ({
@@ -286,31 +315,73 @@ const DeductionComponentForm = ({
   handleClose,
 }: {
   editData: any;
-  handleClose: () => void;
+  handleClose: (e: any, isSubmit: boolean) => void;
 }) => {
+  const { data: getDeductionComponentsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetDeductionComponentsQuery,
+  });
+  const [addDeductionComponent, { isLoading: addDeductionComponentLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddDeductionComponentMutation,
+  });
+  const [updateDeductionComponent, { isLoading: updateDeductionComponentLoading }] =
+    useQueryAndMutation({
+      type: 'mutation',
+      currentQueryAndMutation: useUpdateDeductionComponentMutation,
+    });
   const formik = useFormik({
     initialValues: {
-      componentName: editData?.name || '',
+      deductionName: editData?.deductionName || '',
       description: editData?.description || '',
-      componentType: editData?.componentType || '',
-      dependOn: editData?.dependOn || '',
-      customComponent: editData?.customComponent || '',
+      calculationType: editData?.calculationType || '',
+      calculatePercentageBasedOn: editData?.calculatePercentageBasedOn || '',
+      selectedDeductionComponent: editData?.selectedDeductionComponent || '',
       amount: editData?.amount || '',
-      visibleInPayslip: editData?.visibleInPayslip || true,
-      isFixed: editData ? editData?.isFixed : true,
+      showOnPayslip: editData?.showOnPayslip || true,
+      isSameAmountForAll: editData ? editData?.isSameAmountForAll : true,
     },
     validationSchema,
-    onSubmit: (values) => {
-      handleClose();
+    onSubmit: async (values) => {
+      try {
+        if (editData) {
+          await updateDeductionComponent({
+            id: editData.id,
+            body: {
+              deductionName: values.deductionName,
+              description: values.description,
+              calculationType: values.calculationType,
+              calculatePercentageBasedOn: values.calculatePercentageBasedOn,
+              selectedDeductionComponent: values.selectedDeductionComponent,
+              amount: values.amount,
+              showOnPayslip: values.showOnPayslip,
+              isSameAmountForAll: values.isSameAmountForAll,
+            },
+          }).unwrap();
+        } else {
+          await addDeductionComponent({
+            deductionName: values.deductionName,
+            description: values.description,
+            calculationType: values.calculationType,
+            calculatePercentageBasedOn: values.calculatePercentageBasedOn,
+            selectedDeductionComponent: values.selectedDeductionComponent,
+            amount: values.amount,
+            showOnPayslip: values.showOnPayslip,
+            isSameAmountForAll: values.isSameAmountForAll,
+          }).unwrap();
+        }
+        handleClose(null, true);
+      } catch (error) {
+        console.error(error);
+      }
     },
   });
-
   return (
-    <>
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        {/* General Information */}
+        {/* Deduction Details */}
         <SectionCard
-          title="General Information"
+          title="Deduction Details"
           gridProps={{
             sx: {
               alignItems: 'start',
@@ -319,17 +390,17 @@ const DeductionComponentForm = ({
         >
           <Grid size={{ xs: 12, sm: 6 }}>
             <ShakingTextField
-              error={formik.touched.componentName && Boolean(formik.errors.componentName)}
+              error={formik.touched.deductionName && Boolean(formik.errors.deductionName)}
             >
               <TextField
                 size="small"
                 fullWidth
-                label="Component Name *"
-                name="componentName"
-                value={formik.values.componentName}
+                label="Deduction Name *"
+                name="deductionName"
+                value={formik.values.deductionName}
                 onChange={formik.handleChange}
-                error={formik.touched.componentName && Boolean(formik.errors.componentName)}
-                helperText={(formik.touched.componentName && formik.errors.componentName) as string}
+                error={formik.touched.deductionName && Boolean(formik.errors.deductionName)}
+                helperText={(formik.touched.deductionName && formik.errors.deductionName) as string}
               />
             </ShakingTextField>
           </Grid>
@@ -354,40 +425,41 @@ const DeductionComponentForm = ({
               control={
                 <Switch
                   size="small"
-                  name="isFixed"
-                  checked={formik.values.isFixed}
-                  onChange={(_e, value) => formik.setFieldValue('isFixed', value)}
+                  name="isSameAmountForAll"
+                  checked={formik.values.isSameAmountForAll}
+                  onChange={(_e, value) => formik.setFieldValue('isSameAmountForAll', value)}
                 />
               }
-              label="Is Fixed Component"
+              label="Same Amount for All Employees"
             />
           </Grid>
         </SectionCard>
 
         {/* Earning Configuration */}
-        {formik.values.isFixed && (
-          <SectionCard title="Earning Configuration">
+        {formik.values.isSameAmountForAll && (
+          <SectionCard title="Calculation Rules">
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <ShakingTextField
-                error={formik.touched.componentType && Boolean(formik.errors.componentType)}
+                error={formik.touched.calculationType && Boolean(formik.errors.calculationType)}
               >
                 <TextField
                   size="small"
                   select
                   fullWidth
-                  label="Component Type *"
-                  name="componentType"
-                  value={formik.values.componentType}
+                  label="Calculation Type *"
+                  name="calculationType"
+                  value={formik.values.calculationType}
                   onChange={(e) => {
                     formik.handleChange(e);
                     if (e.target.value !== 'Percentage') {
-                      formik.setFieldValue('dependOn', '');
-                      formik.setFieldValue('customComponent', '');
+                      formik.setFieldValue('calculatePercentageBasedOn', '');
+                      formik.setFieldValue('selectedDeductionComponent', '');
                     }
+                    formik.setFieldTouched('calculationType', false);
                   }}
-                  error={formik.touched.componentType && Boolean(formik.errors.componentType)}
+                  error={formik.touched.calculationType && Boolean(formik.errors.calculationType)}
                   helperText={
-                    (formik.touched.componentType && formik.errors.componentType) as string
+                    (formik.touched.calculationType && formik.errors.calculationType) as string
                   }
                 >
                   {componentTypes.map((type) => (
@@ -399,21 +471,30 @@ const DeductionComponentForm = ({
               </ShakingTextField>
             </Grid>
 
-            {formik.values.componentType === 'Percentage' && (
+            {formik.values.calculationType === 'Percentage' && (
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <ShakingTextField
-                  error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}
+                  error={
+                    formik.touched.calculatePercentageBasedOn &&
+                    Boolean(formik.errors.calculatePercentageBasedOn)
+                  }
                 >
                   <TextField
                     size="small"
                     select
                     fullWidth
-                    label="Depend on *"
-                    name="dependOn"
-                    value={formik.values.dependOn}
+                    label="Calculate Percentage Based On *"
+                    name="calculatePercentageBasedOn"
+                    value={formik.values.calculatePercentageBasedOn}
                     onChange={formik.handleChange}
-                    error={formik.touched.dependOn && Boolean(formik.errors.dependOn)}
-                    helperText={(formik.touched.dependOn && formik.errors.dependOn) as string}
+                    error={
+                      formik.touched.calculatePercentageBasedOn &&
+                      Boolean(formik.errors.calculatePercentageBasedOn)
+                    }
+                    helperText={
+                      (formik.touched.calculatePercentageBasedOn &&
+                        formik.errors.calculatePercentageBasedOn) as string
+                    }
                   >
                     {dependsOnOptions.map((dep) => (
                       <MenuItem key={dep} value={dep}>
@@ -425,33 +506,34 @@ const DeductionComponentForm = ({
               </Grid>
             )}
 
-            {formik.values.componentType === 'Percentage' &&
-              formik.values.dependOn === 'Any custom salary component' && (
+            {formik.values.calculationType === 'Percentage' &&
+              formik.values.calculatePercentageBasedOn === 'CUSTOM_COMPONENT' && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <ShakingTextField
-                    error={formik.touched.customComponent && Boolean(formik.errors.customComponent)}
+                    error={
+                      formik.touched.selectedDeductionComponent &&
+                      Boolean(formik.errors.selectedDeductionComponent)
+                    }
                   >
-                    <TextField
-                      size="small"
-                      select
-                      fullWidth
-                      label="Select Custom Component *"
-                      name="customComponent"
-                      value={formik.values.customComponent}
-                      onChange={formik.handleChange}
+                    <CustomSelect
+                      options={getDeductionComponentsData?.items || []}
+                      label="Select Deduction Component *"
+                      value={formik.values.selectedDeductionComponent}
+                      onChange={(val) => {
+                        formik.setFieldValue('selectedDeductionComponent', val);
+                      }}
+                      labelKey="componentName"
+                      valueKey="id"
                       error={
-                        formik.touched.customComponent && Boolean(formik.errors.customComponent)
+                        formik.touched.selectedDeductionComponent &&
+                        Boolean(formik.errors.selectedDeductionComponent)
                       }
                       helperText={
-                        (formik.touched.customComponent && formik.errors.customComponent) as string
+                        (formik.touched.selectedDeductionComponent &&
+                          formik.errors.selectedDeductionComponent) as string
                       }
-                    >
-                      {customComponents.map((c) => (
-                        <MenuItem key={c} value={c}>
-                          {c}
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                      fullWidth
+                    />
                   </ShakingTextField>
                 </Grid>
               )}
@@ -462,9 +544,7 @@ const DeductionComponentForm = ({
                   size="small"
                   fullWidth
                   label={
-                    formik.values.componentType === 'Percentage'
-                      ? 'Amount Percentage *'
-                      : 'Amount *'
+                    formik.values.calculationType === 'Percentage' ? 'Percentage *' : 'Amount *'
                   }
                   name="amount"
                   type="number"
@@ -481,12 +561,12 @@ const DeductionComponentForm = ({
                 control={
                   <Switch
                     size="small"
-                    name="visibleInPayslip"
-                    checked={formik.values.visibleInPayslip}
+                    name="showOnPayslip"
+                    checked={formik.values.showOnPayslip}
                     onChange={formik.handleChange}
                   />
                 }
-                label="Visible in Payslip"
+                label="Show on Payslip"
               />
             </Grid>
           </SectionCard>
@@ -498,7 +578,7 @@ const DeductionComponentForm = ({
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"
           variant="outlined"
-          onClick={handleClose}
+          onClick={(e: any) => handleClose(e, false)}
         >
           Cancel
         </Button>
@@ -508,10 +588,11 @@ const DeductionComponentForm = ({
           type="submit"
           startIcon={<Iconify icon={GlobalIcons.submit} />}
           onClick={(e: any) => formik.handleSubmit(e)}
+          loading={addDeductionComponentLoading || updateDeductionComponentLoading}
         >
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
-    </>
+    </BackPopUpChecked>
   );
 };

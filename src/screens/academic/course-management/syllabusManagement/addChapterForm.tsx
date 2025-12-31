@@ -22,6 +22,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useAddChapterMutation,
   useUpdateChapterMutation,
@@ -59,6 +60,11 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useUpdateChapterMutation,
   });
+  const [uploadCurriculumFile] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
+
   // Initialize formik for form handling
   const formik = useFormik<IChapterFormValues>({
     initialValues: getChapterInitialValues(initialValues),
@@ -102,6 +108,17 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
       }
     },
   });
+
+  const handleFileUpload = async (files: (File | string)[]) => {
+    const uploadedFiles: (string | File)[] = [];
+    const formData = new FormData();
+    formData.append('FileName', (files[0] as File)?.name);
+    formData.append('File', files[0] as File);
+    const response = await uploadCurriculumFile(formData).unwrap();
+    uploadedFiles.push(response.data);
+
+    formik.setFieldValue(`documents`, uploadedFiles);
+  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -250,6 +267,16 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
 
               {/* Document Upload Section */}
               <Grid size={{ xs: 12 }}>
+                <CustomUpload
+                  multiple
+                  previewCount={6}
+                  onChange={(files) => {
+                    handleFileUpload(files);
+                  }}
+                  value={formik.values.documents}
+                  label="Upload Your Subject Documents"
+                  outputFormat="file"
+                />
                 <CustomUpload
                   multiple
                   previewCount={6}

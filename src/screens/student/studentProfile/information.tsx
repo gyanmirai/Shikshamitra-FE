@@ -2,21 +2,28 @@
 
 import { useFormik } from 'formik';
 import { useTabs } from 'src/hooks/use-tabs';
-import { Category } from 'src/enums/studnet-category';
-import { useMemo, useState, useCallback } from 'react';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { getBase64String } from 'src/utils/get-base64-string';
+import { LoadingScreen } from 'src/components/loading-screen';
 import { Tab, Box, Grid, Card, TextField } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import {
+  useGetBasicDetailsQuery,
+  useGetFamilyDetailsQuery,
+  useGetParentBankDetailsQuery,
   useUpdateBasicDetailsMutation,
   useUpdateFamilyDetailsMutation,
+  useGetStudentMedicalDetailsQuery,
+  useGetPreviousSchoolDetailsQuery,
   useUpdateParentBankDetailsMutation,
+  useGetStudentAdditionalDetailsQuery,
   useUpdatePreviousSchoolDetailsMutation,
   useUpdateStudentMedicalDetailsMutation,
+  useGetStudentCommunicationDetailsQuery,
   useUpdateStudentAdditionalDetailsMutation,
   useUpdateStudentCommunicationDetailsMutation,
 } from 'src/redux/student/registration/registration-api';
@@ -127,51 +134,47 @@ export function StudentInformation(props: StudentTabsComponentType) {
       try {
         if (editData) {
           await updateBasicDetails({
-            id: editData?.id || values?.id,
+            id: editData?.studentId || values?.id,
             body: {
-              formNumber: values.formNo,
               firstName: values.firstName,
               middleName: values.middleName,
               lastName: values.lastName,
-              previousSchoolName: values.previousSchool,
-
               dateOfBirth: dateConvertor(values.dob?.format(dateFormat) || '') || '',
-              genderType: values.gender,
-              primaryContactNumber: values.primaryContactNumber,
-              secondaryContactNumber: values.secondaryContactNumber,
-
-              academicYearId: values.academicYear,
-              educationBoardId: values.board,
-              educationMediumId: values.medium,
-              standardId: values.class,
-              // userId: values.userId || res?.id,
-              profilePicture: values.photo ? getBase64String(values.photo) : '',
-              // mobileNo: values.mobileNo,
+              gender: values.gender,
+              profilePictureUrl: values.photo ? getBase64String(values.photo) : '',
+              primaryContactNo: values.primaryContactNumber,
+              secondaryContactNo: values.secondaryContactNumber,
               email: values.email,
-              aadhaarNo: String(values.adharNo),
+              aadharNo: String(values.adharNo),
+              apparId: values.apparId,
+              panNo: values.panNo,
               religion: values.religion,
               familyCast: values.familyCast,
-              castType: values.castCategory,
-              motherTongue: values.motherTongue,
+              castCategory: values.castCategory,
               nationality: values.nationality,
               birthPlace: values.birthPlace,
-              temporaryGr: +values.temporaryGr,
-              remarks: values.remarks,
-              addressLine1: values.addressLine1,
-              addressLine2: values.addressLine2,
-              addressLine3: values.addressLine3,
+              motherTongue: values.motherTongue,
+              adderss1: values.addressLine1,
+              address2: values.addressLine2,
+              address3: values.addressLine3,
               city: values?.city?.name,
               state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
               country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
-              pinCode: String(values.pinCode),
-              inquiryPreferenceId: values.inquiryPreference,
-              village: values.village,
-              apparId: values.apparId,
-              panNo: values.panNo,
-              userId: editData?.userId,
+              pincode: String(values.pinCode),
+              previousSchool: values.previousSchool,
               lastClassPassed: values.lastClassPassed,
+              academicMediumId: values.medium,
+              standardId: values.class,
+
+              formNumber: values.formNo,
+              // academicYearId: values.academicYear,
+              // educationBoardId: values.board,
             },
           }).unwrap();
+          // if (isComeFromIssueForm) {
+          //   await moveToRegistration(editData?.id);
+          //   // router.push('/student/enrollment/registration');
+          // }
         }
       } catch (error) {
         throw new Error(error);
@@ -183,32 +186,44 @@ export function StudentInformation(props: StudentTabsComponentType) {
     async (values: any, formik: any) => {
       try {
         await updateFamilyDetails({
-          id: editData?.id || values?.id,
+          id: editData?.studentId || values?.id,
           body: {
             fatherDetails: {
-              name: values.fatherName,
+              fullName: values.fatherName,
               dateOfBirth: values.fatherDob
                 ? dateConvertor(values.fatherDob?.format(dateFormat) || '') || ''
                 : null,
               occupation: values.fatherOccupation,
-              qualification: values.fatherQualification,
-              contactNo: values.fatherContactNo,
               email: values.fatherEmail,
-              passOutYear: +values.fatherPassOutYear,
+              contactNo: values.fatherContactNo,
               officeNo: values.fatherOfficeNo,
-              officeAddress1: values.fatherOfficeAddress1,
-              officeAddress2: values.fatherOfficeAddress2,
-              officeAddress3: values.fatherOfficeAddress3,
+              qualification: values.fatherQualification,
+              yearOfPassing: values.fatherPassOutYear,
               designation: values.fatherDesignation,
               organisation: values.fatherOrganization,
-              aadhaarNo: String(values.fatherAadharNo),
+              aadharNo: String(values.fatherAadharNo),
+              officeAddress: {
+                address1: values.fatherOfficeAddress1,
+                address2: values.fatherOfficeAddress2,
+                address3: values.fatherOfficeAddress3,
+                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+                city: values?.city?.name,
+                pincode: values.fatherOfficePincode,
+              },
+              localAddress: {
+                address1: values.fatherAddress1,
+                address2: values.fatherAddress2,
+                address3: values.fatherAddress3,
+                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+                city: values?.city?.name,
+                pincode: values.fatherLocalPincode,
+              },
               remarks: values.fatherRemarks,
-              address1: values.fatherAddress1,
-              address2: values.fatherAddress2,
-              address3: values.fatherAddress3,
             },
             motherDetails: {
-              name: values.motherName,
+              fullName: values.motherName,
               dateOfBirth: values.motherDob
                 ? dateConvertor(values.motherDob?.format(dateFormat) || '') || ''
                 : null,
@@ -216,7 +231,7 @@ export function StudentInformation(props: StudentTabsComponentType) {
               qualification: values.motherQualification,
               contactNo: values.motherContactNo,
               email: values.motherEmail,
-              passOutYear: +values.motherPassOutYear,
+              passOutYear: values.motherPassOutYear,
               officeNo: values.motherOfficeNo,
               officeAddress1: values.motherOfficeAddress1,
               officeAddress2: values.motherOfficeAddress2,
@@ -225,10 +240,27 @@ export function StudentInformation(props: StudentTabsComponentType) {
               organisation: values.motherOrganization,
               aadhaarNo: String(values.motherAadharNo),
               remarks: values.motherRemarks,
-              address: values.motherAddress,
+              officeAddress: {
+                address1: values.motherOfficeAddress1,
+                address2: values.motherOfficeAddress2,
+                address3: values.motherOfficeAddress3,
+                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+                city: values?.city?.name,
+                pincode: values.motherOfficePincode,
+              },
+              localAddress: {
+                address1: values.motherAddress1,
+                address2: values.motherAddress2,
+                address3: values.motherAddress3,
+                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+                city: values?.city?.name,
+                pincode: values.motherLocalPincode,
+              },
             },
             guardianDetails: {
-              name: values.guardianName,
+              fullName: values.guardianName,
               dateOfBirth: values.guardianDob
                 ? dateConvertor(values.guardianDob?.format(dateFormat) || '') || ''
                 : null,
@@ -236,7 +268,7 @@ export function StudentInformation(props: StudentTabsComponentType) {
               qualification: values.guardianQualification,
               contactNo: values.guardianContactNo,
               email: values.guardianEmail,
-              passOutYear: +values.guardianPassOutYear,
+              passOutYear: values.guardianPassOutYear,
               officeNo: values.guardianOfficeNo,
               officeAddress1: values.guardianOfficeAddress1,
               officeAddress2: values.guardianOfficeAddress2,
@@ -245,9 +277,24 @@ export function StudentInformation(props: StudentTabsComponentType) {
               organisation: values.guardianOrganization,
               aadhaarNo: String(values.guardianAadharNo),
               remarks: values.guardianRemarks,
-              address1: values.guardianAddress1,
-              address2: values.guardianAddress2,
-              address3: values.guardianAddress3,
+              officeAddress: {
+                address1: values.guardianOfficeAddress1,
+                address2: values.guardianOfficeAddress2,
+                address3: values.guardianOfficeAddress3,
+                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+                city: values?.city?.name,
+                pincode: values.guardianOfficePincode,
+              },
+              localAddress: {
+                address1: values.guardianAddress1,
+                address2: values.guardianAddress2,
+                address3: values.guardianAddress3,
+                country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+                state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+                city: values?.city?.name,
+                pincode: values.guardianLocalPincode,
+              },
             },
           },
         }).unwrap();
@@ -255,102 +302,100 @@ export function StudentInformation(props: StudentTabsComponentType) {
         throw new Error(error);
       }
     },
-    [editData?.id, updateFamilyDetails]
+    [editData?.studentId, updateFamilyDetails]
   );
   const handleCommunicationFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
         await updateCommunicationDetails({
-          id: editData?.id || values?.id,
+          id: editData?.studentId || values?.id,
           body: {
-            primaryContactNo: values.primaryContactNumber,
-            parentContactNo: values.parentContactNumber,
-            parentEmail: values.parentEmail,
-            studentContactNo: values.studentContactNo,
-            studentEmail: values.studentEmail,
-            whatsAppNo: values.whatsAppContactNo,
-            localAddress: values.localAddress,
-            localCountryName: values?.localCountry?.name || '',
-            localCountryIsoCode: values?.localCountry?.isoCode || '',
-            localStateName: values?.localState?.name || '',
-            localStateIsoCode: values?.localState?.isoCode || '',
-            localCity: values.localCity.name,
-            localPinCode: values.localPincode,
-            permanentAddress: values.permanentAddress,
-            permanentCountryName: values?.permanentCountry?.name || '',
-            permanentCountryIsoCode: values?.permanentCountry?.isoCode || '',
-
-            permanentStateName: values?.permanentState?.name || '',
-            permanentStateIsoCode: values?.permanentState?.isoCode || '',
-
-            permanentCity: values?.permanentCity?.name,
-            permanentPinCode: values.permanentPincode,
-            emergencyAddress: values.emergencyAddress,
-            emergencyStateName: values.emergencyState?.name || '',
-            emergencyStateIsoCode: values.emergencyState?.isoCode || '',
-            emergencyCountryName: values.emergencyCountry?.name || '',
-            emergencyCountryIsoCode: values.emergencyCountry?.isoCode || '',
-
-            emergencyCity: values?.emergencyCity?.name,
-            emergencyPinCode: values.emergencyPincode,
-            remarks: values.remarks,
+            localAddress: {
+              address1: values.localAddress1,
+              address2: values.localAddress2,
+              address3: values.localAddress3,
+              country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+              state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+              city: values?.city?.name,
+              pincode: values.localPincode,
+            },
+            permanentAddress: {
+              address1: values.permanentAddress1,
+              address2: values.permanentAddress2,
+              address3: values.permanentAddress3,
+              country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+              state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+              city: values?.city?.name,
+              pincode: values.permanentPincode,
+            },
+            emergencyAddress: {
+              address1: values.emergencyAddress1,
+              address2: values.emergencyAddress2,
+              address3: values.emergencyAddress3,
+              country: { name: values?.country?.name, isoCode: values?.country?.isoCode },
+              state: { name: values?.state?.name, isoCode: values?.state?.isoCode },
+              city: values?.city?.name,
+              pincode: values.emergencyPincode,
+            },
+            isPermanentSameAsLocal: values.sameAsLocalForPermanent,
+            isEmergencySameAsLocal: values.emergencySameAsLocal,
           },
         }).unwrap();
       } catch (error) {
         throw new Error(error);
       }
     },
-    [editData?.id, updateCommunicationDetails]
+    [editData?.studentId, updateCommunicationDetails]
   );
   const handleMedicalFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
         await updateMedicalDetails({
-          id: editData?.id || values?.id,
+          id: editData?.studentId || values?.id,
           body: {
-            weight: +values.weight,
-            height: +values.height,
+            weightKg: +values.weight,
+            heightCm: +values.height,
             bodyMassIndex: +values.bmi,
-            haemoglobin: +values.haemoglobin,
+            hemoglobin: +values.haemoglobin,
             allergies: values.allergies,
-            covidVaccination: values.covidVaccination,
-            childImmunisation: values.childImmunisation,
-            immunisationRemarks: values.immunisationRemarks,
+            covidVaccinationDoses: values.covidVaccination,
+            childImmunization: values.childImmunisation,
+            immunizationRemarks: values.immunisationRemarks,
           },
         }).unwrap();
       } catch (error) {
         throw new Error(error);
       }
     },
-    [editData?.id, updateMedicalDetails]
+    [editData?.studentId, updateMedicalDetails]
   );
   const handlePreviousSchoolFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
         await updatePreviousSchoolDetails({
-          id: editData?.id || values?.id,
+          id: editData?.studentId || values?.id,
           body: {
-            previousSchoolName: values.schoolName,
-            previousSchoolAddress: values.schoolAddress,
-            previousSchoolBoard: values.schoolBoard,
-            previousSchoolMedium: values.schoolMedium,
-            tcNo: values.tcNumber,
-            lastClassPassed: String(values.lastClassPassed),
-            percentage: +values.percentage,
+            schoolName: values.schoolName,
+            schoolAddress: values.schoolAddress,
+            board: values.schoolBoard,
+            medium: values.schoolMedium,
+            tcNumber: values.tcNumber,
+            lastClassAttended: String(values.lastClassPassed),
+            percentageObtained: +values.percentage,
           },
         }).unwrap();
       } catch (error) {
         throw new Error(error);
       }
     },
-    [editData?.id, updatePreviousSchoolDetails]
+    [editData?.studentId, updatePreviousSchoolDetails]
   );
 
   const handleBankDetailsFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
         await updateBankDetails({
-          id: editData?.id || values?.id,
+          id: editData?.studentId || values?.id,
           body: {
             bankName: values.bankName,
             branchName: values.branchName,
@@ -363,31 +408,42 @@ export function StudentInformation(props: StudentTabsComponentType) {
         throw new Error(error);
       }
     },
-    [editData?.id, updateBankDetails]
+    [editData?.studentId, updateBankDetails]
   );
   const handleAdditionalDetailsFormSubmit = useCallback(
     async (values: any, formik: any) => {
       try {
         await updateAdditionDetails({
-          id: editData?.id || values?.id,
+          id: editData?.studentId || values?.id,
           body: {
+            // category: values.category,
+            // rightToEducation: values.category === Category.Rte,
+            // bplStudent: values.bplStudent,
+            // bplCardNo: values.bplCardNo,
+            // personWithDisability: values.personWithDisability,
+            // secondLanguage: values.secondLanguage,
+            // emergencyContactNo: values.emergencyContactNo,
+            // singleParentChild: values.singleParentChild,
+            // singleChild: values.singleChild,
+            // sponsorName: values.sponsorStudent.id,
+
             category: values.category,
-            rightToEducation: values.category === Category.Rte,
-            bplStudent: values.bplStudent,
+            isBPLStudent: values.bplStudent,
             bplCardNo: values.bplCardNo,
-            personWithDisability: values.personWithDisability,
             secondLanguage: values.secondLanguage,
+            haveDisability: values.personWithDisability,
+            emergencyRelativeName: values.relationName,
+            emergencyRelation: values.relation,
             emergencyContactNo: values.emergencyContactNo,
-            singleParentChild: values.singleParentChild,
-            singleChild: values.singleChild,
-            sponsorName: values.sponsorStudent.id,
+            isSingleChild: values.singleChild,
+            isSingleParentChild: values.singleParentChild,
           },
         }).unwrap();
       } catch (error) {
         throw new Error(error);
       }
     },
-    [editData?.id, updateAdditionDetails]
+    [editData?.studentId, updateAdditionDetails]
   );
 
   const onSubmit = async (values: any) => {
@@ -480,72 +536,238 @@ export function StudentInformation(props: StudentTabsComponentType) {
               />
             ))}
           </CustomTabs>
-          <FormSlider
-            steps={TABS}
-            isBackClick={isBackClick}
+          <StudentInformationForm
+            formik={formik}
             step={activeTabIndex}
-            containerProps={{
-              sx: {
-                p: 0,
-              },
-            }}
-          >
-            <Grid container spacing={2} p={2}>
-              {fields[activeTabIndex].map((field: FieldsType) => (
-                <Grid
-                  size={{
-                    xs: [1].includes(activeTabIndex) ? 12 : 3,
-                    md: [1].includes(activeTabIndex) ? 12 : 3,
-                  }}
-                  key={field.name}
-                  {...(field.gridProps || {})}
-                >
-                  {field.renderComp ? (
-                    field.renderComp({ formik, field, isEdit, isMainForm: false })
-                  ) : field.type === 'date' ? (
-                    <DatePicker
-                      label={field.label}
-                      name={field.name}
-                      value={formik.values[field.name]}
-                      format="DD-MM-YYYY"
-                      onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
-                      disabled={!isEdit}
-                      slotProps={{
-                        textField: {
-                          placeholder: field.placeholder,
-                          fullWidth: true,
-                          size: 'small',
-                          helperText: formik.touched[field.name] && formik.errors[field.name],
-                          error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
-                        },
-                      }}
-                    />
-                  ) : (
-                    <TextField
-                      key={field.name}
-                      type={field.type}
-                      size="small"
-                      label={field.label}
-                      name={field.name}
-                      placeholder={field.placeholder}
-                      value={formik.values[field.name]}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-                      helperText={formik.touched[field.name] && formik.errors[field.name]}
-                      fullWidth
-                      disabled={!isEdit}
-                      // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
-                      {...(field?.otherProps || {})}
-                    />
-                  )}
-                </Grid>
-              ))}
-            </Grid>
-          </FormSlider>
+            editData={editData}
+            isEdit={isEdit}
+            isBackClick={isBackClick}
+          />
         </Card>
       </form>
       {/* </BackPopUpChecked> */}
     </Box>
   );
 }
+
+const StudentInformationForm = ({ formik, step, editData, isEdit, isBackClick }: any) => {
+  console.log('editData', editData);
+  const initializedStepsRef = useRef<Record<number, boolean>>({});
+
+  const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBasicDetailsQuery,
+    params: {
+      studentId: editData?.studentId,
+    },
+    options: {
+      skip: !(editData?.studentId && step === 0),
+    },
+  });
+
+  const { data: familyDetails, isLoading: familyDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFamilyDetailsQuery,
+    params: {
+      studentId: editData?.studentId,
+    },
+    options: {
+      skip: !(editData?.studentId && step === 1),
+    },
+  });
+  const { data: studentCommunicationDetails, isLoading: studentCommunicationDetailsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetStudentCommunicationDetailsQuery,
+      params: {
+        studentId: editData?.studentId,
+      },
+      options: {
+        skip: !(editData?.studentId && step === 2),
+      },
+    });
+
+  const { data: studentAdditionalDetails, isLoading: studentAdditionalDetailsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetStudentAdditionalDetailsQuery,
+      params: {
+        studentId: editData?.studentId,
+      },
+      options: {
+        skip: !(editData?.studentId && step === 3),
+      },
+    });
+
+  const { data: studentMedicalDetails, isLoading: studentMedicalDetailsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetStudentMedicalDetailsQuery,
+      params: {
+        studentId: editData?.studentId,
+      },
+      options: {
+        skip: !(editData?.studentId && step === 4),
+      },
+    });
+  const { data: previousSchoolDetails, isLoading: previousSchoolDetailsLoading } =
+    useQueryAndMutation({
+      type: 'query',
+      currentQueryAndMutation: useGetPreviousSchoolDetailsQuery,
+      params: {
+        studentId: editData?.studentId,
+      },
+      options: {
+        skip: !(editData?.studentId && step === 5),
+      },
+    });
+
+  const { data: parentBankDetails, isLoading: parentBankDetailsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetParentBankDetailsQuery,
+    params: {
+      studentId: editData?.studentId,
+    },
+    options: {
+      skip: !(editData?.studentId && step === 6),
+    },
+  });
+
+  useEffect(() => {
+    if (initializedStepsRef.current[step]) return;
+    if (basicDetails?.data && step === 0) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...generalFieldsInitialValues(basicDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (familyDetails?.data && step === 1) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...familyFieldsInitialValues(familyDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (studentCommunicationDetails?.data && step === 2) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...CommunicationFieldsInitialValues(studentCommunicationDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (studentAdditionalDetails?.data && step === 3) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...additionalDetailsInitialValues(studentAdditionalDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (studentMedicalDetails?.data && step === 4) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...medicalFieldsInitialValues(studentMedicalDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (previousSchoolDetails?.data && step === 5) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...previousSchoolFieldsInitialValues(previousSchoolDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (parentBankDetails?.data && step === 6) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        ...bankDetailsInitialValues(parentBankDetails?.data),
+      }));
+      initializedStepsRef.current[step] = true;
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    basicDetails?.data,
+    familyDetails?.data,
+    parentBankDetails?.data,
+    previousSchoolDetails?.data,
+    step,
+    studentAdditionalDetails?.data,
+    studentCommunicationDetails?.data,
+    studentMedicalDetails?.data,
+  ]);
+
+  return basicDetailsLoading ||
+    familyDetailsLoading ||
+    studentCommunicationDetailsLoading ||
+    studentAdditionalDetailsLoading ||
+    studentMedicalDetailsLoading ||
+    previousSchoolDetailsLoading ||
+    parentBankDetailsLoading ? (
+    <LoadingScreen />
+  ) : (
+    <FormSlider
+      steps={TABS}
+      isBackClick={isBackClick}
+      step={step}
+      containerProps={{
+        sx: {
+          p: 0,
+        },
+      }}
+    >
+      <Grid container spacing={2} p={2}>
+        {fields[step].map((field: FieldsType) => (
+          <Grid
+            size={{
+              xs: [1].includes(step) ? 12 : 3,
+              md: [1].includes(step) ? 12 : 3,
+            }}
+            key={field.name}
+            {...(field.gridProps || {})}
+          >
+            {field.renderComp ? (
+              field.renderComp({
+                formik,
+                field,
+                isEdit,
+                isMainForm: false,
+                editData,
+              })
+            ) : field.type === 'date' ? (
+              <DatePicker
+                label={field.label}
+                name={field.name}
+                value={formik.values[field.name]}
+                format="DD-MM-YYYY"
+                onChange={(newValue) => formik.setFieldValue(field.name, newValue)}
+                disabled={!isEdit}
+                slotProps={{
+                  textField: {
+                    placeholder: field.placeholder,
+                    fullWidth: true,
+                    size: 'small',
+                    helperText: formik.touched[field.name] && formik.errors[field.name],
+                    error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
+                  },
+                }}
+              />
+            ) : (
+              <TextField
+                key={field.name}
+                type={field.type}
+                size="small"
+                label={field.label}
+                name={field.name}
+                placeholder={field.placeholder}
+                value={formik.values[field.name]}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
+                helperText={formik.touched[field.name] && formik.errors[field.name]}
+                fullWidth
+                disabled={!isEdit}
+                // sx={{ maxWidth: '200px', width: '100%', ...(field?.sx || {}) }}
+                {...(field?.otherProps || {})}
+              />
+            )}
+          </Grid>
+        ))}
+      </Grid>
+    </FormSlider>
+  );
+};

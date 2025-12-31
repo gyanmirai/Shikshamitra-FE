@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
@@ -243,6 +244,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
     [StudentsData?.items]
   );
 
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <DialogScrollContent>
@@ -397,6 +400,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
                 label="First Trial Date"
                 value={values.firstTrialDate}
                 format="DD-MM-YYYY"
+                minDate={dayjs(currentYear?.startDate)}
+                maxDate={dayjs(currentYear?.endDate)}
                 onChange={(newValue) => {
                   setFieldValue('firstTrialDate', newValue);
                 }}
@@ -419,6 +424,8 @@ const FirstTrialForm = ({ onClose }: { onClose: (e: any, isSubmit: boolean) => v
                 value={values.examYear}
                 format="YYYY"
                 views={['year']}
+                minDate={dayjs(currentYear?.startDate)}
+                maxDate={dayjs(currentYear?.endDate)}
                 onChange={(newValue) => {
                   setFieldValue('examYear', newValue);
                 }}

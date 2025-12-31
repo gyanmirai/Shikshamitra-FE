@@ -14,7 +14,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { AccurateRateType } from 'src/enums/accurate-rate';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -28,10 +27,10 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
-  useGetEmployeeLeavePolicyQuery,
-  useAddEmployeeLeavePolicyMutation,
-  useUpdateEmployeeLeavePolicyMutation,
-  useDeleteEmployeeLeavePolicyMutation,
+  useGetEmployeeTypeQuery,
+  useAddEmployeeTypeMutation,
+  useUpdateEmployeeTypeMutation,
+  useDeleteEmployeeTypeMutation,
 } from 'src/redux/employee/employeeApi';
 
 export interface ILeavePolicy {
@@ -43,12 +42,12 @@ export interface ILeavePolicy {
   isDeleted: boolean;
   deleterId: string;
   deletionTime: string;
-  policyName: string;
+  title: string;
   leaveType: string;
-  maximumDaysPerYear: number;
+  maxLeavePerYear: number;
   paidType: string;
   carryForward: boolean;
-  encashable: boolean;
+  encashmentAllowed: boolean;
   requiresApproval: boolean;
   description: string;
   isActive: boolean;
@@ -61,14 +60,15 @@ const LeaveType = () => {
   const dispatch = useDispatch();
   const leaveTypeDialog = useBoolean(false);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
   const { data: leavePolicyData, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
+    currentQueryAndMutation: useGetEmployeeTypeQuery,
+    params: mediumStageId?.id,
   });
-
   const [deleteLeavePolicy, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useDeleteEmployeeLeavePolicyMutation,
+    currentQueryAndMutation: useDeleteEmployeeTypeMutation,
   });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -90,7 +90,7 @@ const LeaveType = () => {
     () =>
       leavePolicyData?.items.map((item: ILeavePolicy) => ({
         ...item,
-        leaveDays: item?.maximumDaysPerYear?.toString(),
+        leaveDays: item?.maxLeavePerYear?.toString(),
         isCarryForward: item.carryForward ? 'Yes' : 'No',
         // accrualRateString: AccurateRateType[item.accrualRate],
         // color: item.color,
@@ -188,7 +188,7 @@ const LeaveType = () => {
         tableId="leave-policy-table"
         columns={[
           {
-            id: 'leaveType',
+            id: 'name',
             label: 'Leave Type',
             render: (value, row) => (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -199,6 +199,11 @@ const LeaveType = () => {
               </Box>
             ),
           },
+          // {
+          //   id: 'description',
+          //   label: 'Description',
+          //   render: (value) => value || '-',
+          // },
           //  {
           //   id: 'leaveTypeShortName',
           //   label: 'Leave Type Short Name',
@@ -305,12 +310,14 @@ const LeaveTypeForm = ({
 }) => {
   const [addLeavePolicy, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddEmployeeLeavePolicyMutation,
+    currentQueryAndMutation: useAddEmployeeTypeMutation,
   });
+
+  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
 
   const [updateLeavePolicy, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateEmployeeLeavePolicyMutation,
+    currentQueryAndMutation: useUpdateEmployeeTypeMutation,
   });
 
   // const { data: roles, isLoading: isRolesLoading } = useQueryAndMutation({
@@ -320,60 +327,47 @@ const LeaveTypeForm = ({
 
   const formik = useFormik({
     initialValues: {
-      leaveType: editData?.leaveType || '',
-      leaveTypeShortName: editData?.leaveTypeShortName || '',
-      leaveDays: editData?.leaveDays || 0,
-      carryForward: editData?.carryForward || false,
-      accrualRate: editData?.accrualRate ?? AccurateRateType.Monthly,
+      name: editData?.name || '',
+      description: editData?.description || '',
       color: editData?.color || '',
-      roles: editData?.roles || [],
-      fieldType: editData?.fieldType || 'paid',
     },
     validationSchema: Yup.object().shape({
-      leaveType: Yup.string().required('Leave Type is required'),
-      color: Yup.string().required('Color is required'),
-      // leaveTypeShortName: Yup.string().required('Leave type short name is required'),
-      // leaveDays: Yup.number()
-      //   .required('Leave days is required')
-      //   .min(1, 'Leave days must be greater than 0'),
-      // color: Yup.string().required('Color is required'),
-      //   roles: Yup.array().min(1, 'At least one role must be selected'),
-      //   fieldType: Yup.string().required('Field type is required'),
+      name: Yup.string()
+        .required('Leave Type name is required')
+        .min(1, 'Name must be at least 1 character'),
+      description: Yup.string(),
+      color: Yup.string()
+        .required('Color is required')
+        .matches(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Invalid color format'),
     }),
     onSubmit: async (values) => {
       try {
+        const payload = {
+          name: values.name,
+          description: values.description || undefined,
+          color: values.color,
+        };
+
         if (editData) {
           await updateLeavePolicy({
-            id: editData.id,
-            body: {
-              leaveType: values.leaveType,
-              leaveTypeShortName: values.leaveTypeShortName,
-              leaveDays: values.leaveDays,
-              carryForward: values.carryForward,
-              accrualRate: values.accrualRate,
-              color: values.color,
-              //   roles: values.roles,
-              //   fieldType: values.fieldType,
-            },
+            leaveTypeId: editData.id,
+            body: payload,
           });
           shikshaMitraToast.success({ message: 'Leave Type updated successfully' });
         } else {
           await addLeavePolicy({
-            leaveType: values.leaveType,
-            leaveTypeShortName: values.leaveTypeShortName,
-            leaveDays: values.leaveDays,
-            carryForward: values.carryForward,
-            accrualRate: values.accrualRate,
-            color: values.color,
-            // roles: values.roles,
-            // fieldType: values.fieldType,
+            mediumStageId: mediumStageId?.id,
+            body: payload,
           });
           shikshaMitraToast.success({ message: 'Leave Type added successfully' });
         }
         handleClose(null, true);
         formik.resetForm();
       } catch (error) {
-        console.error(error);
+        console.error('Failed to save leave type:', error);
+        shikshaMitraToast.error({
+          message: editData ? 'Failed to update leave type' : 'Failed to add leave type',
+        });
       }
     },
   });
@@ -383,22 +377,41 @@ const LeaveTypeForm = ({
       <DialogScrollContent>
         <Grid container spacing={3}>
           <Grid size={12}>
-            <ShakingTextField error={formik.touched.leaveType && Boolean(formik.errors.leaveType)}>
+            <ShakingTextField error={formik.touched.name && Boolean(formik.errors.name)}>
               <TextField
-                name="leaveType"
-                label="Leave Type *"
-                value={formik.values.leaveType}
+                name="name"
+                label="Leave Type Name *"
+                value={formik.values.name}
                 onChange={(e) => {
                   const newValue = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                  formik.setFieldValue('leaveType', capitalize(newValue));
+                  formik.setFieldValue('name', capitalize(newValue));
                 }}
                 size="small"
                 fullWidth
-                error={formik.touched.leaveType && Boolean(formik.errors.leaveType)}
-                helperText={(formik.touched.leaveType && formik.errors.leaveType) as string}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={(formik.touched.name && formik.errors.name) as string}
               />
             </ShakingTextField>
           </Grid>
+
+          {/* <Grid size={12}>
+            <ShakingTextField
+              error={formik.touched.description && Boolean(formik.errors.description)}
+            >
+              <TextField
+                name="description"
+                label="Description"
+                value={formik.values.description}
+                onChange={formik.handleChange}
+                size="small"
+                fullWidth
+                multiline
+                rows={3}
+                error={formik.touched.description && Boolean(formik.errors.description)}
+                helperText={(formik.touched.description && formik.errors.description) as string}
+              />
+            </ShakingTextField>
+          </Grid> */}
 
           {/* <Grid item xs={12}>
             <ShakingTextField

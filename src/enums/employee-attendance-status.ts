@@ -2,7 +2,6 @@ export enum EmployeeAttendanceStatus {
   Present,
   HalfDayLeave,
   FullDayLeave,
-  All,
   Late,
   RejectedLeave,
 }
@@ -21,10 +20,6 @@ export const EmployeeAttendanceStatusOptions = [
     value: EmployeeAttendanceStatus.FullDayLeave,
   },
   {
-    label: 'All',
-    value: EmployeeAttendanceStatus.All,
-  },
-  {
     label: 'Late',
     value: EmployeeAttendanceStatus.Late,
   },
@@ -38,7 +33,6 @@ export const EmployeeAttendanceStatusColor = {
   [EmployeeAttendanceStatus.Present]: 'success',
   [EmployeeAttendanceStatus.HalfDayLeave]: 'warning',
   [EmployeeAttendanceStatus.FullDayLeave]: 'error',
-  [EmployeeAttendanceStatus.All]: 'default', // Add fallback values
   [EmployeeAttendanceStatus.Late]: 'info',
   [EmployeeAttendanceStatus.RejectedLeave]: 'error',
 };

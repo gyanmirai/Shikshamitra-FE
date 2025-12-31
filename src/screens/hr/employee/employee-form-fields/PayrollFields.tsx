@@ -2,6 +2,7 @@ import { Add } from '@mui/icons-material';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { formatNumber } from 'src/utils/formate_number';
 import ShakingTextField from 'src/components/shaking-text-field';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Card, Grid, Paper, Button, TextField, IconButton, Typography } from '@mui/material';
@@ -12,15 +13,6 @@ import { CardActions, SectionCard } from './InformationFields';
 
 import type { FieldsType } from './types';
 
-const EARNINGS_CONFIG: Record<string, { isFixed: boolean }> = {
-  'Basic Salary': { isFixed: false },
-  'House Rent Allowance (HRA)': { isFixed: true },
-  'Transport Allowance': { isFixed: true },
-  'Special Allowance': { isFixed: false },
-  'Medical Allowance': { isFixed: true },
-  Bonus: { isFixed: false },
-};
-
 export const RenderComponents = ({ formik, name, label, type, showTempAdd = false }: any) => {
   const { values } = formik;
   const components = values[name] || [];
@@ -28,23 +20,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
   const isAddingTemp = useBoolean(false);
 
   const handleAdd = (selectedNames: string[]) => {
-    const currentComponents = [...components];
-    selectedNames.forEach((compName) => {
-      const exists = currentComponents.some((c: any) => c.name === compName);
-      if (!exists) {
-        const config = EARNINGS_CONFIG[compName];
-        // Default to not fixed if not found in config, or handle deductions which might not be in EARNINGS_CONFIG
-        const isFixed = type === 'earning' ? (config?.isFixed ?? false) : false;
-        currentComponents.push({
-          name: compName,
-          type: isFixed ? 'Fixed' : 'Not Fixed',
-          amount: '',
-          isFixed,
-          isTemp: isAddingTemp.value || false,
-        });
-      }
-    });
-    formik.setFieldValue(name, currentComponents);
+    formik.setFieldValue(name, selectedNames);
     // Reset temp add mode after adding
     if (isAddingTemp.value) {
       isAddingTemp.onFalse();
@@ -130,7 +106,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                     width={18}
                   />
                   <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                    {component.name}
+                    {component?.componentName || component?.name}
                   </Typography>
 
                   {isFixed && (
@@ -158,7 +134,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                         borderRadius: 1,
                       }}
                     >
-                      {component.amount || '₹ 10,000'}
+                      ₹ {formatNumber(component.amount) || '10,000'}
                     </Typography>
                   )}
                   {component.isTemp && <Label color="warning">Temp</Label>}
@@ -222,6 +198,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
           onClose={isDialogOpen.onFalse}
           type={type}
           onAdd={handleAdd}
+          values={components}
         />
       )}
     </Box>

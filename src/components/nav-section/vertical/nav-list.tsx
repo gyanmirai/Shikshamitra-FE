@@ -27,9 +27,9 @@ export function NavList({
   const removeTrailingSlash = pathname.replace(/\/$/, '');
   const { permissions } = useSelector((state: RootState) => state.auth);
 
-  const isGranted = permissions.find(
-    (perm: any) => perm.name === data.permissionName || perm.name === `${data.permissionName}.View`
-  )?.isGranted;
+  // const isGranted = permissions.find(
+  //   (perm: any) => perm.name === data.permissionName || perm.name === `${data.permissionName}.View`
+  // )?.isGranted;
 
   const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
   // const active = useActiveLink(data.path, !!data.children);

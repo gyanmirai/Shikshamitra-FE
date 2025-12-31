@@ -4,30 +4,27 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all subject assignments - academicMediumId passed in query params
     getSubjectAssignments: builder.query({
-      query: ({ academicMediumId }) => ({
-        url: `/subject-assignments`,
+      query: ({ academicMediumId, classId }) => ({
+        url: `/academics/curriculum/classes/${classId}/subject-assignments`,
         method: 'GET',
-        params: { academicMediumId }, // ✔ QUERY param
       }),
       providesTags: ['SubjectAssignment'],
     }),
 
     // Get one assignment - academicMediumId also optional in query param
     getSubjectAssignmentById: builder.query({
-      query: ({ assignmentId, academicMediumId }) => ({
-        url: `/subject-assignments/${assignmentId}`,
+      query: ({ assignmentId }) => ({
+        url: `/academics/curriculum/subject-assignments/${assignmentId}`,
         method: 'GET',
-        params: academicMediumId ? { academicMediumId } : undefined, // Optional param
       }),
       providesTags: ['SubjectAssignment'],
     }),
 
     // Create assignment
     addSubjectAssignment: builder.mutation({
-      query: ({ academicMediumId, body }) => ({
-        url: `/subject-assignments`,
+      query: ({ body }) => ({
+        url: `/academics/curriculum/subject-assignments`,
         method: 'POST',
-        params: { academicMediumId }, // QUERY param again
         data: body,
       }),
       invalidatesTags: ['SubjectAssignment'],
@@ -35,10 +32,9 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
 
     // Update assignment
     updateSubjectAssignment: builder.mutation({
-      query: ({ assignmentId, academicMediumId, body }) => ({
-        url: `/subject-assignments/${assignmentId}`,
+      query: ({ assignmentId, body }) => ({
+        url: `/academics/curriculum/subject-assignments/${assignmentId}`,
         method: 'PUT',
-        params: { academicMediumId }, // passing query again
         data: body,
       }),
       invalidatesTags: ['SubjectAssignment'],
@@ -46,22 +42,51 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
 
     // Delete assignment
     deleteSubjectAssignment: builder.mutation({
-      query: ({ assignmentId, academicMediumId }) => ({
-        url: `/subject-assignments/${assignmentId}`,
+      query: ({ assignmentId }) => ({
+        url: `/academics/curriculum/subject-assignments/${assignmentId}`,
         method: 'DELETE',
-        params: { academicMediumId }, // passed in query
       }),
       invalidatesTags: ['SubjectAssignment'],
     }),
 
     // Publish assignment
     publishSubjectAssignment: builder.mutation({
-      query: ({ assignmentId, academicMediumId }) => ({
-        url: `/subject-assignments/${assignmentId}/publish`,
+      query: ({ assignmentId, status }) => ({
+        url: `/academics/curriculum/subject-assignments/${assignmentId}/status`,
         method: 'PATCH',
-        params: { academicMediumId }, // query param
+        data: { status },
       }),
       invalidatesTags: ['SubjectAssignment'],
+    }),
+
+    // Upload Curriculum File
+    uploadCurriculumFile: builder.mutation({
+      query: (body) => ({
+        url: `/academics/curriculum/files`,
+        method: 'POST',
+        data: body,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }),
+      invalidatesTags: ['CurriculumFile'],
+    }),
+
+    // Get subject assignment documents
+    getSubjectAssignmentDocuments: builder.query({
+      query: ({ subjectAssignmentId, subjectId }) => ({
+        url: `/subject-assignments/${subjectAssignmentId}/subjects/${subjectId}/documents`,
+        method: 'GET',
+      }),
+      providesTags: ['CurriculumFile'],
+    }),
+    // Get core-elective subjects by academicMediumId
+    getCoreElectiveSubjects: builder.query({
+      query: ({ academicMediumId }) => ({
+        url: `/academics/curriculum/${academicMediumId}/core-elective-subjects`,
+        method: 'GET',
+      }),
+      providesTags: ['SubjectAssignment'],
     }),
   }),
 
@@ -75,4 +100,7 @@ export const {
   useUpdateSubjectAssignmentMutation,
   useDeleteSubjectAssignmentMutation,
   usePublishSubjectAssignmentMutation,
+  useUploadCurriculumFileMutation,
+  useGetSubjectAssignmentDocumentsQuery,
+  useGetCoreElectiveSubjectsQuery,
 } = subjectAssignmentsApi;

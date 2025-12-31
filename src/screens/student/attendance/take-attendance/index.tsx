@@ -165,11 +165,12 @@ const TakeAttendanceScreen = () => {
         <DatePicker
           label="Date"
           value={date}
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           onChange={(val) => {
             setDate(val);
           }}
           format="DD-MM-YYYY"
-          maxDate={dayjs()}
           slotProps={{ textField: { size: 'small', sx: { maxWidth: '250px', width: '100%' } } }}
         />
 

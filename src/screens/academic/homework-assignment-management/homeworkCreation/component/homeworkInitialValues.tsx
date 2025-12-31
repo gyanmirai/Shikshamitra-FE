@@ -33,4 +33,6 @@ export const getHomeworkInitialValues = (
   createdBy: editData?.createdBy || ({} as TeacherProfile),
   content: editData?.content || '',
   submission: editData?.submission || '',
+  chapterId: undefined,
+  homeworkId: undefined,
 });

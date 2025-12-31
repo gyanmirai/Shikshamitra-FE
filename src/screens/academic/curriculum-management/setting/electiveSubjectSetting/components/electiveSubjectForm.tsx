@@ -3,8 +3,8 @@
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import { useFormik } from 'formik';
+import React, { useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -20,6 +20,7 @@ import { Grid, Button, TextField, Typography, DialogActions } from '@mui/materia
 import { useGetSubjectsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import {
   useAddElectiveGroupMutation,
+  useGetElectiveGroupByIdQuery,
   useUpdateElectiveGroupMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 
@@ -50,10 +51,24 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
       skip: !(currentMedium as Medium)?.id,
     },
   });
+  const {
+    data: subjectById,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetElectiveGroupByIdQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id, id: editData?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id || !editData?.id,
+    },
+  });
+  const initialValues = useMemo(() => getElectiveSubjectInitialValues(editData), [editData]);
+
   // Initialize formik form with initial values, validation schema and submit handler
   const formik = useFormik({
     // Get initial form values from edit data or default values
-    initialValues: getElectiveSubjectInitialValues(editData),
+    initialValues,
     // Apply validation rules to form fields
     validationSchema: electiveSubjectValidationSchema,
     // Handle form submission

@@ -5,11 +5,11 @@ import type { RootState } from 'src/redux/store';
 import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { GenderOptions } from 'src/enums/gender';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { GenderType, GenderOptions } from 'src/enums/gender';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -24,7 +24,6 @@ import {
 import { CommunicationForm } from '../follow-up';
 import RegisterForm from '../register/register-form';
 
-import type { IInquiryData } from '../Inquiry';
 import type { IGeneralInformationResponse } from '../register/type';
 
 const RegistrationFormScreen = () => {
@@ -69,10 +68,10 @@ const RegistrationFormScreen = () => {
   // - Maps gender type enum to display value
   const tableData = useMemo(
     () =>
-      inquiryFormData?.data?.items?.map((item: IInquiryData) => ({
+      inquiryFormData?.data?.items?.map((item: any) => ({
         ...item,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
-
+        genderValue: GenderType[item?.gender as any],
         doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
       })),
     [inquiryFormData?.data?.items]
@@ -209,7 +208,7 @@ const RegistrationFormScreen = () => {
               filterType: 'date',
             },
             {
-              id: 'gender',
+              id: 'genderValue',
               label: 'Gender',
               align: 'left',
               filterType: 'enum',

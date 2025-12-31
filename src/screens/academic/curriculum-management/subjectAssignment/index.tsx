@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 // import type { TabComponentType } from 'src/screens/hr/leave-request';
 
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -14,8 +15,14 @@ import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
+import {
+  useDeleteSubjectAssignmentMutation,
+  usePublishSubjectAssignmentMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import SubjectTable from './component/subjectTable';
 import { ViewSubject } from './component/viewDetailComponents/viewSubjectComponent';
@@ -24,91 +31,134 @@ import SubjectAssignmentForm from './component/subjectAssignmentForm/subjectAssi
 import type { ISubjectFormValues } from './component/type';
 
 const Subject = () => {
+  const [deleteSubjectAssignment, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteSubjectAssignmentMutation,
+  });
+
+  const [publishSubjectAssignment, { isLoading: isPublishLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePublishSubjectAssignmentMutation,
+  });
   // State to manage subject table data and filtered data
   const [subjectTableData, setSubjectTableData] = useState<any[]>([
     {
+      id: 'math-assign-id',
+      status: PublishUnpublishStatusType.Draft,
+      subjectType: 0,
+      subjects: [
+        {
+          assignedId: 'math-assigned-01',
+          subjectCode: 'MATH-101',
+          subjectId: 'math-sub-id',
+          subjectName: 'Mathematics',
+          color: '#DEB887',
+          electiveGroupId: null,
+          primaryTeacher: 'teacher-1',
+          secondaryTeachers: ['teacher-2'],
+          learningGoal: 'To master algebra and geometry concepts.',
+          prerequisites: 'Basic arithmetic',
+          description: 'Core mathematics course for 10th grade.',
+          documents: [],
+        },
+      ],
+    },
+    {
+      id: 'science-assign-id',
+      status: PublishUnpublishStatusType.Draft,
+      subjectType: 0,
+      subjects: [
+        {
+          assignedId: 'sci-assigned-01',
+          subjectCode: 'SCI-101',
+          subjectId: 'sci-sub-id',
+          subjectName: 'Science',
+          color: '#00CED1',
+          electiveGroupId: null,
+          primaryTeacher: 'teacher-3',
+          secondaryTeachers: [],
+          learningGoal: 'Understanding basic physics and chemistry.',
+          prerequisites: 'None',
+          description: 'General science covering various topics.',
+          documents: [],
+        },
+      ],
+    },
+    {
+      id: 'tech-fitness-group-id',
+      status: PublishUnpublishStatusType.Draft,
       subjectType: 1,
-      electiveGroupId: 'EG-01',
       electiveGroupName: 'Tech & Fitness Group',
-      color: '#4CAF50', // Green
+      electiveGroupId: 'tech-fitness-group-id',
+      color: '#4169E1',
       subjects: [
         {
-          subjectId: 'sub-01',
+          assignedId: 'comp-assigned-01',
+          subjectCode: 'COMP-101',
+          subjectId: 'comp-sub-id',
           subjectName: 'Computer',
-          subjectCode: 'CS-12',
-          status: 1,
-          color: '#80f261ff',
+          color: '#4169E1',
+          electiveGroupId: 'tech-fitness-group-id',
+          primaryTeacher: 'teacher-4',
+          secondaryTeachers: [],
+          learningGoal: 'Basic programming skills',
+          prerequisites: 'None',
+          description: 'Introduction to computers.',
+          documents: [],
         },
         {
-          subjectId: 'sub-02',
+          assignedId: 'pt-assigned-01',
+          subjectCode: 'PT-101',
+          subjectId: 'pt-sub-id',
           subjectName: 'Physical Training',
-          subjectCode: 'PE-12',
-          status: 1,
-          color: '#e87025ff',
+          color: '#FF69B4',
+          electiveGroupId: 'tech-fitness-group-id',
+          primaryTeacher: 'teacher-5',
+          secondaryTeachers: [],
+          learningGoal: 'Physical fitness and sportsmanship',
+          prerequisites: 'None',
+          description: 'Weekly PT sessions.',
+          documents: [],
         },
       ],
     },
     {
+      id: 'lang-group-id',
+      status: PublishUnpublishStatusType.Draft,
       subjectType: 1,
-      electiveGroupId: 'EG-02',
       electiveGroupName: 'Language Enrichment Group',
-      color: '#FF9800', // Orange
+      electiveGroupId: 'lang-group-id',
+      color: '#FF4500',
       subjects: [
         {
-          subjectId: 'sub-03',
+          assignedId: 'hindi-assigned-01',
+          subjectCode: 'HIN-101',
+          subjectId: 'hindi-sub-id',
           subjectName: 'Hindi',
-          subjectCode: 'HIN-12',
-          status: 1,
-          color: '#f261b1ff',
+          color: '#FF4500',
+          electiveGroupId: 'lang-group-id',
+          primaryTeacher: 'teacher-6',
+          secondaryTeachers: [],
+          learningGoal: 'Hindi literature and grammar',
+          prerequisites: 'None',
+          description: 'Compulsory language course.',
+          documents: [],
         },
         {
-          subjectId: 'sub-04',
+          assignedId: 'sansk-assigned-01',
+          subjectCode: 'SAN-101',
+          subjectId: 'sansk-sub-id',
           subjectName: 'Sanskrit',
-          subjectCode: 'SAN-12',
-          status: 1,
-          color: '#61d7f2ff',
+          color: '#DA70D6',
+          electiveGroupId: 'lang-group-id',
+          primaryTeacher: 'teacher-7',
+          secondaryTeachers: [],
+          learningGoal: 'Basics of Sanskrit',
+          prerequisites: 'None',
+          description: 'Ancient language study.',
+          documents: [],
         },
       ],
-    },
-    {
-      subjectType: 0,
-      subjectId: 'sub-05',
-      subjectName: 'Mathematics',
-      subjectCode: 'MATH-10',
-      status: 1,
-      color: '#2196F3', // Blue
-    },
-    {
-      subjectType: 0,
-      subjectId: 'sub-06',
-      subjectName: 'Science',
-      subjectCode: 'SCI-12',
-      status: 1,
-      color: '#9C27B0', // Purple
-    },
-    {
-      subjectType: 0,
-      subjectId: 'sub-07',
-      subjectName: 'Social Science',
-      subjectCode: 'SOC-12',
-      status: 1,
-      color: '#3F51B5', // Indigo
-    },
-    {
-      subjectType: 0,
-      subjectId: 'sub-08',
-      subjectName: 'Gujarati',
-      subjectCode: 'GUJ-12',
-      status: 1,
-      color: '#795548', // Brown
-    },
-    {
-      subjectType: 0,
-      subjectId: 'sub-09',
-      subjectName: 'English',
-      subjectCode: 'ENG-12',
-      status: 1,
-      color: '#E91E63', // Pink
     },
   ]);
 
@@ -143,7 +193,7 @@ const Subject = () => {
   // State for managing selected subject and edit mode
   // State to store the currently selected subject for editing/viewing
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
-
+  console.log('selectedSubject-----', selectedSubject);
   // Boolean flag to track if we're in edit mode
   const [isEdit, setIsEdit] = useState(false);
 
@@ -183,11 +233,13 @@ const Subject = () => {
   };
   // Close all dialogs and reset form state
   const handleCloseDialog = () => {
-    setSelectedSubject(null);
     addSubjectDialog.onFalse();
     deleteConfirmDialog.onFalse();
     confirmPublishDialog.onFalse();
     setIsEdit(false);
+    setTimeout(() => {
+      setSelectedSubject(null);
+    }, 100);
   };
 
   // Delete selected subject from table
@@ -309,9 +361,9 @@ const Subject = () => {
                 formControlProps={{ sx: { maxWidth: '247px', width: '100%' } }}
                 value={classId}
                 onChange={(value) => {
-                  setClasses(value as string);
+                  setClassId(value as string);
                   const standard = allClass.find((c) => c.id === value);
-                  setClassId(standard?.id || '');
+                  setClasses(standard?.name || '');
                 }}
               />
               <Button
@@ -337,6 +389,7 @@ const Subject = () => {
 
           {!showSubjectDialog.value && (
             <SubjectTable
+              classId={classId}
               addSubjectDialog={addSubjectDialog}
               data={subjectTableData}
               editData={selectedSubject}
@@ -367,118 +420,163 @@ const Subject = () => {
         onClose={handleCloseDialog}
         title="Remove"
         content={
-          selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
-            <>
-              Are you sure you want to remove the following subjects and groups from{' '}
-              <strong>
-                {selectedSubject.subjectName
-                  .map((name: any, index: any) => {
-                    const code = selectedSubject.subjectCode?.[index] || '';
-                    return `${name} (${code})`;
-                  })
-                  .join(' , ')}
-              </strong>{' '}
-              from Class {classes} ?
-            </>
-          ) : (
-            <>
-              Are you sure you want to remove the following subjects and groups from{' '}
-              <strong>
-                {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
-              </strong>{' '}
-              from Class {classes} ?
-            </>
-          )
+          <>
+            Are you sure you want to remove the following{' '}
+            {selectedSubject?.subjectType === 1 ? 'subjects and group' : 'subject'}{' '}
+            <strong>
+              {selectedSubject?.subjectType === 1
+                ? selectedSubject?.subjects
+                    ?.map((sub: any) => `${sub.subjectName} (${sub.subjectCode})`)
+                    .join(' , ')
+                : `${selectedSubject?.subjects?.[0]?.subjectName} (${selectedSubject?.subjects?.[0]?.subjectCode})`}
+            </strong>{' '}
+            from Class {classes}?
+          </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
-            onClick={handleDelete}
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            onClick={async () => {
+              try {
+                await deleteSubjectAssignment({
+                  subjectAssignmentId: selectedSubject?.id,
+                }).unwrap();
+
+                shikshaMitraToast.success({
+                  message:
+                    selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
+                      <>
+                        Subject :{' '}
+                        <strong>
+                          {selectedSubject.subjectName
+                            .map((name: any, index: number) => {
+                              const code = selectedSubject.subjectCode?.[index] || '';
+                              return `${name} (${code})`;
+                            })
+                            .join(', ')}
+                        </strong>{' '}
+                        deleted successfully.
+                      </>
+                    ) : (
+                      <>
+                        Subject :{' '}
+                        <strong>
+                          {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
+                        </strong>{' '}
+                        deleted successfully.
+                      </>
+                    ),
+                });
+
+                deleteConfirmDialog.onFalse();
+                setSelectedSubject(null);
+              } catch (error) {
+                console.error('Delete subject failed', error);
+              }
+            }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
 
       {/* Publish confirmation dialog */}
       <ConfirmDialog
         open={confirmPublishDialog.value}
-        icon={selectedSubject?.status === 0 ? 'warning' : 'success'}
+        icon={
+          selectedSubject?.status === PublishUnpublishStatusType.Published ? 'warning' : 'success'
+        }
         onClose={() => {
           confirmPublishDialog.onFalse();
           setTimeout(() => {
             setSelectedSubject(null);
-          }, 200); // Adjust the delay based on your dialog transition duration
+          }, 100);
         }}
-        title={selectedSubject?.status === 0 ? 'Draft' : 'Publish'}
+        title={
+          selectedSubject?.status === PublishUnpublishStatusType.Published ? 'Draft' : 'Publish'
+        }
         content={
-          selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
-            <>
-              Are you sure you want move{' '}
-              <strong>
-                {selectedSubject.subjectName
-                  .map((name: any, index: any) => {
-                    const code = selectedSubject.subjectCode?.[index] || '';
-                    return `${name} (${code})`;
-                  })
-                  .join(', ')}
-              </strong>{' '}
-              subject to {selectedSubject.status === 0 ? 'draft' : 'publish'} ?
-            </>
-          ) : (
-            <>
-              Are you sure you want move{' '}
-              <strong>
-                {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
-              </strong>{' '}
-              subject to {selectedSubject?.status === 0 ? 'draft' : 'publish'} ?
-            </>
-          )
+          <>
+            Are you sure you want to move{' '}
+            <strong>
+              {selectedSubject?.subjectType === 1
+                ? selectedSubject?.subjects
+                    ?.map((sub: any) => `${sub.subjectName} (${sub.subjectCode})`)
+                    .join(', ')
+                : `${selectedSubject?.subjects?.[0]?.subjectName} (${selectedSubject?.subjects?.[0]?.subjectCode})`}
+            </strong>{' '}
+            subject to{' '}
+            {selectedSubject?.status === PublishUnpublishStatusType.Published ? 'Draft' : 'Publish'}
+            ?
+          </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isPublishLoading}
             variant="contained"
             size="small"
             startIcon={
               <Iconify
-                icon={selectedSubject?.status === 0 ? GlobalIcons.draftIcon : GlobalIcons.publish}
+                icon={
+                  selectedSubject?.status === PublishUnpublishStatusType.Published
+                    ? GlobalIcons.publish
+                    : GlobalIcons.draftIcon
+                }
               />
             }
-            onClick={() => {
-              const status = selectedSubject?.status === 0 ? 'Draft' : 'Published';
-              shikshaMitraToast.success({
-                message:
-                  selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
-                    <>
-                      Subject :{' '}
-                      <strong>
-                        {selectedSubject.subjectName
-                          .map((name: any, index: any) => {
-                            const code = selectedSubject.subjectCode?.[index] || '';
-                            return `${name} (${code})`;
-                          })
-                          .join(' , ')}
-                      </strong>{' '}
-                      move to {status} successfully.
-                    </>
-                  ) : (
-                    <>
-                      Subject :{' '}
-                      <strong>
-                        {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
-                      </strong>{' '}
-                      move to {status} successfully.
-                    </>
-                  ),
-              });
-              confirmPublishDialog.onFalse();
+            onClick={async () => {
+              try {
+                const nextStatus =
+                  selectedSubject?.status === PublishUnpublishStatusType.Published
+                    ? PublishUnpublishStatusType.Draft
+                    : PublishUnpublishStatusType.Published;
+
+                await publishSubjectAssignment({
+                  assignmentId: selectedSubject?.id,
+                  status: nextStatus,
+                }).unwrap();
+
+                const statusText =
+                  nextStatus === PublishUnpublishStatusType.Published ? 'Published' : 'Draft';
+
+                shikshaMitraToast.success({
+                  message:
+                    selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
+                      <>
+                        Subject :{' '}
+                        <strong>
+                          {selectedSubject.subjectName
+                            .map((name: any, index: number) => {
+                              const code = selectedSubject.subjectCode?.[index] || '';
+                              return `${name} (${code})`;
+                            })
+                            .join(', ')}
+                        </strong>{' '}
+                        moved to {statusText} successfully.
+                      </>
+                    ) : (
+                      <>
+                        Subject :{' '}
+                        <strong>
+                          {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
+                        </strong>{' '}
+                        moved to {statusText} successfully.
+                      </>
+                    ),
+                });
+
+                confirmPublishDialog.onFalse();
+              } catch (error) {
+                console.error('Publish / Unpublish failed', error);
+              }
             }}
           >
-            {selectedSubject?.status === 0 ? 'Draft' : 'Publish'}
-          </Button>
+            {selectedSubject?.status === PublishUnpublishStatusType.Published ? 'Draft' : 'Publish'}
+          </LoadingButton>
         }
       />
 

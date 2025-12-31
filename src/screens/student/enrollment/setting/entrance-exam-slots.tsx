@@ -43,17 +43,26 @@ const EntranceExamSlots = () => {
   const confirm = useBoolean();
   // State to store data being edited
   const [editData, setEditData] = useState<ISlot | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
   const entranceExamSlotsDialog = useBoolean();
 
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   // Redux dispatch
   const dispatch = useDispatch();
   // Fetch entrance exam slots data
   const { data: slots, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamSlotQuery,
+    params: {
+      academicYearId: currentYear?.id,
+      startDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
+      endDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
+    },
+    options: {
+      skip: !(currentYear?.id && selectedDate),
+    },
   });
 
   // Delete slot mutation hook
@@ -65,9 +74,9 @@ const EntranceExamSlots = () => {
   // Transform slots data to include formatted time strings
   const tableData = slots?.items?.map((item: ISlot) => ({
     ...item,
-    startTime: dayjs(item.startDate).format('hh:mm A'),
+    startTime: dayjs(item.startTime, 'HH:mm:ss').format('hh:mm A'),
     creationDate: dayjs(item.creationTime).format('MM-DD-YYYY'),
-    endTime: dayjs(item.endDate).format('hh:mm A'),
+    endTime: dayjs(item.endTime, 'HH:mm:ss').format('hh:mm A'),
   }));
 
   // Handles closing the incident form
@@ -153,6 +162,8 @@ const EntranceExamSlots = () => {
         <DatePicker
           label="Select Date"
           format="DD-MM-YYYY"
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           value={selectedDate}
           onChange={(newValue) => setSelectedDate(newValue)}
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
@@ -184,9 +195,9 @@ const EntranceExamSlots = () => {
           </>
         }
         columns={[
-          { label: 'Slot Name', id: 'slotName' },
+          { label: 'Slot Name', id: 'slotName', sticky: true, minWidth: '12vw', align: 'left' },
           { label: 'Duration', id: 'duration' },
-          { label: 'Date', id: 'creationDate' },
+          // { label: 'Date', id: 'creationDate' },
           { label: 'Start Time', id: 'startTime', filterType: 'date' },
           { label: 'End Time', id: 'endTime', filterType: 'date' },
           { label: 'Student Limit', id: 'studentLimit', filterType: 'number' },
@@ -223,7 +234,7 @@ const EntranceExamSlots = () => {
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
             <Typography variant="h5">
-              {editData ? 'Update Slots' : 'Add Slots'}({selectedDate?.format('DD-MM-YYYY')})
+              {editData ? 'Update Slots' : 'Add Slot'}({selectedDate?.format('DD-MM-YYYY')})
             </Typography>
             <CustomTooltip
               arrow
@@ -257,6 +268,7 @@ export const SlotsForm = ({
   editData: ISlot | null;
   date: Dayjs | null;
 }) => {
+  console.log(editData, 'editData');
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Hook for adding a new entrance exam slot
@@ -273,8 +285,8 @@ export const SlotsForm = ({
   const formik = useFormik({
     initialValues: {
       slotName: editData?.slotName || null,
-      startTime: editData?.startDate ? dayjs(editData?.startDate) : null,
-      endTime: editData?.endDate ? dayjs(editData?.endDate) : null,
+      startTime: editData?.startTime ? dayjs(editData?.startTime, 'hh:mm A') : null,
+      endTime: editData?.endTime ? dayjs(editData?.endTime, 'hh:mm A') : null,
       duration: editData?.duration || null,
       studentLimit: editData?.studentLimit || null,
       roomNo: editData?.roomNo || null,
@@ -315,6 +327,7 @@ export const SlotsForm = ({
       roomNo: Yup.string().required('Room No. is required'),
     }),
     onSubmit: async (values, formikHelpers) => {
+      console.log(values, '====called');
       try {
         if (editData) {
           await updateSlot({
@@ -322,9 +335,9 @@ export const SlotsForm = ({
             body: {
               academicYearId: currentYear?.id,
               slotName: values.slotName,
-              startTime: values.startTime ? dayjs(values.startTime).format('HH:mm:ss') : null,
-              endTime: values.endTime ? dayjs(values.endTime).format('HH:mm:ss') : null,
-              duration: values.duration,
+              date: dateConvertor(date?.format(dateFormat) || ''),
+              startTime: values.startTime ? values.startTime.format('HH:mm:ss') : null,
+              endTime: values.endTime ? values.endTime.format('HH:mm:ss') : null,
               studentLimit: values.studentLimit,
               roomNo: values.roomNo,
             },
@@ -333,11 +346,13 @@ export const SlotsForm = ({
             message: `${values.slotName} exam slot updated successfully`,
           });
         } else {
+          console.log(date, values);
           await addSlot({
             academicYearId: currentYear?.id,
             slotName: values.slotName,
-            startTime: dateConvertor(dayjs(values.startTime, 'hh:mm A').format(dateFormat)),
-            endTime: dateConvertor(dayjs(values.endTime, 'hh:mm A').format(dateFormat)),
+            date: dateConvertor(date?.format(dateFormat) || ''),
+            startTime: values.startTime ? values.startTime.format('HH:mm:ss') : null,
+            endTime: values.endTime ? values.endTime.format('HH:mm:ss') : null,
             studentLimit: values.studentLimit,
             roomNo: values.roomNo,
           }).unwrap();

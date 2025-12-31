@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import DetailRow from 'src/screens/communication/announcement/components/detailRow';
 import {
   Box,
@@ -14,46 +15,57 @@ import {
   Typography,
   CardContent,
 } from '@mui/material';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import type { ISubjectDetail } from '../type';
 
-const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
-  <Box sx={{ height: '100%' }}>
-    <Grid container spacing={2} height="100%">
-      <Grid
-        size={{ xs: 12, md: 8 }}
-        sx={{ mt: 0, pt: 0, pl: 0, pb: 2, height: '100%', overflow: 'auto' }}
-      >
-        <Card sx={{ height: '100%', boxShadow: 0, border: 'none' }}>
-          <Scrollbar sx={{ height: '100%', px: 0, pr: 2 }}>
-            <CardContent sx={{ p: 0 }}>
-              {/* Adjust padding here */}
-              <DetailRow label="Subject Code" value={subject?.subjectCode} icon="mdi:code-tags" />
-              <DetailRow
-                label="Description"
-                value={subject?.description}
-                icon="mdi:text-box-outline"
-              />
-              <DetailRow
-                label="Prerequisites"
-                value={subject?.prerequisites}
-                icon="mdi:alert-decagram-outline"
-              />
-              <DetailRow label="Learning Goal" value={subject?.learningGoal} icon="mdi:target" />
-            </CardContent>
-          </Scrollbar>
-        </Card>
-      </Grid>
+const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => {
+  const {
+    data: subjectData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: { assignmentId: subject?.id },
+  });
+  return (
+    <Box sx={{ height: '100%' }}>
+      <Grid container spacing={2} height="100%">
+        <Grid
+          size={{ xs: 12, md: 8 }}
+          sx={{ mt: 0, pt: 0, pl: 0, pb: 2, height: '100%', overflow: 'auto' }}
+        >
+          <Card sx={{ height: '100%', boxShadow: 0, border: 'none' }}>
+            <Scrollbar sx={{ height: '100%', px: 0, pr: 2 }}>
+              <CardContent sx={{ p: 0 }}>
+                {/* Adjust padding here */}
+                <DetailRow label="Subject Code" value={subject?.subjectCode} icon="mdi:code-tags" />
+                <DetailRow
+                  label="Description"
+                  value={subject?.description}
+                  icon="mdi:text-box-outline"
+                />
+                <DetailRow
+                  label="Prerequisites"
+                  value={subject?.prerequisites}
+                  icon="mdi:alert-decagram-outline"
+                />
+                <DetailRow label="Learning Goal" value={subject?.learningGoal} icon="mdi:target" />
+              </CardContent>
+            </Scrollbar>
+          </Card>
+        </Grid>
 
-      <Grid size={{ xs: 12, md: 4 }}>
-        <Card>
-          <CardContent sx={{ p: 2 }}>
-            {/* Primary Teacher */}
-            <Box sx={{ mb: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Primary Teacher
-              </Typography>
-              {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card>
+            <CardContent sx={{ p: 2 }}>
+              {/* Primary Teacher */}
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Primary Teacher
+                </Typography>
+                {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <ListItem
                   sx={{
                     borderRadius: '8px',
@@ -128,11 +140,11 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
                   />
                 </ListItem>
               </Box> */}
-            </Box>
+              </Box>
 
-            {/* Secondary Teachers */}
-            <Typography variant="subtitle2">Secondary Teacher</Typography>
-            {/* <Scrollbar sx={{ height: '200px' }}>
+              {/* Secondary Teachers */}
+              <Typography variant="subtitle2">Secondary Teacher</Typography>
+              {/* <Scrollbar sx={{ height: '200px' }}>
               {Array.isArray(subject?.secondaryTeacher) && subject?.secondaryTeacher.length > 0 ? (
                 subject.secondaryTeacher.map((teacher, idx) => (
                   <ListItem
@@ -217,12 +229,13 @@ const SubjectOverview = ({ subject }: { subject: ISubjectDetail }) => (
                 </Typography>
               )}
             </Scrollbar> */}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
-    </Grid>
-  </Box>
-);
+    </Box>
+  );
+};
 
 export default SubjectOverview;
 

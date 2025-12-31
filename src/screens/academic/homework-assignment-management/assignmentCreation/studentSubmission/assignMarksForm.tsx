@@ -1,12 +1,10 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
 import type { IDocument } from 'src/screens/academic/curriculum-management/subjectAssignment/component/type';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 // eslint-disable-next-line import/extensions
@@ -50,8 +48,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
    * @param initialValues Object containing initial grade and feedback values from data prop
    * @param onSubmit Handler function that gets called when form is submitted
    */
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
   const [updateSubmissionFeedback, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateSubmissionFeedbackMutation,
@@ -72,7 +68,6 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
       updateSubmissionFeedback({
         assignmentId: data?.id, // Assuming data.assignmentId is available
         studentId: data?.studentName, // Assuming data.studentId is available
-        academicMediumId: medium?.id, // Assuming data.academicMediumId is available
         body: {
           marks: values.marks,
           totalMarks: values.totalMarks,

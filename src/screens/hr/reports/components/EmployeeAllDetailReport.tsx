@@ -43,7 +43,7 @@ export default function EmployeeAllDetailReport() {
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Select Employees"
+                label="Select Employees *"
                 error={formik.touched.employees && Boolean(formik.errors.employees)}
                 helperText={formik.touched.employees && (formik.errors.employees as string)}
               />

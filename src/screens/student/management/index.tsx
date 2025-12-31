@@ -73,7 +73,7 @@ const TABS = [
     value: 'groupManageMent',
     label: 'House Management',
     icon: <Iconify icon="mdi:house" width={20} />,
-    component: (props: { tableData: IInquiryData[]; isLoading: boolean }) => (
+    component: (props: { tableData: IInquiryData[]; isLoading: boolean; division: string }) => (
       <GroupManagement {...props} />
     ),
   },

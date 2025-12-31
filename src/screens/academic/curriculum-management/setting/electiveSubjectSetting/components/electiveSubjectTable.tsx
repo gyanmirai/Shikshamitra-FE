@@ -73,12 +73,12 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
       }
       columns={[
         {
-          id: 'title',
+          id: 'name',
           label: 'Elective Group',
           align: 'left',
           render: (value, row) => (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <SubjectColorIndicator color={row.subjectColor} />
+              <SubjectColorIndicator color={row.color} />
               <Typography variant="caption" fontSize="13px">
                 {value}
               </Typography>
@@ -91,9 +91,9 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
           align: 'left',
           render: (value) => (
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {value.map((subject: { name: string; subjectColor: string }) => (
+              {value.map((subject: { name: string; color: string }) => (
                 <Box key={subject.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <SubjectColorIndicator color={subject.subjectColor} />
+                  <SubjectColorIndicator color={subject.color} />
                   <Typography variant="caption" fontSize="13px">
                     {subject.name}
                   </Typography>

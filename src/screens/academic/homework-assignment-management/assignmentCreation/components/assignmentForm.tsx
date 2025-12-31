@@ -111,27 +111,28 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, dialog, editD
           title: values.title,
           description: values.description,
           assignmentTypeId: values.assignmentTypeId,
+          totalMarks: values.totalMarks,
           submissionType: values.submissionType,
-          attachments: values.attachments,
-          divisions: values.divisions.map((division: any) => ({
+          attachment: values.attachments,
+          divisionSchedules: values.divisions.map((division: any) => ({
             divisionId: division.divisionId,
-            publishDate: division.publishDate.toISOString(),
-            dueDate: division.dueDate.toISOString(),
+            publishAt: division.publishDate.toISOString(),
+            dueAt: division.dueDate.toISOString(),
           })),
         };
 
         if (editData) {
           // For update, include the assignment ID
           const updatePayload = {
-            id: editData.id,
+            assignmentId: editData.id,
             body: payload,
           };
-          await updateAssignment({ academicMediumId: medium?.id, ...updatePayload }).unwrap();
+          await updateAssignment(updatePayload).unwrap();
           shikshaMitraToast.success({
             message: `Assignment "${values.title}" has been updated successfully.`,
           });
         } else {
-          await addAssignment({ academicMediumId: medium?.id, ...payload }).unwrap();
+          await addAssignment({ academicMediumId: medium?.id, body: payload }).unwrap();
           shikshaMitraToast.success({
             message: `Assignment "${values.title}" has been created successfully.`,
           });

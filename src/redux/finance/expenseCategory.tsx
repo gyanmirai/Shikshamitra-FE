@@ -1,29 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
-import expenseCategoryData from 'src/json/finance/settings/expense-category/expenseCategoryData.json';
+import { financeModuleApi } from './financeModuleApi';
 
-const isDev = process.env.NODE_ENV === 'development';
-
-export const ExpenseCategoryApi = createApi({
-  reducerPath: 'ExpenseCategoryApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock routes
-        if (url === '/expenseCategories') {
-          return { data: expenseCategoryData.expenseCategories };
-        }
-        if (url === '/budgetOptions') {
-          return { data: expenseCategoryData.budgetOptions };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['expense-category', 'budget-options'],
+export const expenseCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getExpenseCategory: builder.query({
       query: () => ({
@@ -32,6 +9,7 @@ export const ExpenseCategoryApi = createApi({
       }),
       providesTags: ['expense-category'],
     }),
+
     getBudgetOptions: builder.query({
       query: () => ({
         url: '/budgetOptions',
@@ -40,6 +18,7 @@ export const ExpenseCategoryApi = createApi({
       providesTags: ['budget-options'],
     }),
   }),
+  overrideExisting: false,
 });
 
-export const { useGetExpenseCategoryQuery, useGetBudgetOptionsQuery } = ExpenseCategoryApi;
+export const { useGetExpenseCategoryQuery, useGetBudgetOptionsQuery } = expenseCategoryApi;

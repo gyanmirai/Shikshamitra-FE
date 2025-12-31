@@ -23,10 +23,6 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import {
-  useGetEmployeeLeaveQuery,
-  useEmployeeLeaveRequestStatusMutation,
-} from 'src/redux/employee/employeeApi';
-import {
   Box,
   Button,
   MenuItem,
@@ -40,22 +36,36 @@ import {
   EmployeeLeaveStatusOptions,
   EmployeeLeaveStatusTypeColor,
 } from 'src/enums/employee-leave-status';
+import {
+  useGetEmployeeLeaveQuery,
+  useDeleteEmployeeLeaveMutation,
+  useEmployeeLeaveRequestStatusMutation,
+} from 'src/redux/employee/employeeApi';
 
 import AddLeaveRequest from './leave-requst';
 import { LeaveRequestForm } from './leave-calender';
 
 const LeaveHistory = (props: any) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium: mediumStageId } = useSelector(
+    (state: RootState) => state.globalState
+  );
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeaveQuery,
+    params: mediumStageId?.id,
   });
   const [changeStatus, { isLoading: isChangeStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useEmployeeLeaveRequestStatusMutation,
   });
+
+  const [deleteLeave, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteEmployeeLeaveMutation,
+  });
+
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
@@ -63,6 +73,7 @@ const LeaveHistory = (props: any) => {
 
   const approveConfirmation = useBoolean();
   const approveOrRejectConfirmation = useBoolean();
+  const cancelConfirmation = useBoolean();
 
   const [editData, setEditData] = useState<any>(null);
   const actions = useCallback(
@@ -112,31 +123,42 @@ const LeaveHistory = (props: any) => {
           <Iconify icon="mdi:close-circle" sx={{ height: '16px', width: '16px' }} />
           Reject
         </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setEditData(row);
+            cancelConfirmation.onTrue();
+            popover.onClose();
+          }}
+          sx={{ color: 'warning.main' }}
+        >
+          <Iconify icon="mdi:cancel" sx={{ height: '16px', width: '16px' }} />
+          Cancel
+        </MenuItem>
       </MenuList>
     ),
-    [changeStatus, modal, approveOrRejectConfirmation]
+    [changeStatus, modal, approveOrRejectConfirmation, cancelConfirmation]
   );
 
   const tableData = useMemo(
     () =>
-      data?.items?.map((item: any) => ({
-        ...item,
-        start: dayjs(item.startDate).format('DD-MM-YYYY'),
-        end: dayjs(item.endDate).format('DD-MM-YYYY'),
-        statusValue: item.status,
-        viewStartDate: item.startDate,
-        color: item.leavePolicy.color,
-        viewEndDate: item.endDate,
-        allDay: false,
-        textColor: item.leavePolicy.color,
-        title: `${item.leavePolicy.leaveType} [${item.employee.firstName} ${item.employee.lastName}]`,
-        description: item.description.replace(/<[^>]+>/g, ''),
-        totalDays: item.isHalfDay
-          ? 0.5
-          : dayjs(item.endDate).diff(dayjs(item.startDate), 'day') + 1 < 0
-            ? 0
-            : dayjs(item.endDate).diff(dayjs(item.startDate), 'day') + 1,
-      })) || [],
+      data?.items?.map((item: any) => {
+        const start = dayjs(item.startDate);
+        const end = dayjs(item.endDate);
+
+        return {
+          id: item.id,
+          name: item.name,
+          employeeIdentifier: item.employeeIdentifier,
+          leaveType: item.leaveType,
+          startDate: start.format('DD-MM-YYYY'),
+          endDate: end.format('DD-MM-YYYY'),
+          totalDays: item.totalDays,
+          organization: item.organization,
+          description: item.description,
+          remarks: item.remarks,
+          status: item.status,
+        };
+      }) || [],
     [data]
   );
 
@@ -216,15 +238,12 @@ const LeaveHistory = (props: any) => {
           <>
             No Leave Request Found{' '}
             <Box
-              onClick={() => {
-                modal?.onTrue?.();
-              }}
+              onClick={() => modal?.onTrue?.()}
               color="primary.main"
               fontWeight={600}
               sx={{
                 '&:hover': {
                   cursor: 'pointer',
-                  color: 'primary.main',
                   textDecoration: 'underline',
                 },
               }}
@@ -237,26 +256,24 @@ const LeaveHistory = (props: any) => {
         showCheckbox={selectedStudents.length !== 0}
         isLoading={isLoading}
         tableId="leave-history-table"
+        data={tableData}
         columns={[
           {
             label: 'Name',
+            id: 'name',
             sticky: true,
-            id: 'employee.firstName',
             minWidth: '12vw',
             align: 'left',
-            render(value, row) {
-              return `${value} ${row.employee.lastName}`;
-            },
           },
           {
             label: 'Employee Code',
-            id: 'employee.employeeCode',
+            id: 'employeeIdentifier',
             minWidth: '9.5vw',
             align: 'left',
           },
           {
             label: 'Start Date',
-            id: 'start',
+            id: 'startDate',
             filterType: 'date',
             minWidth: '120px',
             align: 'left',
@@ -264,7 +281,7 @@ const LeaveHistory = (props: any) => {
           },
           {
             label: 'End Date',
-            id: 'end',
+            id: 'endDate',
             filterType: 'date',
             minWidth: '100px',
             align: 'left',
@@ -278,7 +295,7 @@ const LeaveHistory = (props: any) => {
           },
           {
             label: 'Organization',
-            id: 'employee.educationMediumStage.name',
+            id: 'organization',
             align: 'left',
             minWidth: '14vw',
           },
@@ -290,25 +307,26 @@ const LeaveHistory = (props: any) => {
           },
           {
             label: 'Remarks',
-            id: 'rejectionReason',
+            id: 'remarks',
             align: 'left',
             minWidth: '12vw',
-            render(value, row) {
+            render(value) {
               return value || '-';
             },
           },
           {
             label: 'Status',
-            id: 'statusValue',
+            id: 'status',
             filterType: 'enum',
             align: 'left',
             enumOptions: EmployeeLeaveStatusOptions,
             sticky: true,
             minWidth: '100px',
-            render(value, row) {
+            render(value) {
               const color = EmployeeLeaveStatusTypeColor[
                 value as EmployeeLeaveStatusType
               ] as LabelColor;
+
               return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
             },
           },
@@ -316,17 +334,17 @@ const LeaveHistory = (props: any) => {
             label: 'Action',
             id: 'action',
             isFilter: false,
-            sticky: true,
             isSort: false,
-            render(value, row) {
+            sticky: true,
+            render(_value, row) {
               return (
                 <ThreeDotsActions placement="right-top" actions={(prop) => actions(prop, row)} />
               );
             },
           },
         ]}
-        data={tableData}
       />
+
       <ConfirmDialog
         open={approveConfirmation.value}
         onClose={() => {
@@ -353,6 +371,35 @@ const LeaveHistory = (props: any) => {
             }}
           >
             Approve
+          </LoadingButton>
+        }
+      />
+
+      <ConfirmDialog
+        open={cancelConfirmation.value}
+        onClose={() => {
+          setEditData(null);
+          cancelConfirmation.onFalse();
+        }}
+        title="Cancel Leave Request"
+        content={
+          <>
+            Are you sure you want to cancel this leave request for <strong>{editData?.name}</strong>
+            ?
+          </>
+        }
+        action={
+          <LoadingButton
+            variant="contained"
+            color="warning"
+            loading={isDeleteLoading}
+            onClick={async () => {
+              await deleteLeave(editData?.id);
+              cancelConfirmation.onFalse();
+              setEditData(null);
+            }}
+          >
+            Yes, Cancel
           </LoadingButton>
         }
       />
@@ -470,7 +517,7 @@ export const ApproveRejectForm = ({
           id: editData?.id,
           body: {
             status: editData.type,
-            rejectionReason: formikValues.rejectionReason,
+            remarks: formikValues.rejectionReason,
           },
         }).unwrap();
         handleClose(null, true);

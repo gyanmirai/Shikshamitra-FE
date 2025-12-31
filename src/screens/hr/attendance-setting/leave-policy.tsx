@@ -61,9 +61,12 @@ const LeavePolicy = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Removed leave policy fetch – using static sample data for simplified form.
 
+  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
+
   const { data: leavePolicyData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEmployeeLeavePolicyQuery,
+    params: mediumStageId?.id,
   });
 
   const [deleteLeavePolicy, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -71,18 +74,7 @@ const LeavePolicy = () => {
     currentQueryAndMutation: useDeleteEmployeeLeavePolicyMutation,
   });
 
-  const tableData = useMemo(
-    () =>
-      leavePolicyData?.items.map((item: ILeavePolicy) => ({
-        ...item,
-        leaveDays: item?.maximumDaysPerYear?.toString(),
-        isCarryForward: item.carryForward ? 'Yes' : 'No',
-        isEncashable: item.encashable ? 'Yes' : 'No',
-        // accrualRateString: AccurateRateType[item.accrualRate],
-        // color: item.color,
-      })) || [],
-    [leavePolicyData?.items]
-  );
+  const tableData = useMemo(() => leavePolicyData?.items || [], [leavePolicyData?.items]);
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -136,8 +128,7 @@ const LeavePolicy = () => {
         title="Delete"
         content={
           <>
-            Are you sure you want to delete <strong>{editData?.policyName || 'this policy'}</strong>
-            ?
+            Are you sure you want to delete <strong>{editData?.title || 'this policy'}</strong>?
           </>
         }
         action={
@@ -192,7 +183,7 @@ const LeavePolicy = () => {
         tableId="leave-policy-table"
         columns={[
           {
-            id: 'policyName',
+            id: 'title',
             label: 'Name',
             minWidth: '12vw',
             align: 'left',
@@ -205,24 +196,24 @@ const LeavePolicy = () => {
             align: 'left',
           },
           {
-            id: 'maximumDaysPerYear',
+            id: 'maxLeavePerYear',
             label: 'Maximum Per year',
             minWidth: '17vw',
             align: 'left',
           },
           {
-            id: 'isCarryForward',
+            id: 'carryForward',
             label: 'Carry Forward',
             minWidth: '16vw',
             align: 'left',
-            filterType: 'date',
+            render: (value) => (value ? 'Yes' : 'No'),
           },
           {
-            id: 'isEncashable',
+            id: 'encashmentAllowed',
             label: 'Encashable',
             minWidth: '16vw',
             align: 'left',
-            filterType: 'date',
+            render: (value) => (value ? 'Yes' : 'No'),
           },
           {
             id: 'paidType',
@@ -326,9 +317,12 @@ export const LeavePolicyForm = ({
   handleClose: (e: any, isSubmit?: boolean) => void;
   editData: ILeavePolicy | null;
 }) => {
+  const { currentMedium: mediumStageId } = useSelector((state: RootState) => state.globalState);
+
   const [addLeavePolicy, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddEmployeeLeavePolicyMutation,
+    params: mediumStageId?.id,
   });
 
   const [updateLeavePolicy, { isLoading: isUpdateLoading }] = useQueryAndMutation({
@@ -337,45 +331,42 @@ export const LeavePolicyForm = ({
   });
   const formik = useFormik({
     initialValues: {
-      policyTitle: editData?.policyName || '',
+      policyTitle: editData?.title || '',
       leaveType: editData?.leaveType || '',
-      maxLeavePerYear: editData?.maximumDaysPerYear?.toString() || '',
+      maxLeavePerYear: editData?.maxLeavePerYear?.toString() || '',
       paidType: editData?.paidType || 'Paid',
       carryForward: editData?.carryForward ?? false,
-      encashmentAllowed: editData?.encashable ?? false,
+      encashmentAllowed: editData?.encashmentAllowed ?? false,
       requiresApproval: editData?.requiresApproval ?? false,
       description: editData?.description || '',
     },
     validationSchema,
     onSubmit: async (values) => {
       try {
+        const payload = {
+          mediumStageId: mediumStageId?.id,
+          policyTitle: values.policyTitle,
+          leaveType: values.leaveType,
+          maxLeavePerYear: Number(values.maxLeavePerYear),
+          paidType: values.paidType,
+          carryForward: values.carryForward,
+          encashmentAllowed: values.encashmentAllowed,
+          requiresApproval: values.requiresApproval,
+          description: values.description || undefined,
+        };
+
         if (!editData) {
           await addLeavePolicy({
-            policyName: values.policyTitle,
-            leaveType: values.leaveType,
-            maximumDaysPerYear: Number(values.maxLeavePerYear),
-            paidType: values.paidType,
-            carryForward: values.carryForward,
-            encashable: values.encashmentAllowed,
-            requiresApproval: values.requiresApproval,
-            description: values.description,
+            mediumStageId: mediumStageId?.id,
+            body: payload,
           });
           shikshaMitraToast.success({
             message: `Leave policy ${values.policyTitle} added successfully`,
           });
         } else {
           await updateLeavePolicy({
-            id: editData.id,
-            body: {
-              policyName: values.policyTitle,
-              leaveType: values.leaveType,
-              maximumDaysPerYear: Number(values.maxLeavePerYear),
-              paidType: values.paidType,
-              carryForward: values.carryForward,
-              encashable: values.encashmentAllowed,
-              requiresApproval: values.requiresApproval,
-              description: values.description,
-            },
+            policyId: editData.id,
+            body: payload,
           });
           shikshaMitraToast.success({
             message: `Leave policy ${values.policyTitle} updated successfully`,
@@ -383,7 +374,10 @@ export const LeavePolicyForm = ({
         }
         handleClose(null, true);
       } catch (error) {
-        console.error(error);
+        console.error('Failed to save leave policy:', error);
+        shikshaMitraToast.error({
+          message: editData ? 'Failed to update leave policy' : 'Failed to add leave policy',
+        });
       }
     },
   });

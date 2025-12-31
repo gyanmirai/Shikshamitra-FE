@@ -3,29 +3,65 @@
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Stack, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddAssignmentTypeMutation,
+  useUpdateAssignmentTypeMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
 
 import type { IAssignmentTypeFormProps } from './type';
 
 const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose, editData }) => {
+  const [addAssignmentType, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddAssignmentTypeMutation,
+  });
+
+  const [updateAssignmentType, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateAssignmentTypeMutation,
+  });
+
   const formik = useFormik({
     initialValues: {
       assignmentTypeName: editData?.assignmentTypeName || '',
     },
+    enableReinitialize: true,
     validationSchema: Yup.object().shape({
       assignmentTypeName: Yup.string().required('Name is required'),
     }),
-    onSubmit: (values) => {
-      shikshaMitraToast.success({
-        message: `${values.assignmentTypeName} Assignment Type ${editData ? 'updated' : 'added'} successfully`,
-      });
-      onClose(null, true);
+    onSubmit: async (values) => {
+      try {
+        if (editData) {
+          const payload = {
+            assignmentTypeId: editData.id,
+            name: values.assignmentTypeName,
+          };
+          await updateAssignmentType(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.assignmentTypeName}" Assignment Type updated successfully`,
+          });
+        } else {
+          const payload = {
+            name: values.assignmentTypeName,
+          };
+          await addAssignmentType(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.assignmentTypeName}" Assignment Type added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to save assignment type', error);
+      }
     },
   });
 
@@ -76,7 +112,8 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
+          loading={isAddLoading || isUpdateLoading}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -90,7 +127,7 @@ const AssignmentTypeForm: React.FC<IAssignmentTypeFormProps> = ({ open, onClose,
           size="small"
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
       {/* </form> */}
     </BackPopUpChecked>

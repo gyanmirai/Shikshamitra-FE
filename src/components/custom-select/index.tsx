@@ -74,7 +74,18 @@ const CustomSelect = <T extends string, J extends boolean>({
     <FormControl
       size="small"
       error={error}
-      sx={{ width: '100%', position: 'relative' }}
+      sx={[
+        { width: '100%', position: 'relative' },
+        ...(Array.isArray(formControlProps?.sx) ? formControlProps.sx : [formControlProps?.sx]),
+        (theme) => ({
+          ...(error &&
+            disabled && {
+              '& .MuiInputLabel-root.Mui-disabled': {
+                color: `${theme.palette.error.main} !important`,
+              },
+            }),
+        }),
+      ]}
       {...formControlProps}
     >
       {isLoading ? (
@@ -110,6 +121,14 @@ const CustomSelect = <T extends string, J extends boolean>({
                   )
                 : undefined
             }
+            sx={(theme) => ({
+              ...(error &&
+                disabled && {
+                  '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+                    borderColor: `${theme.palette.error.main} !important`,
+                  },
+                }),
+            })}
             {...props}
           >
             {options?.length === 0 ? (

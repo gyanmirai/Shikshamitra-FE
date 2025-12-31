@@ -100,15 +100,16 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
         const payload = {
           classId: values.classId,
           subjectId: values.subjectId,
+          chapterId: values.chapterId,
           title: values.title,
           description: values.description,
-          assignmentTypeId: values.homeworkTypeId,
+          homeworkTypeId: values.homeworkTypeId,
           submissionType: values.submissionType,
-          attachments: values.attachments,
-          divisions: values.divisions.map((division: any) => ({
+          attachment: values.attachments,
+          divisionSchedules: values.divisions.map((division: any) => ({
             divisionId: division.divisionId,
-            publishDate: division.publishDate.toISOString(),
-            dueDate: division.dueDate.toISOString(),
+            publishAt: division.publishDate.toISOString(),
+            dueAt: division.dueDate.toISOString(),
           })),
         };
 
@@ -116,14 +117,15 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           // For update, include the assignment ID
           const updatePayload = {
             id: editData.id,
+            academicMediumId: medium?.id,
             body: payload,
           };
-          await updateHomework({ academicMediumId: medium?.id, ...updatePayload }).unwrap();
+          await updateHomework(updatePayload).unwrap();
           shikshaMitraToast.success({
             message: `Homework "${values.title}" has been updated successfully.`,
           });
         } else {
-          await addHomework({ academicMediumId: medium?.id, ...payload }).unwrap();
+          await addHomework({ academicMediumId: medium?.id, body: payload }).unwrap();
           shikshaMitraToast.success({
             message: `Homework "${values.title}" has been created successfully.`,
           });

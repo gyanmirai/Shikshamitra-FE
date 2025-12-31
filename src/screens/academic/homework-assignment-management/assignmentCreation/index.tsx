@@ -277,12 +277,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             loading={isDeleteLoading}
             onClick={async () => {
               try {
-                const payload = {
-                  academicMediumId: medium?.id,
-                  id: selectedAssignment?.id,
-                };
-
-                await deleteAssignment(payload).unwrap();
+                await deleteAssignment(selectedAssignment?.id).unwrap();
 
                 shikshaMitraToast.success({
                   message: `Assignment for "${selectedAssignment?.subjectName}" has been successfully deleted from Class ${classes} - ${division}.`,
@@ -324,8 +319,8 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             onClick={async () => {
               try {
                 const payload = {
-                  id: selectedAssignment?.id,
-                  academicMediumId: medium?.id,
+                  assignmentId: selectedAssignment?.id,
+                  status: 'PUBLISHED',
                 };
 
                 await publishAssignment(payload).unwrap();

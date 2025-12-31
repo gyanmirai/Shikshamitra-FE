@@ -4,16 +4,40 @@ export const scheduleExamApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Step 1: Basic Details
     addExamBasicDetails: builder.mutation({
-      query: ({ academicMediumId, body }) => ({
+      query: ({ body }) => ({
         url: `exams/basic-details`,
         method: 'POST',
-        params: { academicMediumId },
         data: body,
       }),
       invalidatesTags: ['Exam'],
     }),
 
+    updateExamBasicDetails: builder.mutation({
+      query: ({ examId, body }) => ({
+        url: `exams/${examId}/basic-details`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['Exam'],
+    }),
+
+    getExamBasicDetails: builder.query({
+      query: ({ examId }) => ({
+        url: `exams/${examId}/basic-details`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, arg) => [{ type: 'Exam', id: arg.examId }],
+    }),
+
     // Step 2: Exam Schedule
+    getExamSchedule: builder.query({
+      query: ({ examId }) => ({
+        url: `exams/${examId}/schedule`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, arg) => [{ type: 'Exam', id: arg.examId }],
+    }),
+
     updateExamSchedule: builder.mutation({
       query: ({ examId, body }) => ({
         url: `exams/${examId}/schedule`,
@@ -24,6 +48,14 @@ export const scheduleExamApi = academicApi.injectEndpoints({
     }),
 
     // Step 3: Room Assignment
+    getExamRoomAssignments: builder.query({
+      query: ({ examId }) => ({
+        url: `exams/${examId}/rooms`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, arg) => [{ type: 'Exam', id: arg.examId }],
+    }),
+
     updateExamRoomAssignment: builder.mutation({
       query: ({ examId, body }) => ({
         url: `exams/${examId}/rooms`,
@@ -43,33 +75,29 @@ export const scheduleExamApi = academicApi.injectEndpoints({
       providesTags: ['Exam'],
     }),
 
-    // Get Exam By ID
-    getExamById: builder.query({
-      query: ({ examId, academicMediumId }) => ({
-        url: `exams/${examId}`,
+    // Get Subjects of Exam
+    getExamSubjects: builder.query({
+      query: ({ examId }) => ({
+        url: `exams/${examId}/subjects`,
         method: 'GET',
-        params: { academicMediumId },
       }),
       providesTags: (result, error, arg) => [{ type: 'Exam', id: arg.examId }],
     }),
 
-    // Publish Exam
-    publishExam: builder.mutation({
-      query: ({ examId, academicMediumId, body }) => ({
-        url: `exams/${examId}/publish`,
-        method: 'PATCH',
-        params: { academicMediumId },
-        data: body,
+    // Delete Exam
+    deleteExam: builder.mutation({
+      query: ({ examId }) => ({
+        url: `exams/${examId}`,
+        method: 'DELETE',
       }),
       invalidatesTags: ['Exam'],
     }),
 
-    // Delete Exam
-    deleteExam: builder.mutation({
-      query: ({ examId, academicMediumId }) => ({
-        url: `exams/${examId}`,
-        method: 'DELETE',
-        params: { academicMediumId },
+    publishExam: builder.mutation({
+      query: ({ examId, body }) => ({
+        url: `exams/${examId}/publish`,
+        method: 'PATCH',
+        data: body,
       }),
       invalidatesTags: ['Exam'],
     }),
@@ -79,10 +107,14 @@ export const scheduleExamApi = academicApi.injectEndpoints({
 
 export const {
   useAddExamBasicDetailsMutation,
+  useUpdateExamBasicDetailsMutation,
+  useGetExamBasicDetailsQuery,
+  useGetExamScheduleQuery,
   useUpdateExamScheduleMutation,
+  useGetExamRoomAssignmentsQuery,
   useUpdateExamRoomAssignmentMutation,
   useGetExamsQuery,
-  useGetExamByIdQuery,
-  usePublishExamMutation,
+  useGetExamSubjectsQuery,
   useDeleteExamMutation,
+  usePublishExamMutation,
 } = scheduleExamApi;

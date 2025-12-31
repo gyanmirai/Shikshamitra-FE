@@ -1,8 +1,10 @@
+import type { RootState } from 'src/redux/store';
 import type { GridProps, PaperProps } from '@mui/material';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import dayjs from 'dayjs';
 import { capitalize } from 'lodash';
+import { useSelector } from 'react-redux';
 import { useState, useEffect } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -13,6 +15,8 @@ import { fileToBase64 } from 'src/utils/file-to-base64';
 import { motion, AnimatePresence } from 'framer-motion';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { BloodGroup, BloodGroupArray } from 'src/enums/blood-group';
+import { ReligionType, ReligionTypeArray } from 'src/enums/religion';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
 import CountryComponent from 'src/components/stardard-address/country-component';
@@ -43,7 +47,6 @@ import {
 
 import RenderShift from './RenderShift';
 import { RenderRole } from './RenderRole';
-import { RenderOrganization } from './RenderOrganization';
 
 import type { FieldsType } from './types';
 
@@ -199,8 +202,10 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
     return undefined;
   };
   const handleCancel = () => {
-    formik.resetForm();
+    // formik.resetForm();
   };
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   return (
     <Box>
@@ -400,14 +405,11 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     label="Religion *"
                     name="religion"
                   >
-                    <MenuItem value="Hinduism">Hinduism</MenuItem>
-                    <MenuItem value="Islam">Islam</MenuItem>
-                    <MenuItem value="Christianity">Christianity</MenuItem>
-                    <MenuItem value="Sikhism">Sikhism</MenuItem>
-                    <MenuItem value="Buddhism">Buddhism</MenuItem>
-                    <MenuItem value="Jainism">Jainism</MenuItem>
-                    <MenuItem value="Judaism">Judaism</MenuItem>
-                    <MenuItem value="Zoroastrianism">Zoroastrianism (Parsi)</MenuItem>
+                    {ReligionTypeArray.map((item, index) => (
+                      <MenuItem key={index} value={ReligionType[index]}>
+                        {ReligionType[index]}
+                      </MenuItem>
+                    ))}
                   </Select>
                   {formik.touched.religion && formik.errors.religion && (
                     <FormHelperText>{formik.errors.religion}</FormHelperText>
@@ -521,14 +523,11 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     label="Blood Group"
                     name="bloodGroup"
                   >
-                    <MenuItem value="A+">A+</MenuItem>
-                    <MenuItem value="A-">A-</MenuItem>
-                    <MenuItem value="B+">B+</MenuItem>
-                    <MenuItem value="B-">B-</MenuItem>
-                    <MenuItem value="AB+">AB+</MenuItem>
-                    <MenuItem value="AB-">AB-</MenuItem>
-                    <MenuItem value="O+">O+</MenuItem>
-                    <MenuItem value="O-">O-</MenuItem>
+                    {BloodGroupArray.map((item, index) => (
+                      <MenuItem key={item} value={index}>
+                        {BloodGroup[index]}
+                      </MenuItem>
+                    ))}
                   </Select>
                   {formik.touched.bloodGroup && formik.errors.bloodGroup && (
                     <FormHelperText>{formik.errors.bloodGroup}</FormHelperText>
@@ -627,6 +626,8 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
             error={formik.touched.dateOfJoining && Boolean(formik.errors.dateOfJoining)}
           >
             <DatePicker
+              minDate={dayjs(currentYear?.startDate)}
+              maxDate={dayjs(currentYear?.endDate)}
               label="Date of Joining *"
               value={formik.values.dateOfJoining}
               onChange={(value) => formik.setFieldValue('dateOfJoining', value)}
@@ -725,9 +726,6 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
 
         <Grid size={{ xs: 12, md: 4 }}>
           <RenderRole formik={formik} disabled={!isProfessionalDetailsEditable.value} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <RenderOrganization formik={formik} disabled={!isProfessionalDetailsEditable.value} />
         </Grid>
         <Grid size={{ xs: 12, md: 4 }}>
           <RenderShift formik={formik} disabled={!isProfessionalDetailsEditable.value} />

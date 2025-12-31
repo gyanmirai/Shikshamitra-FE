@@ -1,55 +1,67 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-
 import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useSelector } from 'react-redux';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Stack, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   useAddHomeworkTypeMutation,
   useUpdateHomeworkTypeMutation,
-} from 'src/redux/academics/homeworkAndAssignment/homeworkTypeApi';
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 
 import type { IHomeworkTypeFormProps } from './type';
 
 const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, editData }) => {
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [addHomeworkType, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddHomeworkTypeMutation,
+  });
 
-  const [addHomeworkType] = useAddHomeworkTypeMutation();
-  const [updateHomeworkType] = useUpdateHomeworkTypeMutation();
+  const [updateHomeworkType, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHomeworkTypeMutation,
+  });
 
   const formik = useFormik({
     initialValues: {
       homeworkTypeName: editData?.homeworkTypeName || '',
     },
+    enableReinitialize: true,
     validationSchema: Yup.object().shape({
       homeworkTypeName: Yup.string().required('Name is required'),
     }),
-    onSubmit: (values) => {
-      if (editData) {
-        updateHomeworkType({
-          id: editData.id,
-          name: values.homeworkTypeName,
-          academicMediumId: currentMedium?.id,
-        });
-      } else {
-        addHomeworkType({
-          name: values.homeworkTypeName,
-          academicMediumId: currentMedium?.id,
-        });
+    onSubmit: async (values) => {
+      try {
+        if (editData) {
+          const payload = {
+            homeworkTypeId: editData.id,
+            name: values.homeworkTypeName,
+          };
+          await updateHomeworkType(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.homeworkTypeName}" Homework Type updated successfully`,
+          });
+        } else {
+          const payload = {
+            name: values.homeworkTypeName,
+          };
+          await addHomeworkType(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.homeworkTypeName}" Homework Type added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to save homework type', error);
       }
-      shikshaMitraToast.success({
-        message: `${values.homeworkTypeName} Homework Type ${editData ? 'updated' : 'added'} successfully`,
-      });
-      onClose(null, true);
     },
   });
 
@@ -97,7 +109,8 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
+          loading={isUpdateLoading || isAddLoading}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -111,7 +124,7 @@ const HomeworkTypeForm: React.FC<IHomeworkTypeFormProps> = ({ open, onClose, edi
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
       {/* </form> */}
     </BackPopUpChecked>

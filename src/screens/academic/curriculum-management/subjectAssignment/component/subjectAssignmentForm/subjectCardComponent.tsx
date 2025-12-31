@@ -11,6 +11,8 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { SingleFilePreview } from 'src/components/upload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
@@ -37,12 +39,19 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   subject,
   isCore,
   isPublished,
-  teacherOptions,
+  // teacherOptions,
   onSubjectChange,
   index,
+  onFileUpload,
 }: ISubjectCardProps) => {
   const theme = useTheme();
+  const {
+    data: employee,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({ type: 'query', currentQueryAndMutation: useGetEmployeeQuery });
 
+  console.log('employee----', employee);
   // State to control accordion expansion, initialized with subject's isSubjectOpen or false
   const [isExpanded, setIsExpanded] = useState(subject.isSubjectOpen || false);
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
@@ -169,13 +178,21 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             <Grid size={{ xs: 12, md: 4 }}>
               <FormControl fullWidth error={!!getError('primaryTeacher')}>
                 <Autocomplete
-                  options={teacherOptions}
-                  value={teacherOptions.find((t) => t.id === subject.primaryTeacher) ?? null}
-                  getOptionLabel={(option) => option.name ?? ''}
+                  options={
+                    employee?.items?.filter(
+                      (option: any) =>
+                        !subject.secondaryTeacher?.some(
+                          (secondary: any) => (secondary.id || secondary) === option.id
+                        )
+                    ) || []
+                  }
+                  value={employee?.items?.find((t: any) => t.id === subject.primaryTeacher) ?? null}
+                  getOptionLabel={(option) => option.fullName ?? ''}
                   onChange={(_, newValue) =>
                     formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '')
                   }
-                  renderOption={(props, option) => <li {...props}>{option?.name}</li>}
+                  loading={isLoading}
+                  renderOption={(props, option) => <li {...props}>{option?.fullName}</li>}
                   renderInput={(params) => (
                     <TextField {...params} label="Primary Teacher" size="small" />
                   )}
@@ -232,15 +249,18 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   multiple
                   disableCloseOnSelect
                   options={
-                    teacherOptions?.filter((option) => option.id !== subject.primaryTeacher) || []
+                    employee?.items?.filter(
+                      (option: any) => option.id !== subject.primaryTeacher
+                    ) || []
                   }
+                  loading={isLoading}
                   // UI expects objects, not IDs → convert stored ids to objects
                   value={
-                    teacherOptions?.filter((t) =>
+                    employee?.items?.filter((t: any) =>
                       subject.secondaryTeacher?.includes(t?.id as any)
                     ) || []
                   }
-                  getOptionLabel={(option) => option?.name ?? ''}
+                  getOptionLabel={(option) => option?.fullName ?? ''}
                   isOptionEqualToValue={(option, value) => option.id === value.id}
                   onChange={(_, newValue) =>
                     formik.setFieldValue(
@@ -256,7 +276,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                         checked={selected}
                         sx={{ marginRight: 1 }}
                       />
-                      {option?.name}
+                      {option?.fullName}
                     </li>
                   )}
                   renderTags={(values) => {
@@ -267,8 +287,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     return [
                       <Chip
                         key={first?.id}
-                        avatar={<Avatar>{first?.name?.[0]}</Avatar>}
-                        label={first?.name}
+                        avatar={<Avatar>{first?.fullName?.[0]}</Avatar>}
+                        label={first?.fullName}
                         size="small"
                         sx={{ ml: 1 }}
                       />,
@@ -390,7 +410,9 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               <CustomUpload
                 multiple
                 previewCount={6}
-                onChange={(files) => formik.setFieldValue(`subjects.${index}.documents`, files)}
+                onChange={(files) => {
+                  onFileUpload(files, index);
+                }}
                 value={subject.documents}
                 label="Upload Your Subject Documents"
                 outputFormat="file"
@@ -432,10 +454,10 @@ export const TeacherListPopover = ({
       <Box sx={{ p: 1, maxWidth: 180, borderRadius: 1 }}>
         {teachers.map((teacher) => (
           <Chip
-            key={teacher.name}
+            key={teacher.fullName}
             variant="soft"
-            avatar={<Avatar sx={{ width: 24, height: 24 }}>{teacher?.name?.charAt(0)}</Avatar>}
-            label={teacher.name}
+            avatar={<Avatar sx={{ width: 24, height: 24 }}>{teacher?.fullName?.charAt(0)}</Avatar>}
+            label={teacher.fullName}
             sx={{ ml: 0.5, height: 24, fontSize: 12, mb: 1 }}
             size="small"
           />

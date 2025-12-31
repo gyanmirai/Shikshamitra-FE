@@ -21,6 +21,9 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { Box, Grid, Chip, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
 import {
   useAddSubjectAssignmentMutation,
+  useUploadCurriculumFileMutation,
+  useGetCoreElectiveSubjectsQuery,
+  useGetSubjectAssignmentByIdQuery,
   useUpdateSubjectAssignmentMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
@@ -29,7 +32,6 @@ import SettingSubjectForm from '../../../setting/subjectCreation/subjectForm';
 import { validationSchema, getSubjectAssignmentInitialValues } from './initialValues';
 import SettingElectiveSubjectForm from '../../../setting/electiveSubjectSetting/components/electiveSubjectForm';
 
-import type { TeacherProfile } from '../type';
 import type { ISubjectAssignmentFormProps, ISubjectAssignmentFormValues } from './type';
 
 // Enhanced subject options with Core and Elective groups
@@ -59,55 +61,6 @@ const subjectOptions = [
   },
 ];
 
-// Reusing the teacherProfiles (mock data)
-const teacherProfiles: TeacherProfile[] = [
-  {
-    id: '1',
-    name: 'Sharma Riya Kumar',
-    avatarUrl: 'https://yourcdn.com/riya.png',
-    designation: 'Senior Mathematics Teacher',
-    department: 'Mathematics Department',
-    class: '8',
-    division: 'A',
-    status: 'Active',
-    dailyStatus: 'Present',
-    email: 'riya.sharma@example.com',
-    experience: '10 years',
-    qualification: 'M.Sc. Mathematics, B.Ed',
-    subjects: ['Algebra', 'Geometry'],
-  },
-  {
-    id: '2',
-    name: 'Patel Ankit Rajesh',
-    avatarUrl: 'https://yourcdn.com/ankit.png',
-    designation: 'Science Teacher',
-    department: 'Science Department',
-    class: '9',
-    division: 'B',
-    status: 'Active',
-    dailyStatus: 'Present',
-    email: 'ankit.patel@example.com',
-    experience: '7 years',
-    qualification: 'M.Sc. Physics, B.Ed',
-    subjects: ['Physics', 'Chemistry'],
-  },
-  {
-    id: '3',
-    name: 'Desai Priya Mahesh',
-    avatarUrl: 'https://yourcdn.com/priya.png',
-    designation: 'English Lecturer',
-    department: 'English Department',
-    class: '10',
-    division: 'C',
-    status: 'Active',
-    dailyStatus: 'On Leave',
-    email: 'priya.desai@example.com',
-    experience: '5 years',
-    qualification: 'M.A. English, B.Ed',
-    subjects: ['Literature', 'Grammar'],
-  },
-];
-
 const SubjectAssignmentForm = ({
   onClose,
   data,
@@ -115,9 +68,29 @@ const SubjectAssignmentForm = ({
   selectedClass,
   classId,
 }: ISubjectAssignmentFormProps) => {
-  // State to track if the form is in draft mode - determined by edit status or existing data status
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isDraft, setIsDraft] = useState<boolean>(false);
+  const {
+    data: subjectAssignmentData,
+    isLoading: isSubjectAssignmentLoading,
+    isFetching: isSubjectAssignmentFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentByIdQuery,
+    params: { assignmentId: data?.id },
+  });
+  console.log('subjectAssignmentData', subjectAssignmentData);
+
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  const {
+    data: subjectOptionsData,
+    isLoading: isSubjectOptionsLoading,
+    isFetching: isSubjectOptionsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetCoreElectiveSubjectsQuery,
+    params: { academicMediumId: (currentMedium as Medium).id },
+  });
+
   // Flag to check if the subject is already published
   const isPublished: boolean =
     PublishUnpublishStatusType[data?.status as PublishUnpublishStatusType] === 'Published';
@@ -129,7 +102,6 @@ const SubjectAssignmentForm = ({
   const [selectedOption, setSelectedOption] = useState<any[]>([]);
   // Flag to prevent infinite update loops
   const [isInitializing, setIsInitializing] = useState(true);
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const [addSubjectAssignment, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddSubjectAssignmentMutation,
@@ -139,30 +111,29 @@ const SubjectAssignmentForm = ({
     currentQueryAndMutation: useUpdateSubjectAssignmentMutation,
   });
 
+  const [uploadCurriculumFile] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUploadCurriculumFileMutation,
+  });
+
   // Initialize formik form with initial values from data prop or default values
   const formik = useFormik<ISubjectAssignmentFormValues>({
-    initialValues: getSubjectAssignmentInitialValues(data, selectedClass, classId),
+    initialValues: getSubjectAssignmentInitialValues(subjectAssignmentData, selectedClass, classId),
     validationSchema,
     enableReinitialize: true,
     // Handle form submission
     onSubmit: async (values, formikHelpers) => {
       try {
-        // Transform the form values to the payload structure
         const subjectsPayload = values.subjects.map((subj) => ({
-          subjectId: subj.subjectId,
-          subjectType: subj.subjectType,
-          electiveGroupId: subj.electiveGroupId,
-          subjectName: subj.subjectName,
+          subjectId: subj.subjectId, // ✅ required
+          electiveGroupId: subj.electiveGroupId || null, // ✅ UUID or null
           subjectCode: subj.subjectCode,
-          primaryTeacherId: subj.primaryTeacher, // Map back to Id
-          secondaryTeacherIds: subj.secondaryTeacher, // Map back to Ids
+          documents: subj.documents || [],
           learningGoal: subj.learningGoal,
           prerequisites: subj.prerequisites,
           description: subj.description,
-          documents: subj.documents,
-          // Optional: include UI fields if the API ignores them, otherwise exclude
-          // subjectColor is often needed for display in lists later
-          subjectColor: subj.subjectColor,
+          primaryTeacherId: subj.primaryTeacher || null,
+          secondaryTeacherId: subj.secondaryTeacher || [],
         }));
 
         const payload = {
@@ -176,7 +147,7 @@ const SubjectAssignmentForm = ({
           body: payload,
         };
 
-        if (isEdit && data) {
+        if (isEdit && subjectAssignmentData) {
           await updateSubjectAssignment(finalPayload).unwrap();
 
           shikshaMitraToast.success({
@@ -185,15 +156,12 @@ const SubjectAssignmentForm = ({
         } else {
           await addSubjectAssignment(finalPayload).unwrap();
 
-          if (values.status === 0) {
-            shikshaMitraToast.success({
-              message: `Subject Assignment saved as draft for class ${values.className}`,
-            });
-          } else {
-            shikshaMitraToast.success({
-              message: `Subject Assignment published successfully for class ${values.className}`,
-            });
-          }
+          shikshaMitraToast.success({
+            message:
+              values.status === 0
+                ? `Subject Assignment saved as draft for class ${values.className}`
+                : `Subject Assignment published successfully for class ${values.className}`,
+          });
         }
 
         onClose(null, true);
@@ -229,13 +197,15 @@ const SubjectAssignmentForm = ({
       // Naive matching: match by name or group containment
       subjectOptions.forEach((opt) => {
         if (opt.type === 0) {
-          // Core
-          if (subjects.some((s: any) => s.subjectName === opt.value)) {
+          // Core: Check if the option's name matches any subject's name in the data
+          if (subjects.some((s: any) => s.subjectName === opt.label)) {
             preSelectedOptions.push(opt);
           }
         } else {
-          // Elective Group
-          // Check if ANY of the group's subjects are in the data
+          // Elective Group: Check if ANY of the group's subjects are in the data
+          // The option has a list of 'subjects' (definitions)
+          // The data has a list of 'subjects' (assignments)
+          // We check if any assignment's subjectName matches any definition's name in this group
           // eslint-disable-next-line no-lonely-if
           if (
             opt.subjects &&
@@ -257,7 +227,6 @@ const SubjectAssignmentForm = ({
   // Handle subject selection change
   const handleSubjectChange = (newValue: any[]) => {
     if (!newValue || newValue.length === 0) {
-      formik.setFieldValue('subjectName', '');
       formik.setFieldValue('subjectType', 0);
       formik.setFieldValue('subjects', []);
       setSelectedOption([]);
@@ -272,10 +241,11 @@ const SubjectAssignmentForm = ({
 
     newValue.forEach((option) => {
       if (option.type === 0) {
+        // Core Subject
         const newSubject = {
-          subjectId: null, // New subject
-          subjectName: option.value,
-          subjectCode: '',
+          subjectId: option.value, // New assignment, so no assignment ID yet
+          subjectName: option.label, // Use label (Name)
+          subjectCode: '', // User to enter code
           subjectType: 0,
           primaryTeacher: '',
           secondaryTeacher: [],
@@ -283,25 +253,26 @@ const SubjectAssignmentForm = ({
           isSubjectOpen: true,
           learningGoal: '',
           prerequisites: '',
-          subjectColor: option.subjectColor,
+          subjectColor: option.color || '#4169E1',
           documents: [],
           subjectNo: Date.now() + Math.random(),
         };
         allSubjects.push(newSubject);
       } else if (option.type === 1) {
-        const electives = option.subjects.map((subject: any) => ({
-          subjectId: null,
+        // Elective Group
+        const electives = (option.subjects || []).map((subject: any) => ({
+          subjectId: subject.id,
           subjectName: subject.name,
-          subjectCode: subject.code,
+          subjectCode: '', // User to enter code
           subjectType: 1,
-          electiveGroupId: option.value,
+          electiveGroupId: option.value, // Group ID
           primaryTeacher: '',
           secondaryTeacher: [],
           isSubjectOpen: true,
           description: '',
           learningGoal: '',
           prerequisites: '',
-          subjectColor: subject.subjectColor,
+          subjectColor: subject.color || '#FFA726',
           documents: [],
           subjectNo: Date.now() + Math.random(),
         }));
@@ -311,7 +282,6 @@ const SubjectAssignmentForm = ({
 
     // Update formik values
     formik.setFieldValue('subjects', allSubjects);
-    formik.setFieldValue('subjectName', newValue.map((v) => v.label).join(', '));
     const hasCore = newValue.some((v) => v.type === 0);
     formik.setFieldValue('subjectType', hasCore ? 0 : 1);
   };
@@ -327,8 +297,17 @@ const SubjectAssignmentForm = ({
     formik.setFieldValue('subjects', updatedSubjects);
   };
 
-  console.log('formik values---', formik.values);
-  console.log('formik erroes---', formik.errors);
+  const handleFileUpload = async (files: (File | string)[], index: number) => {
+    console.log('files', files);
+    const uploadedFiles: (string | File)[] = [];
+    const formData = new FormData();
+    formData.append('FileName', (files[0] as File)?.name);
+    formData.append('File', files[0] as File);
+    const response = await uploadCurriculumFile(formData).unwrap();
+    uploadedFiles.push(response.data);
+
+    formik.setFieldValue(`subjects.${index}.documents`, uploadedFiles);
+  };
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -367,28 +346,41 @@ const SubjectAssignmentForm = ({
                     fullWidth
                     size="small"
                     disabled={isPublished}
-                    options={subjectOptions}
+                    options={
+                      subjectOptionsData?.data?.map((item: any) => ({
+                        label: item.name,
+                        value: item.id,
+                        type: item.subjectType,
+                        color: item.color,
+                        subjects: item.subjects,
+                      })) || []
+                    }
+                    loading={isSubjectOptionsLoading}
                     getOptionLabel={(option) => option.label}
                     value={selectedOption}
                     onChange={(_, newValue) => handleSubjectChange(newValue)}
                     ListboxProps={{
                       style: { maxHeight: 200, overflow: 'auto' },
                     }}
-                    renderOption={(props, option) => (
-                      <li {...props}>
-                        <Box
-                          sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                        >
-                          {option.label}
-                          <Chip
-                            size="small"
-                            label={option.type === 0 ? 'Core' : 'Elective'}
-                            color={option.type === 0 ? 'primary' : 'secondary'}
-                            sx={{ ml: 1, height: 20 }}
-                          />
-                        </Box>
-                      </li>
-                    )}
+                    renderOption={(props, option) => {
+                      const { key, ...restProps } = props;
+
+                      return (
+                        <li key={key} {...restProps}>
+                          <Box
+                            sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                          >
+                            {option.label}
+                            <Chip
+                              size="small"
+                              label={option.type === 0 ? 'Core' : 'Elective'}
+                              color={option.type === 0 ? 'primary' : 'secondary'}
+                              sx={{ ml: 1, height: 20 }}
+                            />
+                          </Box>
+                        </li>
+                      );
+                    }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -441,8 +433,9 @@ const SubjectAssignmentForm = ({
                       subject={subject}
                       isCore={formik.values.subjectType === 0}
                       isPublished={isPublished}
-                      teacherOptions={teacherProfiles}
+                      // teacherOptions={teacherProfiles}
                       onSubjectChange={handleSubjectFieldChange}
+                      onFileUpload={handleFileUpload}
                     />
                   ))}
                 </Grid>
@@ -468,7 +461,6 @@ const SubjectAssignmentForm = ({
                   size="small"
                   variant="contained"
                   onClick={() => {
-                    setIsDraft(true);
                     formik.handleSubmit();
                   }}
                   loading={isUpdateLoading}
@@ -484,11 +476,12 @@ const SubjectAssignmentForm = ({
                   type="submit"
                   variant="outlined"
                   onClick={() => {
-                    setIsDraft(true);
-                    formik.setFieldValue('status', 0); // Draft
+                    formik.setFieldValue('status', PublishUnpublishStatusType.Draft); // Draft
                     formik.handleSubmit();
                   }}
-                  loading={isAddLoading}
+                  loading={
+                    isAddLoading && formik.values.status === PublishUnpublishStatusType.Draft
+                  }
                   startIcon={<Iconify icon={GlobalIcons.draftIcon} />}
                 >
                   Save Draft
@@ -498,11 +491,12 @@ const SubjectAssignmentForm = ({
                   type="submit"
                   variant="contained"
                   onClick={() => {
-                    setIsDraft(false);
-                    formik.setFieldValue('status', 1); // Publish
+                    formik.setFieldValue('status', PublishUnpublishStatusType.Published); // Publish
                     formik.handleSubmit();
                   }}
-                  loading={isAddLoading}
+                  loading={
+                    isAddLoading && formik.values.status === PublishUnpublishStatusType.Published
+                  }
                   startIcon={<Iconify icon={GlobalIcons.publish} />}
                 >
                   Publish

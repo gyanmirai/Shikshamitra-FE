@@ -584,7 +584,8 @@ const InquiryForm = ({
                         name="dateOfInquiry"
                         value={values.dateOfInquiry}
                         format="DD-MM-YYYY"
-                        maxDate={dayjs()}
+                        minDate={dayjs(currentYear?.startDate)}
+                        maxDate={dayjs(currentYear?.endDate)}
                         onChange={(newValue) => {
                           setFieldValue('dateOfInquiry', newValue);
                           setFieldTouched('dateOfInquiry', true);

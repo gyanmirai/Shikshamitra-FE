@@ -20,7 +20,7 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetPayElementsQuery } from 'src/redux/payElement/payElementApi';
+// import { useGetPayElementsQuery } from 'src/redux/payElement/payElementApi';
 import {
   Box,
   Grid,
@@ -278,10 +278,10 @@ export const SectionForm = ({ handleClose, type, organization, editData }: any) 
     currentQueryAndMutation: useUpdatePayrollStructureMutation,
   });
 
-  const { data: payElements } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetPayElementsQuery,
-  });
+  // const { data: payElements } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetPayElementsQuery,
+  // });
   const { values, handleChange, handleSubmit, setFieldValue } = useFormik({
     initialValues: {
       type: editData?.payElementId || '',
@@ -315,7 +315,7 @@ export const SectionForm = ({ handleClose, type, organization, editData }: any) 
       <Stack spacing={2} direction="column" sx={{ bgcolor: 'background.neutral' }}>
         <CustomSelect
           label="Select Type"
-          options={payElements?.items || []}
+          options={[]}
           labelKey="name"
           valueKey="id"
           value={values?.type}

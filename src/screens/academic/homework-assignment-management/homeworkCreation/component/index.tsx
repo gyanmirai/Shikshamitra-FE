@@ -18,8 +18,8 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import homeworkTableData from 'src/json/academic/homeworkAssignment/homework-table-data.json';
 import {
+  useGetHomeworksQuery,
   useDeleteHomeworkMutation,
   useUpdateHomeworkMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
@@ -92,9 +92,19 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
   const [, setViewHomework] = useState<IHomeworkDetail | null>(null);
 
   // State to store the list of homework/subject assignments
-  const [homeworkData] = useState<any[]>(homeworkTableData);
+  // const [homeworkData] = useState<any[]>(homeworkTableData);
   // Redux dispatch
   const dispatch = useDispatch();
+
+  const selectedClassData = allClass.find((c: any) => c?.name === classes);
+  const selectedDivisionData = allDivision.find((d: any) => d?.name === division);
+
+  const { data: homeworkData } = useGetHomeworksQuery({
+    classId: selectedClassData?.id,
+    divisionId: selectedDivisionData?.id,
+    subjectId: subject,
+    homeworkDate: date?.toISOString(),
+  });
 
   // Handles closing the incident form
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -114,6 +124,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       resetState();
     }
   };
+
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -172,6 +184,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           label="Homework Date"
           slotProps={{ textField: { size: 'small', fullWidth: true } }}
           name="date"
+          minDate={dayjs(currentYear?.startDate)}
+          maxDate={dayjs(currentYear?.endDate)}
           value={date}
           onChange={(val) => {
             setDate(val);
@@ -268,8 +282,8 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             onClick={async () => {
               try {
                 const payload = {
-                  id: selectedHomework?.id,
-                  academicMediumId: medium?.id,
+                  homeworkId: selectedHomework?.id,
+                  status: 'PUBLISHED',
                 };
 
                 await publishHomework(payload).unwrap();
@@ -313,8 +327,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             onClick={async () => {
               try {
                 const payload = {
-                  academicMediumId: medium?.id,
-                  id: selectedHomework?.id,
+                  homeworkId: selectedHomework?.id,
                 };
 
                 await deleteHomework(payload).unwrap();

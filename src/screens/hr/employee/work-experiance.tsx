@@ -108,9 +108,9 @@ const WorkExperiences = (props: any) => {
                   <TextField
                     fullWidth
                     size="small"
-                    name={`experiences.${index}.organizationName`}
+                    name={`experiences.${index}.mediumStageName`}
                     label="Organization Name *"
-                    value={experience.organizationName}
+                    value={experience.mediumStageName}
                     onChange={(e) => {
                       const { value } = e.target;
                       if (/^[A-Za-z\s]*$/.test(value)) {
@@ -118,16 +118,16 @@ const WorkExperiences = (props: any) => {
                           .split(' ')
                           .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
                           .join(' ');
-                        setFieldValue(`experiences.${index}.organizationName`, formattedValue);
+                        setFieldValue(`experiences.${index}.mediumStageName`, formattedValue);
                       }
                     }}
                     error={
-                      formik?.touched?.experiences?.[index]?.organizationName &&
-                      formik?.errors?.experiences?.[index]?.organizationName
+                      formik?.touched?.experiences?.[index]?.mediumStageName &&
+                      formik?.errors?.experiences?.[index]?.mediumStageName
                     }
                     helperText={
-                      formik?.touched?.experiences?.[index]?.organizationName &&
-                      formik?.errors?.experiences?.[index]?.organizationName
+                      formik?.touched?.experiences?.[index]?.mediumStageName &&
+                      formik?.errors?.experiences?.[index]?.mediumStageName
                     }
                     FormHelperTextProps={{
                       sx: {
@@ -208,9 +208,9 @@ const WorkExperiences = (props: any) => {
 
               <Box sx={{ width: '200px' }}>
                 <CountryComponent
-                  value={experience.organizationCountry}
+                  value={experience.country}
                   onChange={(e, value) => {
-                    setFieldValue(`experiences.${index}.organizationCountry`, value);
+                    setFieldValue(`experiences.${index}.country`, value);
                   }}
                   disabled={!isEditable.value}
                   textFieldProps={{ label: 'Country' }}
@@ -227,13 +227,13 @@ const WorkExperiences = (props: any) => {
               </Box>
               <Box sx={{ width: '200px' }}>
                 <StateComponent
-                  value={experience.organizationState}
+                  value={experience.state}
                   onChange={(e, value) => {
-                    setFieldValue(`experiences.${index}.organizationState`, value);
-                    setFieldValue(`experiences.${index}.organizationCity`, { name: '' });
+                    setFieldValue(`experiences.${index}.state`, value);
+                    setFieldValue(`experiences.${index}.city`, { name: '' });
                   }}
-                  disabled={!isEditable.value || !experience.organizationCountry}
-                  countryValue={experience.organizationCountry}
+                  disabled={!isEditable.value || !experience.country}
+                  countryValue={experience.country}
                   textFieldProps={{ label: 'State' }}
                   FormHelperTextProps={{
                     sx: {
@@ -260,12 +260,12 @@ const WorkExperiences = (props: any) => {
               </Box>
               <Box sx={{ width: '200px' }}>
                 <CityComponent
-                  value={experience.organizationCity}
+                  value={experience.city}
                   onChange={(e, value) => {
-                    setFieldValue(`experiences.${index}.organizationCity`, value);
+                    setFieldValue(`experiences.${index}.city`, value);
                   }}
-                  disabled={!isEditable.value || !experience.organizationState}
-                  stateValue={experience.organizationState}
+                  disabled={!isEditable.value || !experience.state}
+                  stateValue={experience.state}
                   textFieldProps={{ label: 'City' }}
                   FormHelperTextProps={{
                     sx: {
@@ -293,18 +293,18 @@ const WorkExperiences = (props: any) => {
               <Box sx={{ width: '200px' }}>
                 <ShakingTextField
                   error={
-                    formik?.touched?.experiences?.[index]?.fromDate &&
-                    formik?.errors?.experiences?.[index]?.fromDate
+                    formik?.touched?.experiences?.[index]?.startDate &&
+                    formik?.errors?.experiences?.[index]?.startDate
                   }
                 >
                   <DatePicker
                     label="Start Date *"
-                    name={`experiences.${index}.fromDate`}
+                    name={`experiences.${index}.startDate`}
                     disableFuture
                     format="DD-MM-YYYY"
-                    value={experience.fromDate}
+                    value={experience.startDate}
                     onChange={(date) => {
-                      setFieldValue(`experiences.${index}.fromDate`, date);
+                      setFieldValue(`experiences.${index}.startDate`, date);
                     }}
                     disabled={!isEditable.value}
                     slotProps={{
@@ -313,12 +313,12 @@ const WorkExperiences = (props: any) => {
                         fullWidth: true,
                         error:
                           !!(
-                            formik?.touched?.experiences?.[index]?.fromDate &&
-                            formik?.errors?.experiences?.[index]?.fromDate
+                            formik?.touched?.experiences?.[index]?.startDate &&
+                            formik?.errors?.experiences?.[index]?.startDate
                           ) || false,
                         helperText:
-                          (formik?.touched?.experiences?.[index]?.fromDate &&
-                            formik?.errors?.experiences?.[index]?.fromDate) ||
+                          (formik?.touched?.experiences?.[index]?.startDate &&
+                            formik?.errors?.experiences?.[index]?.startDate) ||
                           '',
                         FormHelperTextProps: {
                           sx: {
@@ -337,18 +337,18 @@ const WorkExperiences = (props: any) => {
               <Box sx={{ width: '200px' }}>
                 <ShakingTextField
                   error={
-                    formik?.touched?.experiences?.[index]?.toDate &&
-                    formik?.errors?.experiences?.[index]?.toDate
+                    formik?.touched?.experiences?.[index]?.endDate &&
+                    formik?.errors?.experiences?.[index]?.endDate
                   }
                 >
                   <DatePicker
                     label="End Date *"
-                    name={`experiences.${index}.toDate`}
+                    name={`experiences.${index}.endDate`}
                     format="DD-MM-YYYY"
                     disableFuture
-                    value={experience.toDate}
+                    value={experience.endDate}
                     onChange={(date) => {
-                      setFieldValue(`experiences.${index}.toDate`, date);
+                      setFieldValue(`experiences.${index}.endDate`, date);
                     }}
                     disabled={!isEditable.value}
                     slotProps={{
@@ -357,12 +357,12 @@ const WorkExperiences = (props: any) => {
                         fullWidth: true,
                         error:
                           !!(
-                            formik?.touched?.experiences?.[index]?.toDate &&
-                            formik?.errors?.experiences?.[index]?.toDate
+                            formik?.touched?.experiences?.[index]?.endDate &&
+                            formik?.errors?.experiences?.[index]?.endDate
                           ) || false,
                         helperText:
-                          (formik?.touched?.experiences?.[index]?.toDate &&
-                            formik?.errors?.experiences?.[index]?.toDate) ||
+                          (formik?.touched?.experiences?.[index]?.endDate &&
+                            formik?.errors?.experiences?.[index]?.endDate) ||
                           '',
                         FormHelperTextProps: {
                           sx: {
