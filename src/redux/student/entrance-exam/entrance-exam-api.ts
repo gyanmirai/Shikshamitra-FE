@@ -26,7 +26,7 @@ export const EntranceExamApi = createApi({
     updateEntranceExam: builder.mutation({
       query: ({ id, body }) => ({
         url: `/student-enrollment/entrance-exam/${id}/result`,
-        method: 'PUT',
+        method: 'POST',
         data: body,
       }),
       invalidatesTags: ['Entrance-Exam'],

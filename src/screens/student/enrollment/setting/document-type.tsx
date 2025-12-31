@@ -515,7 +515,7 @@ export const DocumentForm = ({
           shikshaMitraToast.success({
             message: `${payload.name} document updated successfully`,
           });
-
+          handleClose?.(null, true);
           return;
         }
 
