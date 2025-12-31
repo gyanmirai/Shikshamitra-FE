@@ -348,14 +348,14 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                               }
                             >
                               <Avatar
-                                src={assignment.createdBy.name}
-                                alt={assignment.createdBy.name}
+                                src={assignment.createdBy.fullName}
+                                alt={assignment.createdBy.fullName}
                                 sx={{ width: 36, height: 36, cursor: 'pointer' }}
                               />
                             </Badge>
                           }
                           teacher={{
-                            name: assignment?.createdBy?.name,
+                            name: assignment?.createdBy?.fullName,
                             avatarUrl: assignment?.createdBy?.avatarUrl,
                             designation: assignment?.createdBy?.designation,
                             department: assignment?.createdBy?.department,
@@ -373,7 +373,7 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                       <ListItemText
                         primary={
                           <Typography variant="body2" sx={{ mb: -1 }}>
-                            {assignment?.createdBy?.name}
+                            {assignment?.createdBy?.fullName}
                           </Typography>
                         }
                         secondary={
