@@ -109,7 +109,7 @@ const RegistrationTable = ({
       registrationData?.data?.items.map((item: IInquiryData) => ({
         ...item,
         dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
-        doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
+        doiValue: item.dateOfInquiry ? dayjs(item.dateOfInquiry).format('DD-MM-YYYY') : '-',
         genderValue: GenderType[(item as any)?.gender],
       })) || [],
     [registrationData?.data?.items]

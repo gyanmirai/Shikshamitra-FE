@@ -890,7 +890,7 @@ const ResultForm = ({
    * Returns update function and loading state
    */
   const [updateMarks, { isLoading }] = useQueryAndMutation({
-    type: 'query',
+    type: 'mutation',
     currentQueryAndMutation: useUpdateEntranceExamMutation,
   });
 
