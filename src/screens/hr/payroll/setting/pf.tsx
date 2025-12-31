@@ -259,7 +259,9 @@ const PFForm = ({
         .max(100, 'Employee Percentage cannot be more than 100'),
       employerPercentage: Yup.number()
         .typeError('Employer Percentage must be a number')
-        .required('Employer Percentage is required'),
+        .required('Employer Percentage is required')
+        .min(0, 'Employer Percentage cannot be less than 0')
+        .max(100, 'Employer Percentage cannot be more than 100'),
     }),
     onSubmit: async (values) => {
       try {

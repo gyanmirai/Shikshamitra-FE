@@ -330,14 +330,14 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
                               }
                             >
                               <Avatar
-                                src={homework.createdBy.name}
-                                alt={homework.createdBy.name}
+                                src={homework.createdBy.fullName}
+                                alt={homework.createdBy.fullName}
                                 sx={{ width: 36, height: 36, cursor: 'pointer' }}
                               />
                             </Badge>
                           }
                           teacher={{
-                            name: homework?.createdBy?.name,
+                            name: homework?.createdBy?.fullName,
                             avatarUrl: homework?.createdBy?.avatarUrl,
                             designation: homework?.createdBy?.designation,
                             department: homework?.createdBy?.department,
@@ -355,7 +355,7 @@ const HomeworkOverview = ({ homework }: { homework: IHomework }) => {
                       <ListItemText
                         primary={
                           <Typography variant="body2" sx={{ mb: -1 }}>
-                            {homework?.createdBy?.name}
+                            {homework?.createdBy?.fullName}
                           </Typography>
                         }
                         secondary={
