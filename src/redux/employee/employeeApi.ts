@@ -351,8 +351,8 @@ export const employeeApi = createApi({
       invalidatesTags: ['Employee'],
     }),
     getAccessControl: builder.query({
-      query: (userId) => ({
-        url: `/app/user-scope/user-scope/${userId}`,
+      query: ({ userId, academicYearId }) => ({
+        url: `/app/user-scope/user-scope-hierarchy?userId=${userId}&academicYearId=${academicYearId}`,
         redirect: 'follow',
       }),
       providesTags: ['Employee'],

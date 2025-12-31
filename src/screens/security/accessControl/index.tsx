@@ -115,24 +115,76 @@ export const AccessControlForm = ({
   const { data: accessControl, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAccessControlQuery,
-    params: user?.id,
-    options: { skip: !user?.id },
+    params: { userId: user?.id, academicYearId: currentYear?.id },
+    options: { skip: !(user?.id && currentYear?.id) },
   });
 
   // Effect to populate form with existing access control data
   useEffect(() => {
-    if (accessControl?.effectiveScope) {
-      const data = {
-        boards: accessControl.effectiveScope.boardIds,
-        mediums: accessControl.effectiveScope.mediumIds,
-        organizations: accessControl.effectiveScope.mediumStageIds,
-        standards: accessControl.effectiveScope.standardIds,
-        divisions: accessControl.effectiveScope.divisionIds,
+    if (accessControl?.accessibleHierarchy) {
+      const keyMapping: any = {
+        0: 'hasFullMediumAccess',
+        1: 'hasFullMediumStageAccess',
+        2: 'hasFullStandardAccess',
+        3: 'hasFullDivisionAccess',
       };
+      const idMapping: any = {
+        0: 'boardId',
+        1: 'mediumId',
+        2: 'mediumStageId',
+        3: 'standardId',
+        4: 'divisionId',
+      };
+      const levelMapping: any = {
+        0: 'boards',
+        1: 'mediums',
+        2: 'mediumStages',
+        3: 'standards',
+        4: 'divisions',
+      };
+      const data: {
+        boards: string[];
+        mediums: string[];
+        organizations: string[];
+        standards: string[];
+        divisions: string[];
+      } = {
+        boards: [],
+        mediums: [],
+        organizations: [],
+        standards: [],
+        divisions: [],
+      };
+      const recursionFn = (academicData: any[], level = 0) => {
+        academicData?.forEach((element) => {
+          if (element.hasAccess || element?.[(keyMapping as any)[level]]) {
+            if (level === 0) {
+              data.boards.push(element?.[idMapping[level]]);
+            }
+            if (level === 1) {
+              data.mediums.push(element?.[idMapping[level]]);
+            }
+            if (level === 2) {
+              data.organizations.push(element?.[idMapping[level]]);
+            }
+            if (level === 3) {
+              data.standards.push(element?.[idMapping[level]]);
+            }
+            if (level === 4) {
+              data.divisions.push(element?.[idMapping[level]]);
+            }
+          }
+
+          if (element?.[levelMapping[level]]?.length) {
+            recursionFn(element?.[levelMapping[level]], level + 1);
+          }
+        });
+      };
+      recursionFn(accessControl?.accessibleHierarchy?.[0]?.boards);
       console.log(data, 'data');
       setCheckedItem(data);
     }
-  }, [accessControl?.effectiveScope]);
+  }, [accessControl?.accessibleHierarchy]);
 
   // Handler for form submission
   const handleSubmit = async () => {
