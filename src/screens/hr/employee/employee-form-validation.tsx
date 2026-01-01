@@ -42,7 +42,7 @@ const personalInformationValidationSchema = Yup.object({
     )
     .required('Date of Birth is required'),
   // dob: Yup.date().nullable().required('Date of birth is required'),
-  familyCast: Yup.string().required('Family Cast is required'),
+  familyCast: Yup.string().required('Family caste is required'),
   castType: Yup.string().required('Category is required'),
   gender: Yup.string().required('Gender is required'),
   religion: Yup.string().required('Religion is required'),

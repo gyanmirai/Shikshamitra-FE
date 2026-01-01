@@ -41,6 +41,10 @@ const SubjectTable = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      classId,
+    },
   });
   const theme = useTheme();
   console.log('data---', data);

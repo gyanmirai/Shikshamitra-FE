@@ -16,7 +16,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetEmployeeQuery } from 'src/redux/employee/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetEmployeeSalarySlipQuery } from 'src/redux/employee-salary-slip/employee-salary-slip-api';
+import { useLazyGetEmployeeSalarySlipQuery } from 'src/redux/employee-salary-slip/employee-salary-slip-api';
 import {
   Box,
   Card,
@@ -50,17 +50,29 @@ const PaySlipGenerationScreen = () => {
     currentQueryAndMutation: useGetEmployeeQuery,
   });
 
-  const { data: employeeSalarySlip, isLoading: employeeSalarySlipLoading } = useQueryAndMutation({
+  const [
+    getEmployeeSalarySlip,
+    { data: employeeSalarySlip, isLoading: employeeSalarySlipLoading },
+  ] = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetEmployeeSalarySlipQuery,
+    currentQueryAndMutation: useLazyGetEmployeeSalarySlipQuery,
     params: {
-      id: employee?.id,
-      monthYear: monthYear?.format('YYYY-MM'),
+      employeeId: employee?.id,
+      monthYear: monthYear?.format('MMMM-YYYY').toUpperCase(),
     },
     options: {
       skip: !employee?.id || !monthYear,
     },
   });
+
+  useEffect(() => {
+    if (employee?.id && monthYear) {
+      getEmployeeSalarySlip({
+        employeeId: employee?.id,
+        monthYear: monthYear?.format('MMMM-YYYY').toUpperCase(),
+      });
+    }
+  }, [employee?.id, getEmployeeSalarySlip, monthYear]);
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
@@ -76,23 +88,13 @@ const PaySlipGenerationScreen = () => {
       <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
         <Autocomplete
           loading={isLoading}
-          noOptionsText="No Employee Found"
           fullWidth
           value={employee}
-          onChange={(e, value) => {
-            setEmployee(value);
-          }}
+          onChange={(_, value) => setEmployee(value)}
           options={employees?.items || []}
-          getOptionLabel={(option: any) => option?.firstName || ''}
-          renderInput={(params) => (
-            <TextField {...params} size="small" label="Employee" placeholder="Search  Employee" />
-          )}
-          renderOption={(props, option: any) => (
-            <li {...props} key={option.id}>
-              {option.firstName}
-            </li>
-          )}
-          sx={{ maxWidth: '300px', width: '100%' }}
+          getOptionLabel={(option: any) => option?.fullName || ''}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          renderInput={(params) => <TextField {...params} size="small" label="Employee" />}
         />
 
         <DatePicker
@@ -144,7 +146,7 @@ const PaySlipGenerationScreen = () => {
                         />
                       </Box>
                       <Typography variant="h5" fontWeight={600} color="success.main">
-                        {formatCurrency(employeeSalarySlip?.totalEarning)}
+                        {formatCurrency(employeeSalarySlip?.totalEarning || 0)}
                       </Typography>
                     </Box>
                     <Typography variant="caption" gutterBottom>
@@ -184,7 +186,7 @@ const PaySlipGenerationScreen = () => {
                         />
                       </Box>
                       <Typography variant="h5" fontWeight={600} color="error.main">
-                        {formatCurrency(employeeSalarySlip?.totalDeduction)}
+                        {formatCurrency(employeeSalarySlip?.totalDeduction || 0)}
                       </Typography>
                     </Box>
                     <Typography variant="caption" gutterBottom>
@@ -224,7 +226,7 @@ const PaySlipGenerationScreen = () => {
                         />
                       </Box>
                       <Typography variant="h5" fontWeight={600} color="primary.main">
-                        {formatCurrency(employeeSalarySlip?.netSalary)}
+                        {formatCurrency(employeeSalarySlip?.netSalary || 0)}
                       </Typography>
                     </Box>
                     <Typography variant="caption" gutterBottom>

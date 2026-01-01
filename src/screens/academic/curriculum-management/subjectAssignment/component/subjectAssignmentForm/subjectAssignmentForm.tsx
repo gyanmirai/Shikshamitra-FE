@@ -197,13 +197,15 @@ const SubjectAssignmentForm = ({
       // Naive matching: match by name or group containment
       subjectOptions.forEach((opt) => {
         if (opt.type === 0) {
-          // Core
-          if (subjects.some((s: any) => s.subjectName === opt.value)) {
+          // Core: Check if the option's name matches any subject's name in the data
+          if (subjects.some((s: any) => s.subjectName === opt.label)) {
             preSelectedOptions.push(opt);
           }
         } else {
-          // Elective Group
-          // Check if ANY of the group's subjects are in the data
+          // Elective Group: Check if ANY of the group's subjects are in the data
+          // The option has a list of 'subjects' (definitions)
+          // The data has a list of 'subjects' (assignments)
+          // We check if any assignment's subjectName matches any definition's name in this group
           // eslint-disable-next-line no-lonely-if
           if (
             opt.subjects &&
@@ -225,7 +227,6 @@ const SubjectAssignmentForm = ({
   // Handle subject selection change
   const handleSubjectChange = (newValue: any[]) => {
     if (!newValue || newValue.length === 0) {
-      formik.setFieldValue('subjectName', '');
       formik.setFieldValue('subjectType', 0);
       formik.setFieldValue('subjects', []);
       setSelectedOption([]);
@@ -240,10 +241,11 @@ const SubjectAssignmentForm = ({
 
     newValue.forEach((option) => {
       if (option.type === 0) {
+        // Core Subject
         const newSubject = {
-          subjectId: null, // New subject
-          subjectName: option.value,
-          subjectCode: '',
+          subjectId: option.value, // New assignment, so no assignment ID yet
+          subjectName: option.label, // Use label (Name)
+          subjectCode: '', // User to enter code
           subjectType: 0,
           primaryTeacher: '',
           secondaryTeacher: [],
@@ -251,25 +253,26 @@ const SubjectAssignmentForm = ({
           isSubjectOpen: true,
           learningGoal: '',
           prerequisites: '',
-          subjectColor: option.subjectColor,
+          subjectColor: option.color || '#4169E1',
           documents: [],
           subjectNo: Date.now() + Math.random(),
         };
         allSubjects.push(newSubject);
       } else if (option.type === 1) {
-        const electives = option.subjects.map((subject: any) => ({
-          subjectId: null,
+        // Elective Group
+        const electives = (option.subjects || []).map((subject: any) => ({
+          subjectId: subject.id,
           subjectName: subject.name,
-          subjectCode: subject.code,
+          subjectCode: '', // User to enter code
           subjectType: 1,
-          electiveGroupId: option.value,
+          electiveGroupId: option.value, // Group ID
           primaryTeacher: '',
           secondaryTeacher: [],
           isSubjectOpen: true,
           description: '',
           learningGoal: '',
           prerequisites: '',
-          subjectColor: subject.subjectColor,
+          subjectColor: subject.color || '#FFA726',
           documents: [],
           subjectNo: Date.now() + Math.random(),
         }));
@@ -279,7 +282,6 @@ const SubjectAssignmentForm = ({
 
     // Update formik values
     formik.setFieldValue('subjects', allSubjects);
-    formik.setFieldValue('subjectName', newValue.map((v) => v.label).join(', '));
     const hasCore = newValue.some((v) => v.type === 0);
     formik.setFieldValue('subjectType', hasCore ? 0 : 1);
   };
@@ -349,9 +351,12 @@ const SubjectAssignmentForm = ({
                         label: item.name,
                         value: item.id,
                         type: item.subjectType,
+                        color: item.color,
+                        subjects: item.subjects,
                       })) || []
                     }
-                    getOptionLabel={(option) => option.name}
+                    loading={isSubjectOptionsLoading}
+                    getOptionLabel={(option) => option.label}
                     value={selectedOption}
                     onChange={(_, newValue) => handleSubjectChange(newValue)}
                     ListboxProps={{

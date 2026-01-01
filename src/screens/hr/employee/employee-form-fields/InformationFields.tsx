@@ -405,9 +405,9 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     label="Religion *"
                     name="religion"
                   >
-                    {ReligionTypeArray.map((item, index) => (
-                      <MenuItem key={index} value={ReligionType[index]}>
-                        {ReligionType[index]}
+                    {ReligionTypeArray.filter((item) => typeof item === 'string').map((item) => (
+                      <MenuItem key={item} value={ReligionType[item as keyof typeof ReligionType]}>
+                        {item}
                       </MenuItem>
                     ))}
                   </Select>
@@ -455,7 +455,7 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                 <TextField
                   fullWidth
                   size="small"
-                  label="Family Cast *"
+                  label="Family caste *"
                   {...formik.getFieldProps('familyCast')}
                   onChange={(e) => {
                     // Capitalize the first letter and keep the rest of the string as it is [A-Za-z]
@@ -523,9 +523,9 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     label="Blood Group"
                     name="bloodGroup"
                   >
-                    {BloodGroupArray.map((item, index) => (
-                      <MenuItem key={item} value={index}>
-                        {BloodGroup[index]}
+                    {BloodGroupArray.filter((item) => typeof item === 'string').map((item) => (
+                      <MenuItem key={item} value={BloodGroup[item as keyof typeof BloodGroup]}>
+                        {item}
                       </MenuItem>
                     ))}
                   </Select>

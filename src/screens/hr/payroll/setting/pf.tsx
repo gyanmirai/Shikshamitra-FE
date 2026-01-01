@@ -11,6 +11,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
@@ -82,6 +83,7 @@ const PF = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="PF Rule"
+        description="Configure PF rule for employees"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard/' },
           {
@@ -124,6 +126,9 @@ const PF = () => {
             size="small"
             onClick={async () => {
               await deletePF(editData?.id || '');
+              shikshaMitraToast.success({
+                message: `PF rule "${editData?.name}" deleted successfully`,
+              });
               confirm.onFalse();
               setEditData(null);
             }}
@@ -151,7 +156,7 @@ const PF = () => {
                 },
               }}
             >
-              PF
+              Add PF
             </Box>
           </>
         }
@@ -227,19 +232,11 @@ const PFForm = ({
     type: 'mutation',
     currentQueryAndMutation: useAddPFMutation,
     isThrowError: true,
-    popupConfig: {
-      success: true,
-      successMessage: 'PF created successfully',
-    },
   });
   const [updatePF, { isLoading: isUpdatePFLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdatePFMutation,
     isThrowError: true,
-    popupConfig: {
-      success: true,
-      successMessage: 'PF updated successfully',
-    },
   });
 
   const formik = useFormik({
@@ -259,7 +256,9 @@ const PFForm = ({
         .max(100, 'Employee Percentage cannot be more than 100'),
       employerPercentage: Yup.number()
         .typeError('Employer Percentage must be a number')
-        .required('Employer Percentage is required'),
+        .required('Employer Percentage is required')
+        .min(0, 'Employer Percentage cannot be less than 0')
+        .max(100, 'Employer Percentage cannot be more than 100'),
     }),
     onSubmit: async (values) => {
       try {
@@ -268,8 +267,14 @@ const PFForm = ({
             body: values,
             id: editData.id,
           });
+          shikshaMitraToast.success({
+            message: `PF rule "${values.name}" updated successfully`,
+          });
         } else {
           await addPF(values);
+          shikshaMitraToast.success({
+            message: `PF rule "${values.name}" created successfully`,
+          });
         }
         handleClose(undefined, true);
       } catch (error) {

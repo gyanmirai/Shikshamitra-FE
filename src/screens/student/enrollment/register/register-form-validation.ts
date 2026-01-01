@@ -33,7 +33,7 @@ export const generalFieldValidation = Yup.object({
   apparId: Yup.string().matches(/\b\d{12}\b/, 'Appar Id must be 12 digits'),
   adharNo: Yup.string().matches(/^\d{12}$/, 'Adhar number must be 12 digits'),
   religion: Yup.string(),
-  familyCast: Yup.string().required('Family Cast is required'),
+  familyCast: Yup.string().required('Family caste is required'),
   castCategory: Yup.string().required('Cast Category is required'),
   motherTongue: Yup.string(),
   nationality: Yup.string(),

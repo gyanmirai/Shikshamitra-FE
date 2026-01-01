@@ -187,14 +187,12 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     ) || []
                   }
                   value={employee?.items?.find((t: any) => t.id === subject.primaryTeacher) ?? null}
-                  getOptionLabel={(option) => option.employeeNameWithFather ?? ''}
+                  getOptionLabel={(option) => option.fullName ?? ''}
                   onChange={(_, newValue) =>
                     formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '')
                   }
                   loading={isLoading}
-                  renderOption={(props, option) => (
-                    <li {...props}>{option?.employeeNameWithFather}</li>
-                  )}
+                  renderOption={(props, option) => <li {...props}>{option?.fullName}</li>}
                   renderInput={(params) => (
                     <TextField {...params} label="Primary Teacher" size="small" />
                   )}
@@ -262,7 +260,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                       subject.secondaryTeacher?.includes(t?.id as any)
                     ) || []
                   }
-                  getOptionLabel={(option) => option?.employeeNameWithFather ?? ''}
+                  getOptionLabel={(option) => option?.fullName ?? ''}
                   isOptionEqualToValue={(option, value) => option.id === value.id}
                   onChange={(_, newValue) =>
                     formik.setFieldValue(
@@ -278,7 +276,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                         checked={selected}
                         sx={{ marginRight: 1 }}
                       />
-                      {option?.employeeNameWithFather}
+                      {option?.fullName}
                     </li>
                   )}
                   renderTags={(values) => {
@@ -289,8 +287,8 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     return [
                       <Chip
                         key={first?.id}
-                        avatar={<Avatar>{first?.employeeNameWithFather?.[0]}</Avatar>}
-                        label={first?.employeeNameWithFather}
+                        avatar={<Avatar>{first?.fullName?.[0]}</Avatar>}
+                        label={first?.fullName}
                         size="small"
                         sx={{ ml: 1 }}
                       />,
@@ -456,10 +454,10 @@ export const TeacherListPopover = ({
       <Box sx={{ p: 1, maxWidth: 180, borderRadius: 1 }}>
         {teachers.map((teacher) => (
           <Chip
-            key={teacher.name}
+            key={teacher.fullName}
             variant="soft"
-            avatar={<Avatar sx={{ width: 24, height: 24 }}>{teacher?.name?.charAt(0)}</Avatar>}
-            label={teacher.name}
+            avatar={<Avatar sx={{ width: 24, height: 24 }}>{teacher?.fullName?.charAt(0)}</Avatar>}
+            label={teacher.fullName}
             sx={{ ml: 0.5, height: 24, fontSize: 12, mb: 1 }}
             size="small"
           />

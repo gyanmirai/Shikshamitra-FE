@@ -27,12 +27,7 @@ const TABS = [
     value: 'grGeneration',
     label: 'GR. No. Generation',
     icon: <Iconify icon="cil:badge" width={20} />,
-    component: (props: {
-      isLoading: boolean;
-      tableData: IInquiryData[];
-      allDivision: Division[];
-      division: string;
-    }) => <GrNoGenerationScreen {...props} />,
+    component: (props: { division: string }) => <GrNoGenerationScreen {...props} />,
   },
   {
     value: 'rollGeneration',
