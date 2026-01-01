@@ -2,12 +2,14 @@ import dayjs from 'dayjs';
 import { isEqual } from 'lodash';
 import { useDispatch } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
+import { ReligionType } from 'src/enums/religion';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Grid, Slide, TextField } from '@mui/material';
 import { useAddUserMutation } from 'src/redux/user/userApi';
 import { LoadingScreen } from 'src/components/loading-screen';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -57,11 +59,11 @@ export const personalInformationInitialValues = (editData?: IPersonalInformation
   familyCast: editData ? editData.familyCaste : '',
   castType: editData ? editData.casteType : '',
   gender: editData?.gender ?? '',
-  religion: editData ? editData.religion : '',
+  religion: editData ? ReligionType[editData.religion as keyof typeof ReligionType] : '',
   maritalStatus: editData ? editData.maritalStatus : '',
   bloodGroup: editData ? editData.bloodGroup : '',
   mobileNo: editData ? editData.mobileNo : '',
-  secondaryMobileNo: editData ? editData?.secondaryMobileNo : '',
+  secondaryMobileNo: editData ? editData?.secondaryMobileNo : null,
   email: editData ? editData.email : '',
   department: editData ? editData.department : '',
   // designation: editData ? editData.designation : '',
@@ -194,9 +196,8 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
   uanNumber: editData ? editData?.salaryDetails?.uanNumber : '',
   basicSalary: editData ? editData?.salaryDetails?.basicSalary : '',
   punchId: editData ? editData?.salaryDetails?.punchId : '',
-  // shiftName: '',
-  // tdsPercentage: '',
-  // tdsAmount: '',
+  tdsPercentage: editData ? editData?.salaryDetails?.tdsPercentage : '',
+  tdsAmount: editData ? editData?.salaryDetails?.tdsAmount : '',
   earningComponents: editData ? editData?.earningComponents || [] : [],
   deductionComponents: editData ? editData?.deductionComponents || [] : [],
 });
@@ -286,18 +287,18 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           middleName: values.middleName,
           shortName: values.shortName,
           employeeStatusType: values.employeeStatusType,
-          dob: values.dob.format('YYYY-MM-DD'),
+          dob: dateConvertor(values.dob.format(dateFormat)),
           familyCaste: values.familyCast,
           casteType: values.castType,
           gender: values.gender,
-          religion: values.religion,
+          religion: ReligionType[values.religion],
           maritalStatus: values.maritalStatus,
           bloodGroup: values.bloodGroup,
           mobileNo: values.mobileNo,
           secondaryMobileNo: values.secondaryMobileNo,
           email: values.email,
           department: values.department,
-          doj: values.dateOfJoining.format('YYYY-MM-DD'),
+          doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
           isTeaching: values.employeeGroup === 0,
           // qualification: values.qualification,
           roleId: values.role,
@@ -403,8 +404,8 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             isoCode: i.state.isoCode,
           },
           city: i.city.name,
-          startDate: i.startDate ? i.startDate.format('YYYY-MM-DD') : null,
-          endDate: i.endDate ? i.endDate.format('YYYY-MM-DD') : null,
+          startDate: i.startDate ? dateConvertor(i.startDate.format(dateFormat)) : null,
+          endDate: i.endDate ? dateConvertor(i.endDate.format(dateFormat)) : null,
         })),
       }).unwrap();
       return res;
@@ -413,6 +414,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   );
   const handleBankDetailsInformation = useCallback(
     async (values: any, formik: any) => {
+      console.log('bank calling==');
       const res = updateBankDetails({
         employeeId: values.employeeId,
         body: {
@@ -425,13 +427,13 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           },
 
           salaryDetails: {
-            pfRuleId: values.pfRuleId,
+            pfRuleId: values.pfRule,
             epfNumber: values.epfNumber,
             uanNumber: values.uanNumber,
-            basicSalary: values.basicSalary,
+            basicSalary: Number(values.basicSalary),
             punchId: values.punchId,
-            tdsPercentage: values.tdsPercentage,
-            tdsAmount: values.tdsAmount,
+            tdsPercentage: Number(values.tdsPercentage),
+            tdsAmount: Number(values.tdsAmount),
           },
 
           earningComponents: values.earningComponents,
@@ -454,18 +456,18 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
             middleName: values.middleName,
             shortName: values.shortName,
             employeeStatusType: values.employeeStatusType,
-            dob: values.dob.format('YYYY-MM-DD'),
+            dob: dateConvertor(values.dob.format(dateFormat)),
             familyCaste: values.familyCast,
             casteType: values.castType,
             gender: values.gender,
-            religion: values.religion,
+            religion: ReligionType[values.religion],
             maritalStatus: values.maritalStatus,
             bloodGroup: values.bloodGroup,
             mobileNo: values.mobileNo,
             secondaryMobileNo: values.secondaryMobileNo,
             email: values.email,
             department: values.department,
-            doj: values.dateOfJoining.format('YYYY-MM-DD'),
+            doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
             isTeaching: values.employeeGroup === 0,
             // qualification: values.qualification,
             roleId: values.role,
