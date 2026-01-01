@@ -20,6 +20,7 @@ import { documentApi } from './document/documentApi';
 import { feeTermsApi } from './feeCollection/feeTerms';
 import { PaymentTermApi } from './finance/paymentTerm';
 import { academicApi } from './academicAPI/academicApi';
+import { transportApi } from './transport/transportApi';
 import { librarySettingsApi } from './library/settingApi';
 import globalStateReducer from './globalState/globalSlice';
 import { permissionApi } from './permission/permissionApi';
@@ -177,7 +178,7 @@ const reducers = combineReducers({
   [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
   // [communicationApi.reducerPath]: communicationApi.reducer,
   [roleOptionsApi.reducerPath]: roleOptionsApi.reducer,
-  // [transportApi.reducerPath]: transportApi.reducer,
+  [transportApi.reducerPath]: transportApi.reducer,
   [libraryModuleApi.reducerPath]: libraryModuleApi.reducer,
   [openLibraryApi.reducerPath]: openLibraryApi.reducer,
   [academicApi.reducerPath]: academicApi.reducer,
@@ -278,7 +279,7 @@ const store = configureStore({
       // meetingDetailsApi.middleware,
       // holidayApi.middleware,
       roleOptionsApi.middleware,
-      // transportApi.middleware,
+      transportApi.middleware,
       libraryModuleApi.middleware,
       openLibraryApi.middleware,
       instituteSetupApi.middleware,

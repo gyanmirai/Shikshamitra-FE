@@ -146,7 +146,7 @@ const PaySlipGenerationScreen = () => {
                         />
                       </Box>
                       <Typography variant="h5" fontWeight={600} color="success.main">
-                        {formatCurrency(employeeSalarySlip?.totalEarning)}
+                        {formatCurrency(employeeSalarySlip?.totalEarning || 0)}
                       </Typography>
                     </Box>
                     <Typography variant="caption" gutterBottom>
@@ -186,7 +186,7 @@ const PaySlipGenerationScreen = () => {
                         />
                       </Box>
                       <Typography variant="h5" fontWeight={600} color="error.main">
-                        {formatCurrency(employeeSalarySlip?.totalDeduction)}
+                        {formatCurrency(employeeSalarySlip?.totalDeduction || 0)}
                       </Typography>
                     </Box>
                     <Typography variant="caption" gutterBottom>
@@ -226,7 +226,7 @@ const PaySlipGenerationScreen = () => {
                         />
                       </Box>
                       <Typography variant="h5" fontWeight={600} color="primary.main">
-                        {formatCurrency(employeeSalarySlip?.netSalary)}
+                        {formatCurrency(employeeSalarySlip?.netSalary || 0)}
                       </Typography>
                     </Box>
                     <Typography variant="caption" gutterBottom>

@@ -31,9 +31,9 @@ import {
 
 import type { RootState } from 'src/redux/store';
 
-import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { LoadingScreen } from 'src/components/loading-screen';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
 import { infoValidations } from './employee-form-validation';
 //   WorkExperienceFields,
@@ -188,7 +188,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             middleName: values.middleName,
             shortName: values.shortName,
             employeeStatusType: values.employeeStatusType,
-            dob: values.dob.format('YYYY-MM-DD'),
+            dob: dateConvertor(values.dob.format(dateFormat)),
             familyCaste: values.familyCast,
             casteType: values.castType,
             gender: values.gender,
@@ -199,7 +199,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             secondaryMobileNo: values.secondaryMobileNo,
             email: values.email,
             department: values.department,
-            doj: values.dateOfJoining.format('YYYY-MM-DD'),
+            doj: dateConvertor(values.dateOfJoining.format(dateFormat)),
             isTeaching: values.employeeGroup === 0,
             // qualification: values.qualification,
             roleId: values.role,
@@ -256,8 +256,8 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
             isoCode: i.state.isoCode,
           },
           city: i.city.name,
-          startDate: i.startDate ? i.startDate.format('YYYY-MM-DD') : null,
-          endDate: i.endDate ? i.endDate.format('YYYY-MM-DD') : null,
+          startDate: i.startDate ? dateConvertor(i.startDate.format(dateFormat)) : null,
+          endDate: i.endDate ? dateConvertor(i.endDate.format(dateFormat)) : null,
         })),
       }).unwrap();
       return res;
@@ -373,7 +373,6 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       setSubmitting(false);
     },
   });
-  const currentYear = useSelector((state: RootState) => state.currentYear);
   return (
     <Box
     // sx={{

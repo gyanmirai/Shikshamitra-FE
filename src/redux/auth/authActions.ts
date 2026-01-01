@@ -43,7 +43,7 @@ export const completeSignInUser = createAsyncThunk(
       const permissionData = extractGrantedPermissions(jsonData?.groups || []);
 
       await dispatch(getEmployee(userPlanObject)).unwrap();
-      dispatch(setUser(userPlanObject));
+      dispatch(setUser({ ...userPlanObject, profile: decodeToken }));
       dispatch(setMainModuleVisibility(mainModuleVisibilityArray));
       dispatch(setPermissions(permissionData));
       return user;

@@ -9,8 +9,8 @@ export const studentGrNumberApi = createApi({
   tagTypes: ['studentGrNumber'],
   endpoints: (builder) => ({
     getStudentForGrNumber: builder.query({
-      query: ({ educationBoardId, educationMediumId, educationMediumStageId }) => ({
-        url: `/app/student/gr-no?educationBoardId=${educationBoardId}&educationMediumId=${educationMediumId}&educationMediumStageId=${educationMediumStageId}`,
+      query: (divisionId) => ({
+        url: `/students/records/${divisionId}/gr-projections`,
         method: 'GET',
       }),
 
@@ -19,7 +19,7 @@ export const studentGrNumberApi = createApi({
 
     updateStudentGrNumber: builder.mutation({
       query: ({ body }) => ({
-        url: '/app/student/gr-numbers',
+        url: '/students/records/gr-numbers',
         method: 'PUT',
         data: body,
       }),

@@ -15,9 +15,19 @@ interface DayColumnProps {
   day: DayOfWeek;
   slots: TimeSlot[];
   onDropSubject: (dayIndex: string, slotId: string, subject: Subject, fromSlotId?: string) => void;
+  onRemoveSubject: (slotId: string, subject: Subject) => void;
+  onAssignTeacher: (slotId: string, subject: Subject) => void;
+  onAssignRoom: (slotId: string, subject: Subject) => void;
 }
 
-const DayColumn: React.FC<DayColumnProps> = ({ day, slots, onDropSubject }) => {
+const DayColumn: React.FC<DayColumnProps> = ({
+  day,
+  slots,
+  onDropSubject,
+  onRemoveSubject,
+  onAssignTeacher,
+  onAssignRoom,
+}) => {
   const theme = useTheme();
   const dayHeight = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60 * PIXELS_PER_MINUTE;
 
@@ -82,7 +92,10 @@ const DayColumn: React.FC<DayColumnProps> = ({ day, slots, onDropSubject }) => {
             onDrop={(slotId, subject, fromSlotId) =>
               onDropSubject(day.toString(), slotId, subject, fromSlotId)
             }
-            attachedSubject={(slot as any)._attachedSubject}
+            attachedSubject={slot._attachedSubject}
+            onRemoveSubject={onRemoveSubject}
+            onAssignTeacher={onAssignTeacher}
+            onAssignRoom={onAssignRoom}
           />
         ))}
       </Box>

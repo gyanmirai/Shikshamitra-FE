@@ -556,7 +556,7 @@ const RenderGeneralFormFields = (props: any) => {
             <TextField
               key="familyCast *"
               size="small"
-              label="Family Cast *"
+              label="Family caste *"
               name="familyCast"
               value={formik.values.familyCast}
               onBlur={formik.handleBlur}

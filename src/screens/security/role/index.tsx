@@ -18,7 +18,9 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import {
   useGetPermissionsQuery,
   useUpdatePermissionMutation,
@@ -31,6 +33,7 @@ import {
 } from 'src/redux/role/roleApi';
 import {
   Box,
+  Stack,
   Button,
   MenuList,
   MenuItem,
@@ -154,7 +157,18 @@ const RoleScreen = () => {
           label: 'Search Role',
         }}
         columns={[
-          { id: 'name', label: 'Role' },
+          {
+            id: 'name',
+            label: 'Role',
+            render: (value, row) => (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={row.color} />
+                <Typography variant="caption" fontSize="13px">
+                  {value}
+                </Typography>
+              </Box>
+            ),
+          },
           {
             label: 'Action',
             id: 'action',
@@ -318,12 +332,14 @@ const RoleForm = ({ handleClose, editData }: any) => {
   });
 
   // Formik instance for form handling and validation
-  const formik = useFormik<{ role: string }>({
+  const formik = useFormik<{ role: string; color: string }>({
     initialValues: {
       role: editData ? editData.name : null,
+      color: editData ? editData.color : null,
     },
     validationSchema: Yup.object().shape({
       role: Yup.string().required('Role is required'),
+      color: Yup.string().required('Color is required'),
     }),
     onSubmit: async (values) => {
       try {
@@ -332,6 +348,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
             id: editData.id,
             body: {
               name: values.role,
+              color: values.color,
               isDefault: true,
               isPublic: false,
             },
@@ -339,6 +356,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
         } else {
           await addRole({
             name: values.role,
+            color: values.color,
             isDefault: true,
             isPublic: false,
           });
@@ -376,23 +394,37 @@ const RoleForm = ({ handleClose, editData }: any) => {
           py: 2,
         }}
       >
-        <ShakingTextField error={formik.touched.role && !!formik.errors.role}>
-          <TextField
-            label="Role Name"
-            name="role"
-            size="small"
-            disabled={isSuccess}
-            value={formik.values.role}
-            onChange={formik.handleChange}
-            error={formik.touched.role && !!formik.errors.role}
-            helperText={(formik.touched.role && formik.errors.role) || ''}
-            fullWidth
-            sx={{ width: '100%' }}
-            onBlur={formik.handleBlur}
-          />
-        </ShakingTextField>
+        <Stack spacing={2}>
+          <ShakingTextField error={formik.touched.role && !!formik.errors.role}>
+            <TextField
+              label="Role Name"
+              name="role"
+              size="small"
+              disabled={isSuccess}
+              value={formik.values.role}
+              onChange={formik.handleChange}
+              error={formik.touched.role && !!formik.errors.role}
+              helperText={(formik.touched.role && formik.errors.role) || ''}
+              fullWidth
+              sx={{ width: '100%' }}
+              onBlur={formik.handleBlur}
+            />
+          </ShakingTextField>
+          <ShakingTextField error={!!(formik.touched.color && formik.errors.color) || false}>
+            <Typography
+              variant="subtitle2"
+              sx={{ mb: 1 }}
+              color={formik.touched.color && formik.errors.color ? 'error.main' : 'text.primary'}
+            >
+              Color *
+            </Typography>
+            <ColorPickerCircle
+              onSelect={(color: string) => formik.setFieldValue('color', color)}
+              initialColor={formik.values.color}
+            />
+          </ShakingTextField>
 
-        {/* {isPermissionLoading ? (
+          {/* {isPermissionLoading ? (
           <Box
             sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}
           >
@@ -401,6 +433,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
         ) : (
           <Visibility visibility={visibility} setVisibility={setVisibility} />
         )} */}
+        </Stack>
       </DialogScrollContent>
       <DialogActions>
         <CancelButton onClick={handleClose} />
@@ -409,8 +442,7 @@ const RoleForm = ({ handleClose, editData }: any) => {
           variant="contained"
           loading={isLoading || isUpdateLoading || isUpdatePermissionLoading}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
-          onClick={() => formik.handleSubmit()}
-          type="submit"
+          onClick={(e: any) => formik.handleSubmit(e)}
         >
           Submit
         </LoadingButton>

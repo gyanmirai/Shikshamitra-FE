@@ -30,7 +30,7 @@ const WorkExperiences = (props: any) => {
     formik.resetForm();
   };
   return (
-    <Box>
+    <Box width="100%">
       {!isMainForm && (
         <Box display="flex" justifyContent="flex-end" p={1}>
           <CardActions
@@ -41,8 +41,8 @@ const WorkExperiences = (props: any) => {
           />
         </Box>
       )}
-      {isEditable.value && (
-        <Box display="flex" justifyContent="flex-end" mb={2}>
+      <Box display="flex" justifyContent="flex-end" width="100%" mb={2} position="relative">
+        {isEditable.value && (
           <Button
             variant="contained"
             size="small"
@@ -67,8 +67,8 @@ const WorkExperiences = (props: any) => {
           >
             Experience
           </Button>
-        </Box>
-      )}
+        )}
+      </Box>
       <Box display="flex" flexDirection="column" gap={2}>
         {values.experiences.map((experience: any, index: number) => (
           <Paper

@@ -42,7 +42,7 @@ const personalInformationValidationSchema = Yup.object({
     )
     .required('Date of Birth is required'),
   // dob: Yup.date().nullable().required('Date of birth is required'),
-  familyCast: Yup.string().required('Family Cast is required'),
+  familyCast: Yup.string().required('Family caste is required'),
   castType: Yup.string().required('Category is required'),
   gender: Yup.string().required('Gender is required'),
   religion: Yup.string().required('Religion is required'),
@@ -241,25 +241,62 @@ export const workExperienceValidationSchema = Yup.object({
 });
 
 export const payrollValidationSchema = Yup.object({
-  bankName: Yup.string().nullable(),
-  branchName: Yup.string().nullable(),
-  accountHolderName: Yup.string().nullable(),
-  accountNumber: Yup.string().nullable(),
-  ifscCode: Yup.string().nullable(),
+  bankName: Yup.string().nullable().max(100, 'Bank name must be at most 100 characters'),
+
+  branchName: Yup.string().nullable().max(100, 'Branch name must be at most 100 characters'),
+
+  accountHolderName: Yup.string()
+    .nullable()
+    .matches(/^[a-zA-Z\s.]+$/, 'Only letters and spaces allowed')
+    .max(100, 'Account holder name must be at most 100 characters'),
+
+  accountNumber: Yup.string()
+    .nullable()
+    .matches(/^\d+$/, 'Account number must contain only digits')
+    .min(9, 'Account number must be at least 9 digits')
+    .max(18, 'Account number must be at most 18 digits'),
+
+  ifscCode: Yup.string()
+    .nullable()
+    .matches(/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code'),
+
   pfType: Yup.string().nullable(),
-  epfNumber: Yup.string().nullable(),
-  uanNumber: Yup.string().nullable(),
-  basicSalary: Yup.string().nullable(),
-  punchId: Yup.string().nullable(),
-  tdsPercentage: Yup.string().nullable(),
-  tdsAmount: Yup.string().nullable(),
+
+  epfNumber: Yup.string()
+    .nullable()
+    .matches(/^[A-Z]{2}\/\d{5}\/\d{7}$/, 'Invalid EPF number format(Ex: AP/12345/1234567)'),
+
+  uanNumber: Yup.string()
+    .nullable()
+    .matches(/^\d{12}$/, 'UAN must be exactly 12 digits'),
+
+  basicSalary: Yup.number()
+    .nullable()
+    .typeError('Basic salary must be a number')
+    .min(0, 'Basic salary cannot be negative'),
+
+  punchId: Yup.string().nullable().max(50, 'Punch ID must be at most 50 characters'),
+
+  // --------------------
+  // TDS
+  // --------------------
+  tdsPercentage: Yup.number()
+    .nullable()
+    .typeError('TDS percentage must be a number')
+    .min(1, 'TDS percentage must be greater than 0')
+    .max(100, 'TDS percentage cannot exceed 100'),
+
+  tdsAmount: Yup.number()
+    .nullable()
+    .typeError('TDS amount must be a number')
+    .min(0, 'TDS amount cannot be negative'),
   earningComponents: Yup.array().of(
     Yup.object({
       name: Yup.string().required('Name is required'),
       type: Yup.string().required('Type is required'),
       // eslint-disable-next-line func-names
       amount: Yup.string().test('amount', 'Amount is required', function () {
-        if (this.parent.type === 'fixed') {
+        if (this.parent.type === 'Fixed') {
           return false;
         }
         return true;
@@ -272,7 +309,7 @@ export const payrollValidationSchema = Yup.object({
       type: Yup.string().required('Type is required'),
       // eslint-disable-next-line func-names
       amount: Yup.string().test('amount', 'Amount is required', function () {
-        if (this.parent.type === 'fixed') {
+        if (this.parent.type === 'Fixed') {
           return false;
         }
         return true;
