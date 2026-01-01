@@ -209,6 +209,7 @@ const RenderPayrollFields = (props: any) => {
   const { formik, isMainForm } = props;
   const { values, handleChange } = formik;
   const isEditable = useBoolean(isMainForm);
+
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
     await formik?.submitForm?.();
@@ -234,59 +235,84 @@ const RenderPayrollFields = (props: any) => {
       )}
       <SectionCard title="Payroll Details">
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            fullWidth
-            disabled={!isEditable.value}
-            label="Bank Name"
-            name="bankName"
-            value={values.bankName || ''}
-            onChange={handleChange}
-          />
+          <ShakingTextField error={formik.touched.bankName && Boolean(formik.errors.bankName)}>
+            <TextField
+              size="small"
+              fullWidth
+              disabled={!isEditable.value}
+              label="Bank Name"
+              name="bankName"
+              value={values.bankName || ''}
+              onChange={handleChange}
+              error={formik.touched.bankName && Boolean(formik.errors.bankName)}
+              helperText={formik.touched.bankName && formik.errors.bankName}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            fullWidth
-            disabled={!isEditable.value}
-            label="Branch Name"
-            name="branchName"
-            value={values.branchName || ''}
-            onChange={handleChange}
-          />
+          <ShakingTextField error={formik.touched.branchName && Boolean(formik.errors.branchName)}>
+            <TextField
+              size="small"
+              fullWidth
+              disabled={!isEditable.value}
+              label="Branch Name"
+              name="branchName"
+              value={values.branchName || ''}
+              onChange={handleChange}
+              error={formik.touched.branchName && Boolean(formik.errors.branchName)}
+              helperText={formik.touched.branchName && formik.errors.branchName}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            fullWidth
-            disabled={!isEditable.value}
-            label="Account Holder Name"
-            name="accountHolderName"
-            value={values.accountHolderName || ''}
-            onChange={handleChange}
-          />
+          <ShakingTextField
+            error={formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)}
+          >
+            <TextField
+              size="small"
+              fullWidth
+              disabled={!isEditable.value}
+              label="Account Holder Name"
+              name="accountHolderName"
+              value={values.accountHolderName || ''}
+              onChange={handleChange}
+              error={formik.touched.accountHolderName && Boolean(formik.errors.accountHolderName)}
+              helperText={formik.touched.accountHolderName && formik.errors.accountHolderName}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            fullWidth
-            disabled={!isEditable.value}
-            label="Account Number"
-            name="accountNumber"
-            value={values.accountNumber || ''}
-            onChange={handleChange}
-          />
+          <ShakingTextField
+            error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
+          >
+            <TextField
+              size="small"
+              fullWidth
+              disabled={!isEditable.value}
+              label="Account Number"
+              name="accountNumber"
+              type="number"
+              value={values.accountNumber || ''}
+              onChange={handleChange}
+              error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
+              helperText={formik.touched.accountNumber && formik.errors.accountNumber}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            fullWidth
-            disabled={!isEditable.value}
-            label="IFSC Code"
-            name="ifscCode"
-            value={values.ifscCode || ''}
-            onChange={handleChange}
-          />
+          <ShakingTextField error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}>
+            <TextField
+              size="small"
+              fullWidth
+              disabled={!isEditable.value}
+              label="IFSC Code"
+              name="ifscCode"
+              value={values.ifscCode || ''}
+              onChange={handleChange}
+              error={formik.touched.ifscCode && Boolean(formik.errors.ifscCode)}
+              helperText={formik.touched.ifscCode && formik.errors.ifscCode}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <RenderPfRules
@@ -297,71 +323,107 @@ const RenderPayrollFields = (props: any) => {
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            fullWidth
-            disabled={!isEditable.value}
-            label="EPF Number"
-            name="epfNumber"
-            value={values.epfNumber || ''}
-            onChange={handleChange}
-          />
+          <ShakingTextField error={formik.touched.epfNumber && Boolean(formik.errors.epfNumber)}>
+            <TextField
+              size="small"
+              fullWidth
+              disabled={!isEditable.value}
+              label="EPF Number"
+              name="epfNumber"
+              value={values.epfNumber || ''}
+              onChange={handleChange}
+              error={formik.touched.epfNumber && Boolean(formik.errors.epfNumber)}
+              helperText={formik.touched.epfNumber && formik.errors.epfNumber}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            fullWidth
-            disabled={!isEditable.value}
-            label="UAN Number"
-            name="uanNumber"
-            value={values.uanNumber || ''}
-            onChange={handleChange}
-          />
+          <ShakingTextField error={formik.touched.uanNumber && Boolean(formik.errors.uanNumber)}>
+            <TextField
+              size="small"
+              fullWidth
+              disabled={!isEditable.value}
+              label="UAN Number"
+              name="uanNumber"
+              value={values.uanNumber || ''}
+              onChange={(e) => {
+                const { value } = e.target;
+                if (value.length <= 12) {
+                  formik.handleChange(e);
+                  formik.validateField('uanNumber');
+                }
+              }}
+              error={formik.touched.uanNumber && Boolean(formik.errors.uanNumber)}
+              helperText={formik.touched.uanNumber && formik.errors.uanNumber}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            // type="number"
-            fullWidth
-            disabled={!isEditable.value}
-            label="Basic Salary"
-            name="basicSalary"
-            value={values.basicSalary || ''}
-            onChange={handleChange}
-          />
+          <ShakingTextField
+            error={formik.touched.basicSalary && Boolean(formik.errors.basicSalary)}
+          >
+            <TextField
+              size="small"
+              type="number"
+              fullWidth
+              disabled={!isEditable.value}
+              label="Basic Salary"
+              name="basicSalary"
+              value={values.basicSalary || ''}
+              onChange={handleChange}
+              error={formik.touched.basicSalary && Boolean(formik.errors.basicSalary)}
+              helperText={formik.touched.basicSalary && formik.errors.basicSalary}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            fullWidth
-            disabled={!isEditable.value}
-            label="Punch Id"
-            name="punchId"
-            value={values.punchId || ''}
-            onChange={handleChange}
-          />
+          <ShakingTextField error={formik.touched.punchId && Boolean(formik.errors.punchId)}>
+            <TextField
+              size="small"
+              fullWidth
+              disabled={!isEditable.value}
+              label="Punch Id"
+              name="punchId"
+              value={values.punchId || ''}
+              onChange={handleChange}
+              error={formik.touched.punchId && Boolean(formik.errors.punchId)}
+              helperText={formik.touched.punchId && formik.errors.punchId}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            fullWidth
-            disabled={!isEditable.value}
-            label="TDS Percentage"
-            name="tdsPercentage"
-            value={values.tdsPercentage || ''}
-            onChange={handleChange}
-          />
+          <ShakingTextField
+            error={formik.touched.tdsPercentage && Boolean(formik.errors.tdsPercentage)}
+          >
+            <TextField
+              size="small"
+              fullWidth
+              disabled={!isEditable.value}
+              label="TDS Percentage"
+              name="tdsPercentage"
+              type="number"
+              value={values.tdsPercentage || ''}
+              onChange={handleChange}
+              error={formik.touched.tdsPercentage && Boolean(formik.errors.tdsPercentage)}
+              helperText={formik.touched.tdsPercentage && formik.errors.tdsPercentage}
+            />
+          </ShakingTextField>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            size="small"
-            fullWidth
-            disabled={!isEditable.value}
-            label="TDS Amount"
-            name="tdsAmount"
-            value={values.tdsAmount || ''}
-            onChange={handleChange}
-          />
+          <ShakingTextField error={formik.touched.tdsAmount && Boolean(formik.errors.tdsAmount)}>
+            <TextField
+              size="small"
+              fullWidth
+              disabled={!isEditable.value}
+              label="TDS Amount"
+              name="tdsAmount"
+              type="number"
+              value={values.tdsAmount || ''}
+              onChange={handleChange}
+              error={formik.touched.tdsAmount && Boolean(formik.errors.tdsAmount)}
+              helperText={formik.touched.tdsAmount && formik.errors.tdsAmount}
+            />
+          </ShakingTextField>
         </Grid>
       </SectionCard>
 
