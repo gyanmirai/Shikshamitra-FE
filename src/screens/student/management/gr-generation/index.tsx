@@ -12,6 +12,7 @@ import { Save, Refresh, Grading } from '@mui/icons-material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetAllStudentGroupQuery } from 'src/redux/student/student-group/student-group';
 import {
   useUpdateStudentGrNumberMutation,
   useLazyGetStudentForGrNumberQuery,
@@ -19,23 +20,37 @@ import {
 
 import type { IInquiryData } from '../../enrollment/Inquiry';
 
-const GrNoGenerationScreen = ({ tableData: studentData }: { tableData: IInquiryData[] }) => {
+const GrNoGenerationScreen = ({ division }: { division: string }) => {
   // State to track if manual GR number generation is enabled
   const [isManual, setIsManual] = useState<boolean>(false);
 
+  // Get current board and medium from global state
+  const { currentBoard, currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  // Get the division ID from current medium
+
+  const { data: getStudentData, isLoading: isStudentDataLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllStudentGroupQuery,
+    params: division,
+    options: {
+      skip: !division,
+    },
+  });
+
   // State to store and manage the table data of students
-  const [tableData, setTableData] = useState<IInquiryData[]>(studentData);
+  const [tableData, setTableData] = useState<IInquiryData[]>(getStudentData?.data || []);
 
   // Update table data when student data changes
   useEffect(() => {
-    setTableData(studentData);
-    setInitialData(studentData);
-  }, [studentData]);
+    if (getStudentData?.data) {
+      setTableData(getStudentData?.data);
+      setInitialData(getStudentData?.data);
+    }
+  }, [getStudentData]);
 
   const dispatch = useDispatch();
-  // Get current board and medium from global state
-  const { currentBoard, currentMedium } = useSelector((state: RootState) => state.globalState);
-  const [initialData, setInitialData] = useState<IInquiryData[]>(studentData);
+  const [initialData, setInitialData] = useState<IInquiryData[]>(getStudentData || []);
 
   // Extract education related IDs from current selections
   const educationBoardId = currentBoard?.id || null;
@@ -43,8 +58,16 @@ const GrNoGenerationScreen = ({ tableData: studentData }: { tableData: IInquiryD
   const educationMediumStageId = currentMedium?.educationMediumStages[0]?.id || null;
 
   // API hooks for fetching and updating student GR numbers
-  const [fetchStudents, { isLoading: isStudentGrNumberLoading }] =
-    useLazyGetStudentForGrNumberQuery();
+
+  const { data: fetchStudents, isLoading: isStudentGrNumberLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useLazyGetStudentForGrNumberQuery,
+    params: division,
+    options: {
+      skip: !division,
+    },
+  });
+
   const [updateStudentGrNumbers, { isLoading: isSaving }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateStudentGrNumberMutation,
@@ -93,9 +116,9 @@ const GrNoGenerationScreen = ({ tableData: studentData }: { tableData: IInquiryD
   // Handle individual GR number changes in manual mode
   const handleGrNumberChange = (id: string, name: string, newValue: number | null) => {
     setTableData((prevData) =>
-      prevData.map((item) => (item.id === id ? { ...item, grNoRecord: newValue } : item))
+      prevData.map((item) => (item.studentId === id ? { ...item, grNo: newValue } : item))
     );
-    setSelectedStudents([{ id, name }]);
+    setSelectedStudents([{ studentId: id, name }]);
   };
 
   // Save the updated GR numbers to the backend
@@ -126,7 +149,9 @@ const GrNoGenerationScreen = ({ tableData: studentData }: { tableData: IInquiryD
   };
 
   // State to track selected students for notifications
-  const [selectedStudents, setSelectedStudents] = useState<{ id: string; name: string }[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<{ studentId: string; name: string }[]>(
+    []
+  );
   // Controls the visibility of notification dialog
   const sendInstantNotificationDialogValue = useBoolean();
 
@@ -174,12 +199,13 @@ const GrNoGenerationScreen = ({ tableData: studentData }: { tableData: IInquiryD
       <CustomizableTable
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
+        isLoading={isStudentDataLoading}
         tableId="gr-no-generation-table"
         noDataText={<>No GR No Data Found </>}
         columns={[
-          { id: 'name', label: 'Name', align: 'left' },
+          { id: 'studentName', label: 'Name', align: 'left' },
           {
-            id: 'grNoRecord',
+            id: 'grNo',
             label: 'New GR No.',
             align: 'left',
             isFilter: false,
@@ -192,9 +218,13 @@ const GrNoGenerationScreen = ({ tableData: studentData }: { tableData: IInquiryD
                   // placeholder="Enter New GR No."
                   type="number"
                   inputProps={{ min: 0 }}
-                  value={row.grNoRecord}
+                  value={row.grNo}
                   onChange={(e) =>
-                    handleGrNumberChange(row.id, row.name, e.target.value ? +e.target.value : null)
+                    handleGrNumberChange(
+                      row.studentId,
+                      row.name,
+                      e.target.value ? +e.target.value : null
+                    )
                   }
                 />
               ) : (
@@ -203,7 +233,7 @@ const GrNoGenerationScreen = ({ tableData: studentData }: { tableData: IInquiryD
             },
           },
         ]}
-        data={tableData}
+        data={tableData || []}
       />{' '}
     </Box>
   );
