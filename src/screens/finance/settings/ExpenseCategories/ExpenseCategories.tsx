@@ -135,7 +135,7 @@ const FinanceExpenseCategory = () => {
         description="This screen displays all created expense categories and provides an option to create a new category."
         links={[
           { name: 'Finance', href: '/finance' },
-          { name: 'Setting', href: '/finance/setting' },
+          { name: 'Settings', href: '/finance/setting' },
           { name: 'Expense Category', href: '/finance/settings/expense-category' },
         ]}
         action={

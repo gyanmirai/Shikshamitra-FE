@@ -5,6 +5,7 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { EmptyContent } from 'src/components/empty-content';
@@ -393,6 +394,9 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
 
                   // Update formik values
                   formik.setFieldValue('feeStructureClasses', updated);
+                  shikshaMitraToast.success({
+                    message: `Class Fee Structure ${selectedFeeStructure?.feeStructureName} deleted successfully`,
+                  });
                 }
               }
 

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { Button, DialogActions, FormHelperText } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -90,6 +91,10 @@ const AddFeeHeadDialogContent: React.FC<Props> = ({
 
     // ✅ Set back in formik
     formik.setFieldValue(`feeStructureClasses.${className}`, updatedClassFeeStructures);
+
+    shikshaMitraToast.success({
+      message: `${selectedFeeHead.length} Fee Head added successfully`,
+    });
 
     setSelectedFeeHead([]);
     setError('');

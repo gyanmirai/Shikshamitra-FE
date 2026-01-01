@@ -3,6 +3,7 @@
 import { LoadingButton } from '@mui/lab';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -80,6 +81,9 @@ const FinanceTaxSettingTab = () => {
   const handleDelete = (item: any) => {
     data = data.filter((val) => val.id !== item.id || val.id !== item.id);
     setTableData([...data]);
+    shikshaMitraToast.success({
+      message: `Tax ${item.taxName} deleted successfully`,
+    });
   };
 
   // Handler to save new or updated tax settings
@@ -112,9 +116,16 @@ const FinanceTaxSettingTab = () => {
         const existingEntry = data[existingEntryIndex];
         existingEntry.applicableRegion = applicableRegion;
         existingEntry.applicableCategory = applicableCategory;
+        shikshaMitraToast.success({
+          message: `Tax ${taxName} updated successfully`,
+        });
       } else if (existingEntryIndex === -1 && !isEdit) {
         data.push(taxSetting);
+        shikshaMitraToast.success({
+          message: `Tax ${taxName} added successfully`,
+        });
       }
+      setTableData([...data]);
     }
 
     closeDialog();

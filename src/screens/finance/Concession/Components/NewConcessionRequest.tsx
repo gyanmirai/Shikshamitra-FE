@@ -270,7 +270,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 </ShakingTextField>
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
+              <Grid size={{ xs: 6 }}>
                 <ShakingTextField
                   error={!!(formik.touched.concessions && formik.errors.concessions)}
                 >
@@ -318,7 +318,7 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Concession Type(s) *"
+                        label="Concession Types *"
                         size="small"
                         fullWidth
                         error={!!(formik.errors.concessions && formik.touched.concessions)}

@@ -67,7 +67,7 @@ const BankAccountManagement: React.FC = () => {
         description="Manage bank accounts used by the school. Add, edit or delete bank account details and link payment methods or branches."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Setting', href: '/finance/setting' },
+          { name: 'Settings', href: '/finance/setting' },
           { name: 'Bank Accounts', href: '/finance/bank-accounts' },
         ]}
         action={
@@ -78,7 +78,7 @@ const BankAccountManagement: React.FC = () => {
             variant="contained"
             sx={{ px: '32px' }}
           >
-            Add Bank Account
+            Bank Account
           </Button>
         }
         sx={{ px: 1, mb: 1 }}
@@ -146,7 +146,10 @@ const BankAccountManagement: React.FC = () => {
         content={
           <>
             Are you sure you want to delete bank account{' '}
-            <strong>{selectedBankAccount?.accountNumber}</strong>?
+            <strong>
+              {selectedBankAccount?.bankName} ({selectedBankAccount?.accountNumber})
+            </strong>
+            ?
           </>
         }
         action={
@@ -158,7 +161,7 @@ const BankAccountManagement: React.FC = () => {
               deleteBankAccountDialog.onFalse();
               setSelectedBankAccount(null);
               shikshaMitraToast.success({
-                message: `Bank account deleted successfully`,
+                message: `Bank Account "${selectedBankAccount?.bankName}" deleted successfully`,
               });
               // TODO: call delete mutation here
             }}

@@ -3,6 +3,7 @@ import type { FormikProps } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
 import { Button, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -46,12 +47,19 @@ const AddFeeStructureDialog: React.FC<Props> = ({ formik, className, onClose, ed
         ...updated[editIndex],
         feeStructureName,
       };
+      shikshaMitraToast.success({
+        message: `Class Fee Structure ${feeStructureName} updated successfully`,
+      });
     } else {
       // Add mode
+      const name = feeStructureName || `Fee Structure ${updated.length + 1}`;
       updated.push({
-        feeStructureName: feeStructureName || `Fee Structure ${updated.length + 1}`,
+        feeStructureName: name,
         status: FeeStructureClassStatusType.Current,
         feeItems: [],
+      });
+      shikshaMitraToast.success({
+        message: `Class Fee Structure ${name} added successfully`,
       });
     }
 

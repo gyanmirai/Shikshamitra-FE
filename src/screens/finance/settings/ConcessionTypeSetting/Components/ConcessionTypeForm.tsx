@@ -8,6 +8,7 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { shikshaMitraToast } from 'src/components/toast';
 import { DocumentTypeArray } from 'src/enums/documnet-type';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
@@ -49,6 +50,15 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
     initialValues: getInitialConcessionTypeData(editData),
     validationSchema: concessionTypeValidationSchema,
     onSubmit: (values) => {
+      if (editData) {
+        shikshaMitraToast.success({
+          message: `Concession Type ${editData.concessionName} updated successfully`,
+        });
+      } else {
+        shikshaMitraToast.success({
+          message: `Concession Type ${values.concessionName} added successfully`,
+        });
+      }
       onClose(null, true);
     },
   });

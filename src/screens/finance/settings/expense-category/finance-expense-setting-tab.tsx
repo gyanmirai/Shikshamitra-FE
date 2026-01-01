@@ -4,6 +4,7 @@ import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
+import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
@@ -73,13 +74,20 @@ const FinanceExpenseSettingTab = () => {
 
       if (!isEdit && existingEntryIndex === -1) {
         data.push(expenseSetting);
+        shikshaMitraToast.success({
+          message: `Expense category ${categoryName} added successfully`,
+        });
       } else if (isEdit && existingEntryIndex !== -1) {
         const changeCategory = data[existingEntryIndex];
         changeCategory.categoryName = categoryName;
         changeCategory.parentCategory = parentCategory;
         changeCategory.assignDepartment = assignDepartment;
         changeCategory.budgetLimit = budgetLimit;
+        shikshaMitraToast.success({
+          message: `Expense category ${categoryName} updated successfully`,
+        });
       }
+      setTableData([...data]);
     }
     closeDialog();
   };
@@ -94,6 +102,9 @@ const FinanceExpenseSettingTab = () => {
     );
 
     setTableData([...data]);
+    shikshaMitraToast.success({
+      message: `Expense category ${item.categoryName} deleted successfully`,
+    });
   };
 
   return (

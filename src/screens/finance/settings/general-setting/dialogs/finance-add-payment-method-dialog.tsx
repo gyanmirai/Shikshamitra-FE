@@ -35,7 +35,10 @@ const AddPaymentMethodDialog: React.FC<IFinanceAddPaymentMethodDialogProps> = ({
   } = useFormik<IFinanceAddPaymentMethodInterface>({
     initialValues,
     validationSchema: addPaymentMethodValidationSchema,
-    onSubmit: async (formValues) => {},
+    onSubmit: async (formValues) => {
+      onSave?.(formValues);
+      setFieldValue('paymentMethodName', ''); // Reset after submit
+    },
   });
 
   // Check if payment method name field has been touched and has validation errors

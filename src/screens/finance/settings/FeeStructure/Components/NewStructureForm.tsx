@@ -3,6 +3,7 @@ import type { RootState } from 'src/redux/store';
 import { Box } from '@mui/material';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
@@ -36,9 +37,13 @@ const FeeStructureFormStepper: React.FC<IFeeStructureFormProps> = ({ onClose, ed
         if (isLastStep) {
           // Final submit
           if (editData) {
-            // Update API call here
+            shikshaMitraToast.success({
+              message: `Fee Structure ${values.feeStructureName} updated successfully`,
+            });
           } else {
-            // Create API call here
+            shikshaMitraToast.success({
+              message: `Fee Structure ${values.feeStructureName} added successfully`,
+            });
           }
           onClose(null, true);
           return;

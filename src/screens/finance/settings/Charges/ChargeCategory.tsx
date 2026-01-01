@@ -147,7 +147,7 @@ const FinanceChargeCategory = () => {
         description="This screen displays all created charge Category, helping the school manage additional fees or penalties that can be applied to students"
         links={[
           { name: 'Finance', href: '/finance' },
-          { name: 'Setting', href: '/finance/setting' },
+          { name: 'Settings', href: '/finance/settings' },
           { name: 'Charge Category', href: '/finance/settings/charge-category' },
         ]}
         action={
@@ -158,7 +158,7 @@ const FinanceChargeCategory = () => {
             onClick={handleAdd}
             sx={{ px: '32px' }}
           >
-            Charge Type
+            Charge Category
           </Button>
         }
         sx={{ mb: 2 }}
@@ -166,7 +166,28 @@ const FinanceChargeCategory = () => {
 
       <CustomizableTable
         tableId="charge-category-table"
-        noDataText={<>No Charge Category Data Found</>}
+        noDataText={
+          <>
+            No Charge Category Data Found
+            <Box
+              onClick={() => {
+                handleAdd();
+                setSelectedItem(null);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Charge Category
+            </Box>
+          </>
+        }
         isLoading={isLoading}
         columns={[
           {
@@ -337,7 +358,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
           isRefundable: values.isRefundable ? 'Yes' : 'No',
         };
         await onSave(submitValues);
-        handleClose();
+        handleClose(true);
       } catch (error) {
         console.error('Save failed:', error);
       } finally {
@@ -347,9 +368,9 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
   });
 
   // Handle dialog cancellation and form reset
-  const handleClose = () => {
+  const handleClose = (isSubmit: boolean = false) => {
     formik.resetForm();
-    onClose(null, false);
+    onClose(null, isSubmit);
   };
 
   return (
@@ -467,7 +488,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData, onSave }: ChargeCategor
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"
           variant="outlined"
-          onClick={handleClose}
+          onClick={() => handleClose()}
         >
           Cancel
         </Button>

@@ -22,9 +22,13 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
     validationSchema: bankAccountValidationSchema,
     onSubmit: (values) => {
       if (editData) {
-        shikshaMitraToast.success({ message: `Bank Account updated successfully` });
+        shikshaMitraToast.success({
+          message: `${editData.bankName} Bank Account updated successfully`,
+        });
       } else {
-        shikshaMitraToast.success({ message: `Bank Account added successfully` });
+        shikshaMitraToast.success({
+          message: `${values.bankName} Bank Account added successfully`,
+        });
       }
       onClose(null, true);
     },
@@ -52,6 +56,27 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                 }}
                 error={formik.touched.bankName && Boolean(formik.errors.bankName)}
                 helperText={formik.touched.bankName && formik.errors.bankName}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          {/* Account Number */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ShakingTextField
+              error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
+            >
+              <TextField
+                fullWidth
+                size="small"
+                label="Account Number *"
+                name="accountNumber"
+                value={formik.values.accountNumber}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 18);
+                  formik.setFieldValue('accountNumber', value);
+                }}
+                error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
+                helperText={formik.touched.accountNumber && formik.errors.accountNumber}
               />
             </ShakingTextField>
           </Grid>
@@ -136,25 +161,6 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                 formControlProps={{ fullWidth: true, size: 'small' }}
                 error={formik.touched.accountType && Boolean(formik.errors.accountType)}
                 helperText={(formik.touched.accountType && formik.errors.accountType) as string}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          {/* Account Number */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ShakingTextField
-              error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
-            >
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Account Number *"
-                name="accountNumber"
-                value={formik.values.accountNumber}
-                onChange={formik.handleChange}
-                error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
-                helperText={formik.touched.accountNumber && formik.errors.accountNumber}
               />
             </ShakingTextField>
           </Grid>

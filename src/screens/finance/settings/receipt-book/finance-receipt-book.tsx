@@ -41,7 +41,7 @@ const FinanceReceiptBookSetting = () => {
   const [isEdit, setIsEdit] = useState(false);
 
   // State to store all receipt book entries for the table
-  const [tableData] = useState(initialData);
+  const [tableData, setTableData] = useState<IReceiptBook[]>(initialData);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
@@ -73,7 +73,7 @@ const FinanceReceiptBookSetting = () => {
         heading="Receipt Book"
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Setting', href: '/finance/settings/receipt-book/' },
+          { name: 'Settings', href: '/finance/settings/receipt-book/' },
           { name: 'Receipt Book' },
         ]}
         sx={{ mb: 1 }}
@@ -246,7 +246,23 @@ const FinanceReceiptBookSetting = () => {
           }
         >
           <FinanceSettingReceiptbookDialog
-            onSave={() => {}}
+            onSave={(values) => {
+              setTableData((prev) => {
+                const existingIndex = prev.findIndex((entry) => entry.id === values.id);
+                if (existingIndex !== -1) {
+                  const newData = [...prev];
+                  newData[existingIndex] = values;
+                  shikshaMitraToast.success({
+                    message: <>Receipt Book: {values.receiptBookName} updated successfully</>,
+                  });
+                  return newData;
+                }
+                shikshaMitraToast.success({
+                  message: <>Receipt Book: {values.receiptBookName} added successfully</>,
+                });
+                return [...prev, values];
+              });
+            }}
             // dialogValue={dialog.value}
             onClose={handleClose}
             data={selectedEntry}
@@ -269,13 +285,13 @@ const FinanceReceiptBookSetting = () => {
         content={
           selectedEntry && Array.isArray(selectedEntry.receiptBookName) ? (
             <>
-              Are you sure you want move <strong>{selectedEntry.receiptBookName}</strong> receipt
-              book to {selectedEntry.toggle === true ? 'Inactive' : 'Active'} ?
+              Are you sure you want move {selectedEntry.receiptBookName} receipt book to{' '}
+              {selectedEntry.toggle === true ? 'Inactive' : 'Active'} ?
             </>
           ) : (
             <>
-              Are you sure you want move <strong>{selectedEntry?.receiptBookName}</strong> receipt
-              book to {selectedEntry?.toggle === true ? 'Inactive' : 'Active'} ?
+              Are you sure you want move {selectedEntry?.receiptBookName} receipt book to{' '}
+              {selectedEntry?.toggle === true ? 'Inactive' : 'Active'} ?
             </>
           )
         }
@@ -289,21 +305,21 @@ const FinanceReceiptBookSetting = () => {
               />
             }
             onClick={() => {
-              const status = selectedEntry?.toggle === true ? 'Inactive' : 'Active';
-              shikshaMitraToast.success({
-                message:
-                  selectedEntry && Array.isArray(selectedEntry.receiptBookName) ? (
+              if (selectedEntry) {
+                const status = selectedEntry.toggle ? 'Inactive' : 'Active';
+                setTableData((prev) =>
+                  prev.map((item) =>
+                    item.id === selectedEntry.id ? { ...item, toggle: !item.toggle } : item
+                  )
+                );
+                shikshaMitraToast.success({
+                  message: (
                     <>
-                      Receipt Book: <strong>{selectedEntry.receiptBookName}</strong> moved to{' '}
-                      {status} successfully.
-                    </>
-                  ) : (
-                    <>
-                      Receipt Book: <strong>{selectedEntry?.receiptBookName}</strong> moved to{' '}
-                      {status} successfully.
+                      Receipt Book: {selectedEntry.receiptBookName} moved to {status} successfully.
                     </>
                   ),
-              });
+                });
+              }
               setTimeout(() => {
                 setSelectedEntry(null);
               }, 200); // Adjust delay (in ms) as needed
@@ -311,6 +327,36 @@ const FinanceReceiptBookSetting = () => {
             }}
           >
             {selectedEntry?.toggle === true ? 'Inactive' : 'Active'}
+          </Button>
+        }
+      />
+      <ConfirmDialog
+        open={dialogForDeleteConfirmation.value}
+        onClose={() => {
+          dialogForDeleteConfirmation.onFalse();
+          setSelectedEntry(null);
+        }}
+        title="Delete Item"
+        content={
+          <>Are you sure you want to delete receipt book {selectedEntry?.receiptBookName}?</>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              if (selectedEntry) {
+                setTableData((prev) => prev.filter((item) => item.id !== selectedEntry.id));
+                shikshaMitraToast.success({
+                  message: <>Receipt Book: {selectedEntry.receiptBookName} deleted successfully</>,
+                });
+                setSelectedEntry(null);
+              }
+              dialogForDeleteConfirmation.onFalse();
+            }}
+          >
+            Yes
           </Button>
         }
       />

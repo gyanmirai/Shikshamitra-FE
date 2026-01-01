@@ -6,12 +6,13 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
-import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Tab, Tabs, Paper } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParam } from 'src/hooks/use-search-param';
+import React, { useMemo, useState, useCallback } from 'react';
+import { Box, Tab, Tabs, Paper, IconButton } from '@mui/material';
+import { ArrowBackIos, ArrowForwardIos } from '@mui/icons-material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ReconciliationtatusType } from 'src/enums/reconciliation-status-type';
@@ -197,6 +198,46 @@ const FinanceReconciliation = () => {
     setSearchParams({ tab: newValue });
   };
 
+  const tabsContainerRef = React.useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
+  const handleScroll = useCallback(() => {
+    const el = tabsContainerRef.current?.querySelector('.MuiTabs-scroller');
+    if (!el) return;
+
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setShowLeftArrow(scrollLeft > 5);
+    setShowRightArrow(scrollLeft + clientWidth < scrollWidth - 5);
+  }, []);
+
+  const scrollTabs = (direction: 'left' | 'right') => {
+    const el = tabsContainerRef.current?.querySelector('.MuiTabs-scroller');
+    if (el) {
+      const scrollAmount = 200;
+      el.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    const el = tabsContainerRef.current?.querySelector('.MuiTabs-scroller');
+    if (el) {
+      el.addEventListener('scroll', handleScroll);
+      window.addEventListener('resize', handleScroll);
+      // Initial check after a short delay to allow rendering
+      const timer = setTimeout(handleScroll, 100);
+      return () => {
+        el.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('resize', handleScroll);
+        clearTimeout(timer);
+      };
+    }
+    return undefined;
+  }, [handleScroll, currentIndex]); // Re-run when tab changes as content might shift
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
@@ -244,27 +285,81 @@ const FinanceReconciliation = () => {
             onChange={(newDate) => setDate(newDate)}
             sx={{ maxWidth: '240px', width: '100%' }}
           />
-          <Tabs
-            value={params.tab}
-            onChange={handleTabChange}
+          <Box
             sx={{
-              '& .MuiTabs-flexContainer': { gap: 2, justifyContent: 'end' },
+              display: 'flex',
+              alignItems: 'center',
               flexGrow: 1,
+              width: '100%',
+              overflow: 'hidden',
+              position: 'relative',
             }}
+            ref={tabsContainerRef}
           >
-            {TABS.map((tab) => (
-              <Tab
-                sx={{ fontSize: '12px' }}
-                key={tab.value}
-                label={
-                  <Box display="flex" justifyContent="center" gap={1} alignItems="center">
-                    {tab.label} <Label color={tab.color}>{tab.count}</Label>
-                  </Box>
-                }
-                value={tab.value}
-              />
-            ))}
-          </Tabs>
+            {showLeftArrow && (
+              <IconButton
+                onClick={() => scrollTabs('left')}
+                size="small"
+                sx={{
+                  zIndex: 10,
+                  bgcolor: 'background.paper',
+                  boxShadow: 'var(--shadows-4)',
+                  '&:hover': { bgcolor: 'background.neutral' },
+                  mr: 1,
+                }}
+              >
+                <ArrowBackIos sx={{ fontSize: 14, ml: 0.5 }} />
+              </IconButton>
+            )}
+
+            <Tabs
+              value={params.tab}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons={false}
+              sx={{
+                flexGrow: 1,
+                '& .MuiTabs-flexContainer': {
+                  gap: 2,
+                  justifyContent: 'flex-start',
+                },
+                '& .MuiTabs-scroller': {
+                  msOverflowStyle: 'none',
+                  scrollbarWidth: 'none',
+                  '&::-webkit-scrollbar': { display: 'none' },
+                },
+              }}
+            >
+              {TABS.map((tab) => (
+                <Tab
+                  sx={{ fontSize: '12px', minWidth: 'auto' }}
+                  key={tab.value}
+                  label={
+                    <Box display="flex" justifyContent="center" gap={1} alignItems="center">
+                      {tab.label} <Label color={tab.color}>{tab.count}</Label>
+                    </Box>
+                  }
+                  value={tab.value}
+                />
+              ))}
+            </Tabs>
+
+            {showRightArrow && (
+              <IconButton
+                onClick={() => scrollTabs('right')}
+                size="small"
+                sx={{
+                  zIndex: 10,
+                  bgcolor: 'background.paper',
+                  boxShadow: 'var(--shadows-4)',
+                  '&:hover': { bgcolor: 'background.neutral' },
+                  ml: 1,
+                }}
+              >
+                <ArrowForwardIos sx={{ fontSize: 14 }} />
+              </IconButton>
+            )}
+          </Box>
         </Box>
       </Paper>
       <FormSlider

@@ -7,6 +7,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useSearchParam } from 'src/hooks/use-search-param';
 import { Box, Tab, Card, Button, Typography } from '@mui/material';
@@ -312,7 +313,10 @@ const FinanceGeneralSettingTab = () => {
             }}
             isEditMode={false}
             data={null}
-            onSave={() => {
+            onSave={(values) => {
+              shikshaMitraToast.success({
+                message: `Payment Method ${values.paymentMethodName} added successfully`,
+              });
               setPaymentMethodDialog.onFalse();
             }}
           />
@@ -344,7 +348,10 @@ const FinanceGeneralSettingTab = () => {
             }}
             isEditMode={false}
             data={null}
-            onSave={() => {
+            onSave={(values) => {
+              shikshaMitraToast.success({
+                message: `Late Fee Type ${values.lateFeeTypeName} added successfully`,
+              });
               setLateFeeTypeDialog.onFalse();
             }}
           />
@@ -376,7 +383,10 @@ const FinanceGeneralSettingTab = () => {
             }}
             isEditMode={false}
             data={null}
-            onSave={() => {
+            onSave={(values) => {
+              shikshaMitraToast.success({
+                message: `Payment Term ${values.paymentTermName} added successfully`,
+              });
               setPaymentTermDialog.onFalse();
             }}
           />
@@ -407,7 +417,10 @@ const FinanceGeneralSettingTab = () => {
           }}
           isEditMode={false}
           data={null}
-          onSave={() => {
+          onSave={(values) => {
+            shikshaMitraToast.success({
+              message: `Payment Status ${values.paymentStatusName} added successfully`,
+            });
             setPaymentStatusDialog.onFalse();
           }}
         />
@@ -437,7 +450,10 @@ const FinanceGeneralSettingTab = () => {
           }}
           isEditMode={false}
           data={null}
-          onSave={() => {
+          onSave={(values) => {
+            shikshaMitraToast.success({
+              message: `Budget Category ${values.budgetCategoryName} added successfully`,
+            });
             presetCategoryAndDepartmentForBudgetDialog.onFalse();
           }}
         />
@@ -467,7 +483,10 @@ const FinanceGeneralSettingTab = () => {
           }}
           isEditMode={false}
           data={null}
-          onSave={() => {
+          onSave={(values) => {
+            shikshaMitraToast.success({
+              message: `Budget Sub Category ${values.budgetSubcategoryName} added successfully`,
+            });
             predefinedCategoryIncomeExpenseDialog.onFalse();
           }}
         />

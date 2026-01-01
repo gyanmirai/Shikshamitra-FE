@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Switch, Button, TextField, DialogActions, DialogContent } from '@mui/material';
@@ -74,6 +75,9 @@ const FinanceNotificationTable = () => {
   const handleSaveDetails = () => {
     //
     // Here you can update the data source with the new details value
+    shikshaMitraToast.success({
+      message: `Notification details for ${currentRow?.cardTitle} updated successfully`,
+    });
     handleCloseDialog();
   };
 

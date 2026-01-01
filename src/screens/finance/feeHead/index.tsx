@@ -74,7 +74,7 @@ const FeeHeadCreation = () => {
         description="Manage all fee heads such as Tuition Fee, Exam Fee, and more. Use the actions to edit or delete existing heads. Click '+ Fee Head' to create a new one."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Setting', href: '/finance/setting' },
+          { name: 'Settings', href: '/finance/setting' },
           { name: 'Fee Head', href: '/finance/fee-head' },
         ]}
         action={
@@ -152,7 +152,7 @@ const FeeHeadCreation = () => {
         title={selectedEntry?.toggle === true ? 'Inactive' : 'Active'}
         content={
           <>
-            Are you sure you want move <strong>{selectedEntry?.feeHeadName}</strong> fee head to{' '}
+            Are you sure you want move {selectedEntry?.feeHeadName} fee head to{' '}
             {selectedEntry?.toggle === true ? 'Inactive' : 'Active'}?
           </>
         }
@@ -170,8 +170,7 @@ const FeeHeadCreation = () => {
               shikshaMitraToast.success({
                 message: (
                   <>
-                    Fee Head: <strong>{selectedEntry?.feeHeadName}</strong> moved to {status}{' '}
-                    successfully.
+                    Fee Head: {selectedEntry?.feeHeadName} moved to {status} successfully.
                   </>
                 ),
               });

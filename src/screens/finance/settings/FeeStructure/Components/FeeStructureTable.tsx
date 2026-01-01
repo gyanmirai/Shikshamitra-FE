@@ -43,7 +43,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
               '&:hover': { cursor: 'pointer', color: 'primary.main', textDecoration: 'underline' },
             }}
           >
-            Fee Structure
+            Add Fee Structure
           </Box>
         </>
       }

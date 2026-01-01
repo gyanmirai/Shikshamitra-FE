@@ -69,7 +69,7 @@ const ConcessionType = () => {
         }
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Setting', href: '/finance/setting' },
+          { name: 'Settings', href: '/finance/setting' },
           { name: 'Concession Type', href: '/finance/concession-type' },
         ]}
         action={
@@ -166,8 +166,8 @@ const ConcessionType = () => {
                 shikshaMitraToast.success({
                   message: (
                     <>
-                      Concession Type: <strong>{selectedConcessionType?.concessionName}</strong>{' '}
-                      deleted successfully.
+                      Concession Type: {selectedConcessionType?.concessionName || ''} deleted
+                      successfully.
                     </>
                   ),
                 });

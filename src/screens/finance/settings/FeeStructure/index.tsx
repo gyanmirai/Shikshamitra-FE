@@ -73,7 +73,7 @@ const FeeStructure = () => {
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
-              name: 'Setting',
+              name: 'Settings',
               href: '/finance/settings/fee-category',
               onClick(e) {
                 handleClose(null, false);
@@ -104,7 +104,7 @@ const FeeStructure = () => {
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
-              name: 'Setting',
+              name: 'Settings',
               href: '/finance/settings/fee-category',
               onClick(e) {
                 handleClose(null, false);
@@ -129,7 +129,7 @@ const FeeStructure = () => {
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             {
-              name: 'Setting',
+              name: 'Settings',
               href: '/finance/settings/fee-category',
               onClick(e) {
                 handleClose(null, false);

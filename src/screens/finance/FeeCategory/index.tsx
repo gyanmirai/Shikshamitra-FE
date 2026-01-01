@@ -77,7 +77,7 @@ const FeeCategoryCreation = () => {
         description="Manage all fee categories such as Academic, Hostel. Use the actions to edit or delete existing categories. Click ‘Add Fee Category’ to create a new one."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
-          { name: 'Setting', href: '/finance/setting' },
+          { name: 'Settings', href: '/finance/setting' },
           { name: 'Fee Category', href: '/finance/fee-category' },
         ]}
         action={

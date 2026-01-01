@@ -3,6 +3,7 @@
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
@@ -36,13 +37,14 @@ const data: Data[] = [
 
 const FinanceBudgetSettingTab = () => {
   const dialog = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState(data);
+  const [selectedEntry, setSelectedEntry] = useState<Data | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(data);
   // const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
 
   const closeDialog = () => {
     setIsEdit(false);
+    setSelectedEntry(null);
     dialog.onFalse();
   };
 
@@ -71,6 +73,9 @@ const FinanceBudgetSettingTab = () => {
 
       if (existingEntryIndex === -1) {
         setTableData([...tableData, budget]);
+        shikshaMitraToast.success({
+          message: `Budget for ${departmentName} added successfully`,
+        });
       } else if (isEdit && existingEntryIndex !== -1) {
         const updatedTableData = [...tableData];
         updatedTableData[existingEntryIndex] = {
@@ -79,6 +84,9 @@ const FinanceBudgetSettingTab = () => {
         };
 
         setTableData(updatedTableData);
+        shikshaMitraToast.success({
+          message: `Budget for ${departmentName} updated successfully`,
+        });
       }
 
       closeDialog();

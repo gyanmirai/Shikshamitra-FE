@@ -67,7 +67,7 @@ const PaymentTerm = () => {
           }}
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Setting', href: '/finance/setting' },
+            { name: 'Settings', href: '/finance/setting' },
             { name: 'Payment Terms', href: '/finance/payment-term' },
           ]}
           sx={{ mb: 2 }}
@@ -82,7 +82,7 @@ const PaymentTerm = () => {
           }
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
-            { name: 'Setting', href: '/finance/setting' },
+            { name: 'Settings', href: '/finance/setting' },
             { name: 'Payment Terms', href: '/finance/payment-term' },
           ]}
           isBack={addPaymentTermDialog.value}

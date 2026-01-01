@@ -4,6 +4,7 @@ import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Button, Switch, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -48,7 +49,7 @@ const initialData: Data[] = [
 const FinancePaymentMethodSettingTab: React.FC = () => {
   const dialog = useBoolean();
   const dialogForDeleteConfirmation = useBoolean();
-  const [selectedEntry, setSelectedEntry] = useState(initialData);
+  const [selectedEntry, setSelectedEntry] = useState<Data | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const [tableData, setTableData] = useState(initialData);
 
@@ -84,8 +85,14 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
 
       if (isEdit && existingEntryIndex !== -1) {
         updatedData[existingEntryIndex] = newPaymentMethodName;
+        shikshaMitraToast.success({
+          message: `Payment Method ${paymentMethodName} updated successfully`,
+        });
       } else {
         updatedData.push(newPaymentMethodName);
+        shikshaMitraToast.success({
+          message: `Payment Method ${paymentMethodName} added successfully`,
+        });
       }
 
       setTableData(updatedData);
@@ -201,7 +208,23 @@ const FinancePaymentMethodSettingTab: React.FC = () => {
               title="Delete Item"
               content="Are you sure you want to delete?"
               action={
-                <LoadingButton variant="contained" loading={false} color="error" onClick={() => {}}>
+                <LoadingButton
+                  variant="contained"
+                  loading={false}
+                  color="error"
+                  onClick={() => {
+                    if (selectedEntry) {
+                      // Ensure selectedEntry is not null
+                      const updatedData = tableData.filter((val) => val.id !== selectedEntry.id);
+                      setTableData(updatedData);
+                      shikshaMitraToast.success({
+                        message: `Payment Method ${selectedEntry.paymentMethodName} deleted successfully`,
+                      });
+                      setSelectedEntry(null); // Clear selected entry after deletion
+                    }
+                    dialogForDeleteConfirmation.onFalse();
+                  }}
+                >
                   Yes
                 </LoadingButton>
               }
