@@ -9,51 +9,68 @@ import type { Subject } from './types';
 
 interface SubjectCardProps {
   subject: Subject;
+  placedCount: number;
 }
 
-const SubjectCard: React.FC<SubjectCardProps> = ({ subject }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: ItemTypes.SUBJECT,
-    item: { id: subject.id, type: ItemTypes.SUBJECT, subject },
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
+const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount }) => {
+  const total = subject.totalLectures || 0;
+  const isFull = total > 0 && placedCount >= total;
+
+  const [{ isDragging }, drag] = useDrag(
+    () => ({
+      type: ItemTypes.SUBJECT,
+      item: { id: subject.id, type: ItemTypes.SUBJECT, subject },
+      canDrag: !isFull,
+      collect: (monitor) => ({
+        isDragging: !!monitor.isDragging(),
+      }),
     }),
-  }));
+    [isFull, subject]
+  ); // Add dependencies to ensure drag state updates
 
   return (
     <ListItem
       ref={(node) => {
-        if (node) drag(node);
+        if (node && !isFull) drag(node);
       }}
       sx={{
         p: 1.5,
         mb: 1.5,
         bgcolor: 'background.paper',
         border: 1,
-        borderColor: 'divider',
+        borderColor: isFull ? 'action.disabled' : 'divider',
         borderRadius: 1,
-        cursor: 'grab',
+        cursor: isFull ? 'not-allowed' : 'grab',
         transition: 'all 0.2s ease',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        boxShadow: 1,
+        boxShadow: isFull ? 0 : 1,
         fontWeight: 500,
         fontSize: '0.9rem',
-        borderLeft: `4px solid ${subject.color}`,
-        opacity: isDragging ? 0.5 : 1,
+        borderLeft: `4px solid ${isFull ? '#9e9e9e' : subject.color}`,
+        opacity: isDragging ? 0.5 : isFull ? 0.6 : 1,
+        filter: isFull ? 'grayscale(100%)' : 'none',
         '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: 2,
-          borderColor: 'primary.main',
+          transform: isFull ? 'none' : 'translateY(-2px)',
+          boxShadow: isFull ? 0 : 2,
+          borderColor: isFull ? 'action.disabled' : 'primary.main',
         },
       }}
     >
-      <Typography variant="body2" fontWeight="medium">
+      <Typography
+        variant="body2"
+        fontWeight="medium"
+        color={isFull ? 'text.disabled' : 'text.primary'}
+      >
         {subject.name}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
-        {subject.defaultDuration}m
+      <Typography
+        variant="caption"
+        color={isFull ? 'error.main' : placedCount > 0 ? 'primary.main' : 'text.secondary'}
+        fontWeight={placedCount > 0 ? 'bold' : 'regular'}
+      >
+        {placedCount} / {total}
       </Typography>
     </ListItem>
   );
@@ -61,9 +78,10 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject }) => {
 
 interface PaletteProps {
   subjects: Subject[];
+  placedCounts: Record<string, number>;
 }
 
-const SubjectPalette: React.FC<PaletteProps> = ({ subjects }) => (
+const SubjectPalette: React.FC<PaletteProps> = ({ subjects, placedCounts }) => (
   <Paper
     elevation={2}
     sx={{
@@ -89,7 +107,7 @@ const SubjectPalette: React.FC<PaletteProps> = ({ subjects }) => (
     <Scrollbar sx={{ height: '100%', pr: 1 }}>
       <List sx={{ pr: 1, maxHeight: 'unset', height: '100%' }}>
         {subjects.map((sub) => (
-          <SubjectCard key={sub.id} subject={sub} />
+          <SubjectCard key={sub.id} subject={sub} placedCount={placedCounts[sub.id] || 0} />
         ))}
       </List>
     </Scrollbar>

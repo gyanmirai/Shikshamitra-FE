@@ -47,7 +47,9 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 
   // const pathname = usePathname();
 
-  const { employee } = useSelector((state: any) => state.auth);
+  const { employee, user } = useSelector((state: any) => state.auth);
+
+  const { profile } = user;
 
   const [open, setOpen] = useState(false);
 
@@ -123,14 +125,14 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
           <Stack alignItems="center" sx={{ pt: 8 }}>
             {renderAvatar}
             <Label sx={{ mt: 1 }} color="primary">
-              {employee?.role?.name}
+              {profile?.role}
             </Label>
             <Typography variant="subtitle1" noWrap sx={{ mt: 1 }}>
-              {employee?.employeeName}
+              {profile?.preferred_username || profile?.unique_name}
             </Typography>
 
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>
-              {employee?.email}
+              {profile?.email}
             </Typography>
           </Stack>
 
@@ -168,43 +170,45 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
               borderBottom: `dashed 1px ${theme.vars.palette.divider}`,
             }}
           >
-            {[
-              {
-                label: 'Profile',
-                icon: <Iconify icon="mdi:user-box" />,
-                info: null,
-                onClick: () => {
-                  profileDialog.onTrue();
+            {profile?.role !== 'admin' &&
+              profile?.role !== 'student' &&
+              [
+                {
+                  label: 'Profile',
+                  icon: <Iconify icon="mdi:user-box" />,
+                  info: null,
+                  onClick: () => {
+                    profileDialog.onTrue();
+                  },
                 },
-              },
-            ].map((option) => (
-              // const rootLabel = pathname.includes('/dashboard') ? 'Home' : 'Dashboard';
+              ].map((option) => (
+                // const rootLabel = pathname.includes('/dashboard') ? 'Home' : 'Dashboard';
 
-              // const rootHref = pathname.includes('/dashboard') ? '/' : dashboardPath;
-              // sdadsadsad
-              <MenuItem
-                key={option.label}
-                onClick={option.onClick}
-                sx={{
-                  py: 1,
-                  color: 'text.secondary',
-                  '& svg': { width: 24, height: 24 },
-                  '&:hover': { color: 'text.primary' },
-                }}
-              >
-                {option.icon}
+                // const rootHref = pathname.includes('/dashboard') ? '/' : dashboardPath;
+                // sdadsadsad
+                <MenuItem
+                  key={option.label}
+                  onClick={option.onClick}
+                  sx={{
+                    py: 1,
+                    color: 'text.secondary',
+                    '& svg': { width: 24, height: 24 },
+                    '&:hover': { color: 'text.primary' },
+                  }}
+                >
+                  {option.icon}
 
-                <Box component="span" sx={{ ml: 2 }}>
-                  {option.label}
-                </Box>
+                  <Box component="span" sx={{ ml: 2 }}>
+                    {option.label}
+                  </Box>
 
-                {option?.info && (
-                  <Label color="error" sx={{ ml: 1 }}>
-                    {option?.info}
-                  </Label>
-                )}
-              </MenuItem>
-            ))}
+                  {option?.info && (
+                    <Label color="error" sx={{ ml: 1 }}>
+                      {option?.info}
+                    </Label>
+                  )}
+                </MenuItem>
+              ))}
           </Stack>
 
           {/* <Box sx={{ px: 2.5, py: 3 }}>

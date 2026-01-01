@@ -54,7 +54,7 @@ export const loadUser = createAsyncThunk(
         const userPlanObject = JSON.parse(JSON.stringify(user));
         await dispatch(getEmployee(userPlanObject)).unwrap();
         return {
-          user: userPlanObject,
+          user: { ...userPlanObject, profile: decodeToken },
           mainModuleVisibility: mainModuleVisibilityArray,
           permissionData,
         };
