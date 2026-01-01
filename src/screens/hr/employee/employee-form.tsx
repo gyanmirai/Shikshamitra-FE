@@ -214,6 +214,7 @@ const steps = [
   'Work Experience',
   'Payroll',
   'Assign Reporting Manager',
+  'Academic Permission',
 ];
 
 const EmployeeFrom = ({ editData, handleClose }: any) => {
@@ -414,7 +415,6 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
   );
   const handleBankDetailsInformation = useCallback(
     async (values: any, formik: any) => {
-      console.log('bank calling==');
       const res = updateBankDetails({
         employeeId: values.employeeId,
         body: {
@@ -626,7 +626,6 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
 export default EmployeeFrom;
 
 const FormSlider = ({ step, formik, editData }: any) => {
-  console.log(formik, 'formik', editData);
   const containerRef = React.useRef<HTMLElement>(null);
   const initializedStepsRef = React.useRef<Record<number, boolean>>({});
   const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({

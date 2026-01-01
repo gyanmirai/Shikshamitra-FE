@@ -25,6 +25,7 @@ export const hrPaths = {
       earningComponents: '/hr/payroll/setting/earning-component',
       deductionComponents: '/hr/payroll/setting/deduction-component',
       pfRule: '/hr/payroll/setting/pf',
+      payrollConfiguration: '/hr/payroll/setting/payroll-configuration',
     },
   },
   attendance: {
@@ -65,6 +66,7 @@ export const hrPermissions = {
       earningComponents: `${defaultHrPermissionName}PayrollManagement.Settings.EarningComponents`,
       deductionComponents: `${defaultHrPermissionName}PayrollManagement.Settings.DeductionComponents`,
       pfRule: `${defaultHrPermissionName}PayrollManagement.Settings.PfRule`,
+      payrollConfiguration: `${defaultHrPermissionName}PayrollManagement.Settings.PayrollConfiguration`,
     },
   },
   attendance: {
@@ -207,6 +209,14 @@ const hrModule = (isDdvs: boolean) => ({
                   shortcutKey: 'Alt+H+P+4+2',
                   shortcutKeyName: 'Alt+H+P+4+2',
                   permissionName: hrPermissions.payroll.settings.pfRule,
+                },
+                {
+                  title: 'Payroll Configuration',
+                  path: hrPaths.payroll.settings.payrollConfiguration,
+                  _action: 'payroll-setting-payroll-configuration',
+                  shortcutKey: 'Alt+H+P+4+2',
+                  shortcutKeyName: 'Alt+H+P+4+2',
+                  permissionName: hrPermissions.payroll.settings.payrollConfiguration,
                 },
               ],
             },

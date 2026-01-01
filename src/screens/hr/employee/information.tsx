@@ -43,6 +43,7 @@ import { InformationFields } from './employee-form-fields/InformationFields';
 import { WorkExperienceFields } from './employee-form-fields/WorkExperienceFields';
 import { AssignReportingManager } from './employee-form-fields/AssignReportingManager';
 import { AdditionalDetailsFields } from './employee-form-fields/AdditionalDetailsFields';
+import { AcademicPermissionFields } from './employee-form-fields/AcademicPermissionFields';
 // } from './employee-form-fields';
 import {
   payrollInitialValues,
@@ -63,6 +64,7 @@ const fields = [
   WorkExperienceFields,
   PayrollFields,
   AssignReportingManager,
+  AcademicPermissionFields,
 ];
 // const fields = [InformationFields];
 

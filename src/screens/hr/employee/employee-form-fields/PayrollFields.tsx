@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { Add } from '@mui/icons-material';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -10,6 +11,7 @@ import { Box, Card, Grid, Paper, Button, TextField, IconButton, Typography } fro
 import { RenderPfRules } from './RenderPfRules';
 import PayrollComponentDialog from './PayrollComponentDialog';
 import { CardActions, SectionCard } from './InformationFields';
+import PayrollTempComponentDialog from './PayrollTempComponentDialog';
 
 import type { FieldsType } from './types';
 
@@ -18,13 +20,19 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
   const components = values[name] || [];
   const isDialogOpen = useBoolean();
   const isAddingTemp = useBoolean(false);
-
+  console.log('components----', components);
   const handleAdd = (selectedNames: string[]) => {
     formik.setFieldValue(name, selectedNames);
     // Reset temp add mode after adding
     if (isAddingTemp.value) {
       isAddingTemp.onFalse();
     }
+  };
+
+  const handleAddTemp = (selectedValues: any) => {
+    const updatedComponents = [...components, selectedValues];
+    formik.setFieldValue(name, updatedComponents);
+    isAddingTemp.onFalse();
   };
 
   const handleRemove = (index: number) => {
@@ -54,7 +62,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
               size="small"
               onClick={() => {
                 isAddingTemp.onTrue();
-                isDialogOpen.onTrue();
+                isDialogOpen.onFalse();
               }}
             >
               Temp {type === 'earning' ? 'Earning' : 'Deduction'}
@@ -137,6 +145,7 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                       ₹ {formatNumber(component.amount) || '10,000'}
                     </Typography>
                   )}
+
                   {component.isTemp && <Label color="warning">Temp</Label>}
                   {!isFixed && (
                     <ShakingTextField
@@ -166,6 +175,19 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                       />
                     </ShakingTextField>
                   )}
+
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: 'text.secondary',
+                      bgcolor: 'background.neutral',
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                    }}
+                  >
+                    {dayjs(component.applicableMonth).format('MMM-YYYY')}
+                  </Typography>
                 </Box>
                 <IconButton size="small" color="error" onClick={() => handleRemove(index)}>
                   <Iconify icon="solar:trash-bin-trash-bold" />
@@ -199,6 +221,15 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
           type={type}
           onAdd={handleAdd}
           values={components}
+        />
+      )}
+      {isAddingTemp.value && (
+        <PayrollTempComponentDialog
+          open={isAddingTemp.value}
+          onClose={isAddingTemp.onFalse}
+          type={type}
+          onAdd={handleAddTemp}
+          initialValues={components}
         />
       )}
     </Box>

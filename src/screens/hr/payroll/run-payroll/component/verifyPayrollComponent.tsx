@@ -197,50 +197,66 @@ export const salaryData = [
   {
     employeeName: 'John Doe',
     profilePicture: '', // Provide a valid base64 string or image URL
-    employeeId: 'EMP001',
+    employeeIdentifier: 'EMP001',
     employeeType: 'Full-Time',
+    totalWorkingDays: 22,
+    totalPresentDays: 20,
+    totalAbsentDays: 2,
     salaryMonth: 'January 2025',
     employeeGroup: 'Teaching',
     basicSalary: '₹3,500',
     grossSalary: '₹4,500',
     totalDeduction: '₹500',
-    netPayble: '₹4,000',
+    salary: '₹4,000',
+    netSalary: '₹4,000',
   },
   {
     employeeName: 'Jane Smith',
     profilePicture: '', // Provide a valid base64 string or image URL
-    employeeId: 'EMP002',
+    employeeIdentifier: 'EMP002',
     employeeType: 'Part-Time',
+    totalWorkingDays: 20,
+    totalPresentDays: 18,
+    totalAbsentDays: 2,
     salaryMonth: 'January 2025',
     employeeGroup: 'Teaching',
     basicSalary: '₹2,000',
     grossSalary: '₹2,800',
     totalDeduction: '₹300',
-    netPayble: '₹2,500',
+    salary: '₹2,500',
+    netSalary: '₹2,500',
   },
   {
     employeeName: 'Alice Johnson',
     profilePicture: '', // Provide a valid base64 string or image URL
-    employeeId: 'EMP003',
+    employeeIdentifier: 'EMP003',
     employeeType: 'Contract',
+    totalWorkingDays: 22,
+    totalPresentDays: 20,
+    totalAbsentDays: 2,
     salaryMonth: 'January 2025',
     employeeGroup: 'Teaching',
     basicSalary: '₹3,200',
     grossSalary: '₹4,000',
     totalDeduction: '₹400',
-    netPayble: '₹3,600',
+    salary: '₹3,600',
+    netSalary: '₹3,600',
   },
   {
     employeeName: 'Robert Brown',
     profilePicture: '', // Provide a valid base64 string or image URL
-    employeeId: 'EMP004',
+    employeeIdentifier: 'EMP004',
     employeeType: 'Intern',
+    totalWorkingDays: 22,
+    totalPresentDays: 20,
+    totalAbsentDays: 2,
     salaryMonth: 'January 2025',
     employeeGroup: 'Teaching',
     basicSalary: '₹1,500',
     grossSalary: '₹2,000',
     totalDeduction: '₹100',
-    netPayble: '₹1,900',
+    salary: '₹1,900',
+    netSalary: '₹1,900',
   },
 ];
 const Salary = ({ formik }: any) => (
@@ -261,12 +277,11 @@ const Salary = ({ formik }: any) => (
                 src={convertBase64Format(row.profilePicture)}
                 sx={{ height: 32, width: 32 }}
               />{' '}
-              {value}
+              {value} ({row.employeeIdentifier})
             </Box>
           );
         },
       },
-      { id: 'employeeId', label: 'Employee Code', minWidth: '150px', align: 'left' },
       { id: 'employeeGroup', label: 'Employee Group', minWidth: '160px', align: 'left' },
       {
         id: 'basicSalary',
