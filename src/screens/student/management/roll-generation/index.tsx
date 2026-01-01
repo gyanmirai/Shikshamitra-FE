@@ -2,42 +2,43 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { GenderType } from 'src/enums/gender';
 import { StudentApi } from 'src/redux/student';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box, Button, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Save, Refresh, Grading } from '@mui/icons-material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetAllStudentGroupQuery } from 'src/redux/student/student-group/student-group';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
+import {
+  useUpdateStudentRollNumberMutation,
+  useLazyGetRollNumberProjectionsQuery,
+} from 'src/redux/student/roll-number/roll-number-api';
 
 import type { IInquiryData } from '../../enrollment/Inquiry';
 
-const RollNoGenerationScreen = ({
-  tableData: studentData,
-  isLoading,
-}: {
-  isLoading: boolean;
-  tableData: IInquiryData[];
-}) => {
+const RollNoGenerationScreen = ({ division }: { division: string }) => {
   // State for controlling how students are arranged (e.g., boys first, girls first)
   const [arrangementType, setArrangementType] = useState('');
   // State to store selected students for notifications and bulk actions
-  // Each student has an id and name property
-  const [selectedStudents, setSelectedStudents] = useState<{ id: string; name: string }[]>([]);
+  // Each student has a studentId and name property
+  const [selectedStudents, setSelectedStudents] = useState<{ studentId: string; name: string }[]>(
+    []
+  );
   // State to toggle between automatic and manual roll number assignment
   const [isManual, setIsManual] = useState(false);
-  const [initialData, setInitialData] = useState<IInquiryData[]>(studentData);
 
   // State for controlling the sorting criteria (e.g., by name, by GR number)
   const [arrangeBy, setArrangeBy] = useState('');
 
   // State to store and manage the student data table
-  const [tableData, setTableData] = useState(studentData);
+  const [tableData, setTableData] = useState<IInquiryData[]>([]);
+  const [initialData, setInitialData] = useState<IInquiryData[]>([]);
 
   // State to store validation errors for roll numbers
   const [error, setError] = useState<Record<number, string>>({});
@@ -45,54 +46,76 @@ const RollNoGenerationScreen = ({
   // Redux dispatch hook for dispatching actions
   const dispatch = useDispatch();
 
+  const {
+    data: getStudentData,
+    isLoading: isStudentDataLoading,
+    isFetching: isStudentDataFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllStudentGroupQuery,
+    params: division,
+    options: {
+      skip: !division,
+    },
+  });
+
+  const [fetchRollNumberProjections, { isLoading: isProjectionsLoading }] =
+    useLazyGetRollNumberProjectionsQuery();
+
+  const [updateRollNumbers, { isLoading: isSaving }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateStudentRollNumberMutation,
+  });
+
   /**
    * Automatically generates roll numbers based on selected arrangement type and criteria
    */
-  const handleAutoGenerate = () => {
-    let filteredData = [...tableData];
+  const handleAutoGenerate = async () => {
+    try {
+      const result = await fetchRollNumberProjections({
+        divisionId: division,
+        arrangementType: arrangementType === 'mix' ? 0 : arrangementType === 'boysFirst' ? 1 : 2,
+        arrangementBy: arrangeBy === 'firstName' ? 0 : 1,
+      }).unwrap();
 
-    // Filter students based on gender arrangement preference
-    if (arrangementType === 'boysFirst') {
-      filteredData = filteredData.filter((item) => item.genderType === GenderType.Male);
-    } else if (arrangementType === 'girlsFirst') {
-      filteredData = filteredData.filter((item) => item.genderType === GenderType.Female);
+      if (result?.data && Array.isArray(result.data)) {
+        setTableData(result.data);
+        shikshaMitraToast.success({
+          message: 'Roll numbers generated successfully',
+        });
+      } else {
+        shikshaMitraToast.error({
+          message: 'Invalid response from server',
+        });
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch roll number projections:', err);
+      shikshaMitraToast.error({
+        message: err?.data?.message || 'Failed to generate roll numbers',
+      });
     }
-
-    // Sort students based on selected criteria (name, lastName, or GR number)
-    if (arrangeBy === 'firstName') {
-      filteredData.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (arrangeBy === 'lastName') {
-      filteredData.sort((a, b) => a.lastName.localeCompare(b.lastName));
-    } else if (arrangeBy === 'grNo') {
-      filteredData.sort((a, b) =>
-        (a.grNoRecord?.toString() || '').localeCompare(b.grNoRecord?.toString() || '')
-      );
-    }
-
-    // Assign sequential roll numbers starting from 1
-    filteredData = filteredData.map((item, index) => ({
-      ...item,
-      rollNo: index + 1,
-    }));
-
-    setTableData(filteredData);
   };
 
-  // Update table data when studentData prop changes
+  // Update table data when student data changes
   useEffect(() => {
-    if (studentData) {
-      setTableData(studentData);
-      setInitialData(studentData);
+    if (getStudentData?.data) {
+      setTableData(getStudentData.data);
+      setInitialData(getStudentData.data);
     }
-  }, [studentData]);
+  }, [getStudentData]);
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
+  const hasStudentsWithoutRollNo = useMemo(
+    () => tableData.some((student) => student.rollNo === null || student.rollNo === undefined),
+    [tableData]
+  );
+
   // Handle roll number change for a specific student
-  const handleRollNoChange = (id: string, name: string, newValue: number | null) => {
+  const handleRollNoChange = (studentId: string, name: string, newValue: number | null) => {
     // Update the roll number for the specified student
     const updatedData = tableData.map((item) =>
-      item.id === id ? { ...item, rollNo: newValue } : item
+      item.studentId === studentId ? { ...item, rollNo: newValue } : item
     );
 
     // Check for duplicate roll numbers
@@ -104,10 +127,10 @@ const RollNoGenerationScreen = ({
     // Set error message if duplicate roll number is found
     setError((prevError) => ({
       ...prevError,
-      [id]: duplicateRolls.includes(newValue) ? 'Duplicate Roll No!' : '',
+      [studentId]: duplicateRolls.includes(newValue) ? 'Duplicate Roll No!' : '',
     }));
 
-    setSelectedStudents([{ id, name }]);
+    setSelectedStudents([{ studentId, name }]);
 
     // Update the table data with new roll numbers
     setTableData(updatedData);
@@ -115,19 +138,25 @@ const RollNoGenerationScreen = ({
 
   // Save updated roll numbers to the server
   const handleSave = async () => {
+    if (!division) {
+      console.error('Division ID is required.');
+      return;
+    }
+
     // Prepare request body with student IDs and roll numbers
-    const requestBody = {
-      studentNumbers: tableData.map((item) => ({
-        studentId: item.id,
-        rollNo: item.rollNo,
-      })),
-    };
+    const requestBody = tableData.map((item) => ({
+      studentId: item.studentId,
+      rollNo: item.rollNo,
+    }));
+
     try {
+      await updateRollNumbers({ divisionId: division, body: requestBody }).unwrap();
+
       shikshaMitraToast.success({
         message: `Roll Number ${
           selectedStudents.length === 1
             ? `of student ${selectedStudents[0].name}`
-            : `of ${requestBody.studentNumbers.length} students`
+            : `of ${requestBody.length} students`
         } updated successfully`,
       });
 
@@ -135,7 +164,7 @@ const RollNoGenerationScreen = ({
       setIsManual(false);
       dispatch(StudentApi.util.invalidateTags(['Student']));
     } catch (err) {
-      console.error('Failed to update GR Numbers:', err);
+      console.error('Failed to update Roll Numbers:', err);
     }
   };
 
@@ -197,17 +226,23 @@ const RollNoGenerationScreen = ({
                 startIcon={<Refresh />}
                 variant="outlined"
                 onClick={handleAutoGenerate}
+                disabled={
+                  isProjectionsLoading ||
+                  !hasStudentsWithoutRollNo ||
+                  !arrangementType ||
+                  !arrangeBy
+                }
               >
-                Auto Generate
+                {isProjectionsLoading ? 'Loading...' : 'Auto Generate'}
               </Button>
               <Button
                 startIcon={<Save />}
                 variant="contained"
                 onClick={handleSave}
-                disabled={!isChanges}
+                disabled={isSaving || !isChanges}
                 size="small"
               >
-                Save
+                {isSaving ? 'Saving...' : 'Save'}
               </Button>
             </Box>
           )}
@@ -216,11 +251,12 @@ const RollNoGenerationScreen = ({
         {arrangeBy && (
           <CustomizableTable
             onSendNotification={handlerSendNotification}
+            isLoading={isStudentDataLoading || isStudentDataFetching}
             showCheckbox={selectedStudents.length !== 0}
             noDataText={<>No Roll Genaration Data Found </>}
             tableId="roll-no-generation-table"
             columns={[
-              { id: 'grNoRecord', label: 'GR No.' },
+              { id: 'grNo', label: 'GR No.' },
               { id: 'name', label: 'Name' },
               {
                 id: 'rollNo',
@@ -239,20 +275,20 @@ const RollNoGenerationScreen = ({
                       inputProps={{ min: 0 }}
                       onChange={(e) =>
                         handleRollNoChange(
-                          row.id,
+                          row.studentId,
                           row.name,
                           e.target.value ? +e.target.value : null
                         )
                       }
-                      error={Boolean(error[row.id])}
-                      helperText={error[row.id]}
+                      error={Boolean(error[row.studentId])}
+                      helperText={error[row.studentId]}
                       disabled={!isManual}
                     />
                   );
                 },
               },
             ]}
-            data={tableData}
+            data={tableData || []}
           />
         )}
 

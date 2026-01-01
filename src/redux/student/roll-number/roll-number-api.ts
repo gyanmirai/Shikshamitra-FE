@@ -8,10 +8,21 @@ export const studentRollNumberApi = createApi({
   }),
   tagTypes: ['studentRollNumber'],
   endpoints: (builder) => ({
+    getRollNumberProjections: builder.query({
+      query: ({ divisionId, arrangementType, arrangementBy }) => ({
+        url: `/students/records/${divisionId}/roll-number-projections`,
+        method: 'GET',
+        params: {
+          arrangementType,
+          arrangementBy,
+        },
+      }),
+      providesTags: ['studentRollNumber'],
+    }),
     updateStudentRollNumber: builder.mutation({
-      query: ({ body }) => ({
-        url: '/app/student/roll-numbers',
-        method: 'PUT',
+      query: ({ divisionId, body }) => ({
+        url: `/students/records/${divisionId}/roll-numbers`,
+        method: 'POST',
         data: body,
       }),
       invalidatesTags: ['studentRollNumber'],
@@ -19,4 +30,5 @@ export const studentRollNumberApi = createApi({
   }),
 });
 
-export const { useUpdateStudentRollNumberMutation } = studentRollNumberApi;
+export const { useUpdateStudentRollNumberMutation, useLazyGetRollNumberProjectionsQuery } =
+  studentRollNumberApi;
