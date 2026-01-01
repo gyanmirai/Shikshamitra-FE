@@ -1,6 +1,5 @@
 import type { LabelColor } from 'src/components/label';
 
-import { toast } from 'sonner';
 import { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -191,21 +190,24 @@ export const RenderDocuments = ({ employeeId }: RenderDocumentsProps) => {
                     const formData = new FormData();
                     formData.append(row.uploadDocument ? 'file' : 'files', myNewFile);
 
-                    toast.promise(
-                      row.uploadDocument
-                        ? updateDocument({
-                            documentId: row.uploadDocument.id,
-                            employeeId,
-                            body: formData,
-                          })
-                        : uploadDocument({ id: employeeId, body: formData }),
-                      {
-                        loading: `Uploading Document ${row.documentName} `,
-                        success: () => `${row.documentName} Uploaded Successfully.`,
-                        error: 'Error',
-                        closeButton: true,
+                    try {
+                      if (row.uploadDocument) {
+                        await updateDocument({
+                          documentId: row.uploadDocument.id,
+                          employeeId,
+                          body: formData,
+                        }).unwrap();
+                      } else {
+                        await uploadDocument({ id: employeeId, body: formData }).unwrap();
                       }
-                    );
+                      shikshaMitraToast.success({
+                        message: `${row.documentName} uploaded successfully`,
+                      });
+                    } catch (error) {
+                      shikshaMitraToast.error({
+                        message: `Failed to upload ${row.documentName}`,
+                      });
+                    }
                   }}
                   fileInputProps={{ accept: convertFileAcceptType(row.documentTypes) }}
                 >
