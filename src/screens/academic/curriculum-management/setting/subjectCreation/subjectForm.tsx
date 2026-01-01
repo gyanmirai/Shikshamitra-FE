@@ -96,9 +96,6 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
     },
   });
 
-  console.log('subjectById---', subjectById);
-  console.log('formik values----', formik.values);
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       {/* <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}> */}
