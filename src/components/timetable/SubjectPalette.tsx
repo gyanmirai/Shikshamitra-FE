@@ -10,12 +10,11 @@ import type { Subject } from './types';
 interface SubjectCardProps {
   subject: Subject;
   placedCount: number;
+  totalSubjects: number;
 }
 
-const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount }) => {
-  const total = subject.totalLectures || 0;
-  const isFull = total > 0 && placedCount >= total;
-
+const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSubjects }) => {
+  const isFull = placedCount >= (subject.totalLectures || 0);
   const [{ isDragging }, drag] = useDrag(
     () => ({
       type: ItemTypes.SUBJECT,
@@ -51,6 +50,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount }) => {
         borderLeft: `4px solid ${isFull ? '#9e9e9e' : subject.color}`,
         opacity: isDragging ? 0.5 : isFull ? 0.6 : 1,
         filter: isFull ? 'grayscale(100%)' : 'none',
+        pointerEvents: isFull ? 'none' : 'auto',
         '&:hover': {
           transform: isFull ? 'none' : 'translateY(-2px)',
           boxShadow: isFull ? 0 : 2,
@@ -70,7 +70,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount }) => {
         color={isFull ? 'error.main' : placedCount > 0 ? 'primary.main' : 'text.secondary'}
         fontWeight={placedCount > 0 ? 'bold' : 'regular'}
       >
-        {placedCount} / {total}
+        {placedCount} / {subject.totalLectures}
       </Typography>
     </ListItem>
   );
@@ -107,7 +107,12 @@ const SubjectPalette: React.FC<PaletteProps> = ({ subjects, placedCounts }) => (
     <Scrollbar sx={{ height: '100%', pr: 1 }}>
       <List sx={{ pr: 1, maxHeight: 'unset', height: '100%' }}>
         {subjects.map((sub) => (
-          <SubjectCard key={sub.id} subject={sub} placedCount={placedCounts[sub.id] || 0} />
+          <SubjectCard
+            key={sub.id}
+            subject={sub}
+            placedCount={placedCounts[sub.id] || 0}
+            totalSubjects={sub.totalSubjects || 0}
+          />
         ))}
       </List>
     </Scrollbar>

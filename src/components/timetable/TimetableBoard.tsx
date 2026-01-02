@@ -1,27 +1,27 @@
 import confetti from 'canvas-confetti';
 import React, { useState } from 'react';
 import { DndProvider } from 'react-dnd';
+import { GlobalIcons } from 'src/utils/icons';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import {
   Box,
-  List,
   Paper,
-  Dialog,
   Button,
-  ListItem,
-  DialogTitle,
-  ListItemText,
+  TextField,
+  Typography,
+  Autocomplete,
   DialogContent,
   DialogActions,
-  ListItemButton,
 } from '@mui/material';
 
 import { SlotType } from './types';
 import DayColumn from './DayColumn';
+import { Iconify } from '../iconify';
+import CustomDialog from '../customDialog';
 import SubjectPalette from './SubjectPalette';
 import { MOCK_ROOMS, MOCK_TEACHERS, generateTimelineStamps } from './utils';
 
-import type { Subject, TimeSlot, DayOfWeek } from './types';
+import type { Subject, TimeSlot, DayOfWeek, SlotSubject } from './types';
 
 export interface TimetableBoardProps {
   slots: Record<DayOfWeek, TimeSlot[]>;
@@ -42,10 +42,11 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   const [activeDialog, setActiveDialog] = useState<{
     type: 'teacher' | 'room';
     slotId: string;
-    subjectId: string; // To know which subject in the slot we are editing
+    subjects: SlotSubject[];
   } | null>(null);
 
-  // Force re-render
+  // Map subjectId -> selected teacherId/roomId
+  const [selectedIds, setSelectedIds] = useState<Record<string, string>>({});
 
   // --- Actions ---
 
@@ -58,7 +59,6 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     if (readOnly) return;
 
     // 1. Update State
-    // Create a deep(er) clone of the necessary parts or just map properly
     const newWeeklySlots = { ...slots };
 
     // -- HANDLE MOVE (Remove from old slot) --
@@ -89,23 +89,25 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
     const slotIndex = daySlots.findIndex((s) => s.id === slotId);
 
     if (slotIndex !== -1) {
-      // Map Subject to SlotSubject
-      const newSlotSubject = {
-        id: subject.id,
-        name: subject.name,
-        color: subject.color,
-        teacherId: subject.teacherId,
-        teacherName: subject.teacherName,
-        roomId: subject.roomId,
-        roomName: subject.roomName,
-      };
+      // Check for composite name (e.g., "Computer | Physical Training")
+      const subjectNames = subject.name.split('|').map((s) => s.trim());
+
+      const newSlotSubjects: SlotSubject[] = subjectNames.map((name, index) => ({
+        id: subjectNames.length > 1 ? `${subject.id}_part_${index}` : subject.id,
+        name,
+        color: subject.color, // Share color for now, or could rotate/lighten
+        teacherId: index === 0 ? subject.teacherId : undefined, // Only assign default teacher to first if simple match
+        teacherName: index === 0 ? subject.teacherName : undefined,
+        roomId: index === 0 ? subject.roomId : undefined,
+        roomName: index === 0 ? subject.roomName : undefined,
+      }));
 
       daySlots[slotIndex] = {
         ...daySlots[slotIndex],
-        subjectId: subject.id,
-        _attachedSubject: subject,
-        subjects: [newSlotSubject], // Set as array
-        subjectType: 0, // Assume simple subject move is type 0 (Core) unless we carry extra metadata
+        subjectId: subject.id, // Keep main subject ID for reference if needed
+        _attachedSubject: subject, // Keep original for reference
+        subjects: newSlotSubjects, // Set parsed subjects
+        subjectType: 0,
         electiveGroupId: null,
         electiveGroupName: null,
       } as any;
@@ -115,10 +117,11 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
       return; // Should not happen
     }
 
-    // 2. Check for Day Completion (Gamification) - Check BOTH days if moved?
-    // For simplicity, just checking current day of drop.
+    // 2. Check for Day Completion (Gamification)
     const lectureSlots = daySlots.filter((s) => s.type === SlotType.LECTURE);
-    const newFilledSlots = lectureSlots.filter((s) => !!s.subjectId);
+    const newFilledSlots = lectureSlots.filter(
+      (s) => (s.subjects && s.subjects.length > 0) || s.subjectId
+    );
 
     if (newFilledSlots.length === lectureSlots.length) {
       triggerConfetti();
@@ -152,82 +155,148 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   };
 
   const handleAssignTeacher = (slotId: string, subject: Subject) => {
+    const dayKey = slotId.split('-')[0] as DayOfWeek;
+    const slot = slots[dayKey]?.find((s) => s.id === slotId);
+    if (!slot || !slot.subjects) return;
+
+    // Lazily split if we detect composite names (and it wasn't split yet)
+    const splitSubjects: SlotSubject[] = [];
+    const initialSelections: Record<string, string> = {};
+
+    slot.subjects.forEach((sub) => {
+      if (sub.name.includes('|')) {
+        const parts = sub.name.split('|').map((s) => s.trim());
+        parts.forEach((partName, idx) => {
+          // If we are splitting on the fly, we need new IDs.
+          const isAlreadySplitId = sub.id.includes('_part_');
+          const newId = isAlreadySplitId ? sub.id : `${sub.id}_part_${idx}`;
+
+          splitSubjects.push({
+            ...sub,
+            id: newId,
+            name: partName,
+            teacherId: idx === 0 ? sub.teacherId : undefined,
+            teacherName: idx === 0 ? sub.teacherName : undefined,
+            roomId: idx === 0 ? sub.roomId : undefined,
+            roomName: idx === 0 ? sub.roomName : undefined,
+          });
+
+          if (idx === 0 && sub.teacherId) {
+            initialSelections[newId] = sub.teacherId;
+          }
+        });
+      } else {
+        splitSubjects.push(sub);
+        if (sub.teacherId) initialSelections[sub.id] = sub.teacherId;
+      }
+    });
+
+    setSelectedIds(initialSelections);
+
     setActiveDialog({
       type: 'teacher',
       slotId,
-      subjectId: subject.id,
+      subjects: splitSubjects,
     });
   };
 
   const handleAssignRoom = (slotId: string, subject: Subject) => {
+    const dayKey = slotId.split('-')[0] as DayOfWeek;
+    const slot = slots[dayKey]?.find((s) => s.id === slotId);
+    if (!slot || !slot.subjects) return;
+
+    // Build initial state with lazy splitting
+    const splitSubjects: SlotSubject[] = [];
+    const initialSelections: Record<string, string> = {};
+
+    slot.subjects.forEach((sub) => {
+      if (sub.name.includes('|')) {
+        const parts = sub.name.split('|').map((s) => s.trim());
+        parts.forEach((partName, idx) => {
+          const isAlreadySplitId = sub.id.includes('_part_');
+          const newId = isAlreadySplitId ? sub.id : `${sub.id}_part_${idx}`;
+
+          splitSubjects.push({
+            ...sub,
+            id: newId,
+            name: partName,
+            teacherId: idx === 0 ? sub.teacherId : undefined,
+            teacherName: idx === 0 ? sub.teacherName : undefined,
+            roomId: idx === 0 ? sub.roomId : undefined,
+            roomName: idx === 0 ? sub.roomName : undefined,
+          });
+
+          if (idx === 0 && sub.roomId) {
+            initialSelections[newId] = sub.roomId;
+          }
+        });
+      } else {
+        splitSubjects.push(sub);
+        if (sub.roomId) initialSelections[sub.id] = sub.roomId;
+      }
+    });
+
+    setSelectedIds(initialSelections);
+
     setActiveDialog({
       type: 'room',
       slotId,
-      subjectId: subject.id,
+      subjects: splitSubjects,
     });
   };
 
   const handleDialogClose = () => {
     setActiveDialog(null);
+    setSelectedIds({});
   };
 
-  const handleDialogConfirm = (selectedId: string, selectedName: string) => {
+  const handleSaveAssignment = () => {
     if (!activeDialog) return;
+    const list = activeDialog.type === 'teacher' ? MOCK_TEACHERS : MOCK_ROOMS;
 
-    const { type, slotId, subjectId } = activeDialog;
+    const { type, slotId, subjects: dialogSubjects } = activeDialog;
     const dayKey = slotId.split('-')[0] as DayOfWeek;
     const newWeeklySlots = { ...slots };
 
     if (newWeeklySlots[dayKey]) {
       newWeeklySlots[dayKey] = newWeeklySlots[dayKey].map((slot) => {
         if (slot.id === slotId) {
-          // Find the subject to update within the slot (handling both legacy and new array)
-          let updatedSubjects = [...(slot.subjects || [])];
+          // Use dialogSubjects as the source of truth for the structure (since we lazily split)
+          const updatedSubjects = dialogSubjects.map((sub) => {
+            const selectedId = selectedIds[sub.id];
+            const selectedItem = list.find((item) => item.id === selectedId);
+            const selectedName = selectedItem ? selectedItem.name : undefined;
 
-          // If subjects array is empty but we have subject ID (legacy), create one
-          if (updatedSubjects.length === 0 && slot.subjectId) {
-            // Re-construct temp subject so we can edit it
-            if (slot._attachedSubject) {
-              updatedSubjects.push({
-                id: slot.subjectId,
-                name: slot._attachedSubject.name,
-                color: slot._attachedSubject.color,
-                teacherId: slot._attachedSubject.teacherId,
-                teacherName: slot._attachedSubject.teacherName,
-                roomId: slot._attachedSubject.roomId,
-                roomName: slot._attachedSubject.roomName,
-              });
+            if (type === 'teacher') {
+              return {
+                ...sub,
+                teacherId: selectedId || undefined,
+                teacherName: selectedName || undefined,
+              };
             }
-          }
-
-          updatedSubjects = updatedSubjects.map((sub) => {
-            if (sub.id === subjectId) {
-              if (type === 'teacher') {
-                return {
-                  ...sub,
-                  teacherId: selectedId,
-                  teacherName: selectedName,
-                };
-              }
-              return { ...sub, roomId: selectedId, roomName: selectedName };
-            }
-            return sub;
+            return {
+              ...sub,
+              roomId: selectedId || undefined,
+              roomName: selectedName || undefined,
+            };
           });
 
-          // Also update attachedSubject if it matches (for legacy/drag display consistency)
-          let updatedAttachedSubject = slot._attachedSubject;
-          if (updatedAttachedSubject && updatedAttachedSubject.id === subjectId) {
+          // Update _attachedSubject if it matches single subject (for consistency)
+          let updatedAttached = slot._attachedSubject;
+          // If split, single check might fail, which is intended as we move to array
+          if (updatedSubjects.length === 1 && updatedAttached) {
+            const single = updatedSubjects[0];
             if (type === 'teacher') {
-              updatedAttachedSubject = {
-                ...updatedAttachedSubject,
-                teacherId: selectedId,
-                teacherName: selectedName,
+              updatedAttached = {
+                ...updatedAttached,
+                teacherId: single.teacherId,
+                teacherName: single.teacherName,
               };
             } else {
-              updatedAttachedSubject = {
-                ...updatedAttachedSubject,
-                roomId: selectedId,
-                roomName: selectedName,
+              updatedAttached = {
+                ...updatedAttached,
+                roomId: single.roomId,
+                roomName: single.roomName,
               };
             }
           }
@@ -235,13 +304,14 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
           return {
             ...slot,
             subjects: updatedSubjects,
-            _attachedSubject: updatedAttachedSubject,
+            _attachedSubject: updatedAttached,
           };
         }
         return slot;
       });
       onChange(newWeeklySlots);
     }
+
     handleDialogClose();
   };
 
@@ -262,10 +332,12 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
         // Count from the new 'subjects' array
         if (slot.subjects && slot.subjects.length > 0) {
           slot.subjects.forEach((sub) => {
-            counts[sub.id] = (counts[sub.id] || 0) + 1;
+            // If split ids, we might want to map back to original 'parent' id?
+            const originalId = sub.id.split('_part_')[0];
+            counts[originalId] = (counts[originalId] || 0) + 1;
           });
         }
-        // Fallback or legacy check (if subjects array is empty but subjectId exists)
+        // Fallback or legacy check
         else if (slot.subjectId) {
           counts[slot.subjectId] = (counts[slot.subjectId] || 0) + 1;
         }
@@ -359,26 +431,72 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
           ))}
         </Box>
       </Box>
+
       {/* Assignment Dialog */}
-      <Dialog open={!!activeDialog} onClose={handleDialogClose}>
-        <DialogTitle>
-          {activeDialog?.type === 'teacher' ? 'Assign Teacher' : 'Assign Room'}
-        </DialogTitle>
+      <CustomDialog
+        open={!!activeDialog}
+        handleClose={handleDialogClose}
+        maxWidth="xs"
+        fullWidth
+        title={activeDialog?.type === 'teacher' ? `Assign Teacher` : `Assign Room`}
+      >
         <DialogContent>
-          <List sx={{ pt: 0, minWidth: '250px' }}>
-            {(activeDialog?.type === 'teacher' ? MOCK_TEACHERS : MOCK_ROOMS).map((item) => (
-              <ListItem key={item.id} disablePadding>
-                <ListItemButton onClick={() => handleDialogConfirm(item.id, item.name)}>
-                  <ListItemText primary={item.name} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
+          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {activeDialog?.subjects && activeDialog.subjects.length > 0 ? (
+              activeDialog.subjects.map((sub) => (
+                <Box key={sub.id}>
+                  <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+                    For {sub.name} :
+                  </Typography>
+                  <Autocomplete
+                    fullWidth
+                    size="small"
+                    options={activeDialog?.type === 'teacher' ? MOCK_TEACHERS : MOCK_ROOMS}
+                    getOptionLabel={(option) => option?.name || ''}
+                    value={
+                      (activeDialog?.type === 'teacher' ? MOCK_TEACHERS : MOCK_ROOMS).find(
+                        (item) => item.id === selectedIds[sub.id]
+                      ) || null
+                    }
+                    onChange={(event, value) => {
+                      setSelectedIds((prev) => ({
+                        ...prev,
+                        [sub.id]: value?.id || '',
+                      }));
+                    }}
+                    renderInput={(params) => (
+                      <TextField {...params} label={`Select ${activeDialog?.type}`} />
+                    )}
+                  />
+                </Box>
+              ))
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                No subjects found in this slot.
+              </Typography>
+            )}
+          </Box>
         </DialogContent>
+
         <DialogActions>
-          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button
+            onClick={handleDialogClose}
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSaveAssignment}
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.submit} />}
+            size="small"
+          >
+            Submit
+          </Button>
         </DialogActions>
-      </Dialog>
+      </CustomDialog>
     </Box>
   );
 
