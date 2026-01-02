@@ -5,12 +5,26 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useRejectConcessionRequestMutation,
+  useApproveConcessionRequestMutation,
+} from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 
 import type { IReasonApprovalFormProps } from '../type';
 
-const ReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) => {
+const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprovalFormProps) => {
+  const [rejectConcessionRequest, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRejectConcessionRequestMutation,
+  });
+
+  const [approveConcessionRequest, { isLoading: isApproveLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useApproveConcessionRequestMutation,
+  });
   const formik = useFormik({
     initialValues: {
       reason: '',
@@ -19,7 +33,18 @@ const ReasonApprovalForm = ({ onClose, mode }: IReasonApprovalFormProps) => {
       reason: mode === 'Reject' ? Yup.string().required('Reason is required') : Yup.string(), // optional in approve
     }),
     onSubmit: (values) => {
-      onClose(null, true);
+      if (mode === 'Reject') {
+        rejectConcessionRequest({
+          concessionRequestId: selectedConcession?.id,
+          body: values,
+        });
+      } else {
+        approveConcessionRequest({
+          concessionRequestId: selectedConcession?.id,
+          body: values,
+        });
+        onClose(null, true);
+      }
     },
   });
 

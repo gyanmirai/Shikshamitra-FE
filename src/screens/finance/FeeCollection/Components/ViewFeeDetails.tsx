@@ -2,6 +2,8 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 import { Box, Grid } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetFeeCollectionDetailsQuery } from 'src/redux/feeCollection/feeCollection';
 
 import PaymentHistory from './ViewDetailsComponent/PaymentHistory';
 import FeeOverview from './ViewDetailsComponent/FeeOverviewDetails';
@@ -19,51 +21,61 @@ const ViewFeeDetails = ({
   student: IStudentFee | null;
   collectFeesDialog: UseBooleanReturn;
   viewDialog: UseBooleanReturn;
-}) => (
-  <Box display="flex" flexDirection="column" height="100%" pb={2}>
-    <Scrollbar sx={{ height: '100%', p: 1.5 }}>
-      <Grid container spacing={2}>
-        {/* Row 1 */}
-        {/* Left Side */}
-        <Grid size={{ xs: 12, md: 9 }}>
-          <Grid container direction="column" spacing={2}>
-            <Grid size={{ xs: 12 }}>
-              <StudentFeesSummaryView student={student} />
-            </Grid>
+}) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: feeCollectionDetailsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeCollectionDetailsQuery,
+    params: {
+      studentFeeId: student?.id,
+    },
+  });
+  return (
+    <Box display="flex" flexDirection="column" height="100%" pb={2}>
+      <Scrollbar sx={{ height: '100%', p: 1.5 }}>
+        <Grid container spacing={2}>
+          {/* Row 1 */}
+          {/* Left Side */}
+          <Grid size={{ xs: 12, md: 9 }}>
+            <Grid container direction="column" spacing={2}>
+              <Grid size={{ xs: 12 }}>
+                <StudentFeesSummaryView student={student} />
+              </Grid>
 
-            <Grid size={{ xs: 12 }}>
-              <FeeTermAccordion />
+              <Grid size={{ xs: 12 }}>
+                <FeeTermAccordion />
+              </Grid>
             </Grid>
           </Grid>
-        </Grid>
 
-        {/* Right Side */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <FeeOverview
-            total={50000}
-            paid={30000}
-            pending={15000}
-            overdue={5000}
-            concession={2000}
-          />
-        </Grid>
+          {/* Right Side */}
+          <Grid size={{ xs: 12, md: 3 }}>
+            <FeeOverview
+              total={50000}
+              paid={30000}
+              pending={15000}
+              overdue={5000}
+              concession={2000}
+            />
+          </Grid>
 
-        {/* Row 2 */}
-        <Grid
-          size={{ xs: 12, md: 9 }}
-          // sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
-        >
-          <PaymentHistory student={student} />
-        </Grid>
+          {/* Row 2 */}
+          <Grid
+            size={{ xs: 12, md: 9 }}
+            // sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+          >
+            <PaymentHistory student={student} />
+          </Grid>
 
-        <Grid
-          size={{ xs: 12, md: 3 }}
-          // sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
-        >
-          <ConcessionsCard />
+          <Grid
+            size={{ xs: 12, md: 3 }}
+            // sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+          >
+            <ConcessionsCard />
+          </Grid>
         </Grid>
-      </Grid>
-    </Scrollbar>
-  </Box>
-);
+      </Scrollbar>
+    </Box>
+  );
+};
 export default ViewFeeDetails;

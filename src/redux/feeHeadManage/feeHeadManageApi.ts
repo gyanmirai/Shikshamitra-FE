@@ -1,36 +1,62 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { financeModuleApi } from '../finance/financeModuleApi';
 
-import feeHeadData from '../../../feeHeadData.json';
-
-const isDev = process.env.NODE_ENV === 'development';
-
-export const FeeHeadManagementApi = createApi({
-  reducerPath: 'feeHeadManagementApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/feeHeadData') {
-          return { data: feeHeadData.feeHeadData };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['FeeHead'],
+export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    // Get fee head list
     getFeeHeads: builder.query({
-      query: () => ({
-        url: '/feeHeadData',
+      query: (params) => ({
+        url: '/api/v1/finance/fee-heads',
         method: 'GET',
+        params,
       }),
       providesTags: ['FeeHead'],
+    }),
+
+    // Create fee head
+    addFeeHead: builder.mutation({
+      query: (body) => ({
+        url: '/api/v1/finance/fee-heads',
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['FeeHead'],
+    }),
+
+    // Update fee head
+    updateFeeHead: builder.mutation({
+      query: ({ feeHeadId, body }) => ({
+        url: `/api/v1/finance/fee-heads/${feeHeadId}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['FeeHead'],
+    }),
+
+    // Delete fee head
+    deleteFeeHead: builder.mutation({
+      query: (feeHeadId) => ({
+        url: `/api/v1/finance/fee-heads/${feeHeadId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['FeeHead'],
+    }),
+
+    // Change fee head active status
+    updateFeeHeadStatus: builder.mutation({
+      query: ({ feeHeadId, body }) => ({
+        url: `/api/v1/finance/fee-heads/${feeHeadId}/status`,
+        method: 'PATCH',
+        data: body,
+      }),
+      invalidatesTags: ['FeeHead'],
     }),
   }),
 });
 
-export const { useGetFeeHeadsQuery } = FeeHeadManagementApi;
+export const {
+  useGetFeeHeadsQuery,
+  useAddFeeHeadMutation,
+  useUpdateFeeHeadMutation,
+  useDeleteFeeHeadMutation,
+  useUpdateFeeHeadStatusMutation,
+} = FeeHeadManagementApi;

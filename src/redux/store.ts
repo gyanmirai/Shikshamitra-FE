@@ -39,6 +39,7 @@ import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { feeConcessionApi } from './feeCollection/feeConcession';
 import { incomeDetailsApi } from './incomeApi/incomeDetailedApi';
+import { feeCollectionApi } from './feeCollection/feeCollection';
 import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { paymentHistoryApi } from './feeCollection/paymentHistory';
@@ -53,7 +54,6 @@ import { bookManagementApi } from './bookManagement/bookManagementApi';
 import { instituteSetupApi } from './InstituteSetup/instituteSetupApi';
 import { StudentAdmissionApi } from './student/admission/admission-api';
 import { studentGroupApi } from './student/student-group/student-group';
-import { financeFeeCollectionApi } from './feeCollection/feeCollection';
 import { FeeHeadManagementApi } from './feeHeadManage/feeHeadManageApi';
 import { BulkStudentApi } from './student/buik-student/bulk-student-api';
 import { CoreSubjectApi } from './subject/core-subject/core-subject-api';
@@ -141,7 +141,7 @@ const reducers = combineReducers({
   [BulkStudentApi.reducerPath]: BulkStudentApi.reducer,
   [CoreSubjectApi.reducerPath]: CoreSubjectApi.reducer,
   [quizManagementApi.reducerPath]: quizManagementApi.reducer,
-  [financeFeeCollectionApi.reducerPath]: financeFeeCollectionApi.reducer,
+  [feeCollectionApi.reducerPath]: feeCollectionApi.reducer,
   [feeTermsApi.reducerPath]: feeTermsApi.reducer,
   [paymentHistoryApi.reducerPath]: paymentHistoryApi.reducer,
   [feeConcessionApi.reducerPath]: feeConcessionApi.reducer,
@@ -239,7 +239,7 @@ const store = configureStore({
       BulkStudentApi.middleware,
       CoreSubjectApi.middleware,
       quizManagementApi.middleware,
-      financeFeeCollectionApi.middleware,
+      feeCollectionApi.middleware,
       feeTermsApi.middleware,
       paymentHistoryApi.middleware,
       feeConcessionApi.middleware,

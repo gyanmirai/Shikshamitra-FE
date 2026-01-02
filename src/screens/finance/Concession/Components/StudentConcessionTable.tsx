@@ -12,13 +12,14 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import { Box, Tab, Tabs, MenuList, MenuItem, Typography } from '@mui/material';
-import { useGetConcessionRequestsQuery } from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
+import { useGetConcessionRequestsListQuery } from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 
 import type { IStudentInfo } from '../type';
 import type { IViewConcessionRequestProps } from '../../ConcessionAdmin/type';
 
 interface ICombinedProps {
-  data: any[];
+  selectedBoard: string;
+  selectedMedium: string;
   onRequestConcession?: (student: IStudentInfo) => void;
   onApprove: (data: IStudentInfo) => void;
   onReject: (data: IStudentInfo) => void;
@@ -29,7 +30,8 @@ interface ICombinedProps {
 }
 
 const StudentConcessionTable: React.FC<ICombinedProps> = ({
-  data,
+  selectedBoard,
+  selectedMedium,
   onApprove,
   onReject,
   onRemove,
@@ -38,11 +40,18 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   onViewConcession,
   onViewAllConcession,
 }) => {
-  const { data: concessionData = [], isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetConcessionRequestsQuery,
-  });
   const tabs = useTabs(ConcessionStatusType.Pending);
+
+  const { data: concessionData = [], isLoading: isLoadingConcessionData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetConcessionRequestsListQuery,
+    params: {
+      board: selectedBoard,
+      medium: selectedMedium,
+      status: tabs.value,
+    },
+  });
+
   const concessionCounts = useMemo(
     () => ({
       pending:
@@ -142,7 +151,7 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
 
       <CustomizableTable
         tableId="student-concession-table"
-        isLoading={isLoading}
+        isLoading={isLoadingConcessionData}
         noDataText={
           <>
             No Concessions Found{' '}

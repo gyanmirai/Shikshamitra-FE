@@ -1,57 +1,51 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { financeModuleApi } from '../finance/financeModuleApi';
 
-import feeCollection from '../../../financeFeeCollection.json';
-
-const isDev = process.env.NODE_ENV === 'development';
-
-export const financeFeeCollectionApi = createApi({
-  reducerPath: 'FinanceFeeCollectionApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/feeCollectionData') {
-          return { data: feeCollection.feeCollectionData };
-        }
-        if (url === '/allBoard') {
-          return { data: feeCollection.allBoard };
-        }
-        if (url === '/allMedium') {
-          return { data: feeCollection.allMedium };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['Finance-Fee-Collection'],
+export const feeCollectionApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
-    getFinanceFeeCollection: builder.query({
-      query: () => ({
-        url: '/feeCollectionData',
+    // Get fee collection list (table view)
+    getFeeCollectionList: builder.query({
+      query: (params) => ({
+        url: '/v1/finance/fee-collection',
         method: 'GET',
+        params,
       }),
-      providesTags: ['Finance-Fee-Collection'],
+      providesTags: ['FeeCollection'],
     }),
-    getAllBoard: builder.query({
-      query: () => ({
-        url: '/allBoard',
+
+    // Get fee collection details for a student
+    getFeeCollectionDetails: builder.query({
+      query: (studentFeeId) => ({
+        url: `/v1/finance/fee-collection/${studentFeeId}`,
         method: 'GET',
       }),
-      providesTags: ['Finance-Fee-Collection'],
+      providesTags: ['FeeCollection'],
     }),
-    getAllMedium: builder.query({
-      query: () => ({
-        url: '/allMedium',
+
+    // Get student fee details
+    getStudentFeeDetails: builder.query({
+      query: ({ studentId, academicYearId }) => ({
+        url: `/v1/finance/fee-details/${studentId}`,
         method: 'GET',
+        params: { academicYearId },
       }),
-      providesTags: ['Finance-Fee-Collection'],
+      providesTags: ['FeeDetails'],
+    }),
+
+    // Collect fee with multiple payment methods
+    collectFee: builder.mutation({
+      query: (body) => ({
+        url: '/v1/finance/fee-collections',
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['FeeCollection', 'FeeDetails'],
     }),
   }),
 });
 
-export const { useGetFinanceFeeCollectionQuery, useGetAllBoardQuery, useGetAllMediumQuery } =
-  financeFeeCollectionApi;
+export const {
+  useGetFeeCollectionListQuery,
+  useGetFeeCollectionDetailsQuery,
+  useGetStudentFeeDetailsQuery,
+  useCollectFeeMutation,
+} = feeCollectionApi;

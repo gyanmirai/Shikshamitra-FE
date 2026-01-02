@@ -1,14 +1,23 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddFeeCategoryMutation,
+  useUpdateFeeCategoryMutation,
+} from 'src/redux/feeCategory/feeCategoryApi';
 
 import { feeCategoryValidationSchema } from './FeeCategoryValidation';
 import { getFeeCategoryInitialValues } from './FeeCategoryInitialValues';
@@ -16,15 +25,34 @@ import { getFeeCategoryInitialValues } from './FeeCategoryInitialValues';
 import type { IFeeCategoryFormProps } from './type';
 
 const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editData }) => {
+  const { currentAcademicYearId } = useSelector((state: RootState) => state.globalState);
+  const [addFeeCategory, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddFeeCategoryMutation,
+  });
+  const [updateFeeCategory, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateFeeCategoryMutation,
+  });
   const formik = useFormik({
     initialValues: getFeeCategoryInitialValues(editData),
     validationSchema: feeCategoryValidationSchema,
     onSubmit: (values) => {
       if (editData) {
+        updateFeeCategory({
+          feeCategoryId: editData.id,
+          name: values.feeCategoryName,
+          description: values.description,
+        });
         shikshaMitraToast.success({
           message: `${values.feeCategoryName} Fee Category updated successfully`,
         });
       } else {
+        addFeeCategory({
+          academicYearId: currentAcademicYearId,
+          name: values.feeCategoryName,
+          description: values.description,
+        });
         shikshaMitraToast.success({
           message: `${values.feeCategoryName} Fee Category added successfully`,
         });
@@ -92,7 +120,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -104,9 +132,10 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          loading={isAddLoading || isUpdateLoading}
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

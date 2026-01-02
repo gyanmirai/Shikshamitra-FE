@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -15,7 +16,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
+import { useDeleteFeeCategoryMutation } from 'src/redux/feeCategory/feeCategoryApi';
 
 import FeeCategoryForm from './Components/FeeCategoryForm';
 import FeeCategoryTable from './Components/FeeCategoryTable';
@@ -23,10 +24,12 @@ import FeeCategoryTable from './Components/FeeCategoryTable';
 import type { IFeeCategory } from './Components/type';
 
 const FeeCategoryCreation = () => {
-  // Custom hook to fetch fee category data
-  const { data: feeCategoryData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeCategoriesQuery,
+  const { currentAcademicYearId } = useSelector((state: RootState) => state.globalState);
+
+  const [deleteFeeCategory, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteFeeCategoryMutation,
+    params: { academicYearId: currentAcademicYearId },
   });
 
   // Dialog control states
@@ -108,7 +111,6 @@ const FeeCategoryCreation = () => {
         setOpenDialog={setOpen}
         editData={selectedFeeCategory}
         setEditData={setSelectedFeeCategory}
-        data={feeCategoryData}
       />
 
       <CustomDialog
@@ -160,21 +162,30 @@ const FeeCategoryCreation = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              deleteFeeCategoryDialog.onFalse();
-              setSelectedFeeCategory(null);
-              shikshaMitraToast.success({
-                message: `Fee Category : ${selectedFeeCategory?.feeCategoryName} deleted successfully`,
-              });
-              // handle delete action
+            loading={isDeleteLoading}
+            onClick={async () => {
+              try {
+                const payload = {
+                  academicYearId: currentAcademicYearId?.id,
+                  id: (selectedFeeCategory as any).id,
+                };
+                await deleteFeeCategory(payload).unwrap();
+                deleteFeeCategoryDialog.onFalse();
+                setSelectedFeeCategory(null);
+                shikshaMitraToast.success({
+                  message: `Fee category &quot;${selectedFeeCategory?.feeCategoryName}&quot; deleted successfully`,
+                });
+              } catch (error) {
+                console.error('Failed to delete fee category', error);
+              }
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

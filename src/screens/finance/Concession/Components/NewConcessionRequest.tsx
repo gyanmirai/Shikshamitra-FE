@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -20,6 +21,11 @@ import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { useGetConcessionTypesQuery } from 'src/redux/finance/concessionType';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useGetConcessionRequestByIdQuery,
+  useCreateConcessionRequestMutation,
+  useUpdateConcessionRequestMutation,
+} from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 import {
   Box,
   Grid,
@@ -61,6 +67,15 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     currentQueryAndMutation: useGetConcessionTypesQuery,
   });
 
+  const [createConcessionRequest, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateConcessionRequestMutation,
+  });
+  const [updateConcessionRequest, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateConcessionRequestMutation,
+  });
+
   // queries
   const [getClassByMedium, { data: classes }] = useQueryAndMutation({
     type: 'mutation',
@@ -70,12 +85,49 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useLazyGetFilterStudentsQuery,
   });
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: concessionData = [], isLoading: isLoadingConcessionData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetConcessionRequestByIdQuery,
+    params: {
+      id: editData?.id,
+    },
+  });
   const formik = useFormik<IConcession>({
     initialValues: getInitialConcessionFormData(editData),
     validationSchema: concessionValidation,
     onSubmit: (values) => {
-      shikshaMitraToast.success({ message: 'Concession request submitted successfully' });
-      onClose(values, true);
+      if (editData) {
+        updateConcessionRequest({
+          academicYearId: currentYear?.id,
+          boardId: values.board,
+          mediumId: values.medium,
+          classId: values.className,
+          divisionId: values.division,
+          studentId: values.studentId,
+          concessionTypeIds: values.concessionTypeIds,
+          documents: values.documents,
+        });
+        shikshaMitraToast.success({
+          message: `Concession request updated successfully`,
+        });
+      } else {
+        createConcessionRequest({
+          academicYearId: currentYear?.id,
+          boardId: values.board,
+          mediumId: values.medium,
+          classId: values.className,
+          divisionId: values.division,
+          studentId: values.studentId,
+          concessionTypeIds: values.concessionTypeIds,
+          documents: values.documents,
+        });
+        shikshaMitraToast.success({
+          message: `Concession request added successfully`,
+        });
+      }
+      onClose(null, true);
     },
   });
   // load boards on year change
@@ -510,15 +562,16 @@ const NewConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               type="submit"
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               variant="contained"
               size="small"
+              loading={isAddLoading || isUpdateLoading}
               onClick={(e: any) => formik.handleSubmit(e)}
             >
               Submit
-            </Button>
+            </LoadingButton>
           </DialogActions>
         </Box>
       </form>

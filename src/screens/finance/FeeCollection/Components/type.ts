@@ -17,7 +17,6 @@ export interface IFeeData {
 }
 
 export interface IFeeTableProps {
-  data: IFeeData[];
   onAddFee: UseBooleanReturn;
   selectedBoard: string;
   setSelectedBoard: (value: string) => void;

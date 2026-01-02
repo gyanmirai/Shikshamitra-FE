@@ -5,7 +5,9 @@ import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Box, Button, DialogActions } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetFeeCollectionDetailsQuery } from 'src/redux/feeCollection/feeCollection';
 
 import { StudentFeeSummaryCard } from './StudentFeesSummaryCard';
 import PaymentDetailsForm, {
@@ -27,7 +29,14 @@ const FeeCollectComponent = ({
   loading?: boolean;
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: feeCollectionDetailsData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeCollectionDetailsQuery,
+    params: {
+      studentFeeId: student?.id,
+    },
+  });
   const formik = useFormik({
     initialValues: buildInitialValues(),
     validationSchema: buildValidationSchema(currentYear),
