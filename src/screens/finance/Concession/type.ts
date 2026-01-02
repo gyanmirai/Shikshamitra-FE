@@ -91,5 +91,5 @@ export interface IStudentAdminTableProps {
 export interface IReasonApprovalFormProps {
   onClose: (e: any, isSubmit: boolean) => void;
   mode: string;
-  selectedConcession: IStudentInfo | null;
+  selectedConcession?: IStudentInfo | null;
 }
