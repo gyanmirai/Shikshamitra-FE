@@ -129,23 +129,47 @@ const RunPayroll = () => {
                         src={convertBase64Format(row.profilePicture)}
                         sx={{ height: 32, width: 32 }}
                       />{' '}
-                      {value}
+                      {value} ({row.employeeIdentifier})
                     </Box>
                   );
                 },
               },
-              { id: 'employeeId', label: 'Employee Code', minWidth: '150px', align: 'left' },
               { id: 'employeeGroup', label: 'Employee Group', minWidth: '160px', align: 'left' },
               {
-                id: 'basicSalary',
-                label: 'Basic Salary',
-                minWidth: '130px',
+                id: 'totalWorkingDays',
+                label: 'Total Working Days',
+                minWidth: '170px',
+                align: 'left',
+              },
+              {
+                id: 'totalPresentDays',
+                label: 'Total Present Days',
+                minWidth: '170px',
+                align: 'left',
+              },
+              {
+                id: 'totalAbsentDays',
+                label: 'Total Absent Days',
+                minWidth: '170px',
+                align: 'left',
+              },
+              {
+                id: 'salary',
+                label: 'Salary',
+                minWidth: '100px',
                 align: 'left',
                 filterType: 'number',
               },
               {
                 id: 'grossSalary',
                 label: 'Gross Salary',
+                minWidth: '130px',
+                align: 'left',
+                filterType: 'number',
+              },
+              {
+                id: 'basicSalary',
+                label: 'Basic Salary',
                 minWidth: '130px',
                 align: 'left',
                 filterType: 'number',
@@ -158,8 +182,8 @@ const RunPayroll = () => {
                 filterType: 'number',
               },
               {
-                id: 'netPayble',
-                label: 'Net Payble',
+                id: 'netSalary',
+                label: 'Net Salary',
                 filterType: 'number',
                 minWidth: '130px',
                 align: 'left',

@@ -245,18 +245,11 @@ const HrEmployee = () => {
                           border: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
                         }}
                       />{' '}
-                      {value}
+                      {value} ({row.employeeIdentifier})
                     </Box>
                   );
                 },
               },
-              {
-                id: 'employeeIdentifier',
-                label: 'Employee Code',
-                minWidth: '150px',
-                align: 'left',
-              },
-
               {
                 id: 'dob',
                 label: 'Date of Birth',
@@ -408,6 +401,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           componentType: Yup.string(),
           // eslint-disable-next-line func-names
           amount: Yup.string().required('Amount is required'),
+          applicableMonth: Yup.mixed().required('Applicable month is required'),
         })
       ),
       deductionComponents: Yup.array().of(
@@ -416,6 +410,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           componentType: Yup.string(),
           // eslint-disable-next-line func-names
           amount: Yup.string().required('Amount is required'),
+          applicableMonth: Yup.mixed().required('Applicable month is required'),
         })
       ),
     }),
@@ -425,6 +420,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           name: item?.name || item?.componentName,
           description: item?.description,
           amount: item?.amount,
+          applicableMonth: item?.applicableMonth,
           isFixed: item?.isFixed,
           isTemp: false,
           componentType: item?.componentType,
@@ -435,6 +431,7 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
           name: item?.name || item?.componentName,
           description: item?.description,
           amount: item?.amount,
+          applicableMonth: item?.applicableMonth,
           isFixed: item?.isFixed,
           isTemp: false,
           componentType: item?.componentType,

@@ -315,7 +315,7 @@ export default function PaymentDetailsForm({ formik }: IPaymentDetailsFormProps)
                         value: method,
                         label: method.charAt(0).toUpperCase() + method.slice(1),
                       }))}
-                      disabled={!formik.values.totalAmount}
+                      // disabled={!formik.values.totalAmount}
                       label="Payment Methods *"
                       value={formik.values.selectedMethods}
                       onChange={(value) => formik.setFieldValue('selectedMethods', value)}
