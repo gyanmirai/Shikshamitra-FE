@@ -12,8 +12,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useDeleteBankAccountMutation } from 'src/redux/finance/BankAccountManage/bankAccountApi';
 
 import BankAccountForm from './Components/BankManageForm';
 import BankAccountTable from './Components/BankAccountTable';
@@ -21,7 +23,11 @@ import BankAccountTable from './Components/BankAccountTable';
 import type { IBankAccount } from './Components/type';
 
 const BankAccountManagement: React.FC = () => {
-  // Fetch bank accounts using the same custom hook pattern as FeeCategoryCreation
+  // DELETE mutation
+  const { deleteBankAccount, isLoading: isDeleting } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteBankAccountMutation,
+  });
 
   // Dialog control states
   const deleteBankAccountDialog = useBoolean();
@@ -154,13 +160,27 @@ const BankAccountManagement: React.FC = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              deleteBankAccountDialog.onFalse();
-              setSelectedBankAccount(null);
-              shikshaMitraToast.success({
-                message: `Bank account deleted successfully`,
-              });
-              // TODO: call delete mutation here
+            loading={isDeleting}
+            disabled={isDeleting}
+            onClick={async () => {
+              if (!selectedBankAccount?.id) return;
+
+              try {
+                await deleteBankAccount({
+                  bankAccountId: selectedBankAccount.id,
+                }).unwrap();
+
+                shikshaMitraToast.success({
+                  message: `Bank account deleted successfully`,
+                });
+                deleteBankAccountDialog.onFalse();
+                setSelectedBankAccount(null);
+              } catch (error) {
+                console.error('Delete operation failed:', error);
+                shikshaMitraToast.error({
+                  message: 'Failed to delete bank account',
+                });
+              }
             }}
           >
             Yes

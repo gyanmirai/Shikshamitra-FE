@@ -89,7 +89,7 @@ const ViewExpenseData = ({
                 sticky: true,
               },
               {
-                id: 'expenseDate',
+                id: 'spentDate',
                 label: 'Expense Date',
                 align: 'left',
               },

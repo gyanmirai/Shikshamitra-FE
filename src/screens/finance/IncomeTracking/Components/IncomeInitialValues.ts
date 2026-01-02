@@ -13,4 +13,5 @@ export const getInitialIncomeData = (
   date: editData?.date ? dayjs(editData?.date) : null, // default today
   notes: editData?.notes ?? '',
   paymentDetails: editData?.paymentDetails ?? {},
+  id: undefined,
 });

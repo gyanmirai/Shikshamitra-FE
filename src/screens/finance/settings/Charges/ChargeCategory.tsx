@@ -21,7 +21,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetChargeCategoryQuery } from 'src/redux/finance/chargeCategory';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -36,6 +35,12 @@ import {
   DialogActions,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useGetChargeCategoryQuery,
+  usePutChargeCategoryMutation,
+  usePostChargeCategoryMutation,
+  useDeleteChargeCategoryMutation,
+} from 'src/redux/finance/chargeCategory';
 
 const FinanceChargeCategory = () => {
   const addDialog = useBoolean();
@@ -43,7 +48,6 @@ const FinanceChargeCategory = () => {
   const confirm = useBoolean();
 
   const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get charge categories data
   const { data, isLoading } = useQueryAndMutation({
@@ -51,23 +55,56 @@ const FinanceChargeCategory = () => {
     currentQueryAndMutation: useGetChargeCategoryQuery,
   });
 
+  // POST mutation for creating
+  const { postChargeCategory, isLoading: isCreating } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePostChargeCategoryMutation,
+  });
+
+  // PUT mutation for updating
+  const { putChargeCategory, isLoading: isUpdating } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePutChargeCategoryMutation,
+  });
+
+  // DELETE mutation
+  const { deleteChargeCategory, isLoading: isDeleting } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteChargeCategoryMutation,
+  });
+
   // Handle save operation (create/update)
   const handleSave = async (values: any) => {
     try {
-      if (selectedItem) {
-        // Update logic
+      // Transform form data to API format
+      const payload = {
+        name: values.chargeName,
+        isApprovalRequired: values.isRefundable,
+        description: values.description || '',
+      };
+
+      if (selectedItem?.id) {
+        // Update existing charge category
+        await putChargeCategory({
+          chargeCategoryId: selectedItem.id,
+          body: payload,
+        }).unwrap();
+
         shikshaMitraToast.success({
           message: `${values.chargeName} Charge Category Updated Successfully`,
         });
       } else {
-        // Create logic
+        // Create new charge category
+        await postChargeCategory(payload).unwrap();
+
         shikshaMitraToast.success({
           message: `${values.chargeName} Charge Category Added Successfully`,
         });
       }
     } catch (error) {
+      console.error('Save operation failed:', error);
       shikshaMitraToast.error({
-        message: 'Failed to save charge category',
+        message: `Failed to ${selectedItem ? 'update' : 'create'} charge category`,
       });
       throw error;
     }
@@ -75,9 +112,10 @@ const FinanceChargeCategory = () => {
 
   // Handle delete operation
   const handleDelete = async () => {
+    if (!selectedItem?.id) return;
+
     try {
-      setIsDeleting(true);
-      // Delete logic here
+      await deleteChargeCategory(selectedItem.id).unwrap();
 
       shikshaMitraToast.success({
         message: `${selectedItem.chargeName} Charge Category Deleted Successfully`,
@@ -93,8 +131,6 @@ const FinanceChargeCategory = () => {
       shikshaMitraToast.error({
         message: 'Failed to delete charge category',
       });
-    } finally {
-      setIsDeleting(false);
     }
   };
 

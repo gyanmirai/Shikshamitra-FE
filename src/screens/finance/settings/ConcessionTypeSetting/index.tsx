@@ -15,7 +15,11 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetConcessionTypesQuery } from 'src/redux/finance/concessionType';
+import {
+  useGetConcessionTypesQuery,
+  useGetConcessionTypeByIdQuery,
+  useDeleteConcessionTypeMutation,
+} from 'src/redux/finance/concessionType';
 
 import ConcessionTypeTable from './Components/ConcessionTable';
 import ConcessionTypeForm from './Components/ConcessionTypeForm';
@@ -34,15 +38,70 @@ const ConcessionType = () => {
   const deleteConcessionTypeDialog = useBoolean();
   const viewConcessionTypeDialog = useBoolean();
 
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   // Fetch concession type data
-  const { data: concessionTypes } = useQueryAndMutation({
+  const { data: concessionTypes, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+    },
+    options: { skip: !currentYear?.id },
   });
 
   // Redux state and dispatch
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
+  // Delete mutation
+  const { deleteConcessionType, isLoading: isDeleting } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteConcessionTypeMutation,
+  });
+
+  // Fetch concession type details by ID for view dialog
+  const { data: concessionTypeDetails, isLoading: isLoadingDetails } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetConcessionTypeByIdQuery,
+    params: {
+      academicYearId: currentYear?.id,
+      concessionTypeId: selectedConcessionType?.id,
+    },
+    options: {
+      skip: !currentYear?.id || !selectedConcessionType?.id || !viewConcessionTypeDialog.value,
+    },
+  });
+
+  /**
+   * Handles deleting a concession type
+   */
+  const handleDelete = async () => {
+    if (!selectedConcessionType?.id) return;
+
+    try {
+      await deleteConcessionType({
+        academicYearId: currentYear?.id,
+        concessionTypeId: selectedConcessionType.id,
+      }).unwrap();
+
+      shikshaMitraToast.success({
+        message: (
+          <>
+            Concession Type: <strong>{selectedConcessionType?.concessionName}</strong> deleted
+            successfully.
+          </>
+        ),
+      });
+      deleteConcessionTypeDialog.onFalse();
+      setSelectedConcessionType(null);
+    } catch (error) {
+      console.error('Error deleting concession type:', error);
+      shikshaMitraToast.error({
+        message: 'Failed to delete concession type. Please try again.',
+      });
+    }
+  };
 
   /**
    * Handles closing the concession type dialog
@@ -124,6 +183,7 @@ const ConcessionType = () => {
 
         <ConcessionTypeTable
           data={concessionTypes}
+          isLoading={isLoading}
           addConcessionType={addConcessionTypeDialog}
           setEditData={setSelectedConcessionType}
           onEdit={(data) => {
@@ -161,19 +221,9 @@ const ConcessionType = () => {
               variant="contained"
               color="error"
               size="small"
-              onClick={() => {
-                // Handle delete action here
-                shikshaMitraToast.success({
-                  message: (
-                    <>
-                      Concession Type: <strong>{selectedConcessionType?.concessionName}</strong>{' '}
-                      deleted successfully.
-                    </>
-                  ),
-                });
-                deleteConcessionTypeDialog.onFalse();
-                setSelectedConcessionType(null);
-              }}
+              loading={isDeleting}
+              disabled={isDeleting}
+              onClick={handleDelete}
             >
               Yes
             </Button>
@@ -201,7 +251,10 @@ const ConcessionType = () => {
             </Box>
           }
         >
-          <ConcessionDocumentTable data={selectedConcessionType} />
+          <ConcessionDocumentTable
+            data={concessionTypeDetails || selectedConcessionType}
+            isLoading={isLoadingDetails}
+          />
         </CustomDialog>
       </>
     </Box>

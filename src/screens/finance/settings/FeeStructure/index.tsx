@@ -13,7 +13,10 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetFinanceFeeStructureQuery } from 'src/redux/finance/financeFeeStructure';
+import {
+  useGetFinanceFeeStructureQuery,
+  usePatchFeeStructureStatusMutation,
+} from 'src/redux/finance/financeFeeStructure';
 
 import FeeStructureTable from './Components/FeeStructureTable';
 import FeeStructureFormStepper from './Components/NewStructureForm';
@@ -32,6 +35,12 @@ const FeeStructure = () => {
   const { data: feeStructure } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFinanceFeeStructureQuery,
+  });
+
+  // PATCH mutation for status change
+  const { patchFeeStructureStatus } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePatchFeeStructureStatusMutation,
   });
 
   // Redux state and dispatch
@@ -242,18 +251,33 @@ const FeeStructure = () => {
                 }
               />
             }
-            onClick={() => {
-              const status = selectedFeeStructure?.status === 0 ? 'Lock' : 'Unlock';
+            onClick={async () => {
+              try {
+                const newStatus = selectedFeeStructure?.status === 0 ? 1 : 0;
+                await patchFeeStructureStatus({
+                  feeStructureId: selectedFeeStructure?.id,
+                  body: { status: newStatus },
+                }).unwrap();
 
-              shikshaMitraToast.success({
-                message: (
-                  <>
-                    Fee Structure: <strong>{selectedFeeStructure?.feeStructureName}</strong> moved
-                    to {status} successfully
-                  </>
-                ),
-              });
-              confirmDialog.onFalse();
+                const statusLabel = newStatus === 1 ? 'Lock' : 'Unlock';
+                shikshaMitraToast.success({
+                  message: (
+                    <>
+                      Fee Structure: <strong>{selectedFeeStructure?.feeStructureName}</strong> moved
+                      to {statusLabel} successfully
+                    </>
+                  ),
+                });
+                confirmDialog.onFalse();
+                setTimeout(() => {
+                  setSelectedFeeStructure(null);
+                }, 200);
+              } catch (error) {
+                console.error('Failed to update fee structure status:', error);
+                shikshaMitraToast.error({
+                  message: 'Failed to update fee structure status',
+                });
+              }
             }}
           >
             {selectedFeeStructure?.status === 0 ? 'Lock' : 'Unlock'}

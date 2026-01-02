@@ -17,6 +17,7 @@ export interface IClassWiseFeeData {
 }
 
 export interface IFeeStructure {
+  id: any;
   feeStructureName: string;
   academicYear?: string;
   academicYearName?: string;

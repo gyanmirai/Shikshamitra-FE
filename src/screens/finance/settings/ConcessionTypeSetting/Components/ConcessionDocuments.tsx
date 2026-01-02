@@ -5,11 +5,13 @@ import type { IConcessionTypeForm } from '../type';
 
 interface ConcessionTableProps {
   data: IConcessionTypeForm | null;
+  isLoading: boolean;
 }
 
-const ConcessionDocumentTable: React.FC<ConcessionTableProps> = ({ data }) => (
+const ConcessionDocumentTable: React.FC<ConcessionTableProps> = ({ data, isLoading }) => (
   <CustomizableTable
     tableId="concession-details"
+    isLoading={isLoading}
     noDataText="Concession Data Not Found"
     columns={[
       { id: 'documentName', label: 'Concession Name', align: 'left' },

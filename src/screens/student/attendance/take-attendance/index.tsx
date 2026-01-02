@@ -57,7 +57,7 @@ const TakeAttendanceScreen = () => {
 
   // const [markAttendance] = useMarkAttendanceMutation();
 
-  const [markAttendance] = useQueryAndMutation({
+  const { markAttendance, isLoading: isMarkAttendanceLoading } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useMarkAttendanceMutation,
   });
@@ -104,7 +104,7 @@ const TakeAttendanceScreen = () => {
     }
   };
 
-  const { data, isLoading } = useQueryAndMutation({
+  const { data, isLoading, isFetching } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAttendanceByFilterQuery,
     params: {
@@ -273,6 +273,7 @@ const TakeAttendanceScreen = () => {
         <Button
           size="small"
           variant="outlined"
+          loading={isLoading}
           startIcon={<RestartAlt sx={{ fontSize: '16px' }} />}
           onClick={() => {
             setStudentData(
@@ -305,6 +306,7 @@ const TakeAttendanceScreen = () => {
         <Button
           size="small"
           variant="contained"
+          loading={isMarkAttendanceLoading}
           startIcon={<Iconify icon={GlobalIcons.submit} sx={{ fontSize: '16px' }} />}
           onClick={() => {
             handleSave();
@@ -445,13 +447,14 @@ const TakeAttendanceScreen = () => {
         data={studentData}
         setStudentData={setStudentData}
         isLoading={isLoading}
+        isFetching={isFetching}
       />
     </Box>
   );
 };
 export default TakeAttendanceScreen;
 
-const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
+const ListView = ({ isSaved, data, setStudentData, isLoading, isFetching }: any) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedStudent, setSelectedStudent] = useState<any>([]);
   const sendInstantNotificationDialogValue = useBoolean();
@@ -468,7 +471,7 @@ const ListView = ({ isSaved, data, setStudentData, isLoading }: any) => {
         showCheckbox={selectedStudent.length !== 0}
         tableId="student-attendance-list"
         noDataText="No Students Found for Attendance"
-        isLoading={isLoading}
+        isLoading={isLoading || isFetching}
         rowProps={(tableData: any) => ({
           sx: {
             background: (theme) =>

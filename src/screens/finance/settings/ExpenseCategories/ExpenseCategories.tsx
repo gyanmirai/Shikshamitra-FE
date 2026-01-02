@@ -25,6 +25,9 @@ import { Box, Chip, Stack, Button, TextField, Typography, DialogActions } from '
 import {
   useGetBudgetOptionsQuery,
   useGetExpenseCategoryQuery,
+  usePutExpenseCategoryMutation,
+  usePostExpenseCategoryMutation,
+  useDeleteExpenseCategoryMutation,
 } from 'src/redux/finance/expenseCategory';
 
 const FinanceExpenseCategory = () => {
@@ -33,7 +36,6 @@ const FinanceExpenseCategory = () => {
   const confirm = useBoolean();
 
   const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get expense categories data
   const { data, isLoading } = useQueryAndMutation({
@@ -41,23 +43,56 @@ const FinanceExpenseCategory = () => {
     currentQueryAndMutation: useGetExpenseCategoryQuery,
   });
 
+  // POST mutation for creating
+  const { postExpenseCategory, isLoading: isCreating } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePostExpenseCategoryMutation,
+  });
+
+  // PUT mutation for updating
+  const { putExpenseCategory, isLoading: isUpdating } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePutExpenseCategoryMutation,
+  });
+
+  // DELETE mutation
+  const { deleteExpenseCategory, isLoading: isDeleting } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteExpenseCategoryMutation,
+  });
+
   // Handle save operation (create/update)
   const handleSave = async (values: any) => {
     try {
-      if (selectedItem) {
-        // Update logic
+      // Transform form data to API format
+      const payload = {
+        name: values.expenseCategoryName,
+        description: values.description || '',
+        tags: values.tags || [],
+      };
+
+      if (selectedItem?.id) {
+        // Update existing expense category
+        await putExpenseCategory({
+          expenseCategoryId: selectedItem.id,
+          body: payload,
+        }).unwrap();
+
         shikshaMitraToast.success({
           message: `${values.expenseCategoryName} Expense Category Updated Successfully`,
         });
       } else {
-        // Create logic
+        // Create new expense category
+        await postExpenseCategory(payload).unwrap();
+
         shikshaMitraToast.success({
           message: `${values.expenseCategoryName} Expense Category Added Successfully`,
         });
       }
     } catch (error) {
+      console.error('Save operation failed:', error);
       shikshaMitraToast.error({
-        message: 'Failed to save expense category',
+        message: `Failed to ${selectedItem ? 'update' : 'create'} expense category`,
       });
       throw error;
     }
@@ -65,9 +100,10 @@ const FinanceExpenseCategory = () => {
 
   // Handle delete operation
   const handleDelete = async () => {
+    if (!selectedItem?.id) return;
+
     try {
-      setIsDeleting(true);
-      // Delete logic
+      await deleteExpenseCategory(selectedItem.id).unwrap();
 
       shikshaMitraToast.success({
         message: `${selectedItem.expenseCategoryName} Expense Category Deleted Successfully`,
@@ -82,8 +118,6 @@ const FinanceExpenseCategory = () => {
       shikshaMitraToast.error({
         message: 'Failed to delete expense category',
       });
-    } finally {
-      setIsDeleting(false);
     }
   };
 

@@ -193,9 +193,18 @@ const FinanceReconciliation = () => {
   const handleTabChange = (event: React.SyntheticEvent, newValue: string | number) => {
     const newIndex = TABS.findIndex((tab) => tab.value === newValue);
     setIsBack(currentIndex > newIndex);
-    // tabs.onChange(event, newValue);
     setSearchParams({ tab: newValue });
   };
+
+  // Extract month and year from date picker
+  const queryParams = useMemo(
+    () => ({
+      month: date ? date.format('MM') : dayjs().format('MM'),
+      year: date ? date.format('YYYY') : dayjs().format('YYYY'),
+      paymentMethod: params.tab,
+    }),
+    [date, params.tab]
+  );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -285,6 +294,7 @@ const FinanceReconciliation = () => {
               addDiscrepancyDialog={addDiscrepancyDialog}
               addBankStatementsDialog={addBankStatementsDialog}
               handleClose={handleClose}
+              queryParams={queryParams}
             />
           )}
         </Box>

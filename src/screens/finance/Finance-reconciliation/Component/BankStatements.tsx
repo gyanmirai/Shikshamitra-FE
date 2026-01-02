@@ -8,18 +8,23 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuItem, MenuList, Typography } from '@mui/material';
-import { useGetBankStatementsQuery } from 'src/redux/finance/reconciliation';
+import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
 import {
   PamentMethodsStatusColor,
   PaymentMethodsStatusType,
   PaymentMethodsStatusOptions,
 } from 'src/enums/finance-reconcilition-status';
 
-const BankStatements = () => {
+const BankStatements = ({
+  queryParams,
+}: {
+  queryParams?: { month: string; year: string; paymentMethod: string };
+}) => {
   // API call to get bank statements data
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetBankStatementsQuery,
+    currentQueryAndMutation: useGetReconciliationListQuery,
+    params: queryParams,
   });
 
   // Extract data arrays from API response

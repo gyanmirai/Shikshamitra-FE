@@ -360,10 +360,10 @@ const AdmissionScreen = () => {
                     setEditData(row as IInquiryData);
                     setOpen(true);
                   }}
-                  handleViewClick={() => {
-                    setEditData(row as IInquiryData);
-                    openDetails.onTrue();
-                  }}
+                  // handleViewClick={() => {
+                  //   setEditData(row as IInquiryData);
+                  //   openDetails.onTrue();
+                  // }}
                   actions={({ popover }) => (
                     <MenuList>
                       <MenuItem
@@ -557,7 +557,7 @@ const AdmissionScreen = () => {
         // />
       )}
 
-      <CustomDialog
+      {/* <CustomDialog
         open={openDetails.value}
         handleClose={() => {
           setEditData(null);
@@ -585,7 +585,7 @@ const AdmissionScreen = () => {
             openDetails.onFalse();
           }}
         />
-      </CustomDialog>
+      </CustomDialog> */}
     </Box>
   );
 };

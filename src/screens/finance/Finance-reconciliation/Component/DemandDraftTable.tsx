@@ -13,8 +13,8 @@ import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetDemandDraftQuery } from 'src/redux/finance/reconciliation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
 import { Button, MenuList, TextField, IconButton, Typography, DialogActions } from '@mui/material';
 import {
   PamentMethodsStatusColor,
@@ -22,7 +22,11 @@ import {
   PaymentMethodsStatusOptions,
 } from 'src/enums/finance-reconcilition-status';
 
-const DemandDraftTable = () => {
+const DemandDraftTable = ({
+  queryParams,
+}: {
+  queryParams?: { month: string; year: string; paymentMethod: string };
+}) => {
   const [isClearCheck, setIsClearCheck] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
 
@@ -30,7 +34,8 @@ const DemandDraftTable = () => {
 
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetDemandDraftQuery,
+    currentQueryAndMutation: useGetReconciliationListQuery,
+    params: queryParams,
   });
 
   return (

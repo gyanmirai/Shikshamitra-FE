@@ -45,59 +45,17 @@ export const ReconciliationApi = createApi({
       },
   tagTypes: ['Reconciliation'],
   endpoints: (builder) => ({
-    getChequeDetails: builder.query({
-      query: () => ({
-        url: '/chequeDetails',
-        method: 'GET',
-      }),
-      providesTags: ['Reconciliation'],
-    }),
-    getBankStatements: builder.query({
-      query: () => ({
-        url: '/bankStatements',
-        method: 'GET',
-      }),
-      providesTags: ['Reconciliation'],
-    }),
-    getDemandDraft: builder.query({
-      query: () => ({
-        url: '/demandDraft',
-        method: 'GET',
-      }),
-      providesTags: ['Reconciliation'],
-    }),
-    getBankTransfer: builder.query({
-      query: () => ({
-        url: '/bankTransferData',
-        method: 'GET',
-      }),
-      providesTags: ['Reconciliation'],
-    }),
-    getCreditCard: builder.query({
-      query: () => ({
-        url: '/creditCardData',
-        method: 'GET',
-      }),
-      providesTags: ['Reconciliation'],
-    }),
-    getUpi: builder.query({
-      query: () => ({
-        url: '/upiData',
-        method: 'GET',
-      }),
-      providesTags: ['Reconciliation'],
-    }),
-
-    getOnlineGateway: builder.query({
-      query: () => ({
-        url: '/onlineGatewayData',
-        method: 'GET',
-      }),
-      providesTags: ['Reconciliation'],
-    }),
-    getWallet: builder.query({
-      query: () => ({
-        url: '/walletData',
+    getReconciliationList: builder.query({
+      query: ({
+        month,
+        year,
+        paymentMethod,
+      }: {
+        month: string;
+        year: string;
+        paymentMethod: string;
+      }) => ({
+        url: `/finance/reconciliations?month=${month}&year=${year}&paymentMethod=${paymentMethod}`,
         method: 'GET',
       }),
       providesTags: ['Reconciliation'],
@@ -105,13 +63,4 @@ export const ReconciliationApi = createApi({
   }),
 });
 
-export const {
-  useGetChequeDetailsQuery,
-  useGetBankStatementsQuery,
-  useGetDemandDraftQuery,
-  useGetBankTransferQuery,
-  useGetUpiQuery,
-  useGetCreditCardQuery,
-  useGetOnlineGatewayQuery,
-  useGetWalletQuery,
-} = ReconciliationApi;
+export const { useGetReconciliationListQuery } = ReconciliationApi;
