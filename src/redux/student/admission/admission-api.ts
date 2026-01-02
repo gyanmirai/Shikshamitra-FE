@@ -18,18 +18,26 @@ export const StudentAdmissionApi = createApi({
     changeAdmissionStatus: builder.mutation({
       query: ({ body }) => ({
         url: `/students/admissions/status`,
-        method: 'PUT',
-        data: body,
+        method: 'POST',
+        data: { items: body },
       }),
       invalidatesTags: ['Student-Admission'],
     }),
     assignDivisionTOStudent: builder.mutation({
       query: ({ studentId, body }) => ({
-        url: `/students/admissions/{studentId}/division`,
+        url: `/students/admissions/${studentId}/division`,
         method: 'PUT',
         data: body,
       }),
       invalidatesTags: ['Student-Admission'],
+    }),
+
+    getDivisionForStandard: builder.query({
+      query: (standardId) => ({
+        url: `/app/standard/${standardId}`,
+        method: 'GET',
+      }),
+      providesTags: ['Student-Admission'],
     }),
   }),
 });
@@ -38,4 +46,5 @@ export const {
   useGetStudentAdmissionQuery,
   useChangeAdmissionStatusMutation,
   useAssignDivisionTOStudentMutation,
+  useGetDivisionForStandardQuery,
 } = StudentAdmissionApi;

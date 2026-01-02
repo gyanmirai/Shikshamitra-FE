@@ -33,37 +33,16 @@ const TABS = [
     value: 'rollGeneration',
     label: ' Roll No. Generation',
     icon: <Iconify icon="token:scroll" width={20} />,
-    component: (props: {
-      isLoading: boolean;
-      tableData: IInquiryData[];
-      allDivision: Division[];
-      division: string;
-    }) => <RollNoGenerationScreen {...props} />,
+    component: (props: { division: string }) => <RollNoGenerationScreen {...props} />,
   },
   {
     value: 'changeDivision',
     label: 'Change Division',
     icon: <Iconify icon="mage:exchange-a" width={20} />,
-    component: (props: {
-      isLoading: boolean;
-      tableData: IInquiryData[];
-      allDivision: Division[];
-      division: string;
-    }) => <ChangeDivisionScreen {...props} />,
+    component: (props: { allDivision: Division[]; division: string }) => (
+      <ChangeDivisionScreen {...props} />
+    ),
   },
-  // {
-  //   value: 'changeClass',
-  //   label: 'Change Class',
-  //   icon: <Iconify icon="icon-park-outline:exchange-one" width={20} />,
-  //   component: (props: {
-  //     isLoading: boolean;
-  //     tableData: IInquiryData[];
-  //     allClass: Standards[];
-  //     classes: string;
-  //   }) => <ChangeClassScreen {...props} />,
-  // },
-  // { value: 'bulkDataUpdate', label: 'Bulk Data Update', component: () => <BulkDataUpdateScreen /> },
-  // { value: 'bulkStudentAdd', label: 'Bulk Student Add', component: () => <BulkStudentAddScreen /> },
   {
     value: 'groupManageMent',
     label: 'House Management',

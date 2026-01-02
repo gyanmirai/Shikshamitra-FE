@@ -20,7 +20,7 @@ export const studentGrNumberApi = createApi({
     updateStudentGrNumber: builder.mutation({
       query: ({ body }) => ({
         url: '/students/records/gr-numbers',
-        method: 'PUT',
+        method: 'POST',
         data: body,
       }),
       invalidatesTags: ['studentGrNumber'],

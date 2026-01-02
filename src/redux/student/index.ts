@@ -31,8 +31,8 @@ export const StudentApi = createApi({
     }),
     changeDivision: builder.mutation({
       query: (body) => ({
-        url: `/app/student/student-division`,
-        method: 'PUT',
+        url: `/students/records/divisions`,
+        method: 'POST',
         data: body,
       }),
       invalidatesTags: ['Student'],

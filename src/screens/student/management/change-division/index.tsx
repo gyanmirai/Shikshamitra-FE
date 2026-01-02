@@ -15,37 +15,47 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { StudentApi, useChangeDivisionMutation } from 'src/redux/student';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetAllStudentGroupQuery } from 'src/redux/student/student-group/student-group';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import type { TableDivisionDropDownProps } from './type';
 import type { IInquiryData } from '../../enrollment/Inquiry';
 
 const ChangeDivisionScreen = ({
-  tableData: studentData,
-  isLoading,
   allDivision,
   division,
 }: {
-  isLoading: boolean;
-  tableData: IInquiryData[];
   allDivision: Division[];
   division: string;
 }) => {
   // State to manage table data
-  // State to store and manage the current table data that can be modified
-  const [tableData, setTableData] = useState<IInquiryData[]>(studentData);
+  const [tableData, setTableData] = useState<IInquiryData[]>([]);
+  const [initialData, setInitialData] = useState<IInquiryData[]>([]);
 
   // Redux dispatch hook for dispatching actions
   const dispatch = useDispatch();
 
-  // State to keep track of the initial/original table data for comparison
-  const [, setInitialData] = useState<IInquiryData[]>(studentData);
-  // const [selectedStudents, setSelectedStudents] = useState<{ id: string; name: string }[]>([]);
-  // Update table data when studentData changes
+  // Fetch student data using the same query as GR and Roll generation
+  const {
+    data: getStudentData,
+    isLoading: isStudentDataLoading,
+    isFetching: isStudentDataFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAllStudentGroupQuery,
+    params: division,
+    options: {
+      skip: !division,
+    },
+  });
+
+  // Update table data when student data changes
   useEffect(() => {
-    setTableData(studentData);
-    setInitialData(studentData);
-  }, [studentData]);
+    if (getStudentData?.data) {
+      setTableData(getStudentData.data);
+      setInitialData(getStudentData.data);
+    }
+  }, [getStudentData]);
 
   // Mutation hook for changing student division
   const [changeDivision, { isLoading: isChangeDivisionLoading }] = useQueryAndMutation({
@@ -60,17 +70,17 @@ const ChangeDivisionScreen = ({
   const handelSave = async () => {
     try {
       const updatedStudents = tableData.filter((student) => !!student.divisionId);
-      const requestBody = await changeDivision({
-        studentDivisionUpdates: updatedStudents.map((student) => ({
-          studentId: student.id,
+      await changeDivision(
+        updatedStudents.map((student) => ({
+          studentId: student.studentId,
           divisionId: student.divisionId,
-        })),
-      }).unwrap();
+        }))
+      ).unwrap();
       shikshaMitraToast.success({
         message: `Division ${
           selectedStudents.length === 1
             ? `of student ${selectedStudents[0].name}`
-            : `of ${requestBody.studentDivisionUpdates.length} students`
+            : `of ${updatedStudents.length} students`
         } updated successfully`,
       });
 
@@ -96,7 +106,7 @@ const ChangeDivisionScreen = ({
     <Box
       sx={{ height: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
     >
-      <BackPopUpChecked initialValues={studentData} currentValues={tableData}>
+      <BackPopUpChecked initialValues={initialData} currentValues={tableData}>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, gap: 2 }}>
           <LoadingButton
             loading={isChangeDivisionLoading}
@@ -114,9 +124,9 @@ const ChangeDivisionScreen = ({
           showCheckbox={selectedStudents.length !== 0}
           tableId="change-division-table"
           noDataText={<>No Student Data Found </>}
-          isLoading={isLoading}
+          isLoading={isStudentDataLoading || isStudentDataFetching}
           columns={[
-            { id: 'grNoRecord', label: 'GR No.' },
+            { id: 'grNo', label: 'GR No.' },
             { id: 'name', label: 'Name' },
             {
               id: 'divisionId',
@@ -131,8 +141,8 @@ const ChangeDivisionScreen = ({
                     currentDivision={division}
                     onChange={(val) => {
                       const newData = tableData.map((item) => {
-                        if (item.id === row.id) {
-                          setSelectedStudents([{ id: row.id, name: row.name }]);
+                        if (item.studentId === row.studentId) {
+                          setSelectedStudents([{ id: row.studentId, name: row.name }]);
 
                           return {
                             ...item,

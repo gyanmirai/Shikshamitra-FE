@@ -3,11 +3,11 @@
 import type { RootState } from 'src/redux/store';
 
 import { StudentApi } from 'src/redux/student';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box, Button, TextField } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Save, Refresh, Grading } from '@mui/icons-material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -24,12 +24,11 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
   // State to track if manual GR number generation is enabled
   const [isManual, setIsManual] = useState<boolean>(false);
 
-  // Get current board and medium from global state
-  const { currentBoard, currentMedium } = useSelector((state: RootState) => state.globalState);
-
-  // Get the division ID from current medium
-
-  const { data: getStudentData, isLoading: isStudentDataLoading } = useQueryAndMutation({
+  const {
+    data: getStudentData,
+    isLoading: isStudentDataLoading,
+    isFetching: isStudentDataFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllStudentGroupQuery,
     params: division,
@@ -52,21 +51,9 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
   const dispatch = useDispatch();
   const [initialData, setInitialData] = useState<IInquiryData[]>(getStudentData || []);
 
-  // Extract education related IDs from current selections
-  const educationBoardId = currentBoard?.id || null;
-  const educationMediumId = currentMedium?.id || null;
-  const educationMediumStageId = currentMedium?.educationMediumStages[0]?.id || null;
-
   // API hooks for fetching and updating student GR numbers
-
-  const { data: fetchStudents, isLoading: isStudentGrNumberLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useLazyGetStudentForGrNumberQuery,
-    params: division,
-    options: {
-      skip: !division,
-    },
-  });
+  const [fetchStudents, { isLoading: isStudentGrNumberLoading }] =
+    useLazyGetStudentForGrNumberQuery();
 
   const [updateStudentGrNumbers, { isLoading: isSaving }] = useQueryAndMutation({
     type: 'mutation',
@@ -75,28 +62,32 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
 
   // Handle automatic GR number generation
   const handleAutoGenerate = async () => {
-    if (!educationBoardId || !educationMediumId || !educationMediumStageId) {
-      console.error('Missing required parameters for API call.');
+    if (!division) {
+      console.error('Division ID is required for GR number generation.');
       return;
     }
 
     try {
-      const result = await fetchStudents({
-        educationBoardId,
-        educationMediumId,
-        educationMediumStageId,
-      }).unwrap();
+      const result = await fetchStudents(division).unwrap();
 
-      if (typeof result === 'number') {
-        let lastNum = result;
+      // The API returns an object with data array containing students with grNumber
+      if (result?.data && Array.isArray(result.data)) {
+        // Find the highest GR number from the response
+        const grNumbers = result.data
+          .map((student: any) => student.grNumber)
+          .filter((num: any) => num !== null && num !== undefined);
+
+        const lastNum = grNumbers.length > 0 ? Math.max(...grNumbers) : 0;
+
+        let currentNum = lastNum;
         setTableData((prevData) =>
-          prevData.map((item, index) => ({
+          prevData.map((item) => ({
             ...item,
-            grNoRecord:
-              item.grNoRecord ??
+            grNo:
+              item.grNo ??
               (() => {
-                lastNum += 1;
-                return lastNum;
+                currentNum += 1;
+                return currentNum;
               })(),
           }))
         );
@@ -123,12 +114,10 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
 
   // Save the updated GR numbers to the backend
   const handleSave = async () => {
-    const requestBody = {
-      studentNumbers: tableData.map((item) => ({
-        studentId: item.id,
-        grNo: item.grNoRecord ?? item.tempGrNo, // Use new GR No if available, else keep the current one
-      })),
-    };
+    const requestBody = tableData.map((item) => ({
+      studentId: item.studentId,
+      grNo: item.grNo ?? item.tempGrNo, // Use new GR No if available, else keep the current one
+    }));
 
     try {
       await updateStudentGrNumbers({ body: requestBody }).unwrap();
@@ -137,7 +126,7 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
         message: `GR Number ${
           selectedStudents.length === 1
             ? `of student ${selectedStudents[0].name}`
-            : `of ${requestBody.studentNumbers.length} students`
+            : `of ${requestBody.length} students`
         } updated successfully`,
       });
       setInitialData(tableData);
@@ -161,6 +150,12 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
       sendInstantNotificationDialogValue.onTrue();
     }
   };
+
+  const hasStudentsWithoutGrNo = useMemo(
+    () => tableData.some((student) => student.grNo === null || student.grNo === undefined),
+    [tableData]
+  );
+
   return (
     <Box
       sx={{ height: '100%', display: 'flex', flexDirection: 'column', flexGrow: 1, minHeight: 0 }}
@@ -181,6 +176,7 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
             startIcon={<Refresh />}
             variant="outlined"
             onClick={handleAutoGenerate}
+            disabled={!hasStudentsWithoutGrNo || isStudentGrNumberLoading}
             // sx={{ width: '180px' }}
           >
             {isStudentGrNumberLoading ? 'Loading...' : 'Auto Generate'}
@@ -199,7 +195,7 @@ const GrNoGenerationScreen = ({ division }: { division: string }) => {
       <CustomizableTable
         onSendNotification={handlerSendNotification}
         showCheckbox={selectedStudents.length !== 0}
-        isLoading={isStudentDataLoading}
+        isLoading={isStudentDataLoading || isStudentDataFetching}
         tableId="gr-no-generation-table"
         noDataText={<>No GR No Data Found </>}
         columns={[

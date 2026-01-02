@@ -70,6 +70,7 @@ import { memberManagementApi } from './memberManagement/memberManagementApi';
 import { reservationDataApi } from './reservationDataApi/reservationDataApi';
 import { bookConditionOptionsApi } from './library/setting/bookConditionApi';
 import { classManagementApi } from './classManagementApi/classManagementApi';
+import { studentRollNumberApi } from './student/roll-number/roll-number-api';
 import { quizManagementApi } from './academics/examination/quiz-management-api';
 import { LibraryChargeApi } from './library/charges-management/charges-get-api';
 import { StudentRegistrationApi } from './student/registration/registration-api';
@@ -130,6 +131,7 @@ const reducers = combineReducers({
   [EnrollmentReportApi.reducerPath]: EnrollmentReportApi.reducer,
   [StudentCertificateApi.reducerPath]: StudentCertificateApi.reducer,
   [studentGrNumberApi.reducerPath]: studentGrNumberApi.reducer,
+  [studentRollNumberApi.reducerPath]: studentRollNumberApi.reducer,
   [StudentTakeAttendanceApi.reducerPath]: StudentTakeAttendanceApi.reducer,
   [shiftManagementApi.reducerPath]: shiftManagementApi.reducer,
   [StudentApi.reducerPath]: StudentApi.reducer,
@@ -227,6 +229,7 @@ const store = configureStore({
       EnrollmentReportApi.middleware,
       StudentCertificateApi.middleware,
       studentGrNumberApi.middleware,
+      studentRollNumberApi.middleware,
       StudentTakeAttendanceApi.middleware,
       shiftManagementApi.middleware,
       StudentApi.middleware,

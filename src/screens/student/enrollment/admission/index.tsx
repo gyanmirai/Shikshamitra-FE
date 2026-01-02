@@ -37,6 +37,7 @@ import FeeNewCollectionForm from 'src/screens/finance/fee-collection/collectFees
 import { useGetEntranceExamByStudentIdQuery } from 'src/redux/student/entrance-exam/entrance-exam-api';
 import {
   useGetStudentAdmissionQuery,
+  useGetDivisionForStandardQuery,
   useChangeAdmissionStatusMutation,
   useAssignDivisionTOStudentMutation,
 } from 'src/redux/student/admission/admission-api';
@@ -69,30 +70,6 @@ import { ViewDocuments } from '../register/RenderDocument';
 
 import type { IInquiryData } from '../Inquiry';
 
-// const cssVars = {
-//   '--item-gap': '16px',
-//   '--item-radius': '12px',
-//   '--column-gap': '24px',
-//   '--column-width': '336px',
-//   '--column-radius': '16px',
-//   '--column-padding': '20px 16px 16px 16px',
-// };
-
-// const columns: IKanbanColumn[] = [
-//   {
-//     id: 'pendingApproval',
-//     name: 'Pending Approval',
-//   },
-//   {
-//     id: 'approved',
-//     name: 'Approved',
-//   },
-//   {
-//     id: 'rejected',
-//     name: 'Rejected',
-//   },
-// ];
-
 const AdmissionScreen = () => {
   const tabs = useTabs(RegistrationStatusType.Pending);
   const dialogForCollectFees = useBoolean();
@@ -113,15 +90,9 @@ const AdmissionScreen = () => {
   });
   const counts = useMemo(
     () => ({
-      pending: admissionData?.items.filter(
-        (i: any) => i.studentEnrollmentApprovalState === RegistrationStatusType.Pending
-      )?.length,
-      approved: admissionData?.items.filter(
-        (i: any) => i.studentEnrollmentApprovalState === RegistrationStatusType.Approved
-      )?.length,
-      rejected: admissionData?.items.filter(
-        (i: any) => i.studentEnrollmentApprovalState === RegistrationStatusType.Rejected
-      )?.length,
+      pending: admissionData?.items?.length || 0,
+      approved: 0,
+      rejected: 0,
     }),
     [admissionData?.items]
   );
@@ -151,19 +122,18 @@ const AdmissionScreen = () => {
 
   const tableData = useMemo(
     () =>
-      admissionData?.items
-        .filter((i: any) => i.studentEnrollmentApprovalState === tabs.value)
-        .map((item: IInquiryData) => ({
-          ...item,
-          dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
-          ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
-          doiValue: dayjs(item.dateOfInquiry).format('DD-MM-YYYY'),
-          // studentName: ` ${item.lastName}  ${item.firstName} ${item.middleName}`,
-          secondaryContactNumber: item.secondaryContactNumber || undefined,
-          genderValue: GenderType[item?.genderType as any],
-          remarks: item?.remarks || '-',
-        })) || [],
-    [admissionData?.items, tabs.value]
+      admissionData?.items?.map((item: IInquiryData) => ({
+        ...item,
+        id: item.studentId, // Map studentId to id for component compatibility
+        dobValue: dayjs(item.dateOfBirth).format('DD-MM-YYYY'),
+        ageValue: calculateAge(dayjs(item.dateOfBirth).format()),
+        doiValue: item.dateOfInquiry ? dayjs(item.dateOfInquiry).format('DD-MM-YYYY') : '-',
+        // studentName: ` ${item.lastName}  ${item.firstName} ${item.middleName}`,
+        secondaryContactNo: item.secondaryContactNumber || undefined,
+        genderValue: GenderType[item?.gender as any],
+        remarks: item?.remarks || '-',
+      })) || [],
+    [admissionData?.items]
   );
 
   const sendInstantNotificationDialogValue = useBoolean();
@@ -373,48 +343,6 @@ const AdmissionScreen = () => {
             minWidth: '200px',
             align: 'left',
           },
-
-          // { id: 'educationMedium.name', label: 'Medium', align: 'left' },
-          // { id: 'FirstName', label: 'First Name', minWidth: '110px' },
-          // { id: 'MiddleName', label: 'Middle Name', minWidth: '125px' },
-          // { id: 'Name', label: 'Name', align: 'left' },
-          // { id: 'Code', label: 'Code', align: 'left' },
-          // { id: 'class', label: 'Class', align: 'left' },
-          // { id: 'Organization', label: 'Organization' },
-          // {
-          //   id: 'totalAmount',
-          //   label: 'Total Amount',
-          //   minWidth: '135px',
-          //   filterType: 'number',
-          //   align: 'left',
-          // },
-          // {
-          //   id: 'paidAmount',
-          //   label: 'Paid Amount',
-          //   minWidth: '125px',
-          //   filterType: 'number',
-          //   align: 'left',
-          // },
-          // {
-          //   id: 'feeStatusType',
-          //   label: 'Payment Status',
-          //   minWidth: '150px',
-          //   filterType: 'enum',
-          //   sticky: true,
-          //   enumOptions: AdmissionPaymentStatusOptions,
-          //   align: 'left',
-          //   render(value, row) {
-          //     const color = AdmissionPaymentStatusTypeColors[
-          //       value as Partial<AdmissionPaymentStatusType>
-          //     ] as LabelColor;
-
-          //     return (
-          //       <Label color={color}>
-          //         {AdmissionPaymentStatusType[value as AdmissionPaymentStatusType]}
-          //       </Label>
-          //     );
-          //   },
-          // },
           {
             id: 'actions',
             label: 'Actions',
@@ -675,8 +603,13 @@ const StudentDetails = ({ tabValue, editData, onClose }: any) => {
     if (selectedStatus === null) return;
 
     const payload = {
-      approvalStatus: selectedStatus,
-      body: [editData.id],
+      items: [
+        {
+          studentId: editData.studentId,
+          action: selectedStatus,
+          remarks: '',
+        },
+      ],
     };
 
     await changeStatus(payload).unwrap();
@@ -777,9 +710,9 @@ const EntranceExamSections = ({ editData }: any) => {
   const { data: entranceExamData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamByStudentIdQuery,
-    params: editData?.id,
+    params: editData?.studentId,
     options: {
-      skip: !editData?.id,
+      skip: !editData?.studentId,
     },
   });
   // const theme = useTheme();
@@ -955,7 +888,7 @@ const DocumentsSections = ({ editData }: any) => {
         </Stack>
       )}
       <Dialog open={viewDialog.value} onClose={viewDialog.onFalse}>
-        <ViewDocuments id={editData?.id} docId={docId} />
+        <ViewDocuments id={editData?.studentId} docId={docId} />
       </Dialog>
     </Stack>
   );
@@ -975,6 +908,17 @@ const AssignDivisionForm = ({
   selectedStudent?: IInquiryData | null;
 }) => {
   const [selectedDivision, setSelectedDivision] = useState('');
+
+  // Fetch standard details with divisions based on student's standardId
+  const { data: standardData, isLoading: isLoadingStandard } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetDivisionForStandardQuery,
+    params: selectedStudent?.standardId,
+    options: {
+      skip: !selectedStudent?.standardId,
+    },
+  });
+
   const [assignDivision, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAssignDivisionTOStudentMutation,
@@ -985,8 +929,9 @@ const AssignDivisionForm = ({
   }>({
     initialValues: {
       division: division || '',
-      standardName: standard?.name || '',
+      standardName: standardData?.name || standard?.name || '',
     },
+    enableReinitialize: true,
     validationSchema: Yup.object({
       division: Yup.string().required('Division is required'),
     }),
@@ -1009,9 +954,10 @@ const AssignDivisionForm = ({
   });
 
   useEffect(() => {
-    const div = standard?.divisions?.find((item) => item.id === formik.values.division);
+    const divisions = standardData?.divisions || standard?.divisions || [];
+    const div = divisions.find((item: any) => item.id === formik.values.division);
     setSelectedDivision(div?.name || '');
-  }, [standard?.divisions, formik.values.division]);
+  }, [standardData?.divisions, standard?.divisions, formik.values.division]);
 
   return (
     <>
@@ -1038,7 +984,7 @@ const AssignDivisionForm = ({
           <Grid size={12}>
             <CustomSelect
               autoFocus
-              options={standard?.divisions || []}
+              options={standardData?.divisions || standard?.divisions || []}
               value={formik.values.division}
               onChange={(val) => {
                 formik.setFieldValue('division', val);
@@ -1046,6 +992,7 @@ const AssignDivisionForm = ({
               label="Division *"
               valueKey="id"
               labelKey="name"
+              isLoading={isLoadingStandard}
               formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               error={formik.touched.division && Boolean(formik.errors.division)}
               helperText={(formik.touched.division && formik.errors.division) as string}
@@ -1102,7 +1049,6 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
           return;
         }
         await changeStatus({
-          approvalStatus: values.status,
           body: selectedStudents.map((i: any) => ({
             studentId: i.studentId,
             action: values.status,
@@ -1118,28 +1064,6 @@ const ChangeStatusForm: React.FC<ChangeStatusFormProps> = ({
       }
     },
   });
-
-  // const getStatusOptions = () => {
-  //   switch (tabValue) {
-  //     case RegistrationStatusType.Pending:
-  //       return [
-  //         { label: 'Approved', value: RegistrationStatusType.Approved },
-  //         { label: 'Rejected', value: RegistrationStatusType.Rejected },
-  //       ];
-  //     case RegistrationStatusType.Approved:
-  //       return [
-  //         { label: 'Rejected', value: RegistrationStatusType.Rejected },
-  //         { label: 'Pending', value: RegistrationStatusType.Pending },
-  //       ];
-  //     case RegistrationStatusType.Rejected:
-  //       return [
-  //         { label: 'Approved', value: RegistrationStatusType.Approved },
-  //         { label: 'Pending', value: RegistrationStatusType.Pending },
-  //       ];
-  //     default:
-  //       return [];
-  //   }
-  // };
 
   return (
     <>
