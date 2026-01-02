@@ -5,8 +5,9 @@ export const gradeScalingApi = academicApi.injectEndpoints({
     // Get all grade scalings under academic medium
     getGradeScalings: builder.query({
       query: ({ academicMediumId }) => ({
-        url: `/grade-scaling/academicMediumId=${academicMediumId}`,
+        url: `/academics/examination/settings/grading-scales`,
         method: 'GET',
+        params: { academicMediumId },
       }),
       providesTags: ['GradeScaling'],
     }),
@@ -14,8 +15,9 @@ export const gradeScalingApi = academicApi.injectEndpoints({
     // Get specific grade scaling under academic medium
     getGradeScalingById: builder.query({
       query: ({ academicMediumId, id }) => ({
-        url: `/grade-scaling/${id}/academicMediumId=${academicMediumId}`,
+        url: `/academics/examination/settings/grading-scales/${id}`,
         method: 'GET',
+        params: { academicMediumId },
       }),
       providesTags: ['GradeScaling'],
     }),
@@ -23,8 +25,9 @@ export const gradeScalingApi = academicApi.injectEndpoints({
     // Add new grade scaling under medium
     addGradeScaling: builder.mutation({
       query: ({ academicMediumId, body }) => ({
-        url: `/grade-scaling/academicMediumId=${academicMediumId}`,
+        url: `/academics/examination/settings/grading-scales`,
         method: 'POST',
+        params: { academicMediumId },
         data: body,
       }),
       invalidatesTags: ['GradeScaling'],
@@ -33,8 +36,9 @@ export const gradeScalingApi = academicApi.injectEndpoints({
     // Update grade scaling in medium
     updateGradeScaling: builder.mutation({
       query: ({ academicMediumId, id, body }) => ({
-        url: `/grade-scaling/${id}/academicMediumId=${academicMediumId}`,
+        url: `/academics/examination/settings/grading-scales/${id}`,
         method: 'PUT',
+        params: { academicMediumId },
         data: body,
       }),
       invalidatesTags: ['GradeScaling'],
@@ -43,8 +47,9 @@ export const gradeScalingApi = academicApi.injectEndpoints({
     // Delete grade scaling under medium
     deleteGradeScaling: builder.mutation({
       query: ({ academicMediumId, id }) => ({
-        url: `/grade-scaling/${id}/academicMediumId=${academicMediumId}`,
+        url: `/academics/examination/settings/grading-scales/${id}`,
         method: 'DELETE',
+        params: { academicMediumId },
       }),
       invalidatesTags: ['GradeScaling'],
     }),
