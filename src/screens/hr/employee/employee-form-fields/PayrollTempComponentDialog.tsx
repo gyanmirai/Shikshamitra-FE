@@ -101,7 +101,7 @@ export default function PayrollTempComponentDialog({
           />
 
           <DatePicker
-            label="Month-Year"
+            label="Applicable Month *"
             format="MMM-YYYY"
             value={formik.values.applicableMonth}
             minDate={dayjs(currentYear?.startDate)}
@@ -110,6 +110,12 @@ export default function PayrollTempComponentDialog({
             slotProps={{
               textField: {
                 size: 'small',
+                error: formik.touched.applicableMonth && Boolean(formik.errors.applicableMonth),
+                helperText:
+                  formik.touched.applicableMonth &&
+                  typeof formik.errors.applicableMonth === 'string'
+                    ? formik.errors.applicableMonth
+                    : undefined,
               },
             }}
             onChange={(newValue) => formik.setFieldValue('applicableMonth', newValue)}

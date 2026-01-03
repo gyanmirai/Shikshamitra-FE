@@ -5,6 +5,7 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -18,7 +19,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import gradeScalingData from 'src/json/academic/examination/gradeScalingData.json';
 import {
   useGetGradeScalingsQuery,
   useDeleteGradeScalingMutation,
@@ -29,16 +29,13 @@ import GradeForm from './gradeScaleForm';
 import type { IGrade } from './type';
 
 const GradingScale = () => {
-  // State for tracking edit mode
-  const [isEdit, setIsEdit] = useState(false);
   // State for storing currently selected grade
   const [selectedGrade, setSelectedGrade] = useState<IGrade | null>(null);
   // Dialog control for viewing grade details
   const viewDialog = useBoolean();
   // Dialog control for delete confirmation
   const deleteConfirmDialog = useBoolean();
-  // State for storing all grades data
-  const [grades, setGrades] = useState<IGrade[]>(gradeScalingData);
+
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
@@ -63,36 +60,7 @@ const GradingScale = () => {
       skip: !(currentMedium as Medium)?.id,
     },
   });
-  /**
-   * Handles closing of all dialogs and resetting related states
-   */
-  const handleCloseDialog = () => {
-    setSelectedGrade(null);
-    setIsEdit(false);
-    addGradeScalingDialog.onFalse();
-    deleteConfirmDialog.onFalse();
-  };
 
-  /**
-   * Handles deletion of a grade
-   * @param gradeData - Grade object to be deleted
-   */
-  const handleDelete = (gradeData: IGrade) => {
-    if (selectedGrade) {
-      setGrades(grades.filter((grade) => grade.id !== gradeData.id));
-      deleteConfirmDialog.onFalse();
-      setSelectedGrade(null);
-      shikshaMitraToast.success({
-        message: `${gradeData.name} Grade Scale deleted successfully`,
-      });
-    }
-  };
-
-  /**
-   * Handles closing of grade form dialog
-   * @param _e - Event object
-   * @param isSubmit - Boolean indicating if form was submitted
-   */
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
       setTimeout(() => {
@@ -186,7 +154,6 @@ const GradingScale = () => {
             render(value, row) {
               return (
                 <ThreeDotsActions
-                  // actions={(prop) => actions({ ...prop, row })}
                   showThreeDots={false}
                   placement="right-top"
                   showViewIcon
@@ -202,7 +169,6 @@ const GradingScale = () => {
                   }}
                   handleEditClick={() => {
                     setSelectedGrade(row as any);
-                    setIsEdit(true);
                     addGradeScalingDialog.onTrue();
                   }}
                 />
@@ -242,13 +208,7 @@ const GradingScale = () => {
           </Box>
         }
       >
-        <GradeForm
-          onSubmit={handleSubmit}
-          onClose={handleClose}
-          data={selectedGrade}
-          isEdit={isEdit}
-          disabled={false}
-        />{' '}
+        <GradeForm onSubmit={handleSubmit} onClose={handleClose} data={selectedGrade} />{' '}
       </CustomDialog>
 
       <CustomDialog
@@ -273,13 +233,7 @@ const GradingScale = () => {
           </Box>
         }
       >
-        <GradeForm
-          onSubmit={handleSubmit}
-          onClose={handleClose}
-          data={selectedGrade}
-          isEdit={isEdit}
-          disabled
-        />{' '}
+        <GradeForm onSubmit={handleSubmit} onClose={handleClose} data={selectedGrade} />{' '}
       </CustomDialog>
 
       <ConfirmDialog
@@ -317,7 +271,7 @@ const GradingScale = () => {
                 console.error('Failed to delete grade scale', error);
               }
             }}
-            // startIcon={<Iconify icon={GlobalIcons.delete} />}
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </LoadingButton>
