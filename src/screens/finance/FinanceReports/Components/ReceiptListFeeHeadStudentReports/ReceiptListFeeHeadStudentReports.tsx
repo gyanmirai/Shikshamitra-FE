@@ -129,7 +129,7 @@ const ReceiptListFeeHeadStudentReports = ({ report }: { report: any }) => {
   const [allDivisions, setAllDivisions] = useState<Division[]>([]);
 
   // Fee Heads Data
-  const { data: feeHeadsData } = useGetFeeHeadsQuery(null);
+  const { data: feeHeadsData } = useGetFeeHeadsQuery('');
   const allFeeHeads = useMemo(() => feeHeadsData?.items || [], [feeHeadsData]);
 
   // Months Data (Static for now)

@@ -16,4 +16,5 @@ export const getInitialFeeStructureData = (
   totalClass: editData?.totalClass ?? 0,
   feeStructureClasses: editData?.feeStructureClasses || {},
   status: 0,
+  id: undefined,
 });

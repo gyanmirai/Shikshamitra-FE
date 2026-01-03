@@ -1,15 +1,24 @@
 'use client';
 
-import React from 'react';
+import type { RootState } from 'src/redux/store';
+
 import { useFormik } from 'formik';
+import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddFeeHeadMutation,
+  useUpdateFeeHeadMutation,
+} from 'src/redux/feeHeadManage/feeHeadManageApi';
 
 import { getFeeHeadInitialValues } from './FeeHeadInitialValues';
 import { feeHeadValidationSchema } from './FeeHeadValidationSchema';
@@ -17,20 +26,63 @@ import { feeHeadValidationSchema } from './FeeHeadValidationSchema';
 import type { IFeeHeadFormProps } from './type';
 
 const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // POST mutation for creating
+  const { addFeeHead } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddFeeHeadMutation,
+  });
+
+  // PUT mutation for updating
+  const { updateFeeHead } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateFeeHeadMutation,
+  });
+
   const formik = useFormik({
     initialValues: getFeeHeadInitialValues(editData),
     validationSchema: feeHeadValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `${values.feeHeadName} Fee Head updated successfully`,
+    onSubmit: async (values) => {
+      try {
+        setIsLoading(true);
+
+        // Transform form data to API format
+        const payload = {
+          academicYearId: currentYear?.id,
+          feeCategoryId: values.feeCategoryId,
+          name: values.feeHeadName,
+          description: values.description || '',
+        };
+
+        if (editData?.id) {
+          // Update existing fee head
+          await updateFeeHead({
+            feeHeadId: editData.id,
+            body: payload,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `${values.feeHeadName} Fee Head updated successfully`,
+          });
+        } else {
+          // Create new fee head
+          await addFeeHead(payload).unwrap();
+
+          shikshaMitraToast.success({
+            message: `${values.feeHeadName} Fee Head added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Save operation failed:', error);
+        shikshaMitraToast.error({
+          message: `Failed to ${editData ? 'update' : 'create'} fee head`,
         });
-      } else {
-        shikshaMitraToast.success({
-          message: `${values.feeHeadName} Fee Head added successfully`,
-        });
+      } finally {
+        setIsLoading(false);
       }
-      onClose(null, true);
     },
   });
 
@@ -122,7 +174,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -133,10 +185,12 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
           type="submit"
           variant="contained"
           size="small"
+          loading={isLoading}
+          disabled={isLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

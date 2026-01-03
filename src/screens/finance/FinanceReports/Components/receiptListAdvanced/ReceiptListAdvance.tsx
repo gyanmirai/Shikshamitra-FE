@@ -15,7 +15,6 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useLazyGetFilterStudentsQuery } from 'src/redux/student';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import { Box, Grid, Card, Button, TextField, Autocomplete } from '@mui/material';
 import {
   ReceiptListAdvanceReportsTitle,
@@ -148,10 +147,11 @@ const ReceiptListAdvance = () => {
   const [students, setStudents] = useState<any[]>([]);
 
   // API Calls
-  const { data: feeHeadsData } = useGetFeeHeadsQuery(null);
+  // const { data: feeHeadsData } = useGetFeeHeadsQuery(null);
+  const feeHeadsData = '';
   const [getFilterStudents] = useLazyGetFilterStudentsQuery();
 
-  const allFeeHeads = feeHeadsData?.data || [];
+  const allFeeHeads = feeHeadsData || [];
 
   // Mock Data
   const allReceiptBooks = [

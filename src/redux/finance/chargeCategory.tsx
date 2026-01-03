@@ -22,14 +22,59 @@ export const ChargeCategoryApi = createApi({
       },
   tagTypes: ['charge-category'],
   endpoints: (builder) => ({
+    // Get charge categories data
     getChargeCategory: builder.query({
       query: () => ({
-        url: '/chargeCategories',
+        url: '/finance/charge-categories',
         method: 'GET',
       }),
       providesTags: ['charge-category'],
     }),
+
+    // Get charge category by id
+    getChargeCategoryById: builder.query({
+      query: (academicYearId: string) => ({
+        url: `/finance/charge-categories/${academicYearId}`,
+        method: 'GET',
+      }),
+      providesTags: ['charge-category'],
+    }),
+
+    // Post charge category
+    postChargeCategory: builder.mutation({
+      query: (body) => ({
+        url: `/finance/charge-categories`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['charge-category'],
+    }),
+
+    // Put charge category
+    putChargeCategory: builder.mutation({
+      query: ({ chargeCategoryId, body }) => ({
+        url: `/finance/charge-categories/${chargeCategoryId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['charge-category'],
+    }),
+
+    // Delete charge category
+    deleteChargeCategory: builder.mutation({
+      query: (chargeCategoryId: string) => ({
+        url: `/finance/charge-categories/${chargeCategoryId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['charge-category'],
+    }),
   }),
 });
 
-export const { useGetChargeCategoryQuery } = ChargeCategoryApi;
+export const {
+  useGetChargeCategoryQuery,
+  useGetChargeCategoryByIdQuery,
+  usePostChargeCategoryMutation,
+  usePutChargeCategoryMutation,
+  useDeleteChargeCategoryMutation,
+} = ChargeCategoryApi;

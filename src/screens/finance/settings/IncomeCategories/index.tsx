@@ -15,7 +15,10 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
+import {
+  useGetIncomeCategoriesQuery,
+  useDeleteIncomeCategoryMutation,
+} from 'src/redux/finance/incomeCategory';
 
 import IncomeCategoryForm from './Components/IncomeCategoryForm';
 import IncomeCategoryTable from './Components/IncomeCategoryTable';
@@ -27,6 +30,12 @@ const FinanceIncomeCategoriesScreen = () => {
   const { data: incomeCategoryData, isLoading: incomeCategoryLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeCategoriesQuery,
+  });
+
+  // DELETE mutation
+  const { deleteIncomeCategory, isLoading: isDeleting } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteIncomeCategoryMutation,
   });
 
   // Dialog control states
@@ -161,13 +170,25 @@ const FinanceIncomeCategoriesScreen = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              deleteIncomeCategoryDialog.onFalse();
-              setSelectedIncomeCategory(null);
-              shikshaMitraToast.success({
-                message: `Income Category ${selectedIncomeCategory?.incomeCategoryName} deleted successfully`,
-              });
-              // Handle delete action here
+            loading={isDeleting}
+            disabled={isDeleting}
+            onClick={async () => {
+              if (!selectedIncomeCategory?.id) return;
+
+              try {
+                await deleteIncomeCategory(selectedIncomeCategory.id).unwrap();
+
+                shikshaMitraToast.success({
+                  message: `Income Category ${selectedIncomeCategory?.incomeCategoryName} deleted successfully`,
+                });
+                deleteIncomeCategoryDialog.onFalse();
+                setSelectedIncomeCategory(null);
+              } catch (error) {
+                console.error('Delete operation failed:', error);
+                shikshaMitraToast.error({
+                  message: 'Failed to delete income category',
+                });
+              }
             }}
           >
             Yes

@@ -1,9 +1,10 @@
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import dayjs from 'dayjs';
-import { useSelector } from 'react-redux';
+import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { getIn, useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
@@ -17,6 +18,8 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { Box, Grid, Button, MenuItem, TextField, DialogActions } from '@mui/material';
 import {
   useGetExpenseOptionsQuery,
+  usePutExpenseDetailsMutation,
+  usePostExpenseDetailsMutation,
   useGetPaymentMethodsConfigQuery,
 } from 'src/redux/finance/expenseApi/expenseDetailedApi';
 
@@ -29,11 +32,24 @@ import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
 
 const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch expense options from API
   const { data: expenseOptionsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseOptionsQuery,
+  });
+
+  // POST mutation for creating
+  const { postExpenseDetails } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePostExpenseDetailsMutation,
+  });
+
+  // PUT mutation for updating
+  const { putExpenseDetails } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePutExpenseDetailsMutation,
   });
 
   // Fetch payment methods config from API
@@ -61,17 +77,49 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
     initialValues: getInitialExpenseData(editData),
     validationSchema: getExpenseFormSchema(currentYear),
     enableReinitialize: true,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Expense Tracking : ${values.expenseName} updated successfully!`,
+    onSubmit: async (values) => {
+      try {
+        setIsLoading(true);
+
+        // Transform form data to API format
+        const payload = {
+          academicYearId: currentYear?.id,
+          categoryId: values.expenseCategory,
+          name: values.expenseName,
+          categoryTags: values.expenseCategoryTags || [],
+          amount: values.amount,
+          paymentMethod: values.paymentMethod,
+          paymentDate: values.date?.toISOString(),
+          notes: values.notes || '',
+        };
+
+        if (editData?.id) {
+          // Update existing expense
+          await putExpenseDetails({
+            expenseId: editData.id,
+            body: payload,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Expense Tracking : ${values.expenseName} updated successfully!`,
+          });
+        } else {
+          // Create new expense
+          await postExpenseDetails(payload).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Expense Tracking : ${values.expenseName} added successfully!`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Save operation failed:', error);
+        shikshaMitraToast.error({
+          message: `Failed to ${editData ? 'update' : 'create'} expense tracking`,
         });
-      } else {
-        shikshaMitraToast.success({
-          message: `Expense Tracking : ${values.expenseName} added successfully!`,
-        });
+      } finally {
+        setIsLoading(false);
       }
-      onClose(null, true);
     },
   });
 
@@ -312,7 +360,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
                             name={fieldPath}
                             value={value || ''}
                             onChange={formik.handleChange}
-                            onBlur={() => formik.setFieldTouched(fieldPath, true)} // ✅ needed for custom inputs
+                            onBlur={() => formik.setFieldTouched(fieldPath, true)}
                             error={Boolean(touched && error)}
                             helperText={touched && typeof error === 'string' ? error : ''}
                           />
@@ -380,7 +428,7 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               startIcon={
                 <Iconify
                   icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -391,9 +439,11 @@ const ExpenseCategoryForm: React.FC<IExpenseFormProps> = ({ open, onClose, editD
               type="submit"
               size="small"
               variant="contained"
+              loading={isLoading}
+              disabled={isLoading}
             >
               {editData ? 'Update' : 'Submit'}
-            </Button>
+            </LoadingButton>
           </DialogActions>
         </Box>
       </form>

@@ -14,11 +14,17 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { ConfirmDialog } from 'src/components/confirm-dialog/confirm-dialog';
 import initialData from 'src/json/finance/settings/receipt-book/receiptBookData.json';
+import {
+  useGetReceiptBooksQuery,
+  usePatchReceiptBookMutation,
+  useDeleteReceiptBookMutation,
+} from 'src/redux/finance/receiptBookApi';
 
 // eslint-disable-next-line import/no-named-as-default
 import FinanceSettingReceiptbookDialog from './component/finance-setting-receiptbook-dialog';
@@ -47,6 +53,26 @@ const FinanceReceiptBookSetting = () => {
 
   // Dialog state for delete confirmation
   const dialogForDeleteConfirmation = useBoolean();
+
+  // DELETE mutation
+  const { deleteReceiptBook } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteReceiptBookMutation,
+  });
+
+  // GET receipt book
+  const academicYearId = useSelector((state: RootState) => state.academicYearId);
+  const { getReceiptBooks, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetReceiptBooksQuery,
+    params: { academicYearId },
+  });
+
+  // PATCH mutation for status change
+  const { patchReceiptBook } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePatchReceiptBookMutation,
+  });
 
   const handleClose = (_e?: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -288,29 +314,86 @@ const FinanceReceiptBookSetting = () => {
                 icon={selectedEntry?.toggle === true ? GlobalIcons.draftIcon : GlobalIcons.publish}
               />
             }
-            onClick={() => {
-              const status = selectedEntry?.toggle === true ? 'Inactive' : 'Active';
-              shikshaMitraToast.success({
-                message:
-                  selectedEntry && Array.isArray(selectedEntry.receiptBookName) ? (
-                    <>
-                      Receipt Book: <strong>{selectedEntry.receiptBookName}</strong> moved to{' '}
-                      {status} successfully.
-                    </>
-                  ) : (
+            onClick={async () => {
+              try {
+                const newStatus = !selectedEntry?.toggle;
+                await patchReceiptBook({
+                  receiptBookId: selectedEntry?.id,
+                  body: { isActive: newStatus },
+                }).unwrap();
+
+                const status = newStatus ? 'Active' : 'Inactive';
+                shikshaMitraToast.success({
+                  message: (
                     <>
                       Receipt Book: <strong>{selectedEntry?.receiptBookName}</strong> moved to{' '}
                       {status} successfully.
                     </>
                   ),
-              });
-              setTimeout(() => {
-                setSelectedEntry(null);
-              }, 200); // Adjust delay (in ms) as needed
-              activeDialog.onFalse();
+                });
+                activeDialog.onFalse();
+                setTimeout(() => {
+                  setSelectedEntry(null);
+                }, 200);
+              } catch (error) {
+                console.error('Failed to update receipt book status:', error);
+                shikshaMitraToast.error({
+                  message: 'Failed to update receipt book status',
+                });
+              }
             }}
           >
             {selectedEntry?.toggle === true ? 'Inactive' : 'Active'}
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={dialogForDeleteConfirmation.value}
+        onClose={() => {
+          dialogForDeleteConfirmation.onFalse();
+          setTimeout(() => {
+            setSelectedEntry(null);
+          }, 200);
+        }}
+        title="Delete Receipt Book"
+        content={
+          <>
+            Are you sure you want to delete <strong>{selectedEntry?.receiptBookName}</strong>{' '}
+            receipt book? This action cannot be undone.
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            onClick={async () => {
+              try {
+                await deleteReceiptBook(selectedEntry?.id).unwrap();
+
+                shikshaMitraToast.success({
+                  message: (
+                    <>
+                      Receipt Book: <strong>{selectedEntry?.receiptBookName}</strong> deleted
+                      successfully.
+                    </>
+                  ),
+                });
+                dialogForDeleteConfirmation.onFalse();
+                setTimeout(() => {
+                  setSelectedEntry(null);
+                }, 200);
+              } catch (error) {
+                console.error('Failed to delete receipt book:', error);
+                shikshaMitraToast.error({
+                  message: 'Failed to delete receipt book',
+                });
+              }
+            }}
+          >
+            Delete
           </Button>
         }
       />

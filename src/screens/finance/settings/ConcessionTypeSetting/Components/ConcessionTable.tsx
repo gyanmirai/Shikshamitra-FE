@@ -9,6 +9,7 @@ import type { IConcessionTypeForm, IConcessionTableProps } from '../type';
 
 const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   data,
+  isLoading,
   addConcessionType,
   setEditData,
   onEdit,
@@ -32,6 +33,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
   return (
     <CustomizableTable
       tableId="concession-table"
+      isLoading={isLoading}
       noDataText={
         <>
           No Concession data found

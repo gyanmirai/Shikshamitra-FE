@@ -38,10 +38,40 @@ export const expenseDetailsApi = createApi({
   endpoints: (builder) => ({
     getExpenseDetails: builder.query({
       query: () => ({
-        url: '/detailedExpenseData',
+        url: '/finance/expenses',
         method: 'GET',
       }),
       providesTags: ['ExpenseDetails'],
+    }),
+    getExpenseById: builder.query({
+      query: (expenseId: string) => ({
+        url: `/finance/expenses/${expenseId}`,
+        method: 'GET',
+      }),
+      providesTags: ['ExpenseDetails'],
+    }),
+    postExpenseDetails: builder.mutation({
+      query: (body) => ({
+        url: '/finance/expenses',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['ExpenseDetails'],
+    }),
+    putExpenseDetails: builder.mutation({
+      query: ({ expenseId, body }) => ({
+        url: `/finance/expenses/${expenseId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['ExpenseDetails'],
+    }),
+    deleteExpenseDetails: builder.mutation({
+      query: (expenseId: string) => ({
+        url: `/finance/expenses/${expenseId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['ExpenseDetails'],
     }),
     getExpenseList: builder.query({
       query: () => ({
@@ -69,7 +99,11 @@ export const expenseDetailsApi = createApi({
 
 export const {
   useGetExpenseDetailsQuery,
+  usePostExpenseDetailsMutation,
+  usePutExpenseDetailsMutation,
+  useDeleteExpenseDetailsMutation,
   useGetExpenseOptionsQuery,
+  useGetExpenseByIdQuery,
   useGetExpenseListQuery,
   useGetPaymentMethodsConfigQuery,
 } = expenseDetailsApi;

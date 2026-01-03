@@ -2,13 +2,19 @@
 
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Grid, Button, TextField, DialogActions } from '@mui/material';
+import {
+  usePutIncomeCategoryMutation,
+  usePostIncomeCategoryMutation,
+} from 'src/redux/finance/incomeCategory';
 
 import { getIncomeCategoryInitialValues } from './IncomeCategoryInitialValues';
 import { incomeCategoryValidationSchema } from './IncomeCategoryValidationSchema';
@@ -17,21 +23,61 @@ import type { IIncomeCategoryFormProps } from './type';
 
 const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose, editData }) => {
   const [tag, setTag] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // POST mutation for creating
+  const { addIncomeCategory } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePostIncomeCategoryMutation,
+  });
+
+  // PUT mutation for updating
+  const { updateIncomeCategory } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePutIncomeCategoryMutation,
+  });
 
   const formik = useFormik({
     initialValues: getIncomeCategoryInitialValues(editData),
     validationSchema: incomeCategoryValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `${values.incomeCategoryName} Income Category updated successfully`,
+    onSubmit: async (values) => {
+      try {
+        setIsLoading(true);
+
+        // Transform form data to API format
+        const payload = {
+          name: values.incomeCategoryName,
+          description: values.description || '',
+          tags: values.tags || [],
+        };
+
+        if (editData?.id) {
+          // Update existing income category
+          await updateIncomeCategory({
+            incomeCategoryId: editData.id,
+            body: payload,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `${values.incomeCategoryName} Income Category updated successfully`,
+          });
+        } else {
+          // Create new income category
+          await addIncomeCategory(payload).unwrap();
+
+          shikshaMitraToast.success({
+            message: `${values.incomeCategoryName} Income Category added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Save operation failed:', error);
+        shikshaMitraToast.error({
+          message: `Failed to ${editData ? 'update' : 'create'} income category`,
         });
-      } else {
-        shikshaMitraToast.success({
-          message: `${values.incomeCategoryName} Income Category added successfully`,
-        });
+      } finally {
+        setIsLoading(false);
       }
-      onClose(null, true);
     },
   });
 
@@ -162,7 +208,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -173,10 +219,12 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
           type="submit"
           variant="contained"
           size="small"
+          loading={isLoading}
+          disabled={isLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

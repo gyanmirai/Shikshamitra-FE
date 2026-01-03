@@ -4,15 +4,22 @@ import type { RootState } from 'src/redux/store';
 import type { Board, Medium, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Card, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useAddReceiptBookMutation,
+  useUpdateReceiptBookMutation,
+} from 'src/redux/finance/receiptBookApi';
 
 import { receiptBookValidationSchema } from '../validationSchema';
 
@@ -25,6 +32,20 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
   onClose,
   allData,
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  // POST mutation for creating
+  const { addReceiptBook } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddReceiptBookMutation,
+  });
+
+  // PUT mutation for updating
+  const { updateReceiptBook } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateReceiptBookMutation,
+  });
+
   // Get isChanges state from Redux store
   useSelector((state: RootState) => state.confirmPopup);
   // State to track and display duplicate receipt book name error
@@ -68,20 +89,49 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
     initialValues,
     validationSchema: receiptBookValidationSchema,
     enableReinitialize: true,
-    onSubmit: (values) => {
-      // Check if receipt book name already exists in the data
-      const exists = allData.some(
-        (entry) => entry.receiptBookName.toLowerCase() === values.receiptBookName.toLowerCase()
-      );
+    onSubmit: async (values) => {
+      try {
+        setIsLoading(true);
 
-      // Allow save if entry doesn't exist or if editing existing entry
-      if (!exists || isEdit) {
-        setShowErrorMessage(false);
-        onSave(values);
+        // Transform form data to API format
+        const payload = {
+          boardId: values.board,
+          mediumId: values.medium,
+          mediumStageId: values.organization,
+          name: values.receiptBookName,
+          prefix: values.prefix || '',
+          suffix: values.suffix || '',
+          startingNumber: Number(values.startingNumber) || 0,
+          endingNumber: Number(values.endingNumber) || 0,
+          description: values.description || '',
+        };
+
+        if (isEdit && data?.id) {
+          // Update existing receipt book
+          await updateReceiptBook({
+            receiptBookId: data.id,
+            body: payload,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `${values.receiptBookName} Receipt Book updated successfully`,
+          });
+        } else {
+          // Create new receipt book
+          await addReceiptBook(payload).unwrap();
+
+          shikshaMitraToast.success({
+            message: `${values.receiptBookName} Receipt Book added successfully`,
+          });
+        }
         onClose(null, true);
-      } else {
-        setShowErrorMessage(true);
-        onClose(null, true);
+      } catch (error) {
+        console.error('Save operation failed:', error);
+        shikshaMitraToast.error({
+          message: `Failed to ${isEdit ? 'update' : 'create'} receipt book`,
+        });
+      } finally {
+        setIsLoading(false);
       }
     },
   });
@@ -372,7 +422,7 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={
             <Iconify
               icon={data ? GlobalIcons.edit : GlobalIcons.submit}
@@ -386,9 +436,11 @@ const FinanceSettingReceiptbookDialog: React.FC<IProps> = ({
           type="submit"
           variant="contained"
           size="small"
+          loading={isLoading}
+          disabled={isLoading}
         >
           {data ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

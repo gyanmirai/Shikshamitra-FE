@@ -16,7 +16,10 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
+import {
+  useGetFeeHeadsQuery,
+  usePatchFeeHeadMutation,
+} from 'src/redux/feeHeadManage/feeHeadManageApi';
 
 import FeeHeadForm from './Components/FeeHeadForm';
 import FeeHeadTable from './Components/FeeHeadTable';
@@ -28,6 +31,12 @@ const FeeHeadCreation = () => {
   const { data: feeHeadData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeHeadsQuery,
+  });
+
+  // PATCH mutation for status change
+  const { patchFeeHead, isLoading: isPatching } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePatchFeeHeadMutation,
   });
 
   // Dialog control states
@@ -160,25 +169,41 @@ const FeeHeadCreation = () => {
           <Button
             variant="contained"
             size="small"
+            loading={isPatching}
+            disabled={isPatching}
             startIcon={
               <Iconify
                 icon={selectedEntry?.toggle === true ? GlobalIcons.draftIcon : GlobalIcons.publish}
               />
             }
-            onClick={() => {
-              const status = selectedEntry?.toggle === true ? 'Inactive' : 'Active';
-              shikshaMitraToast.success({
-                message: (
-                  <>
-                    Fee Head: <strong>{selectedEntry?.feeHeadName}</strong> moved to {status}{' '}
-                    successfully.
-                  </>
-                ),
-              });
-              setTimeout(() => {
-                setSelectedEntry(null);
-              }, 200);
-              activeDialog.onFalse();
+            onClick={async () => {
+              if (!selectedEntry?.id) return;
+
+              try {
+                await patchFeeHead({
+                  feeHeadId: selectedEntry.id,
+                  body: { isActive: selectedEntry?.toggle !== true },
+                }).unwrap();
+
+                const status = selectedEntry?.toggle === true ? 'Inactive' : 'Active';
+                shikshaMitraToast.success({
+                  message: (
+                    <>
+                      Fee Head: <strong>{selectedEntry?.feeHeadName}</strong> moved to {status}{' '}
+                      successfully.
+                    </>
+                  ),
+                });
+                setTimeout(() => {
+                  setSelectedEntry(null);
+                }, 200);
+                activeDialog.onFalse();
+              } catch (error) {
+                console.error('Status change failed:', error);
+                shikshaMitraToast.error({
+                  message: 'Failed to change fee head status',
+                });
+              }
             }}
           >
             {selectedEntry?.toggle === true ? 'Inactive' : 'Active'}

@@ -25,12 +25,41 @@ export const FinanceFeeStructureApi = createApi({
   endpoints: (builder) => ({
     getFinanceFeeStructure: builder.query({
       query: () => ({
-        url: '/feeStructure',
+        url: '/finance/fee-structures',
         method: 'GET',
       }),
       providesTags: ['Finance-Fee-Structure'],
     }),
+    createFeeStructure: builder.mutation({
+      query: (body) => ({
+        url: '/v1/finance/fee-structures',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Finance-Fee-Structure'],
+    }),
+    updateFeeStructure: builder.mutation({
+      query: ({ feeStructureId, body }) => ({
+        url: `/v1/finance/fee-structures/${feeStructureId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['Finance-Fee-Structure'],
+    }),
+    patchFeeStructureStatus: builder.mutation({
+      query: ({ feeStructureId, body }) => ({
+        url: `/v1/finance/fee-structures/${feeStructureId}/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['Finance-Fee-Structure'],
+    }),
   }),
 });
 
-export const { useGetFinanceFeeStructureQuery } = FinanceFeeStructureApi;
+export const {
+  useGetFinanceFeeStructureQuery,
+  useCreateFeeStructureMutation,
+  useUpdateFeeStructureMutation,
+  usePatchFeeStructureStatusMutation,
+} = FinanceFeeStructureApi;

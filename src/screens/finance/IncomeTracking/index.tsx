@@ -15,9 +15,12 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetIncomesQuery } from 'src/redux/incomeApi/incomeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-// import { useGetIncomeTrackingQuery } from 'src/redux/finance/incomeTracking';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetIncomeDetailsQuery } from 'src/redux/incomeApi/incomeDetailedApi';
+import {
+  useGetIncomeCategoryByIdQuery,
+  useDeleteIncomeCategoryMutation,
+} from 'src/redux/finance/incomeTrackingManagement/incomeTracking';
 
 import IncomeTable from './Components/IncomeTable';
 import ViewIncomeData from './Components/ViewIncomeData';
@@ -33,13 +36,30 @@ const IncomeTracking = () => {
   const addIncomeDialog = useBoolean();
   const deleteIncomeDialog = useBoolean();
   const viewIncomeDialog = useBoolean();
+
   const { data: incomeData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomesQuery,
   });
+
   const { data: incomeDetailedData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeDetailsQuery,
+  });
+
+  // GET by ID mutation
+  const { data: incomeById, isLoading: isLoadingDetails } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetIncomeCategoryByIdQuery,
+    options: {
+      skip: !selectedIncome?.id,
+    },
+  });
+
+  // DELETE mutation
+  const { deleteIncomeCategory, isLoading: isDeleting } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteIncomeCategoryMutation,
   });
 
   // Redux
@@ -162,13 +182,25 @@ const IncomeTracking = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              deleteIncomeDialog.onFalse();
-              setSelectedIncome(null);
-              shikshaMitraToast.success({
-                message: `Income record "${selectedIncome?.incomeName}" deleted successfully`,
-              });
-              // handle delete action
+            loading={isDeleting}
+            disabled={isDeleting}
+            onClick={async () => {
+              if (!selectedIncome?.id) return;
+
+              try {
+                await deleteIncomeCategory(selectedIncome.id).unwrap();
+
+                shikshaMitraToast.success({
+                  message: `Income record "${selectedIncome?.incomeName}" deleted successfully`,
+                });
+                deleteIncomeDialog.onFalse();
+                setSelectedIncome(null);
+              } catch (error) {
+                console.error('Delete operation failed:', error);
+                shikshaMitraToast.error({
+                  message: 'Failed to delete income record',
+                });
+              }
             }}
           >
             Yes

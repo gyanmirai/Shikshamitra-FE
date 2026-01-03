@@ -10,7 +10,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuList, Typography, IconButton } from '@mui/material';
-import { useGetChequeDetailsQuery } from 'src/redux/finance/reconciliation';
+import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
 import {
   PamentMethodsStatusColor,
   PaymentMethodsStatusType,
@@ -19,7 +19,11 @@ import {
 
 import { ApproveRejectForm } from './DemandDraftTable';
 
-const ChequeDetailsForm = () => {
+const ChequeDetailsForm = ({
+  queryParams,
+}: {
+  queryParams?: { month: string; year: string; paymentMethod: string };
+}) => {
   const [isClearCheck, setIsClearCheck] = useState<boolean>(false);
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const isDialog = useBoolean(false);
@@ -27,7 +31,8 @@ const ChequeDetailsForm = () => {
   // Fetch discrepancy data using the custom hook pattern
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetChequeDetailsQuery,
+    currentQueryAndMutation: useGetReconciliationListQuery,
+    params: queryParams,
   });
 
   return (

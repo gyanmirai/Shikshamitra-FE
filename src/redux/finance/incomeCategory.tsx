@@ -27,11 +27,38 @@ export const incomeCategoryApi = createApi({
   endpoints: (builder) => ({
     getIncomeCategories: builder.query({
       query: () => ({
-        url: '/incomeCategoryData',
+        url: '/finance/income-categories',
         method: 'GET',
       }),
       providesTags: ['incomeCategoryData'],
     }),
+
+    postIncomeCategory: builder.mutation({
+      query: (body: any) => ({
+        url: '/finance/income-categories',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['incomeCategoryData'],
+    }),
+
+    putIncomeCategory: builder.mutation({
+      query: ({ incomeCategoryId, body }) => ({
+        url: `/finance/income-categories/${incomeCategoryId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['incomeCategoryData'],
+    }),
+
+    deleteIncomeCategory: builder.mutation({
+      query: (incomeCategoryId: string) => ({
+        url: `/finance/income-categories/${incomeCategoryId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['incomeCategoryData'],
+    }),
+
     getBudgetOptions: builder.query({
       query: () => ({
         url: '/incomeOptions',
@@ -42,4 +69,10 @@ export const incomeCategoryApi = createApi({
   }),
 });
 
-export const { useGetIncomeCategoriesQuery, useGetBudgetOptionsQuery } = incomeCategoryApi;
+export const {
+  useGetIncomeCategoriesQuery,
+  usePostIncomeCategoryMutation,
+  usePutIncomeCategoryMutation,
+  useDeleteIncomeCategoryMutation,
+  useGetBudgetOptionsQuery,
+} = incomeCategoryApi;

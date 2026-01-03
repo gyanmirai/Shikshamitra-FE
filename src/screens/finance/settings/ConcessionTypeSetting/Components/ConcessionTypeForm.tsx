@@ -1,8 +1,10 @@
 import type { FormikErrors } from 'formik';
+import type { RootState } from 'src/redux/store';
 
 import React from 'react';
 import { useFormik } from 'formik';
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -11,9 +13,14 @@ import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { DocumentTypeArray } from 'src/enums/documnet-type';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  usePutConcessionTypeMutation,
+  usePostConcessionTypeMutation,
+} from 'src/redux/finance/concessionType';
 import {
   Box,
   Grid,
@@ -45,11 +52,65 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
   onClose,
   editData,
 }: IConcessionTypeFormProps) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
+  const { addConcessionType, isLoading: isCreating } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePostConcessionTypeMutation,
+  });
+
+  const { updateConcessionType, isLoading: isUpdating } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePutConcessionTypeMutation,
+  });
+
+  const isSubmitting = isCreating || isUpdating;
+
   const formik = useFormik({
     initialValues: getInitialConcessionTypeData(editData),
     validationSchema: concessionTypeValidationSchema,
-    onSubmit: (values) => {
-      onClose(null, true);
+    onSubmit: async (values) => {
+      try {
+        // Transform form data to match API requirements
+        const payload = {
+          name: values.concessionName,
+          baseAmount: values.concessionType === 'fixed' ? values.amount || 0 : 0,
+          amount:
+            values.concessionType === 'percentage' ? values.percentage || 0 : values.amount || 0,
+          applicableFeeHeads: values.applicableFeeHeads.map((head) => ({
+            id: head,
+            name: head,
+          })),
+          documentRequired: values.documentRequired,
+          documents: values.documentRequired
+            ? (values.documents || []).map((doc) => ({
+                documentName: doc.documentName,
+                documentSize: Number(doc.documentSize),
+                acceptedFormat: doc.acceptedFormat,
+              }))
+            : [],
+          description: values.description || '',
+        };
+
+        if (editData?.id) {
+          // Update existing concession type
+          await updateConcessionType({
+            academicYearId: currentYear?.id,
+            concessionTypeId: editData.id,
+            body: payload,
+          }).unwrap();
+        } else {
+          // Create new concession type
+          await addConcessionType({
+            academicYearId: currentYear?.id,
+            body: payload,
+          }).unwrap();
+        }
+
+        onClose(null, true);
+      } catch (error) {
+        console.error(`Error ${editData?.id ? 'updating' : 'creating'} concession type:`, error);
+      }
     },
   });
 
@@ -521,6 +582,8 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
           type="submit"
           size="small"
           variant="contained"
+          loading={isSubmitting}
+          disabled={isSubmitting}
         >
           {editData ? 'Update' : 'Submit'}
         </Button>

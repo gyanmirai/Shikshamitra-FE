@@ -16,7 +16,11 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetExpensesQuery } from 'src/redux/finance/expenseApi/expenseApi';
 import { Box, Card, Button, Typography, CircularProgress } from '@mui/material';
-import { useGetExpenseDetailsQuery } from 'src/redux/finance/expenseApi/expenseDetailedApi';
+import {
+  useGetExpenseByIdQuery,
+  useGetExpenseDetailsQuery,
+  useDeleteExpenseDetailsMutation,
+} from 'src/redux/finance/expenseApi/expenseDetailedApi';
 
 import ViewExpenseData from './component/ViewExpenseData';
 import ExpenseCategoryForm from './component/ExpenseCategoryForm';
@@ -39,6 +43,21 @@ const FinanceExpenseTracking = () => {
   const { data: expenseDetailedData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseDetailsQuery,
+  });
+
+  // GET by ID query
+  const { data: expenseById, isLoading: isLoadingDetails } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExpenseByIdQuery,
+    options: {
+      skip: !selectedExpense?.id,
+    },
+  });
+
+  // DELETE mutation
+  const { deleteExpenseDetails, isLoading: isDeleting } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteExpenseDetailsMutation,
   });
 
   // Redux
@@ -179,12 +198,25 @@ const FinanceExpenseTracking = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              deleteExpenseDialog.onFalse();
-              setSelectedExpense(null);
-              shikshaMitraToast.success({
-                message: `Expense record : ${selectedExpense?.expenseName} deleted successfully`,
-              });
+            loading={isDeleting}
+            disabled={isDeleting}
+            onClick={async () => {
+              if (!selectedExpense?.id) return;
+
+              try {
+                await deleteExpenseDetails(selectedExpense.id).unwrap();
+
+                shikshaMitraToast.success({
+                  message: `Expense record : ${selectedExpense?.expenseName} deleted successfully`,
+                });
+                deleteExpenseDialog.onFalse();
+                setSelectedExpense(null);
+              } catch (error) {
+                console.error('Delete operation failed:', error);
+                shikshaMitraToast.error({
+                  message: 'Failed to delete expense record',
+                });
+              }
             }}
           >
             Yes
@@ -210,12 +242,18 @@ const FinanceExpenseTracking = () => {
         handleClose={handleViewDialogClose}
         maxWidth="md"
       >
-        <ViewExpenseData
-          viewExpenseDialog={viewExpenseDialog}
-          expenseData={selectedExpense}
-          expenseDetailedData={expenseDetailedData}
-          onClose={handleViewDialogClose}
-        />
+        {isLoadingDetails ? (
+          <Box display="flex" justifyContent="center" alignItems="center" p={4}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <ViewExpenseData
+            viewExpenseDialog={viewExpenseDialog}
+            expenseData={expenseById || selectedExpense}
+            expenseDetailedData={expenseDetailedData}
+            onClose={handleViewDialogClose}
+          />
+        )}
       </CustomDialog>
     </Box>
   );

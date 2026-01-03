@@ -8,6 +8,7 @@ export interface IConcessionDocument {
 }
 
 export interface IConcessionTypeForm {
+  id?: string; // for editing
   concessionName: string;
   concessionType: string;
   amount?: number; // required if type = "fixed"
@@ -20,6 +21,7 @@ export interface IConcessionTypeForm {
 
 export interface IConcessionTableProps {
   data: IConcessionTypeForm[];
+  isLoading: boolean;
   addConcessionType: UseBooleanReturn;
   setEditData: (row: IConcessionTypeForm | null) => void;
   onEdit?: (row: IConcessionTypeForm) => void;

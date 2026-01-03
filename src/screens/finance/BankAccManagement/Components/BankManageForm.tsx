@@ -1,15 +1,21 @@
 'use client';
 
-import React from 'react';
 import { useFormik } from 'formik';
+import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddBankAccountMutation,
+  useUpdateBankAccountMutation,
+} from 'src/redux/finance/BankAccountManage/bankAccountApi';
 
 import { getBankAccountInitialValues } from './bankInitialValues';
 import { bankAccountValidationSchema } from './BankValidationSchema';
@@ -17,16 +23,64 @@ import { bankAccountValidationSchema } from './BankValidationSchema';
 import type { IBankAccountFormProps } from './type';
 
 const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editData }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  // POST mutation for creating
+  const { addBankAccount } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddBankAccountMutation,
+  });
+
+  // PUT mutation for updating
+  const { updateBankAccount } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateBankAccountMutation,
+  });
+
   const formik = useFormik({
     initialValues: getBankAccountInitialValues(editData),
     validationSchema: bankAccountValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({ message: `Bank Account updated successfully` });
-      } else {
-        shikshaMitraToast.success({ message: `Bank Account added successfully` });
+    onSubmit: async (values) => {
+      try {
+        setIsLoading(true);
+
+        // Transform form data to API format
+        const payload = {
+          bankName: values.bankName,
+          branchName: values.branchName,
+          branchAddress: values.branchAddress || '',
+          accountHolderName: values.accountName,
+          accountType: values.accountType,
+          accountNumber: values.accountNumber,
+          purpose: values.accountPurpose || '',
+          ifscCode: values.ifscCode,
+          upiId: values.upiId || '',
+          isActive: true,
+        };
+
+        if (editData?.id) {
+          // Update existing bank account
+          await updateBankAccount({
+            bankAccountId: editData.id,
+            body: payload,
+          }).unwrap();
+
+          shikshaMitraToast.success({ message: `Bank Account updated successfully` });
+        } else {
+          // Create new bank account
+          await addBankAccount(payload).unwrap();
+
+          shikshaMitraToast.success({ message: `Bank Account added successfully` });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Save operation failed:', error);
+        shikshaMitraToast.error({
+          message: `Failed to ${editData ? 'update' : 'create'} bank account`,
+        });
+      } finally {
+        setIsLoading(false);
       }
-      onClose(null, true);
     },
   });
 
@@ -224,7 +278,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -235,10 +289,12 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
           type="submit"
           variant="contained"
           size="small"
+          loading={isLoading}
+          disabled={isLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

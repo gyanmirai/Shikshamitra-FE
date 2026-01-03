@@ -118,7 +118,7 @@ const ReceiptSummaryReports = ({ report }: { report: any }) => {
   const [allStandards, setAllStandards] = useState<Standards[]>([]);
 
   // API Data
-  const { data: feeHeadsData } = useGetFeeHeadsQuery(null);
+  const { data: feeHeadsData } = useGetFeeHeadsQuery('');
   const allFeeHeads = useMemo(() => feeHeadsData || [], [feeHeadsData]);
 
   // Mock Data

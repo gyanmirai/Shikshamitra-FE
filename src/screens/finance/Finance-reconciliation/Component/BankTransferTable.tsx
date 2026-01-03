@@ -10,7 +10,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuList, Typography, IconButton } from '@mui/material';
-import { useGetBankTransferQuery } from 'src/redux/finance/reconciliation';
+import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
 import {
   PamentMethodsStatusColor,
   PaymentMethodsStatusType,
@@ -19,14 +19,19 @@ import {
 
 import { ApproveRejectForm } from './DemandDraftTable';
 
-const BankTransferTable = () => {
+const BankTransferTable = ({
+  queryParams,
+}: {
+  queryParams?: { month: string; year: string; paymentMethod: string };
+}) => {
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
   const [isClearCheck, setIsClearCheck] = useState(false);
 
   const isDialog = useBoolean(false);
   const { data: bankTransferData, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetBankTransferQuery,
+    currentQueryAndMutation: useGetReconciliationListQuery,
+    params: queryParams,
   });
 
   return (

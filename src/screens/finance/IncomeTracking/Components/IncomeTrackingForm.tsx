@@ -1,8 +1,9 @@
 import type { RootState } from 'src/redux/store';
 
-import React from 'react';
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
+import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -16,7 +17,11 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetPaymentMethodsConfigQuery } from 'src/redux/finance/expenseApi/expenseDetailedApi';
-import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeTrackingManagement/incomeTracking';
+import {
+  useGetIncomeCategoriesQuery,
+  useAddIncomeCategoryMutation,
+  useUpdateIncomeCategoryMutation,
+} from 'src/redux/finance/incomeTrackingManagement/incomeTracking';
 
 import { getInitialIncomeData } from './IncomeInitialValues';
 import { getIncomeFormSchema } from './IncomeValidationSchema';
@@ -25,11 +30,24 @@ import type { IIncomeTrackingFormProps } from './type';
 
 const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch income options from API
   const { data: incomeOptionsData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeCategoriesQuery,
+  });
+
+  // POST mutation for creating
+  const { addIncomeCategory } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddIncomeCategoryMutation,
+  });
+
+  // PUT mutation for updating
+  const { updateIncomeCategory } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateIncomeCategoryMutation,
   });
 
   // Fetch payment methods config from API
@@ -55,17 +73,49 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
   const formik = useFormik({
     initialValues: getInitialIncomeData(editData),
     validationSchema: getIncomeFormSchema(currentYear),
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Income Tracking "${values.incomeName}" updated successfully!`,
+    onSubmit: async (values) => {
+      try {
+        setIsLoading(true);
+
+        // Transform form data to API format
+        const payload = {
+          academicYearId: currentYear?.id,
+          categoryId: values.incomeCategory,
+          name: values.incomeName,
+          categoryTags: values.incomeCategoryTags || [],
+          amount: values.amount,
+          paymentMethod: values.paymentMethod,
+          paymentDate: values.date?.toISOString(),
+          notes: values.notes || '',
+        };
+
+        if (editData?.id) {
+          // Update existing income
+          await updateIncomeCategory({
+            incomeId: editData.id,
+            body: payload,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Income Tracking "${values.incomeName}" updated successfully!`,
+          });
+        } else {
+          // Create new income
+          await addIncomeCategory(payload).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Income Tracking "${values.incomeName}" added successfully!`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Save operation failed:', error);
+        shikshaMitraToast.error({
+          message: `Failed to ${editData ? 'update' : 'create'} income tracking`,
         });
-      } else {
-        shikshaMitraToast.success({
-          message: `Income Tracking "${values.incomeName}" added successfully!`,
-        });
+      } finally {
+        setIsLoading(false);
       }
-      onClose(null, true);
     },
   });
 
@@ -440,7 +490,7 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               startIcon={
                 <Iconify
                   icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -451,9 +501,11 @@ const IncomeTrackingForm: React.FC<IIncomeTrackingFormProps> = ({ open, onClose,
               type="submit"
               size="small"
               variant="contained"
+              loading={isLoading}
+              disabled={isLoading}
             >
               {editData ? 'Update' : 'Submit'}
-            </Button>
+            </LoadingButton>
           </DialogActions>
         </Box>
       </form>
