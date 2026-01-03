@@ -2,11 +2,12 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 
 import type { IFeeCategory, IFeeCategoryTableProps } from './type';
 
 const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
-  data,
   onAddFeeCategory,
   editData,
   open,
@@ -14,89 +15,96 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
-}) => (
-  <CustomizableTable
-    tableId="fee-category-data-table"
-    noDataText={
-      <>
-        Fee Category Data Not Found{' '}
-        <Box
-          onClick={() => {
-            onAddFeeCategory.onTrue();
-            setOpenDialog(true);
-            setEditData(null);
-          }}
-          color="primary.main"
-          fontWeight={600}
-          sx={{
-            '&:hover': {
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            },
-          }}
-        >
-          Add Fee Category
-        </Box>
-      </>
-    }
-    columns={[
-      {
-        id: 'feeCategoryName',
-        label: 'Name',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
-      },
-      {
-        id: 'description',
-        label: 'Description',
-        align: 'left',
-        render: (value) => (
-          <Typography
-            variant="caption"
-            fontSize="13px"
+}) => {
+  // Custom hook to fetch fee category data
+  const { data: feeCategoryData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetFeeCategoriesQuery,
+  });
+  return (
+    <CustomizableTable
+      tableId="fee-category-data-table"
+      noDataText={
+        <>
+          Fee Category Data Not Found{' '}
+          <Box
+            onClick={() => {
+              onAddFeeCategory.onTrue();
+              setOpenDialog(true);
+              setEditData(null);
+            }}
+            color="primary.main"
+            fontWeight={600}
             sx={{
-              maxWidth: 300,
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis',
-              overflow: 'hidden',
+              '&:hover': {
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              },
             }}
           >
-            {value || '-'}
-          </Typography>
-        ),
-      },
-      {
-        id: 'action',
-        label: 'Actions',
-        minWidth: 50,
-        align: 'left',
-        isSort: false,
-        sticky: true,
-        isFilter: false,
-        render(value, row) {
-          return (
-            <ThreeDotsActions
-              showThreeDots={false}
-              placement="right-top"
-              showDeleteIcon
-              showEditIcon
-              handleDeleteClick={() => {
-                onDelete(row as IFeeCategory);
-              }}
-              handleEditClick={() => {
-                onEdit(row as IFeeCategory);
-              }}
-            />
-          );
+            Add Fee Category
+          </Box>
+        </>
+      }
+      columns={[
+        {
+          id: 'feeCategoryName',
+          label: 'Name',
+          align: 'left',
+          render: (value) => (
+            <Typography variant="caption" fontSize="13px">
+              {value}
+            </Typography>
+          ),
         },
-      },
-    ]}
-    data={data || []}
-  />
-);
+        {
+          id: 'description',
+          label: 'Description',
+          align: 'left',
+          render: (value) => (
+            <Typography
+              variant="caption"
+              fontSize="13px"
+              sx={{
+                maxWidth: 300,
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden',
+              }}
+            >
+              {value || '-'}
+            </Typography>
+          ),
+        },
+        {
+          id: 'action',
+          label: 'Actions',
+          minWidth: 50,
+          align: 'left',
+          isSort: false,
+          sticky: true,
+          isFilter: false,
+          render(value, row) {
+            return (
+              <ThreeDotsActions
+                showThreeDots={false}
+                placement="right-top"
+                showDeleteIcon
+                showEditIcon
+                handleDeleteClick={() => {
+                  onDelete(row as IFeeCategory);
+                }}
+                handleEditClick={() => {
+                  onEdit(row as IFeeCategory);
+                }}
+              />
+            );
+          },
+        },
+      ]}
+      data={feeCategoryData?.data || []}
+    />
+  );
+};
 
 export default FeeCategoryTable;
