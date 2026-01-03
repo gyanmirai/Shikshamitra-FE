@@ -3,12 +3,8 @@ import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'a
 import axios from 'axios';
 import { toast } from 'sonner';
 import store from 'src/redux/store';
-import { isTokenExpired } from 'src/utils/client';
-import { oidcService } from 'src/utils/oidcClient';
-import { setUser, clearUser } from 'src/redux/auth/authSlice';
-
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+import { getSession } from 'next-auth/react';
+import { clearUser } from 'src/redux/auth/authSlice';
 
 const createAxiosInstance = (baseURL: string): AxiosInstance => {
   const instance = axios.create({
@@ -25,81 +21,11 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
   instance.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
       if (typeof window !== 'undefined') {
-        const reduxStore = store.getState();
-        const { currentYear, currentBoard, currentMedium } = reduxStore.globalState;
-
-        const cookieString = `AcademicYearId=${currentYear?.id};EducationBoardId=${currentBoard?.id};EducationMediumId=${currentMedium?.id}`;
-
-        // Cookies.set('AcademicYearId', currentYear?.id, {
-        //   expires: 7,
-        //   path: '/',
-        //   secure: false,
-        //   domain: 'localhost',
-        //   sameSite: 'None', // <-- UNCOMMENT THIS LINE, set sameSite to 'Lax'
-        //   // hostOnly: false,
-        // });
-        // Cookies.set('EducationBoardId', currentBoard?.id, {
-        //   expires: 7,
-        //   path: '/',
-        //   secure: false,
-        //   domain: 'localhost',
-        //   sameSite: 'None', // <-- UNCOMMENT THIS LINE, set sameSite to 'Lax'
-        //   // hostOnly: false,
-        // });
-        // Cookies.set('EducationMediumId', currentMedium?.id, {
-        //   expires: 7,
-        //   path: '/',
-        //   secure: false,
-        //   domain: 'localhost',
-        //   sameSite: 'None', // <-- UNCOMMENT THIS LINE, set sameSite to 'Lax'
-        //   // hostOnly: false,
-        // });
-
-        const token = store.getState().auth.user?.access_token;
+        const session: any = await getSession();
+        const token = session?.accessToken;
 
         if (token) {
-          if (isTokenExpired(token)) {
-            // If the token is expired, handle refresh token logic
-            if (!isRefreshing) {
-              isRefreshing = true;
-              try {
-                const refreshedUser = await oidcService.renewToken();
-                store.dispatch(setUser(JSON.parse(JSON.stringify(refreshedUser))));
-
-                if (refreshedUser?.access_token) {
-                  // Notify all waiting requests that the new token is available
-                  refreshSubscribers.forEach((callback) => callback(refreshedUser?.access_token));
-                  refreshSubscribers = []; // Clear the queue after processing
-
-                  config.headers = config.headers || {};
-                  config.headers.Authorization = `Bearer ${refreshedUser?.access_token}`;
-                  config.headers['X-Custom-Header'] = cookieString;
-                } else {
-                  handleLogout();
-                }
-              } catch (error) {
-                console.error(error, '=========error========');
-                handleLogout();
-              } finally {
-                isRefreshing = false;
-              }
-            } else {
-              // Wait for the refresh to complete and retry the original request
-              await new Promise<void>((resolve) => {
-                refreshSubscribers.push((tokens: string) => {
-                  config.headers = config.headers || {};
-                  config.headers.Authorization = `Bearer ${tokens}`;
-                  config.headers['X-Custom-Header'] = cookieString;
-                  resolve();
-                });
-              });
-            }
-          } else {
-            // Token is valid, attach to the request
-            config.headers = config.headers || {};
-            config.headers.Authorization = `Bearer ${token}`;
-            config.headers['X-Custom-Header'] = cookieString;
-          }
+          config.headers.Authorization = `Bearer ${token}`;
         }
       }
 

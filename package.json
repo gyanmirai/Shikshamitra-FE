@@ -100,6 +100,7 @@
     "mui-color-input": "^7.0.0",
     "mui-tel-input": "^9.0.1",
     "next": "15.5.2",
+    "next-auth": "^5.0.0-beta.30",
     "nprogress": "^0.2.0",
     "oidc-client": "^1.11.5",
     "oidc-client-ts": "^3.3.0",
