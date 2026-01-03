@@ -12,8 +12,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useDeleteServiceTypeMutation } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import ServiceTypeForm from './Components/ServiceTypeForm';
 import ServiceTypeTable from './Components/ServiceTypeTable';
@@ -33,6 +35,12 @@ const ServiceTypeSettingScreen = () => {
   const [selectedServiceType, setSelectedServiceType] = useState<IServiceType | null>(null);
 
   const dispatch = useDispatch();
+
+  // Delete mutation hook
+  const { deleteServiceType, isLoading: isDeleting } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteServiceTypeMutation,
+  });
 
   /**
    * Handles closing of add/edit service type dialog
@@ -155,15 +163,26 @@ const ServiceTypeSettingScreen = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              deleteServiceTypeDialog.onFalse();
-              setSelectedServiceType(null);
-              shikshaMitraToast.success({
-                message: `Service Type: ${selectedServiceType?.typeName} deleted successfully`,
-              });
+            disabled={isDeleting}
+            onClick={async () => {
+              if (!selectedServiceType?.id) return;
+
+              try {
+                const typeName = selectedServiceType?.name || selectedServiceType?.typeName;
+                await deleteServiceType(selectedServiceType.id);
+                deleteServiceTypeDialog.onFalse();
+                setSelectedServiceType(null);
+                shikshaMitraToast.success({
+                  message: `Service Type: ${typeName} deleted successfully`,
+                });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete service type',
+                });
+              }
             }}
           >
-            Yes
+            {isDeleting ? 'Deleting...' : 'Yes'}
           </Button>
         }
       />

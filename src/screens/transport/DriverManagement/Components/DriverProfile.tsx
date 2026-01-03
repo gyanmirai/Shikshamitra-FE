@@ -6,7 +6,9 @@ import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Card, Grid, Alert, Avatar, Typography, IconButton, CardContent } from '@mui/material';
+import { useGetDriverConductorByIdQuery } from 'src/redux/transport/vehicle-management/driver-conductor-api';
 
 import type { IDriverConductor } from './type';
 
@@ -17,7 +19,25 @@ interface IDriverProfileProps {
 
 const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) => {
   const theme = useTheme();
-  if (!driverData) return null;
+
+  // Fetch detailed staff profile if staffId is available
+  const { data: staffProfile, isLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetDriverConductorByIdQuery,
+    params: driverData?.staffId || driverData?.id,
+  });
+
+  // Use fetched profile data if available, otherwise use prop data
+  const profileData = staffProfile || driverData;
+
+  if (!profileData) return null;
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" height="450px">
+        <Typography>Loading profile...</Typography>
+      </Box>
+    );
+  }
 
   // Calculate days until license expiry
   const calculateDaysUntilExpiry = (expiryDate: string) => {
@@ -28,7 +48,7 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
     return diffDays;
   };
 
-  const daysUntilExpiry = calculateDaysUntilExpiry(driverData.licenceExpiry);
+  const daysUntilExpiry = calculateDaysUntilExpiry(profileData.licenceExpiry);
   const isLicenseExpired = daysUntilExpiry < 0;
   const isLicenseExpiringSoon = daysUntilExpiry <= 30 && daysUntilExpiry >= 0;
 
@@ -39,7 +59,7 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
         <CardContent sx={{ p: 2 }}>
           <Box display="flex" alignItems="center" gap={2}>
             <Avatar
-              src={driverData.avatarUrl || '/static/avatars/default-avatar.jpg'}
+              src={profileData.avatarUrl || '/static/avatars/default-avatar.jpg'}
               sx={{
                 width: 56,
                 height: 56,
@@ -51,25 +71,25 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
             </Avatar>
             <Box flex={1}>
               <Typography variant="h6" fontWeight={600}>
-                {driverData.name}
+                {profileData.name}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Employee ID: {driverData.employeeId}
+                Employee ID: {profileData.employeeId}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {driverData.experience} experience
+                {profileData.experience} experience
               </Typography>
             </Box>
             <Label
               color={
-                driverData.status === 'Active'
+                profileData.status === 'Active'
                   ? 'success'
-                  : driverData.status === 'On Leave'
+                  : profileData.status === 'On Leave'
                     ? 'error'
                     : 'default'
               }
             >
-              {driverData.status}
+              {profileData.status}
             </Label>
           </Box>
         </CardContent>
@@ -110,7 +130,7 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
                   sx={{ color: 'text.secondary', mt: 0.3 }}
                 />
                 <Typography variant="body2" color="text.secondary">
-                  {driverData.phoneNo}
+                  {profileData.phoneNo}
                 </Typography>
               </Box>
 
@@ -163,7 +183,7 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
                     Licence Expiry
                   </Typography>
                   <Typography variant="body2" fontWeight={500} color="text.primary">
-                    {driverData.licenceExpiry}
+                    {profileData.licenceExpiry}
                   </Typography>
                 </Grid>
                 <Grid size={{ xs: 6 }}>
@@ -179,7 +199,7 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
                     Experience
                   </Typography>
                   <Typography variant="body2" fontWeight={500} color="text.primary">
-                    {driverData.experience}
+                    {profileData.experience}
                   </Typography>
                 </Grid>
               </Grid>
@@ -201,7 +221,7 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
                 Current Route Assignment
               </Typography>
 
-              {driverData.assignedRoute ? (
+              {profileData.assignedRoute ? (
                 <Box
                   sx={{
                     backgroundColor: varAlpha(theme.palette.success.mainChannel, 0.08),
@@ -213,7 +233,7 @@ const DriverProfile: React.FC<IDriverProfileProps> = ({ driverData, onClose }) =
                   }}
                 >
                   <Typography variant="body2" fontWeight={500} color="text.primary">
-                    {driverData.assignedRoute}
+                    {profileData.assignedRoute}
                   </Typography>
                 </Box>
               ) : (

@@ -8,8 +8,13 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { DocumentTypeArray } from 'src/enums/documnet-type';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddVehicleDocumentMutation,
+  useUpdateVehicleDocumentMutation,
+} from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 import {
   Chip,
   Grid,
@@ -28,20 +33,48 @@ import { getVehicleDocumentInitialValues } from './VehicleDocumentInitialValues'
 import type { IVehicleDocumentFormProps } from './type';
 
 const VehicleDocumentForm: React.FC<IVehicleDocumentFormProps> = ({ open, onClose, editData }) => {
+  const { addVehicleDocument, isLoading: isAdding } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddVehicleDocumentMutation,
+  });
+  const { updateVehicleDocument, isLoading: isUpdating } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateVehicleDocumentMutation,
+  });
+
   const formik = useFormik({
     initialValues: getVehicleDocumentInitialValues(editData),
     validationSchema: vehicleDocumentValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Vehicle Document : ${values.documentName} updated successfully`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Vehicle Document : ${values.documentName} added successfully`,
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          name: values.documentName,
+          maxSizeMb: Number(values.documentSize),
+          acceptedFormats: values.acceptedFormat,
+          isRequired: values.required,
+          isActive: true,
+        };
+
+        if (editData) {
+          await updateVehicleDocument({
+            documentId: editData.id,
+            body: payload,
+          });
+          shikshaMitraToast.success({
+            message: `Vehicle Document: ${values.documentName} updated successfully`,
+          });
+        } else {
+          await addVehicleDocument(payload);
+          shikshaMitraToast.success({
+            message: `Vehicle Document: ${values.documentName} added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Failed to save vehicle document',
         });
       }
-      onClose(null, true);
     },
   });
 
@@ -205,8 +238,9 @@ const VehicleDocumentForm: React.FC<IVehicleDocumentFormProps> = ({ open, onClos
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          disabled={isAdding || isUpdating}
         >
-          {editData ? 'Update' : 'Submit'}
+          {isAdding || isUpdating ? 'Saving...' : editData ? 'Update' : 'Submit'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>

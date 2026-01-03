@@ -1,9 +1,11 @@
 export interface IServiceType {
   id: string;
+  name?: string;
   typeName: string;
   description?: string;
   createdBy?: string;
   createdOn?: string;
+  isActive?: boolean;
 }
 
 export interface IServiceTypeTableProps {

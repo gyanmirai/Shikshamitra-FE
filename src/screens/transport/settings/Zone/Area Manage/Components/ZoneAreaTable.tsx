@@ -19,6 +19,15 @@ const ZoneAreaTable: React.FC<IZoneAreaTableProps> = ({
     currentQueryAndMutation: useGetZoneAreaOptionsQuery,
   });
 
+  // Transform API response to match table format
+  const transformedData = React.useMemo(() => {
+    if (!zoneAreaData) return [];
+    return zoneAreaData.map((item: any) => ({
+      ...item,
+      zoneName: item.name || item.zoneName,
+    }));
+  }, [zoneAreaData]);
+
   return (
     <CustomizableTable
       tableId="zone-area-data-table"
@@ -98,7 +107,7 @@ const ZoneAreaTable: React.FC<IZoneAreaTableProps> = ({
           },
         },
       ]}
-      data={zoneAreaData || []}
+      data={transformedData}
     />
   );
 };

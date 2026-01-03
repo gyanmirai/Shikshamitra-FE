@@ -19,6 +19,15 @@ const ServiceTypeTable: React.FC<IServiceTypeTableProps> = ({
     currentQueryAndMutation: useGetServiceTypesQuery,
   });
 
+  // Transform API response to match table format
+  const transformedData = React.useMemo(() => {
+    if (!serviceTypeData) return [];
+    return serviceTypeData.map((item: any) => ({
+      ...item,
+      typeName: item.name || item.typeName,
+    }));
+  }, [serviceTypeData]);
+
   return (
     <CustomizableTable
       tableId="service-type-data-table"
@@ -88,7 +97,7 @@ const ServiceTypeTable: React.FC<IServiceTypeTableProps> = ({
           },
         },
       ]}
-      data={serviceTypeData || []}
+      data={transformedData}
     />
   );
 };

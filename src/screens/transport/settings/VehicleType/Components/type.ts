@@ -1,8 +1,11 @@
 export interface IVehicleType {
   id: string;
+  name?: string;
   typeName: string;
+  approxSittingRange?: string;
   description?: string;
   vehicleRange: [number, number];
+  isActive?: boolean;
 }
 
 export interface IVehicleTypeTableProps {

@@ -9,7 +9,10 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetAvailableRoutesQuery } from 'src/redux/transport/vehicle-management/driver-conductor-api';
+import {
+  useGetAvailableRoutesQuery,
+  useAddDriverConductorMutation,
+} from 'src/redux/transport/vehicle-management/driver-conductor-api';
 import {
   Box,
   Grid,
@@ -34,16 +37,41 @@ const AssignRouteForm: React.FC<IAssignRouteFormProps> = ({ onClose, driverData 
     currentQueryAndMutation: useGetAvailableRoutesQuery,
   });
 
+  const { addDriverConductor, isLoading: isAssigning } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddDriverConductorMutation,
+  });
+
   const routesData = availableRoutes || [];
 
   const formik = useFormik({
     initialValues: getAssignRouteInitialValues(driverData),
     validationSchema: assignRouteValidationSchema,
-    onSubmit: (values) => {
-      shikshaMitraToast.success({
-        message: `Route "${values.selectedRoute}" assigned to ${values.driverName} successfully`,
-      });
-      onClose(null, true);
+    onSubmit: async (values) => {
+      try {
+        if (!driverData?.staffId) {
+          shikshaMitraToast.error({ message: 'Staff ID is missing' });
+          return;
+        }
+
+        const payload = {
+          routeId: values.selectedRoute,
+        };
+
+        await addDriverConductor({
+          staffId: driverData.staffId,
+          data: payload,
+        });
+
+        shikshaMitraToast.success({
+          message: `Route assigned to ${values.driverName} successfully`,
+        });
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Failed to assign route',
+        });
+      }
     },
   });
 
@@ -116,8 +144,9 @@ const AssignRouteForm: React.FC<IAssignRouteFormProps> = ({ onClose, driverData 
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          disabled={isAssigning}
         >
-          Submit
+          {isAssigning ? 'Assigning...' : 'Submit'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>

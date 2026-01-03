@@ -8,8 +8,13 @@ import { sliderClasses } from '@mui/material/Slider';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Button, Slider, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useAddVehicleTypeMutation,
+  useUpdateVehicleTypeMutation,
+} from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import { vehicleTypeValidationSchema } from './VehicleTypeValidation';
 import { getVehicleTypeInitialValues } from './VehicleTypeInitialValues';
@@ -17,20 +22,47 @@ import { getVehicleTypeInitialValues } from './VehicleTypeInitialValues';
 import type { IVehicleTypeFormProps } from './type';
 
 const VehicleTypeForm: React.FC<IVehicleTypeFormProps> = ({ open, onClose, editData }) => {
+  const { addVehicleType, isLoading: isAdding } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddVehicleTypeMutation,
+  });
+  const { updateVehicleType, isLoading: isUpdating } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateVehicleTypeMutation,
+  });
+
   const formik = useFormik({
     initialValues: getVehicleTypeInitialValues(editData),
     validationSchema: vehicleTypeValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Vehicle Type : ${values.typeName} updated successfully`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Vehicle Type : ${values.typeName} added successfully`,
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          name: values.typeName,
+          approxSittingRange: `${values.vehicleRange[0]}-${values.vehicleRange[1]}`,
+          description: values.description || '',
+          isActive: true,
+        };
+
+        if (editData) {
+          await updateVehicleType({
+            vehicleTypeId: editData.id,
+            body: payload,
+          }).unwrap();
+          shikshaMitraToast.success({
+            message: `Vehicle Type: ${values.typeName} updated successfully`,
+          });
+        } else {
+          await addVehicleType(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `Vehicle Type: ${values.typeName} added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Failed to save vehicle type',
         });
       }
-      onClose(null, true);
     },
   });
 
@@ -131,8 +163,9 @@ const VehicleTypeForm: React.FC<IVehicleTypeFormProps> = ({ open, onClose, editD
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          disabled={isAdding || isUpdating}
         >
-          {editData ? 'Update' : 'Submit'}
+          {isAdding || isUpdating ? 'Saving...' : editData ? 'Update' : 'Submit'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>

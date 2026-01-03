@@ -4,10 +4,15 @@ import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Button, DialogActions } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetRouteStopDataQuery } from 'src/redux/transport/vehicle-management/routeStopApi';
+import {
+  useGetRouteStopDataQuery,
+  usePostRouteStopDataMutation,
+  useStatusRouteStopDataMutation,
+} from 'src/redux/transport/vehicle-management/routeStopApi';
 
 import TransportMemberProfile from '../TransportMemberProfile';
 import TransportApplicationRouteDetail from './TransportRouteDetails';
@@ -32,6 +37,16 @@ const TransportApplicationDetail = ({
     type: 'query',
     currentQueryAndMutation: useGetRouteStopDataQuery,
   });
+
+  const { postRouteStopData, isLoading: isAssigning } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePostRouteStopDataMutation,
+  });
+
+  const { statusRouteStopData, isLoading: isApproving } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useStatusRouteStopDataMutation,
+  });
   const initialValues = getTransportApplicationInitialValues(selectedApplication, routeData);
 
   const formik = useFormik({
@@ -49,9 +64,43 @@ const TransportApplicationDetail = ({
         })
       ),
     }),
-    onSubmit: (values) => {
-      // 🔗 call API or emit event to parent
-      if (onClose) onClose(values, true);
+    onSubmit: async (values) => {
+      try {
+        if (!selectedApplication?.id) {
+          shikshaMitraToast.error({ message: 'Application ID is missing' });
+          return;
+        }
+
+        if (!values.studentDetails?.assignedStop) {
+          shikshaMitraToast.error({ message: 'Please assign a stop before approving' });
+          return;
+        }
+
+        const payload = {
+          routeId: values.selectedRoute.routeId,
+          stopId: values.studentDetails.assignedStop,
+        };
+
+        // Step 1: Assign stop
+        await postRouteStopData({
+          applicationId: selectedApplication.id,
+          body: payload,
+        });
+
+        // Step 2: Approve application
+        await statusRouteStopData(selectedApplication.id);
+
+        shikshaMitraToast.success({
+          message: 'Application approved successfully',
+        });
+
+        if (onApprove) onApprove();
+        if (onClose) onClose(values, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Failed to approve application',
+        });
+      }
     },
   });
 
@@ -93,9 +142,10 @@ const TransportApplicationDetail = ({
             size="small"
             color="success"
             startIcon={<Iconify icon={GlobalIcons.tick} />}
-            onClick={onApprove}
+            onClick={(e: any) => formik.handleSubmit(e)}
+            disabled={isAssigning || isApproving}
           >
-            Approve
+            {isAssigning || isApproving ? 'Approving...' : 'Approve'}
           </Button>
         </DialogActions>
       </Box>

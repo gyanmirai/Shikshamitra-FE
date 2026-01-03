@@ -12,8 +12,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useDeleteVehicleDocumentMutation } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import VehicleDocumentForm from './Components/VehicleDocumentForm';
 import VehicleDocumentTable from './Components/VehicleDocumentTable';
@@ -35,6 +37,12 @@ const VehicleDocumentSettingScreen = () => {
   );
 
   const dispatch = useDispatch();
+
+  // Delete mutation hook
+  const { deleteVehicleDocument, isLoading: isDeleting } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteVehicleDocumentMutation,
+  });
 
   /**
    * Handles closing of add/edit vehicle document dialog
@@ -157,15 +165,27 @@ const VehicleDocumentSettingScreen = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              deleteVehicleDocumentDialog.onFalse();
-              setSelectedVehicleDocument(null);
-              shikshaMitraToast.success({
-                message: `Vehicle Document: ${selectedVehicleDocument?.documentName} deleted successfully`,
-              });
+            disabled={isDeleting}
+            onClick={async () => {
+              if (!selectedVehicleDocument?.id) return;
+
+              try {
+                const documentName =
+                  selectedVehicleDocument?.name || selectedVehicleDocument?.documentName;
+                await deleteVehicleDocument(selectedVehicleDocument.id);
+                deleteVehicleDocumentDialog.onFalse();
+                setSelectedVehicleDocument(null);
+                shikshaMitraToast.success({
+                  message: `Vehicle Document: ${documentName} deleted successfully`,
+                });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete vehicle document',
+                });
+              }
             }}
           >
-            Yes
+            {isDeleting ? 'Deleting...' : 'Yes'}
           </Button>
         }
       />

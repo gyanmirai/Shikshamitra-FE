@@ -1,7 +1,9 @@
 export interface IZoneArea {
   id: string;
+  name?: string;
   zoneName: string;
   description?: string;
+  isActive?: boolean;
 }
 
 export interface IZoneAreaTableProps {
