@@ -2,32 +2,79 @@ import React, { useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box, Grid, Paper } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
-import seatAllocationData from 'src/json/examination/seatAllocationData.json';
-import seatAllocationStudents from 'src/json/examination/seatAllocationStudents.json';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import {
+  useGetSeatLayoutQuery,
+  useGetSeatAllocationStudentsQuery,
+} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
 import StudentCard from './StudentCard';
 import SeatManagement from './SeatManagement';
 
-import type { ISeatAllocation, IStudentRoomAssignment } from '../type';
+import type {
+  IDroppedData,
+  IDroppedStudent,
+  IExamAllocation,
+  ISeatAllocation,
+  IStudentRoomAssignment,
+} from '../type';
 
 const SeatAllocationSection = ({
   division,
   classRoom,
-  className,
+  selectedExam,
+  setDroppedData,
 }: {
   division: string;
   classRoom: string;
-  className: string;
+  selectedExam: IExamAllocation | null;
+  setDroppedData: React.Dispatch<React.SetStateAction<IDroppedData>>;
 }) => {
   // Material-UI theme hook for accessing theme colors and styling properties
   const theme = useTheme();
 
+  const {
+    data: seatAllocationStudentsData,
+    isLoading: seatAllocationStudentsLoading,
+    isFetching: seatAllocationStudentsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSeatAllocationStudentsQuery,
+    params: {
+      examId: selectedExam?.id,
+      divisionId: division,
+      academicMediumId: 1,
+      classNameId: selectedExam?.classId,
+    },
+  });
+
+  const {
+    data: seatLayoutData,
+    isLoading: seatLayoutLoading,
+    isFetching: seatLayoutFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSeatLayoutQuery,
+    params: { examId: selectedExam?.id, divisionId: division, roomId: classRoom },
+  });
+
   // State to manage seat assignment data, tracking which students are assigned to which seats
   // Initialized with mock data from JSON file for seat allocation information
-  const [assignedData, setAssignedData] = useState<ISeatAllocation[]>(seatAllocationData);
-  console.log('assignedData', assignedData);
+  const [assignedData, setAssignedData] = useState<ISeatAllocation[]>([]);
   // Tracks student details including assignment status and bench allocation
-  const [students, setStudents] = useState<IStudentRoomAssignment[]>(seatAllocationStudents);
+  const [students, setStudents] = useState<IStudentRoomAssignment[]>([]);
+
+  React.useEffect(() => {
+    if (seatLayoutData) {
+      setAssignedData(seatLayoutData);
+    }
+  }, [seatLayoutData]);
+
+  React.useEffect(() => {
+    if (seatAllocationStudentsData) {
+      setStudents(seatAllocationStudentsData);
+    }
+  }, [seatAllocationStudentsData]);
 
   const handleStudentRemove = (studentId: number | null) => {
     // Remove from assigned seats
@@ -37,6 +84,12 @@ const SeatAllocationSection = ({
     setStudents((prev) =>
       prev?.map((s) => (s.id === studentId ? { ...s, isRoomAssign: false, bench: undefined } : s))
     );
+
+    // Sync droppedData
+    setDroppedData((prev) => ({
+      ...prev,
+      students: (prev?.students || []).filter((s: IDroppedStudent) => s.studentId !== studentId),
+    }));
   };
 
   const handleStudentDrop = (student: IStudentRoomAssignment, seatNumber: number) => {
@@ -65,6 +118,19 @@ const SeatAllocationSection = ({
           : s
       )
     );
+
+    setDroppedData((prev) => ({
+      roomId: classRoom,
+      students: [
+        ...(prev?.students || []),
+        {
+          studentId: student.id,
+          seatNumber,
+          benchId: Math.ceil(seatNumber / 2).toString(),
+          isRoomAssign: true,
+        },
+      ],
+    }));
   };
 
   const handleSeatSwap = (fromSeat: number, toSeat: number) => {
@@ -93,7 +159,7 @@ const SeatAllocationSection = ({
               justifyContent="space-between"
               sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
             >
-              Total Students : {students.length}
+              Total Students : {seatAllocationStudentsData?.length}
             </Box>
             <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
               <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>

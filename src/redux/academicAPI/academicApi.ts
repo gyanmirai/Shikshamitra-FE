@@ -27,6 +27,7 @@ export const academicApi = createApi({
     'CurriculumFile',
     'ExaminationType',
     'GradeScaling',
+    'SeatAllocation',
   ],
   endpoints: () => ({}), // inject endpoints later
 });
