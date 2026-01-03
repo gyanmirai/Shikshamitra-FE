@@ -1,7 +1,7 @@
 import type { BoxProps } from '@mui/material/Box';
 
-import { m } from 'framer-motion';
 import Box from '@mui/material/Box';
+import { motion } from 'framer-motion';
 import { varAlpha } from 'src/theme/styles';
 
 import { Logo } from '../logo';
@@ -27,7 +27,7 @@ export function AnimateLogo1({ logo, sx, ...other }: AnimateLogoProps) {
       {...other}
     >
       <Box
-        component={m.div}
+        component={motion.div}
         animate={{ scale: [1, 0.9, 0.9, 1, 1], opacity: [1, 0.48, 0.48, 1, 1] }}
         transition={{
           duration: 2,
@@ -41,7 +41,7 @@ export function AnimateLogo1({ logo, sx, ...other }: AnimateLogoProps) {
       </Box>
 
       <Box
-        component={m.div}
+        component={motion.div}
         animate={{
           scale: [1.6, 1, 1, 1.6, 1.6],
           rotate: [270, 0, 0, 270, 270],
@@ -58,7 +58,7 @@ export function AnimateLogo1({ logo, sx, ...other }: AnimateLogoProps) {
       />
 
       <Box
-        component={m.div}
+        component={motion.div}
         animate={{
           scale: [1, 1.2, 1.2, 1, 1],
           rotate: [0, 270, 270, 0, 0],
@@ -98,7 +98,7 @@ export function AnimateLogo2({ logo, sx, ...other }: AnimateLogoProps) {
       {logo ?? <Logo sx={{ zIndex: 9 }} />}
 
       <Box
-        component={m.div}
+        component={motion.div}
         animate={{ rotate: 360 }}
         transition={{ duration: 10, ease: 'linear', repeat: Infinity }}
         sx={{

@@ -2,8 +2,8 @@ import type { NavSectionProps } from 'src/components/nav-section';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
-import { useSelector } from 'react-redux';
 import { Logo } from 'src/components/logo';
+import { useSession } from 'next-auth/react';
 import { dashboardPath } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 import { Skeleton, Typography } from '@mui/material';
@@ -112,7 +112,8 @@ export function HeaderBase({
   ...other
 }: HeaderBaseProps) {
   const theme = useTheme();
-  const { user } = useSelector((state: any) => state.auth);
+  const session: any = useSession();
+  const { data: user } = session;
 
   const { data: tenantData, isLoading } = useQueryAndMutation({
     type: 'query',

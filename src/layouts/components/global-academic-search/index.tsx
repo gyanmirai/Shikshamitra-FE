@@ -3,6 +3,7 @@ import type { RootState } from 'src/redux/store';
 import type { Board, Medium, AcademicYear } from 'src/types/school';
 
 import { keyframes } from '@mui/system';
+import { useSession } from 'next-auth/react';
 import { styled } from '@mui/material/styles';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
@@ -51,6 +52,8 @@ const AnimatedWrapper = styled(Box, { shouldForwardProp: (prop) => prop !== 'err
 const GlobalAcademicSearch = () => {
   const [showConfirm, ConfirmDialog] = useConfirmDialog();
 
+  const { data }: any = useSession();
+
   const dispatch = useDispatch();
 
   // Redux state selectors for current academic selections
@@ -62,11 +65,17 @@ const GlobalAcademicSearch = () => {
   const { data: years, isLoading: isYearLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetYearQuery,
+    options: {
+      skip: !data?.accessToken,
+    },
   });
 
   const { data: boardData, isLoading: isBoardLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBoardsQuery,
+    options: {
+      skip: !data?.accessToken,
+    },
   });
 
   // Memoized computation of merged academic data

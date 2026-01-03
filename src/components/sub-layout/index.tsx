@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { Box, Slide } from '@mui/material';
+import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { navSubData } from 'src/layouts/config-nav-dashboard';
 
@@ -11,7 +11,8 @@ import { useSettingsContext } from '../settings';
 import { NavSectionVertical } from '../nav-section';
 
 const SubLayout = ({ children }: any) => {
-  const { user } = useSelector((state: any) => state.auth);
+  const session: any = useSession();
+  const { data: user } = session;
   const pathname = usePathname();
   const removeLastSlash = pathname.replace(/\/$/, '');
   const [currentModule] = removeLastSlash.split('/').filter((x) => x);

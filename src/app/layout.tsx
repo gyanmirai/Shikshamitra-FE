@@ -7,6 +7,7 @@ import type { Viewport } from 'next';
 
 import { CONFIG } from 'src/config-global';
 import { primary } from 'src/theme/core/palette';
+import { SessionProvider } from 'next-auth/react';
 import { Snackbar } from 'src/components/snackbar';
 import { InitColorSchemeScript } from '@mui/material';
 import { ThemeProvider } from 'src/theme/theme-provider';
@@ -39,22 +40,24 @@ export default async function RootLayout({ children }: Props) {
           modeStorageKey="theme-mode"
           defaultMode={defaultSettings.colorScheme}
         />
-        <ReduxProvider>
-          <KeyboardShortcut />
-          <LocalizationProvider>
-            <SettingsProvider
-              settings={settings}
-              // caches={CONFIG.isStaticExport ? 'localStorage' : 'cookie'}
-            >
-              <ThemeProvider>
-                <Snackbar />
-                <ProgressBar />
-                <SettingsDrawer />
-                {children}
-              </ThemeProvider>
-            </SettingsProvider>
-          </LocalizationProvider>
-        </ReduxProvider>
+        <SessionProvider>
+          <ReduxProvider>
+            <KeyboardShortcut />
+            <LocalizationProvider>
+              <SettingsProvider
+                settings={settings}
+                // caches={CONFIG.isStaticExport ? 'localStorage' : 'cookie'}
+              >
+                <ThemeProvider>
+                  <Snackbar />
+                  <ProgressBar />
+                  <SettingsDrawer />
+                  {children}
+                </ThemeProvider>
+              </SettingsProvider>
+            </LocalizationProvider>
+          </ReduxProvider>
+        </SessionProvider>
       </body>
     </html>
   );

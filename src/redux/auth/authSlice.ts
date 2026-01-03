@@ -23,38 +23,27 @@ export function extractGrantedPermissions(groups: any): { name: string; isGrante
 }
 export const loadUser = createAsyncThunk(
   'auth/loadUser',
-  async (_, { dispatch, rejectWithValue }) => {
+  async (userSession: any, { dispatch, rejectWithValue }) => {
     try {
-      const user = await oidcService.getUser();
-      console.log(user, 'user');
-      if (user) {
-        const decodeToken: any = jwtDecode(user.access_token);
-        console.log(decodeToken, 'decodeToken');
-        const mainModuleVisibility = decodeToken?.module_mask || '';
+      if (userSession?.profile?.sub) {
+        const mainModuleVisibility = userSession?.profile?.module_mask || '';
         const mainModuleVisibilityArray: boolean[] = mainModuleVisibility
           .split('')
           .map((item: string) => (item === '1' ? true : false));
-
         const fetchPermssion = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/permission-management/permissions?providerName=U&providerKey=${user.profile.sub}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/permission-management/permissions?providerName=U&providerKey=${userSession.profile.sub}`,
           {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${user.access_token}`,
+              Authorization: `Bearer ${userSession.accessToken}`,
             },
           }
         );
-
         const jsonData = await fetchPermssion?.json();
 
         const permissionData = extractGrantedPermissions(jsonData?.groups || []);
-        console.log(permissionData, 'permissionData');
-
-        const userPlanObject = JSON.parse(JSON.stringify(user));
-        await dispatch(getEmployee(userPlanObject)).unwrap();
         return {
-          user: { ...userPlanObject, profile: decodeToken },
           mainModuleVisibility: mainModuleVisibilityArray,
           permissionData,
         };
@@ -135,7 +124,6 @@ const authSlice = createSlice({
         state.loading = true;
       })
       .addCase(loadUser.fulfilled, (state, action) => {
-        state.user = action.payload.user;
         state.isAuthenticated = !!action.payload;
         state.mainModuleVisibility = action.payload.mainModuleVisibility;
         state.permissions = action.payload.permissionData;
