@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Medium, Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
@@ -11,46 +11,61 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import {
+  useGetExamRoomsQuery,
+  useGetExamDivisionsQuery,
+} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
 import SeatAllocationTable from './components/SeatAllocationTable';
 import SeatAllocationSection from './components/SeatAllocationSection';
 
+import type { IDroppedData, IExamAllocation } from './type';
+
 const SeatAllocation = () => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
   const openSeatAllocation = useBoolean();
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [room, setRoom] = useState<string>('');
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
-  // State to store all divisions for the selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
   const [division, setDivision] = useState<string>('');
-  const [selectedClass, setSelectedClass] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [rooms, setRooms] = useState([
-    { id: '1', name: 'Room 101' },
-    { id: '2', name: 'Room 102' },
-    { id: '3', name: 'Room 103' },
-    { id: '4', name: 'Room 104' },
-    { id: '5', name: 'Room 105' },
-  ]);
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
-  // Update classes when organization changes
+  // const [selectedClass, setSelectedClass] = useState('');
+  const [selectedExam, setSelectedExam] = useState<IExamAllocation | null>(null);
+
+  const {
+    data: examDivisionsData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExamDivisionsQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id, classId: selectedExam?.classId },
+  }); // Update classes when organization changes
+  const [droppedData, setDroppedData] = useState<IDroppedData>({ roomId: '', students: [] });
+  const {
+    data: examRoomsData,
+    isLoading: examRoomsLoading,
+    isFetching: examRoomsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetExamRoomsQuery,
+    params: { examId: selectedExam?.id, divisionId: division },
+  }); // Update classes when organization changes
+
   useEffect(() => {
     // Flatten the list of standards from all stages
     const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+      currentMedium?.educationMediumStages?.flatMap(
+        (stage: Organization) => stage.standards || []
+      ) || [];
 
     setAllClass(allClasses);
     setClasses(allClasses[0]?.name || '');
-  }, [medium]);
-
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.name === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.name === classes)?.divisions?.[0]?.name || '');
-  }, [allClass, classes, setDivision]);
+  }, [currentMedium]);
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
@@ -101,9 +116,10 @@ const SeatAllocation = () => {
           >
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <CustomSelect
-                options={allDivision}
+                options={examDivisionsData?.data?.divisions || []}
                 label="Division"
                 value={division}
+                isLoading={isLoading || isFetching}
                 onChange={(val) => setDivision(val as string)}
                 labelKey="name"
                 valueKey="name"
@@ -111,9 +127,10 @@ const SeatAllocation = () => {
                 disabled={!classes}
               />
               <CustomSelect
-                options={rooms}
+                options={examRoomsData?.data?.rooms || []}
                 label="Room"
                 value={room}
+                isLoading={examRoomsLoading || examRoomsFetching}
                 onChange={(val) => setRoom(val as string)}
                 labelKey="name"
                 valueKey="id"
@@ -121,7 +138,7 @@ const SeatAllocation = () => {
                 disabled={!division}
               />
               <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>
-                Class : {selectedClass}
+                Exam : {selectedExam?.examName}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 2 }}>
@@ -148,11 +165,15 @@ const SeatAllocation = () => {
             </Box>
           </Box>
           {/* </SectionCard> */}
-          <SeatAllocationSection division={division} classRoom={room} className={selectedClass} />
+          <SeatAllocationSection
+            division={division}
+            classRoom={room}
+            selectedExam={selectedExam}
+            setDroppedData={setDroppedData}
+          />
         </CustomDialog>
       ) : (
         <>
-          {' '}
           <CustomSelect
             options={allClass}
             label="Class"
@@ -164,9 +185,10 @@ const SeatAllocation = () => {
           />
           <SeatAllocationTable
             openSeatAllocation={openSeatAllocation}
-            onSeatAllocate={(className) => {
-              setSelectedClass(className);
+            onSeatAllocate={(examData) => {
+              setSelectedExam(examData);
             }}
+            classId={classes}
           />
         </>
       )}

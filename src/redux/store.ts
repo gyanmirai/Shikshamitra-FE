@@ -31,7 +31,6 @@ import { ChargeCategoryApi } from './finance/chargeCategory';
 import { expenseApi } from './finance/expenseApi/expenseApi';
 import { incomeCategoryApi } from './finance/incomeCategory';
 import { openLibraryApi } from './library/LibraryDataSearch';
-import { feeCategoryApi } from './feeCategory/feeCategoryApi';
 import { feeRefundsTermsApi } from './finance/feeRefundTerms';
 import { libraryModuleApi } from './library/libraryModuleApi';
 import { financeModuleApi } from './finance/financeModuleApi';
@@ -39,7 +38,6 @@ import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { feeConcessionApi } from './feeCollection/feeConcession';
 import { incomeDetailsApi } from './incomeApi/incomeDetailedApi';
-import { feeCollectionApi } from './feeCollection/feeCollection';
 import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { paymentHistoryApi } from './feeCollection/paymentHistory';
@@ -54,7 +52,6 @@ import { bookManagementApi } from './bookManagement/bookManagementApi';
 import { instituteSetupApi } from './InstituteSetup/instituteSetupApi';
 import { StudentAdmissionApi } from './student/admission/admission-api';
 import { studentGroupApi } from './student/student-group/student-group';
-import { FeeHeadManagementApi } from './feeHeadManage/feeHeadManageApi';
 import { BulkStudentApi } from './student/buik-student/bulk-student-api';
 import { CoreSubjectApi } from './subject/core-subject/core-subject-api';
 import { StudentCertificateApi } from './student/certificate/certificate';
@@ -122,7 +119,7 @@ const reducers = combineReducers({
   [StudentRegistrationFormApi.reducerPath]: StudentRegistrationFormApi.reducer,
   [StudentRegistrationApi.reducerPath]: StudentRegistrationApi.reducer,
   [paymentStatusOptionApi.reducerPath]: paymentStatusOptionApi.reducer,
-  [FeeHeadManagementApi.reducerPath]: FeeHeadManagementApi.reducer,
+  // [FeeHeadManagementApi.reducerPath]: FeeHeadManagementApi.reducer,
   [organizationUnitApi.reducerPath]: organizationUnitApi.reducer,
   [EntranceExamSlotApi.reducerPath]: EntranceExamSlotApi.reducer,
   [EntranceExamApi.reducerPath]: EntranceExamApi.reducer,
@@ -239,7 +236,7 @@ const store = configureStore({
       BulkStudentApi.middleware,
       CoreSubjectApi.middleware,
       quizManagementApi.middleware,
-      feeCollectionApi.middleware,
+      // feeCollectionApi.middleware,
       feeTermsApi.middleware,
       paymentHistoryApi.middleware,
       feeConcessionApi.middleware,
@@ -250,9 +247,9 @@ const store = configureStore({
       invoiceApi.middleware,
       receiptApi.middleware,
       studentInvoiceApi.middleware,
-      FeeHeadManagementApi.middleware,
+      // FeeHeadManagementApi.middleware,
       studentReceiptApi.middleware,
-      feeCategoryApi.middleware,
+      // feeCategoryApi.middleware,
       ChargeCategoryApi.middleware,
       // ExpenseCategoryApi.middleware,
       financeModuleApi.middleware,

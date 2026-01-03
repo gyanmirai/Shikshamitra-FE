@@ -1,13 +1,18 @@
 // --- existing imports ---
+import type { Medium } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import { useSelector } from 'react-redux';
+import React, { useCallback } from 'react';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useCallback } from 'react';
 import { Box, MenuItem, MenuList } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetSeatAllocationTableDataQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
 import type { IExamAllocation } from '../type';
 
@@ -66,23 +71,34 @@ const tableData = [
 
 interface SeatAllocationTableProps {
   openSeatAllocation: UseBooleanReturn;
-  examData?: IExamAllocation[];
-  onSeatAllocate: (className: string) => void;
+  onSeatAllocate: (examData: IExamAllocation) => void;
+  classId: string;
 }
 
 const SeatAllocationTable = ({
   openSeatAllocation,
-  examData = tableData,
   onSeatAllocate,
+  classId,
 }: SeatAllocationTableProps) => {
-  const [data] = useState(examData);
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: seatAllocationData,
+    isLoading,
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSeatAllocationTableDataQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id, classId },
+  });
 
   const actions = useCallback(
     ({ popover: pop, row }: any) => (
       <MenuList>
         <MenuItem
           onClick={() => {
-            onSeatAllocate(row.className);
+            onSeatAllocate(row);
             openSeatAllocation.onTrue();
             pop.onClose();
           }}
@@ -104,6 +120,7 @@ const SeatAllocationTable = ({
     <CustomizableTable
       tableId="schedule-exam-table"
       noDataText={<>Exam Data Not Found </>}
+      isLoading={isLoading || isFetching}
       columns={[
         { id: 'examName', label: 'Exam Name', align: 'left', minWidth: 120, sticky: true },
         { id: 'examType', label: 'Exam Type', align: 'left', minWidth: 110 },
@@ -157,7 +174,7 @@ const SeatAllocationTable = ({
           },
         },
       ]}
-      data={data}
+      data={tableData || []}
     />
   );
 };

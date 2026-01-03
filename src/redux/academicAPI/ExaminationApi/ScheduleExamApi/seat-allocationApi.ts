@@ -2,65 +2,74 @@ import { academicApi } from '../../academicApi';
 
 export const seatAllocationApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Get Students for Seat Allocation
-    getStudentsForSeatAllocation: builder.query({
-      query: ({ examId, academicMediumId, classId, divisionId }) => ({
-        url: `exams/${examId}/seat-allocation/students`,
+    // Get Seat Layout (Drag & Drop)
+    getSeatLayout: builder.query({
+      query: ({ examId, divisionId, roomId }) => ({
+        url: `exams/${examId}/seat-layout`,
         method: 'GET',
-        params: { academicMediumId, classId, divisionId },
+        params: { divisionId, roomId },
       }),
-      providesTags: ['Exam'],
+      providesTags: ['SeatAllocation'],
     }),
 
-    // Allocate Seats to Students
-    allocateSeats: builder.mutation({
+    // Save Seat Allocation (Bulk)
+    saveSeatAllocation: builder.mutation({
       query: ({ examId, academicMediumId, body }) => ({
-        url: `exams/${examId}/seat-allocation`,
+        url: `exams/${examId}/seat-allocation/save`,
         method: 'POST',
         params: { academicMediumId },
         data: body,
       }),
-      invalidatesTags: ['Exam'],
+      invalidatesTags: ['SeatAllocation'],
     }),
 
-    // Update Student Seat Allocation
-    updateStudentSeatAllocation: builder.mutation({
-      query: ({ examId, studentId, academicMediumId, body }) => ({
-        url: `exams/${examId}/seat-allocation/${studentId}`,
-        method: 'PATCH',
-        params: { academicMediumId },
-        data: body,
-      }),
-      invalidatesTags: ['Exam'],
-    }),
-
-    // Get Allocated Students for a Room
-    getAllocatedStudentsForRoom: builder.query({
-      query: ({ examId, roomId, academicMediumId }) => ({
-        url: `exams/${examId}/rooms/${roomId}/allocated`,
-        method: 'GET',
-        params: { academicMediumId },
-      }),
-      providesTags: ['Exam'],
-    }),
-
-    // Get Exams Allocation Summary
-    getExamsAllocationSummary: builder.query({
-      query: ({ academicMediumId, classId }) => ({
-        url: `exams/seat-allocation`,
+    // Get Division for Exam
+    getExamDivisions: builder.query({
+      query: ({ examId, academicMediumId, classId }) => ({
+        url: `exams/${examId}/seat-allocation/students`,
         method: 'GET',
         params: { academicMediumId, classId },
       }),
-      providesTags: ['Exam'],
+      providesTags: ['SeatAllocation'],
+    }),
+
+    // Get Rooms for Exam and Division
+    getExamRooms: builder.query({
+      query: ({ examId, divisionId }) => ({
+        url: `exams/${examId}/divisions/${divisionId}/rooms`,
+        method: 'GET',
+      }),
+      providesTags: ['SeatAllocation'],
+    }),
+
+    // Get Seat Allocation Table (Dashboard)
+    getSeatAllocationTableData: builder.query({
+      query: ({ academicMediumId, classId, page = 1, pageSize = 10 }) => ({
+        url: `exams/seat-allocation`,
+        method: 'GET',
+        params: { academicMediumId, classId, page, pageSize },
+      }),
+      providesTags: ['SeatAllocation'],
+    }),
+
+    // Get Students for Seat Allocation (Details/Drag & Drop)
+    getSeatAllocationStudents: builder.query({
+      query: ({ examId, divisionId, academicMediumId, classNameId }) => ({
+        url: `exams/${examId}/seat-allocation/divisions/${divisionId}/students`,
+        method: 'GET',
+        params: { academicMediumId, classNameId },
+      }),
+      providesTags: ['SeatAllocation'],
     }),
   }),
   overrideExisting: false,
 });
 
 export const {
-  useGetStudentsForSeatAllocationQuery,
-  useAllocateSeatsMutation,
-  useUpdateStudentSeatAllocationMutation,
-  useGetAllocatedStudentsForRoomQuery,
-  useGetExamsAllocationSummaryQuery,
+  useGetSeatLayoutQuery,
+  useSaveSeatAllocationMutation,
+  useGetExamDivisionsQuery,
+  useGetExamRoomsQuery,
+  useGetSeatAllocationTableDataQuery,
+  useGetSeatAllocationStudentsQuery,
 } = seatAllocationApi;

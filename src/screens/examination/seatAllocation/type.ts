@@ -43,12 +43,26 @@ export interface ISeatAllocation {
 }
 
 export interface IExamAllocation {
+  id: string;
   examName: string;
   examType: string;
   className: number;
+  classId: string;
   divisions: string[];
   totalStudents: number;
   allocatedStudents: number;
   pendingStudents: number;
   status: string;
+}
+
+export interface IDroppedStudent {
+  studentId: number;
+  seatNumber: number;
+  benchId: string;
+  isRoomAssign: boolean;
+}
+
+export interface IDroppedData {
+  roomId: string;
+  students: IDroppedStudent[];
 }
