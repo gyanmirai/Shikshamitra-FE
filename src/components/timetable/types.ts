@@ -30,6 +30,7 @@ export interface Subject {
   teacherName?: string;
   roomId?: string;
   roomName?: string;
+  totalSubjects?: number;
 }
 
 // --- New API Response Types ---

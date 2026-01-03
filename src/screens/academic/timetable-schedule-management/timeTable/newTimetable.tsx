@@ -23,7 +23,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Button, Divider, MenuList, MenuItem, Typography } from '@mui/material';
-import { DEFAULT_CONFIG, generateWeeklySlots } from 'src/components/timetable/utils';
+import { MOCK_SUBJECTS, DEFAULT_CONFIG, generateWeeklySlots } from 'src/components/timetable/utils';
 import {
   TimetableStatusType,
   TimetableStatusColors,
@@ -1005,15 +1005,7 @@ const TImeTableForm = () => {
         <TimetableBoard
           slots={formik.values.slots}
           onChange={(value) => formik.setFieldValue('slots', value)}
-          subjects={[
-            { id: 'sub-1', name: 'Mathematics', color: '#e3f2fd', defaultDuration: 60 },
-            { id: 'sub-2', name: 'Science', color: '#e8f5e9', defaultDuration: 45 },
-            { id: 'sub-3', name: 'English', color: '#fff3e0', defaultDuration: 30 },
-            { id: 'sub-4', name: 'History', color: '#f3e5f5', defaultDuration: 45 },
-            { id: 'sub-5', name: 'Computer Sci', color: '#e0f2f1', defaultDuration: 60 },
-            { id: 'sub-6', name: 'Art', color: '#fbe9e7', defaultDuration: 90 }, // Long slot
-            { id: 'sub-7', name: 'Sports', color: '#fffde7', defaultDuration: 30 },
-          ]}
+          subjects={MOCK_SUBJECTS}
           readOnly={false}
         />
       </Box>
