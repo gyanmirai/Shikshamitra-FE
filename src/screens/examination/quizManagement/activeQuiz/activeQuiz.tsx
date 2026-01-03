@@ -7,40 +7,82 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import quizPortalData from 'src/json/academic/examination/quizPortalData.json';
-import activeQuizTableData from 'src/json/academic/examination/activeQuizTableData.json';
+import {
+  useGetQuizzesQuery,
+  useDeleteQuizMutation,
+} from 'src/redux/academicAPI/ExaminationApi/quizManagementApi/quizManagementApi';
 
 import QuizPortal from '../quizPortal';
 import QuizTable from './components/activeQuizTable';
 import AddNewQuiz from './components/quizFormComponent';
 
 const ActiveQuiz = () => {
-  // State to store and manage quiz table data
-  const [tableData] = useState(activeQuizTableData);
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  // Fetch quizzes
+  const { data: quizzes } = useGetQuizzesQuery(
+    { academicMediumId: currentMedium?.id },
+    { skip: !currentMedium?.id }
+  );
+
+  const [deleteQuiz] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteQuizMutation,
+  });
+
   // Dialog state for adding new quiz
   const addQuizDialog = useBoolean();
   const deleteQuizDialog = useBoolean();
-  const [, setSelectedQuizData] = useState('');
+  const [selectedQuizData, setSelectedQuizData] = useState<any>(null);
+  const [editData, setEditData] = useState<any>(null);
+
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-  // Dialog state for attempting quiz
+
   // State to control quiz portal visibility
   const [open, setOpen] = useState(false);
+
   const handleTogglePublish = (row: any) => {};
 
   const handleAttemptClick = (row: any) => {
     setOpen(true);
   };
 
+  const handleEdit = (row: any) => {
+    setEditData(row);
+    addQuizDialog.onTrue();
+  };
+
+  const handleDeleteClick = (row: any) => {
+    setSelectedQuizData(row);
+    deleteQuizDialog.onTrue();
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      if (selectedQuizData?.id) {
+        await deleteQuiz(selectedQuizData.id).unwrap();
+        shikshaMitraToast.success({ message: 'Quiz deleted successfully' });
+        deleteQuizDialog.onFalse();
+      }
+    } catch (error) {
+      console.error('Error deleting quiz:', error);
+    }
+  };
+
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       addQuizDialog.onFalse();
+      setEditData(null);
       setOpen(false);
       dispatch(setIsChanges(false));
     } else if (!isChanges) {
       setOpen(false);
+      setEditData(null);
       addQuizDialog.onFalse();
     }
   };
@@ -74,27 +116,26 @@ const ActiveQuiz = () => {
       </Box>
 
       {open ? (
-        <QuizPortal quizData={quizPortalData} handleClose={() => handleClose(null, false)} />
+        <QuizPortal handleClose={() => handleClose(null, false)} />
       ) : (
         <QuizTable
           addQuizDialog={addQuizDialog}
-          handleDelete={(id: string) => {
-            deleteQuizDialog.onTrue();
-            setSelectedQuizData(id);
-          }}
-          data={tableData}
+          handleDelete={handleDeleteClick}
+          onEdit={handleEdit}
+          data={quizzes || []}
           onTogglePublish={handleTogglePublish}
           onAttemptClick={handleAttemptClick}
+          setOpenDialog={(val: boolean) => (val ? addQuizDialog.onTrue() : addQuizDialog.onFalse())}
         />
       )}
 
       <CustomDialog
         maxWidth="lg"
         open={addQuizDialog.value}
-        handleClose={() => addQuizDialog.onFalse()}
-        title="New Quiz"
+        handleClose={() => handleClose(null, false)}
+        title={editData ? 'Update Quiz' : 'New Quiz'}
       >
-        <AddNewQuiz dialog={addQuizDialog} onClose={handleClose} />
+        <AddNewQuiz dialog={addQuizDialog} onClose={handleClose} editData={editData} />
       </CustomDialog>
 
       <ConfirmDialog
@@ -109,7 +150,7 @@ const ActiveQuiz = () => {
             startIcon={<Iconify icon={GlobalIcons.delete} />}
             variant="contained"
             color="error"
-            onClick={() => {}}
+            onClick={handleDeleteConfirm}
           >
             Delete
           </Button>

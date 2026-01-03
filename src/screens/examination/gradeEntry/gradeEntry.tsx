@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { Division, Standards, Organization } from 'src/types/school';
 
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -12,8 +13,10 @@ import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import React, { useState, useEffect, useCallback } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { usePublishExamMarksMutation } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
 import {
   Box,
   Button,
@@ -115,9 +118,7 @@ const GradeEntry = (props: TabComponentType) => {
     searchParams?.assignmentType ? searchParams?.assignmentType : ''
   );
   // Title of the selected assignment
-  const [assignmentTitle, setAssignmentTitle] = useState(
-    searchParams?.assigngmentTitle ? searchParams?.assigngmentTitle : ''
-  );
+  const [examId, setExamId] = useState(searchParams?.examId ? searchParams?.examId : '');
   // Query to fetch class data
   // const { data: classData, isLoading } = useQueryAndMutation({
   //   type: 'query',
@@ -178,6 +179,16 @@ const GradeEntry = (props: TabComponentType) => {
       return [...prev, studentId];
     });
   };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [publishExamMarks, { isLoading: isPublishLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePublishExamMarksMutation,
+    params: {
+      examId,
+      divisionId: division,
+    },
+  });
 
   // Get the changes status from the confirm popup redux state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -261,19 +272,20 @@ const GradeEntry = (props: TabComponentType) => {
         ]}
         sx={{ px: 1, mb: 1 }}
         action={
-          <Button
+          <LoadingButton
             variant="contained"
             size="small"
-            disabled={!assignmentTitle}
+            disabled={!examId}
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={() => {
               publishMarksDialog.onTrue();
             }}
+            loading={isPublishLoading}
             title="Publish marks to make them visible to students"
             sx={{ px: '32px' }}
           >
             Publish Marks
-          </Button>
+          </LoadingButton>
         }
       />
       <Box
@@ -321,7 +333,7 @@ const GradeEntry = (props: TabComponentType) => {
           value={subject}
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
         />
-        <CustomTooltip placement="top" title={assignmentTitle && `${assignmentTitle}`}>
+        <CustomTooltip placement="top" title={examId && `${examId}`}>
           <Autocomplete
             disabled={!subject}
             options={[
@@ -360,10 +372,10 @@ const GradeEntry = (props: TabComponentType) => {
                 { value: 'project_2', label: 'Project Work 2', type: 'project' },
                 { value: 'assignment_1', label: 'Assignment 1', type: 'assignment' },
                 { value: 'assignment_2', label: 'Assignment 2', type: 'assignment' },
-              ].find((opt) => opt.value === assignmentTitle) || null
+              ].find((opt) => opt.value === examId) || null
             }
             onChange={(event, newValue) => {
-              setAssignmentTitle(newValue?.value || '');
+              setExamId(newValue?.value || '');
             }}
             renderInput={(params) => (
               <TextField
@@ -382,6 +394,10 @@ const GradeEntry = (props: TabComponentType) => {
         selectedStudents={selectedStudents}
         handleSelectStudent={handleSelectStudent}
         actions={actions}
+        classId={classes}
+        divisionId={division}
+        subjectId={subject}
+        examId={examId}
       />
 
       <CustomDialog
@@ -432,7 +448,7 @@ const GradeEntry = (props: TabComponentType) => {
         title="Publish"
         content={
           <>
-            Are you sure you want to publish marks <strong>{assignmentTitle}</strong>?`
+            Are you sure you want to publish marks <strong>{examId}</strong>?`
           </>
         }
         action={
