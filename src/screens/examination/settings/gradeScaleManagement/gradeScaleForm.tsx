@@ -26,7 +26,7 @@ import { validationSchema } from './validationSchema';
 
 import type { IGrade, IGradingScale, IGradeFormProps } from './type';
 
-const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit, disabled }) => {
+const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data }) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const [addGradeScaling, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -47,14 +47,14 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
             id: (data as IGrade).id,
             body: {
               name: values.name,
-              totalMarks: values.totalMarks,
+              totalMarks: String(values.totalMarks),
               gradingScale: values.gradingScale,
               educationMediumId: (currentMedium as Medium).id,
             },
           };
           await updateGradeScaling(payload).unwrap();
           shikshaMitraToast.success({
-            message: `"${values.name}" Grade scale updated successfully`,
+            message: `Grade scale : "${values.name}" updated successfully`,
           });
           onClose(null, true);
         } else {
@@ -62,14 +62,14 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
             academicMediumId: (currentMedium as Medium).id,
             body: {
               name: values.name,
-              totalMarks: values.totalMarks,
+              totalMarks: String(values.totalMarks),
               gradingScale: values.gradingScale,
               educationMediumId: (currentMedium as Medium).id,
             },
           };
           await addGradeScaling(payload).unwrap();
           shikshaMitraToast.success({
-            message: `"${values.name}" Grade scale added successfully`,
+            message: `Grade scale : "${values.name}" added successfully`,
           });
           onClose(null, true);
         }
@@ -101,7 +101,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                   label="Grade Scale Title *"
                   name="name"
                   size="small"
-                  disabled={disabled}
+                  disabled={!!data}
                   value={formik.values.name}
                   onChange={formik.handleChange}
                   error={formik.touched.name && Boolean(formik.errors.name)}
@@ -121,7 +121,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                   label="Total Marks *"
                   name="totalMarks"
                   type="number"
-                  disabled={disabled}
+                  disabled={!!data}
                   onKeyDown={(e) => {
                     if (['e', 'E', '+', '-', '.', 'ArrowUp', 'ArrowDown'].includes(e.key))
                       e.preventDefault();
@@ -144,7 +144,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
               <Box display="flex" justifyContent="space-between" alignItems="center">
                 <h4>Grading Scale</h4>
                 <Button
-                  disabled={disabled}
+                  disabled={!!data}
                   startIcon={<Add />}
                   variant="contained"
                   size="small"
@@ -174,7 +174,6 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                         label="Min Marks *"
                         type="number"
                         name={`gradingScale.${index}.minMarks`}
-                        disabled={disabled}
                         size="small"
                         value={formik.values.gradingScale[index].minMarks}
                         onChange={formik.handleChange}
@@ -224,7 +223,6 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                         label="Max Marks *"
                         type="number"
                         name={`gradingScale.${index}.maxMarks`}
-                        disabled={disabled}
                         size="small"
                         value={formik.values.gradingScale[index].maxMarks}
                         onChange={formik.handleChange}
@@ -285,7 +283,6 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
                         ]}
                         name={`gradingScale.${index}.grade`}
                         size="small"
-                        disabled={disabled}
                         value={formik.values.gradingScale[index].grade}
                         onChange={(val) => formik.setFieldValue(`gradingScale.${index}.grade`, val)}
                         error={
@@ -315,7 +312,6 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
 
                   <Grid size={{ xs: 12, md: 0.6 }}>
                     <IconButton
-                      disabled={disabled}
                       onClick={() => {
                         const updatedGradingScale = [...formik.values.gradingScale];
                         updatedGradingScale.splice(index, 1);
@@ -331,7 +327,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onSubmit, onClose, data, isEdit,
             </Grid>
           </Grid>
         </Scrollbar>
-        {!disabled && (
+        {!data && (
           <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <Button
               startIcon={<Iconify icon={GlobalIcons.cancel} />}

@@ -1,36 +1,51 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { axiosBaseQuery } from 'src/services/axiosBaseQuery';
+import { financeModuleApi } from '../finance/financeModuleApi';
 
-import feeCategoryData from '../../../feeCategoryData.json';
-
-const isDev = process.env.NODE_ENV === 'development';
-
-export const feeCategoryApi = createApi({
-  reducerPath: 'FeeCategoryApi',
-  baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
-    : async ({ url }) => {
-        // Handle mock route
-        if (url === '/feeCategoryData') {
-          return { data: feeCategoryData.feeCategoryData };
-        }
-        return {
-          error: {
-            status: 404,
-            data: 'No mock data found for this route',
-          },
-        };
-      },
-  tagTypes: ['FeeCategory'],
+export const feeCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    // Get fee category list
     getFeeCategories: builder.query({
-      query: () => ({
-        url: '/feeCategoryData',
+      query: (params) => ({
+        url: '/v1/finance/fee-categories',
         method: 'GET',
+        params,
       }),
       providesTags: ['FeeCategory'],
+    }),
+
+    // Create fee category
+    addFeeCategory: builder.mutation({
+      query: (body) => ({
+        url: '/v1/finance/fee-categories',
+        method: 'POST',
+        data: body,
+      }),
+      invalidatesTags: ['FeeCategory'],
+    }),
+
+    // Update fee category
+    updateFeeCategory: builder.mutation({
+      query: ({ feeCategoryId, body }) => ({
+        url: `/v1/finance/fee-categories/${feeCategoryId}`,
+        method: 'PUT',
+        data: body,
+      }),
+      invalidatesTags: ['FeeCategory'],
+    }),
+
+    // Delete fee category
+    deleteFeeCategory: builder.mutation({
+      query: (feeCategoryId) => ({
+        url: `/v1/finance/fee-categories/${feeCategoryId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['FeeCategory'],
     }),
   }),
 });
 
-export const { useGetFeeCategoriesQuery } = feeCategoryApi;
+export const {
+  useGetFeeCategoriesQuery,
+  useAddFeeCategoryMutation,
+  useUpdateFeeCategoryMutation,
+  useDeleteFeeCategoryMutation,
+} = feeCategoryApi;

@@ -74,11 +74,6 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
                 <Card sx={{ boxShadow: 'var(--shadows-4)', mb: 2 }}>
                   <FeeModelSelection formik={formik} setSelectedModel={setSelectedModel} />
                 </Card>
-                {/* {formik.values.model === 'flat-rate' && (
-          <Card sx={{ boxShadow: 'var(--shadows-4)' }}>
-            <FlatRateConfiguration formik={formik} />{' '}
-          </Card>
-        )} */}
 
                 {formik.values.model === 'distance-based' && (
                   <Card sx={{ boxShadow: 'var(--shadows-4)', mb: 2 }}>
@@ -91,12 +86,6 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
                     <StopBasedModel formik={formik} />
                   </Card>
                 )}
-
-                {/* {formik.values.model === 'zone-based' && (
-          <Card sx={{ boxShadow: 'var(--shadows-4)' }}>
-            <ZoneBasedModel formik={formik} />
-          </Card>
-        )} */}
               </Scrollbar>
             </form>
           </BackPopUpChecked>

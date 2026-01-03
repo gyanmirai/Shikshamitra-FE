@@ -57,6 +57,11 @@ export const financeModuleApi = createApi({
     'expense-category',
     'budget-options',
     'ReceiptBook',
+    'FeeCategory',
+    'FeeHead',
+    'FeeCollection',
+    'FeeDetails',
+    'FeeHead',
   ],
   endpoints: () => ({}), // inject later
 });

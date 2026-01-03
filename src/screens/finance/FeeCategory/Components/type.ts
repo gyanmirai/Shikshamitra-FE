@@ -4,7 +4,6 @@ export interface IFeeCategory {
   description?: string;
 }
 export interface IFeeCategoryTableProps {
-  data: IFeeCategory[];
   onAddFeeCategory: any;
   editData: IFeeCategory | null;
   open: boolean;

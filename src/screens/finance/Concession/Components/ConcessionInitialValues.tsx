@@ -8,6 +8,7 @@ export const getInitialConcessionFormData = (
   className: editData?.className || '',
   division: editData?.division || '',
   feeHead: editData?.feeHead || '',
+  studentId: editData?.studentId || '',
   studentName: editData?.studentName || '',
   reason: editData?.reason || '',
   concessions: editData?.concessions?.length
@@ -19,4 +20,6 @@ export const getInitialConcessionFormData = (
         documents: c.documents || [],
       }))
     : [],
+  concessionTypeIds: [],
+  documents: [],
 });

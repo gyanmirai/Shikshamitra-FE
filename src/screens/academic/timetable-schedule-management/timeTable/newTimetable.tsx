@@ -2,17 +2,17 @@
 
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Standards, Organization } from 'src/types/school';
 import type { TimeSlot, DayOfWeek } from 'src/components/timetable/types';
 
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
+import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { isNaN, parseInt, cloneDeep } from 'lodash';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -23,14 +23,14 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Button, Divider, MenuList, MenuItem, Typography } from '@mui/material';
-import { DEFAULT_CONFIG, generateWeeklySlots } from 'src/components/timetable/utils';
+import { MOCK_SUBJECTS, DEFAULT_CONFIG, generateWeeklySlots } from 'src/components/timetable/utils';
 import {
   TimetableStatusType,
   TimetableStatusColors,
   TimetableStatusOptions,
 } from 'src/enums/timatable-type';
 
-import type { DayData, Subject, TimetableSlot, TSubjectGroup } from './type';
+import type { TimetableSlot, TSubjectGroup } from './type';
 
 export const subjectGroupsData: TSubjectGroup[] = [
   {
@@ -368,11 +368,7 @@ const TimeTableGrid = () => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
-  // State to store all divisions for the selected class
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store selected division ID
-  const [division, setDivision] = useState<string>('');
-  // Query hook to fetch class data from the API
+
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
@@ -385,12 +381,6 @@ const TimeTableGrid = () => {
     setAllClass(allClasses);
     setClasses(allClasses[0]?.id || '');
   }, [medium]);
-
-  // Update divisions when class changes
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
-  }, [allClass, classes, setDivision]);
 
   // State for managing classroom selection
   // const [classroom, setClassroom] = useState<string>('');
@@ -420,297 +410,12 @@ const TimeTableGrid = () => {
 
   const [timetable, setTimetable] = useState<TimetableSlot[]>(defaultTimetableData);
 
-  // Handle the start of a drag operation for a subject
-  const handleDragStart = (e: React.DragEvent<HTMLElement>, subject: TSubjectGroup) => {
-    // Store the subject data in the drag event
-    e.dataTransfer.setData('subject', JSON.stringify(subject));
-  };
-
   // Function to open dialog and store initial state
   const handleOpenDialog = useCallback(() => {
     setInitialTimetableData(cloneDeep(timetable));
     setInitialSubjectsGroups(cloneDeep(subjectsGroups));
     setOpen(true);
   }, [timetable, subjectsGroups]);
-
-  const handleDrop = (e: any, item: DayData, rowIndex: number, colIndex: number) => {
-    const subjectData = e.dataTransfer.getData('subject');
-    const sourceRowIndex = e.dataTransfer.getData('rowIndex');
-    const sourceColIndex = e.dataTransfer.getData('colIndex');
-
-    if (subjectData) {
-      const subject = JSON.parse(subjectData);
-      const cloneTimeTableData = cloneDeep(timetable);
-      const cloneSubjectGroups = cloneDeep(subjectsGroups);
-
-      // Check if target slot is already occupied or disabled
-      const existingDayData = cloneTimeTableData[rowIndex].dayData[colIndex];
-      if (existingDayData?.subjects?.length > 0 || existingDayData?.isDisabled) {
-        return;
-      }
-
-      // Helper to clear a slot block by slotId
-      const clearSlotBlock = (rowIdx: number, colIdx: number, data: TimetableSlot[]) => {
-        const { slotId } = data[rowIdx].dayData[colIdx];
-        if (!slotId) {
-          // Fallback for single slot
-          data[rowIdx].dayData[colIdx] = {
-            ...data[rowIdx].dayData[colIdx],
-            subjects: [],
-            subjectColor: '',
-            isDisabled: false,
-          };
-          return;
-        }
-
-        data.forEach((row) => {
-          const cell = row.dayData[colIdx];
-          if (cell.slotId === slotId) {
-            cell.subjects = [];
-            cell.subjectColor = '';
-            cell.isDisabled = false; // Re-enable all cells in the block
-          }
-        });
-      };
-
-      // Helper to occupy a slot block
-      const occupySlotBlock = (
-        rowIdx: number,
-        colIdx: number,
-        data: TimetableSlot[],
-        newSubject: any
-      ) => {
-        const targetCell = data[rowIdx].dayData[colIdx];
-        const { slotId } = targetCell;
-
-        if (!slotId) {
-          targetCell.subjects = newSubject.subjects;
-          targetCell.subjectColor = newSubject.subjectColor;
-          return;
-        }
-
-        // Find all rows for this slotId
-        const blockRows = data.filter((row) => row.dayData[colIdx].slotId === slotId);
-
-        if (blockRows.length === 0) return;
-
-        // Place subject in the FIRST row of the block
-        const firstRow = blockRows[0];
-        firstRow.dayData[colIdx] = {
-          ...firstRow.dayData[colIdx],
-          subjects: newSubject.subjects,
-          subjectColor: newSubject.subjectColor,
-          isDisabled: false,
-        };
-
-        // Disable remaining rows
-        blockRows.slice(1).forEach((row) => {
-          row.dayData[colIdx] = {
-            ...row.dayData[colIdx],
-            subjects: [],
-            subjectColor: '',
-            isDisabled: true,
-          };
-        });
-      };
-
-      // Check if this is a move operation (has source coordinates and they are valid numbers)
-      const isMove =
-        sourceRowIndex !== '' &&
-        sourceColIndex !== '' &&
-        !isNaN(parseInt(sourceRowIndex)) &&
-        !isNaN(parseInt(sourceColIndex));
-
-      if (isMove) {
-        // MOVE OPERATION: Moving from one slot to another
-        const sourceRow = parseInt(sourceRowIndex);
-        const sourceCol = parseInt(sourceColIndex);
-
-        // Prevent moving to the same slot
-        if (sourceRow === rowIndex && sourceCol === colIndex) {
-          return;
-        }
-
-        // Get source data before clearing
-        const sourceCell = cloneTimeTableData[sourceRow].dayData[sourceCol];
-        const sourceSubject = {
-          subjects: [...sourceCell.subjects],
-          subjectColor: sourceCell.subjectColor,
-        };
-
-        // Clear source block
-        clearSlotBlock(sourceRow, sourceCol, cloneTimeTableData);
-
-        // Occupy target block
-        const cleanedSubjects = (sourceSubject.subjects || []).map((s: Subject) => ({
-          ...s,
-          // Keep teacher/room if needed? Or clear?
-          // Usually move keeps assignments.
-        }));
-
-        occupySlotBlock(rowIndex, colIndex, cloneTimeTableData, {
-          ...sourceSubject,
-          subjects: cleanedSubjects,
-        });
-
-        setTimetable(cloneTimeTableData);
-        setSubjectsGroups(cloneSubjectGroups);
-      } else {
-        // NEW PLACEMENT: Dragging from subject list
-
-        // Count how many times this subject is already placed in timetable
-        const usedLectures = cloneTimeTableData.reduce(
-          (count: number, row: any) =>
-            count +
-            row.dayData.reduce((dayCount: number, dayData: any) => {
-              if (dayData.subjects && dayData.subjects.length > 0) {
-                const hasThisSubject = dayData.subjects.some((s: any) =>
-                  subject.subjects.some((subj: any) => subj.subject === s.subject)
-                );
-                return hasThisSubject ? dayCount + 1 : dayCount;
-              }
-              return dayCount;
-            }, 0),
-          0
-        );
-
-        // Check if subject has reached maximum lectures
-        const group = cloneSubjectGroups.find((g: TSubjectGroup) =>
-          g.subjects.some((sub: Subject) => sub.subject === subject.subjects[0].subject)
-        );
-
-        if (group && usedLectures >= group.totalLectures) {
-          // Subject has reached maximum lectures, prevent placement
-          return;
-        }
-
-        const cleanedSubjects = (subject.subjects || []).map((s: Subject) => ({
-          subject: s.subject,
-          subjectCode: s.subjectCode,
-          teacher: '',
-          room: '',
-        }));
-
-        occupySlotBlock(rowIndex, colIndex, cloneTimeTableData, {
-          subjects: cleanedSubjects,
-          subjectColor: subject.subjectColor,
-        });
-
-        // Update subject group allocation count for new placements
-        if (group) {
-          // Set allocateLectures to the actual count from timetable + 1
-          group.allocateLectures = usedLectures + 1;
-        }
-
-        setTimetable(cloneTimeTableData);
-        setSubjectsGroups(cloneSubjectGroups);
-      }
-    }
-  };
-
-  const handleDeleteSlot = (rowIndex: number, colIndex: number) => {
-    const cloneTimeTableData = cloneDeep(timetable);
-    const cloneSubjectGroups = cloneDeep(subjectsGroups);
-    const targetCell = cloneTimeTableData[rowIndex]?.dayData?.[colIndex];
-    const cleanedSubjects = targetCell?.subjects || [];
-    const slotId = targetCell?.slotId;
-
-    // Clear the slot block
-    if (slotId) {
-      cloneTimeTableData.forEach((row) => {
-        const cell = row.dayData[colIndex];
-        if (cell.slotId === slotId) {
-          cell.subjects = [];
-          cell.subjectColor = '';
-          cell.isDisabled = false; // Re-enable
-        }
-      });
-    } else {
-      // Fallback
-      cloneTimeTableData[rowIndex].dayData[colIndex] = {
-        ...targetCell,
-        subjects: [],
-        subjectColor: '',
-        isDisabled: false,
-      };
-    }
-
-    // Update subject group allocation count
-    if (cleanedSubjects.length > 0) {
-      const firstSubject = cleanedSubjects[0];
-      const group = cloneSubjectGroups.find((g: TSubjectGroup) =>
-        g.subjects.some((sub: Subject) => sub.subject === firstSubject.subject)
-      );
-
-      if (group) {
-        group.allocateLectures = Math.max(0, group.allocateLectures - 1);
-      }
-    }
-
-    setTimetable(cloneTimeTableData);
-    setSubjectsGroups(cloneSubjectGroups);
-  };
-
-  // Handles assigning a teacher to a specific time slot
-  const handleTeacherSelect = (
-    updatedSlotData: any, // Contains the updated subjects array with teachers
-    rowIndex: number,
-    colIndex: number
-  ) => {
-    setTimetable((prev: any) => {
-      const newTimetable = [...prev]; // clone outer array
-      const dayData = newTimetable[rowIndex].dayData[colIndex];
-
-      if (dayData && Array.isArray(dayData.subjects)) {
-        // Merge updated teacher values per subject
-        const updatedSubjects = dayData.subjects.map((subjectItem: any) => {
-          const updated = updatedSlotData.subjects.find(
-            (s: any) => s.subject === subjectItem.subject
-          );
-          return updated ? { ...subjectItem, teacher: updated.teacher } : subjectItem;
-        });
-
-        newTimetable[rowIndex].dayData[colIndex] = {
-          ...dayData,
-          subjects: updatedSubjects,
-        };
-      }
-
-      return newTimetable;
-    });
-  };
-
-  // Handles assigning a room to a specific time slot
-  const handleRoomSelect = (
-    updatedSlotData: any, // Contains the updated subjects array with rooms
-    rowIndex: number,
-    colIndex: number
-  ) => {
-    setTimetable((prev: any) => {
-      const newTimetable = [...prev]; // clone outer array
-      const dayData = newTimetable[rowIndex].dayData[colIndex];
-
-      if (dayData && Array.isArray(dayData.subjects)) {
-        // Merge updated room values per subject
-        const updatedSubjects = dayData.subjects.map((subjectItem: any) => {
-          const updated = updatedSlotData.subjects.find(
-            (s: any) => s.subject === subjectItem.subject
-          );
-          return updated ? { ...subjectItem, room: updated.room } : subjectItem;
-        });
-
-        newTimetable[rowIndex].dayData[colIndex] = {
-          ...dayData,
-          subjects: updatedSubjects,
-        };
-      }
-
-      return newTimetable;
-    });
-  };
-
-  // Checks if the given time slot is a break period
-  // const isBreak = (timeSlot: string) => timeSlot === '10:15 - 10:30';
 
   // Defines action menu items for different timetable statuses
   const actions = useCallback(
@@ -922,7 +627,6 @@ const TimeTableGrid = () => {
         open={draftTimetableDialog.value}
         onClose={() => {
           draftTimetableDialog.onFalse();
-          // setSelectedExam(null);
         }}
         title="Draft"
         content="Are you sure you want to Draft Timetable ?"
@@ -944,13 +648,12 @@ const TimeTableGrid = () => {
 export default TimeTableGrid;
 
 const TImeTableForm = () => {
-  const a = null;
-
   const formik = useFormik<{ slots: Record<DayOfWeek, TimeSlot[]> }>({
     initialValues: {
       slots: generateWeeklySlots(DEFAULT_CONFIG),
     },
     onSubmit: (values) => {
+      // eslint-disable-next-line no-console
       console.log(values);
     },
   });
@@ -982,7 +685,7 @@ const TImeTableForm = () => {
             <Typography>Division : A</Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
             <Button
               variant="contained"
               size="small"
@@ -1005,15 +708,7 @@ const TImeTableForm = () => {
         <TimetableBoard
           slots={formik.values.slots}
           onChange={(value) => formik.setFieldValue('slots', value)}
-          subjects={[
-            { id: 'sub-1', name: 'Mathematics', color: '#e3f2fd', defaultDuration: 60 },
-            { id: 'sub-2', name: 'Science', color: '#e8f5e9', defaultDuration: 45 },
-            { id: 'sub-3', name: 'English', color: '#fff3e0', defaultDuration: 30 },
-            { id: 'sub-4', name: 'History', color: '#f3e5f5', defaultDuration: 45 },
-            { id: 'sub-5', name: 'Computer Sci', color: '#e0f2f1', defaultDuration: 60 },
-            { id: 'sub-6', name: 'Art', color: '#fbe9e7', defaultDuration: 90 }, // Long slot
-            { id: 'sub-7', name: 'Sports', color: '#fffde7', defaultDuration: 30 },
-          ]}
+          subjects={MOCK_SUBJECTS}
           readOnly={false}
         />
       </Box>

@@ -6,10 +6,8 @@ import { useState } from 'react';
 import { Box, Card } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetFinanceFeeCollectionQuery } from 'src/redux/feeCollection/feeCollection';
 
 import ViewFeeDetails from './Components/ViewFeeDetails';
 import FeeCollectionTable from './Components/FeeCollectionTable';
@@ -21,13 +19,6 @@ const FeeCollection = () => {
   const [selectedBoard, setSelectedBoard] = useState('');
   const [selectedMedium, setSelectedMedium] = useState('');
 
-  /**
-   * Hook to fetch academic year data
-   */
-  const { data: feeCollectionData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFinanceFeeCollectionQuery,
-  });
   const studentDialog = useBoolean();
   const viewDialog = useBoolean();
   const [selectedStudent, setSelectedStudent] = useState<IStudentFee | null>(null);
@@ -95,7 +86,6 @@ const FeeCollection = () => {
       )}
       {!studentDialog.value && !viewDialog.value && (
         <FeeCollectionTable
-          data={feeCollectionData || []}
           onAddFee={studentDialog}
           selectedBoard={selectedBoard}
           setSelectedBoard={setSelectedBoard}
