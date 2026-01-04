@@ -6,24 +6,29 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import Drawer from '@mui/material/Drawer';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
+import { useSession } from 'next-auth/react';
 import { useState, useCallback } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
 import HrProfile from 'src/screens/hr/profile';
 import { useTheme } from '@mui/material/styles';
-import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { AnimateAvatar } from 'src/components/animate';
-import CustomDialog from 'src/components/customDialog';
+import { shikshaMitraToast } from 'src/components/toast';
 import { convertBase64Format } from 'src/utils/base64Formate';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { useChangePasswordMutation } from 'src/redux/user/userApi';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Button, MenuItem, TextField, DialogActions } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { AccountButton } from './account-button';
 import { SignOutButton } from './sign-out-button';
@@ -47,7 +52,10 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 
   // const pathname = usePathname();
 
-  const { employee, user } = useSelector((state: any) => state.auth);
+  const { employee } = useSelector((state: any) => state.auth);
+
+  const session: any = useSession();
+  const { data: user } = session;
 
   const { profile } = user;
 
@@ -243,7 +251,10 @@ export function AccountDrawer({ data = [], sx, ...other }: AccountDrawerProps) {
 }
 
 const ChangedPasswordForm = ({ handleClose, sessionData }: any) => {
-  const [changePassword] = useChangePasswordMutation();
+  const [changePassword, { isLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useChangePasswordMutation,
+  });
 
   const formik = useFormik({
     initialValues: {
@@ -259,73 +270,89 @@ const ChangedPasswordForm = ({ handleClose, sessionData }: any) => {
         .oneOf([Yup.ref('newPassword')], 'Passwords must match'),
     }),
     onSubmit: async (values) => {
-      const res = await changePassword({
-        data: {
-          currentPassword: values.oldPassword,
-          newPassword: values.newPassword,
-        },
-        token: sessionData?.accessToken,
-      });
-      if (!res.error) {
-        toast.success('Password changed successfully');
+      try {
+        await changePassword({
+          data: {
+            currentPassword: values.oldPassword,
+            newPassword: values.newPassword,
+          },
+          token: sessionData?.accessToken,
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Password changed successfully' });
         handleClose();
-      } else {
-        // @ts-ignore
-        toast.error(res?.error?.data?.error?.message || 'Something went wrong');
+      } catch (error) {
+        console.error(error);
       }
     },
   });
   return (
-    <form onSubmit={formik.handleSubmit}>
-      <Scrollbar
-        sx={{
-          p: 3,
-          bgcolor: 'background.neutral',
-        }}
-      >
-        <TextField
-          fullWidth
-          size="small"
-          name="oldPassword"
-          label="Old Password"
-          type="password"
-          value={formik.values.oldPassword}
-          onChange={formik.handleChange}
-          error={formik.touched.oldPassword && Boolean(formik.errors.oldPassword)}
-          helperText={formik.touched.oldPassword && formik.errors.oldPassword}
-          sx={{ mb: 3 }}
-        />
-        <TextField
-          fullWidth
-          size="small"
-          name="newPassword"
-          label="New Password"
-          type="password"
-          value={formik.values.newPassword}
-          onChange={formik.handleChange}
-          error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
-          helperText={formik.touched.newPassword && formik.errors.newPassword}
-          sx={{ mb: 3 }}
-        />
-        <TextField
-          fullWidth
-          size="small"
-          name="confirmPassword"
-          label="Confirm Password"
-          type="password"
-          value={formik.values.confirmPassword}
-          onChange={formik.handleChange}
+    <>
+      <DialogScrollContent>
+        <ShakingTextField error={formik.touched.oldPassword && Boolean(formik.errors.oldPassword)}>
+          <TextField
+            fullWidth
+            size="small"
+            name="oldPassword"
+            label="Old Password *"
+            type="password"
+            value={formik.values.oldPassword}
+            onChange={formik.handleChange}
+            error={formik.touched.oldPassword && Boolean(formik.errors.oldPassword)}
+            helperText={formik.touched.oldPassword && formik.errors.oldPassword}
+            sx={{ mb: 3 }}
+          />
+        </ShakingTextField>
+        <ShakingTextField error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}>
+          <TextField
+            fullWidth
+            size="small"
+            name="newPassword"
+            label="New Password *"
+            type="password"
+            value={formik.values.newPassword}
+            onChange={formik.handleChange}
+            error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
+            helperText={formik.touched.newPassword && formik.errors.newPassword}
+            sx={{ mb: 3 }}
+          />
+        </ShakingTextField>
+        <ShakingTextField
           error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-          helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
-          sx={{ mb: 3 }}
-        />
-      </Scrollbar>
+        >
+          <TextField
+            fullWidth
+            size="small"
+            name="confirmPassword"
+            label="Confirm Password *"
+            type="password"
+            value={formik.values.confirmPassword}
+            onChange={formik.handleChange}
+            error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
+            helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
+            sx={{ mb: 3 }}
+          />
+        </ShakingTextField>
+      </DialogScrollContent>
       <DialogActions sx={{ flexShrink: 0 }}>
-        <Button onClick={() => handleClose()}>Cancel</Button>
-        <Button type="submit" variant="contained">
-          Submit
+        <Button
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          variant="outlined"
+          size="small"
+          onClick={() => handleClose()}
+        >
+          Cancel
         </Button>
+        <LoadingButton
+          type="submit"
+          size="small"
+          variant="contained"
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+          onClick={(e: any) => formik.handleSubmit(e)}
+          loading={isLoading}
+        >
+          Submit
+        </LoadingButton>
       </DialogActions>
-    </form>
+    </>
   );
 };

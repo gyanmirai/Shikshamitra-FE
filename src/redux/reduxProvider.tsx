@@ -1,7 +1,8 @@
 'use client';
 
-import { memo, useMemo, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Provider, useDispatch } from 'react-redux';
+import { memo, useRef, useMemo, useEffect } from 'react';
 import { PersistGate } from 'redux-persist/integration/react';
 
 import store, { persistor } from './store';
@@ -41,9 +42,17 @@ export default ReduxProvider;
 
 const LoadUser = memo(() => {
   const dispatch = useDispatch();
-  useMemo(() => {
-    dispatch(loadUser() as any);
-  }, [dispatch]);
+  const session: any = useSession();
+  const { data: sessionData } = session;
 
-  return <iframe src="/silent-renew" style={{ display: 'none' }} title="Silent Token Renewal" />;
+  const isInitialize = useRef(false);
+
+  useMemo(() => {
+    if (sessionData?.profile?.sub && !isInitialize.current) {
+      dispatch(loadUser(sessionData) as any);
+      isInitialize.current = true;
+    }
+  }, [dispatch, sessionData]);
+
+  return null;
 });
