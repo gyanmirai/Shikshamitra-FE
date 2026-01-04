@@ -37,7 +37,7 @@ async function signIn({
       expiresAt: Date.now() + resp.data.expires_in * 1000,
       organizationName: organizationName as string,
     };
-  } catch (error) {
+  } catch (error: any) {
     const apiError = error?.response?.data?.error;
 
     if (apiError === 'invalid_grant') {
