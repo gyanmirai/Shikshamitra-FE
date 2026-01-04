@@ -30,15 +30,14 @@ jobs:
       - name: Copy static files
         run: |
           mkdir -p .next/standalone/public
-          cp -R ./public ./build/standalone/public
-          cp -R ./build/static ./build/standalone/build/static
-          cp -R ./build/server ./build/standalone/build/server
+          cp -R ./public ./.next/standalone/public
+          cp -R ./.next/static ./.next/standalone/.next/static
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: app
-          path: ./build/standalone
+          path: ./.next/standalone
 
   deploy:
     runs-on: ubuntu-latest

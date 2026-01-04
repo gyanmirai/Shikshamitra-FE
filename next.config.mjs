@@ -34,7 +34,7 @@ const nextConfig = {
     output: 'export',
   }),
   reactStrictMode: false,
-  distDir: 'build',
+  // distDir: 'build',
   output: 'standalone',
   transpilePackages: ['mui-tel-input'],
 };
