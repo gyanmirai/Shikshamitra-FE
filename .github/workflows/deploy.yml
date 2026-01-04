@@ -32,6 +32,7 @@ jobs:
           mkdir -p .next/standalone/public
           cp -R ./public ./build/standalone/public
           cp -R ./build/static ./build/standalone/build/static
+          cp -R ./build/server ./build/standalone/build/server
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
