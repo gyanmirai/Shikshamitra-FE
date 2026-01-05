@@ -1,3 +1,5 @@
+'use client';
+
 import type { Theme } from 'src/theme/types';
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium, AcademicYear } from 'src/types/school';

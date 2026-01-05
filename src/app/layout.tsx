@@ -7,7 +7,6 @@ import type { Viewport } from 'next';
 
 import { CONFIG } from 'src/config-global';
 import { primary } from 'src/theme/core/palette';
-import { SessionProvider } from 'next-auth/react';
 import { Snackbar } from 'src/components/snackbar';
 import { InitColorSchemeScript } from '@mui/material';
 import { ThemeProvider } from 'src/theme/theme-provider';
@@ -17,6 +16,7 @@ import KeyboardShortcut from 'src/components/keyboard-shortcut';
 import { SettingsDrawer, defaultSettings, SettingsProvider } from 'src/components/settings';
 import { LocalizationProvider } from 'src/components/Localization-provider/localization-provider';
 
+import NextAuthSessionProvider from './providers';
 import ReduxProvider from '../redux/reduxProvider';
 
 // ----------------------------------------------------------------------
@@ -40,7 +40,7 @@ export default async function RootLayout({ children }: Props) {
           modeStorageKey="theme-mode"
           defaultMode={defaultSettings.colorScheme}
         />
-        <SessionProvider>
+        <NextAuthSessionProvider>
           <ReduxProvider>
             <KeyboardShortcut />
             <LocalizationProvider>
@@ -57,7 +57,7 @@ export default async function RootLayout({ children }: Props) {
               </SettingsProvider>
             </LocalizationProvider>
           </ReduxProvider>
-        </SessionProvider>
+        </NextAuthSessionProvider>
       </body>
     </html>
   );

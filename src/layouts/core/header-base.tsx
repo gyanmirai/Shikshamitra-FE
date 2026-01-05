@@ -1,3 +1,5 @@
+"use client"
+
 import type { NavSectionProps } from 'src/components/nav-section';
 
 import Box from '@mui/material/Box';
