@@ -191,7 +191,11 @@ const VehicleTableView = ({ onEdit, onView }: VehicleTableViewProps) => {
           </Box>
         }
       >
-        <AddMaintenanceForm open={maintainDialog.value} onClose={handleClose} />
+        <AddMaintenanceForm
+          open={maintainDialog.value}
+          onClose={handleClose}
+          vehicleId={selectedVehicle?.id || ''}
+        />
       </CustomDialog>
 
       <CustomDialog
@@ -218,6 +222,7 @@ const VehicleTableView = ({ onEdit, onView }: VehicleTableViewProps) => {
           isOpen={changeStatusDialog.value}
           onClose={handleClose}
           vehicleData={selectedVehicle}
+          vehicleId={selectedVehicle?.id}
         />
       </CustomDialog>
     </>

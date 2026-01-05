@@ -51,7 +51,10 @@ export interface IVehicleMaintenance {
 }
 
 export interface IVehiclePayload {
+  isNonAc: boolean;
+  id?: string; // For edit mode
   registrationNo: string;
+  vehicleName?: string; // Vehicle name field
   vehicleNo: string;
   vehicleType: string;
   vehicleCompany: string;
@@ -62,38 +65,50 @@ export interface IVehiclePayload {
   schoolAssignedNo?: string | null;
   owner: string;
   fuelType: string;
-  isAC?: boolean;
-  isNonAC?: boolean;
+  isAc?: boolean;
   description?: string | null;
 
-  // Documents step
-  documents?: {
-    registrationCertificate?: File | null;
-    insuranceCertificate?: File | null;
-    fitnessCertificate?: File | null;
-    vehiclePhotos?: File | null;
-    [key: string]: File | null | undefined;
+  // Documents step - array format for API
+  documents?: Array<{
+    documentTypeId: string;
+    file: File | string; // File object or base64 string
+    fileName: string;
+  }>;
+
+  // Maintenance step - organized into objects matching API structure
+  insurance?: {
+    insuranceCompany: string;
+    policyNo: string;
+    issueDate: Dayjs | string | null;
+    expiryDate: Dayjs | string | null;
+    coverageAmount: number | null;
   };
 
-  // Maintenance step
-  maintenance?: IVehicleMaintenance;
+  puc?: {
+    certificateNo: string;
+    issueDate: Dayjs | string | null;
+    expiryDate: Dayjs | string | null;
+  };
 
-  insuranceCompany: string;
-  policyNo: string;
-  insuranceIssueDate: Dayjs | null;
-  insuranceExpiryDate: Dayjs | null;
-  coverageAmount: number | null;
+  roadTax?: {
+    receiptNo: string;
+    issueDate: Dayjs | string | null;
+  };
 
-  pucCertificateNo: string;
-  pucIssueDate: Dayjs | null;
-  pucExpiryDate: Dayjs | null;
-
-  fitnessCertificateNo: string;
-  fitnessIssueDate: Dayjs | null;
-  fitnessExpiryDate: Dayjs | null;
-
-  roadTaxReceiptNo: string;
-  roadTaxIssueDate: Dayjs | null;
+  // Legacy fields (for backward compatibility - can be removed if not used)
+  insuranceCompany?: string;
+  policyNo?: string;
+  insuranceIssueDate?: Dayjs | null;
+  insuranceExpiryDate?: Dayjs | null;
+  coverageAmount?: number | null;
+  pucCertificateNo?: string;
+  pucIssueDate?: Dayjs | null;
+  pucExpiryDate?: Dayjs | null;
+  fitnessCertificateNo?: string;
+  fitnessIssueDate?: Dayjs | null;
+  fitnessExpiryDate?: Dayjs | null;
+  roadTaxReceiptNo?: string;
+  roadTaxIssueDate?: Dayjs | null;
 }
 
 // History interfaces

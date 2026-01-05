@@ -20,7 +20,7 @@ const VehicleDocumentsStep = ({ formik }: VehicleDocumentsStepProps) => {
 
   // Prepare table data from formik values
   const documents = documentRows?.map((doc: { key: string | number }) => {
-    const file = formik.values.documents?.[doc.key] || null;
+    const file = formik.values.documents?.[doc.key as number] || null;
     return {
       ...doc,
       status: file ? 'Uploaded' : 'Pending',

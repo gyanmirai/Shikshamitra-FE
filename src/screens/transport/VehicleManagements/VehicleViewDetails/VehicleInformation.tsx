@@ -6,12 +6,17 @@ import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Card, Grid, Avatar, Typography } from '@mui/material';
 import LocalGasStationIcon from '@mui/icons-material/LocalGasStationOutlined';
-import { useGetvehicleInformationQuery } from 'src/redux/transport/vehicle-management/vehicleDocumentDataApi';
+import { useGetVehicleDetailsQuery } from 'src/redux/transport/vehicle-management/vehicle-management-api';
 
-const VehicleInformationCard = () => {
-  const { data: vehicle } = useQueryAndMutation({
+interface VehicleInformationCardProps {
+  vehicleId: string;
+}
+
+const VehicleInformationCard = ({ vehicleId }: VehicleInformationCardProps) => {
+  const { data: vehicle, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetvehicleInformationQuery,
+    currentQueryAndMutation: useGetVehicleDetailsQuery,
+    params: vehicleId,
   });
 
   return (

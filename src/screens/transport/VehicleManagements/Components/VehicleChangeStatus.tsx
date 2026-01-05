@@ -10,6 +10,7 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import { useChangeVehicleStatusMutation } from 'src/redux/transport/vehicle-management/vehicle-management-api';
 
 export enum VehicleStatus {
   Active,
@@ -26,6 +27,7 @@ interface ChangeVehicleStatusProps {
   isOpen: boolean;
   onClose: (e: any, isSaved?: boolean) => void;
   vehicleData: any;
+  vehicleId?: string;
 }
 
 const allowedStatuses = [VehicleStatus.Active, VehicleStatus.Inactive, VehicleStatus.Maintenance];
@@ -45,14 +47,37 @@ const ChangeVehicleStatusForm: React.FC<ChangeVehicleStatusProps> = ({
   isOpen,
   onClose,
   vehicleData,
+  vehicleId,
 }) => {
+  const [changeVehicleStatus, { isLoading }] = useChangeVehicleStatusMutation();
+
   const formik = useFormik({
     initialValues: getInitialVehicleStatusData(vehicleData),
-    onSubmit: (values) => {
-      shikshaMitraToast.success({
-        message: `Vehicle status for "${vehicleData?.vehicleType || 'selected vehicle'}" changed to ${VehicleStatus[values.status]} successfully`,
-      });
-      onClose(null, true);
+    onSubmit: async (values) => {
+      try {
+        const vehicleIdToUse = vehicleId || vehicleData?.id;
+        if (!vehicleIdToUse) {
+          shikshaMitraToast.error({ message: 'Vehicle ID is required' });
+          return;
+        }
+
+        await changeVehicleStatus({
+          vehicleId: vehicleIdToUse,
+          body: {
+            status: VehicleStatus[values.status],
+            remarks: values.reason || undefined,
+          },
+        }).unwrap();
+
+        shikshaMitraToast.success({
+          message: `Vehicle status changed to ${VehicleStatus[values.status]} successfully`,
+        });
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Failed to change vehicle status',
+        });
+      }
     },
   });
 
@@ -139,9 +164,10 @@ const ChangeVehicleStatusForm: React.FC<ChangeVehicleStatusProps> = ({
           type="submit"
           variant="contained"
           size="small"
+          disabled={isLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
-          Save
+          {isLoading ? 'Saving...' : 'Save'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>

@@ -21,18 +21,18 @@ import {
   DriverStatusTypeOptions,
 } from 'src/enums/driver-status-enum';
 import {
-  useGetmaintenanceDataQuery,
-  useGetrouteHistoryDataQuery,
-  useGetdriverHistoryDataQuery,
-  useGetdocumentDetailsDataQuery,
-} from 'src/redux/transport/vehicle-management/vehicleDocumentDataApi';
+  useGetRouteHistoryQuery,
+  useGetDriverHistoryQuery,
+  useGetVehicleDocumentsQuery,
+  useGetMaintenanceRecordsQuery,
+} from 'src/redux/transport/vehicle-management/vehicle-management-api';
 
 // Tab Components
-const RouteHistory = () => {
-  const { data: routeHistoryData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetrouteHistoryDataQuery,
-  });
+const RouteHistory = ({ vehicleId }: { vehicleId: string }) => {
+  const { data, isLoading } = useGetRouteHistoryQuery(
+    { vehicleId, page: 1, pageSize: 100 },
+    { skip: !vehicleId }
+  );
 
   return (
     <CustomizableTable
@@ -87,15 +87,15 @@ const RouteHistory = () => {
           },
         },
       ]}
-      data={routeHistoryData || []}
+      data={data?.items || []}
     />
   );
 };
-const DriverHistory = () => {
-  const { data: driverHistoryData, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetdriverHistoryDataQuery,
-  });
+const DriverHistory = ({ vehicleId }: { vehicleId: string }) => {
+  const { data, isLoading } = useGetDriverHistoryQuery(
+    { vehicleId, page: 1, pageSize: 100 },
+    { skip: !vehicleId }
+  );
 
   return (
     <CustomizableTable
@@ -150,15 +150,12 @@ const DriverHistory = () => {
           },
         },
       ]}
-      data={driverHistoryData || []}
+      data={data?.items || []}
     />
   );
 };
-const DocumentDetailsTable = () => {
-  const { data: documentRows, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetdocumentDetailsDataQuery,
-  });
+const DocumentDetailsTable = ({ vehicleId }: { vehicleId: string }) => {
+  const { data, isLoading } = useGetVehicleDocumentsQuery(vehicleId, { skip: !vehicleId });
 
   return (
     <CustomizableTable
@@ -220,15 +217,16 @@ const DocumentDetailsTable = () => {
           },
         },
       ]}
-      data={documentRows || []}
+      data={data || []}
     />
   );
 };
 
-const MaintenanceHistoryTable = () => {
-  const { data: maintenanceHistoryData, isLoading } = useQueryAndMutation({
+const MaintenanceHistoryTable = ({ vehicleId }: { vehicleId: string }) => {
+  const { data, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetmaintenanceDataQuery,
+    currentQueryAndMutation: useGetMaintenanceRecordsQuery,
+    params: vehicleId,
   });
 
   return (
@@ -276,7 +274,7 @@ const MaintenanceHistoryTable = () => {
           filterType: 'date',
         },
       ]}
-      data={maintenanceHistoryData || []}
+      data={data?.items || []}
     />
   );
 };
@@ -309,7 +307,11 @@ const TABS = [
   },
 ];
 
-const MaintenanceHistory = () => {
+interface MaintenanceHistoryProps {
+  vehicleId: string;
+}
+
+const MaintenanceHistory = ({ vehicleId }: MaintenanceHistoryProps) => {
   const [searchParams, setSearchParams] = useSearchParam({ tab: 'documentDetails' });
 
   const currentIndex = useMemo(
@@ -362,7 +364,7 @@ const MaintenanceHistory = () => {
         }}
       >
         <Scrollbar sx={{ p: 1 }}>
-          {currentActiveComponent && <currentActiveComponent.component />}
+          {currentActiveComponent && <currentActiveComponent.component vehicleId={vehicleId} />}
         </Scrollbar>
       </FormSlider>
     </>
