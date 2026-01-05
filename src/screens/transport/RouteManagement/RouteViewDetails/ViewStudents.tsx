@@ -5,9 +5,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Button, Typography, DialogActions } from '@mui/material';
-import { useGetAvailableRoutesQuery } from 'src/redux/transport/vehicle-management/route-management-api';
+// import { useGetAvailableRoutesQuery } from 'src/redux/transport/vehicle-management/route-management-api';
 
 interface ViewStudentsProps {
   open: boolean;
@@ -16,10 +15,10 @@ interface ViewStudentsProps {
 }
 
 const ViewStudents: React.FC<ViewStudentsProps> = ({ open, onClose, routeData }) => {
-  const { data: mockStudentsData, isLoading: isStudentDataLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAvailableRoutesQuery,
-  });
+  // const { data: mockStudentsData, isLoading: isStudentDataLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetAvailableRoutesQuery,
+  // });
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -56,7 +55,7 @@ const ViewStudents: React.FC<ViewStudentsProps> = ({ open, onClose, routeData })
         <CustomizableTable
           tableId="assigned-students-table"
           noDataText="No Students Found"
-          isLoading={isStudentDataLoading}
+          // isLoading={isStudentDataLoading}
           columns={[
             {
               id: 'grNo',
@@ -125,7 +124,7 @@ const ViewStudents: React.FC<ViewStudentsProps> = ({ open, onClose, routeData })
               },
             },
           ]}
-          data={mockStudentsData || []}
+          data={[]}
         />
       </Scrollbar>
       {/* Footer with Cancel button */}

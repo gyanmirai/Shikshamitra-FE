@@ -1,5 +1,5 @@
-import React from 'react';
 import { Box } from '@mui/system';
+import React, { useState } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -7,25 +7,21 @@ import { Tab, Card, Avatar } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import {
-  useGetVehicleHistoryQuery,
-  useGetDriverConductorHistoryQuery,
-} from 'src/redux/transport/vehicle-management/route-management-api';
+
+import vehicleManagementData from '../../../../json/transport/transportModuleData.json';
 
 // Tab Components
 const VehicleHistory = () => {
-  const { data: mockDriverConductorHistory, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetVehicleHistoryQuery,
-  });
+  const [vehicleHistoryData, setVehicleHistoryData] = useState<any>(
+    vehicleManagementData?.vehicleHistoryData
+  );
 
   return (
     <CustomizableTable
       tableId="vehicle-history-table"
       noDataText="No Vehicle Records Found"
       isFilter={false}
-      isLoading={isLoading}
+      // isLoading={isLoading}
       columns={[
         {
           id: 'busNo',
@@ -97,23 +93,26 @@ const VehicleHistory = () => {
           ),
         },
       ]}
-      data={mockDriverConductorHistory || []}
+      data={vehicleHistoryData || []}
     />
   );
 };
 
 const DriverConductorHistoryTable = () => {
-  const { data: mockVehicleHistory, isLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetDriverConductorHistoryQuery,
-  });
+  // const { data: mockVehicleHistory, isLoading } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetDriverConductorHistoryQuery,
+  // });
+  const [driverConductorData, setDriverConductorData] = useState<any>(
+    vehicleManagementData?.driverConductorHistoryData
+  );
 
   return (
     <CustomizableTable
       tableId="driver-conductor-history-table"
       noDataText="No Driver/Conductor Records Found"
       isFilter={false}
-      isLoading={isLoading}
+      // isLoading={isLoading}
       columns={[
         {
           id: 'driverName',
@@ -174,7 +173,7 @@ const DriverConductorHistoryTable = () => {
           minWidth: '180px',
         },
       ]}
-      data={mockVehicleHistory || []}
+      data={driverConductorData || []}
     />
   );
 };

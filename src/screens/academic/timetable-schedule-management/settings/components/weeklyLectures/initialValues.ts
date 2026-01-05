@@ -7,17 +7,26 @@ export const getNoOfLectureInitialValues = (
   selectedClass?: string
 ): any => {
   const subjects =
-    editData?.subjects?.map(({ name, subjectCode, subjectColor, noOfLecture }, index) => ({
-      id: `subject-${index}`,
-      name,
-      subjectCode,
-      subjectColor,
-      noOfLecture,
-    })) ??
+    editData?.subjects?.map(
+      (
+        { id, subjectId, name, subjectCode, subjectColor, noOfLecture, electiveGroupId },
+        index
+      ) => ({
+        id: id || `subject-${index}`,
+        subjectId: subjectId || id,
+        name,
+        subjectCode,
+        subjectColor,
+        noOfLecture,
+        electiveGroupId: electiveGroupId || null,
+      })
+    ) ??
     generateDummySubjects().map((subj, index) => ({
       id: `subject-${index}`,
+      subjectId: '',
       ...subj,
       noOfLecture: '',
+      electiveGroupId: null,
     }));
 
   const totalLectures = subjects.reduce<number>(
@@ -26,6 +35,7 @@ export const getNoOfLectureInitialValues = (
   );
 
   return {
+    id: editData?.id,
     className: editData?.className ? editData.className : selectedClass || '',
     subjects,
     totalLectures,

@@ -14,8 +14,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetRoutesQuery } from 'src/redux/transport/vehicle-management/route-management-api';
 import { RouteStatusType, RouteStatusOptions, RouteStatusTypeColor } from 'src/enums/route-enum';
-import { useGetRouteManagementDataQuery } from 'src/redux/transport/vehicle-management/route-management-api';
 
 import ChangeStopStatusForm from './ChangeStopStatusForm';
 
@@ -33,7 +33,7 @@ const RouteTable: React.FC<IRouteTableProps> = ({ setOpenDialog, setEditData, on
 
   const { data: routeDta, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetRouteManagementDataQuery,
+    currentQueryAndMutation: useGetRoutesQuery,
   });
 
   const changeStatusDialog = useBoolean();
