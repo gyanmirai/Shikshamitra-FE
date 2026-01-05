@@ -138,6 +138,7 @@ export const transportApi = createApi({
     'ZoneAreaOptions',
     'Member',
     'RouteStop',
+    'RouteManagement',
   ],
   endpoints: () => ({}),
 });

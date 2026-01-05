@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { RouteStatus } from 'src/enums/route-status';
+import { RouteType } from 'src/enums/route-type-options';
 
 import type { IRouteData, IRoutesData, IRoutePayload } from '../Components/type';
 
@@ -7,7 +8,7 @@ export const getInitialRouteData = (editData?: IRoutePayload): IRoutePayload => 
   // General Information
   routeName: editData?.routeName || '',
   routeCode: editData?.routeCode || '',
-  routeType: editData?.routeType || '', // "Pickup", "Dropoff", or "Both"
+  routeType: editData?.routeType ?? RouteType.pickup,
   distance: editData?.distance || '',
   duration: editData?.duration || '',
   description: editData?.description || '',
@@ -15,10 +16,10 @@ export const getInitialRouteData = (editData?: IRoutePayload): IRoutePayload => 
   endPoint: editData?.endPoint ?? '',
   // Pickup Schedule
   pickupSchedule: {
-    startTime: editData?.dropoffSchedule?.startTime
-      ? dayjs(editData?.dropoffSchedule?.startTime)
+    startTime: editData?.pickupSchedule?.startTime
+      ? dayjs(editData?.pickupSchedule?.startTime)
       : null,
-    endTime: editData?.dropoffSchedule?.endTime ? dayjs(editData?.dropoffSchedule?.endTime) : null,
+    endTime: editData?.pickupSchedule?.endTime ? dayjs(editData?.pickupSchedule?.endTime) : null,
   },
 
   // Dropoff Schedule

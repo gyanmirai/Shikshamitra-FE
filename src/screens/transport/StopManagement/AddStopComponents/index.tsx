@@ -1,11 +1,21 @@
+import type { Medium } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Grid, Button, DialogActions } from '@mui/material';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useCreateStopMutation,
+  useUpdateStopMutation,
+} from 'src/redux/transport/vehicle-management/stop-management-api';
 
 import StopInformation from './StopManagementForm';
 import { stopManagementValidationSchema } from '../Components/StopManagementValidation';
@@ -32,23 +42,66 @@ const AddStopIndex: React.FC<AddStopIndexProps> = ({
   stopName,
   handleSubmit,
 }) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [createStop, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateStopMutation,
+  });
+  const [updateStop, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateStopMutation,
+  });
   const formik = useFormik({
     initialValues: getStopManagementInitialValues(stopName, editData),
     validationSchema: stopManagementValidationSchema,
-    onSubmit: (values) => {
-      if (handleSubmit) {
-        handleSubmit(values);
+    onSubmit: async (values, formikHelpers) => {
+      try {
+        if (editData) {
+          const payload = {
+            academicMediumId: (currentMedium as Medium).id,
+            id: (editData as IStopData).id,
+            body: {
+              stopName: values.stopName,
+              zoneId: values.zoneId,
+              amount: values.amount,
+              approxKmFromSchool: values.approxKmFromSchool,
+              pinCode: values.pincode,
+              addressLine1: values.addressLine1,
+              addressLine2: values.addressLine2,
+              description: values.description,
+              landmark: values.landmark,
+            },
+          };
+          await updateStop(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `Stop : "${values.stopName}" updated successfully`,
+          });
+          onClose(null, true);
+        } else {
+          const payload = {
+            academicMediumId: (currentMedium as Medium).id,
+            body: {
+              stopName: values.stopName,
+              zoneId: values.zoneId,
+              amount: values.amount,
+              approxKmFromSchool: values.approxKmFromSchool,
+              pinCode: values.pincode,
+              addressLine1: values.addressLine1,
+              addressLine2: values.addressLine2,
+              description: values.description,
+              landmark: values.landmark,
+            },
+          };
+          await createStop(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `Stop : "${values.stopName}" added successfully`,
+          });
+          onClose(null, true);
+        }
+      } catch (error) {
+        // Error handling is managed by the API hook or global error handler if configured
+        console.error('Failed to save subject', error);
       }
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Stop "${values.stopName}" updated successfully.`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Stop "${values.stopName}" added successfully.`,
-        });
-      }
-      onClose(null, true);
     },
   });
 
@@ -77,9 +130,10 @@ const AddStopIndex: React.FC<AddStopIndexProps> = ({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             variant="contained"
             onClick={(e: any) => formik.handleSubmit(e)}
+            loading={isAddLoading || isUpdateLoading}
             size="small"
             startIcon={
               <Iconify
@@ -90,7 +144,7 @@ const AddStopIndex: React.FC<AddStopIndexProps> = ({
             }
           >
             {editData ? 'Update' : 'Submit'}
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </Box>
     </BackPopUpChecked>

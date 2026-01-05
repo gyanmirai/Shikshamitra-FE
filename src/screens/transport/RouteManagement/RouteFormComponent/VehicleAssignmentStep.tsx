@@ -3,16 +3,11 @@ import type { FormikProps } from 'formik';
 import React from 'react';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Grid, TextField, Autocomplete } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import {
-  useGetSelectableDriversQuery,
-  useGetAssignableVehiclesQuery,
-  useGetSelectableConductorsQuery,
-} from 'src/redux/transport/vehicle-management/route-management-api';
 
 import RouteDetailsView from './RouteBasicView';
+import vehicleManagementData from '../../../../json/transport/transportModuleData.json';
 
 import type { IRoutePayload } from '../Components/type';
 
@@ -22,20 +17,29 @@ interface VehicleAssignmentStepProps {
 
 const VehicleAssignmentStep = ({ formik }: VehicleAssignmentStepProps) => {
   // Fetch available vehicles, drivers, and conductors at the top level of the component
-  const { data: availableVehicles = [] } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAssignableVehiclesQuery,
-  });
+  // const { data: availableVehicles = [] } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetAssignableVehiclesQuery,
+  // });
+  const [availableVehicles, setAvailableVehicles] = React.useState(
+    vehicleManagementData.assignableVehiclesData
+  );
+  const [availableDrivers, setSelectableDriversData] = React.useState(
+    vehicleManagementData.selectableDriversData
+  );
+  const [availableConductors, setSelectableConductorsData] = React.useState(
+    vehicleManagementData.selectableConductorsData
+  );
 
-  const { data: availableDrivers = [] } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSelectableDriversQuery,
-  });
+  // const { data: availableDrivers = [] } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetSelectableDriversQuery,
+  // });
 
-  const { data: availableConductors = [] } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSelectableConductorsQuery,
-  });
+  // const { data: availableConductors = [] } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetSelectableConductorsQuery,
+  // });
 
   const handleVehicleSelect = (selectedVehicle: string | null) => {
     if (!selectedVehicle) {

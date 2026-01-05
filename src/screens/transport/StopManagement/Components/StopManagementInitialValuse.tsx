@@ -11,7 +11,7 @@ export const getStopManagementInitialValues = (
   areaLocalityRoadName: editData?.areaLocalityRoadName || '',
   amount: editData?.amount || '',
   pincode: editData ? editData?.pincode : null,
-  zone: editData?.zone || '',
+  zoneId: editData?.zoneId || '',
   status: editData?.status || 0,
   description: null,
   coordinates: {

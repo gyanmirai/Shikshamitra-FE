@@ -28,6 +28,10 @@ export const academicApi = createApi({
     'ExaminationType',
     'GradeScaling',
     'SeatAllocation',
+    'RecordMarks',
+    'Quiz',
+    'WeeklyLectureSlot',
+    'LectureSlot',
   ],
   endpoints: () => ({}), // inject endpoints later
 });
