@@ -31,8 +31,8 @@ jobs:
 
       - name: Prepare standalone artifact
         run: |
-          mkdir -p deploy
-          cp -R .next/standalone/* deploy/
+          mkdir -p deploy/.next
+          cp -R .next/standalone/* deploy/.next/
           cp -R .next/static deploy/.next/static
           cp -R public deploy/public
           cp package.json deploy/package.json
