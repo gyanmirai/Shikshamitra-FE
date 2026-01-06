@@ -1,5 +1,7 @@
 'use client';
 
+import type { Dayjs } from 'dayjs';
+
 import { useFormik } from 'formik';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -8,19 +10,32 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useAddMaintenanceRecordMutation } from 'src/redux/transport/vehicle-management/vehicle-management-api';
 
 import { maintenanceValidationSchema } from './MaintenanceValidationSchema';
 
 interface AddMaintenanceFormProps {
   open: boolean;
   onClose: (e: any, isSubmit: boolean) => void;
+  vehicleId: string;
 }
 
-const initialValues = {
+interface MaintenanceFormValues {
+  serviceType: string[];
+  serviceDate: Dayjs | null;
+  serviceNotes: string;
+  serviceCost: string;
+  serviceProvider: string;
+  nextServiceDate: Dayjs | null;
+  documents: File[];
+}
+
+const initialValues: MaintenanceFormValues = {
   serviceType: [],
   serviceDate: null,
   serviceNotes: '',
@@ -30,15 +45,57 @@ const initialValues = {
   documents: [],
 };
 
-const AddMaintenanceForm: React.FC<AddMaintenanceFormProps> = ({ open, onClose }) => {
+const AddMaintenanceForm: React.FC<AddMaintenanceFormProps> = ({ open, onClose, vehicleId }) => {
+  // Add Maintenance Record
+  const { addMaintenanceRecord, isLoading } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddMaintenanceRecordMutation,
+  });
+
   const formik = useFormik({
     initialValues,
     validationSchema: maintenanceValidationSchema,
-    onSubmit: (values) => {
-      shikshaMitraToast.success({
-        message: 'Maintenance record added successfully',
-      });
-      onClose(values, true);
+    onSubmit: async (values) => {
+      try {
+        // Create FormData to match API specification
+        const formData = new FormData();
+
+        // Required fields
+        formData.append('serviceType', values.serviceType.join(', ')); // Convert array to comma-separated string
+        formData.append('serviceDate', values.serviceDate?.format('YYYY-MM-DD') || '');
+
+        // Optional fields
+        if (values.nextServiceDate) {
+          formData.append('nextServiceDate', values.nextServiceDate.format('YYYY-MM-DD'));
+        }
+        if (values.serviceCost) {
+          formData.append('cost', values.serviceCost);
+        }
+        if (values.serviceProvider) {
+          formData.append('provider', values.serviceProvider);
+        }
+        if (values.serviceNotes) {
+          formData.append('notes', values.serviceNotes);
+        }
+
+        // Append photos array
+        if (values.documents && values.documents.length > 0) {
+          values.documents.forEach((file: File) => {
+            formData.append('photos', file);
+          });
+        }
+
+        await addMaintenanceRecord({ vehicleId, body: formData }).unwrap();
+
+        shikshaMitraToast.success({
+          message: 'Maintenance record added successfully',
+        });
+        onClose(values, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Failed to add maintenance record',
+        });
+      }
     },
   });
 
@@ -196,11 +253,12 @@ const AddMaintenanceForm: React.FC<AddMaintenanceFormProps> = ({ open, onClose }
           type="submit"
           size="small"
           variant="contained"
+          disabled={isLoading}
           onClick={(e: any) => {
             formik.handleSubmit(e);
           }}
         >
-          Submit
+          {isLoading ? 'Submitting...' : 'Submit'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>

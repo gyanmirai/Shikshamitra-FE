@@ -3,7 +3,9 @@ import dayjs from 'dayjs';
 import type { IVehiclePayload } from '../Components/type';
 
 export const getInitialVehicleData = (editData?: IVehiclePayload): IVehiclePayload => ({
+  id: editData?.id,
   registrationNo: editData?.registrationNo || '',
+  vehicleName: editData?.vehicleName || '',
   vehicleNo: editData?.vehicleNo || '',
   vehicleType: editData?.vehicleType || '',
   vehicleCompany: editData?.vehicleCompany || '',
@@ -14,44 +16,67 @@ export const getInitialVehicleData = (editData?: IVehiclePayload): IVehiclePaylo
   schoolAssignedNo: editData?.schoolAssignedNo || '',
   owner: editData?.owner || '',
   fuelType: editData?.fuelType || '',
-  isAC: editData?.isAC || false,
-  isNonAC: editData?.isNonAC || false,
+  isAc: editData?.isAc || false,
   description: editData?.description || '',
 
-  documents: {
-    registrationCertificate: editData?.documents?.registrationCertificate || null,
-    insuranceCertificate: editData?.documents?.insuranceCertificate || null,
-    fitnessCertificate: editData?.documents?.fitnessCertificate || null,
-    vehiclePhotos: editData?.documents?.vehiclePhotos || null,
+  // Documents as array
+  documents: editData?.documents || [],
+
+  // Insurance object
+  insurance: editData?.insurance || {
+    insuranceCompany: '',
+    policyNo: '',
+    issueDate: null,
+    expiryDate: null,
+    coverageAmount: null,
   },
 
-  insuranceCompany: editData?.insuranceCompany || '',
-  policyNo: editData?.policyNo || '',
-  insuranceIssueDate: editData?.insuranceIssueDate ? dayjs(editData?.insuranceIssueDate) : null,
-  insuranceExpiryDate: editData?.insuranceExpiryDate ? dayjs(editData?.insuranceExpiryDate) : null,
-  coverageAmount: editData?.coverageAmount || null,
+  // PUC object
+  puc: editData?.puc || {
+    certificateNo: '',
+    issueDate: null,
+    expiryDate: null,
+  },
 
-  pucCertificateNo: editData?.pucCertificateNo || '',
-  pucIssueDate: editData?.pucIssueDate ? dayjs(editData?.pucIssueDate) : null,
-  pucExpiryDate: editData?.pucExpiryDate ? dayjs(editData?.pucExpiryDate) : null,
+  // Road Tax object
+  roadTax: editData?.roadTax || {
+    receiptNo: '',
+    issueDate: null,
+  },
 
+  // Legacy fields for backward compatibility (optional)
+  insuranceCompany: editData?.insuranceCompany || editData?.insurance?.insuranceCompany || '',
+  policyNo: editData?.policyNo || editData?.insurance?.policyNo || '',
+  insuranceIssueDate: editData?.insuranceIssueDate
+    ? dayjs(editData.insuranceIssueDate)
+    : editData?.insurance?.issueDate
+      ? dayjs(editData.insurance.issueDate)
+      : null,
+  insuranceExpiryDate: editData?.insuranceExpiryDate
+    ? dayjs(editData.insuranceExpiryDate)
+    : editData?.insurance?.expiryDate
+      ? dayjs(editData.insurance.expiryDate)
+      : null,
+  coverageAmount: editData?.coverageAmount || editData?.insurance?.coverageAmount || null,
+  pucCertificateNo: editData?.pucCertificateNo || editData?.puc?.certificateNo || '',
+  pucIssueDate: editData?.pucIssueDate
+    ? dayjs(editData.pucIssueDate)
+    : editData?.puc?.issueDate
+      ? dayjs(editData.puc.issueDate)
+      : null,
+  pucExpiryDate: editData?.pucExpiryDate
+    ? dayjs(editData.pucExpiryDate)
+    : editData?.puc?.expiryDate
+      ? dayjs(editData.puc.expiryDate)
+      : null,
   fitnessCertificateNo: editData?.fitnessCertificateNo || '',
   fitnessIssueDate: editData?.fitnessIssueDate ? dayjs(editData.fitnessIssueDate) : null,
   fitnessExpiryDate: editData?.fitnessExpiryDate ? dayjs(editData.fitnessExpiryDate) : null,
-
-  roadTaxReceiptNo: editData?.roadTaxReceiptNo || '',
-  roadTaxIssueDate: editData?.roadTaxIssueDate ? dayjs(editData.roadTaxIssueDate) : null,
-
-  maintenance: {
-    serviceDate: editData?.maintenance?.serviceDate
-      ? dayjs(editData.maintenance.serviceDate)
+  roadTaxReceiptNo: editData?.roadTaxReceiptNo || editData?.roadTax?.receiptNo || '',
+  roadTaxIssueDate: editData?.roadTaxIssueDate
+    ? dayjs(editData.roadTaxIssueDate)
+    : editData?.roadTax?.issueDate
+      ? dayjs(editData.roadTax.issueDate)
       : null,
-    serviceNotes: editData?.maintenance?.serviceNotes || '',
-    serviceCost: editData?.maintenance?.serviceCost || '',
-    serviceProvider: editData?.maintenance?.serviceProvider || '',
-    nextServiceDate: editData?.maintenance?.nextServiceDate
-      ? dayjs(editData.maintenance.nextServiceDate)
-      : null,
-    documents: editData?.maintenance?.documents || [],
-  },
+  isNonAc: false,
 });

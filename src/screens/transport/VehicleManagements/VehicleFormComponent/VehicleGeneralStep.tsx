@@ -261,12 +261,12 @@ const VehicleGeneralStep = ({ formik }: VehicleGeneralStepProps) => {
           <FormControlLabel
             control={
               <Checkbox
-                checked={formik.values.isAC === true}
+                checked={formik.values.isAc === true}
                 onChange={(_, checked) => {
-                  formik.setFieldValue('isAC', checked);
-                  if (checked) formik.setFieldValue('isNonAC', false);
+                  formik.setFieldValue('isAc', checked);
+                  if (checked) formik.setFieldValue('isNonAc', false);
                 }}
-                name="isAC"
+                name="isAc"
                 color="primary"
               />
             }
@@ -275,12 +275,12 @@ const VehicleGeneralStep = ({ formik }: VehicleGeneralStepProps) => {
           <FormControlLabel
             control={
               <Checkbox
-                checked={formik.values.isNonAC === true}
+                checked={formik.values.isNonAc === true}
                 onChange={(_, checked) => {
-                  formik.setFieldValue('isNonAC', checked);
-                  if (checked) formik.setFieldValue('isAC', false);
+                  formik.setFieldValue('isNonAc', checked);
+                  if (checked) formik.setFieldValue('isAc', false);
                 }}
-                name="isNonAC"
+                name="isNonAc"
                 color="primary"
               />
             }
