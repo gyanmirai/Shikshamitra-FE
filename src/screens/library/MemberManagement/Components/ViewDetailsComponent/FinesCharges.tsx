@@ -1,10 +1,12 @@
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFinesChargesQuery } from 'src/redux/memberManagement/memberManagementApi';
+import { useGetMemberChargesQuery } from 'src/redux/library/libraryMembers/memberManagementApi';
 import {
   FinesChargesStatusType,
   FinesChargesStatusTypeColors,
@@ -18,9 +20,15 @@ interface FinesChargesProps {
 }
 
 const FinesCharges: React.FC<FinesChargesProps> = ({ member }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const { data: mockFinesCharges, isLoading: mockFinesChargesLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetFinesChargesQuery,
+    currentQueryAndMutation: useGetMemberChargesQuery,
+    params: {
+      memberId: member?.id,
+      academicYearId: currentYear,
+    },
   });
 
   return (

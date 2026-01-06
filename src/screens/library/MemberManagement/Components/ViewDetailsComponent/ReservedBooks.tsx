@@ -1,7 +1,10 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import { useSelector } from 'react-redux';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetReservedBooksQuery } from 'src/redux/memberManagement/memberManagementApi';
+import { useGetMemberReservedBooksQuery } from 'src/redux/library/libraryMembers/memberManagementApi';
 
 import type { IMember } from '../type';
 
@@ -10,9 +13,12 @@ interface ReservedBooksProps {
 }
 
 const ReservedBooks: React.FC<ReservedBooksProps> = ({ member }) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+
   const { data: mockReservedBooks, isLoading: memberLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetReservedBooksQuery,
+    currentQueryAndMutation: useGetMemberReservedBooksQuery,
+    params: { memberId: member?.id, academicYearId: currentYear?.id },
   });
 
   return (

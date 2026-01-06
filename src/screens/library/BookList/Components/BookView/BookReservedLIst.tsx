@@ -1,11 +1,13 @@
+import type { RootState } from 'src/redux/store';
 import type { IBook } from 'src/screens/library/BookManagement/Components/type';
 
 import React from 'react';
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
 import { Box, Grid, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
+import { useGetReservationTableViewQuery } from 'src/redux/library/bookList/bookList-api';
 
 interface ViewReservedMembersTableProps {
   editData: IBook | null; // book data containing reservationMemberIds
@@ -16,14 +18,16 @@ const ViewReservedMembersTable: React.FC<ViewReservedMembersTableProps> = ({
   editData,
   onDelete,
 }) => {
+  const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
   // Fetch all members
-  const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
+  const { data: reservationData, isLoading: reservationLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetAllMembersQuery,
+    currentQueryAndMutation: useGetReservationTableViewQuery,
+    params: { bookId: editData?.id, academicYearId: currentAcademicYear },
   });
 
   // Match reserved member IDs with member details
-  const reservedList = memberData?.filter((member: any) =>
+  const reservedList = reservationData?.filter((member: any) =>
     editData?.reservationMemberIds?.includes(member.memberId)
   );
 
@@ -35,7 +39,7 @@ const ViewReservedMembersTable: React.FC<ViewReservedMembersTableProps> = ({
             <CustomizableTable
               tableId="reserved-members-table"
               noDataText="No Reserved Members Found"
-              isLoading={memberLoading}
+              isLoading={reservationLoading}
               columns={[
                 { id: 'memberId', label: 'Member ID', align: 'left', sticky: true, minWidth: 120 },
                 { id: 'name', label: 'Member Name', align: 'left', minWidth: 140 },

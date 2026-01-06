@@ -1,8 +1,11 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { Box } from '@mui/material';
+import { useSelector } from 'react-redux';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetIssuedBooksQuery } from 'src/redux/memberManagement/memberManagementApi';
+import { useGetMemberBorrowedBooksQuery } from 'src/redux/library/libraryMembers/memberManagementApi';
 
 import type { IMember } from '../type';
 
@@ -11,9 +14,12 @@ interface IssuedBooksProps {
 }
 
 const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
-  const { data: mockIssuedBooks, isLoading: mockIssuedLoading } = useQueryAndMutation({
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: membersData, isLoading: mockIssuedLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetIssuedBooksQuery,
+    currentQueryAndMutation: useGetMemberBorrowedBooksQuery,
+    params: { memberId: member?.id, academicYearId: currentYear?.id },
   });
 
   return (
@@ -46,7 +52,7 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
           //   },
           // },
         ]}
-        data={mockIssuedBooks || []}
+        data={[]}
       />
     </Box>
   );

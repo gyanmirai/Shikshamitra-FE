@@ -21,6 +21,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
 import { useGetAllCopiesQuery } from 'src/redux/library/bookList/copies-api';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetBookDetailsByAccessionQuery } from 'src/redux/library/issueAndReturnApi/issueAndReturnApi';
 import {
   Box,
   Grid,
@@ -71,7 +72,13 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     },
   });
 
-  const { data: memberData } = useQueryAndMutation({
+  const { data: bookData, isLoading: isLoadingBookData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBookDetailsByAccessionQuery,
+    params: { accessionNo: debouncedAccessionNumber, academicYearId: currentYear?.id },
+  });
+
+  const { data: memberData, isLoading: isLoadingMemberData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllMembersQuery,
   });

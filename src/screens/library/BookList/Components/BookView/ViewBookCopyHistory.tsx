@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { Box, Grid, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
+import { useGetBookCopyMembersQuery } from 'src/redux/library/bookList/bookList-api';
 
 interface ViewBookCopyHistoryTableProps {
   editData: IBookCopyWithBook | null; // book data containing reservationMemberIds
@@ -19,7 +19,8 @@ const ViewBookCopyHistoryTable: React.FC<ViewBookCopyHistoryTableProps> = ({
   // Fetch all members
   const { data: memberData, isLoading: memberLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetAllMembersQuery,
+    currentQueryAndMutation: useGetBookCopyMembersQuery,
+    params: { bookId: editData?.bookId, accessionNo: editData?.accessionNo },
   });
 
   return (
