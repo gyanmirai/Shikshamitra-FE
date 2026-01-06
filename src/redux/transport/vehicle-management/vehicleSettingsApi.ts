@@ -2,26 +2,106 @@ import { transportApi } from '../transportApi';
 
 export const vehicleSettingsApi = transportApi.injectEndpoints({
   endpoints: (builder) => ({
+    // Vehicle Type
     getVehicleTypes: builder.query({
       query: () => ({
-        url: '/vehicleTypes',
+        url: '/vehicle-types',
         method: 'GET',
       }),
       providesTags: ['VehicleTypes'],
     }),
+
+    addVehicleType: builder.mutation({
+      query: (body) => ({
+        url: '/vehicle-types',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['VehicleTypes'],
+    }),
+
+    updateVehicleType: builder.mutation({
+      query: ({ vehicleTypeId, body }) => ({
+        url: `/vehicle-types/${vehicleTypeId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['VehicleTypes'],
+    }),
+
+    deleteVehicleType: builder.mutation({
+      query: (vehicleTypeId) => ({
+        url: `/vehicle-types/${vehicleTypeId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['VehicleTypes'],
+    }),
+
+    // Vehicle Document
     getVehicleDocuments: builder.query({
       query: () => ({
-        url: '/vehicleDocuments',
+        url: '/required-vehicle-documents',
         method: 'GET',
       }),
       providesTags: ['VehicleDocuments'],
     }),
+
+    addVehicleDocument: builder.mutation({
+      query: (body) => ({
+        url: '/required-vehicle-documents',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['VehicleDocuments'],
+    }),
+
+    updateVehicleDocument: builder.mutation({
+      query: ({ documentId, body }) => ({
+        url: `/required-vehicle-documents/${documentId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['VehicleDocuments'],
+    }),
+
+    deleteVehicleDocument: builder.mutation({
+      query: (documentId) => ({
+        url: `/required-vehicle-documents/${documentId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['VehicleDocuments'],
+    }),
+
+    // Service Type
     getServiceTypes: builder.query({
       query: () => ({
-        url: '/serviceTypes',
+        url: '/servicing-types',
         method: 'GET',
       }),
       providesTags: ['ServiceTypes'],
+    }),
+    addServiceType: builder.mutation({
+      query: (body) => ({
+        url: '/servicing-types',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['ServiceTypes'],
+    }),
+    updateServiceType: builder.mutation({
+      query: ({ servicingTypeId, body }) => ({
+        url: `/servicing-types/${servicingTypeId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['ServiceTypes'],
+    }),
+    deleteServiceType: builder.mutation({
+      query: (servicingTypeId) => ({
+        url: `/servicing-types/${servicingTypeId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['ServiceTypes'],
     }),
     getLicenceTypes: builder.query({
       query: () => ({
@@ -37,13 +117,32 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
       }),
       providesTags: ['FuelTypeOptions'],
     }),
-    getStopBasedFeeData: builder.query({
+
+    // Fee Configuration
+    getFeeConfiguration: builder.query({
       query: () => ({
-        url: '/stopBasedFeeData',
+        url: '/fee-configuration',
         method: 'GET',
       }),
-      providesTags: ['StopBasedFeeData'],
+      providesTags: ['FeeConfiguration'],
     }),
+    addFeeConfiguration: builder.mutation({
+      query: (body) => ({
+        url: '/fee-configuration',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['FeeConfiguration'],
+    }),
+    updateFeeConfiguration: builder.mutation({
+      query: (body) => ({
+        url: `/fee-configuration`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['FeeConfiguration'],
+    }),
+
     getDistanceCalculationOptions: builder.query({
       query: () => ({
         url: '/distanceCalculationOptions',
@@ -72,26 +171,64 @@ export const vehicleSettingsApi = transportApi.injectEndpoints({
       }),
       providesTags: ['AvailableStopsOptions'],
     }),
+
     getZoneAreaOptions: builder.query({
       query: () => ({
-        url: '/zoneAreas',
+        url: '/zones-areas',
         method: 'GET',
       }),
       providesTags: ['ZoneAreaOptions'],
+    }),
+    addZoneAreaOptions: builder.mutation({
+      query: (body) => ({
+        url: '/zones-areas',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['ZoneAreaOptions'],
+    }),
+    updateZoneAreaOptions: builder.mutation({
+      query: ({ zoneAreaId, body }) => ({
+        url: `/zones-areas/${zoneAreaId}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['ZoneAreaOptions'],
+    }),
+    deleteZoneAreaOptions: builder.mutation({
+      query: (zoneAreaId) => ({
+        url: `/zones-areas/${zoneAreaId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['ZoneAreaOptions'],
     }),
   }),
 });
 
 export const {
   useGetVehicleTypesQuery,
+  useAddVehicleTypeMutation,
+  useUpdateVehicleTypeMutation,
+  useDeleteVehicleTypeMutation,
+  useAddVehicleDocumentMutation,
+  useUpdateVehicleDocumentMutation,
+  useDeleteVehicleDocumentMutation,
+  useAddServiceTypeMutation,
+  useUpdateServiceTypeMutation,
+  useDeleteServiceTypeMutation,
   useGetVehicleDocumentsQuery,
+  useGetFeeConfigurationQuery,
+  useAddFeeConfigurationMutation,
+  useUpdateFeeConfigurationMutation,
   useGetServiceTypesQuery,
   useGetLicenceTypesQuery,
   useGetFuelTypesQuery,
-  useGetStopBasedFeeDataQuery,
   useGetDistanceCalculationOptionsQuery,
   useGetFrequencyOptionsQuery,
   useGetZoneBasedFeeDataQuery,
   useGetAvailableStopsOptionsQuery,
   useGetZoneAreaOptionsQuery,
+  useAddZoneAreaOptionsMutation,
+  useUpdateZoneAreaOptionsMutation,
+  useDeleteZoneAreaOptionsMutation,
 } = vehicleSettingsApi;

@@ -12,8 +12,10 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useDeleteVehicleTypeMutation } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import VehicleTypeForm from './Components/VehicleTypeForm';
 import VehicleTypeTable from './Components/VehicalTypeTable';
@@ -33,6 +35,12 @@ const VehicleTypeSettingScreen = () => {
   const [selectedVehicleType, setSelectedVehicleType] = useState<IVehicleType | null>(null);
 
   const dispatch = useDispatch();
+
+  // Delete mutation hook
+  const { deleteVehicleType, isLoading: isDeleting } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteVehicleTypeMutation,
+  });
 
   /**
    * Handles closing of add/edit vehicle type dialog
@@ -154,16 +162,26 @@ const VehicleTypeSettingScreen = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              const vehicleTypeName = selectedVehicleType?.typeName;
-              deleteVehicleTypeDialog.onFalse();
-              setSelectedVehicleType(null);
-              shikshaMitraToast.success({
-                message: `Vehicle Type : ${vehicleTypeName} deleted successfully`,
-              });
+            disabled={isDeleting}
+            onClick={async () => {
+              if (!selectedVehicleType?.id) return;
+
+              try {
+                const vehicleTypeName = selectedVehicleType?.name || selectedVehicleType?.typeName;
+                await deleteVehicleType(selectedVehicleType.id);
+                deleteVehicleTypeDialog.onFalse();
+                setSelectedVehicleType(null);
+                shikshaMitraToast.success({
+                  message: `Vehicle Type: ${vehicleTypeName} deleted successfully`,
+                });
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.message || 'Failed to delete vehicle type',
+                });
+              }
             }}
           >
-            Yes
+            {isDeleting ? 'Deleting...' : 'Yes'}
           </Button>
         }
       />

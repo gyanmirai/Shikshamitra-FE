@@ -11,6 +11,7 @@ export interface IStudent {
 }
 
 export interface ITransportApplicationPayload {
+  id?: string;
   selectedStudent: number;
   studentId: string;
   avatarUrl?: string;

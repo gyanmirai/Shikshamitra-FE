@@ -7,8 +7,13 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddServiceTypeMutation,
+  useUpdateServiceTypeMutation,
+} from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import { serviceTypeValidationSchema } from './ServiceTypeValidation';
 import { getServiceTypeInitialValues } from './ServiceTypeInitialValues';
@@ -16,20 +21,46 @@ import { getServiceTypeInitialValues } from './ServiceTypeInitialValues';
 import type { IServiceTypeFormProps } from './type';
 
 const ServiceTypeForm: React.FC<IServiceTypeFormProps> = ({ open, onClose, editData }) => {
+  const { addServiceType, isLoading: isAdding } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddServiceTypeMutation,
+  });
+  const { updateServiceType, isLoading: isUpdating } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateServiceTypeMutation,
+  });
+
   const formik = useFormik({
     initialValues: getServiceTypeInitialValues(editData),
     validationSchema: serviceTypeValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Service Type : ${values.typeName} updated successfully`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Service Type : ${values.typeName} added successfully`,
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          name: values.typeName,
+          description: values.description || '',
+          isActive: true,
+        };
+
+        if (editData) {
+          await updateServiceType({
+            servicingTypeId: editData.id,
+            body: payload,
+          });
+          shikshaMitraToast.success({
+            message: `Service Type: ${values.typeName} updated successfully`,
+          });
+        } else {
+          await addServiceType(payload);
+          shikshaMitraToast.success({
+            message: `Service Type: ${values.typeName} added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Failed to save service type',
         });
       }
-      onClose(null, true);
     },
   });
 
@@ -104,8 +135,9 @@ const ServiceTypeForm: React.FC<IServiceTypeFormProps> = ({ open, onClose, editD
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          disabled={isAdding || isUpdating}
         >
-          {editData ? 'Update' : 'Submit'}
+          {isAdding || isUpdating ? 'Saving...' : editData ? 'Update' : 'Submit'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>

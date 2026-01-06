@@ -8,12 +8,17 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
+import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Card, Button, DialogActions } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetStopBasedFeeDataQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
+import {
+  useGetFeeConfigurationQuery,
+  useAddFeeConfigurationMutation,
+  useUpdateFeeConfigurationMutation,
+} from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import StopBasedModel from './Components/StopBasedModel';
 import FeeModelSelection from './Components/FeeModelSelection';
@@ -24,9 +29,20 @@ import { getValidationSchemaByModel } from './Components/FeeConfigurationValidat
 const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
-  const { data: stopBasedFeeData } = useQueryAndMutation({
+
+  const { data: feeConfiguration } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetStopBasedFeeDataQuery,
+    currentQueryAndMutation: useGetFeeConfigurationQuery,
+  });
+
+  const { addFeeConfiguration, isLoading: isAdding } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddFeeConfigurationMutation,
+  });
+
+  const { updateFeeConfiguration, isLoading: isUpdating } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateFeeConfigurationMutation,
   });
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are you sure you want to leave this page?'))) {
@@ -41,15 +57,41 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
   const [editData] = useState(null); // for edit mode, set an object
 
   const initialValues = React.useMemo(
-    () => getInitialValuesByModel(selectedModel, editData, stopBasedFeeData),
-    [selectedModel, editData, stopBasedFeeData]
+    () => getInitialValuesByModel(selectedModel, editData, feeConfiguration),
+    [selectedModel, editData, feeConfiguration]
   );
 
   const formik = useFormik({
     initialValues,
     validationSchema: getValidationSchemaByModel(selectedModel, currentYear),
     enableReinitialize: true,
-    onSubmit: (values) => {},
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          feeModelType: values.model,
+          ratePerKm: values.ratePerKm || null,
+          feeFrequency: values.feeFrequency,
+          isActive: true,
+        };
+
+        if (feeConfiguration) {
+          await updateFeeConfiguration(payload);
+          shikshaMitraToast.success({
+            message: 'Fee Configuration updated successfully',
+          });
+        } else {
+          await addFeeConfiguration(payload);
+          shikshaMitraToast.success({
+            message: 'Fee Configuration created successfully',
+          });
+        }
+        dispatch(setIsChanges(false));
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Failed to save fee configuration',
+        });
+      }
+    },
   });
 
   return (
@@ -63,6 +105,18 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
             { name: 'Setting', href: '/transport/settings/vehicleType' },
             { name: 'Fee Configuration' },
           ]}
+          action={
+            <Button
+              onClick={(e: any) => formik.handleSubmit(e)}
+              size="small"
+              variant="contained"
+              startIcon={<Iconify icon="mdi:content-save" />}
+              disabled={isAdding || isUpdating}
+              sx={{ px: '32px' }}
+            >
+              {isAdding || isUpdating ? 'Saving...' : 'Save '}
+            </Button>
+          }
           sx={{ mb: 2 }}
         />
       )}
@@ -96,6 +150,7 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
               size="small"
               onClick={(e) => handleClose(e, false)}
               startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+              disabled={isAdding || isUpdating}
             >
               Reset
             </Button>
@@ -104,8 +159,9 @@ const FeeConfiguration = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
               size="small"
               onClick={(e: any) => formik.handleSubmit(e)}
               startIcon={<Iconify icon="mdi:content-save" />}
+              disabled={isAdding || isUpdating}
             >
-              Submit
+              {isAdding || isUpdating ? 'Saving...' : 'Submit'}
             </Button>
           </DialogActions>
         </Box>

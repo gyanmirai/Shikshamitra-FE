@@ -7,8 +7,13 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddZoneAreaOptionsMutation,
+  useUpdateZoneAreaOptionsMutation,
+} from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import { zoneValidationSchema } from './ZoneValidationSchema';
 import { getZoneAreaInitialValues } from './zoneInitialValues';
@@ -16,20 +21,46 @@ import { getZoneAreaInitialValues } from './zoneInitialValues';
 import type { IZoneAreaFormProps } from './type';
 
 const ZoneAreaForm: React.FC<IZoneAreaFormProps> = ({ open, onClose, editData }) => {
+  const { addZoneAreaOptions, isLoading: isAdding } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddZoneAreaOptionsMutation,
+  });
+  const { updateZoneAreaOptions, isLoading: isUpdating } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateZoneAreaOptionsMutation,
+  });
+
   const formik = useFormik({
     initialValues: getZoneAreaInitialValues(editData),
     validationSchema: zoneValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Zone/Area : ${values.zoneName} updated successfully`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Zone/Area : ${values.zoneName} added successfully`,
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          name: values.zoneName,
+          description: values.description || '',
+          isActive: true,
+        };
+
+        if (editData) {
+          await updateZoneAreaOptions({
+            zoneAreaId: editData.id,
+            body: payload,
+          });
+          shikshaMitraToast.success({
+            message: `Zone/Area: ${values.zoneName} updated successfully`,
+          });
+        } else {
+          await addZoneAreaOptions(payload);
+          shikshaMitraToast.success({
+            message: `Zone/Area: ${values.zoneName} added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Failed to save zone/area',
         });
       }
-      onClose(null, true);
     },
   });
 
@@ -105,8 +136,9 @@ const ZoneAreaForm: React.FC<IZoneAreaFormProps> = ({ open, onClose, editData })
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          disabled={isAdding || isUpdating}
         >
-          {editData ? 'Update' : 'Submit'}
+          {isAdding || isUpdating ? 'Saving...' : editData ? 'Update' : 'Submit'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>

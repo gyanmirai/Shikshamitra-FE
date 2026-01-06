@@ -19,6 +19,18 @@ const VehicleDocumentTable: React.FC<IVehicleDocumentTableProps> = ({
     currentQueryAndMutation: useGetVehicleDocumentsQuery,
   });
 
+  // Transform API response to match table format
+  const transformedData = React.useMemo(() => {
+    if (!vehicleDocumentData) return [];
+    return vehicleDocumentData.map((item: any) => ({
+      ...item,
+      documentName: item.name || item.documentName,
+      documentSize: item.maxSizeMb || item.documentSize,
+      acceptedFormat: item.acceptedFormats || item.acceptedFormat,
+      required: item.isRequired ?? item.required,
+    }));
+  }, [vehicleDocumentData]);
+
   return (
     <CustomizableTable
       tableId="vehicle-document-data-table"
@@ -114,7 +126,7 @@ const VehicleDocumentTable: React.FC<IVehicleDocumentTableProps> = ({
           },
         },
       ]}
-      data={vehicleDocumentData || []}
+      data={transformedData}
     />
   );
 };

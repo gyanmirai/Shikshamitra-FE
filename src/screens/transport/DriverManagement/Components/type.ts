@@ -1,6 +1,7 @@
 export interface IDriverConductor {
   avatarUrl: string;
   id: string;
+  staffId?: string;
   employeeId: string;
   role: 'Driver' | 'Conductor';
   name: string;

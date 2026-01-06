@@ -23,6 +23,7 @@ const SelectStudentStep = ({ formik }: { formik: FormikProps<ITransportApplicati
   const [searchInput, setSearchInput] = useState(''); // typed text
   const filteredMembers = useMemo(() => {
     if (!searchInput) return requestData;
+    if (!requestData) return [];
     const term = searchInput.toLowerCase();
     return requestData.filter(
       (member: ITransportApplicationPayload) =>

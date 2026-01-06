@@ -3,8 +3,10 @@
 import { Box } from '@mui/material';
 import { useMemo, useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useAddTransportMemberMutation } from 'src/redux/transport/vehicle-management/member-manage-api';
 
 import SelectStudentStep from './SelectStudentStep';
 import TransportApplicationForm from './TransportApplicationForm';
@@ -38,6 +40,11 @@ const TransportApplicationStepper = ({
 }) => {
   const [activeStep, setActiveStep] = useState(0);
 
+  const { addTransportMember, isLoading: isAdding } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddTransportMemberMutation,
+  });
+
   // Step Names
   const steps = ['Select Member', 'Transport Application'];
 
@@ -68,8 +75,20 @@ const TransportApplicationStepper = ({
             return;
           }
         } else if (activeStep === 1) {
+          // Call the API to save transport application
+          const payload = {
+            studentId: values.studentId,
+            pickupType: values.pickupType,
+            stopId: values.searchStop,
+            landmark: values.landmark,
+            areaLocality: values.areaLocality,
+            description: values.description,
+          };
+
+          await addTransportMember(payload);
+
           shikshaMitraToast.success({
-            message: `Transport application saved successfully for "${values.studentId}"`,
+            message: `Transport application saved successfully for "${values.name}"`,
           });
         }
 
@@ -83,14 +102,16 @@ const TransportApplicationStepper = ({
           });
           onClose?.(null, true);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error(error);
-        shikshaMitraToast.error({ message: 'Something went wrong. Please try again' });
+        shikshaMitraToast.error({
+          message: error?.data?.message || 'Something went wrong. Please try again',
+        });
       } finally {
         setIsLoading(false);
       }
     },
-    [activeStep, onClose, selectedApplication]
+    [activeStep, onClose, selectedApplication, addTransportMember]
   );
 
   return (

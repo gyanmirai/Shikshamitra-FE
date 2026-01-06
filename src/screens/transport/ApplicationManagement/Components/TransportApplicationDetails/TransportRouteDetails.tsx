@@ -4,7 +4,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Grid, Paper, TableRow, TableCell, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import { useGetRouteStopDataQuery } from 'src/redux/transport/vehicle-management/routeStopApi';
+import { useGetSuggestedRouteDataQuery } from 'src/redux/transport/vehicle-management/routeStopApi';
 
 import RouteStopDetails from './RouteStopDetails';
 
@@ -21,7 +21,8 @@ const TransportApplicationRouteDetail = ({
 }) => {
   const { data: routeData, isLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetRouteStopDataQuery,
+    currentQueryAndMutation: useGetSuggestedRouteDataQuery,
+    params: selectedApplication?.id,
   });
   const [setSelectedRoute] = useState<any>(formik.values.selectedRoute);
 

@@ -19,6 +19,19 @@ const VehicleTypeTable: React.FC<IVehicleTypeTableProps> = ({
     currentQueryAndMutation: useGetVehicleTypesQuery,
   });
 
+  // Transform API response to match table format
+  const transformedData = React.useMemo(() => {
+    if (!vehicleTypeData) return [];
+    return vehicleTypeData.map((item: any) => {
+      const range = item.approxSittingRange?.split('-').map((v: string) => parseInt(v.trim(), 10));
+      return {
+        ...item,
+        typeName: item.name || item.typeName,
+        vehicleRange: range && range.length === 2 ? range : [0, 0],
+      };
+    });
+  }, [vehicleTypeData]);
+
   return (
     <CustomizableTable
       tableId="vehicle-type-data-table"
@@ -109,7 +122,7 @@ const VehicleTypeTable: React.FC<IVehicleTypeTableProps> = ({
           },
         },
       ]}
-      data={vehicleTypeData || []}
+      data={transformedData}
     />
   );
 };
