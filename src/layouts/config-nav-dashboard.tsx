@@ -9,11 +9,11 @@ import securityModule from 'src/constants/security-menu';
 import calendarModule from 'src/constants/calendar-menu';
 import transportModule from 'src/constants/transport-menu';
 import resourceManagement from 'src/constants/resource-menu';
-import instituteSetupModule from 'src/constants/institute-setup';
 import classManagementModule from 'src/constants/class-management';
 import communicationModule from 'src/constants/comminication-menu';
 import securityGuardModule from 'src/constants/security-gaurd-menu';
 import studentModule, { defaultModulePermissionName } from 'src/constants/student-menu';
+import instituteSetupModule, { instituteSetupPaths } from 'src/constants/institute-setup';
 import {
   hrPath,
   classPath,
@@ -83,7 +83,7 @@ export const ICONS = {
 
 export const settingMenu = {
   title: 'Institute Setup',
-  path: '/setting/basic-information',
+  path: instituteSetupPaths.academicSetup,
   icon: ICONS.school,
   _action: 'setting',
 };

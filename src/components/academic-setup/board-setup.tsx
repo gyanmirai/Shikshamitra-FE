@@ -31,10 +31,10 @@ import {
 
 import { Iconify } from '../iconify';
 import MediumSetup from './medium-setup';
-import CustomDialog from '../customDialog';
 import CustomSelect from '../custom-select';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
+import CustomDialog, { DialogScrollContent } from '../customDialog';
 
 import type { EducationMedium } from './medium-setup';
 
@@ -234,7 +234,7 @@ export default BoardSetup;
 
 interface IBoardForm {
   handleClose: () => void;
-  handleSetTeb: (value: Record<string, any>) => void;
+  handleSetTeb?: (value: Record<string, any>) => void;
   editData: null | Record<string, any>;
   academicYearId: string | number;
   boards?: Board[];
@@ -317,7 +317,7 @@ export const BoardForm = ({
   };
 
   return (
-    <Box>
+    <>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -336,41 +336,43 @@ export const BoardForm = ({
           </LoadingButton>
         }
       />
-      <Stack spacing={2} p={2}>
-        <CustomSelect
-          fullWidth
-          id="board"
-          name="board"
-          autoFocus
-          label="Board Name"
-          value={formik.values.board}
-          onChange={(val) => formik.setFieldValue('board', val)}
-          error={formik.touched.board && Boolean(formik.errors.board)}
-          helperText={((formik.touched.board && formik.errors.board) || '') as string}
-          size="small"
-          options={boardOptions}
-          formControlProps={{
-            fullWidth: true,
-            sx: {
-              maxWidth: 'unset',
-            },
-          }}
-        />
 
-        <DialogActions>
-          <Button variant="outlined" size="small" onClick={handleClose}>
-            Cancel
-          </Button>
-          <LoadingButton
-            loading={isLoading || isUpdateLoading}
-            variant="contained"
+      <DialogScrollContent>
+        <Stack spacing={2}>
+          <CustomSelect
+            fullWidth
+            id="board"
+            name="board"
+            autoFocus
+            label="Board Name"
+            value={formik.values.board}
+            onChange={(val) => formik.setFieldValue('board', val)}
+            error={formik.touched.board && Boolean(formik.errors.board)}
+            helperText={((formik.touched.board && formik.errors.board) || '') as string}
             size="small"
-            onClick={(e: any) => formik.handleSubmit(e)}
-          >
-            Submit
-          </LoadingButton>
-        </DialogActions>
-      </Stack>
-    </Box>
+            options={boardOptions}
+            formControlProps={{
+              fullWidth: true,
+              sx: {
+                maxWidth: 'unset',
+              },
+            }}
+          />
+        </Stack>
+      </DialogScrollContent>
+      <DialogActions>
+        <Button variant="outlined" size="small" onClick={handleClose}>
+          Cancel
+        </Button>
+        <LoadingButton
+          loading={isLoading || isUpdateLoading}
+          variant="contained"
+          size="small"
+          onClick={(e: any) => formik.handleSubmit(e)}
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
+    </>
   );
 };

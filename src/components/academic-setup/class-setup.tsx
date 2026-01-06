@@ -35,10 +35,10 @@ import {
 } from '@mui/material';
 
 import { Iconify } from '../iconify';
-import CustomDialog from '../customDialog';
 import DivisionSetup from './division-setup';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
+import CustomDialog, { DialogScrollContent } from '../customDialog';
 
 interface IClassSetup {
   id: string;
@@ -299,7 +299,7 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
   const dispatch = useDispatch();
 
   return (
-    <Box>
+    <>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -335,60 +335,62 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
           </LoadingButton>
         }
       />
-      <Stack spacing={2} direction="column" p={2}>
-        <TextField
-          fullWidth
-          id="class"
-          name="class"
-          autoFocus
-          label="Class Name"
-          value={formik.values.class}
-          onChange={(e) => {
-            const newName = capitalize(e.target.value);
-            formik.setFieldValue('class', newName);
-          }}
-          error={formik.touched.class && Boolean(formik.errors.class)}
-          helperText={formik.touched.class && formik.errors.class}
-          size="small"
-        />
-        <TextField
-          fullWidth
-          id="limitOfAge"
-          name="limit"
-          label="Limit Of Age"
-          type="number"
-          value={formik.values.limit}
-          onChange={formik.handleChange}
-          error={formik.touched.limit && Boolean(formik.errors.limit)}
-          helperText={formik.touched.limit && formik.errors.limit}
-          size="small"
-        />
-        <Autocomplete
-          disabled={isShiftLoading}
-          options={data?.items || []}
-          value={shiftValue}
-          getOptionLabel={(option: any) => {
-            const startTime = dayjs(option.startTime, 'HH:mm:ss').format('hh:mm A');
-            const endTime = dayjs(option.endTime, 'HH:mm:ss').format('hh:mm A');
-            return `${option.shiftName} (${startTime}-${endTime})`;
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Shift *"
-              placeholder="Search Shift *"
-              size="small"
-              fullWidth
-              sx={{ width: '100%', minWidth: '200px' }}
-              error={formik.touched.shift && Boolean(formik.errors.shift)}
-              helperText={formik.touched.shift && formik.errors.shift}
-            />
-          )}
-          onChange={(e, value) => {
-            formik.setFieldValue('shift', value?.id);
-          }}
-        />
-      </Stack>
+      <DialogScrollContent>
+        <Stack spacing={2} direction="column">
+          <TextField
+            fullWidth
+            id="class"
+            name="class"
+            autoFocus
+            label="Class Name"
+            value={formik.values.class}
+            onChange={(e) => {
+              const newName = capitalize(e.target.value);
+              formik.setFieldValue('class', newName);
+            }}
+            error={formik.touched.class && Boolean(formik.errors.class)}
+            helperText={formik.touched.class && formik.errors.class}
+            size="small"
+          />
+          <TextField
+            fullWidth
+            id="limitOfAge"
+            name="limit"
+            label="Limit Of Age"
+            type="number"
+            value={formik.values.limit}
+            onChange={formik.handleChange}
+            error={formik.touched.limit && Boolean(formik.errors.limit)}
+            helperText={formik.touched.limit && formik.errors.limit}
+            size="small"
+          />
+          <Autocomplete
+            disabled={isShiftLoading}
+            options={data?.items || []}
+            value={shiftValue}
+            getOptionLabel={(option: any) => {
+              const startTime = dayjs(option.startTime, 'HH:mm:ss').format('hh:mm A');
+              const endTime = dayjs(option.endTime, 'HH:mm:ss').format('hh:mm A');
+              return `${option.shiftName} (${startTime}-${endTime})`;
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Shift *"
+                placeholder="Search Shift *"
+                size="small"
+                fullWidth
+                sx={{ width: '100%', minWidth: '200px' }}
+                error={formik.touched.shift && Boolean(formik.errors.shift)}
+                helperText={formik.touched.shift && formik.errors.shift}
+              />
+            )}
+            onChange={(e, value) => {
+              formik.setFieldValue('shift', value?.id);
+            }}
+          />
+        </Stack>
+      </DialogScrollContent>
       <DialogActions>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -408,6 +410,6 @@ export const ClassForm = ({ handleClose, editData, organizationId }: IClassForm)
           Submit
         </LoadingButton>
       </DialogActions>
-    </Box>
+    </>
   );
 };

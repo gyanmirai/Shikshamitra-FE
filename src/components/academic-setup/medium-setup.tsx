@@ -29,10 +29,10 @@ import {
 } from '@mui/material';
 
 import { Iconify } from '../iconify';
-import CustomDialog from '../customDialog';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
 import { CustomStyling } from '../tree-view/custom-styling';
+import CustomDialog, { DialogScrollContent } from '../customDialog';
 
 export interface EducationMedium {
   id: string;
@@ -311,7 +311,7 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
   };
 
   return (
-    <Box>
+    <>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -347,37 +347,39 @@ export const MediumForm = ({ handleClose, editData, boardId }: IMediumForm) => {
           </LoadingButton>
         }
       />
-      <Stack spacing={2} direction="column" p={2}>
-        <TextField
-          fullWidth
-          id="medium"
-          name="medium"
-          label="Medium Name"
-          autoFocus
-          value={formik.values.medium}
-          onChange={(e) => {
-            const newName = capitalize(e.target.value);
-            formik.setFieldValue('medium', newName);
-          }}
-          error={formik.touched.medium && Boolean(formik.errors.medium)}
-          // @ts-ignore
-          helperText={formik.touched.medium && formik.errors.medium}
-          size="small"
-        />
-        <DialogActions>
-          <Button variant="outlined" size="small" onClick={handleClose}>
-            Cancel
-          </Button>
-          <LoadingButton
-            loading={isLoading || isUpdateLoading}
-            variant="contained"
+      <DialogScrollContent>
+        <Stack spacing={2} direction="column">
+          <TextField
+            fullWidth
+            id="medium"
+            name="medium"
+            label="Medium Name"
+            autoFocus
+            value={formik.values.medium}
+            onChange={(e) => {
+              const newName = capitalize(e.target.value);
+              formik.setFieldValue('medium', newName);
+            }}
+            error={formik.touched.medium && Boolean(formik.errors.medium)}
+            // @ts-ignore
+            helperText={formik.touched.medium && formik.errors.medium}
             size="small"
-            onClick={(e: any) => formik.handleSubmit(e)}
-          >
-            Submit
-          </LoadingButton>
-        </DialogActions>
-      </Stack>
-    </Box>
+          />
+        </Stack>
+      </DialogScrollContent>
+      <DialogActions>
+        <Button variant="outlined" size="small" onClick={handleClose}>
+          Cancel
+        </Button>
+        <LoadingButton
+          loading={isLoading || isUpdateLoading}
+          variant="contained"
+          size="small"
+          onClick={(e: any) => formik.handleSubmit(e)}
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
+    </>
   );
 };
