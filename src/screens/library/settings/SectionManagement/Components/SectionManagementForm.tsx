@@ -1,12 +1,20 @@
+import type { RootState } from 'src/redux/store';
+
 import { useFormik } from 'formik';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import React, { useRef, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useAddSectionManagementMutation,
+  useUpdateSectionManagementMutation,
+} from 'src/redux/library/settingApi';
 
 import { getSectionInitialValues } from './SectionManagementInitialValues';
 import { sectionManagementValidationSchema } from './SectionManagementValidationSchema';
@@ -19,23 +27,49 @@ const SectionManagementForm: React.FC<ISectionFormProps> = ({ onClose, editData 
   const [shelfNames, setShelfNames] = useState<string[]>([]);
   const shelfInputRef = useRef<HTMLInputElement>(null);
 
+  // Get academicYearId from Redux state
+  const { currentAcademicYearId } = useSelector((state: RootState) => state.globalState);
+
+  // Add section mutation hook
+  const { addSectionManagement } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddSectionManagementMutation,
+  });
+
+  // Update section mutation hook
+  const { updateSectionManagement } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateSectionManagementMutation,
+  });
+
   const formik = useFormik({
     initialValues: {
       ...getSectionInitialValues(editData),
       shelfNames: editData?.shelfNames || [],
     },
     validationSchema: sectionManagementValidationSchema,
-    onSubmit: (values) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onSubmit: async (values) => {
+      // Construct payload matching API specification
       const payload = {
-        ...values,
-        shelfNames,
+        sectionName: values.sectionName,
+        numberOfColumns: Number(values.numberOfColumns),
       };
+
       if (editData) {
+        // Update existing section - PUT /library/settings/sections/{sectionId}
+        await updateSectionManagement({
+          sectionId: editData.id,
+          data: payload,
+        });
         shikshaMitraToast.success({
           message: `${values.sectionName} Section updated successfully`,
         });
       } else {
+        // Create new section - POST /library/settings/sections?academicYearId={academicYearId}
+        await addSectionManagement({
+          data: payload,
+          academicYearId: currentAcademicYearId,
+        });
         shikshaMitraToast.success({
           message: `${values.sectionName} Section added successfully`,
         });

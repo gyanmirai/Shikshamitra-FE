@@ -344,15 +344,15 @@ export const LeavePolicyForm = ({
     onSubmit: async (values) => {
       try {
         const payload = {
-          mediumStageId: mediumStageId?.id,
-          policyTitle: values.policyTitle,
-          leaveType: values.leaveType,
-          maxLeavePerYear: Number(values.maxLeavePerYear),
-          paidType: values.paidType,
-          carryForward: values.carryForward,
-          encashmentAllowed: values.encashmentAllowed,
-          requiresApproval: values.requiresApproval,
-          description: values.description || undefined,
+          MediumStageId: mediumStageId?.id,
+          PolicyName: values.policyTitle, // Backend expects PolicyName, not PolicyTitle
+          LeaveType: values.leaveType,
+          MaximumDaysPerYear: Number(values.maxLeavePerYear), // Backend expects MaximumDaysPerYear
+          PaidType: values.paidType,
+          CarryForward: values.carryForward,
+          EncashmentAllowed: values.encashmentAllowed,
+          RequiresApproval: values.requiresApproval,
+          Description: values.description || undefined,
         };
 
         if (!editData) {

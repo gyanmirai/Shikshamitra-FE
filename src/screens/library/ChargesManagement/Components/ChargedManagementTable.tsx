@@ -1,5 +1,6 @@
 import type { LabelColor } from 'src/components/label';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -40,6 +41,71 @@ const LibraryChargesTable = ({
   onDeleteCharge: (row: ILibraryChargeData) => void;
   onViewCharges: (row: ILibraryChargeData) => void;
 }) => {
+  const columns: IColumn[] = [
+    {
+      id: 'memberName',
+      label: 'Member Name',
+      align: 'left',
+      minWidth: '150px',
+      sticky: true,
+    },
+    { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '130px' },
+    { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '150px' },
+    { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '140px' },
+    { id: 'role', label: 'Role', align: 'left' },
+    { id: 'chargeCategory', label: 'Charge Category', align: 'left', minWidth: '160px' },
+    { id: 'dueDate', label: 'Due Date', align: 'left', minWidth: '120px' },
+    {
+      id: 'fineAmount',
+      label: 'Amount',
+      align: 'left',
+      filterType: 'number',
+      render(value) {
+        return new Intl.NumberFormat('en-IN', {
+          style: 'currency',
+          currency: 'INR',
+          minimumFractionDigits: 2,
+        }).format(value);
+      },
+    },
+    { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
+    { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 90 },
+    { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
+    { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
+    { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '130px' },
+    { id: 'reason', label: 'Reason', align: 'left' },
+    {
+      id: 'actions',
+      label: 'Actions',
+      align: 'left',
+      isSort: false,
+      isFilter: false,
+      minWidth: 80,
+      sticky: true,
+      render(value, row) {
+        return (
+          <ThreeDotsActions
+            actions={(prop) => actions({ ...prop, row })}
+            placement="right-top"
+            showThreeDots={row.status === LibraryChargeStatusType.Pending}
+            showEditIcon
+            handleEditClick={() => {
+              onEditCharge(row as ILibraryChargeData);
+            }}
+            showDeleteIcon
+            handleDeleteClick={() => {
+              onDeleteCharge(row as ILibraryChargeData);
+            }}
+            showViewIcon
+            handleViewClick={() => {
+              onViewCharges(row as ILibraryChargeData);
+            }}
+          />
+        );
+      },
+    },
+  ];
+
   const [tabValue, setTabValue] = useState(LibraryChargeStatusType.Paid);
   const currentIndex = TABS.findIndex((tab) => tab.value === tabValue);
 
@@ -141,70 +207,7 @@ const LibraryChargesTable = ({
           <CustomizableTable
             tableId="library-charges-table"
             noDataText="No Charges Data Found"
-            columns={[
-              {
-                id: 'memberName',
-                label: 'Member Name',
-                align: 'left',
-                minWidth: '150px',
-                sticky: true,
-              },
-              { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '130px' },
-              { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '150px' },
-              { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '140px' },
-              { id: 'role', label: 'Role', align: 'left' },
-              { id: 'chargeCategory', label: 'Charge Category', align: 'left', minWidth: '160px' },
-              { id: 'dueDate', label: 'Due Date', align: 'left', minWidth: '120px' },
-              {
-                id: 'fineAmount',
-                label: 'Amount',
-                align: 'left',
-                filterType: 'number',
-                render(value) {
-                  return new Intl.NumberFormat('en-IN', {
-                    style: 'currency',
-                    currency: 'INR',
-                    minimumFractionDigits: 2,
-                  }).format(value);
-                },
-              },
-              { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
-              { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 90 },
-              { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
-              { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
-              { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '130px' },
-              { id: 'reason', label: 'Reason', align: 'left' },
-              {
-                id: 'actions',
-                label: 'Actions',
-                align: 'left',
-                isSort: false,
-                isFilter: false,
-                minWidth: 80,
-                sticky: true,
-                render(value, row) {
-                  return (
-                    <ThreeDotsActions
-                      actions={(prop) => actions({ ...prop, row })}
-                      placement="right-top"
-                      showThreeDots={row.status === LibraryChargeStatusType.Pending}
-                      showEditIcon
-                      handleEditClick={() => {
-                        onEditCharge(row as ILibraryChargeData);
-                      }}
-                      showDeleteIcon
-                      handleDeleteClick={() => {
-                        onDeleteCharge(row as ILibraryChargeData);
-                      }}
-                      showViewIcon
-                      handleViewClick={() => {
-                        onViewCharges(row as ILibraryChargeData);
-                      }}
-                    />
-                  );
-                },
-              },
-            ]}
+            columns={columns}
             data={tableData || []}
           />
         </Box>

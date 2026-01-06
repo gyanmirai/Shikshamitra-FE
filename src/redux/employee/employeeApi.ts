@@ -375,7 +375,7 @@ export const employeeApi = createApi({
     }),
     addEmployeeLeavePolicy: builder.mutation({
       query: ({ mediumStageId, body }) => ({
-        url: `/leave-policies?mediumStageId=${mediumStageId}`,
+        url: `/app/leave-policy?mediumStageId=${mediumStageId}`,
         method: 'POST',
         data: body,
         headers: {

@@ -1,8 +1,11 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Save } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -16,7 +19,10 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Stack, Button, TextField, Typography } from '@mui/material';
-import { useGetBorrowingReturnRulesQuery } from 'src/redux/library/settingApi';
+import {
+  useGetBorrowingReturnRulesQuery,
+  useAddBorrowingReturnRulesMutation,
+} from 'src/redux/library/settingApi';
 
 // Base validation schema for a single field
 const createFieldValidationSchema = () =>
@@ -39,6 +45,8 @@ const BorrowingReturnRules = () => {
   const [originalRulesData, setOriginalRulesData] = useState<any[]>([]);
   const [saveLoading, setSaveLoading] = useState(false);
 
+  const { currentAcademicYearId } = useSelector((state: RootState) => state.globalState);
+
   // Dialog control states
   const resetDialog = useBoolean();
   const saveDialog = useBoolean();
@@ -47,6 +55,12 @@ const BorrowingReturnRules = () => {
   const { data: fetchedRulesData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBorrowingReturnRulesQuery,
+  });
+
+  // Add borrowing return rules mutation hook
+  const { addBorrowingReturnRules } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddBorrowingReturnRulesMutation,
   });
 
   // Create initial values for formik based on rulesData
@@ -135,7 +149,22 @@ const BorrowingReturnRules = () => {
     setSaveLoading(true);
 
     try {
+      // Construct payload matching API specification
+      const payload = {
+        rules: rulesData.map((rule: any) => ({
+          role: rule.role,
+          maxBooksPerMonth: rule.maxBooksPerMonth || 0,
+          reservationLimit: rule.reservationLimit || 0,
+        })),
+      };
+
+      await addBorrowingReturnRules({
+        data: payload,
+        academicYearId: currentAcademicYearId,
+      });
+
       saveDialog.onFalse();
+      setOriginalRulesData(rulesData);
       shikshaMitraToast.success({
         message: 'Borrowing Rules have been saved successfully',
       });

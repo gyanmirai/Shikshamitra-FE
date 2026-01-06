@@ -1,3 +1,5 @@
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -19,6 +21,58 @@ const SectionManagementTable: React.FC<ISectionTableProps> = ({
     type: 'query',
     currentQueryAndMutation: useGetSectionManagementQuery,
   });
+
+  const columns: IColumn[] = [
+    {
+      id: 'sectionName',
+      label: 'Section Name',
+      align: 'left',
+      render: (value) => (
+        <Typography variant="caption" fontSize="13px">
+          {value}
+        </Typography>
+      ),
+    },
+    {
+      id: 'numberOfColumns',
+      label: 'No. of Shelf',
+      align: 'left',
+      render: (value) => (
+        <Typography variant="caption" fontSize="13px">
+          {value}
+        </Typography>
+      ),
+    },
+    {
+      id: 'action',
+      label: 'Actions',
+      minWidth: 50,
+      align: 'left',
+      isSort: false,
+      sticky: true,
+      isFilter: false,
+      render(value, row) {
+        return (
+          <ThreeDotsActions
+            showThreeDots={false}
+            placement="right-top"
+            showDeleteIcon
+            showEditIcon
+            showViewIcon
+            handleDeleteClick={() => {
+              onDelete(row as ISection);
+            }}
+            handleEditClick={() => {
+              onEdit(row as ISection);
+            }}
+            handleViewClick={() => {
+              onView(row as ISection);
+            }}
+          />
+        );
+      },
+    },
+  ];
 
   return (
     <CustomizableTable
@@ -56,57 +110,7 @@ const SectionManagementTable: React.FC<ISectionTableProps> = ({
           </Box>
         </>
       }
-      columns={[
-        {
-          id: 'sectionName',
-          label: 'Section Name',
-          align: 'left',
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value}
-            </Typography>
-          ),
-        },
-        {
-          id: 'numberOfColumns',
-          label: 'No. of Shelf',
-          align: 'left',
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value}
-            </Typography>
-          ),
-        },
-        {
-          id: 'action',
-          label: 'Actions',
-          minWidth: 50,
-          align: 'left',
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                showThreeDots={false}
-                placement="right-top"
-                showDeleteIcon
-                showEditIcon
-                showViewIcon
-                handleDeleteClick={() => {
-                  onDelete(row as ISection);
-                }}
-                handleEditClick={() => {
-                  onEdit(row as ISection);
-                }}
-                handleViewClick={() => {
-                  onView(row as ISection);
-                }}
-              />
-            );
-          },
-        },
-      ]}
+      columns={columns}
       data={sectionData || []}
     />
   );

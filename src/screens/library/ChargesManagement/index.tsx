@@ -15,7 +15,10 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetLibraryChargesQuery } from 'src/redux/library/charges-management/charges-get-api';
+import {
+  useGetLibraryChargesQuery,
+  useDeleteLibraryChargeMutation,
+} from 'src/redux/library/charges-management/charges-get-api';
 
 import AssignChargesForm from './Components/AssignChargesForm';
 import LibraryChargesTable from './Components/ChargedManagementTable';
@@ -40,8 +43,15 @@ const LibraryChargesManagement = () => {
     currentQueryAndMutation: useGetLibraryChargesQuery,
   });
 
+  // Delete library charge mutation hook
+  const { deleteLibraryCharge } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteLibraryChargeMutation,
+  });
+
   // Redux confirm state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentAcademicYearId } = useSelector((state: RootState) => state.globalState);
   const dispatch = useDispatch();
 
   /**
@@ -213,8 +223,12 @@ const LibraryChargesManagement = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              // Handle delete action here
+            onClick={async () => {
+              await deleteLibraryCharge({
+                chargeId: selectedRecord?.id || '',
+                academicYearId: currentAcademicYearId,
+              });
+
               shikshaMitraToast.success({
                 message: (
                   <>
