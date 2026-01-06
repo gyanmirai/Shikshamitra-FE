@@ -34,10 +34,10 @@ import {
 
 import { Iconify } from '../iconify';
 import ClassSetup from './class-setup';
-import CustomDialog from '../customDialog';
 import UploadButton from '../upload-button';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
+import CustomDialog, { DialogScrollContent } from '../customDialog';
 
 export interface IOrganizationSetup {
   id: string;
@@ -278,7 +278,7 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
   };
 
   return (
-    <Box>
+    <>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -314,64 +314,66 @@ export const OrganizationForm = ({ handleClose, editData, mediumId }: IOrganizat
           </LoadingButton>
         }
       />
-      <Stack spacing={2} direction="column" p={2}>
-        <TextField
-          fullWidth
-          id="board"
-          name="organization"
-          label="Organization Name"
-          autoFocus
-          value={formik.values.organization}
-          onChange={(e) => {
-            const newName = capitalize(e.target.value);
-            formik.setFieldValue('organization', newName);
-          }}
-          error={formik.touched.organization && Boolean(formik.errors.organization)}
-          // @ts-ignore
-          helperText={formik.touched.organization && formik.errors.organization}
-          size="small"
-        />
-        <UploadButton
-          variant="outlined"
-          onChange={async (e) => {
-            const base64: string = await new Promise((resolve) => {
-              const reader = new FileReader();
-              reader.readAsDataURL(e.target.files[0]);
-              reader.onload = () => {
-                resolve(reader.result as string);
-              };
-            });
-            formik.setFieldValue('banner', getBase64String(base64));
-          }}
-        >
-          Upload Banner
-        </UploadButton>
-        {formik.values.banner && (
-          <Box
-            component="img"
-            src={convertBase64Format(formik.values.banner)}
-            sx={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              borderRadius: '5px',
+      <DialogScrollContent>
+        <Stack spacing={2} direction="column">
+          <TextField
+            fullWidth
+            id="board"
+            name="organization"
+            label="Organization Name"
+            autoFocus
+            value={formik.values.organization}
+            onChange={(e) => {
+              const newName = capitalize(e.target.value);
+              formik.setFieldValue('organization', newName);
             }}
-          />
-        )}
-        <DialogActions>
-          <Button variant="outlined" size="small" onClick={handleClose}>
-            Cancel
-          </Button>
-          <LoadingButton
-            loading={isLoading || isUpdateLoading}
-            variant="contained"
+            error={formik.touched.organization && Boolean(formik.errors.organization)}
+            // @ts-ignore
+            helperText={formik.touched.organization && formik.errors.organization}
             size="small"
-            onClick={(e: any) => formik.handleSubmit(e)}
+          />
+          <UploadButton
+            variant="outlined"
+            onChange={async (e) => {
+              const base64: string = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(e.target.files[0]);
+                reader.onload = () => {
+                  resolve(reader.result as string);
+                };
+              });
+              formik.setFieldValue('banner', getBase64String(base64));
+            }}
           >
-            Submit
-          </LoadingButton>
-        </DialogActions>
-      </Stack>
-    </Box>
+            Upload Banner
+          </UploadButton>
+          {formik.values.banner && (
+            <Box
+              component="img"
+              src={convertBase64Format(formik.values.banner)}
+              sx={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: '5px',
+              }}
+            />
+          )}
+        </Stack>
+      </DialogScrollContent>
+      <DialogActions>
+        <Button variant="outlined" size="small" onClick={handleClose}>
+          Cancel
+        </Button>
+        <LoadingButton
+          loading={isLoading || isUpdateLoading}
+          variant="contained"
+          size="small"
+          onClick={(e: any) => formik.handleSubmit(e)}
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
+    </>
   );
 };

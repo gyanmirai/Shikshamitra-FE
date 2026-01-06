@@ -19,6 +19,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -38,6 +39,7 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
+  StudentDocumentTypeApi,
   useGetStudentDocumentTypeQuery,
   useAddStudentDocumentTypeMutation,
   useUpdateStudentDocumentTypeMutation,
@@ -95,6 +97,10 @@ const StudentDocumentType = () => {
     }
   };
 
+  const { confirmWithUndo } = useConfirmWithUndo();
+
+  console.log(StudentDocumentTypeApi.util, 'documents');
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -137,9 +143,34 @@ const StudentDocumentType = () => {
             color="error"
             size="small"
             onClick={async () => {
-              await deleteDocument(editData?.id);
-              shikshaMitraToast.success({
-                message: `"${editData?.name}" document deleted successfully`,
+              confirmWithUndo({
+                item: editData,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    StudentDocumentTypeApi.util.updateQueryData(
+                      'getStudentDocumentType',
+                      { ...query },
+                      (draft: any) => {
+                        const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    StudentDocumentTypeApi.util.updateQueryData(
+                      'getStudentDocumentType',
+                      { ...query },
+                      (draft: any) => {
+                        if (!draft.items) return;
+                        draft.items.splice(index, 0, editData);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteDocument(editData?.id || ''),
               });
               confirm.onFalse();
               setEditData(null);

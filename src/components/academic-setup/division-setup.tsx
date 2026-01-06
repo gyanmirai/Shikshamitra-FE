@@ -31,9 +31,9 @@ import {
 } from 'src/redux/division/divisionApi';
 
 import { Iconify } from '../iconify';
-import CustomDialog from '../customDialog';
 import { ConfirmDialog } from '../confirm-dialog';
 import ThreeDotsActions from '../three-dots-actions';
+import CustomDialog, { DialogScrollContent } from '../customDialog';
 
 interface IDivision {
   id: string;
@@ -276,7 +276,7 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
   };
 
   return (
-    <Box>
+    <>
       <ConfirmDialog
         open={confirm.value}
         onClose={() => {
@@ -312,62 +312,64 @@ export const DivisionForm = ({ handleClose, editData, classId }: IDivisionForm) 
           </LoadingButton>
         }
       />
-      <Stack spacing={2} direction="column" p={2}>
-        <TextField
-          fullWidth
-          id="division"
-          name="division"
-          label="Division Name"
-          autoFocus
-          value={formik.values.division}
-          onChange={(e) => {
-            const newName = capitalize(e.target.value);
-            formik.setFieldValue('division', newName);
-          }}
-          error={formik.touched.division && Boolean(formik.errors.division)}
-          // @ts-ignore
-          helperText={formik.touched.division && formik.errors.division}
-          size="small"
-        />
-        <TextField
-          fullWidth
-          id="strength"
-          name="strength"
-          type="number"
-          label="Strength"
-          value={formik.values.strength}
-          onChange={formik.handleChange}
-          error={formik.touched.strength && Boolean(formik.errors.strength)}
-          // @ts-ignore
-          helperText={formik.touched.strength && formik.errors.strength}
-          size="small"
-        />
-        <TextField
-          fullWidth
-          id="roomNo"
-          name="roomNo"
-          label="Room No"
-          value={formik.values.roomNo}
-          onChange={formik.handleChange}
-          error={formik.touched.roomNo && Boolean(formik.errors.roomNo)}
-          // @ts-ignore
-          helperText={formik.touched.roomNo && formik.errors.roomNo}
-          size="small"
-        />
-        <DialogActions>
-          <Button variant="outlined" size="small" onClick={handleClose}>
-            Cancel
-          </Button>
-          <LoadingButton
-            loading={isLoading || isUpdateLoading}
-            variant="contained"
+      <DialogScrollContent>
+        <Stack spacing={2} direction="column">
+          <TextField
+            fullWidth
+            id="division"
+            name="division"
+            label="Division Name"
+            autoFocus
+            value={formik.values.division}
+            onChange={(e) => {
+              const newName = capitalize(e.target.value);
+              formik.setFieldValue('division', newName);
+            }}
+            error={formik.touched.division && Boolean(formik.errors.division)}
+            // @ts-ignore
+            helperText={formik.touched.division && formik.errors.division}
             size="small"
-            onClick={(e: any) => formik.handleSubmit(e)}
-          >
-            Submit
-          </LoadingButton>
-        </DialogActions>
-      </Stack>
-    </Box>
+          />
+          <TextField
+            fullWidth
+            id="strength"
+            name="strength"
+            type="number"
+            label="Strength"
+            value={formik.values.strength}
+            onChange={formik.handleChange}
+            error={formik.touched.strength && Boolean(formik.errors.strength)}
+            // @ts-ignore
+            helperText={formik.touched.strength && formik.errors.strength}
+            size="small"
+          />
+          <TextField
+            fullWidth
+            id="roomNo"
+            name="roomNo"
+            label="Room No"
+            value={formik.values.roomNo}
+            onChange={formik.handleChange}
+            error={formik.touched.roomNo && Boolean(formik.errors.roomNo)}
+            // @ts-ignore
+            helperText={formik.touched.roomNo && formik.errors.roomNo}
+            size="small"
+          />
+        </Stack>
+      </DialogScrollContent>
+      <DialogActions>
+        <Button variant="outlined" size="small" onClick={handleClose}>
+          Cancel
+        </Button>
+        <LoadingButton
+          loading={isLoading || isUpdateLoading}
+          variant="contained"
+          size="small"
+          onClick={(e: any) => formik.handleSubmit(e)}
+        >
+          Submit
+        </LoadingButton>
+      </DialogActions>
+    </>
   );
 };
