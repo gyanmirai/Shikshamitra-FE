@@ -45,6 +45,7 @@ const SeatAllocation = () => {
     currentQueryAndMutation: useGetExamDivisionsQuery,
     params: { academicMediumId: (currentMedium as Medium)?.id, classId: selectedExam?.classId },
   }); // Update classes when organization changes
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [droppedData, setDroppedData] = useState<IDroppedData>({ roomId: '', students: [] });
   const {
     data: examRoomsData,

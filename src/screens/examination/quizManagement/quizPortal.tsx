@@ -297,7 +297,7 @@ const NavigationButtons = ({
 );
 
 // Main Quiz Portal Component
-const QuizPortal = ({ quizData, handleClose }: { quizData: any; handleClose: () => void }) => {
+const QuizPortal = ({ handleClose }: { handleClose: () => void }) => {
   const { data, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetQuizListQuery,

@@ -35,7 +35,9 @@ const SeatAllocationSection = ({
 
   const {
     data: seatAllocationStudentsData,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isLoading: seatAllocationStudentsLoading,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isFetching: seatAllocationStudentsFetching,
   } = useQueryAndMutation({
     type: 'query',
@@ -50,7 +52,9 @@ const SeatAllocationSection = ({
 
   const {
     data: seatLayoutData,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isLoading: seatLayoutLoading,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isFetching: seatLayoutFetching,
   } = useQueryAndMutation({
     type: 'query',

@@ -13,7 +13,6 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import quizTableData from 'src/json/academic/examination/quizTableData.json';
-import quizPortalData from 'src/json/academic/examination/quizPortalData.json';
 
 import QuizPortal from '../quizManagement/quizPortal';
 import QuizTable from '../quizManagement/activeQuiz/components/activeQuizTable';
@@ -113,7 +112,6 @@ const QuizManagement = (props: TabComponentType) => {
         fullScreen
       >
         <QuizPortal
-          quizData={quizPortalData}
           handleClose={() => {
             attemptQuizDialog.onFalse();
             setSelectedQuiz(null);

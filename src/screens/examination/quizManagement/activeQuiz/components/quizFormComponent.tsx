@@ -8,21 +8,33 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useEffect } from 'react';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { LoadingScreen } from 'src/components/loading-screen';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { Draggable, Droppable, DragDropContext } from '@hello-pangea/dnd';
 import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetSubjectsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import { useGetChaptersQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import {
+  useGetQuizQuery,
+  useCreateQuizMutation,
+  useUpdateQuizMutation,
+  useGetQuizQuestionsQuery,
+  useUpdateQuizQuestionsMutation,
+} from 'src/redux/academicAPI/ExaminationApi/quizManagementApi/quizManagementApi';
 import {
   Box,
   Chip,
@@ -57,6 +69,16 @@ const QuizInformation = ({ formik }: any) => {
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
+  );
+
+  const { data: subjectsData } = useGetSubjectsQuery(
+    { academicMediumId: medium?.id },
+    { skip: !medium?.id }
+  );
+
+  const { data: chaptersData } = useGetChaptersQuery(
+    { subjectId: formik.values.subject },
+    { skip: !formik.values.subject }
   );
 
   // Update classes when organization changes
@@ -231,15 +253,16 @@ const QuizInformation = ({ formik }: any) => {
           <ShakingTextField error={!!(formik.touched.subject && formik.errors.subject)}>
             <CustomSelect
               label="Subject *"
-              options={[
-                { value: 'math', label: 'Math' },
-                { value: 'english', label: 'English' },
-                { value: 'science', label: 'Science' },
-              ]}
+              options={subjectsData || []}
+              labelKey="name"
+              valueKey="id"
               disabled={!(formik.values.division && formik.values.division.length > 0)}
               name="subject"
               value={formik.values.subject}
-              onChange={(val) => formik.setFieldValue('subject', val as string)}
+              onChange={(val) => {
+                formik.setFieldValue('subject', val as string);
+                formik.setFieldValue('chapter', []);
+              }}
               error={!!(formik.touched.subject && formik.errors.subject)}
               helperText={formik.touched.subject && formik.errors.subject}
               formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
@@ -252,19 +275,10 @@ const QuizInformation = ({ formik }: any) => {
             <ResponsiveMultiSelect
               label="Chapter *"
               disabled={!formik.values.subject}
-              options={[
-                { value: 'numbers', label: 'Numbers and Number Systems' },
-                { value: 'algebra', label: 'Algebra' },
-                { value: 'geometry', label: 'Geometry' },
-                { value: 'mensuration', label: 'Mensuration' },
-                { value: 'statistics', label: 'Statistics and Probability' },
-                { value: 'trigonometry', label: 'Trigonometry' },
-                { value: 'coordinate', label: 'Coordinate Geometry' },
-                { value: 'sets', label: 'Sets and Relations' },
-              ]}
+              options={chaptersData || []}
               value={formik.values.chapter || []}
-              getOptionLabel={(opt) => opt.label}
-              getOptionValue={(opt) => opt.value}
+              getOptionLabel={(opt: any) => opt.name}
+              getOptionValue={(opt: any) => opt.id}
               onChange={(selectedValues: string[]) => {
                 formik.setFieldValue('chapter', selectedValues);
               }}
@@ -550,7 +564,6 @@ const defaultValues = {
 };
 
 const QuestionForm = ({ onSave, onCancel, initialData = null, formik }: any) => {
-  console.log('formik values---', formik.values);
   // Initialize form state with provided initial data or default values
   const initial = initialData || defaultValues;
   const [formState, setFormState] = useState(initial);
@@ -1107,40 +1120,206 @@ const allSurveySteps = [QuizInformation, QuizBuilder];
 interface AddNewQuizProps {
   dialog: ReturnType<typeof useBoolean>;
   onClose: (_e?: any, isSubmit?: boolean) => void;
+  editData?: any;
 }
 
-const AddNewQuiz: React.FC<AddNewQuizProps> = ({ dialog, onClose }) => {
+const AddNewQuiz: React.FC<AddNewQuizProps> = ({ dialog, onClose, editData }) => {
   // State to track the current active step in the quiz creation stepper
   const [activeStep, setActiveStep] = useState(0);
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  // Mutations
+  const [createQuiz] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateQuizMutation,
+  });
+
+  const [updateQuiz] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateQuizMutation,
+  });
+
+  const [updateQuizQuestions] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateQuizQuestionsMutation,
+  });
+
+  const handleQuizInformation = useCallback(
+    async (values: any, formik: any) => {
+      const payload = {
+        title: values.quizTitle,
+        standardId: values.className,
+        divisionIds: values.division.includes('all')
+          ? values.division.filter((id: string) => id !== 'all')
+          : values.division,
+        subjectId: values.subject,
+        chapterIds: values.chapter,
+        totalMarks: Number(values.totalMarks),
+        passingMarks: Number(values.passingMarks),
+        duration: Number(values.quizDuration),
+        startDateTime: values.quizStartDateTime.toISOString(),
+        endDateTime: values.quizEndDateTime.toISOString(),
+        quizTakenType: values.quizTakenType,
+        randomOrder: values.randomOrder,
+      };
+
+      if (editData || values.quizId) {
+        const res = await updateQuiz({
+          quizId: editData?.id || values.quizId,
+          academicMediumId: currentMedium?.id,
+          body: payload,
+        }).unwrap();
+        return res;
+      }
+      const res = await createQuiz({
+        academicMediumId: currentMedium?.id,
+        body: payload,
+      }).unwrap();
+
+      formik.setFieldValue('quizId', res.id);
+      return res;
+    },
+    [createQuiz, currentMedium?.id, editData, updateQuiz]
+  );
+
+  const handleQuizQuestions = useCallback(
+    async (values: any) => {
+      const payload = {
+        questions: values.questions.map((q: any) => ({
+          question: q.question,
+          questionType: q.questionType,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          marks: Number(q.marks),
+          questionTime: Number(q.questionTime),
+          isRequired: q.isRequired,
+        })),
+        isQuestionUpload: values.isQuestionUpload,
+      };
+
+      const res = await updateQuizQuestions({
+        quizId: values.quizId || editData?.id,
+        body: payload,
+      }).unwrap();
+      return res;
+    },
+    [editData?.id, updateQuizQuestions]
+  );
+
+  const handleSave = useCallback(
+    async (isLastStep: boolean, values: any, formik: any, setIsLoading: (val: boolean) => void) => {
+      try {
+        setIsLoading(true);
+
+        if (activeStep === 0) {
+          await handleQuizInformation(values, formik);
+          shikshaMitraToast.success({ message: 'Quiz information saved successfully' });
+        } else if (activeStep === 1) {
+          await handleQuizQuestions(values);
+          shikshaMitraToast.success({ message: 'Quiz questions saved successfully' });
+        }
+
+        if (!isLastStep) {
+          setActiveStep(activeStep + 1);
+        } else {
+          onClose(null, true);
+        }
+      } catch (error) {
+        console.error('Error saving quiz details:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [activeStep, handleQuizInformation, handleQuizQuestions, onClose]
+  );
 
   return (
     <CustomStepperWithFormik
-      initialValues={getInitialValues()}
+      initialValues={{
+        ...getInitialValues(),
+        quizId: editData?.id || '',
+      }}
       steps={['Quiz', 'Quiz Builder']}
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);
       }}
       validateOnChange
-      // eslint-disable-next-line no-sequences
       validationSchema={stepValidationSchemas(currentYear)[activeStep]}
-      handleNext={(isLastStep, _values) => {
-        if (isLastStep) return;
-        setActiveStep(activeStep + 1);
+      handleNext={(isLastStep, values, formik, setIsLoading) => {
+        handleSave(isLastStep, values, formik, setIsLoading);
       }}
-      renderItem={({ formik, activeStep: step }: any) => {
-        const StepComponent = allSurveySteps[step];
-        return (
-          <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-            <Box p={2}>
-              <StepComponent formik={formik} />
-            </Box>
-          </BackPopUpChecked>
-        );
-      }}
+      renderItem={({ formik, activeStep: step }: any) => (
+        <NewQuizStepForm
+          activeStep={step}
+          formik={formik}
+          editData={editData}
+          allSteps={allSurveySteps}
+        />
+      )}
     />
   );
 };
 
 export default AddNewQuiz;
+
+const NewQuizStepForm = ({ activeStep: step, formik, editData, allSteps }: any) => {
+  const initializedStepsRef = useRef<Record<number, boolean>>({});
+  const quizId = editData?.id || formik.values.quizId;
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
+  const { data: quizData, isLoading: quizLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetQuizQuery,
+    params: { quizId, academicMediumId: currentMedium?.id },
+    options: { skip: !quizId || step !== 0 },
+  });
+
+  const { data: questionsData, isLoading: questionsLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetQuizQuestionsQuery,
+    params: quizId,
+    options: { skip: !quizId || step !== 1 },
+  });
+
+  useEffect(() => {
+    if (initializedStepsRef.current[step]) return;
+
+    if (quizData && step === 0) {
+      formik.setValues((pre: any) => ({
+        ...pre,
+        quizTitle: quizData.title,
+        className: quizData.standardId,
+        division: quizData.divisionIds,
+        subject: quizData.subjectId,
+        quizDuration: quizData.duration.toString(),
+        chapter: quizData.chapterIds,
+        totalMarks: quizData.totalMarks.toString(),
+        passingMarks: quizData.passingMarks.toString(),
+        quizStartDateTime: dayjs(quizData.startDateTime),
+        quizEndDateTime: dayjs(quizData.endDateTime),
+        quizTakenType: quizData.quizTakenType,
+        randomOrder: quizData.randomOrder,
+      }));
+      initializedStepsRef.current[step] = true;
+    } else if (questionsData && step === 1) {
+      formik.setFieldValue('questions', questionsData.questions);
+      formik.setFieldValue('isQuestionUpload', questionsData.isQuestionUpload);
+      initializedStepsRef.current[step] = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quizData, questionsData, step]);
+
+  if (quizLoading || questionsLoading) {
+    return <LoadingScreen />;
+  }
+
+  const StepComponent = allSteps[step];
+  return (
+    <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
+      <Box p={2}>
+        <StepComponent formik={formik} />
+      </Box>
+    </BackPopUpChecked>
+  );
+};

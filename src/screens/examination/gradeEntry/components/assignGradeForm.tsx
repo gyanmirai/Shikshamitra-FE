@@ -1,16 +1,27 @@
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useUpdateStudentMarksMutation } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
 
 import type { IAssignGradeProps } from '../type';
 
 const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGradeProps) => {
+  const [updateStudentMarks, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateStudentMarksMutation,
+    params: {
+      examId: data?.examId,
+      studentId: data?.id,
+    },
+  });
   const formik = useFormik({
     initialValues: {
       marks: typeof data?.marks === 'number' ? data.marks : '',
@@ -23,6 +34,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
         .max(Yup.ref('totalMarks'), 'Marks cannot exceed Total Marks'),
     }),
     onSubmit(values) {
+      updateStudentMarks({
+        marks: values.marks,
+        feedback: values.feedback,
+      });
       const studentName = data?.studentName || 'Student';
       if (data?.marks) {
         onClose?.(null, true);
@@ -132,10 +147,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             size="small"
-            type="submit"
             variant="contained"
+            loading={isUpdateLoading}
             onClick={(e: any) => formik.handleSubmit(e)}
             startIcon={
               <Iconify
@@ -146,7 +161,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
             }
           >
             {data?.marks ? 'Update' : 'Submit'}
-          </Button>
+          </LoadingButton>
         </DialogActions>
         {/* </form> */}
       </BackPopUpChecked>

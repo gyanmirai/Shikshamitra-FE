@@ -11,6 +11,7 @@ export interface IStudentExamGradeEntry {
   status: number;
   examType: string;
   examName: string;
+  examId?: string;
 }
 
 /**
@@ -28,4 +29,8 @@ export interface IGradeEntryTableProps {
   selectedStudents: string[];
   handleSelectStudent: (id: string) => void;
   actions: (props: any) => any;
+  classId: string;
+  divisionId: string;
+  subjectId: string;
+  examId: string;
 }
