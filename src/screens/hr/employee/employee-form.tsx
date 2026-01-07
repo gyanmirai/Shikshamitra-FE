@@ -1,8 +1,10 @@
+import type { RootState } from 'src/redux/store';
+
 import dayjs from 'dayjs';
 import { isEqual } from 'lodash';
-import { useDispatch } from 'react-redux';
 import { DatePicker } from '@mui/x-date-pickers';
 import { ReligionType } from 'src/enums/religion';
+import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { Box, Grid, Slide, TextField } from '@mui/material';
 import { useAddUserMutation } from 'src/redux/user/userApi';
@@ -15,9 +17,11 @@ import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   useGetBankDetailsQuery,
+  useGetAccessControlQuery,
   useUpdateEmployeeMutation,
   useGetWorkExperienceQuery,
   useGetBasicInformationQuery,
+  useAddAccessControlMutation,
   useUpdateBankDetailsMutation,
   useGetFamilyInformationQuery,
   useAddBasicInformationMutation,
@@ -41,7 +45,9 @@ import type {
   IAdditionalInformationResponse,
 } from './types';
 
-export const personalInformationInitialValues = (editData?: IPersonalInformationResponse) => ({
+export const personalInformationInitialValues = (
+  editData?: Partial<IPersonalInformationResponse>
+) => ({
   // photo: editData
   //   ? editData.profilePicture
   //     ? convertBase64Format(editData.profilePicture)
@@ -206,6 +212,23 @@ export const assignReportingManagerInitialValues = (editData?: IReportingInforma
   reportingManager: editData ? editData?.employeeId : '',
 });
 
+export const academicPermissionInitialValues = (editData?: any) => ({
+  academicPermission: editData || {
+    boards: [],
+    mediums: [],
+    organizations: [],
+    standards: [],
+    divisions: [],
+  },
+  academicPermissionSelectedData: {
+    boards: [],
+    mediums: [],
+    organizations: [],
+    standards: [],
+    divisions: [],
+  },
+});
+
 const steps = [
   'Personal Information',
   'Family Information',
@@ -218,6 +241,7 @@ const steps = [
 ];
 
 const EmployeeFrom = ({ editData, handleClose }: any) => {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [activeStep, setActiveStep] = useState(0);
 
   const [addEmployee] = useQueryAndMutation({
@@ -263,15 +287,23 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     isThrowError: true,
   });
 
+  const [addAccessControl, { isLoading: isAddAccessControlLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddAccessControlMutation,
+  });
+
   const initialValues = useMemo(
     () => ({
-      ...personalInformationInitialValues(),
+      ...personalInformationInitialValues({
+        id: editData?.id,
+      }),
       ...familyInformationInitialValues(),
       ...additionalDetailsInitialValues(),
       ...documentsInitialValues(),
       ...workExperienceInitialValues(),
       ...payrollInitialValues(),
       ...assignReportingManagerInitialValues(),
+      ...academicPermissionInitialValues(),
     }),
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -505,6 +537,22 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     [updateReportingManager]
   );
 
+  const handleAcademicPermission = useCallback(
+    async (values: any, formik: any, id: any) => {
+      const res = await addAccessControl({
+        academicYearIds: [currentYear.id],
+        userIds: [values.employeeId],
+        educationBoardIds: values.academicPermissionSelectedData.boards,
+        educationMediumIds: values.academicPermissionSelectedData.mediums,
+        educationMediumStageIds: values.academicPermissionSelectedData.organizations,
+        standardIds: values.academicPermissionSelectedData.standards,
+        divisionIds: values.academicPermissionSelectedData.divisions,
+      }).unwrap();
+      return res;
+    },
+    [addAccessControl, currentYear.id]
+  );
+
   const handleSave = useCallback(
     async (
       isLastStep: boolean,
@@ -557,6 +605,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
           // }
         }
         if (isLastStep && !isSaveButton) {
+          await handleAcademicPermission(values, formik, values.employeeId);
           shikshaMitraToast.success({
             message: `Employee ${editData ? 'updated' : 'added'}  successfully`,
           });
@@ -576,6 +625,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       activeStep,
       editData,
       handelUpdateEmployee,
+      handleAcademicPermission,
       handleAdditionalDetails,
       handleBankDetailsInformation,
       handleBasicInformation,
@@ -590,6 +640,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
     <CustomStepperWithFormik
       initialValues={initialValues}
       steps={steps}
+      viewMode="vertical"
       activeStep={activeStep}
       handleBack={() => {
         setActiveStep(activeStep - 1);
@@ -627,6 +678,7 @@ export default EmployeeFrom;
 
 const FormSlider = ({ step, formik, editData }: any) => {
   const containerRef = React.useRef<HTMLElement>(null);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const initializedStepsRef = React.useRef<Record<number, boolean>>({});
   const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
     type: 'query',
@@ -680,6 +732,13 @@ const FormSlider = ({ step, formik, editData }: any) => {
       },
     });
 
+  const { data: accessControl, isLoading: accessControlLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAccessControlQuery,
+    params: { userId: editData?.id, academicYearId: currentYear?.id },
+    options: { skip: !(editData?.id && currentYear?.id && step === 7) },
+  });
+
   useEffect(() => {
     if (initializedStepsRef.current[step]) return;
     if (basicDetails && step === 0) {
@@ -718,6 +777,75 @@ const FormSlider = ({ step, formik, editData }: any) => {
         ...assignReportingManagerInitialValues(reportingManagerDetails),
       }));
       initializedStepsRef.current[step] = true;
+    } else if (accessControl && step === 7) {
+      if (accessControl?.accessibleHierarchy) {
+        const keyMapping: any = {
+          0: 'hasFullMediumAccess',
+          1: 'hasFullMediumStageAccess',
+          2: 'hasFullStandardAccess',
+          3: 'hasFullDivisionAccess',
+        };
+        const idMapping: any = {
+          0: 'boardId',
+          1: 'mediumId',
+          2: 'mediumStageId',
+          3: 'standardId',
+          4: 'divisionId',
+        };
+        const levelMapping: any = {
+          0: 'boards',
+          1: 'mediums',
+          2: 'mediumStages',
+          3: 'standards',
+          4: 'divisions',
+        };
+        const data: {
+          boards: string[];
+          mediums: string[];
+          organizations: string[];
+          standards: string[];
+          divisions: string[];
+        } = {
+          boards: [],
+          mediums: [],
+          organizations: [],
+          standards: [],
+          divisions: [],
+        };
+        const recursionFn = (academicData: any[], level = 0) => {
+          academicData?.forEach((element) => {
+            if (element.hasAccess || element?.[(keyMapping as any)[level]]) {
+              if (level === 0) {
+                data.boards.push(element?.[idMapping[level]]);
+              }
+              if (level === 1) {
+                data.mediums.push(element?.[idMapping[level]]);
+              }
+              if (level === 2) {
+                data.organizations.push(element?.[idMapping[level]]);
+              }
+              if (level === 3) {
+                data.standards.push(element?.[idMapping[level]]);
+              }
+              if (level === 4) {
+                data.divisions.push(element?.[idMapping[level]]);
+              }
+            }
+
+            if (element?.[levelMapping[level]]?.length) {
+              recursionFn(element?.[levelMapping[level]], level + 1);
+            }
+          });
+        };
+        recursionFn(accessControl?.accessibleHierarchy?.[0]?.boards);
+        console.log(data, 'data');
+
+        formik.setValues((pre: any) => ({
+          ...pre,
+          ...academicPermissionInitialValues(data),
+        }));
+        initializedStepsRef.current[step] = true;
+      }
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -732,7 +860,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
   ]);
 
   return (
-    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', mt: 1 }}>
+    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', mt: 1, height: '100%' }}>
       {steps.map(
         (_, index) =>
           index === step && (
@@ -742,7 +870,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
               direction="left"
               key={index}
             >
-              <Box display="flex">
+              <Box display="flex" height="100%">
                 {/* {step === 0 && (
                   <Box display="flex">
                     <UploadAvatar
@@ -764,16 +892,18 @@ const FormSlider = ({ step, formik, editData }: any) => {
                   flexWrap="wrap"
                   gap={2}
                   width="100%"
+                  height="100%"
                 >
                   {basicDetailsLoading ||
                   familyDetailsLoading ||
                   additionalDetailsLoading ||
                   workExperienceLoading ||
                   bankDetailsLoading ||
-                  reportingManagerDetailsLoading ? (
+                  reportingManagerDetailsLoading ||
+                  accessControlLoading ? (
                     <LoadingScreen />
                   ) : (
-                    <Grid container spacing={0}>
+                    <Grid container spacing={0} sx={{ height: '100%', width: '100%' }}>
                       {' '}
                       {allFields[step].map((field) => (
                         <Grid
