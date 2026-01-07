@@ -153,7 +153,7 @@ const reducers = combineReducers({
   // [feeCategoryApi.reducerPath]: feeCategoryApi.reducer,
   [ChargeCategoryApi.reducerPath]: ChargeCategoryApi.reducer,
   // [ExpenseCategoryApi.reducerPath]: ExpenseCategoryApi.reducer,
-  // [financeModuleApi.reducerPath]: financeModuleApi.reducer,
+  [financeModuleApi.reducerPath]: financeModuleApi.reducer,
   [expenseApi.reducerPath]: expenseApi.reducer,
   [expenseDetailsApi.reducerPath]: expenseDetailsApi.reducer,
   [incomeApi.reducerPath]: incomeApi.reducer,

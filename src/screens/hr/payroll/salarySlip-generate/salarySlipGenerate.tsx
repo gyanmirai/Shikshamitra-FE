@@ -273,48 +273,7 @@ const PaySlipGenerationScreen = () => {
               <Typography variant="body2" fontWeight={600}>
                 Earning Section
               </Typography>
-              <CustomizableTable
-                noDataText="No Earning Found"
-                isSearch={false}
-                isFilter={false}
-                isPagination={false}
-                isShowedDense={false}
-                tableId="earning-table"
-                columns={[
-                  {
-                    id: 'name',
-                    label: 'Earning Type',
-                    render(value, row) {
-                      return (
-                        <Typography
-                          variant="caption"
-                          sx={{ fontWeight: value === 'Total Amount' ? 'bold' : 'normal' }}
-                        >
-                          {value}
-                        </Typography>
-                      );
-                    },
-                  },
-                  {
-                    id: 'amount',
-                    label: 'Amount',
-                    filterType: 'number',
-                    render(value, row) {
-                      return (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal',
-                          }}
-                        >
-                          {formatCurrency(value)}
-                        </Typography>
-                      );
-                    },
-                  },
-                ]}
-                data={employeeSalarySlip?.earnings || []}
-              />
+              <EarningSection data={employeeSalarySlip?.earnings || []} />
             </Grid>
             <Grid
               size={{ xs: 12, md: 6 }}
@@ -323,53 +282,7 @@ const PaySlipGenerationScreen = () => {
               <Typography variant="body2" fontWeight={600}>
                 Deduction Section
               </Typography>
-              <CustomizableTable
-                noDataText="No Deduction Found"
-                isSearch={false}
-                isFilter={false}
-                isPagination={false}
-                isShowedDense={false}
-                tableId="deduction-table"
-                columns={[
-                  {
-                    id: 'name',
-                    label: 'Deduction Type',
-                    isFilter: false,
-                    isSort: false,
-                    render(value, row) {
-                      return (
-                        <Typography
-                          variant="caption"
-                          sx={{ fontWeight: value === 'Total Amount' ? 'bold' : 'normal' }}
-                        >
-                          {value}
-                        </Typography>
-                      );
-                    },
-                  },
-                  {
-                    id: 'amount',
-                    label: 'Amount',
-                    isFilter: false,
-                    isSort: false,
-                    filterType: 'number',
-                    render(value, row) {
-                      return (
-                        <Typography
-                          variant="caption"
-                          color="error"
-                          sx={{
-                            fontWeight: row.deductionType === 'Total Amount' ? 'bold' : 'normal',
-                          }}
-                        >
-                          {formatCurrency(value)}
-                        </Typography>
-                      );
-                    },
-                  },
-                ]}
-                data={employeeSalarySlip?.deductions || []}
-              />
+              <DeductionSection data={employeeSalarySlip?.deductions || []} />
             </Grid>
           </Grid>
         </>
@@ -381,3 +294,93 @@ const PaySlipGenerationScreen = () => {
 };
 
 export default PaySlipGenerationScreen;
+
+export const EarningSection = ({ data }: { data: any }) => (
+  <CustomizableTable
+    noDataText="No Earning Found"
+    isSearch={false}
+    isFilter={false}
+    isPagination={false}
+    isShowedDense={false}
+    tableId="earning-table"
+    columns={[
+      {
+        id: 'name',
+        label: 'Earning Type',
+        render(value, row) {
+          return (
+            <Typography
+              variant="caption"
+              sx={{ fontWeight: value === 'Total Amount' ? 'bold' : 'normal' }}
+            >
+              {value}
+            </Typography>
+          );
+        },
+      },
+      {
+        id: 'amount',
+        label: 'Amount',
+        filterType: 'number',
+        render(value, row) {
+          return (
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal',
+              }}
+            >
+              {formatCurrency(value)}
+            </Typography>
+          );
+        },
+      },
+    ]}
+    data={data || []}
+  />
+);
+
+export const DeductionSection = ({ data }: { data: any }) => (
+  <CustomizableTable
+    noDataText="No Deduction Found"
+    isSearch={false}
+    isFilter={false}
+    isPagination={false}
+    isShowedDense={false}
+    tableId="deduction-table"
+    columns={[
+      {
+        id: 'name',
+        label: 'Deduction Type',
+        render(value, row) {
+          return (
+            <Typography
+              variant="caption"
+              sx={{ fontWeight: value === 'Total Amount' ? 'bold' : 'normal' }}
+            >
+              {value}
+            </Typography>
+          );
+        },
+      },
+      {
+        id: 'amount',
+        label: 'Amount',
+        filterType: 'number',
+        render(value, row) {
+          return (
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal',
+              }}
+            >
+              {formatCurrency(value)}
+            </Typography>
+          );
+        },
+      },
+    ]}
+    data={data || []}
+  />
+);

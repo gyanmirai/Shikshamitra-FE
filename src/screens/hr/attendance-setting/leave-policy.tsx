@@ -11,6 +11,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -23,6 +24,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { AccuralPolicyType, AccuralPolicyTypeArray } from 'src/enums/accuralPolicyType';
 import {
   useGetEmployeeLeavePolicyQuery,
   useAddEmployeeLeavePolicyMutation,
@@ -32,6 +34,7 @@ import {
 import {
   Box,
   Grid,
+  Radio,
   Button,
   Select,
   Divider,
@@ -40,6 +43,7 @@ import {
   TextField,
   Typography,
   InputLabel,
+  RadioGroup,
   FormControl,
   DialogActions,
   FormHelperText,
@@ -102,7 +106,7 @@ const LeavePolicy = () => {
         heading="Leave Policy"
         description="Define and manage leave policies for your organization to ensure smooth attendance and leave management."
         links={[
-          { name: 'Hr', href: '/hr/dashboard/' },
+          { name: 'HR/Staff', href: '/hr/dashboard/' },
           { name: 'Attendance & Leave Management' },
           { name: 'Setting' },
           { name: 'Leave Policy' },
@@ -192,6 +196,18 @@ const LeavePolicy = () => {
           {
             id: 'leaveType',
             label: 'Leave Type',
+            minWidth: '11vw',
+            align: 'left',
+          },
+          {
+            id: 'accuralPolicyType',
+            label: 'Accural Policy',
+            minWidth: '11vw',
+            align: 'left',
+          },
+          {
+            id: 'leaveCount',
+            label: 'Leave Count',
             minWidth: '11vw',
             align: 'left',
           },
@@ -295,17 +311,23 @@ const paidTypes = ['Paid', 'Unpaid'];
 const validationSchema = Yup.object({
   policyTitle: Yup.string().required('Policy title is required'),
   leaveType: Yup.string().required('Leave type is required'),
-  maxLeavePerYear: Yup.number()
+
+  accuralPolicyType: Yup.string().required('Accural policy type is required'),
+  leaveCount: Yup.number()
     .typeError('Must be a number')
     .integer('Must be an integer')
     .min(0, 'Cannot be negative')
-    .required('Maximum leave per year is required'),
-
+    .required('Leave count is required'),
   requiresApproval: Yup.boolean(),
 
   paidType: Yup.string().required('Paid type is required'),
   carryForward: Yup.boolean(),
   encashmentAllowed: Yup.boolean(),
+  encashmentTiming: Yup.string().when('encashmentAllowed', {
+    is: true,
+    then: (schema) => schema.required('Encashment timing is required'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
 
   description: Yup.string().max(1000, 'Description cannot exceed 1000 characters'),
 });
@@ -333,10 +355,12 @@ export const LeavePolicyForm = ({
     initialValues: {
       policyTitle: editData?.title || '',
       leaveType: editData?.leaveType || '',
-      maxLeavePerYear: editData?.maxLeavePerYear?.toString() || '',
+      accuralPolicyType: editData?.accuralPolicyType || AccuralPolicyType.Monthly,
+      leaveCount: editData?.leaveCount || '1',
       paidType: editData?.paidType || 'Paid',
       carryForward: editData?.carryForward ?? false,
       encashmentAllowed: editData?.encashmentAllowed ?? false,
+      encashmentTiming: editData?.encashmentTiming || 'next_payroll',
       requiresApproval: editData?.requiresApproval ?? false,
       description: editData?.description || '',
     },
@@ -347,10 +371,13 @@ export const LeavePolicyForm = ({
           mediumStageId: mediumStageId?.id,
           policyTitle: values.policyTitle,
           leaveType: values.leaveType,
-          maxLeavePerYear: Number(values.maxLeavePerYear),
+
+          leaveCount: Number(values.leaveCount),
+          accuralPolicyType: values.accuralPolicyType,
           paidType: values.paidType,
           carryForward: values.carryForward,
           encashmentAllowed: values.encashmentAllowed,
+          encashmentTiming: values.encashmentAllowed ? values.encashmentTiming : undefined,
           requiresApproval: values.requiresApproval,
           description: values.description || undefined,
         };
@@ -429,29 +456,7 @@ export const LeavePolicyForm = ({
               </FormControl>
             </ShakingTextField>
           </Grid>
-          <Grid size={{ xs: 6 }}>
-            <ShakingTextField
-              error={!!(formik.touched.maxLeavePerYear && formik.errors.maxLeavePerYear)}
-            >
-              <TextField
-                size="small"
-                fullWidth
-                label="Maximum Days per Year *"
-                type="number"
-                onKeyDown={(e) => {
-                  if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-                error={formik.touched.maxLeavePerYear && Boolean(formik.errors.maxLeavePerYear)}
-                helperText={
-                  (formik.touched.maxLeavePerYear && (formik.errors.maxLeavePerYear as string)) ||
-                  ''
-                }
-                {...formik.getFieldProps('maxLeavePerYear')}
-              />
-            </ShakingTextField>
-          </Grid>
+
           <Grid size={{ xs: 6 }}>
             <ShakingTextField error={!!(formik.touched.paidType && formik.errors.paidType)}>
               <FormControl
@@ -481,6 +486,43 @@ export const LeavePolicyForm = ({
               </FormControl>
             </ShakingTextField>
           </Grid>
+          <Grid size={{ xs: 6 }}>
+            <CustomSelect
+              label="Select Accural Policy"
+              options={AccuralPolicyTypeArray}
+              onChange={(e) => formik.setFieldValue('accuralPolicyType', e)}
+              value={formik.values.accuralPolicyType}
+              formControlProps={{ sx: { width: '100%' } }}
+              helperText={
+                formik.touched.accuralPolicyType && formik.errors.accuralPolicyType
+                  ? (formik.errors.accuralPolicyType as string)
+                  : ''
+              }
+              error={formik.touched.accuralPolicyType && Boolean(formik.errors.accuralPolicyType)}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 6 }}>
+            <ShakingTextField error={!!(formik.touched.leaveCount && formik.errors.leaveCount)}>
+              <TextField
+                size="small"
+                fullWidth
+                label="Leave Count *"
+                type="number"
+                onKeyDown={(e) => {
+                  if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                error={formik.touched.leaveCount && Boolean(formik.errors.leaveCount)}
+                helperText={
+                  (formik.touched.leaveCount && (formik.errors.leaveCount as string)) || ''
+                }
+                {...formik.getFieldProps('leaveCount')}
+              />
+            </ShakingTextField>
+          </Grid>
+
           <Grid size={{ xs: 12 }}>
             <Divider />
           </Grid>
@@ -518,10 +560,37 @@ export const LeavePolicyForm = ({
               Allow employees to encash unused leaves
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Divider />
+          <Grid size={{ xs: 6 }}>
+            {formik.values.encashmentAllowed && (
+              <>
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 0.5, pt: 0 }}>
+                  When Should Leave Be Encashed?
+                </Typography>
+                <RadioGroup
+                  row
+                  name="encashmentTiming"
+                  value={formik.values.encashmentTiming}
+                  onChange={formik.handleChange}
+                >
+                  <FormControlLabel
+                    value="next_payroll"
+                    control={<Radio size="small" />}
+                    label="Next Payroll"
+                  />
+                  <FormControlLabel
+                    value="year_end"
+                    control={<Radio size="small" />}
+                    label="Year End"
+                  />
+                </RadioGroup>
+                {formik.touched.encashmentTiming && formik.errors.encashmentTiming && (
+                  <FormHelperText error>{formik.errors.encashmentTiming as string}</FormHelperText>
+                )}
+              </>
+            )}
           </Grid>
-          <Grid size={{ xs: 12 }}>
+
+          <Grid size={{ xs: 6 }}>
             <FormControlLabel
               control={
                 <Checkbox

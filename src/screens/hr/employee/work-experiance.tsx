@@ -41,13 +41,12 @@ const WorkExperiences = (props: any) => {
           />
         </Box>
       )}
-      <Box display="flex" justifyContent="flex-end" width="100%" mb={2} position="relative">
+      <Box width="100%" display="flex" justifyContent="flex-end">
         {isEditable.value && (
           <Button
             variant="contained"
             size="small"
             startIcon={<Add />}
-            // disabled={!isEditable.value}
             onClick={() => {
               setFieldValue('experiences', [
                 ...values.experiences,
@@ -69,7 +68,8 @@ const WorkExperiences = (props: any) => {
           </Button>
         )}
       </Box>
-      <Box display="flex" flexDirection="column" gap={2}>
+
+      <Box display="flex" flexDirection="column" gap={2} mt={2}>
         {values.experiences.map((experience: any, index: number) => (
           <Paper
             key={index}

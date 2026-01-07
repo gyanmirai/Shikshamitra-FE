@@ -194,10 +194,8 @@ export const payrollInitialValues = (editData?: IPayrollInformation) => ({
   pfRule: editData ? editData?.salaryDetails?.pfRuleId : '',
   epfNumber: editData ? editData?.salaryDetails?.epfNumber : '',
   uanNumber: editData ? editData?.salaryDetails?.uanNumber : '',
-  basicSalary: editData ? editData?.salaryDetails?.basicSalary : '',
+  totalWorkingHourPerMonth: editData ? editData?.salaryDetails?.totalWorkingHourPerMonth : '',
   punchId: editData ? editData?.salaryDetails?.punchId : '',
-  tdsPercentage: editData ? editData?.salaryDetails?.tdsPercentage : '',
-  tdsAmount: editData ? editData?.salaryDetails?.tdsAmount : '',
   earningComponents: editData ? editData?.earningComponents || [] : [],
   deductionComponents: editData ? editData?.deductionComponents || [] : [],
 });
@@ -732,7 +730,14 @@ const FormSlider = ({ step, formik, editData }: any) => {
   ]);
 
   return (
-    <Box ref={containerRef} sx={{ p: 2, overflowX: 'hidden', mt: 1 }}>
+    <Box
+      ref={containerRef}
+      sx={{ p: 2, overflowX: 'hidden', mt: 1 }}
+      display="flex"
+      flexDirection="column"
+      justifyContent="flex-end"
+      width="100%"
+    >
       {steps.map(
         (_, index) =>
           index === step && (
@@ -742,7 +747,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
               direction="left"
               key={index}
             >
-              <Box display="flex">
+              <Box display="flex" width="100%" justifyContent="flex-end">
                 {/* {step === 0 && (
                   <Box display="flex">
                     <UploadAvatar
@@ -764,6 +769,7 @@ const FormSlider = ({ step, formik, editData }: any) => {
                   flexWrap="wrap"
                   gap={2}
                   width="100%"
+                  justifyContent="flex-end"
                 >
                   {basicDetailsLoading ||
                   familyDetailsLoading ||
