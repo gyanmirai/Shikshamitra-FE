@@ -38,12 +38,14 @@ import { organizationApi } from './oraganization/oraganization';
 import { FollowUpApi } from './student/follow-up/follow-up-api';
 import { feeConcessionApi } from './feeCollection/feeConcession';
 import { incomeDetailsApi } from './incomeApi/incomeDetailedApi';
+import { EventHolidayApi } from './eventHoliday/eventHolidayApi';
 import { StudentInquiryApi } from './student/inquiry/inquiry-api';
 import confirmPopupReducer from './confirmPopup/confirmPopupSlice';
 import { paymentHistoryApi } from './feeCollection/paymentHistory';
 import { bookIssuedApi } from './bookIssuedData/bookIssuedDataApi';
 import { bookCategoryApi } from './bookCategoryApi/bookCategoryApi';
 import { issueReturnFormApi } from './issueRetunApi/issueReturnApi';
+// import { holidayApi } from './communication/holiday/holidayDataApi';
 import { budgetSubCategoryApi } from './budgetApi/budgetSubCategory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
@@ -183,7 +185,7 @@ const reducers = combineReducers({
   [academicApi.reducerPath]: academicApi.reducer,
   [instituteSetupApi.reducerPath]: instituteSetupApi.reducer,
   [classManagementApi.reducerPath]: classManagementApi.reducer,
-  // [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
+  [EventHolidayApi.reducerPath]: EventHolidayApi.reducer,
 });
 
 const store = configureStore({
@@ -275,6 +277,7 @@ const store = configureStore({
       LibraryChargeApi.middleware,
       libraryChargeCategoryOptionsApi.middleware,
       bookConditionOptionsApi.middleware,
+      EventHolidayApi.middleware,
       // communicationApi.middleware,
       // meetingDetailsApi.middleware,
       // holidayApi.middleware,

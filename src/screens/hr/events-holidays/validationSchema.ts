@@ -3,6 +3,7 @@ import * as Yup from 'yup';
 
 // Validation schema for events and holidays form
 export const eventAndHolidayValidationSchema = Yup.object().shape({
+  name: Yup.string().required('Name is required'),
   // Validate that start date is provided
   startDate: Yup.date().required('Start date is required'),
   // Validate end date with custom validation logic

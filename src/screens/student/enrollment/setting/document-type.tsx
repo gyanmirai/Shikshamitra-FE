@@ -99,8 +99,6 @@ const StudentDocumentType = () => {
 
   const { confirmWithUndo } = useConfirmWithUndo();
 
-  console.log(StudentDocumentTypeApi.util, 'documents');
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs

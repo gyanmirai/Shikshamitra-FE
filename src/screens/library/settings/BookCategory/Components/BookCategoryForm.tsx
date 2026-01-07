@@ -7,8 +7,13 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddBookCategoryMutation,
+  useUpdateBookCategoryMutation,
+} from 'src/redux/bookCategoryApi/bookCategoryApi';
 
 import { getBookCategoryInitialValues } from './BookInitialValues';
 import { bookCategoryValidationSchema } from './BookCategoryValidationSchema';
@@ -18,15 +23,38 @@ import type { IBookCategoryFormProps } from './type';
 // import initial values & validation schema (you’ll create these files similar to FeeHead)
 
 const BookCategoryForm: React.FC<IBookCategoryFormProps> = ({ open, onClose, editData }) => {
+  const { addBookCategory } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddBookCategoryMutation,
+  });
+
+  const { updateBookCategory } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateBookCategoryMutation,
+  });
+
   const formik = useFormik({
     initialValues: getBookCategoryInitialValues(editData),
     validationSchema: bookCategoryValidationSchema,
     onSubmit: (values) => {
+      // Construct payload matching API specification
+      const payload = {
+        categoryName: values.categoryName,
+        description: values.description,
+      };
+
       if (editData) {
+        // Update existing category - PUT /library/settings/book-categories/{categoryId}
+        updateBookCategory({
+          categoryId: editData.id,
+          data: payload,
+        });
         shikshaMitraToast.success({
           message: `${values.categoryName} Book Category updated successfully`,
         });
       } else {
+        // Create new category - POST /library/settings/book-categories
+        addBookCategory(payload);
         shikshaMitraToast.success({
           message: `${values.categoryName} Book Category added successfully`,
         });

@@ -308,13 +308,13 @@ const hrModule = (isDdvs: boolean) => ({
           shortcutKeyName: 'Alt+H+R',
           permissionName: hrPermissions.reports,
         },
-        // {
-        //   title: 'Events & Holidays',
-        //   _action: 'events-holidays',
-        //   path: '/hr/events-holidays',
-        //   shortcutKey: 'Alt+H+V',
-        //   shortcutKeyName: 'Alt+H+V',
-        // },
+        {
+          title: 'Events & Holidays',
+          _action: 'events-holidays',
+          path: '/hr/events-holidays',
+          shortcutKey: 'Alt+H+V',
+          shortcutKeyName: 'Alt+H+V',
+        },
         {
           title: 'Notification',
           path: hrPaths.notification,

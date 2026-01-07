@@ -25,7 +25,37 @@ export const LibraryChargeApi = createApi({
   endpoints: (builder) => ({
     getLibraryCharges: builder.query({
       query: () => ({
-        url: '/libraryChargesData',
+        url: '/library/charges',
+        method: 'GET',
+      }),
+      providesTags: ['LibraryCharge'],
+    }),
+    addLibraryCharge: builder.mutation({
+      query: (data) => ({
+        url: '/library/charges/create',
+        method: 'POST',
+        data,
+      }),
+      invalidatesTags: ['LibraryCharge'],
+    }),
+    updateLibraryCharge: builder.mutation({
+      query: ({ data, chargeId, academicYearId }) => ({
+        url: `/library/charges/${chargeId}?academicYearId=${academicYearId}`,
+        method: 'PUT',
+        data,
+      }),
+      invalidatesTags: ['LibraryCharge'],
+    }),
+    deleteLibraryCharge: builder.mutation({
+      query: ({ chargeId, academicYearId }) => ({
+        url: `/library/charges/${chargeId}?academicYearId=${academicYearId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['LibraryCharge'],
+    }),
+    getDetailedCharge: builder.query({
+      query: ({ chargeId, academicYearId }) => ({
+        url: `/library/charges/details/${chargeId}?academicYearId=${academicYearId}`,
         method: 'GET',
       }),
       providesTags: ['LibraryCharge'],
@@ -33,4 +63,10 @@ export const LibraryChargeApi = createApi({
   }),
 });
 
-export const { useGetLibraryChargesQuery } = LibraryChargeApi;
+export const {
+  useGetLibraryChargesQuery,
+  useAddLibraryChargeMutation,
+  useUpdateLibraryChargeMutation,
+  useDeleteLibraryChargeMutation,
+  useGetDetailedChargeQuery,
+} = LibraryChargeApi;

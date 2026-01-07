@@ -1,13 +1,17 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { IPaymentFieldConfig } from 'src/screens/finance/FeeCollection/Components/type';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { ExpandMore } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { useGetDetailedChargeQuery } from 'src/redux/library/charges-management/charges-get-api';
 import { paymentMethodsConfig } from 'src/screens/finance/FeeCollection/Components/paymentConfigMethods';
 import {
   Grid,
@@ -30,9 +34,25 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
   const [expandedChargeDetails, setExpandedChargeDetails] = useState(false);
   const [expandedPaymentDetails, setExpandedPaymentDetails] = useState(false);
 
+  // Get academicYearId from Redux state
+  const { currentAcademicYearId } = useSelector((state: RootState) => state.globalState);
+
+  // Fetch detailed charge information
+  const { data: detailedCharge } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetDetailedChargeQuery,
+    params: {
+      chargeId: charge?.id || '',
+      academicYearId: currentAcademicYearId,
+    },
+  });
+
+  // Use detailed charge data if available, otherwise fallback to prop
+  const chargeData = detailedCharge || charge;
+
   return (
     <DialogScrollContent>
-      <LibraryChargeInfo charge={charge} />
+      <LibraryChargeInfo charge={chargeData} />
 
       {/* Charge Details Accordion */}
       <Accordion
@@ -66,7 +86,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   label="Book Title"
-                  value={charge?.bookTitle ?? ''}
+                  value={chargeData?.bookTitle ?? ''}
                   fullWidth
                   size="small"
                   disabled
@@ -75,7 +95,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   label="Charge Category"
-                  value={charge?.chargeCategory ?? ''}
+                  value={chargeData?.chargeCategory ?? ''}
                   fullWidth
                   size="small"
                   disabled
@@ -89,7 +109,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="Book Title"
-                value={charge?.bookTitle ?? ''}
+                value={chargeData?.bookTitle ?? ''}
                 fullWidth
                 size="small"
                 disabled
@@ -98,7 +118,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="Charge Category"
-                value={charge?.chargeCategory ?? ''}
+                value={chargeData?.chargeCategory ?? ''}
                 fullWidth
                 size="small"
                 disabled
@@ -107,7 +127,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
             <Grid size={{ xs: 12, md: 6 }}>
               <NumericFormatCustom
                 label="Amount"
-                value={charge?.fineAmount ?? ''}
+                value={chargeData?.fineAmount ?? ''}
                 fullWidth
                 size="small"
                 disabled
@@ -116,7 +136,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
             <Grid size={{ xs: 12, md: 6 }}>
               <DatePicker
                 label="Due Date"
-                value={charge?.dueDate ? dayjs(charge?.dueDate, 'DD/MM/YYYY') : null}
+                value={chargeData?.dueDate ? dayjs(chargeData?.dueDate, 'DD/MM/YYYY') : null}
                 disabled
                 format="DD/MM/YYYY"
                 sx={{ width: '100%' }}
@@ -131,7 +151,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
             <Grid size={{ xs: 12, md: 6 }}>
               <DatePicker
                 label="Return Date"
-                value={charge?.returnDate ? dayjs(charge?.returnDate, 'DD/MM/YYYY') : null}
+                value={chargeData?.returnDate ? dayjs(chargeData?.returnDate, 'DD/MM/YYYY') : null}
                 disabled
                 format="DD/MM/YYYY"
                 sx={{ width: '100%' }}
@@ -146,7 +166,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
             <Grid size={{ xs: 12 }}>
               <TextField
                 label="Reason of Charge"
-                value={charge?.reason ?? ''}
+                value={chargeData?.reason ?? ''}
                 fullWidth
                 size="small"
                 multiline
@@ -205,7 +225,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
                   <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       label="Payment Method"
-                      value={charge?.paymentDetails?.paymentMethod ?? ''}
+                      value={chargeData?.paymentDetails?.paymentMethod ?? ''}
                       fullWidth
                       size="small"
                       disabled
@@ -216,7 +236,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
                       fullWidth
                       label="Amount"
                       size="small"
-                      value={charge?.paymentDetails?.paymentAmount ?? ''}
+                      value={chargeData?.paymentDetails?.paymentAmount ?? ''}
                       disabled
                     />
                   </Grid>
@@ -227,8 +247,8 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 0 }}>
           <Grid container spacing={2}>
-            {!charge?.paymentDetails ||
-            Object.values(charge.paymentDetails).every(
+            {!chargeData?.paymentDetails ||
+            Object.values(chargeData.paymentDetails).every(
               (val) => val === '' || val === null || val === undefined
             ) ? (
               <Grid size={12}>
@@ -245,7 +265,7 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     label="Payment Method"
-                    value={charge?.paymentDetails?.paymentMethod ?? ''}
+                    value={chargeData?.paymentDetails?.paymentMethod ?? ''}
                     fullWidth
                     size="small"
                     disabled
@@ -256,14 +276,14 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
                     fullWidth
                     label="Amount"
                     size="small"
-                    value={charge?.paymentDetails?.paymentAmount ?? ''}
+                    value={chargeData?.paymentDetails?.paymentAmount ?? ''}
                     disabled
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
                   <TextField
                     label="Notes"
-                    value={charge?.paymentDetails?.notes ?? ''}
+                    value={chargeData?.paymentDetails?.notes ?? ''}
                     fullWidth
                     size="small"
                     multiline
@@ -271,16 +291,19 @@ const CollectChargesView: React.FC<CollectChargesViewProps> = ({ charge }) => {
                     disabled
                   />
                 </Grid>
-                {charge?.paymentDetails?.paymentMethod !== 'Cash' &&
+                {chargeData?.paymentDetails?.paymentMethod !== 'Cash' &&
                   paymentMethodsConfig[
-                    charge?.paymentDetails?.paymentMethod as keyof typeof paymentMethodsConfig
+                    chargeData?.paymentDetails?.paymentMethod as keyof typeof paymentMethodsConfig
                   ]?.map((field: IPaymentFieldConfig) => (
-                    <Grid size={6} key={`${charge?.paymentDetails?.paymentMethod}-${field.name}`}>
+                    <Grid
+                      size={6}
+                      key={`${chargeData?.paymentDetails?.paymentMethod}-${field.name}`}
+                    >
                       <TextField
                         label={field.label}
                         value={
-                          charge?.paymentDetails?.[
-                            field.name as keyof typeof charge.paymentDetails
+                          chargeData?.paymentDetails?.[
+                            field.name as keyof typeof chargeData.paymentDetails
                           ] ?? ''
                         }
                         fullWidth

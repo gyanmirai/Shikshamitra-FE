@@ -3,19 +3,24 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetBookCategoriesQuery } from 'src/redux/bookCategoryApi/bookCategoryApi';
+import {
+  bookCategoryApi,
+  useGetBookCategoriesQuery,
+  useDeleteBookCategoryMutation,
+} from 'src/redux/bookCategoryApi/bookCategoryApi';
 
 import BookCategoryForm from './Components/BookCategoryForm';
 import BookCategoryTable from './Components/BookCategoryTable';
@@ -28,6 +33,15 @@ const BookCategoryCreation = () => {
     type: 'query',
     currentQueryAndMutation: useGetBookCategoriesQuery,
   });
+
+  // Delete mutation hook
+  const [deleteBookCategory, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteBookCategoryMutation,
+  });
+
+  // Undo functionality hook
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // Dialog control states
   const deleteBookCategoryDialog = useBoolean();
@@ -149,21 +163,49 @@ const BookCategoryCreation = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedBookCategory,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    bookCategoryApi.util.updateQueryData(
+                      'getBookCategories',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft?.findIndex(
+                          (b: any) => b.id === selectedBookCategory?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    bookCategoryApi.util.updateQueryData(
+                      'getBookCategories',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selectedBookCategory);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteBookCategory({ categoryId: selectedBookCategory?.id || '' }),
+              });
               deleteBookCategoryDialog.onFalse();
               setSelectedBookCategory(null);
-              shikshaMitraToast.success({
-                message: `Book Category ${selectedBookCategory?.categoryName} deleted successfully`,
-              });
-              // handle delete API call here
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>
