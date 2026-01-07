@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
+import { RouteType } from 'src/enums/route-type-options';
 import { Box, Card, Grid, Typography } from '@mui/material';
 import { Route, PinDrop, AccessTime, DirectionsBus } from '@mui/icons-material';
 
@@ -101,7 +102,7 @@ export default function RouteDetailsView({ values }: Props) {
         </Grid>
 
         {/* Pickup Schedule */}
-        {(values.routeType === 'pickup' || values.routeType === 'both') && (
+        {(values.routeType === RouteType.pickup || values.routeType === RouteType.both) && (
           <Grid size={{ xs: 12, md: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box
@@ -135,7 +136,7 @@ export default function RouteDetailsView({ values }: Props) {
         )}
 
         {/* Dropoff Schedule */}
-        {(values.routeType === 'drop' || values.routeType === 'both') && (
+        {(values.routeType === RouteType.drop || values.routeType === RouteType.both) && (
           <Grid size={{ xs: 12, md: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box

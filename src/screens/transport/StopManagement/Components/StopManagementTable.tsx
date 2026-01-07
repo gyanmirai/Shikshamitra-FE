@@ -13,7 +13,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, MenuItem, MenuList, Typography } from '@mui/material';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetStopManagementDataQuery } from 'src/redux/transport/vehicle-management/stop-management-api';
+import { useGetStopsQuery } from 'src/redux/transport/vehicle-management/stop-management-api';
 
 import ChangeStopStatusForm from './ChangeStopStatusForm';
 import {
@@ -35,9 +35,10 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
   setEditData,
   onEdit,
 }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: stopManagementData, isLoading: stopManagementLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetStopManagementDataQuery,
+    currentQueryAndMutation: useGetStopsQuery,
   });
   const dispatch = useDispatch();
 
@@ -196,7 +197,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             },
           },
         ]}
-        data={stopManagementData || []}
+        data={[]}
       />
 
       {/* Change Status Dialog */}

@@ -23,11 +23,10 @@ export interface IStopData {
   addressLine2?: string | null;
   pincode: number | null;
   areaLocalityRoadName: string;
-  zone: string;
+  zoneId: string;
   amount: string;
   assignedStudents: number;
   status: StopStatusType;
-  createdDate?: string;
   updatedDate?: string;
   approxKmFromSchool?: number | null;
 }
@@ -48,7 +47,7 @@ export interface IStopPayload {
   addressLine2?: string | null;
   pincode: number | null;
   areaLocalityRoadName: string;
-  zone: string;
+  zoneId: string;
   amount: string;
   status?: StopStatusType;
   description?: string | null;

@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -13,9 +14,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { Box, Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useGetWeeklyLectureSlotByIdQuery,
+  useCreateWeeklyLectureSlotMutation,
+  useUpdateWeeklyLectureSlotMutation,
+} from 'src/redux/academicAPI/timetableApi/weeklyLecturesApi';
 
 import { getNoOfLectureInitialValues } from './initialValues';
 import { noOfLectureValidationSchema } from './validationSchema';
@@ -36,29 +43,61 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
   const [classes, setClasses] = useState<string>('');
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
+  const [addWeeklyLectureSlot, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCreateWeeklyLectureSlotMutation,
+  });
+  const [updateWeeklyLectureSlot, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateWeeklyLectureSlotMutation,
+  });
+  const [getWeeklyLectureSlotById, { isLoading: isLoadingGetById }] = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetWeeklyLectureSlotByIdQuery,
+    params: {
+      lectureSlotId: editData?.id,
+    },
+  });
   const formik = useFormik<ISubjectFormValues>({
-    initialValues: getNoOfLectureInitialValues(editData, selectedClass || classes),
+    initialValues: getNoOfLectureInitialValues(
+      getWeeklyLectureSlotById?.data,
+      selectedClass || classes
+    ),
     enableReinitialize: true, // important when using useMemo
     validationSchema: noOfLectureValidationSchema,
-    onSubmit: (values) => {
-      // Calculate total lectures
-      const totalLectures = values.subjects.reduce((sum, subject) => sum + subject.noOfLecture, 0);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const submitData = {
-        ...values,
-        totalLectures,
-      };
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Weekly No. of lectures updated for class ${values.className}`,
+    onSubmit: async (values) => {
+      const subjectsPayload = values.subjects.map((subject) => ({
+        subjectId: subject.subjectId || subject.id,
+        weeklyLectures: Number(subject.noOfLecture) || 0,
+        electiveGroupId: subject.electiveGroupId || null,
+      }));
+
+      if (editData && values.id) {
+        const res = await updateWeeklyLectureSlot({
+          lectureSlotId: values.id,
+          body: {
+            subjects: subjectsPayload,
+          },
         });
+        if (res.data) {
+          shikshaMitraToast.success({
+            message: `Weekly No. of lectures updated for class ${values.className}`,
+          });
+          onClose?.(null, true);
+        }
       } else {
-        shikshaMitraToast.success({
-          message: `Weekly No. of lectures added for class ${values.className}`,
+        const res = await addWeeklyLectureSlot({
+          standardId: values.className,
+          subjects: subjectsPayload,
         });
+
+        if (res.data) {
+          shikshaMitraToast.success({
+            message: `Weekly No. of lectures added for class ${values.className}`,
+          });
+          onClose?.(null, true);
+        }
       }
-      onClose?.(null, true);
     },
   });
 
@@ -76,8 +115,10 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
     if (!editData && selectedClass) {
       const dummySubjects = generateDummySubjects().map((subj, index) => ({
         id: `subject-${index}`,
+        subjectId: '',
         ...subj,
         noOfLecture: '',
+        electiveGroupId: null,
       }));
 
       // formik.setFieldValue('className', selectedClass);
@@ -169,8 +210,10 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
 
                   const dummySubjects = generateDummySubjects().map((subj, index) => ({
                     id: `subject-${index}`,
+                    subjectId: '',
                     ...subj,
-                    noOfLecture: null,
+                    noOfLecture: '',
+                    electiveGroupId: null,
                   }));
                   formik.setFieldValue('subjects', dummySubjects);
                   formik.setFieldValue('totalLectures', 0);
@@ -242,7 +285,7 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             startIcon={
               <Iconify
                 icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -250,14 +293,15 @@ const CreateNoOfLecture: React.FC<ICreateNoOfLectureProps> = ({
                 height={editData ? 16 : 20}
               />
             }
+            loading={isAddLoading || isUpdateLoading}
             form="dialog-form"
-            onClick={() => formik.handleSubmit()}
+            onClick={(e: any) => formik.handleSubmit(e)}
             size="small"
             variant="contained"
           >
             {editData ? 'Update' : 'Submit'}
             {/* {isEdit ? 'Update' : 'Submit'} */}
-          </Button>
+          </LoadingButton>
           {/* <SubmitButton size="small" disabled={disabled} /> */}
         </DialogActions>
       )}

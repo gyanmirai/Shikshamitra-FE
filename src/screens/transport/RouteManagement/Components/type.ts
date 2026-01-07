@@ -1,5 +1,6 @@
 import type { Dayjs } from 'dayjs';
 import type { RouteStatus } from 'src/enums/route-status';
+import type { RouteType } from 'src/enums/route-type-options';
 
 export interface ISchedule {
   startTime: Dayjs | string | null;
@@ -9,7 +10,7 @@ export interface ISchedule {
 export interface IRoutePayload {
   routeName: string;
   routeCode: string;
-  routeType: string;
+  routeType: RouteType;
   distance: string;
   duration: string;
   description: string;

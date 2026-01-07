@@ -2,10 +2,12 @@ import type { IData } from 'src/components/customizabaleTable/type';
 
 export interface ISubject {
   id: string;
+  subjectId?: string;
   name: string;
   subjectColor: string;
   subjectCode: string;
   noOfLecture: number;
+  electiveGroupId?: string | null;
 }
 
 export interface IWeeklyLecture extends IData {
@@ -25,6 +27,7 @@ export interface ICreateNoOfLectureProps {
 }
 
 export interface ISubjectFormValues {
+  id?: string;
   className: string;
   subjects: ISubject[];
   totalLectures: number;

@@ -8,9 +8,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetAvailableVehiclesQuery } from 'src/redux/transport/vehicle-management/route-management-api';
 import {
   Box,
   Grid,
@@ -22,6 +20,10 @@ import {
   RadioGroup,
   DialogActions,
 } from '@mui/material';
+
+import vehicleManagementData from '../../../../json/transport/transportModuleData.json';
+
+// import { useGetAvailableVehiclesQuery } from 'src/redux/transport/vehicle-management/route-management-api';
 
 interface ChangeVehicleFormProps {
   onClose: (e: any, isSubmit: boolean) => void;
@@ -36,10 +38,13 @@ const currentVehicle = {
 };
 
 const ChangeVehicleForm: React.FC<ChangeVehicleFormProps> = ({ onClose }) => {
-  const { data: availableVehicles } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAvailableVehiclesQuery,
-  });
+  const [availableVehicles, setAvailableVehicles] = useState<any>(
+    vehicleManagementData?.availableVehiclesData
+  );
+  // const { data: availableVehicles } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetAvailableVehiclesQuery,
+  // });
 
   const [selectedVehicle, setSelectedVehicle] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
