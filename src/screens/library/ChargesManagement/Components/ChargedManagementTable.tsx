@@ -41,72 +41,94 @@ const LibraryChargesTable = ({
   onDeleteCharge: (row: ILibraryChargeData) => void;
   onViewCharges: (row: ILibraryChargeData) => void;
 }) => {
-  const columns: IColumn[] = [
-    {
-      id: 'memberName',
-      label: 'Member Name',
-      align: 'left',
-      minWidth: '150px',
-      sticky: true,
-    },
-    { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '130px' },
-    { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '150px' },
-    { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '140px' },
-    { id: 'role', label: 'Role', align: 'left' },
-    { id: 'chargeCategory', label: 'Charge Category', align: 'left', minWidth: '160px' },
-    { id: 'dueDate', label: 'Due Date', align: 'left', minWidth: '120px' },
-    {
-      id: 'fineAmount',
-      label: 'Amount',
-      align: 'left',
-      filterType: 'number',
-      render(value) {
-        return new Intl.NumberFormat('en-IN', {
-          style: 'currency',
-          currency: 'INR',
-          minimumFractionDigits: 2,
-        }).format(value);
-      },
-    },
-    { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
-    { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 90 },
-    { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
-    { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
-    { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '130px' },
-    { id: 'reason', label: 'Reason', align: 'left' },
-    {
-      id: 'actions',
-      label: 'Actions',
-      align: 'left',
-      isSort: false,
-      isFilter: false,
-      minWidth: 80,
-      sticky: true,
-      render(value, row) {
-        return (
-          <ThreeDotsActions
-            actions={(prop) => actions({ ...prop, row })}
-            placement="right-top"
-            showThreeDots={row.status === LibraryChargeStatusType.Pending}
-            showEditIcon
-            handleEditClick={() => {
-              onEditCharge(row as ILibraryChargeData);
-            }}
-            showDeleteIcon
-            handleDeleteClick={() => {
-              onDeleteCharge(row as ILibraryChargeData);
-            }}
-            showViewIcon
-            handleViewClick={() => {
-              onViewCharges(row as ILibraryChargeData);
-            }}
-          />
-        );
-      },
-    },
-  ];
-
   const [tabValue, setTabValue] = useState(LibraryChargeStatusType.Paid);
+
+  const actions = useCallback(
+    ({ popover: pop, row }: any) => (
+      <MenuList>
+        <MenuItem
+          onClick={() => {
+            onCollectCharges(row);
+            pop.onClose();
+          }}
+        >
+          <Iconify icon="mdi:cash-multiple" sx={{ height: '16px', width: '16px' }} />
+          Collect Charges
+        </MenuItem>
+      </MenuList>
+    ),
+    [onCollectCharges]
+  );
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'memberName',
+        label: 'Member Name',
+        align: 'left',
+        minWidth: '150px',
+        sticky: true,
+      },
+      { id: 'memberId', label: 'Member ID', align: 'left', minWidth: '130px' },
+      { id: 'bookTitle', label: 'Book Title', align: 'left', minWidth: '150px' },
+      { id: 'accessionNo', label: 'Accession No.', align: 'left', minWidth: '140px' },
+      { id: 'role', label: 'Role', align: 'left' },
+      { id: 'chargeCategory', label: 'Charge Category', align: 'left', minWidth: '160px' },
+      { id: 'dueDate', label: 'Due Date', align: 'left', minWidth: '120px' },
+      {
+        id: 'fineAmount',
+        label: 'Amount',
+        align: 'left',
+        filterType: 'number',
+        render(value) {
+          return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2,
+          }).format(value);
+        },
+      },
+      { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
+      { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 90 },
+      { id: 'classNo', label: 'Class', align: 'left', minWidth: '80px' },
+      { id: 'division', label: 'Division', align: 'left', minWidth: '80px' },
+      { id: 'contactNo', label: 'Contact No.', align: 'left', minWidth: '130px' },
+      { id: 'reason', label: 'Reason', align: 'left' },
+      {
+        id: 'actions',
+        label: 'Actions',
+        align: 'left',
+        isSort: false,
+        isFilter: false,
+        minWidth: 80,
+        sticky: true,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              actions={(prop) => actions({ ...prop, row })}
+              placement="right-top"
+              showThreeDots={row.status === LibraryChargeStatusType.Pending}
+              showEditIcon
+              handleEditClick={() => {
+                onEditCharge(row as ILibraryChargeData);
+              }}
+              showDeleteIcon
+              handleDeleteClick={() => {
+                onDeleteCharge(row as ILibraryChargeData);
+              }}
+              showViewIcon
+              handleViewClick={() => {
+                onViewCharges(row as ILibraryChargeData);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   const currentIndex = TABS.findIndex((tab) => tab.value === tabValue);
 
   // Calculate total paid and pending amounts
@@ -131,23 +153,6 @@ const LibraryChargesTable = ({
 
   // Filter table data based on selected tab
   const tableData = useMemo(() => data?.filter((i) => i.status === tabValue), [data, tabValue]);
-
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            onCollectCharges(row);
-            pop.onClose();
-          }}
-        >
-          <Iconify icon="mdi:cash-multiple" sx={{ height: '16px', width: '16px' }} />
-          Collect Charges
-        </MenuItem>
-      </MenuList>
-    ),
-    [onCollectCharges]
-  );
   const isBackClick = false;
   return (
     <>
