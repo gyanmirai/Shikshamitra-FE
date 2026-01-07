@@ -2,8 +2,9 @@
 
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -37,6 +38,50 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
     },
   });
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'name',
+        label: 'Subject Name',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <SubjectColorIndicator color={row.color} />
+            <Typography variant="caption" fontSize="13px">
+              {value}
+            </Typography>
+          </Box>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        minWidth: 60,
+        align: 'left',
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showThreeDots={false}
+              placement="right-top"
+              showDeleteIcon
+              showEditIcon
+              handleDeleteClick={() => {
+                onDelete(row as ISubject);
+              }}
+              handleEditClick={() => {
+                onEdit(row as ISubject);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    [onDelete, onEdit]
+  );
+
   return (
     <CustomizableTable
       tableId="subject-data-table"
@@ -63,46 +108,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
           </Box>
         </>
       }
-      columns={[
-        {
-          id: 'name',
-          label: 'Subject Name',
-          align: 'left',
-          render: (value, row) => (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <SubjectColorIndicator color={row.color} />
-              <Typography variant="caption" fontSize="13px">
-                {value}
-              </Typography>
-            </Box>
-          ),
-        },
-        {
-          id: 'action',
-          label: 'Actions',
-          minWidth: 60,
-          align: 'left',
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                showThreeDots={false}
-                placement="right-top"
-                showDeleteIcon
-                showEditIcon
-                handleDeleteClick={() => {
-                  onDelete(row as ISubject);
-                }}
-                handleEditClick={() => {
-                  onEdit(row as ISubject);
-                }}
-              />
-            );
-          },
-        },
-      ]}
+      columns={columns}
       data={subjectData || []}
     />
   );

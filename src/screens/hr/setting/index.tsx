@@ -13,6 +13,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Add, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
@@ -30,6 +31,7 @@ import {
   DialogActions,
 } from '@mui/material';
 import {
+  documentApi,
   useGetDocumentsQuery,
   useAddDocumentMutation,
   useDeleteDocumentMutation,
@@ -41,6 +43,13 @@ const HrSetting = () => {
   const confirm = useBoolean();
   const [deleteInformation, setDeleteInformation] = useState<any>(null);
   const [editData, setEditData] = useState<any>(null);
+  const { confirmWithUndo } = useConfirmWithUndo();
+  // Fetch all student document types
+  const [query, setQuery] = useState({
+    sorting: '',
+    skipCount: 0,
+    maxResultCount: 10,
+  });
 
   const { data: documents, isLoading } = useQueryAndMutation({
     type: 'query',
@@ -78,12 +87,32 @@ const HrSetting = () => {
             size="small"
             color="error"
             onClick={async () => {
-              await deleteDocument(deleteInformation?.id);
-              shikshaMitraToast.success({
-                message: `${deleteInformation?.title} Document deleted successfully`,
+              confirmWithUndo({
+                item: deleteInformation,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    documentApi.util.updateQueryData('getDocuments', null, (draft: any) => {
+                      console.log('draft----', draft);
+                      const index = draft.items?.findIndex(
+                        (b: any) => b.id === deleteInformation?.id
+                      );
+                      setDeleteIndex(index);
+                      if (index !== -1) {
+                        draft.items.splice(index, 1);
+                      }
+                    })
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    documentApi.util.updateQueryData('getDocuments', null, (draft: any) => {
+                      if (!draft.items) return;
+                      draft.items.splice(index, 0, deleteInformation);
+                    })
+                  ),
+                onCommit: () => deleteDocument(deleteInformation?.id || ''),
               });
-              setDeleteInformation(null);
               confirm.onFalse();
+              setEditData(null);
             }}
           >
             Yes

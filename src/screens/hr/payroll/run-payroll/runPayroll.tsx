@@ -2,27 +2,31 @@
 
 import type { Dayjs } from 'dayjs';
 
+import dayjs from 'dayjs';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import CustomDialog from 'src/components/customDialog';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Card, Alert, Avatar, Button, Typography } from '@mui/material';
+import { Box, Card, Alert, Avatar, Button, Typography, IconButton } from '@mui/material';
 import {
   useGetRunPayrollPreviewQuery,
   useGenerateAndLockPayrollMutation,
 } from 'src/redux/runPayroll/runPayrollApi';
 
 import { salaryData } from './component/verifyPayrollComponent';
+import { DeductionSection } from '../salarySlip-generate/salarySlipGenerate';
 
 const RunPayroll = () => {
+  const deductionDialog = useBoolean();
   const isPayrollOpen = useBoolean();
-  const [month, setMonth] = useState<Dayjs | null>(null);
+  const [month, setMonth] = useState<Dayjs | null>(dayjs());
 
   const { data: getRunPayrollPreviewData, isLoading: getRunPayrollPreviewLoading } =
     useQueryAndMutation({
@@ -51,8 +55,7 @@ const RunPayroll = () => {
       {/* <StepsForPayroll /> */}
 
       <Card sx={{ p: 2 }}>
-        <Typography variant="h6">Process Payroll For</Typography>
-        <Box sx={{ display: 'flex', gap: 2, mt: 2, mb: 2, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 1, alignItems: 'center' }}>
           <DatePicker
             label="Select Month *"
             views={['month']}
@@ -91,7 +94,13 @@ const RunPayroll = () => {
       {month && (
         <Card sx={{ p: 2, mt: 2 }}>
           <Box
-            sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'space-between' }}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              justifyContent: 'space-between',
+              mb: 1,
+            }}
           >
             <Typography variant="h6">Employee Payable</Typography>
             <LoadingButton
@@ -105,13 +114,13 @@ const RunPayroll = () => {
               }}
               loading={generateAndLockPayrollLoading}
               size="small"
-              sx={{ px: '32px' }}
             >
               Submit
             </LoadingButton>
           </Box>
 
           <CustomizableTable
+            wrapperProps={{ sx: { height: '400px' } }}
             noDataText={<>No Data Found For Payroll</>}
             tableId="employee-salary-table"
             isLoading={getRunPayrollPreviewLoading}
@@ -121,6 +130,7 @@ const RunPayroll = () => {
                 label: 'Employee Name',
                 minWidth: '160px',
                 align: 'left',
+                sticky: true,
                 render(value, row) {
                   return (
                     <Box display="flex" alignItems="center" gap={1}>
@@ -180,6 +190,23 @@ const RunPayroll = () => {
                 minWidth: '150px',
                 align: 'left',
                 filterType: 'number',
+                render(value, row) {
+                  return (
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="caption" fontSize="13px">
+                        {value}
+                      </Typography>
+                      <IconButton
+                        onClick={() => {
+                          deductionDialog.onTrue();
+                        }}
+                        size="small"
+                      >
+                        <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
+                      </IconButton>
+                    </Box>
+                  );
+                },
               },
               {
                 id: 'netSalary',
@@ -215,6 +242,15 @@ const RunPayroll = () => {
           }}
         />
       </CustomDialog> */}
+      <CustomDialog
+        open={deductionDialog.value}
+        handleClose={() => deductionDialog.onFalse()}
+        title="Deduction History"
+      >
+        <Box p={2}>
+          <DeductionSection data={[]} />
+        </Box>
+      </CustomDialog>
     </Box>
   );
 };

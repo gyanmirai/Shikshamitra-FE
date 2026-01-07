@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { AccuralPolicyType } from 'src/enums/accuralPolicyType';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -44,10 +45,13 @@ export interface ILeavePolicy {
   deletionTime: string;
   title: string;
   leaveType: string;
+  leaveCount: number;
+  accuralPolicyType: AccuralPolicyType;
   maxLeavePerYear: number;
   paidType: string;
   carryForward: boolean;
   encashmentAllowed: boolean;
+  encashmentTiming?: 'next_payroll' | 'year_end';
   requiresApproval: boolean;
   description: string;
   isActive: boolean;
@@ -102,7 +106,7 @@ const LeaveType = () => {
       <CustomBreadcrumbs
         heading="Leave Type"
         links={[
-          { name: 'Hr', href: '/hr/dashboard/' },
+          { name: 'HR/Staff', href: '/hr/dashboard/' },
           { name: 'Attendance & Leave Management', href: '' },
           { name: 'Setting' },
           { name: 'Leave Type', href: '' },

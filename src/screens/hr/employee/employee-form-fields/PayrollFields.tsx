@@ -1,6 +1,5 @@
 import dayjs from 'dayjs';
 import { Add } from '@mui/icons-material';
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
@@ -20,7 +19,6 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
   const components = values[name] || [];
   const isDialogOpen = useBoolean();
   const isAddingTemp = useBoolean(false);
-  console.log('components----', components);
   const handleAdd = (selectedNames: string[]) => {
     formik.setFieldValue(name, selectedNames);
     // Reset temp add mode after adding
@@ -101,36 +99,21 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                 display="flex"
                 alignItems="center"
                 justifyContent="space-between"
-                mb={isFixed ? 0 : 2}
+                // mb={isFixed ? 0 : 2}
               >
                 <Box display="flex" alignItems="center" gap={1}>
-                  <Iconify
-                    icon={
-                      type === 'earning'
-                        ? 'solar:wallet-money-bold-duotone'
-                        : 'solar:minus-circle-bold-duotone'
-                    }
-                    color={type === 'earning' ? 'success.main' : 'error.main'}
-                    width={18}
-                  />
-                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                  <Typography
+                    variant="body1"
+                    fontWeight={600}
+                    sx={{
+                      borderLeft: (theme) =>
+                        `4px solid ${component.isTemp ? theme.palette.warning.main : type === 'earning' ? theme.palette.success.main : theme.palette.error.main}`,
+                      pl: 1,
+                    }}
+                  >
                     {component?.componentName || component?.name}
                   </Typography>
 
-                  {isFixed && (
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: 'text.secondary',
-                        bgcolor: 'background.neutral',
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                      }}
-                    >
-                      Fixed Value
-                    </Typography>
-                  )}
                   {isFixed && (
                     <Typography
                       variant="caption"
@@ -146,7 +129,6 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                     </Typography>
                   )}
 
-                  {component.isTemp && <Label color="warning">Temp</Label>}
                   {!isFixed && (
                     <ShakingTextField
                       error={
@@ -176,23 +158,31 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
                     </ShakingTextField>
                   )}
 
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: 'text.secondary',
-                      bgcolor: 'background.neutral',
-                      px: 1,
-                      py: 0.5,
-                      borderRadius: 1,
-                    }}
-                  >
-                    {dayjs(component.applicableMonth).format('MMM-YYYY')}
-                  </Typography>
+                  {!component.isTemp && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: 'text.secondary',
+                        bgcolor: 'background.neutral',
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      {dayjs(component.applicableMonth).format('MMM-YYYY')}
+                    </Typography>
+                  )}
                 </Box>
                 <IconButton size="small" color="error" onClick={() => handleRemove(index)}>
                   <Iconify icon="solar:trash-bin-trash-bold" />
                 </IconButton>
               </Box>
+              {component.isTemp && (
+                <Typography variant="caption" color="text.secondary">
+                  This component will be applicable only for{' '}
+                  {dayjs(component.applicableMonth).format('MMM-YYYY')} payroll
+                </Typography>
+              )}
             </Card>
           );
         })}
@@ -389,24 +379,7 @@ const RenderPayrollFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <ShakingTextField
-            error={formik.touched.basicSalary && Boolean(formik.errors.basicSalary)}
-          >
-            <TextField
-              size="small"
-              type="number"
-              fullWidth
-              disabled={!isEditable.value}
-              label="Basic Salary"
-              name="basicSalary"
-              value={values.basicSalary || ''}
-              onChange={handleChange}
-              error={formik.touched.basicSalary && Boolean(formik.errors.basicSalary)}
-              helperText={formik.touched.basicSalary && formik.errors.basicSalary}
-            />
-          </ShakingTextField>
-        </Grid>
+
         <Grid size={{ xs: 12, sm: 4 }}>
           <ShakingTextField error={formik.touched.punchId && Boolean(formik.errors.punchId)}>
             <TextField
@@ -422,37 +395,30 @@ const RenderPayrollFields = (props: any) => {
             />
           </ShakingTextField>
         </Grid>
+
         <Grid size={{ xs: 12, sm: 4 }}>
           <ShakingTextField
-            error={formik.touched.tdsPercentage && Boolean(formik.errors.tdsPercentage)}
+            error={
+              formik.touched.totalWorkingHourPerMonth &&
+              Boolean(formik.errors.totalWorkingHourPerMonth)
+            }
           >
             <TextField
               size="small"
               fullWidth
               disabled={!isEditable.value}
-              label="TDS Percentage"
-              name="tdsPercentage"
+              label="Total Working Hours (Month)"
+              name="totalWorkingHourPerMonth"
               type="number"
-              value={values.tdsPercentage || ''}
+              value={values.totalWorkingHourPerMonth || ''}
               onChange={handleChange}
-              error={formik.touched.tdsPercentage && Boolean(formik.errors.tdsPercentage)}
-              helperText={formik.touched.tdsPercentage && formik.errors.tdsPercentage}
-            />
-          </ShakingTextField>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <ShakingTextField error={formik.touched.tdsAmount && Boolean(formik.errors.tdsAmount)}>
-            <TextField
-              size="small"
-              fullWidth
-              disabled={!isEditable.value}
-              label="TDS Amount"
-              name="tdsAmount"
-              type="number"
-              value={values.tdsAmount || ''}
-              onChange={handleChange}
-              error={formik.touched.tdsAmount && Boolean(formik.errors.tdsAmount)}
-              helperText={formik.touched.tdsAmount && formik.errors.tdsAmount}
+              error={
+                formik.touched.totalWorkingHourPerMonth &&
+                Boolean(formik.errors.totalWorkingHourPerMonth)
+              }
+              helperText={
+                formik.touched.totalWorkingHourPerMonth && formik.errors.totalWorkingHourPerMonth
+              }
             />
           </ShakingTextField>
         </Grid>

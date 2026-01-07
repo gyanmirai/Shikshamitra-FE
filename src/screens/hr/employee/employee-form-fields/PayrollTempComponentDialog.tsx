@@ -39,18 +39,20 @@ export default function PayrollTempComponentDialog({
     },
     validationSchema: Yup.object({
       name: Yup.string().required('Name is required'),
-      amount: Yup.number().transform((value, originalValue) => {
-        if (typeof originalValue === 'string') {
-          const cleaned = originalValue.replace(/[₹,\s]/g, '');
-          // If cleaned value is not a valid number, return undefined
-          // eslint-disable-next-line no-restricted-globals
-          if (!cleaned || isNaN(Number(cleaned))) {
-            return undefined;
+      amount: Yup.number()
+        .required('Amount is required')
+        .transform((value, originalValue) => {
+          if (typeof originalValue === 'string') {
+            const cleaned = originalValue.replace(/[₹,\s]/g, '');
+            // If cleaned value is not a valid number, return undefined
+            // eslint-disable-next-line no-restricted-globals
+            if (!cleaned || isNaN(Number(cleaned))) {
+              return undefined;
+            }
+            return Number(cleaned);
           }
-          return Number(cleaned);
-        }
-        return value;
-      }),
+          return value;
+        }),
       applicableMonth: Yup.mixed().required('Applicable month is required'),
     }),
     onSubmit: (values, { resetForm }) => {
@@ -73,7 +75,7 @@ export default function PayrollTempComponentDialog({
       maxWidth="sm"
     >
       <DialogScrollContent>
-        <Stack spacing={2} sx={{ mt: 1 }}>
+        <Stack spacing={3} sx={{ mt: 1 }}>
           <TextField
             fullWidth
             size="small"
@@ -129,6 +131,7 @@ export default function PayrollTempComponentDialog({
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={handleClose}
           color="inherit"
+          variant="outlined"
         >
           Cancel
         </Button>
