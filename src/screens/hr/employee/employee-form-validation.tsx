@@ -330,6 +330,7 @@ export const validations = [
   workExperienceValidationSchema,
   payrollValidationSchema,
   reportingManagerValidationSchema,
+  Yup.object({}),
 ];
 export const infoValidations = [
   personalInformationValidationSchema,

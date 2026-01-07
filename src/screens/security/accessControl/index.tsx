@@ -374,7 +374,7 @@ const RenderNode = ({ node, checkedItem, toggleNode, handleNodeSelect, level = 0
 };
 
 // Component for managing board selection step
-const BoardScreenStep = ({
+export const BoardScreenStep = ({
   checkedItem,
   setCheckedItem,
   selectedData,
@@ -571,15 +571,15 @@ const BoardScreenStep = ({
 
   return (
     <>
-      <Typography variant="body2" fontWeight={600} color="text.secondary" mb={2}>
+      {/* <Typography variant="body2" fontWeight={600} color="text.secondary" mb={2}>
         Academic Year: {currentYear?.name}
-      </Typography>
+      </Typography> */}
 
       <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Box sx={{ flex: 1, minHeight: 0 }}>
+        <Box sx={{ flex: 1, minHeight: 0, height: '100%' }}>
           <Grid container spacing={3} sx={{ height: '100%' }}>
             {nodeData.map((boardNode: any) => (
-              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={boardNode.id} sx={{ height: '100%' }}>
+              <Grid size={{ xs: 12, md: 6, lg: 6 }} key={boardNode.id} sx={{ height: '100%' }}>
                 <Card
                   sx={{
                     height: '100%',
