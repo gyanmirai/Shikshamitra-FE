@@ -14,10 +14,16 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { ExpandMore } from '@mui/icons-material';
 import noCover from 'src/assets/icons/no-cover.png';
 import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useAddLibraryChargeMutation,
+  useUpdateLibraryChargeMutation,
+} from 'src/redux/library/charges-management/charges-get-api';
 import {
   Box,
   Grid,
@@ -264,7 +270,9 @@ function fillEditData(editData: any) {
 }
 
 const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, editData }) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentAcademicYearId } = useSelector(
+    (state: RootState) => state.globalState
+  );
   const [expandedMemberAccordion, setExpandedMemberAccordion] = useState(false);
   const [loadingMember, setLoadingMember] = useState(false);
   const [loadingBook, setLoadingBook] = useState(false);
@@ -276,10 +284,49 @@ const AssignChargesForm: React.FC<IAssignChargesFormProps> = ({ open, onClose, e
   const [debouncedMemberId, setDebouncedMemberId] = useState('');
   const [debouncedBookNumber, setDebouncedBookNumber] = useState('');
 
+  // Add library charge mutation hook
+  const { addLibraryCharge } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddLibraryChargeMutation,
+  });
+
+  // Update library charge mutation hook
+  const { updateLibraryCharge } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateLibraryChargeMutation,
+  });
+
   const formik = useFormik({
     initialValues: assignLibraryChargeInitialValues(fillEditData(editData)),
     validationSchema: assignLibraryChargeValidationSchema(currentYear),
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
+      // Construct payload matching API specification
+      const payload = {
+        memberId: values.memberId,
+        accessionNo: values.bookNumber,
+        chargeCategory: values.chargeCategory,
+        amount: Number(values.amount),
+        dueDate: values.dueDate,
+        reason: values.reason,
+      };
+
+      if (editData) {
+        // Update existing charge - PUT /library/charges/{chargeId}?academicYearId={academicYearId}
+        await updateLibraryCharge({
+          chargeId: editData.id,
+          data: payload,
+          academicYearId: currentAcademicYearId,
+        });
+        shikshaMitraToast.success({
+          message: 'Charge updated successfully',
+        });
+      } else {
+        // Create new charge - POST /library/charges/create
+        await addLibraryCharge(payload);
+        shikshaMitraToast.success({
+          message: 'Charge assigned successfully',
+        });
+      }
       onClose(null, true);
     },
   });

@@ -12,7 +12,10 @@ import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetLibraryTimingQuery } from 'src/redux/library/settingApi';
+import {
+  useGetLibraryTimingQuery,
+  useAddLibraryTimingMutation,
+} from 'src/redux/library/settingApi';
 import {
   Box,
   Table,
@@ -43,6 +46,12 @@ const LibraryTimingCreation = () => {
   const { data: fetchedTimingData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLibraryTimingQuery,
+  });
+
+  // Add library timing mutation hook
+  const { addLibraryTiming } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddLibraryTimingMutation,
   });
 
   // Initialize data when fetched
@@ -151,6 +160,19 @@ const LibraryTimingCreation = () => {
     setErrors(newErrors);
 
     if (hasError) return;
+
+    // Construct payload matching API specification
+    const payload = {
+      hours: timingData.map((row) => ({
+        day: row.day,
+        startTime: row.startTime || '',
+        endTime: row.endTime || '',
+        status: row.status,
+      })),
+    };
+
+    // Call POST API - POST /library/settings/hours
+    addLibraryTiming(payload);
 
     saveDialog.onFalse();
     shikshaMitraToast.success({

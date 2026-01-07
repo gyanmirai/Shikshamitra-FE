@@ -1,4 +1,6 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo } from 'react';
 import { Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -13,33 +15,9 @@ const ChargeTypeTable: React.FC<IChargeTypeTableProps> = ({
   onDelete,
   onEdit,
   open,
-}) => (
-  <CustomizableTable
-    tableId="charge-type-data-table"
-    noDataText={
-      <>
-        Charge Category Data Not Found{' '}
-        <Typography
-          component="span"
-          color="primary.main"
-          fontWeight={600}
-          sx={{
-            '&:hover': {
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            },
-          }}
-          onClick={() => {
-            onAddChargeType.onTrue();
-            setOpenDialog(true);
-            setEditData(null);
-          }}
-        >
-          Add Charge Category
-        </Typography>
-      </>
-    }
-    columns={[
+}) => {
+  const columns: IColumn[] = useMemo(
+    () => [
       {
         id: 'chargeType',
         label: 'Name',
@@ -103,9 +81,41 @@ const ChargeTypeTable: React.FC<IChargeTypeTableProps> = ({
           );
         },
       },
-    ]}
-    data={data || []}
-  />
-);
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  return (
+    <CustomizableTable
+      tableId="charge-type-data-table"
+      noDataText={
+        <>
+          Charge Category Data Not Found{' '}
+          <Typography
+            component="span"
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              },
+            }}
+            onClick={() => {
+              onAddChargeType.onTrue();
+              setOpenDialog(true);
+              setEditData(null);
+            }}
+          >
+            Add Charge Category
+          </Typography>
+        </>
+      }
+      columns={columns}
+      data={data || []}
+    />
+  );
+};
 
 export default ChargeTypeTable;

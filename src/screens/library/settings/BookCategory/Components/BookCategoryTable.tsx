@@ -1,4 +1,6 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo } from 'react';
 import { Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -13,33 +15,9 @@ const CategoryTable: React.FC<IBookCategoryTableProps> = ({
   onDelete,
   onEdit,
   open,
-}) => (
-  <CustomizableTable
-    tableId="category-data-table"
-    noDataText={
-      <>
-        Category Data Not Found{' '}
-        <Typography
-          component="span"
-          color="primary.main"
-          fontWeight={600}
-          sx={{
-            '&:hover': {
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            },
-          }}
-          onClick={() => {
-            onAddBookCategory.onTrue();
-            setOpenDialog(true);
-            setEditData(null);
-          }}
-        >
-          Add Category
-        </Typography>
-      </>
-    }
-    columns={[
+}) => {
+  const columns: IColumn[] = useMemo(
+    () => [
       {
         id: 'categoryName',
         label: 'Name',
@@ -80,9 +58,40 @@ const CategoryTable: React.FC<IBookCategoryTableProps> = ({
           );
         },
       },
-    ]}
-    data={data || []}
-  />
-);
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
+  return (
+    <CustomizableTable
+      tableId="category-data-table"
+      noDataText={
+        <>
+          Category Data Not Found{' '}
+          <Typography
+            component="span"
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              },
+            }}
+            onClick={() => {
+              onAddBookCategory.onTrue();
+              setOpenDialog(true);
+              setEditData(null);
+            }}
+          >
+            Add Category
+          </Typography>
+        </>
+      }
+      columns={columns}
+      data={data || []}
+    />
+  );
+};
 export default CategoryTable;

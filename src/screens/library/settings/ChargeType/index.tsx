@@ -3,19 +3,24 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetLibrarySettingsQuery } from 'src/redux/library/settingApi';
+import {
+  librarySettingsApi,
+  useGetLibrarySettingsQuery,
+  useDeleteChargeCategoryMutation,
+} from 'src/redux/library/settingApi';
 
 import ChargeTypeForm from './Components/ChargeTypeForm';
 import ChargeTypeTable from './Components/ChargeTypeTable';
@@ -28,6 +33,15 @@ const ChargeTypeCreation = () => {
     type: 'query',
     currentQueryAndMutation: useGetLibrarySettingsQuery,
   });
+
+  // Delete mutation hook
+  const [deleteChargeCategory, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteChargeCategoryMutation,
+  });
+
+  // Undo functionality hook
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // Dialog control states
   const deleteChargeTypeDialog = useBoolean();
@@ -148,21 +162,47 @@ const ChargeTypeCreation = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedChargeType,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    librarySettingsApi.util.updateQueryData(
+                      'getLibrarySettings',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft?.findIndex((b: any) => b.id === selectedChargeType?.id);
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    librarySettingsApi.util.updateQueryData(
+                      'getLibrarySettings',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selectedChargeType);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteChargeCategory({ categoryId: selectedChargeType?.id || '' }),
+              });
               deleteChargeTypeDialog.onFalse();
               setSelectedChargeType(null);
-              shikshaMitraToast.success({
-                message: `Charge Category ${selectedChargeType?.chargeType} deleted successfully`,
-              });
-              // handle delete API call here
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

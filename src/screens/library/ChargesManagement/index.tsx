@@ -3,19 +3,24 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetLibraryChargesQuery } from 'src/redux/library/charges-management/charges-get-api';
+import {
+  LibraryChargeApi,
+  useGetLibraryChargesQuery,
+  useDeleteLibraryChargeMutation,
+} from 'src/redux/library/charges-management/charges-get-api';
 
 import AssignChargesForm from './Components/AssignChargesForm';
 import LibraryChargesTable from './Components/ChargedManagementTable';
@@ -40,8 +45,18 @@ const LibraryChargesManagement = () => {
     currentQueryAndMutation: useGetLibraryChargesQuery,
   });
 
+  // Delete library charge mutation hook
+  const [deleteLibraryCharge, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteLibraryChargeMutation,
+  });
+
+  // Undo functionality hook
+  const { confirmWithUndo } = useConfirmWithUndo();
+
   // Redux confirm state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { currentAcademicYearId } = useSelector((state: RootState) => state.globalState);
   const dispatch = useDispatch();
 
   /**
@@ -209,26 +224,53 @@ const LibraryChargesManagement = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              // Handle delete action here
-              shikshaMitraToast.success({
-                message: (
-                  <>
-                    The <strong>{selectedRecord?.chargeCategory}</strong> Charge for{' '}
-                    <strong>{selectedRecord?.memberName}</strong> was deleted successfully
-                  </>
-                ),
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedRecord,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    LibraryChargeApi.util.updateQueryData(
+                      'getLibraryCharges',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft?.findIndex(
+                          (charge: any) => charge.id === selectedRecord?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    LibraryChargeApi.util.updateQueryData(
+                      'getLibraryCharges',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selectedRecord);
+                      }
+                    )
+                  ),
+                onCommit: () =>
+                  deleteLibraryCharge({
+                    chargeId: selectedRecord?.id || '',
+                    academicYearId: currentAcademicYearId,
+                  }),
               });
               deleteDialog.onFalse();
               setSelectedRecord(null);
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

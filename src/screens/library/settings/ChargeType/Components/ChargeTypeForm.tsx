@@ -7,9 +7,14 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Button, Switch, TextField, DialogActions, FormControlLabel } from '@mui/material';
+import {
+  useAddChargeCategoryMutation,
+  useUpdateChargeCategoryMutation,
+} from 'src/redux/library/settingApi';
 
 import { getChargeTypeInitialValues } from './ChargeInitialValues';
 import { chargeTypeValidationSchema } from './ChargeTypeValidationSchema';
@@ -17,15 +22,40 @@ import { chargeTypeValidationSchema } from './ChargeTypeValidationSchema';
 import type { IChargeTypeFormProps } from './type';
 
 const ChargeTypeForm: React.FC<IChargeTypeFormProps> = ({ open, onClose, editData }) => {
+  const { addChargeCategory } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddChargeCategoryMutation,
+  });
+
+  const { updateChargeCategory } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateChargeCategoryMutation,
+  });
+
   const formik = useFormik({
     initialValues: getChargeTypeInitialValues(editData),
     validationSchema: chargeTypeValidationSchema,
     onSubmit: (values) => {
+      // Construct payload matching API specification
+      const payload = {
+        chargeType: values.chargeType,
+        amount: values.amount ? Number(values.amount) : 0,
+        isFixed: values.isFixed,
+        description: values.description,
+      };
+
       if (editData) {
+        // Update existing charge category - PUT /library/settings/charge-categories/{categoryId}
+        updateChargeCategory({
+          categoryId: editData.id,
+          data: payload,
+        });
         shikshaMitraToast.success({
           message: `${values.chargeType} Charge Category updated successfully`,
         });
       } else {
+        // Create new charge category - POST /library/settings/charge-categories
+        addChargeCategory(payload);
         shikshaMitraToast.success({
           message: `${values.chargeType} Charge Category added successfully`,
         });

@@ -2,14 +2,17 @@
 
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import { useChangeStopStatusMutation } from 'src/redux/transport/vehicle-management/stop-management-api';
 
 import { StopStatusType } from './type';
 import { stopStatusChangeValidationSchema } from './StopManagementValidation';
@@ -36,10 +39,19 @@ const ChangeStopStatusForm: React.FC<ChangeStopStatusProps> = ({
   stopData,
   onStatusChange,
 }) => {
+  const [changeStopStatus, { isLoading: isChangeStopStatusLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useChangeStopStatusMutation,
+  });
   const formik = useFormik({
     initialValues: getStopStatusChangeInitialValues(stopData),
     validationSchema: stopStatusChangeValidationSchema,
     onSubmit: (values) => {
+      changeStopStatus({
+        stopId: stopData?.id,
+        status: values.status,
+        remarks: values.reason,
+      });
       shikshaMitraToast.success({
         message: `Stop status for "${stopData?.stopName}" changed to ${StopStatusType[values.status]} successfully`,
       });
@@ -124,15 +136,15 @@ const ChangeStopStatusForm: React.FC<ChangeStopStatusProps> = ({
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={<Iconify icon="mdi:content-save" width={16} height={16} />}
-          type="submit"
           variant="contained"
           size="small"
+          loading={isChangeStopStatusLoading}
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           Save
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

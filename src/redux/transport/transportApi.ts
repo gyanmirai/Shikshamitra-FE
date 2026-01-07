@@ -139,6 +139,7 @@ export const transportApi = createApi({
     'Member',
     'RouteStop',
     'FeeConfiguration',
+    'RouteManagement',
   ],
   endpoints: () => ({}),
 });

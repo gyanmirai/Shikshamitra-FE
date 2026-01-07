@@ -2,7 +2,7 @@ import React from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Card, List, Avatar, ListItem, Typography } from '@mui/material';
-import { useGetRouteStopsDataQuery } from 'src/redux/transport/vehicle-management/route-management-api';
+import { useGetRouteStopsQuery } from 'src/redux/transport/vehicle-management/route-management-api';
 
 type RouteStop = {
   id: string | number;
@@ -12,7 +12,11 @@ type RouteStop = {
 const RouteStopsCard = () => {
   const { data: mockStopsData } = useQueryAndMutation<{ data: RouteStop[] }>({
     type: 'query',
-    currentQueryAndMutation: useGetRouteStopsDataQuery,
+    currentQueryAndMutation: useGetRouteStopsQuery,
+    params: {
+      routeId: '',
+      academicMediumId: '',
+    },
   });
 
   return (

@@ -11,9 +11,11 @@ import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
+import { useGetWeeklyLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/weeklyLecturesApi';
 
 import CreateNoOfLecture from './createWeeklyLectures';
 
@@ -116,6 +118,19 @@ const WeeklyLectures = () => {
   const [selectedWeeklyLecture, setSelectedWeeklyLecture] = useState<ISubjectFormValues | null>(
     null
   );
+
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: weeklyLectureData,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isLoading,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetWeeklyLectureSlotsQuery,
+  });
+
   // Dialog state to control the visibility of create lecture number dialog
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   // Redux dispatch hook for dispatching actions

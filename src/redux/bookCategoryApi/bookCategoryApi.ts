@@ -25,12 +25,40 @@ export const bookCategoryApi = createApi({
   endpoints: (builder) => ({
     getBookCategories: builder.query({
       query: () => ({
-        url: '/bookCategoryData',
+        url: '/library/settings/book-categories',
         method: 'GET',
       }),
       providesTags: ['BookCategory'],
     }),
+    addBookCategory: builder.mutation({
+      query: (data) => ({
+        url: '/library/settings/book-categories',
+        method: 'POST',
+        data,
+      }),
+      invalidatesTags: ['BookCategory'],
+    }),
+    updateBookCategory: builder.mutation({
+      query: ({ categoryId, data }) => ({
+        url: `/library/settings/book-categories/${categoryId}`,
+        method: 'PUT',
+        data,
+      }),
+      invalidatesTags: ['BookCategory'],
+    }),
+    deleteBookCategory: builder.mutation({
+      query: ({ categoryId }) => ({
+        url: `/library/settings/book-categories/${categoryId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['BookCategory'],
+    }),
   }),
 });
 
-export const { useGetBookCategoriesQuery } = bookCategoryApi;
+export const {
+  useGetBookCategoriesQuery,
+  useAddBookCategoryMutation,
+  useUpdateBookCategoryMutation,
+  useDeleteBookCategoryMutation,
+} = bookCategoryApi;

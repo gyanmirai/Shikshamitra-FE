@@ -3,6 +3,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 import type { LibraryChargeStatusType } from 'src/enums/library_charges_type';
 
 export interface ILibraryChargeData {
+  id: any;
   memberId: string;
   memberName: string;
   rollNo?: string;
