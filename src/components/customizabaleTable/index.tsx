@@ -128,6 +128,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   });
 
   useEffect(() => {
+    console.log('columns=>', columns);
     setTableConfig((pre) => ({
       ...pre,
       columnVisibility: columns.reduce(

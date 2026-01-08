@@ -45,7 +45,7 @@ import { paymentHistoryApi } from './feeCollection/paymentHistory';
 import { bookIssuedApi } from './bookIssuedData/bookIssuedDataApi';
 import { bookCategoryApi } from './bookCategoryApi/bookCategoryApi';
 import { issueReturnFormApi } from './issueRetunApi/issueReturnApi';
-// import { holidayApi } from './communication/holiday/holidayDataApi';
+import { communicationApi } from './communication/communicationApi';
 import { budgetSubCategoryApi } from './budgetApi/budgetSubCategory';
 import { ProfessionalApi } from './ProfessionalTax/ProfessionalTaxApi';
 import { outstandingFeeApi } from './feeCollection/outstandingFeeData';
@@ -177,7 +177,7 @@ const reducers = combineReducers({
   [LibraryChargeApi.reducerPath]: LibraryChargeApi.reducer,
   [libraryChargeCategoryOptionsApi.reducerPath]: libraryChargeCategoryOptionsApi.reducer,
   [bookConditionOptionsApi.reducerPath]: bookConditionOptionsApi.reducer,
-  // [communicationApi.reducerPath]: communicationApi.reducer,
+  [communicationApi.reducerPath]: communicationApi.reducer,
   [roleOptionsApi.reducerPath]: roleOptionsApi.reducer,
   [transportApi.reducerPath]: transportApi.reducer,
   [libraryModuleApi.reducerPath]: libraryModuleApi.reducer,
@@ -279,6 +279,7 @@ const store = configureStore({
       bookConditionOptionsApi.middleware,
       EventHolidayApi.middleware,
       // communicationApi.middleware,
+      communicationApi.middleware,
       // meetingDetailsApi.middleware,
       // holidayApi.middleware,
       roleOptionsApi.middleware,

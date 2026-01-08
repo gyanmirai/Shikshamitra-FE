@@ -148,7 +148,7 @@ const HrEmployee = () => {
       {open ? (
         <Box display="flex" flexDirection="column" gap={2} height="100%">
           <CustomBreadcrumbs
-            heading="Employee List"
+            heading={`${editData?.id ? 'Edit' : 'Add'} Employee (${editData?.fullName})`}
             links={[
               { name: 'HR/Staff', href: '/hr/dashboard/' },
               { name: 'Employee', href: '/hr/employee/' },

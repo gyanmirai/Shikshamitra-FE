@@ -1,7 +1,6 @@
 'use client';
 
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import { IconButton } from '@mui/material';
 import Typography from '@mui/material/Typography';
@@ -27,41 +26,50 @@ export function CustomBreadcrumbs({
   tooltipProps,
   isBack = false,
   onBack = () => {},
+  showDivider = false, // NEW: optional divider
   ...other
-}: CustomBreadcrumbsProps) {
-  const lastLink = links[links.length - 1].name;
+}: CustomBreadcrumbsProps & { showDivider?: boolean }) {
+  const lastLink = links[links.length - 1]?.name;
 
   const renderHeading = (
-    <Typography
-      variant="h4"
-      sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, ...slotProps?.heading }}
-    >
+    <Stack direction="row" alignItems="center" spacing={1}>
       {isBack && (
-        <IconButton onClick={onBack}>
-          {' '}
-          <Iconify icon="ic:outline-arrow-back-ios-new" />{' '}
+        <IconButton size="small" onClick={onBack}>
+          <Iconify icon="ic:outline-arrow-back-ios-new" fontSize={18} />
         </IconButton>
       )}
-      {heading}{' '}
-      {description && (
-        <CustomTooltip
-          arrow
-          placement="right"
-          sx={{ textAlign: 'justify' }}
-          title={description}
-          {...tooltipProps}
-        >
-          <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-        </CustomTooltip>
-      )}
-    </Typography>
+
+      <Typography
+        variant="h4"
+        sx={{ display: 'flex', alignItems: 'center', gap: 0.75, ...slotProps?.heading }}
+      >
+        {heading}
+        {description && (
+          <CustomTooltip arrow placement="right" title={description} {...tooltipProps}>
+            <Iconify
+              icon="lucide:info"
+              sx={{ cursor: 'pointer' }}
+              fontSize={16}
+              color="info.main"
+            />
+          </CustomTooltip>
+        )}
+      </Typography>
+    </Stack>
   );
-  if (isBack) {
-    // @ts-ignore
-    slotProps.breadcrumbs.pl = '47px';
-  }
+
   const renderLinks = (
-    <Breadcrumbs separator={<Separator />} sx={slotProps?.breadcrumbs} {...other}>
+    <Breadcrumbs
+      separator="/"
+      sx={{
+        mt: 0.5,
+        fontSize: 12,
+        color: 'text.secondary',
+        '& .MuiBreadcrumbs-separator': { mx: 0.5 },
+        ...slotProps?.breadcrumbs,
+      }}
+      {...other}
+    >
       {links.map((link, index) => (
         <BreadcrumbsLink
           key={link.name ?? index}
@@ -73,41 +81,117 @@ export function CustomBreadcrumbs({
     </Breadcrumbs>
   );
 
-  const renderAction = <Box sx={{ flexShrink: 0, ...slotProps?.action }}> {action} </Box>;
-
-  const renderMoreLink = (
-    <Box component="ul">
-      {moreLink?.map((href) => (
-        <Box key={href} component="li" sx={{ display: 'flex' }}>
-          <Link href={href} variant="body2" target="_blank" rel="noopener" sx={slotProps?.moreLink}>
-            {href}
-          </Link>
-        </Box>
-      ))}
-    </Box>
-  );
-
   return (
-    <Stack
-      spacing={2}
+    <Box
       sx={{
-        pl: 0,
-        pb: 2,
-        borderBottom: (theme) => `1px solid ${theme.vars.palette.grey[400]}`,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        minHeight: 44, // slight bump for comfort (still compact)
+        px: 2,
+        borderRadius: 1.5,
+
+        // subtle modern surface
+        // backgroundColor: (theme) =>
+        //   theme.palette.mode === 'light' ? 'rgba(248, 250, 252, 0.9)' : 'rgba(20, 24, 28, 0.9)',
+        backdropFilter: 'blur(6px)',
+
+        overflow: 'hidden',
         ...sx,
       }}
     >
-      <Stack direction="row" alignItems="center">
-        <Box sx={{ flexGrow: 1 }}>
-          {heading && renderHeading}
-          {!!links.length && renderLinks}
-        </Box>
+      {/* LEFT: Back + Heading */}
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ flexShrink: 0 }}>
+        {isBack && (
+          <IconButton size="small" onClick={onBack}>
+            <Iconify icon="ic:outline-arrow-back-ios-new" fontSize={18} />
+          </IconButton>
+        )}
 
-        {action && renderAction}
+        <Typography variant="h5" noWrap fontWeight={600} letterSpacing="-0.01em">
+          {heading}
+        </Typography>
+
+        {description && (
+          <CustomTooltip arrow placement="right" title={description} {...tooltipProps}>
+            <Iconify
+              icon="lucide:info"
+              sx={{ cursor: 'pointer' }}
+              fontSize={16}
+              color="info.main"
+            />
+          </CustomTooltip>
+        )}
+
+        {/* MODERN separator (replace red bar) */}
+        <Box
+          sx={{
+            width: 12,
+            height: 1,
+            bgcolor: 'grey.400',
+            opacity: 0.6,
+            mx: 1,
+            flexShrink: 0,
+          }}
+        />
       </Stack>
 
-      {!!moreLink && renderMoreLink}
-    </Stack>
+      {/* CENTER: Breadcrumbs */}
+      {!!links.length && (
+        <Breadcrumbs
+          separator="/"
+          sx={{
+            fontSize: 12,
+            letterSpacing: '0.02em',
+            color: 'text.secondary',
+            whiteSpace: 'nowrap',
+            overflowX: 'auto',
+            flexGrow: 1,
+            '* ol': {
+              gap: 1,
+            },
+
+            '&::-webkit-scrollbar': { display: 'none' },
+            '& .MuiBreadcrumbs-separator': { mx: 0.5 },
+
+            // modern hover feel
+            '& a': {
+              transition: 'color 0.2s ease',
+              '&:hover': {
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            },
+          }}
+        >
+          {links.map((link, index) => (
+            <BreadcrumbsLink
+              key={link.name ?? index}
+              link={link}
+              activeLast={activeLast}
+              disabled={index === links.length - 1}
+            />
+          ))}
+        </Breadcrumbs>
+      )}
+
+      {/* RIGHT: Actions */}
+      {action && (
+        <Box
+          sx={{
+            flexShrink: 0,
+            ml: 1,
+            '& .MuiButton-root': {
+              // borderRadius: 999, // pill-style modern CTA
+              textTransform: 'none',
+              px: 2,
+            },
+          }}
+        >
+          {action}
+        </Box>
+      )}
+    </Box>
   );
 }
 

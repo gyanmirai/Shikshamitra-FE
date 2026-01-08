@@ -6,9 +6,11 @@ import type { LoadingButtonProps } from '@mui/lab';
 import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { styled } from '@mui/material/styles';
+import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
+import { styled } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { motion, AnimatePresence } from 'framer-motion';
 import { stepConnectorClasses } from '@mui/material/StepConnector';
 import { Box, Step, Button, Stepper, StepLabel, StepConnector } from '@mui/material';
 
@@ -71,11 +73,15 @@ interface CustomStepperWithFormikProps {
   showSaveButton?: boolean;
   saveButtonProps?: LoadingButtonProps;
   saveAndNextButtonProps?: LoadingButtonProps;
+  viewMode?: 'horizontal' | 'vertical'; // Add this line
 }
 
 const CustomStepLabel = styled(StepLabel)(({ theme, error, isdisabledlabel }: any) => {
   isdisabledlabel = isdisabledlabel === 'true';
   return {
+    '& .MuiStepLabel-root': {
+      padding: '0px !important',
+    },
     '&.Mui-disabled': { cursor: 'default !important' },
     '& .MuiStepLabel-iconContainer': {
       color: error ? theme.palette.error.main : theme.palette.primary.main,
@@ -133,6 +139,110 @@ function CustomStepIcon(props: StepIconProps) {
     </Box>
   );
 }
+
+const ModernStepIcon = (props: StepIconProps) => {
+  const { active, completed, icon } = props;
+
+  return (
+    <Box
+      sx={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 32,
+        height: 32,
+      }}
+    >
+      <AnimatePresence>
+        {active && (
+          <Box
+            component={motion.div}
+            layoutId="active-step-indicator"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            sx={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              bgcolor: (theme) => theme.palette.primary.main,
+              opacity: 0.15,
+              zIndex: 0,
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <Box
+        component={motion.div}
+        animate={{
+          scale: active ? 1.1 : 1,
+          backgroundColor: completed || active ? 'var(--palette-primary-main)' : 'transparent',
+          borderColor:
+            completed || active ? 'var(--palette-primary-main)' : 'var(--palette-grey-400)',
+        }}
+        sx={{
+          zIndex: 1,
+          width: 24,
+          height: 24,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '50%',
+          border: '2px solid',
+          bgcolor: (theme) => (completed || active ? theme.palette.primary.main : 'transparent'),
+          color: (theme) => (completed || active ? '#fff' : theme.palette.text.secondary),
+        }}
+      >
+        {completed ? (
+          <Iconify icon="eva:checkmark-fill" width={16} />
+        ) : (
+          <Box
+            component="span"
+            sx={{
+              fontSize: '0.75rem',
+              fontWeight: 700,
+            }}
+          >
+            {icon}
+          </Box>
+        )}
+      </Box>
+    </Box>
+  );
+};
+
+const ModernConnector = styled(StepConnector)(({ theme }) => ({
+  [`&.${stepConnectorClasses.alternativeLabel}`]: {
+    top: 10,
+    left: 'calc(-50% + 16px)',
+    right: 'calc(50% + 16px)',
+  },
+  [`&.${stepConnectorClasses.active}`]: {
+    [`& .${stepConnectorClasses.line}`]: {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+  [`&.${stepConnectorClasses.completed}`]: {
+    [`& .${stepConnectorClasses.line}`]: {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+  [`& .${stepConnectorClasses.line}`]: {
+    borderColor: theme.palette.grey[300],
+    borderTopWidth: 3,
+    borderRadius: 1,
+    transition: 'all 0.3s ease-in-out',
+  },
+  [`& .${stepConnectorClasses.lineVertical}`]: {
+    borderLeftWidth: 2,
+    marginLeft: 12, // Align with icon center
+    minHeight: 24,
+  },
+}));
 export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = ({
   scrollbarHeight = 'auto',
   activeStep,
@@ -150,6 +260,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   showSaveButton = true,
   saveButtonProps = {},
   saveAndNextButtonProps = {},
+  viewMode = 'horizontal', // Default to horizontal
 }) => {
   const [isBackClick, setIsBackClick] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -166,148 +277,204 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     validateOnChange,
   });
 
+  const isVertical = viewMode === 'vertical';
+
+  const renderStepper = () => (
+    <Stepper
+      activeStep={activeStep}
+      alternativeLabel={!isVertical}
+      orientation={isVertical ? 'vertical' : 'horizontal'}
+      connector={isVertical ? <ModernConnector /> : <QontoConnector />}
+      sx={
+        isVertical
+          ? {
+              minWidth: '280px', // Slightly wider for modern look
+              p: 3,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              borderRight: (theme) => `1px dashed ${theme.palette.divider}`,
+              height: '100%',
+              // '& .MuiStep-root': {
+              //   mb: 2, // Spacing between steps
+              // },
+              '& .MuiStepLabel-root': {
+                px: 1,
+                borderRadius: 1.5,
+                transition: 'background-color 0.2s',
+                '&:hover': {
+                  bgcolor: (theme) => theme.palette.action.hover,
+                },
+                '&.Mui-active': {
+                  bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
+                  '&:hover': {
+                    bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.12),
+                  },
+                },
+              },
+              '& .MuiStepLabel-label': {
+                typography: 'subtitle2',
+                ml: 1.5,
+                '&.Mui-active': {
+                  color: 'primary.main',
+                  fontWeight: 'bold',
+                },
+                '&.Mui-completed': {
+                  color: 'text.primary',
+                },
+              },
+            }
+          : {}
+      }
+    >
+      {/* <Scrollbar
+        sx={{
+          height: '100%',
+          overflowY: 'auto',
+        }}
+      > */}
+      {steps.map((label: string, index: number) => (
+        <Step
+          key={label}
+          id={`step-label-${index}`}
+          sx={{ cursor: 'pointer' }}
+          onClick={() => {
+            onStepClick?.(index, label, formik);
+          }}
+        >
+          <CustomStepLabel
+            error={errors[index]}
+            sx={{ '& span': { fontSize: '12px', mt: '2px !important' } }}
+            // @ts-ignore
+            isdisabledlabel={`${isDisabledLabel}`}
+            StepIconComponent={isVertical ? ModernStepIcon : CustomStepIcon}
+          >
+            {label}
+          </CustomStepLabel>
+        </Step>
+      ))}
+      {/* </Scrollbar> */}
+    </Stepper>
+  );
+
+  const renderFormContent = () => (
+    <Box
+      component="form"
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
+        position: 'relative',
+        height: '100%',
+      }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        formik.handleSubmit(e);
+      }}
+    >
+      <Scrollbar
+        sx={{
+          height: '100%',
+          overflowY: 'auto',
+          ...(scrollbarHeight !== 'auto' && scrollbarHeight ? { height: scrollbarHeight } : {}),
+          '& .simplebar-content': {
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100%',
+            height: '100%',
+          },
+        }}
+      >
+        {formik && renderItem({ formik, activeStep, isBackClick })}
+      </Scrollbar>
+
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          position: 'sticky',
+          bottom: 0,
+          backgroundColor: 'background.paper',
+          p: 2,
+          borderTop: isVertical ? '1px solid' : 'none',
+          borderColor: 'divider',
+          zIndex: 10,
+        }}
+      >
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={activeStep === 0}
+          onClick={() => {
+            setIsBackClick(true);
+            handleBack();
+          }}
+          startIcon={<Iconify icon="ic:round-arrow-back" width={20} />}
+        >
+          Back
+        </Button>
+        <Box display="flex" gap={2}>
+          {showSaveButton && (
+            <LoadingButton
+              variant="outlined"
+              size="small"
+              loading={isSaveLoading.value}
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              onClick={async () => {
+                const error = await formik.validateForm();
+                formik.setTouched({});
+
+                if (Object.keys(error).length <= 0) {
+                  onSave?.(
+                    activeStep === steps.length - 1,
+                    formik.values,
+                    formik,
+                    isSaveLoading.setValue
+                  );
+                } else {
+                  formik.handleSubmit();
+                }
+              }}
+              {...saveButtonProps}
+            >
+              Save
+            </LoadingButton>
+          )}
+          <LoadingButton
+            variant="contained"
+            type="submit"
+            size="small"
+            loading={isLoading}
+            startIcon={
+              activeStep === steps.length - 1 ? <Iconify icon={GlobalIcons.submit} /> : null
+            }
+            endIcon={
+              activeStep !== steps.length - 1 ? (
+                <Iconify icon="ic:round-arrow-forward" width={20} />
+              ) : null
+            }
+            {...saveAndNextButtonProps}
+          >
+            {activeStep === steps.length - 1 ? 'Submit' : 'Save & Next'}
+          </LoadingButton>
+        </Box>
+      </Box>
+    </Box>
+  );
+
   return (
     <Box
       sx={{
         width: '100%',
         height: '100%',
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: isVertical ? 'row' : 'column',
         position: 'relative',
-        p: 2,
       }}
     >
-      <Stepper activeStep={activeStep} alternativeLabel connector={<QontoConnector />}>
-        {steps.map((label: string, index: number) => (
-          <Step
-            key={label}
-            id={`step-label-${index}`}
-            sx={{ cursor: 'pointer' }}
-            onClick={() => {
-              onStepClick?.(index, label, formik);
-            }}
-          >
-            <CustomStepLabel
-              error={errors[index]}
-              sx={{ '& span': { fontSize: '12px', mt: '2px !important' } }}
-              // @ts-ignore
-              isdisabledlabel={`${isDisabledLabel}`}
-              StepIconComponent={CustomStepIcon}
-            >
-              {label}
-            </CustomStepLabel>
-          </Step>
-        ))}
-      </Stepper>
-
-      <Box
-        component="form"
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
-          minHeight: 0, // Important for proper flex behavior
-          position: 'relative',
-          height: '100%',
-        }}
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          formik.handleSubmit(e);
-        }}
-      >
-        <Scrollbar
-          sx={{
-            // Auto height behavior: when scrollbarHeight is 'auto' (default), we let flexbox
-            // consume all remaining space between the stepper header and the sticky action bar.
-            // If a specific height is provided, we honor it.
-            flex: 1,
-            minHeight: 0, // ensures the Scrollbar can shrink properly inside flex container
-            overflow: 'auto',
-            ...(scrollbarHeight !== 'auto' && scrollbarHeight ? { height: scrollbarHeight } : {}),
-            '& .simplebar-content': {
-              display: 'flex',
-              flexDirection: 'column',
-              minHeight: '100%',
-              height: '100%',
-            },
-          }}
-        >
-          {formik && renderItem({ formik, activeStep, isBackClick })}
-        </Scrollbar>
-
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            // mt: 2,
-            position: 'sticky',
-            bottom: 0,
-            backgroundColor: 'background.paper',
-            p: 2,
-            // borderTop: '1px solid',
-            // borderColor: 'divider',
-          }}
-        >
-          <Button
-            size="small"
-            variant="outlined"
-            disabled={activeStep === 0}
-            onClick={() => {
-              setIsBackClick(true);
-              handleBack();
-            }}
-            startIcon={<Iconify icon="ic:round-arrow-back" width={20} />}
-          >
-            Back
-          </Button>
-          <Box display="flex" gap={2}>
-            {showSaveButton && (
-              <LoadingButton
-                variant="outlined"
-                size="small"
-                loading={isSaveLoading.value}
-                startIcon={<Iconify icon={GlobalIcons.submit} />}
-                onClick={async () => {
-                  const error = await formik.validateForm();
-                  formik.setTouched({});
-
-                  if (Object.keys(error).length <= 0) {
-                    onSave?.(
-                      activeStep === steps.length - 1,
-                      formik.values,
-                      formik,
-                      isSaveLoading.setValue
-                    );
-                  } else {
-                    formik.handleSubmit();
-                  }
-                }}
-                {...saveButtonProps}
-              >
-                Save
-              </LoadingButton>
-            )}
-            <LoadingButton
-              variant="contained"
-              type="submit"
-              size="small"
-              loading={isLoading}
-              startIcon={
-                activeStep === steps.length - 1 ? <Iconify icon={GlobalIcons.submit} /> : null
-              }
-              endIcon={
-                activeStep !== steps.length - 1 ? (
-                  <Iconify icon="ic:round-arrow-forward" width={20} />
-                ) : null
-              }
-              {...saveAndNextButtonProps}
-            >
-              {activeStep === steps.length - 1 ? 'Submit' : 'Save & Next'}
-            </LoadingButton>
-          </Box>
-        </Box>
-      </Box>
+      {renderStepper()}
+      {renderFormContent()}
     </Box>
   );
 };

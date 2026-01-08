@@ -2,6 +2,7 @@
 
 import type { Standards } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 import type { EntranceExamStatusType } from 'src/enums/entranceExam-type';
 
 import dayjs from 'dayjs';
@@ -75,7 +76,6 @@ const AdmissionScreen = () => {
   const dialogForCollectFees = useBoolean();
   const divisionDialog = useBoolean();
   const statusDialog = useBoolean();
-  const openDetails = useBoolean();
   const followUpDialog = useBoolean();
   const [open, setOpen] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<any>([]);
@@ -149,6 +149,205 @@ const AdmissionScreen = () => {
     tabs.onChange(event, newValue);
   };
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'checkBox',
+        align: 'center',
+        minWidth: '60px',
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        label: '',
+        renderColumn() {
+          return (
+            <Checkbox
+              checked={tableData?.length && selectedStudents?.length === tableData?.length}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedStudents(tableData || []);
+                } else {
+                  setSelectedStudents([]);
+                }
+              }}
+            />
+          );
+        },
+        render(value, row) {
+          return (
+            <Checkbox
+              checked={selectedStudents.some((i: any) => i.id === row.id)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedStudents([...selectedStudents, row]);
+                } else {
+                  setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                }
+              }}
+            />
+          );
+        },
+      },
+      {
+        id: 'studentName',
+        label: 'Student Name',
+        minWidth: '160px',
+        align: 'left',
+        sticky: true,
+      },
+      // { id: 'educationBoard.name', label: 'Board', align: 'left' },
+      // { id: 'educationMedium.name', label: 'Medium', align: 'left' },
+      { id: 'standard', label: 'Class', align: 'left' },
+      { id: 'division', label: 'Division', align: 'left' },
+      {
+        id: 'dobValue',
+        label: 'Date of Birth',
+        minWidth: '130px',
+        align: 'left',
+        isFilter: true,
+        filterType: 'date',
+      },
+      { id: 'age', label: 'Age', align: 'left' },
+      { id: 'genderValue', label: 'Gender', align: 'left' },
+      { id: 'formNo', label: 'Form No', minWidth: '110px', align: 'left' },
+      {
+        id: 'inquiryNo',
+        label: 'Inquiry No.',
+        minWidth: '120px',
+        isFilter: true,
+        filterType: 'string',
+        align: 'left',
+      },
+
+      {
+        id: 'doiValue',
+        label: 'Date of Inquiry',
+        minWidth: '140px',
+        align: 'left',
+        isDateRangeFilter: true,
+        filterType: 'date',
+      },
+      {
+        id: 'remarks',
+        label: 'Remarks',
+        minWidth: '180px',
+        align: 'left',
+        render: (value) => value || '-',
+      },
+      {
+        id: 'address',
+        label: 'Address',
+        minWidth: '180px',
+        align: 'left',
+        render: (value, row) => {
+          const addressLines = value.split(', ');
+          const displayAddress = addressLines.slice(0, 3).join(', ');
+          const hasMoreLines = addressLines.length > 3;
+
+          return (
+            <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '13px',
+                  // width: 200,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  lineHeight: '1.2em',
+                  maxHeight: '2.4em',
+                }}
+              >
+                {displayAddress}
+                {hasMoreLines && '...'}
+              </Typography>
+            </CustomTooltip>
+          );
+        },
+      },
+      {
+        id: 'primaryContactNo',
+        label: 'Primary Contact No.',
+        minWidth: '185px',
+        align: 'left',
+      },
+      {
+        id: 'secondaryContactNo',
+        label: 'Secondary Contact No.',
+        minWidth: '220px',
+        align: 'left',
+      },
+      { id: 'previousSchool', label: 'Previous School', minWidth: '170px', align: 'left' },
+      {
+        id: 'inquiryPreference',
+        label: 'Inquiry Preference',
+        minWidth: '200px',
+        align: 'left',
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        isSort: false,
+        align: 'left',
+        isFilter: false,
+        sticky: true,
+        minWidth: 70,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showEditIcon
+              showViewIcon
+              handleEditClick={() => {
+                setEditData(row as IInquiryData);
+                setOpen(true);
+              }}
+              // handleViewClick={() => {
+              //   setEditData(row as IInquiryData);
+              //   openDetails.onTrue();
+              // }}
+              actions={({ popover }) => (
+                <MenuList>
+                  <MenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      divisionDialog.onTrue();
+                      setEditData(row as IInquiryData);
+                      popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
+                    Assign Division
+                  </MenuItem>
+                  {/* <MenuItem
+                        onClick={() => {
+                          dialogForCollectFees.onTrue();
+                        }}
+                      >
+                        <Iconify icon="tdesign:money" />
+                        Pay Fees
+                      </MenuItem> */}
+                  <MenuItem
+                    onClick={() => {
+                      followUpDialog.onTrue();
+                      setEditData(row as IInquiryData);
+                      popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="clarity:note-edit-line" color="default.main" sx={{ mr: 2 }} />
+                    Note
+                  </MenuItem>
+                </MenuList>
+              )}
+              placement="right-top"
+            />
+          );
+        },
+      },
+    ],
+    [divisionDialog, followUpDialog, selectedStudents, tableData]
+  );
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -208,205 +407,7 @@ const AdmissionScreen = () => {
         tableId="student-enrollment-admission-table"
         noDataText={<>No Students Admission Data Found</>}
         isLoading={isLoading}
-        columns={[
-          {
-            id: 'checkBox',
-            align: 'center',
-            minWidth: '60px',
-            isSort: false,
-            sticky: true,
-            isFilter: false,
-            label: '',
-            renderColumn() {
-              return (
-                <Checkbox
-                  checked={tableData?.length && selectedStudents?.length === tableData?.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents(tableData || []);
-                    } else {
-                      setSelectedStudents([]);
-                    }
-                  }}
-                />
-              );
-            },
-            render(value, row) {
-              return (
-                <Checkbox
-                  checked={selectedStudents.some((i: any) => i.id === row.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedStudents([...selectedStudents, row]);
-                    } else {
-                      setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
-                    }
-                  }}
-                />
-              );
-            },
-          },
-          {
-            id: 'studentName',
-            label: 'Student Name',
-            minWidth: '160px',
-            align: 'left',
-            sticky: true,
-          },
-          // { id: 'educationBoard.name', label: 'Board', align: 'left' },
-          // { id: 'educationMedium.name', label: 'Medium', align: 'left' },
-          { id: 'standard', label: 'Class', align: 'left' },
-          { id: 'division', label: 'Division', align: 'left' },
-          {
-            id: 'dobValue',
-            label: 'Date of Birth',
-            minWidth: '130px',
-            align: 'left',
-            isFilter: true,
-            filterType: 'date',
-          },
-          { id: 'age', label: 'Age', align: 'left' },
-          { id: 'genderValue', label: 'Gender', align: 'left' },
-          { id: 'formNo', label: 'Form No', minWidth: '110px', align: 'left' },
-          {
-            id: 'inquiryNo',
-            label: 'Inquiry No.',
-            minWidth: '120px',
-            isFilter: true,
-            filterType: 'string',
-            align: 'left',
-          },
-
-          {
-            id: 'doiValue',
-            label: 'Date of Inquiry',
-            minWidth: '140px',
-            align: 'left',
-            isDateRangeFilter: true,
-            filterType: 'date',
-          },
-          {
-            id: 'remarks',
-            label: 'Remarks',
-            minWidth: '180px',
-            align: 'left',
-            render: (value) => value || '-',
-          },
-          {
-            id: 'address',
-            label: 'Address',
-            minWidth: '180px',
-            align: 'left',
-            render: (value, row) => {
-              const addressLines = value.split(', ');
-              const displayAddress = addressLines.slice(0, 3).join(', ');
-              const hasMoreLines = addressLines.length > 3;
-
-              return (
-                <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: '13px',
-                      // width: 200,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      lineHeight: '1.2em',
-                      maxHeight: '2.4em',
-                    }}
-                  >
-                    {displayAddress}
-                    {hasMoreLines && '...'}
-                  </Typography>
-                </CustomTooltip>
-              );
-            },
-          },
-          {
-            id: 'primaryContactNo',
-            label: 'Primary Contact No.',
-            minWidth: '185px',
-            align: 'left',
-          },
-          {
-            id: 'secondaryContactNo',
-            label: 'Secondary Contact No.',
-            minWidth: '220px',
-            align: 'left',
-          },
-          { id: 'previousSchool', label: 'Previous School', minWidth: '170px', align: 'left' },
-          {
-            id: 'inquiryPreference',
-            label: 'Inquiry Preference',
-            minWidth: '200px',
-            align: 'left',
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            isSort: false,
-            align: 'left',
-            isFilter: false,
-            sticky: true,
-            minWidth: 70,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  showEditIcon
-                  showViewIcon
-                  handleEditClick={() => {
-                    setEditData(row as IInquiryData);
-                    setOpen(true);
-                  }}
-                  // handleViewClick={() => {
-                  //   setEditData(row as IInquiryData);
-                  //   openDetails.onTrue();
-                  // }}
-                  actions={({ popover }) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          divisionDialog.onTrue();
-                          setEditData(row as IInquiryData);
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="fluent-mdl2:assign" sx={{ height: '16px', width: '16px' }} />
-                        Assign Division
-                      </MenuItem>
-                      {/* <MenuItem
-                        onClick={() => {
-                          dialogForCollectFees.onTrue();
-                        }}
-                      >
-                        <Iconify icon="tdesign:money" />
-                        Pay Fees
-                      </MenuItem> */}
-                      <MenuItem
-                        onClick={() => {
-                          followUpDialog.onTrue();
-                          setEditData(row as IInquiryData);
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify
-                          icon="clarity:note-edit-line"
-                          color="default.main"
-                          sx={{ mr: 2 }}
-                        />
-                        Note
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                  placement="right-top"
-                />
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={tableData || []}
       />
 
