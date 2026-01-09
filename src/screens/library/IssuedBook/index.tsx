@@ -12,10 +12,8 @@ import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetIssueReturnFormsQuery } from 'src/redux/issueRetunApi/issueReturnApi';
 
 import BookIssueReturnTable from './Components/IssuedBookTable';
 import IssueBookModal from '../BookList/Components/BookView/BookIssueForm';
@@ -32,12 +30,6 @@ const IssueReturnBook = () => {
   const issueDialog = useBoolean();
   const returnDialog = useBoolean();
   const deleteDialog = useBoolean();
-
-  //   Fetch issued/returned books
-  const { data: issuedBooks } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetIssueReturnFormsQuery,
-  });
 
   // Redux confirm state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -122,7 +114,6 @@ const IssueReturnBook = () => {
 
       {/* Table */}
       <BookIssueReturnTable
-        data={issuedBooks}
         addDialog={issueDialog}
         onReturnBook={(data) => {
           returnDialog.onTrue();

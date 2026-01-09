@@ -92,7 +92,6 @@ const HrSetting = () => {
                 onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
                   dispatchFn(
                     documentApi.util.updateQueryData('getDocuments', null, (draft: any) => {
-                      console.log('draft----', draft);
                       const index = draft.items?.findIndex(
                         (b: any) => b.id === deleteInformation?.id
                       );

@@ -1,8 +1,11 @@
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
 import dayjs from 'dayjs';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -12,6 +15,10 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetAllMembersQuery } from 'src/redux/library/bookList/memberApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import {
+  useReserveBookMutation,
+  useGetReservationTableViewQuery,
+} from 'src/redux/library/bookList/bookList-api';
 import {
   Box,
   Grid,
@@ -42,6 +49,11 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
     currentQueryAndMutation: useGetAllMembersQuery,
   });
 
+  const [reserveBookMutation, { isLoading: reserveBookLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useReserveBookMutation,
+  });
+
   const formik = useFormik({
     initialValues: {
       memberId: '',
@@ -49,9 +61,14 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
       reserveDueDate: null,
     },
     validationSchema: getReserveBookSchema(currentYear),
-    onSubmit: (values) => {
-      shikshaMitraToast.success({ message: `Book reserved successfully for ${values.memberId}` });
-      onClose(null, true);
+    onSubmit: async (values) => {
+      try {
+        await reserveBookMutation({ bookId: editData?.bookId, body: values });
+        shikshaMitraToast.success({ message: `Book reserved successfully for ${values.memberId}` });
+        onClose(null, true);
+      } catch (error) {
+        shikshaMitraToast.error({ message: 'Failed to reserve book' });
+      }
     },
   });
 
@@ -78,8 +95,76 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
     }, 400);
   };
 
+  // Fetch all members
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: reservationData, isLoading: reservationLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetReservationTableViewQuery,
+    params: { bookId: editData?.id, academicYearId: currentYear?.id },
+  });
+
   const reservedList = memberData?.filter((member: any) =>
     editData?.reservationMemberIds.includes(member.memberId)
+  );
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'memberId',
+        label: 'Member ID',
+        align: 'left',
+        sticky: true,
+        minWidth: 120,
+      },
+      { id: 'name', label: 'Member Name', align: 'left', minWidth: 140 },
+      { id: 'role', label: 'Role', align: 'left' },
+      { id: 'class', label: 'Class', align: 'left' },
+      { id: 'division', label: 'Division', align: 'left' },
+      { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
+      { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 90 },
+      {
+        id: 'accessionNo',
+        label: 'Accession No.',
+        align: 'left',
+        minWidth: 140,
+      },
+      {
+        id: 'reservedBook',
+        label: 'Reserved Book',
+        minWidth: 140,
+        align: 'left',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {typeof value === 'object' ? value?.title || '-' : value || '-'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'requestedDate',
+        label: 'Requested Date',
+        minWidth: 150,
+        align: 'left',
+        filterType: 'date',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {dayjs(value).format('DD-MM-YYYY')}
+          </Typography>
+        ),
+      },
+      {
+        id: 'reserveDueDate',
+        label: 'Reserve Due Date',
+        align: 'left',
+        minWidth: 160,
+        filterType: 'date',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {dayjs(value).format('DD-MM-YYYY')}
+          </Typography>
+        ),
+      },
+    ],
+    []
   );
 
   return (
@@ -233,62 +318,7 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                   tableId="reserved-members-table"
                   noDataText="No Reserved Members Found"
                   isLoading={memberLoading}
-                  columns={[
-                    {
-                      id: 'memberId',
-                      label: 'Member ID',
-                      align: 'left',
-                      sticky: true,
-                      minWidth: 120,
-                    },
-                    { id: 'name', label: 'Member Name', align: 'left', minWidth: 140 },
-                    { id: 'role', label: 'Role', align: 'left' },
-                    { id: 'class', label: 'Class', align: 'left' },
-                    { id: 'division', label: 'Division', align: 'left' },
-                    { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },
-                    { id: 'grNo', label: 'GR No.', align: 'left', minWidth: 90 },
-                    {
-                      id: 'accessionNo',
-                      label: 'Accession No.',
-                      align: 'left',
-                      minWidth: 140,
-                    },
-                    {
-                      id: 'reservedBook',
-                      label: 'Reserved Book',
-                      minWidth: 140,
-                      align: 'left',
-                      render: (value) => (
-                        <Typography variant="caption" fontSize="13px">
-                          {typeof value === 'object' ? value?.title || '-' : value || '-'}
-                        </Typography>
-                      ),
-                    },
-                    {
-                      id: 'requestedDate',
-                      label: 'Requested Date',
-                      minWidth: 150,
-                      align: 'left',
-                      filterType: 'date',
-                      render: (value) => (
-                        <Typography variant="caption" fontSize="13px">
-                          {dayjs(value).format('DD-MM-YYYY')}
-                        </Typography>
-                      ),
-                    },
-                    {
-                      id: 'reserveDueDate',
-                      label: 'Reserve Due Date',
-                      align: 'left',
-                      minWidth: 160,
-                      filterType: 'date',
-                      render: (value) => (
-                        <Typography variant="caption" fontSize="13px">
-                          {dayjs(value).format('DD-MM-YYYY')}
-                        </Typography>
-                      ),
-                    },
-                  ]}
+                  columns={columns}
                   data={reservedList || []}
                 />
               </>
@@ -309,15 +339,16 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           variant="contained"
           size="small"
+          loading={reserveBookLoading}
           onClick={() => formik.handleSubmit()}
           startIcon={<Iconify icon={GlobalIcons.submit} width={16} height={10} />}
           sx={{ minWidth: 120, px: 3 }}
         >
           Submit
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

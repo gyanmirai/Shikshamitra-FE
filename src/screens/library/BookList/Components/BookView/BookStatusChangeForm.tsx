@@ -1,15 +1,20 @@
+import type { RootState } from 'src/redux/store';
 import type { IBookCopyWithBook } from 'src/screens/library/BookManagement/Components/type';
 
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { LibraryBookStatus } from 'src/enums/library-book-status';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Grid, Button, TextField, Autocomplete, DialogActions } from '@mui/material';
+import { useUpdateBookCopyStatusMutation } from 'src/redux/library/bookList/bookList-api';
 
 interface ChangeStatusFormProps {
   editData: IBookCopyWithBook | null;
@@ -22,6 +27,11 @@ const allowedStatuses = [
 ];
 
 const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClose }) => {
+  const [updateBookCopyStatus, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateBookCopyStatusMutation,
+  });
+  const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
   if (!editData) return null; // handle null data
 
   const options = allowedStatuses.map((status) => ({
@@ -42,6 +52,12 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
       remarks: '',
     },
     onSubmit: async (values) => {
+      await updateBookCopyStatus({
+        bookId: editData.bookId,
+        accessionNo: editData.accessionNo,
+        academicYearId: currentAcademicYear.id,
+        body: values,
+      });
       shikshaMitraToast.success({
         message: `Status has been updated successfully.`,
       });
@@ -107,16 +123,17 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={<Iconify icon={GlobalIcons.submit} width={16} height={16} />}
           onClick={(e: any) => {
             formik.handleSubmit(e);
           }}
+          loading={isUpdateLoading}
           size="small"
           variant="contained"
         >
           Submit
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

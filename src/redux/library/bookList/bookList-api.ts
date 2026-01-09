@@ -3,14 +3,146 @@ import { libraryModuleApi } from '../libraryModuleApi';
 export const booksApi = libraryModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getAllBooks: builder.query({
-      query: () => ({
-        url: '/books', // endpoint for fetching book list
+      query: (params) => ({
+        url: '/library/books',
         method: 'GET',
+        params,
       }),
       providesTags: ['Books'],
+    }),
+
+    addBook: builder.mutation({
+      query: ({ academicYearId, body }) => ({
+        url: '/library/books',
+        method: 'POST',
+        params: { academicYearId },
+        data: body,
+      }),
+      invalidatesTags: ['Books'],
+    }),
+
+    updateBookCopyStatus: builder.mutation({
+      query: ({ bookId, accessionNo, academicYearId, body }) => ({
+        url: `/library/books/${bookId}/copies/${accessionNo}/status`,
+        method: 'PUT',
+        params: { academicYearId },
+        data: body,
+      }),
+      invalidatesTags: ['Copies'],
+    }),
+
+    getBookById: builder.query({
+      query: ({ bookId, academicYearId }) => ({
+        url: `/library/books/${bookId}`,
+        method: 'GET',
+        params: { academicYearId },
+      }),
+      providesTags: (result, error, { bookId }) => [{ type: 'Books', id: bookId }],
+    }),
+
+    updateBook: builder.mutation({
+      query: ({ bookId, academicYearId, body }) => ({
+        url: `/library/books/${bookId}`,
+        method: 'PUT',
+        params: { academicYearId },
+        data: body,
+      }),
+      invalidatesTags: (result, error, { bookId }) => ['Books', { type: 'Books', id: bookId }],
+    }),
+
+    deleteBook: builder.mutation({
+      query: ({ bookId, academicYearId }) => ({
+        url: `/library/books/${bookId}`,
+        method: 'DELETE',
+        params: { academicYearId },
+      }),
+      invalidatesTags: ['Books'],
+    }),
+
+    getReservationTableView: builder.query({
+      query: ({ bookId, ...params }) => ({
+        url: `/library/books/${bookId}/table-view`,
+        method: 'GET',
+        params,
+      }),
+    }),
+
+    reserveBook: builder.mutation({
+      query: ({ bookId, body }) => ({
+        url: `/library/books/${bookId}/reservations`,
+        method: 'POST',
+        data: body,
+      }),
+    }),
+
+    getBookReservations: builder.query({
+      query: ({ bookId, ...params }) => ({
+        url: `/library/books/${bookId}/reservations`,
+        method: 'GET',
+        params,
+      }),
+    }),
+
+    getBookCopies: builder.query({
+      query: ({ bookId, ...params }) => ({
+        url: `/library/books/${bookId}/copies`,
+        method: 'GET',
+        params,
+      }),
+      providesTags: (result, error, { bookId }) => [{ type: 'Copies', id: bookId }],
+    }),
+
+    updateBookCopies: builder.mutation({
+      query: ({ bookId, academicYearId, body }) => ({
+        url: `/library/books/${bookId}/copies`,
+        method: 'PUT',
+        params: { academicYearId },
+        data: body,
+      }),
+      invalidatesTags: (result, error, { bookId }) => [{ type: 'Copies', id: bookId }],
+    }),
+
+    viewBookDetails: builder.query({
+      query: ({ bookId, academicYearId }) => ({
+        url: `/library/books/${bookId}/view`,
+        method: 'GET',
+        params: { academicYearId },
+      }),
+    }),
+
+    getBookCopyMembers: builder.query({
+      query: ({ bookId, accessionNo, ...params }) => ({
+        url: `/library/books/${bookId}/copies/${accessionNo}/members`,
+        method: 'GET',
+        params,
+      }),
+    }),
+    updateBookStatus: builder.mutation({
+      query: ({ bookId, academicYearId, body }) => ({
+        url: `/library/books/${bookId}/status`,
+        method: 'PUT',
+        params: { academicYearId },
+        data: body,
+      }),
+      invalidatesTags: (result, error, { bookId }) => ['Books', { type: 'Books', id: bookId }],
     }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetAllBooksQuery } = booksApi;
+export const {
+  useGetAllBooksQuery,
+  useAddBookMutation,
+  useUpdateBookCopyStatusMutation,
+  useGetBookByIdQuery,
+  useUpdateBookMutation,
+  useDeleteBookMutation,
+  useGetReservationTableViewQuery,
+  useReserveBookMutation,
+  useGetBookReservationsQuery,
+  useGetBookCopiesQuery,
+  useUpdateBookCopiesMutation,
+  useViewBookDetailsQuery,
+  useGetBookCopyMembersQuery,
+  useUpdateBookStatusMutation,
+} = booksApi;

@@ -1,3 +1,6 @@
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import { Scrollbar } from 'src/components/scrollbar';
 import { GridExpandMoreIcon } from '@mui/x-data-grid';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
@@ -50,24 +53,32 @@ const LibrarySearch: React.FC<LibrarySearchProps> = ({
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  const [visibleCount, setVisibleCount] = useState(10);
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { currentAcademicYear, currentMedium } = useSelector(
+    (state: RootState) => state.globalState
+  );
   // const {
   //   data: books,
   //   isLoading,
-  //   error,
+  //   isFetching,
   // } = useQueryAndMutation({
   //   type: 'query',
-  //   currentQueryAndMutation: useGetAllBooksQuery, // no params needed
+  //   currentQueryAndMutation: useGetAllBooksQuery,
+  //   params: {
+  //     academicYearId: (currentAcademicYear as AcademicYear)?.id,
+  //     search: debouncedSearch,
+  //   },
   // });
-  // const { data: books, isLoading, error } = useGetAllBooksQuery(undefined);
+  const [visibleCount, setVisibleCount] = useState(10);
+  const loaderRef = useRef<HTMLDivElement | null>(null);
+
   const [books] = useState(libraryDummyData.books);
-  //
+
   const filteredBooks = useMemo(() => {
     if (!debouncedSearch) return books;
     const term = debouncedSearch.toLowerCase();
-    return books.filter(
-      (book) =>
+    return books?.filter(
+      (book: any) =>
         book.title.toLowerCase().includes(term) ||
         book.author.toLowerCase().includes(term) ||
         book.isbn.includes(term)

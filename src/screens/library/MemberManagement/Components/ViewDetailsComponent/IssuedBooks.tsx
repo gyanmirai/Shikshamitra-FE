@@ -1,8 +1,12 @@
-import React from 'react';
+import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
 import { Box } from '@mui/material';
+import React, { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetIssuedBooksQuery } from 'src/redux/memberManagement/memberManagementApi';
+import { useGetMemberBorrowedBooksQuery } from 'src/redux/library/libraryMembers/memberManagementApi';
 
 import type { IMember } from '../type';
 
@@ -11,10 +15,24 @@ interface IssuedBooksProps {
 }
 
 const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
-  const { data: mockIssuedBooks, isLoading: mockIssuedLoading } = useQueryAndMutation({
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: membersData, isLoading: mockIssuedLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetIssuedBooksQuery,
+    currentQueryAndMutation: useGetMemberBorrowedBooksQuery,
+    params: { memberId: member?.id, academicYearId: currentYear?.id },
   });
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      { id: 'bookTitle', label: 'Book Title', align: 'left' },
+      { id: 'bookId', label: 'Book Category', align: 'left' },
+      { id: 'accessionNo', label: 'Accession No.', align: 'left' },
+      { id: 'issueDate', label: 'Issued on', align: 'left' },
+      { id: 'dueDate', label: 'Due on', align: 'left' },
+    ],
+    []
+  );
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -22,31 +40,8 @@ const IssuedBooks: React.FC<IssuedBooksProps> = ({ member }) => {
         tableId="issued-books-table"
         noDataText="No Borrowed Books Data Found"
         isLoading={mockIssuedLoading}
-        columns={[
-          { id: 'bookTitle', label: 'Book Title', align: 'left' },
-          { id: 'bookId', label: 'Book Category', align: 'left' },
-          { id: 'accessionNo', label: 'Accession No.', align: 'left' },
-          { id: 'issueDate', label: 'Issued on', align: 'left' },
-          { id: 'dueDate', label: 'Due on', align: 'left' },
-          // {
-          //   id: 'status',
-          //   label: 'Status',
-          //   align: 'left',
-          //   render(value) {
-          //     // Find the status type based on the label from enum options
-          //     const statusType = BookIssueStatusTypeOptions.find(
-          //       (option) => option.label === value
-          //     )?.value;
-
-          //     // Get corresponding color from enum colors mapping
-          //     const color =
-          //       statusType !== undefined ? BookIssueStatusTypeColors[statusType] : 'default';
-
-          //     return <Label color={color as any}>{value}</Label>;
-          //   },
-          // },
-        ]}
-        data={mockIssuedBooks || []}
+        columns={columns}
+        data={[]}
       />
     </Box>
   );

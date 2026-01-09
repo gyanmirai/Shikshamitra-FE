@@ -9,10 +9,8 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetMembersQuery } from 'src/redux/memberManagement/memberManagementApi';
 
 import MemberForm from './Components/MemberManageForm';
 import MemberManagementTable from './Components/MemberManagementTable';
@@ -21,10 +19,6 @@ import MemberDetailedViewComponent from './Components/MemberDetailedViewComponen
 const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control member form visibility
   const [open, setOpen] = useState(false);
-  const { data: memberData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetMembersQuery,
-  });
 
   // State to store currently selected member for editing
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
@@ -103,7 +97,6 @@ const MemberManagement = ({ showBreadCumb = true }: { showBreadCumb?: boolean })
         ))}
 
       <MemberManagementTable
-        data={memberData}
         onView={(data) => {
           viewDialog.onTrue();
           setSelectedMember(data);
