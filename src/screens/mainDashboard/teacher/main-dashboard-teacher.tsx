@@ -3,15 +3,14 @@
 import React, { useState } from 'react';
 import { CONFIG } from 'src/config-global';
 import { SvgColor } from 'src/components/svg-color';
-import { formatCurrency } from 'src/utils/cureencyFormater';
-import CustomizableTable from 'src/components/customizabaleTable';
 import { AppWelcome } from 'src/sections/overview/app/app-welcome';
+import { Box, Grid, Card, Button, ButtonGroup } from '@mui/material';
 import SeoIllustration from 'src/assets/illustrations/seo-illustration';
-import { Box, Grid, Card, Alert, Button, Typography, ButtonGroup } from '@mui/material';
 
 import PerformerCard from './component/performer-card';
 import { StudentPerformanceChart } from './component/student-performance';
 import UpcomingExamCard from '../student/component/exam-card-for-student';
+import TeacherPayrollOverview from './component/teacher-payroll-overview';
 import UpcomingAssignmentCard from '../student/component/upcoming-assignment-card';
 import { PrincipalDashboardCard } from '../principal/component/principal-dashboard-card';
 import WhatsNewInMonthComponent from '../principal/component/whats-new-in-month-component';
@@ -225,8 +224,8 @@ const MainDashboardTeacher = () => {
       </Grid>
 
       {/* What’s New in Month, Performance Chart, and Payroll Overview */}
-      <Grid container spacing={3} sx={{ mt: 3, px: 3 }}>
-        <Grid size={{ lg: 12 }}>
+      <Grid container spacing={3} sx={{ mt: 3, px: 3, width: '100%' }}>
+        <Grid size={{ xs: 12 }}>
           <Card sx={{ boxShadow: 'var(--shadows-2)', height: '460px' }}>
             <StudentPerformanceChart />
           </Card>
@@ -234,138 +233,28 @@ const MainDashboardTeacher = () => {
       </Grid>
 
       {/* Student Assignments Table */}
-      <Grid container spacing={3} sx={{ mt: 3, px: 3 }}>
+      <Grid container spacing={3} sx={{ mt: 3, px: 3, width: '100%' }}>
         <Grid size={{ xs: 12, lg: 4 }}>
-          <Card sx={{ p: 2, height: '90%' }}>
+          <Card sx={{ p: 2, height: '100%' }}>
             <WhatsNewInMonthComponent birthdays={[]} events={[]} timeOffRequests={[]} />
           </Card>
         </Grid>
 
         <Grid size={{ xs: 12, lg: 8 }}>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant="h6">Earning Section</Typography>
-              <CustomizableTable
-                isSearch={false}
-                isFilter={false}
-                isPagination={false}
-                isShowedDense={false}
-                tableId="earning-table"
-                columns={[
-                  {
-                    id: 'employeeType',
-                    label: 'Employee Type',
-                    isFilter: false,
-                    render(value, row) {
-                      return (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontSize: '16px',
-                            fontWeight: value === 'Total Amount' ? 'bold' : 'normal',
-                          }}
-                        >
-                          {value}
-                        </Typography>
-                      );
-                    },
-                  },
-                  {
-                    id: 'amount',
-                    label: 'Amount',
-                    isFilter: false,
-                    render(value, row) {
-                      return (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontSize: '16px',
-                            fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal',
-                          }}
-                        >
-                          {formatCurrency(value)}
-                        </Typography>
-                      );
-                    },
-                  },
-                ]}
-                data={[
-                  { employeeType: 'Teaching Allowance', amount: 5000 },
-                  { employeeType: 'Transport Allowance', amount: 2000 },
-                  { employeeType: 'Academic Performance Bonus', amount: 3000 },
-                  { employeeType: 'Extra-curricular Activities', amount: 2000 },
-                  { employeeType: 'Total Amount', amount: 12000 },
-                ]}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant="h6">Deduction Section</Typography>
-              <CustomizableTable
-                isSearch={false}
-                isFilter={false}
-                isPagination={false}
-                isShowedDense={false}
-                tableId="deduction-table"
-                columns={[
-                  {
-                    id: 'deductionType',
-                    label: 'Deduction Type',
-                    isFilter: false,
-                    render(value, row) {
-                      return (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontSize: '16px',
-                            fontWeight: value === 'Total Amount' ? 'bold' : 'normal',
-                          }}
-                        >
-                          {value}
-                        </Typography>
-                      );
-                    },
-                  },
-                  {
-                    id: 'amount',
-                    label: 'Amount',
-                    isFilter: false,
-                    render(value, row) {
-                      return (
-                        <Typography
-                          variant="caption"
-                          color="error"
-                          sx={{
-                            fontSize: '16px',
-                            fontWeight: row.deductionType === 'Total Amount' ? 'bold' : 'normal',
-                          }}
-                        >
-                          {formatCurrency(value)}
-                        </Typography>
-                      );
-                    },
-                  },
-                ]}
-                data={[
-                  { deductionType: 'Income Tax', amount: 5000, totalDeduction: 5000 },
-                  { deductionType: 'Provident Fund', amount: 3000, totalDeduction: 3000 },
-                  { deductionType: 'Professional Tax', amount: 1000, totalDeduction: 1000 },
-                  { deductionType: 'Insurance Premium', amount: 1000, totalDeduction: 1000 },
-                  { deductionType: 'Total Amount', amount: 12000 },
-                ]}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }} display="flex" justifyContent="flex-end" alignItems="flex-end">
-              <Alert
-                variant="outlined"
-                icon={false}
-                sx={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'inherit' }}
-              >
-                Net Salary : {formatCurrency(24000)}
-              </Alert>
-            </Grid>
-          </Grid>
+          <TeacherPayrollOverview
+            earnings={[
+              { label: 'Teaching Allowance', amount: 5000 },
+              { label: 'Transport Allowance', amount: 2000 },
+              { label: 'Academic Performance Bonus', amount: 3000 },
+              { label: 'Extra-curricular Activities', amount: 2000 },
+            ]}
+            deductions={[
+              { label: 'Income Tax', amount: 5000 },
+              { label: 'Provident Fund', amount: 3000 },
+              { label: 'Professional Tax', amount: 1000 },
+              { label: 'Insurance Premium', amount: 1000 },
+            ]}
+          />
         </Grid>
       </Grid>
 

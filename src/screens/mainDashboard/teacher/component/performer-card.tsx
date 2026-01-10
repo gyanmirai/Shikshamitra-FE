@@ -29,31 +29,81 @@ const PerformerCard: React.FC<PerformerCardProps> = ({ title, subheader, list, o
     selectedSubject === 'all' ? list : list.filter((student) => student.value === selectedSubject);
 
   return (
-    <Card sx={{ p: 2, height: '380px' }}>
+    <Card sx={{ p: 3, height: '100%', minHeight: 380, display: 'flex', flexDirection: 'column' }}>
       {/* Title & Dropdown */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box flex={10}>
-          <CardHeader title={title} subheader={subheader} sx={{ p: 0 }} />
-        </Box>
+      <Box
+        sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}
+      >
+        <CardHeader
+          title={title}
+          subheader={subheader}
+          titleTypographyProps={{ variant: 'h6', fontWeight: 600 }}
+          subheaderTypographyProps={{ variant: 'body2', color: 'text.secondary', mt: 0.5 }}
+          sx={{ p: 0, flex: 1 }}
+        />
 
-        <Box flex={2}>
+        <Box sx={{ minWidth: 140 }}>
           <CustomSelect
             onChange={handleSubjectChange}
             options={options}
             value={selectedSubject}
             size="small"
-            sx={{ width: '150px' }}
+            formControlProps={{
+              size: 'small',
+              sx: { '& .MuiInputBase-root': { fontSize: '0.8125rem' } },
+            }}
           />
         </Box>
       </Box>
 
       {/* Student List */}
-      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
         {orderBy(filteredList, ['totalMarks'], title === 'Top Performers' ? ['desc'] : ['asc']).map(
-          (student) => (
-            <Box key={student.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar src={student.avatarUrl} />
-              <Typography>{student.name}</Typography>
+          (student, index) => (
+            <Box
+              key={student.id}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                p: 1,
+                borderRadius: 1.5,
+                transition: 'background-color 0.2s',
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              <Avatar
+                src={student.avatarUrl}
+                alt={student.name}
+                sx={{ width: 40, height: 40, boxShadow: 1 }}
+              />
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  {student.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                  Marks:
+                  <Typography
+                    component="span"
+                    variant="body2"
+                    sx={{ fontWeight: 700, ml: 0.5, color: 'text.primary' }}
+                  >
+                    {student.totalMarks}
+                  </Typography>
+                </Typography>
+              </Box>
+
+              {/* Optional: Add a rank or index indicator if "Top" */}
+              <Typography
+                variant="h6"
+                sx={{
+                  color: 'text.disabled',
+                  fontWeight: 700,
+                  opacity: 0.5,
+                }}
+              >
+                #{index + 1}
+              </Typography>
             </Box>
           )
         )}

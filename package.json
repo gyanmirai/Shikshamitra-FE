@@ -88,7 +88,7 @@
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "formik": "^2.4.6",
-    "framer-motion": "^12.23.12",
+    "framer-motion": "^12.24.10",
     "iron-session": "^8.0.4",
     "js-cookie": "^3.0.5",
     "jspdf": "^3.0.2",

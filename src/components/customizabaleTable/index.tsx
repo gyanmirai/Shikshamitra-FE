@@ -526,11 +526,13 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       >
         <Card
           sx={{
-            boxShadow: 'var(--shadows-4)',
+            boxShadow: theme.customShadows?.z20 || '0px 4px 20px rgba(0, 0, 0, 0.05)',
+            borderRadius: 2,
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
             minHeight: 0,
+            border: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
           }}
           ref={setTableRef}
         >
@@ -538,9 +540,11 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
             sx={{
               display: 'flex',
               alignItems: 'center',
-              p: isSearch ? 1 : 0,
-              gap: 1,
+              p: 2.5,
+              gap: 2,
               flexShrink: 0,
+              borderBottom: `1px dashed ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
+              flexWrap: 'wrap',
             }}
           >
             {isSearch && (
@@ -549,27 +553,35 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 size="small"
                 value={searchValue}
                 onChange={handleSearch}
+                placeholder="Search..."
                 InputProps={{
-                  endAdornment: (
-                    <>
-                      {searchValue ? (
-                        <IconButton
-                          size="small"
-                          sx={{ mr: '-12px', p: 1 }}
-                          onClick={() => setSearchValue('')}
-                        >
-                          <ClearIcon />
-                        </IconButton>
-                      ) : (
-                        <IconButton size="small" sx={{ mr: '-12px', p: 1 }}>
-                          <SearchIcon />
-                        </IconButton>
-                      )}
-                    </>
+                  startAdornment: (
+                    <SearchIcon sx={{ color: 'text.disabled', mr: 1, fontSize: 20 }} />
                   ),
+                  endAdornment: searchValue && (
+                    <IconButton size="small" onClick={() => setSearchValue('')} edge="end">
+                      <ClearIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  ),
+                  sx: {
+                    borderRadius: 1.5,
+                    bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+                    fontSize: '14px',
+                    '& fieldset': {
+                      border: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.2)}`,
+                    },
+                    '&:hover fieldset': {
+                      borderColor: `${varAlpha(theme.vars.palette.grey['500Channel'], 0.4)} !important`,
+                    },
+                  },
                 }}
-                label="Search in Table"
-                sx={{ maxWidth: '249.6px', width: '100%' }}
+                sx={{
+                  maxWidth: '300px',
+                  width: '100%',
+                  '& .MuiInputBase-root': {
+                    pr: 1,
+                  },
+                }}
                 {...searchFieldProps}
               />
             )}
@@ -584,10 +596,16 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
               >
                 <Box sx={{ ml: 2 }}>
                   <Button
-                    // variant="outlined"
+                    variant="soft"
+                    color="inherit"
                     size="small"
-                    startIcon={<RemoveRedEyeIcon />}
+                    startIcon={<RemoveRedEyeIcon sx={{ width: 18, height: 18 }} />}
                     onClick={(event) => setColumnAnchorEl(event.currentTarget)}
+                    sx={{
+                      borderRadius: 1,
+                      color: 'text.secondary',
+                      fontWeight: 600,
+                    }}
                   >
                     Columns
                   </Button>
@@ -595,13 +613,22 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     open={Boolean(anchorColumnEl)}
                     anchorEl={anchorColumnEl}
                     onClose={() => setColumnAnchorEl(null)}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                    transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                    slotProps={{
+                      paper: {
+                        sx: {
+                          width: 280,
+                          p: 2,
+                          borderRadius: 1.5,
+                          boxShadow:
+                            theme.customShadows?.dropdown || '0px 5px 20px rgba(0,0,0,0.1)',
+                        },
+                      },
+                    }}
                   >
                     <Box
                       sx={{
-                        p: 2,
-                        width: 250,
                         display: 'flex',
                         flexDirection: 'column',
                         height: '400px',
@@ -610,10 +637,14 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                       <TextField
                         fullWidth
                         size="small"
-                        label="Search columns"
+                        placeholder="Search columns..."
                         value={columnSearchTerm}
                         onChange={(e) => handelChangeParams({ columnSearchTerm: e.target.value })}
-                        sx={{ mb: 2, flexShrink: '0', background: 'white', zIndex: '1' }}
+                        sx={{
+                          mb: 2,
+                          flexShrink: '0',
+                          '& .MuiInputBase-root': { borderRadius: 1.5 },
+                        }}
                       />
                       <Box
                         sx={{
@@ -621,6 +652,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                           flexDirection: 'column',
                           flex: 1,
                           overflowY: 'auto',
+                          gap: 1,
                         }}
                       >
                         {columns
@@ -637,10 +669,18 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                           .map((column) => (
                             <FormControlLabel
                               key={column.id}
-                              sx={{ ml: 0 }}
+                              sx={{
+                                ml: 0,
+                                mr: 0,
+                                justifyContent: 'space-between',
+                                flexDirection: 'row-reverse',
+                                '& .MuiTypography-root': { fontSize: '14px', fontWeight: 500 },
+                              }}
                               control={
                                 <Checkbox
                                   checked={columnVisibility[column.id]}
+                                  size="small"
+                                  disableRipple
                                   onChange={(e) => {
                                     handelChangeParams({
                                       columnVisibility: {
@@ -655,9 +695,18 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                             />
                           ))}
                       </Box>
-                      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                      <Box
+                        sx={{
+                          mt: 2,
+                          display: 'flex',
+                          justifyContent: 'flex-end',
+                          pt: 2,
+                          borderTop: `1px dashed ${theme.vars.palette.divider}`,
+                        }}
+                      >
                         <Button
                           size="small"
+                          color="inherit"
                           onClick={() => {
                             handelChangeParams({
                               columnSearchTerm: '',
@@ -676,9 +725,16 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
 
                 <Box>
                   <Button
-                    startIcon={<Iconify icon="solar:export-bold" />}
+                    startIcon={<Iconify icon="solar:export-bold" width={18} />}
                     size="small"
+                    variant="soft"
+                    color="inherit"
                     onClick={(event) => setExportAnchorEl(event.currentTarget)}
+                    sx={{
+                      borderRadius: 1,
+                      color: 'text.secondary',
+                      fontWeight: 600,
+                    }}
                   >
                     Export
                   </Button>
@@ -686,6 +742,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                     anchorEl={exportAnchorEl}
                     open={Boolean(exportAnchorEl)}
                     onClose={() => setExportAnchorEl(null)}
+                    slotProps={{
+                      paper: { sx: { width: 160, borderRadius: 1.5, mt: 1 } },
+                    }}
                   >
                     <MenuItem onClick={() => handleExport('excel')}>
                       <Iconify icon="solar:document-bold" />
@@ -699,23 +758,32 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   </Menu>
                 </Box>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', p: isSearch ? 1 : 0, gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', p: 0, gap: 1 }}>
                   <CustomTooltip
                     arrow
-                    placement="bottom-end"
+                    placement="top"
                     title={fullScreenDialog.value ? 'Exit Fullscreen' : 'Fullscreen'}
                   >
                     <IconButton
                       onClick={async () => {
                         fullScreenDialog.onToggle();
                       }}
-                      sx={{ color: varAlpha(theme.vars.palette.grey['900Channel'], 1) }}
+                      sx={{
+                        color: 'text.secondary',
+                        bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+                        borderRadius: 1,
+                        p: 0.75,
+                        '&:hover': {
+                          bgcolor: varAlpha(theme.vars.palette.grey['500Channel'], 0.16),
+                        },
+                      }}
                     >
                       <Iconify
+                        width={20}
                         icon={
                           fullScreenDialog.value
-                            ? 'ic:sharp-fullscreen-exit'
-                            : 'ic:sharp-fullscreen'
+                            ? 'solar:minimize-square-3-outline'
+                            : 'solar:maximize-square-3-outline'
                         }
                       />
                     </IconButton>
@@ -774,34 +842,34 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                               headerRefs.current[index] = el as HTMLTableCellElement;
                             }}
                             sx={{
-                              fontSize: '14px',
+                              fontSize: '13px',
+                              fontWeight: 600,
+                              color: 'text.secondary',
                               width: column.minWidth,
+                              whiteSpace: 'nowrap',
+                              py: 1.5,
+                              px: 2,
                               // @ts-ignore
                               left: column.sticky ? stickyMap[column.id] : 'auto',
                               right: column.sticky && columns.length === index + 1 ? 0 : 'auto',
                               zIndex: column.sticky ? 99 : 10,
-                              backgroundColor: column.sticky ? 'background.paper' : 'transparent',
-                              boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+                              backgroundColor: column.sticky
+                                ? 'background.neutral'
+                                : 'background.neutral',
+                              boxShadow: column.sticky
+                                ? '0px 0 8px rgba(0,0,0,0.08)'
+                                : '1px 0 8px rgba(0,0,0,0.08)',
+                              borderBottom: `1px solid ${theme.vars.palette.divider}`,
 
                               ...(column.sticky ? { backgroundImage: 'none' } : {}),
                               '& .column-filter-icon': {
-                                opacity: 0,
-                                transition: 'opacity 0.3s ease',
+                                opacity: 1,
+                                transition: 'opacity 0.2s',
                               },
-                              '&:hover .column-filter-icon': { opacity: 1 },
-                              '&::after': {
-                                borderRight: !column.sticky
-                                  ? `1px solid ${theme.vars.palette.grey[400]}`
-                                  : 'none',
-                                content: '""',
-                                position: 'absolute',
-                                right: '0',
-                                bottom: '0',
-                                height: '40%',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
+                              '&:hover .column-filter-icon': {
+                                opacity: 1,
+                                color: `${theme.palette.text.secondary}`,
                               },
-                              '&:last-child::after': { borderRight: 'none' },
                               ...getStickyStyle(column),
                               position: 'sticky',
                             }}
@@ -825,24 +893,23 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                                 display="block"
                                 textAlign={column.align}
                                 gap={1}
-                                width="inherit"
+                                width={!column?.renderColumn ? 'auto' : 'inherit'}
                                 component="span"
                               >
                                 {column.label} {column?.renderColumn?.(column)}
                               </Box>
 
                               {column.isFilter && (
-                                <>
+                                <Box position="relative" display="flex" alignItems="center">
                                   <Iconify
-                                    icon="lucide:list-filter"
+                                    icon="solar:filter-bold"
+                                    className="column-filter-icon"
                                     sx={{
-                                      height: '16px',
-                                      width: '16px',
+                                      height: 16,
+                                      width: 16,
                                       cursor: 'pointer',
-                                      position: 'absolute',
-                                      right: '4px',
-                                      top: '50%',
-                                      transform: 'translateY(-50%)',
+                                      ml: 0.5,
+                                      color: 'text.disabled',
                                     }}
                                     onClick={(e) => handleColumnFilterClick(e, column)}
                                   />
@@ -854,12 +921,12 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                                         borderRadius: '50%',
                                         bgcolor: 'primary.main',
                                         position: 'absolute',
-                                        top: 8,
-                                        right: 2,
+                                        top: '-2px',
+                                        right: '-5px',
                                       }}
                                     />
                                   )}
-                                </>
+                                </Box>
                               )}
 
                               {column.isSort !== false && (
@@ -932,7 +999,11 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                                   align={column.align}
                                   sx={{
                                     alignItems: 'center',
-                                    fontSize: '13px',
+                                    fontSize: '14px',
+                                    py: dense ? 1.5 : 2,
+                                    px: 2,
+                                    color: 'text.primary',
+                                    borderBottom: `1px dashed ${theme.vars.palette.divider}`,
                                     position: column.sticky ? 'sticky' : 'static',
                                     // @ts-ignore
                                     left: column.sticky ? stickyMap[column.id] : 'auto',
@@ -941,7 +1012,9 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                                     backgroundColor: column.sticky
                                       ? 'background.paper'
                                       : 'transparent',
-                                    boxShadow: column.sticky ? 'var(--shadows-4)' : 'none',
+                                    boxShadow: column.sticky
+                                      ? '0px 0 8px rgba(0,0,0,0.08)'
+                                      : 'none',
                                     ...getStickyStyle(column),
                                   }}
                                 >
@@ -993,30 +1066,36 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  p: 1,
+                  p: 2,
                   width: '100%',
+                  borderTop: `1px dashed ${theme.vars.palette.divider}`,
                 }}
               >
                 {isShowedDense && (
                   <FormControlLabel
                     control={<Switch size="small" checked={dense} onChange={handleChangeDense} />}
                     label="Dense"
+                    sx={{
+                      ml: 1,
+                      '& .MuiTypography-root': { fontSize: '13px', fontWeight: 500 },
+                    }}
                   />
                 )}
                 {isPagination && (
                   <TablePagination
                     rowsPerPageOptions={[10, 25, 100, { value: filteredData.length, label: 'All' }]}
-                    component={Scrollbar}
+                    component="div"
                     count={serverSide ? totalCount || 0 : filteredData.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     onPageChange={handleChangePage}
                     onRowsPerPageChange={handleChangeRowsPerPage}
-                    size="small"
                     sx={{
-                      '& *': { fontSize: '14px !important' },
-                      '& svg': { fontSize: '18px !important' },
-                      '& .MuiToolbar-root': { minHeight: 'unset', height: 'auto' },
+                      '& .MuiTablePagination-toolbar': { height: 40, minHeight: 40 },
+                      '& .MuiTablePagination-actions': { ml: 1 },
+                      '& .MuiTablePagination-selectLabel': { fontSize: '13px' },
+                      '& .MuiTablePagination-input': { fontSize: '13px' },
+                      '& .MuiTablePagination-displayedRows': { fontSize: '13px' },
                     }}
                   />
                 )}
@@ -1070,6 +1149,10 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       stickyMap,
       sx,
       tableRef,
+      theme.customShadows?.dropdown,
+      theme.customShadows?.z20,
+      theme.palette.text.secondary,
+      theme.vars.palette.divider,
       theme.vars.palette.grey,
       totalCount,
     ]
@@ -1119,11 +1202,10 @@ const FilterChips = ({
       display: 'flex',
       flexWrap: 'wrap',
       gap: 1,
-      mb: 1,
-      p: 1,
+      mb: 0,
+      p: 2,
       alignItems: 'center',
-      border: (theme) => (filters.length ? `dashed 1px ${theme.vars.palette.divider}` : 'none'),
-      borderRadius: 1,
+      borderBottom: (theme) => `1px dashed ${theme.vars.palette.divider}`,
     }}
   >
     {filters.map((filter: any, index: number) => {
@@ -1147,8 +1229,18 @@ const FilterChips = ({
           key={index}
           size="small"
           variant="soft"
-          label={`${findColumn?.label} :  ${label}`}
+          label={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                {findColumn?.label}:
+              </Box>
+              <Box component="span" sx={{ color: 'text.secondary' }}>
+                {label}
+              </Box>
+            </Box>
+          }
           onDelete={() => removeFilter(index)}
+          sx={{ borderRadius: 1 }}
         />
       );
     })}

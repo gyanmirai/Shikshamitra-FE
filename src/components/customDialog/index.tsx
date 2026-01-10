@@ -6,7 +6,7 @@ import { Close } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Dialog, Divider, IconButton, Typography, DialogContent } from '@mui/material';
+import { Box, Dialog, IconButton, Typography, DialogContent } from '@mui/material';
 
 import { Scrollbar } from '../scrollbar';
 
@@ -27,6 +27,7 @@ const CustomDialog = ({
   children,
   paperProps,
   hasForm = true,
+  maxWidth = 'xs',
   ...props
 }: CustomDialogProps) => {
   const theme = useTheme();
@@ -43,13 +44,16 @@ const CustomDialog = ({
       handleClose(e, reason);
     }
   };
+
+  const isLarge = ['lg', 'xl', false].includes(maxWidth) || !!props.fullScreen;
+
   const FormComponent = hasForm ? 'form' : Box;
   return (
     <Dialog
       open={open}
       onClose={handleCloseDialog}
       fullWidth
-      maxWidth="xs"
+      maxWidth={maxWidth}
       transitionDuration={{
         enter: theme.transitions.duration.shortest,
         exit: theme.transitions.duration.shortest - 80,
@@ -59,6 +63,8 @@ const CustomDialog = ({
           display: 'flex',
           overflow: 'hidden',
           flexDirection: 'column',
+          borderRadius: '16px', // Modern rounded corners
+          boxShadow: theme.customShadows?.dialog || theme.shadows[24], // Premium shadow
           '& form': { minHeight: 0, display: 'flex', flex: '1 1 auto', flexDirection: 'column' },
           ...(sx || {}),
         },
@@ -67,17 +73,54 @@ const CustomDialog = ({
       {...props}
     >
       <FormComponent id="dialog-form" style={{ height: '100%' }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between" py={1} px={2}>
-          <Typography variant="h5">{title}</Typography>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{
+            py: 2.1,
+            px: 2,
+            background: (th) =>
+              isLarge
+                ? 'transparent'
+                : th.palette.mode === 'dark'
+                  ? 'var(--palette-common-white)'
+                  : 'var(--palette-grey-800)',
+            color: (th) =>
+              isLarge
+                ? 'text.primary'
+                : th.palette.mode === 'dark'
+                  ? 'var(--palette-grey-800)'
+                  : 'var(--palette-common-white)',
+          }} // Increased padding for header
+        >
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            {title}
+          </Typography>
           <IconButton
             aria-label="close"
             onClick={() => handleCloseDialog({}, 'escapeKeyDown')}
-            sx={{ color: theme.vars.palette.grey[500] }}
+            sx={{
+              color: (th) =>
+                isLarge
+                  ? 'text.secondary'
+                  : th.palette.mode === 'dark'
+                    ? 'var(--palette-grey-800)'
+                    : 'var(--palette-common-white)',
+              transition: 'all 0.2s',
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+                transform: 'scale(1.1)',
+              },
+            }}
           >
-            <Close />
+            <Close sx={{ fontSize: 20 }} />
           </IconButton>
         </Box>
-        <Divider />
+
+        {/* Subtle separator using border instead of full Divider for cleaner look */}
+        <Box sx={{ borderBottom: `1px solid ${theme.palette.divider}`, width: '100%' }} />
+
         {children}
       </FormComponent>
     </Dialog>
@@ -93,7 +136,14 @@ export const DialogScrollContent = ({
   const ref = useRef<HTMLDivElement>(null);
   return (
     <Scrollbar ref={ref} {...scrollBarProps}>
-      <DialogContent ref={ref} sx={{ p: 2 }} {...props}>
+      <DialogContent
+        ref={ref}
+        sx={{
+          p: 3, // Increased content padding for better readability
+          ...props.sx,
+        }}
+        {...props}
+      >
         {children}
       </DialogContent>
     </Scrollbar>

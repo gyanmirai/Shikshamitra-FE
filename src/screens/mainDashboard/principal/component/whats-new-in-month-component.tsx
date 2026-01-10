@@ -1,5 +1,7 @@
 import React from 'react';
+import { varAlpha } from 'src/theme/styles';
 import { useTabs } from 'src/hooks/use-tabs';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs/custom-tabs';
@@ -8,12 +10,15 @@ import {
   Box,
   List,
   Chip,
+  Stack,
   Avatar,
   ListItem,
   Typography,
   ListItemText,
   ListItemAvatar,
 } from '@mui/material';
+
+// ----------------------------------------------------------------------
 
 interface Birthday {
   id: number;
@@ -42,38 +47,121 @@ interface WhatsNewInMonthProps {
   events: Event[];
 }
 
+// ----------------------------------------------------------------------
+
 const TABS = [
   {
     value: 'timesoff',
-    label: 'Times Off',
-    icon: <Iconify icon="pepicons-pencil:rewind-time-off" />,
+    label: 'Time Off',
+    icon: <Iconify icon="pepicons-pencil:rewind-time-off" width={20} />,
+    color: 'error',
   },
-  { value: 'birthday', label: 'Birthday', icon: <Iconify icon="arcticons:ebobirthday" /> },
-  { value: 'event', label: 'Event', icon: <Iconify icon="material-symbols-light:event" /> },
+  {
+    value: 'birthday',
+    label: 'Birthdays',
+    icon: <Iconify icon="arcticons:ebobirthday" width={20} />,
+    color: 'info',
+  },
+  {
+    value: 'event',
+    label: 'Events',
+    icon: <Iconify icon="material-symbols-light:event" width={20} />,
+    color: 'success',
+  },
 ];
 
-const BirthdayComponent: React.FC<{ birthdays: Birthday[] }> = ({ birthdays }) => {
-  const today = new Date().toISOString().slice(5, 10);
-  return (
+// ----------------------------------------------------------------------
+
+const EmptyState = ({
+  icon,
+  title,
+  description,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+}) => (
+  <Stack
+    spacing={2}
+    alignItems="center"
+    justifyContent="center"
+    sx={{ height: 300, textAlign: 'center', color: 'text.secondary' }}
+  >
+    <Iconify icon={icon} width={64} sx={{ opacity: 0.24 }} />
     <Box>
+      <Typography variant="subtitle1" gutterBottom>
+        {title}
+      </Typography>
+      <Typography variant="body2">{description}</Typography>
+    </Box>
+  </Stack>
+);
+
+const BirthdayComponent: React.FC<{ birthdays: Birthday[] }> = ({ birthdays }) => {
+  const theme = useTheme();
+  const today = new Date().toISOString().slice(5, 10);
+
+  if (!birthdays?.length) {
+    return (
+      <EmptyState
+        icon="arcticons:ebobirthday"
+        title="No Birthdays"
+        description="No birthdays this month."
+      />
+    );
+  }
+
+  return (
+    <List disablePadding>
       {birthdays.map((person) => {
         const isToday = person.date.slice(5, 10) === today;
         return (
-          <Box key={person.id} display="flex" alignItems="center" gap={2} p={2}>
-            <Avatar src={person.image} alt={person.name} />
-            <Box>
-              <Typography variant="h6">{person.name}</Typography>
-              <Typography variant="body2">Turning {person.age} </Typography>
-              {isToday && (
-                <Typography variant="caption" color="error">
-                  🎉 Today!
-                </Typography>
-              )}
-            </Box>
-          </Box>
+          <ListItem
+            key={person.id}
+            sx={{
+              py: 2,
+              px: 2.5,
+              borderRadius: 1.5,
+              mb: 1,
+              bgcolor: isToday ? varAlpha(theme.palette.primary.mainChannel, 0.08) : 'transparent',
+              '&:hover': {
+                bgcolor: varAlpha(theme.palette.action.activeChannel, 0.08),
+              },
+            }}
+          >
+            <ListItemAvatar>
+              <Avatar
+                src={person.image}
+                alt={person.name}
+                sx={{
+                  width: 48,
+                  height: 48,
+                  border: `2px solid ${theme.palette.background.paper}`,
+                }}
+              />
+            </ListItemAvatar>
+            <ListItemText
+              primary={
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Typography variant="subtitle2">{person.name}</Typography>
+                  {isToday && (
+                    <Chip
+                      label="Today!"
+                      size="small"
+                      color="primary"
+                      variant="soft"
+                      sx={{ height: 20, fontSize: 10, fontWeight: 700 }}
+                    />
+                  )}
+                </Stack>
+              }
+              secondary={`Turning ${person.age} • ${person.date}`}
+              secondaryTypographyProps={{ variant: 'caption', color: 'text.secondary', mt: 0.5 }}
+            />
+          </ListItem>
         );
       })}
-    </Box>
+    </List>
   );
 };
 
@@ -82,48 +170,120 @@ const TimesOffComponent: React.FC<{ timeOffRequests: TimeOffRequest[] }> = ({
 }) => {
   const todayDate = new Date().toLocaleDateString('en-GB').split('/').reverse().join('-');
 
+  if (!timeOffRequests?.length) {
+    return (
+      <EmptyState
+        icon="pepicons-pencil:rewind-time-off"
+        title="No Time Off Requests"
+        description="Everyone is present this month."
+      />
+    );
+  }
+
   return (
-    <Box>
-      {timeOffRequests.length > 0 ? (
-        <List>
-          {timeOffRequests.map((request) => {
-            const isToday = request.date === todayDate;
-            return (
-              <ListItem key={request.id} sx={{ bgcolor: 'transparent' }}>
-                <ListItemAvatar>
-                  <Avatar>{request.name.charAt(0)}</Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={request.name}
-                  secondary={`${request.date} - ${request.reason}`}
-                  primaryTypographyProps={{ fontWeight: isToday ? 'bold' : 'normal' }}
-                />
-              </ListItem>
-            );
-          })}
-        </List>
-      ) : (
-        <Typography>No time off requests for this month.</Typography>
-      )}
-    </Box>
+    <List disablePadding>
+      {timeOffRequests.map((request) => {
+        const isToday = request.date === todayDate;
+        return (
+          <ListItem
+            key={request.id}
+            sx={{
+              py: 2,
+              px: 2.5,
+              borderRadius: 1.5,
+              mb: 1,
+              '&:hover': {
+                bgcolor: (theme) => varAlpha(theme.palette.action.activeChannel, 0.08),
+              },
+            }}
+          >
+            <ListItemAvatar>
+              <Avatar
+                sx={{
+                  bgcolor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.16),
+                  color: 'error.main',
+                }}
+              >
+                {request.name.charAt(0)}
+              </Avatar>
+            </ListItemAvatar>
+            <ListItemText
+              primary={request.name}
+              secondary={
+                <Stack direction="row" alignItems="center" spacing={1} mt={0.5}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {request.date}
+                  </Typography>
+                  <Box
+                    sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: 'text.disabled' }}
+                  />
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {request.reason}
+                  </Typography>
+                </Stack>
+              }
+              primaryTypographyProps={{ variant: 'subtitle2', fontWeight: isToday ? 700 : 600 }}
+            />
+            {isToday && (
+              <Chip label="Today" color="error" size="small" variant="soft" sx={{ ml: 1 }} />
+            )}
+          </ListItem>
+        );
+      })}
+    </List>
   );
 };
 
-const EventComponent: React.FC<{ events: Event[] }> = ({ events }) => (
-  <Box>
-    {events.length > 0 ? (
-      <List>
-        {events.map((event) => (
-          <ListItem key={event.id}>
-            <ListItemText primary={event.title} secondary={event.date} />
-          </ListItem>
-        ))}
-      </List>
-    ) : (
-      <Typography>No events scheduled for this month.</Typography>
-    )}
-  </Box>
-);
+const EventComponent: React.FC<{ events: Event[] }> = ({ events }) => {
+  if (!events?.length) {
+    return (
+      <EmptyState
+        icon="material-symbols-light:event"
+        title="No Events"
+        description="No events scheduled for this month."
+      />
+    );
+  }
+
+  return (
+    <List disablePadding>
+      {events.map((event) => (
+        <ListItem
+          key={event.id}
+          sx={{
+            py: 2,
+            px: 2.5,
+            borderRadius: 1.5,
+            mb: 1,
+            '&:hover': {
+              bgcolor: (theme) => varAlpha(theme.palette.action.activeChannel, 0.08),
+            },
+          }}
+        >
+          <ListItemAvatar>
+            <Avatar
+              variant="rounded"
+              sx={{
+                bgcolor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.16),
+                color: 'success.main',
+              }}
+            >
+              <Iconify icon="material-symbols-light:event" width={24} />
+            </Avatar>
+          </ListItemAvatar>
+          <ListItemText
+            primary={event.title}
+            secondary={event.date}
+            primaryTypographyProps={{ variant: 'subtitle2' }}
+            secondaryTypographyProps={{ variant: 'caption', mt: 0.5 }}
+          />
+        </ListItem>
+      ))}
+    </List>
+  );
+};
+
+// ----------------------------------------------------------------------
 
 const WhatsNewInMonthComponent: React.FC<WhatsNewInMonthProps> = ({
   birthdays,
@@ -132,59 +292,75 @@ const WhatsNewInMonthComponent: React.FC<WhatsNewInMonthProps> = ({
 }) => {
   const tabs = useTabs('timesoff');
 
-  const getColor = (tab: string) => {
-    if (tab === 'timesoff') {
-      return `red`;
-    }
-    if (tab === 'birthday') {
-      return `blue`;
-    }
-    if (tab === 'event') {
-      return 'green';
-    }
-    return 'default';
+  const getCount = (tab: string) => {
+    if (tab === 'timesoff') return timeOffRequests?.length || 0;
+    if (tab === 'birthday') return birthdays?.length || 0;
+    if (tab === 'event') return events?.length || 0;
+    return 0;
   };
 
+  const currentTab = TABS.find((t) => t.value === tabs.value);
+
   return (
-    <>
-      <Typography variant="h6" fontWeight={600} mb={2}>{`What's On This Month?`}</Typography>
-      <CustomTabs
-        value={tabs.value}
-        onChange={tabs.onChange}
-        variant="fullWidth"
-        slotProps={{ tab: { px: 0 } }}
-      >
-        {TABS.map((tab) => (
-          <Tab
-            key={tab.value}
-            icon={tab.icon}
-            value={tab.value}
-            label={
-              <Box display="flex" alignItems="center">
-                <Typography variant="body1">{tab.label}</Typography>
-                <Chip
-                  label="100"
-                  size="small"
-                  sx={{
-                    backgroundColor: 'white',
-                    ml: 1,
-                    fontSize: '11px',
-                    color: getColor(tab.value),
-                  }}
-                />
-              </Box>
-            }
-          />
-        ))}
-      </CustomTabs>
-      <Scrollbar sx={{ height: '500px', width: '500px', overflowY: 'auto' }}>
-        <Box mt={2}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Stack direction="column" spacing={2} sx={{ mb: 2 }}>
+        <Typography variant="h6">What&apos;s On This Month?</Typography>
+
+        <CustomTabs
+          value={tabs.value}
+          onChange={tabs.onChange}
+          variant="fullWidth"
+          sx={{
+            minHeight: 40,
+            '& .MuiTab-root': {
+              minHeight: 40,
+              px: 0,
+              mr: 0,
+              zIndex: 1,
+              '&.Mui-selected': {
+                color: 'text.primary',
+                zIndex: 1,
+              },
+            },
+          }}
+        >
+          {TABS.map((tab) => (
+            <Tab
+              key={tab.value}
+              value={tab.value}
+              label={
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  {tab.icon}
+                  <Box component="span">{tab.label}</Box>
+                  <Chip
+                    label={getCount(tab.value)}
+                    size="small"
+                    variant={tabs.value === tab.value ? 'filled' : 'soft'}
+                    color={tab.color as any}
+                    sx={{
+                      height: 20,
+                      borderRadius: '50%',
+                      minWidth: 20,
+                      px: 0.5,
+                      typography: 'caption',
+                      fontSize: 11,
+                    }}
+                  />
+                </Stack>
+              }
+            />
+          ))}
+        </CustomTabs>
+      </Stack>
+
+      <Box sx={{ flexGrow: 1, minHeight: 0, position: 'relative' }}>
+        <Scrollbar sx={{ maxHeight: '100%', pb: 2 }}>
           {tabs.value === 'timesoff' && <TimesOffComponent timeOffRequests={timeOffRequests} />}
           {tabs.value === 'birthday' && <BirthdayComponent birthdays={birthdays} />}
           {tabs.value === 'event' && <EventComponent events={events} />}
-        </Box>
-      </Scrollbar>
-    </>
+        </Scrollbar>
+      </Box>
+    </Box>
   );
 };
 

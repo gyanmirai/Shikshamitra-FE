@@ -79,14 +79,27 @@ export const WeeklyCirculationChart = () => {
 
   const chartOptions = useChart({
     colors: chartColors,
-    xaxis: { categories: mockWeeklyCirculation.categories },
+    xaxis: {
+      categories: mockWeeklyCirculation.categories,
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      labels: { style: { colors: theme.palette.text.secondary } },
+    },
     stroke: { width: 2, curve: 'smooth' },
+    fill: { type: 'gradient', gradient: { opacityFrom: 0.6, opacityTo: 0.1 } },
     tooltip: {
       shared: true,
       intersect: false,
       y: {
         formatter: (value: number) => fNumber(value),
       },
+    },
+    grid: {
+      borderColor: theme.palette.divider,
+      strokeDashArray: 3,
+    },
+    yaxis: {
+      labels: { style: { colors: theme.palette.text.secondary } },
     },
   });
 
@@ -95,7 +108,13 @@ export const WeeklyCirculationChart = () => {
   }, []);
 
   return (
-    <Card>
+    <Card
+      sx={{
+        boxShadow: theme.customShadows?.z1 || theme.shadows[1],
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 2,
+      }}
+    >
       <CardHeader
         title="Weekly Issue/Return Circulation"
         subheader="Last 7 days book circulation activity"
@@ -128,22 +147,35 @@ export const SectionBooksChart = () => {
 
   const chartOptions = useChart({
     colors: chartColors,
-    xaxis: { categories },
+    xaxis: {
+      categories,
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      labels: { style: { colors: theme.palette.text.secondary, fontWeight: 500 } },
+    },
     plotOptions: {
       bar: {
         horizontal: false,
         borderRadius: 4,
-        columnWidth: '60%',
+        columnWidth: '50%',
       },
     },
     dataLabels: {
       enabled: true,
       style: { fontSize: '12px', fontWeight: 'bold' },
+      offsetY: -10,
     },
     tooltip: {
       y: {
         formatter: (value: number) => fNumber(value),
       },
+    },
+    grid: {
+      borderColor: theme.palette.divider,
+      strokeDashArray: 3,
+    },
+    yaxis: {
+      labels: { style: { colors: theme.palette.text.secondary } },
     },
   });
 
@@ -152,7 +184,13 @@ export const SectionBooksChart = () => {
   }, []);
 
   return (
-    <Card>
+    <Card
+      sx={{
+        boxShadow: theme.customShadows?.z1 || theme.shadows[1],
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 2,
+      }}
+    >
       <CardHeader
         title="Section-wise Book Count"
         subheader="Books distribution across shelves"

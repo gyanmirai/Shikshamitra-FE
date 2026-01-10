@@ -44,11 +44,14 @@ const FeeStructureFormStepper: React.FC<IFeeStructureFormProps> = ({ onClose, ed
 
   return (
     <CustomStepperWithFormik
-      scrollbarHeight="400px"
+      // scrollbarHeight="400px"
       initialValues={feeStructureInitialValues}
       steps={['General Information', 'Class Fee Structure']}
       activeStep={activeStep}
       handleBack={() => setActiveStep(activeStep - 1)}
+      onSave={() => {
+        shikshaMitraToast.success({ message: 'Draft saved successfully' });
+      }}
       validateOnChange
       validationSchema={finaceFeeStructureValidationSchema[activeStep]} // pass schema step-wise
       handleNext={async (isLastStep, values) => {

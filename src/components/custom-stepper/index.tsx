@@ -216,31 +216,28 @@ const ModernStepIcon = (props: StepIconProps) => {
 };
 
 const ModernConnector = styled(StepConnector)(({ theme }) => ({
-  [`&.${stepConnectorClasses.alternativeLabel}`]: {
-    top: 10,
-    left: 'calc(-50% + 16px)',
-    right: 'calc(50% + 16px)',
+  [`&.${stepConnectorClasses.vertical}`]: {
+    marginLeft: 16, // EXACT center of 32px icon
   },
-  [`&.${stepConnectorClasses.active}`]: {
-    [`& .${stepConnectorClasses.line}`]: {
-      borderColor: theme.palette.primary.main,
-    },
-  },
-  [`&.${stepConnectorClasses.completed}`]: {
-    [`& .${stepConnectorClasses.line}`]: {
-      borderColor: theme.palette.primary.main,
-    },
-  },
+
   [`& .${stepConnectorClasses.line}`]: {
     borderColor: theme.palette.grey[300],
-    borderTopWidth: 3,
-    borderRadius: 1,
     transition: 'all 0.3s ease-in-out',
   },
+
   [`& .${stepConnectorClasses.lineVertical}`]: {
     borderLeftWidth: 2,
-    marginLeft: 12, // Align with icon center
-    minHeight: 24,
+    minHeight: '100%',
+    marginLeft: '6px',
+    borderColor: theme.palette.grey[300],
+  },
+
+  [`&.${stepConnectorClasses.active} .${stepConnectorClasses.lineVertical}`]: {
+    borderColor: theme.palette.primary.main,
+  },
+
+  [`&.${stepConnectorClasses.completed} .${stepConnectorClasses.lineVertical}`]: {
+    borderColor: theme.palette.primary.main,
   },
 }));
 export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = ({
@@ -282,7 +279,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   const renderStepper = () => (
     <Stepper
       activeStep={activeStep}
-      alternativeLabel={!isVertical}
+      alternativeLabel={isVertical ? undefined : true}
       orientation={isVertical ? 'vertical' : 'horizontal'}
       connector={isVertical ? <ModernConnector /> : <QontoConnector />}
       sx={
@@ -296,6 +293,21 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               height: '100%',
               // '& .MuiStep-root': {
               //   mb: 2, // Spacing between steps
+              // },
+              '& .MuiStep-root': {
+                padding: 0,
+              },
+
+              // '& .MuiStepLabel-root': {
+              //   px: 1,
+              //   py: 1,
+              //   borderRadius: 1.5,
+              //   transition: 'background-color 0.2s',
+              // },
+
+              // '& .MuiStepLabel-label': {
+              //   ml: 1.5,
+              //   typography: 'subtitle2',
               // },
               '& .MuiStepLabel-root': {
                 px: 1,

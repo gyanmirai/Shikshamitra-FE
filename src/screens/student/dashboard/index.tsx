@@ -15,7 +15,7 @@ const StudentDashboardScreen = () => {
   const { employee } = useSelector((state: any) => state.auth);
   const role = employee?.role?.name;
   return (
-    <Box>
+    <Box sx={{ width: '100%' }}>
       {role === 'Admin' && <AdminDashboard />}
       {role === 'Principal' && <PrincipalDashboard />}
       {role === 'Teacher' && <TeacherDashboard />}

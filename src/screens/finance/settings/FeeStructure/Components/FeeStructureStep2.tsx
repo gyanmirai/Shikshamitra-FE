@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { Add } from '@mui/icons-material';
+import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomTooltip from 'src/components/custom-tooltip';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FeeStructureClassStatusType } from 'src/enums/fee-structure-statusType';
@@ -14,16 +13,13 @@ import {
   Box,
   Grid,
   Chip,
+  Card,
   Button,
   Tooltip,
-  Divider,
-  Accordion,
   TextField,
   IconButton,
   Typography,
   Autocomplete,
-  AccordionSummary,
-  AccordionDetails,
 } from '@mui/material';
 
 import FeeStructureCard from './FeeStructureCard';
@@ -140,7 +136,14 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
 
                   // CASE 2: No fee structures match → show EmptyContent
                   if (filtered.length === 0) {
-                    return <EmptyContent title="No Fee Structure Created" sx={{ mt: 2 }} />;
+                    return (
+                      <EmptyContent
+                        filled
+                        title="No Fee Structure Created"
+                        description="Click the 'Fee Structure' button above to create a new fee structure for this class."
+                        sx={{ mt: 2, py: 10 }}
+                      />
+                    );
                   }
 
                   // CASE 1: Render actual fee structures
@@ -155,42 +158,58 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                             ) || 0;
 
                           return (
-                            <Accordion
+                            <Card
                               key={idx}
-                              defaultExpanded
                               sx={{
-                                borderRadius: 2,
-                                '&:before': { display: 'none' },
-                                mb: 2,
+                                borderRadius: 1.5, // Reduced radius
+                                mb: 2, // Reduced margin
+                                border: (theme) =>
+                                  `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
+                                boxShadow: (theme) =>
+                                  `0 2px 8px ${varAlpha(theme.palette.grey['500Channel'], 0.08)}`, // Softer shadow
+                                overflow: 'visible',
                               }}
-                              elevation={6}
+                              elevation={0}
                             >
-                              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                                  <Typography sx={{ fontWeight: 600, mr: 1 }}>
+                              <Box
+                                sx={{
+                                  p: 1.5, // Reduced padding
+                                  pb: 1.5,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  borderBottom: (theme) =>
+                                    `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.1)}`,
+                                  bgcolor: (theme) =>
+                                    varAlpha(theme.palette.background.neutralChannel, 0.4),
+                                }}
+                              >
+                                <Box display="flex" alignItems="center" gap={2}>
+                                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
                                     {structure.feeStructureName || `Fee Structure ${idx + 1}`}
                                   </Typography>
-
                                   <Chip
-                                    label={`Total : ${formatNumber(totalFeeAmount, 'INR')}`}
+                                    label={`Total: ${formatNumber(totalFeeAmount, 'INR')}`}
                                     color="success"
                                     size="small"
-                                    variant="outlined"
+                                    variant="soft"
+                                    sx={{ fontWeight: 600, borderRadius: 1 }}
                                   />
                                 </Box>
 
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  <Tooltip title="Add Fee Head">
-                                    <IconButton
-                                      onClick={(e) => {
-                                        addFeeHeadDialog.onTrue();
-                                        e.stopPropagation();
-                                      }}
-                                      size="small"
-                                    >
-                                      <Add />
-                                    </IconButton>
-                                  </Tooltip>
+                                <Box display="flex" alignItems="center" gap={1}>
+                                  <Button
+                                    variant="contained"
+                                    color="primary"
+                                    size="small"
+                                    startIcon={<Iconify icon="lucide:plus" />}
+                                    onClick={(e) => {
+                                      addFeeHeadDialog.onTrue();
+                                      e.stopPropagation();
+                                    }}
+                                  >
+                                    Add Fee Head
+                                  </Button>
 
                                   <Tooltip title="Edit Fee Structure">
                                     <IconButton
@@ -200,7 +219,7 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                                         setEditFeeStructure({ className, index: idx });
                                       }}
                                     >
-                                      <Iconify icon={GlobalIcons.edit} />
+                                      <Iconify icon={GlobalIcons.edit} width={18} />
                                     </IconButton>
                                   </Tooltip>
 
@@ -214,80 +233,22 @@ const FeeStructureStep = ({ formik }: { formik: any }) => {
                                         setSelectedFeeStrcture(structure);
                                       }}
                                     >
-                                      <Iconify icon={GlobalIcons.delete} color="error" />
+                                      <Iconify icon={GlobalIcons.delete} color="error" width={18} />
                                     </IconButton>
                                   </Tooltip>
                                 </Box>
-                              </AccordionSummary>
+                              </Box>
 
-                              <AccordionDetails sx={{ padding: 0, pr: 3 }}>
-                                <Grid container spacing={2}>
-                                  {structure.feeItems?.length > 0 ? (
-                                    <Grid size={{ xs: 12 }} sx={{ ml: 6 }}>
-                                      <Grid container spacing={2} sx={{ alignItems: 'center' }}>
-                                        <Grid size={{ xs: 2 }}>
-                                          <Typography variant="subtitle2" fontWeight={600}>
-                                            Category
-                                          </Typography>
-                                        </Grid>
-                                        <Grid size={{ xs: 2 }}>
-                                          <Typography variant="subtitle2" fontWeight={600}>
-                                            Name
-                                          </Typography>
-                                        </Grid>
-                                        <Grid size={{ xs: 2 }} pl={2}>
-                                          <Typography variant="subtitle2" fontWeight={600}>
-                                            Amount
-                                          </Typography>
-                                        </Grid>
-                                        <Grid size={{ xs: 2 }} pl={4}>
-                                          <Typography variant="subtitle2" fontWeight={600}>
-                                            Payment Type
-                                          </Typography>
-                                        </Grid>
-                                        <Grid size={{ xs: 2 }} pl={6}>
-                                          <Typography variant="subtitle2" fontWeight={600}>
-                                            Optional
-                                          </Typography>
-                                        </Grid>
-                                        <Grid size={{ xs: 2 }} pl={4}>
-                                          <Typography variant="subtitle2" fontWeight={600}>
-                                            Action
-                                          </Typography>
-                                        </Grid>
-                                      </Grid>
-                                    </Grid>
-                                  ) : (
-                                    <Box
-                                      display="flex"
-                                      alignItems="center"
-                                      justifyContent="center"
-                                      width="100%"
-                                    >
-                                      <EmptyContent
-                                        title="No Fee Heads Added"
-                                        sx={{
-                                          width: 'fullWidth',
-                                          position: 'sticky',
-                                          left: 0,
-                                          padding: 0,
-                                        }}
-                                      />
-                                    </Box>
-                                  )}
-
-                                  <Divider />
-
-                                  <FeeStructureCard
-                                    className={className}
-                                    feeItems={structure.feeItems || []}
-                                    structureIndex={idx}
-                                    formik={formik}
-                                    addFeeHeadDialog={addFeeHeadDialog}
-                                  />
-                                </Grid>
-                              </AccordionDetails>
-                            </Accordion>
+                              <Box sx={{ p: 0 }}>
+                                <FeeStructureCard
+                                  className={className}
+                                  feeItems={structure.feeItems || []}
+                                  structureIndex={idx}
+                                  formik={formik}
+                                  addFeeHeadDialog={addFeeHeadDialog}
+                                />
+                              </Box>
+                            </Card>
                           );
                         })
                       ) : (

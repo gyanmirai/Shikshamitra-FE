@@ -18,10 +18,22 @@ export function BreadcrumbsLink({ link, activeLast, disabled, ...props }: Props)
   const styles = {
     typography: 'body2',
     alignItems: 'center',
-    color: 'text.primary',
+    color: 'text.secondary',
     display: 'inline-flex',
+    transition: 'all 0.2s ease-in-out',
+    fontWeight: activeLast ? 600 : 400,
+    '&:hover': {
+      color: 'primary.main',
+      textDecoration: 'none',
+      backgroundColor: 'action.hover',
+      borderRadius: 0.75,
+    },
     ...(disabled &&
-      !activeLast && { cursor: 'default', pointerEvents: 'none', color: 'text.disabled' }),
+      !activeLast && {
+        cursor: 'default',
+        pointerEvents: 'none',
+        color: 'text.disabled',
+      }),
   };
 
   const renderContent = (
