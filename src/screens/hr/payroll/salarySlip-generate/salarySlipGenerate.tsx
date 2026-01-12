@@ -25,7 +25,6 @@ import {
   Divider,
   TextField,
   Typography,
-  CardContent,
   Autocomplete,
 } from '@mui/material';
 
@@ -74,7 +73,7 @@ const PaySlipGenerationScreen = () => {
     }
   }, [employee?.id, getEmployeeSalarySlip, monthYear]);
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <CustomBreadcrumbs
         heading="Generate Salary Slip"
         links={[
@@ -82,207 +81,224 @@ const PaySlipGenerationScreen = () => {
           { name: 'Payroll Management' },
           { name: 'Generate Salary Slip' },
         ]}
-        sx={{ mb: 2 }}
+        sx={{ mb: 0 }}
         description="Generate and download salary slips by selecting the pay period and employee details."
       />
-      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
-        <Autocomplete
-          loading={isLoading}
-          fullWidth
-          value={employee}
-          onChange={(_, value) => setEmployee(value)}
-          options={employees?.items || []}
-          getOptionLabel={(option: any) => option?.fullName || ''}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderInput={(params) => <TextField {...params} size="small" label="Employee" />}
-        />
 
-        <DatePicker
-          minDate={dayjs(currentYear?.startDate)}
-          maxDate={dayjs(currentYear?.endDate)}
-          value={monthYear}
-          onChange={(val) => setMonthYear(val)}
-          views={['month', 'year']}
-          label="Select Year Month"
-          format="MMMM-YYYY"
-          sx={{ maxWidth: '250px', width: '100%' }}
-          slotProps={{ textField: { size: 'small' } }}
-        />
-      </Box>
+      <Card sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary' }}>
+          Filter Criteria
+        </Typography>
+        <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+          <Autocomplete
+            loading={isLoading}
+            fullWidth
+            value={employee}
+            onChange={(_, value) => setEmployee(value)}
+            options={employees?.items || []}
+            getOptionLabel={(option: any) => option?.fullName || ''}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            renderInput={(params) => <TextField {...params} label="Select Employee" />}
+            sx={{ maxWidth: 400, flex: 1 }}
+            size="small"
+          />
 
-      <Divider />
+          <DatePicker
+            minDate={dayjs(currentYear?.startDate)}
+            maxDate={dayjs(currentYear?.endDate)}
+            value={monthYear}
+            onChange={(val) => setMonthYear(val)}
+            views={['month', 'year']}
+            label="Select Pay Period"
+            format="MMMM-YYYY"
+            sx={{ maxWidth: 250, width: '100%' }}
+            slotProps={{
+              textField: {
+                size: 'small',
+              },
+            }}
+          />
+        </Box>
+      </Card>
 
       {employee?.id && !employeeSalarySlipLoading && (
         <>
-          <Box my={2}>
-            <Grid container spacing={2}>
+          <Box>
+            <Grid container spacing={3}>
               <Grid size={{ xs: 12, sm: 4 }}>
                 <Card
                   sx={{
+                    p: 3,
                     height: '100%',
-
-                    border: (theme) =>
-                      `1px solid ${varAlpha(theme.vars.palette.success.mainChannel, 0.2)}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    boxShadow: (theme) => theme.customShadows?.z8 || 4,
                   }}
                 >
-                  <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                      <Box
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: '10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: (theme) =>
-                            varAlpha(theme.vars.palette.success.mainChannel, 0.16),
-                        }}
-                      >
-                        <Iconify
-                          icon="solar:wallet-money-bold"
-                          width={20}
-                          sx={{ color: 'success.main' }}
-                        />
-                      </Box>
-                      <Typography variant="h5" fontWeight={600} color="success.main">
-                        {formatCurrency(employeeSalarySlip?.totalEarning || 0)}
-                      </Typography>
-                    </Box>
-                    <Typography variant="caption" gutterBottom>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 0.5 }}>
                       Total Earning
                     </Typography>
-                  </CardContent>
+                    <Typography variant="h4" fontWeight={700} color="success.main">
+                      {formatCurrency(employeeSalarySlip?.totalEarning || 0)}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.16),
+                      color: 'success.main',
+                    }}
+                  >
+                    <Iconify icon="solar:wallet-money-bold" width={32} />
+                  </Box>
                 </Card>
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
                 <Card
                   sx={{
+                    p: 3,
                     height: '100%',
-
-                    border: (theme) =>
-                      `1px solid ${varAlpha(theme.vars.palette.error.mainChannel, 0.2)}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    boxShadow: (theme) => theme.customShadows?.z8 || 4,
                   }}
                 >
-                  <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                      <Box
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: '10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: (theme) =>
-                            varAlpha(theme.vars.palette.error.mainChannel, 0.16),
-                        }}
-                      >
-                        <Iconify
-                          icon="tabler:moneybag-minus"
-                          width={20}
-                          sx={{ color: 'error.main' }}
-                        />
-                      </Box>
-                      <Typography variant="h5" fontWeight={600} color="error.main">
-                        {formatCurrency(employeeSalarySlip?.totalDeduction || 0)}
-                      </Typography>
-                    </Box>
-                    <Typography variant="caption" gutterBottom>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 0.5 }}>
                       Total Deduction
                     </Typography>
-                  </CardContent>
+                    <Typography variant="h4" fontWeight={700} color="error.main">
+                      {formatCurrency(employeeSalarySlip?.totalDeduction || 0)}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.16),
+                      color: 'error.main',
+                    }}
+                  >
+                    <Iconify icon="tabler:moneybag-minus" width={32} />
+                  </Box>
                 </Card>
               </Grid>
 
               <Grid size={{ xs: 12, sm: 4 }}>
                 <Card
                   sx={{
+                    p: 3,
                     height: '100%',
-
-                    border: (theme) =>
-                      `1px solid ${varAlpha(theme.vars.palette.primary.mainChannel, 0.2)}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    // bgcolor: 'primary.main',
+                    color: 'primary.main',
+                    boxShadow: (theme) => theme.customShadows?.z8 || 4,
                   }}
                 >
-                  <CardContent sx={{ p: 1.5, pb: '12px !important' }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                      <Box
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: '10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: (theme) =>
-                            varAlpha(theme.vars.palette.primary.mainChannel, 0.16),
-                        }}
-                      >
-                        <Iconify
-                          icon="solar:hand-money-bold"
-                          width={20}
-                          sx={{ color: 'primary.main' }}
-                        />
-                      </Box>
-                      <Typography variant="h5" fontWeight={600} color="primary.main">
-                        {formatCurrency(employeeSalarySlip?.netSalary || 0)}
-                      </Typography>
-                    </Box>
-                    <Typography variant="caption" gutterBottom>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ opacity: 0.8, mb: 0.5 }}>
                       Net Payable
                     </Typography>
-                  </CardContent>
+                    <Typography variant="h4" fontWeight={700}>
+                      {formatCurrency(employeeSalarySlip?.netSalary || 0)}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.16),
+                    }}
+                  >
+                    <Iconify icon="solar:hand-money-bold" width={32} />
+                  </Box>
                 </Card>
               </Grid>
             </Grid>
           </Box>
-          <Box display="flex" gap={2} flexWrap="wrap" my={2} justifyContent="flex-end">
+
+          <Box display="flex" gap={2} my={1} justifyContent="flex-end">
             <Button
-              size="small"
               startIcon={<Iconify icon="ion:download" />}
-              variant="soft"
-              sx={{ px: '32px' }}
+              variant="outlined"
+              color="inherit"
+              sx={{ px: 3 }}
             >
               Download PDF
             </Button>
 
             <Button
-              size="small"
               startIcon={<Iconify icon="ion:print" />}
-              variant="soft"
-              sx={{ px: '32px' }}
+              variant="outlined"
+              color="inherit"
+              sx={{ px: 3 }}
             >
-              Print Payslip
+              Print
             </Button>
 
             <Button
-              size="small"
               startIcon={<Iconify icon="ion:email" />}
               variant="contained"
-              sx={{ px: '32px' }}
+              // color="primary"
+              sx={{ px: 3 }}
             >
               Email Payslip
             </Button>
           </Box>
-          <Grid container spacing={3} sx={{ display: 'flex', height: '100%', minHeight: '0' }}>
-            <Grid
-              size={{ xs: 12, md: 6 }}
-              sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: '0' }}
-            >
-              <Typography variant="body2" fontWeight={600}>
-                Earning Section
-              </Typography>
-              <EarningSection data={employeeSalarySlip?.earnings || []} />
+
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Box
+                  sx={{
+                    p: 2.5,
+                    px: 3,
+                    bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+                  }}
+                >
+                  <Typography variant="h6">Earnings</Typography>
+                </Box>
+                <Divider />
+                <Box sx={{ p: 2 }}>
+                  <EarningSection data={employeeSalarySlip?.earnings || []} />
+                </Box>
+              </Card>
             </Grid>
-            <Grid
-              size={{ xs: 12, md: 6 }}
-              sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: '0' }}
-            >
-              <Typography variant="body2" fontWeight={600}>
-                Deduction Section
-              </Typography>
-              <DeductionSection data={employeeSalarySlip?.deductions || []} />
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Box
+                  sx={{
+                    p: 2.5,
+                    px: 3,
+                    bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+                  }}
+                >
+                  <Typography variant="h6">Deductions</Typography>
+                </Box>
+                <Divider />
+                <Box sx={{ p: 2 }}>
+                  <DeductionSection data={employeeSalarySlip?.deductions || []} />
+                </Box>
+              </Card>
             </Grid>
           </Grid>
         </>
@@ -310,7 +326,7 @@ export const EarningSection = ({ data }: { data: any }) => (
         render(value, row) {
           return (
             <Typography
-              variant="caption"
+              variant="subtitle2"
               sx={{ fontWeight: value === 'Total Amount' ? 'bold' : 'normal' }}
             >
               {value}
@@ -325,7 +341,7 @@ export const EarningSection = ({ data }: { data: any }) => (
         render(value, row) {
           return (
             <Typography
-              variant="caption"
+              variant="body2"
               sx={{
                 fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal',
               }}
@@ -355,7 +371,7 @@ export const DeductionSection = ({ data }: { data: any }) => (
         render(value, row) {
           return (
             <Typography
-              variant="caption"
+              variant="subtitle2"
               sx={{ fontWeight: value === 'Total Amount' ? 'bold' : 'normal' }}
             >
               {value}
@@ -370,7 +386,7 @@ export const DeductionSection = ({ data }: { data: any }) => (
         render(value, row) {
           return (
             <Typography
-              variant="caption"
+              variant="body2"
               sx={{
                 fontWeight: row.employeeType === 'Total Amount' ? 'bold' : 'normal',
               }}

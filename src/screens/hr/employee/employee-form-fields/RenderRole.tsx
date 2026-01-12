@@ -14,8 +14,6 @@ export const RenderRole = ({ formik, disabled }: RenderRoleProps) => {
     currentQueryAndMutation: useGetRolesQuery,
   });
 
-  console.log(data?.items, 'formik.values.role', formik.values.role);
-
   const roleValue = data?.items?.find((item: any) => item.id === formik.values.role) ?? null;
 
   return (

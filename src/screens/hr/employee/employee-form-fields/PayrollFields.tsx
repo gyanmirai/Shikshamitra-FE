@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { Add } from '@mui/icons-material';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
@@ -90,9 +91,18 @@ export const RenderComponents = ({ formik, name, label, type, showTempAdd = fals
             <Card
               key={index}
               sx={{
-                p: 2,
+                p: 2.5,
                 position: 'relative',
-                boxShadow: (theme) => theme.customShadows.z4,
+                borderRadius: 2,
+                borderWidth: 1,
+                borderStyle: 'dashed',
+                borderColor: (theme) => alpha(theme.palette.grey[500], 0.2),
+                boxShadow: 'none',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: (theme) => alpha(theme.palette.background.neutral, 0.4),
+                  borderColor: (theme) => alpha(theme.palette.grey[500], 0.4),
+                },
               }}
             >
               <Box

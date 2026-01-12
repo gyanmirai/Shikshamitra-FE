@@ -1,5 +1,5 @@
-import type { Palette } from '@mui/material/styles';
 import type { LabelColor } from 'src/components/label';
+import type { Palette, PaletteColorOptions } from '@mui/material/styles';
 
 import React from 'react';
 import Link from 'next/link';
@@ -42,81 +42,146 @@ export function PrincipalDashboardCard({
   const theme = useTheme();
 
   return (
-    <Box component={Link} href={href} sx={{ textDecoration: 'none' }}>
+    <Box
+      component={Link}
+      href={href}
+      sx={{ textDecoration: 'none', height: '100%', display: 'block' }}
+    >
       <Card
         sx={{
-          p: 2,
-          cursor: 'pointer',
+          p: 3,
           height: '100%',
-          transition: 'all 0.3s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          overflow: 'visible',
+          borderRadius: 2,
+          boxShadow: theme.shadows[1],
+          border: `1px solid ${theme.palette.divider}`,
+          transition: theme.transitions.create(['transform', 'box-shadow', 'border-color'], {
+            duration: theme.transitions.duration.shorter,
+          }),
           '&:hover': {
-            boxShadow: 'var(--shadows-8)',
-            transform: 'scale(1.03)',
+            transform: 'translateY(-4px)',
+            boxShadow: theme.shadows[8],
+            borderColor: 'transparent',
           },
         }}
       >
-        {/* Title & Dropdown Section */}
-        <Box display="flex" flexDirection="row" alignItems="center">
-          <Box flex={2}>
-            <Iconify icon={icon} width={44} height={44} color={get(theme.palette, color, '')} />
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+          {/* Icon */}
+          <Box
+            sx={{
+              width: 56,
+              height: 56,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 1.5,
+              color: get(theme.palette, color, 'primary.main'),
+              bgcolor: bgColor === 'primary' ? 'primary.lighter' : `${bgColor}.lighter`,
+              boxShadow: `0 8px 16px 0 ${theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.24)' : theme.palette.augmentColor({ color: { main: get(theme.palette, color, '#000') } as PaletteColorOptions }).main}33`,
+              flexShrink: 0,
+            }}
+          >
+            <Iconify icon={icon} width={32} />
           </Box>
-          <Box flex={10}>
-            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
-              <Typography flex={3} variant="subtitle1">
+
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            {/* Header / Title + Dropdown */}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                mb: 1,
+                gap: 1,
+              }}
+            >
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  color: 'text.secondary',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  fontSize: '0.75rem',
+                  mt: 0.5,
+                }}
+              >
                 {title}
               </Typography>
+
               {selectOptions.length > 0 && onSelectChange && (
-                <Box flex={2}>
+                <Box sx={{ minWidth: 120 }}>
                   <CustomSelect
                     label={dropdownLabel}
                     options={selectOptions}
                     value={selectedValue}
                     onChange={(e) => onSelectChange(e as string)}
-                    formControlProps={{ fullWidth: false }}
+                    formControlProps={{
+                      fullWidth: true,
+                      size: 'small',
+                      sx: { '& .MuiInputBase-root': { fontSize: '0.8125rem' } },
+                    }}
                   />
                 </Box>
               )}
             </Box>
 
-            {/* Count Section */}
-            <Box display="flex" gap={2} alignItems="center">
-              <Typography
-                display="flex"
-                justifyContent="flex-start"
-                alignContent="flex-start"
-                alignItems="flex-start"
-                variant="h3"
-                color="black"
-              >
+            {/* Main Value */}
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 2 }}>
+              <Typography variant="h3" sx={{ fontWeight: 800, color: 'text.primary' }}>
                 {count}
               </Typography>
-              {attendance !== '' && (
-                <Typography
-                  display="flex"
-                  justifyContent="flex-start"
-                  alignItems="center"
-                  color="black"
+
+              {attendance && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    color: 'text.secondary',
+                    gap: 0.5,
+                  }}
                 >
-                  <Typography variant="h3" component="span" fontWeight={700}>
-                    {`/ ${attendance}`}
+                  <Typography
+                    variant="h6"
+                    component="span"
+                    sx={{ fontWeight: 600, color: 'text.primary' }}
+                  >
+                    / {attendance}
                   </Typography>
-                  <Typography variant="body2" component="span" fontWeight={500} mr={0.5}>
-                    % (Today Attendance)
+                  <Typography variant="caption" sx={{ fontWeight: 500 }}>
+                    % (Today)
                   </Typography>
-                </Typography>
+                </Box>
               )}
             </Box>
 
-            {/* Labels Section */}
+            {/* Labels / Footer */}
             {labels.length > 0 && (
-              <Box display="flex" justifyContent="flex-start" width="100%" mt={1}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, flexWrap: 'wrap' }}>
-                  {labels.map((label) => (
-                    <Label key={label.name} color={label.color}>
-                      {`${label.name} : ${label.value}`}
-                    </Label>
-                  ))}
-                </Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 1,
+                  flexWrap: 'wrap',
+                  pt: 2,
+                  borderTop: `1px dashed ${theme.palette.divider}`,
+                  mt: 'auto',
+                }}
+              >
+                {labels.map((label) => (
+                  <Label
+                    key={label.name}
+                    color={label.color}
+                    sx={{
+                      fontWeight: 600,
+                      borderRadius: 1,
+                    }}
+                  >
+                    {label.name}: {label.value}
+                  </Label>
+                ))}
               </Box>
             )}
           </Box>

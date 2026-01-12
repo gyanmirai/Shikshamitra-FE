@@ -82,116 +82,129 @@ export function CustomBreadcrumbs({
   );
 
   return (
-    <Box
+    <Stack
+      direction="row"
+      alignItems="center"
+      spacing={2}
       sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        minHeight: 44, // slight bump for comfort (still compact)
+        py: 1.5,
         px: 2,
-        borderRadius: 1.5,
-
-        // subtle modern surface
-        // backgroundColor: (theme) =>
-        //   theme.palette.mode === 'light' ? 'rgba(248, 250, 252, 0.9)' : 'rgba(20, 24, 28, 0.9)',
-        backdropFilter: 'blur(6px)',
-
+        minHeight: 56,
+        borderRadius: 2,
+        bgcolor: 'background.paper',
+        boxShadow: (theme) =>
+          `0px 4px 12px ${theme.palette.mode === 'light' ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.16)'}`,
+        border: (theme) => `1px solid ${theme.palette.divider}`,
+        backdropFilter: 'blur(8px)',
         overflow: 'hidden',
         ...sx,
       }}
     >
-      {/* LEFT: Back + Heading */}
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ flexShrink: 0 }}>
+      {/* LEFT: Back Button & Heading */}
+      <Stack direction="row" alignItems="center" spacing={1.5}>
         {isBack && (
-          <IconButton size="small" onClick={onBack}>
-            <Iconify icon="ic:outline-arrow-back-ios-new" fontSize={18} />
+          <IconButton
+            size="small"
+            onClick={onBack}
+            sx={{
+              color: 'text.secondary',
+              bgcolor: 'action.hover',
+              border: (theme) => `1px solid ${theme.palette.divider}`,
+              '&:hover': {
+                bgcolor: 'action.selected',
+                color: 'text.primary',
+                transform: 'translateY(-1px)',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <Iconify icon="eva:arrow-back-fill" width={18} />
           </IconButton>
         )}
 
-        <Typography variant="h5" noWrap fontWeight={600} letterSpacing="-0.01em">
-          {heading}
-        </Typography>
+        {heading && (
+          <Stack spacing={0.25}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}
+              >
+                {heading}
+              </Typography>
+              {description && (
+                <CustomTooltip arrow placement="right" title={description} {...tooltipProps}>
+                  <Iconify
+                    icon="lucide:info"
+                    sx={{
+                      cursor: 'pointer',
+                    }}
+                    width={16}
+                    color="info.main"
+                  />
+                </CustomTooltip>
+              )}
+            </Stack>
 
-        {description && (
-          <CustomTooltip arrow placement="right" title={description} {...tooltipProps}>
-            <Iconify
-              icon="lucide:info"
-              sx={{ cursor: 'pointer' }}
-              fontSize={16}
-              color="info.main"
-            />
-          </CustomTooltip>
+            {/* Optional: We could show breadcrumbs *under* the title if we wanted a different layout, 
+                 but matching the prompt's request for single line modernization first. 
+                 However, usually enterprise breadcrumbs are above title or inline. 
+                 The current design attempts inline. Let's keep inline but clean.
+             */}
+          </Stack>
         )}
-
-        {/* MODERN separator (replace red bar) */}
-        <Box
-          sx={{
-            width: 12,
-            height: 1,
-            bgcolor: 'grey.400',
-            opacity: 0.6,
-            mx: 1,
-            flexShrink: 0,
-          }}
-        />
       </Stack>
 
-      {/* CENTER: Breadcrumbs */}
+      {/* CENTER: Breadcrumbs (Liquid Width) */}
       {!!links.length && (
-        <Breadcrumbs
-          separator="/"
+        <Box
           sx={{
-            fontSize: 12,
-            letterSpacing: '0.02em',
-            color: 'text.secondary',
-            whiteSpace: 'nowrap',
-            overflowX: 'auto',
             flexGrow: 1,
-            '* ol': {
-              gap: 1,
-            },
-
-            '&::-webkit-scrollbar': { display: 'none' },
-            '& .MuiBreadcrumbs-separator': { mx: 0.5 },
-
-            // modern hover feel
-            '& a': {
-              transition: 'color 0.2s ease',
-              '&:hover': {
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            },
+            minWidth: 0, // Allow shrinking
+            display: 'flex',
+            alignItems: 'center',
           }}
         >
-          {links.map((link, index) => (
-            <BreadcrumbsLink
-              key={link.name ?? index}
-              link={link}
-              activeLast={activeLast}
-              disabled={index === links.length - 1}
-            />
-          ))}
-        </Breadcrumbs>
+          {/* Vertical Separator between Heading and Breadcrumbs */}
+          <Box
+            sx={{
+              width: '1px',
+              height: 24,
+              bgcolor: (theme) => theme.palette.grey[400],
+              mr: 2,
+              display: { xs: 'none', md: 'block' },
+            }}
+          />
+
+          <Breadcrumbs
+            separator={<Separator />}
+            sx={{
+              '& .MuiBreadcrumbs-separator': { mx: 1 },
+              '& .MuiBreadcrumbs-ol': {
+                flexWrap: 'nowrap',
+                overflowX: 'auto',
+                pb: 0.5, // Space for scrollbar if needed
+                scrollbarWidth: 'none', // Firefox
+                '&::-webkit-scrollbar': { display: 'none' }, // Chrome/Safari
+              },
+              ...slotProps?.breadcrumbs,
+            }}
+            {...other}
+          >
+            {links.map((link, index) => (
+              <BreadcrumbsLink
+                key={link.name ?? index}
+                link={link}
+                activeLast={activeLast}
+                disabled={link.name === lastLink}
+              />
+            ))}
+          </Breadcrumbs>
+        </Box>
       )}
 
       {/* RIGHT: Actions */}
-      {action && (
-        <Box
-          sx={{
-            flexShrink: 0,
-            ml: 1,
-            '& .MuiButton-root': {
-              // borderRadius: 999, // pill-style modern CTA
-              textTransform: 'none',
-              px: 2,
-            },
-          }}
-        >
-          {action}
-        </Box>
-      )}
-    </Box>
+      {action && <Box sx={{ flexShrink: 0 }}>{action}</Box>}
+    </Stack>
   );
 }
 
@@ -201,7 +214,13 @@ export function Separator() {
   return (
     <Box
       component="span"
-      sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'text.disabled' }}
+      sx={{
+        width: 4,
+        height: 4,
+        borderRadius: '50%',
+        bgcolor: 'text.disabled',
+        opacity: 0.4, // subtler
+      }}
     />
   );
 }

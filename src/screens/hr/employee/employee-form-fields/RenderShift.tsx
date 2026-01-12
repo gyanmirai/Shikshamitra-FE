@@ -28,7 +28,6 @@ const RenderShift = ({ formik, disabled }: any) => {
           <TextField
             {...params}
             label="Shift *"
-            // placeholder="Search Shift *"
             size="small"
             fullWidth
             sx={{ width: '100%', minWidth: '200px' }}

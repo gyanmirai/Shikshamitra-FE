@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
+import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
+import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { Grid, Button, Switch, IconButton, Typography } from '@mui/material';
+import { Box, Grid, Button, IconButton, Typography } from '@mui/material';
 
 import AddFeeHeadDialogContent from './AddFeeHeadForm';
 
@@ -26,46 +28,54 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
   const deleteFeeStructureDialog = useBoolean();
 
   return (
-    <Grid size={12} key={className} sx={{ ml: 3, mt: 2 }}>
-      {feeItems.length > 0 && (
+    <Grid size={12} key={className} sx={{ mt: 2, px: 2 }}>
+      {feeItems.length > 0 ? (
         <Scrollbar sx={{ height: '150px', mb: 2 }}>
           {feeItems.map((item, index) => (
             <Grid
               container
               key={index}
               sx={{
-                border: '1px dashed #808080',
+                border: '1px dashed',
+                borderColor: 'text.disabled',
                 borderRadius: 1,
-                spacing: 3,
                 alignItems: 'center',
-                p: 1,
-                mb: 2,
+                px: 1.5,
+                py: 0.5, // Reduced padding
+                mb: 1, // Reduced margin
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                  borderColor: 'primary.main',
+                },
               }}
             >
-              <Grid size={0.1}>
-                <Typography variant="subtitle2">{index + 1}.</Typography>
+              <Grid size={0.5}>
+                <Typography variant="body2" color="text.secondary">
+                  {index + 1}.
+                </Typography>
               </Grid>
-              <Grid size={2} pt={0} ml={2}>
-                <Typography variant="subtitle2">{item.feeCategory}</Typography>
+              <Grid size={2.5} sx={{ pr: 1 }}>
+                <Typography variant="subtitle2" noWrap>
+                  {item.feeCategory}
+                </Typography>
               </Grid>
-              <Grid size={2} pt={0}>
-                <Typography variant="subtitle2">{item.feeHead}</Typography>
+              <Grid size={2.5} sx={{ pr: 1 }}>
+                <Typography variant="body2" noWrap>
+                  {item.feeHead}
+                </Typography>
               </Grid>
-              <Grid size={2} pt={0}>
+              <Grid size={2} sx={{ pr: 2 }}>
                 <NumericFormatCustom
                   size="small"
                   fullWidth
-                  label="Amount *"
+                  placeholder="0.00"
                   name={`feeStructureClasses.${className}[${index}].feeItems.${index}.amount`}
                   value={item.amount || ''}
                   onChange={(e) => {
                     let val = e.target.value;
-                    val = val.replace(/[₹,\s]/g, ''); // remove ₹, , and spaces
-
-                    // Allow only numbers
+                    val = val.replace(/[₹,\s]/g, '');
                     if (!/^\d*$/.test(val)) return;
-
-                    // Restrict to 5 digits max
                     if (val.length > 5) return;
 
                     const updatedItems = [...feeItems];
@@ -76,69 +86,171 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                       Number(val)
                     );
                   }}
-                  sx={{
-                    width: '100%',
-                    padding: '0',
-                    borderRadius: 1,
+                  InputProps={{
+                    startAdornment: (
+                      <Typography
+                        variant="caption"
+                        sx={{ mr: 0.5, color: 'text.secondary', fontWeight: 'bold' }}
+                      >
+                        ₹
+                      </Typography>
+                    ),
+                    style: { fontSize: '0.875rem', fontWeight: 600 },
                   }}
-                  // error={
-                  //   !!(
-                  //     formik?.touched?.feeStructureClasses?.[className]?.feeItems?.[index]
-                  //       ?.amount &&
-                  //     formik?.errors?.feeStructureClasses?.[className]?.feeItems?.[index]?.amount
-                  //   )
-                  // }
-                  // helperText={
-                  //   formik?.touched?.feeStructureClasses?.[className]?.feeItems?.[index]?.amount &&
-                  //   formik?.errors?.feeStructureClasses?.[className]?.feeItems?.[index]?.amount
-                  //     ? formik.errors.feeStructureClasses[className].feeItems[index].amount
-                  //     : ''
-                  // }
+                  sx={{
+                    '& .MuiInputBase-root': {
+                      height: 36, // Force compact height
+                      bgcolor: 'background.paper',
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'transparent', // Cleaner look
+                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.08),
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'text.disabled',
+                    },
+                    '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'primary.main',
+                      bgcolor: 'transparent',
+                    },
+                  }}
+                  // error/helperText logic remains...
+                  error={
+                    !!(
+                      (formik?.touched?.feeStructureClasses as any)?.[className]?.[structureIndex]
+                        ?.feeItems?.[index]?.amount &&
+                      (formik?.errors?.feeStructureClasses as any)?.[className]?.[structureIndex]
+                        ?.feeItems?.[index]?.amount
+                    )
+                  }
                 />
               </Grid>
-              <Grid size={2} pt={0} display="flex" alignItems="center" ml={2}>
-                <Switch
-                  checked={item.isOneTime}
-                  onChange={(event) => {
+
+              {/* One Time Fee Toggle */}
+              <Grid size={2} display="flex" justifyContent="center">
+                <Box
+                  component="div"
+                  onClick={() => {
                     formik.setFieldValue(
                       `feeStructureClasses.${className}[${structureIndex}].feeItems[${index}].isOneTime`,
-                      event.target.checked
+                      !item.isOneTime
                     );
                   }}
-                  size="small"
-                />
-                <Typography variant="body2" sx={{ mr: 0.5 }}>
-                  One Time Fee
-                </Typography>
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    cursor: 'pointer',
+                    color: item.isOneTime ? 'primary.main' : 'text.disabled',
+                    bgcolor: item.isOneTime
+                      ? (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08)
+                      : 'transparent',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: item.isOneTime
+                      ? (theme) => varAlpha(theme.palette.primary.mainChannel, 0.2)
+                      : 'transparent',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.12),
+                    },
+                  }}
+                >
+                  <Iconify
+                    icon={
+                      item.isOneTime ? 'solar:calendar-date-bold' : 'solar:calendar-date-outline'
+                    }
+                    width={16}
+                  />
+                  <Typography variant="caption" fontWeight={600}>
+                    One Time
+                  </Typography>
+                </Box>
               </Grid>
-              <Grid size={2} pt={0} display="flex" alignItems="center">
-                <Switch
-                  checked={item.required}
-                  onChange={(event) => {
+
+              {/* Optional Fee Toggle */}
+              <Grid size={2} display="flex" justifyContent="center">
+                <Box
+                  component="div"
+                  onClick={() => {
                     formik.setFieldValue(
                       `feeStructureClasses.${className}[${structureIndex}].feeItems[${index}].required`,
-                      event.target.checked
+                      !item.required
                     );
                   }}
-                />
-                <Typography variant="body2" sx={{ mr: 0.5 }}>
-                  Optional
-                </Typography>
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    cursor: 'pointer',
+                    color: !item.required ? 'info.main' : 'text.disabled',
+                    bgcolor: !item.required
+                      ? (theme) => varAlpha(theme.palette.info.mainChannel, 0.08)
+                      : 'transparent',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: !item.required
+                      ? (theme) => varAlpha(theme.palette.info.mainChannel, 0.2)
+                      : 'transparent',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: (theme) => varAlpha(theme.palette.info.mainChannel, 0.12),
+                    },
+                  }}
+                >
+                  <Iconify
+                    icon={!item.required ? 'solar:check-circle-bold' : 'solar:check-circle-outline'}
+                    width={16}
+                  />
+                  <Typography variant="caption" fontWeight={600}>
+                    Optional
+                  </Typography>
+                </Box>
               </Grid>
-              <Grid size={0.5} ml={2}>
+
+              <Grid size={0.5} display="flex" justifyContent="flex-end">
                 <IconButton
                   color="error"
+                  size="small"
                   onClick={() => {
                     deleteFeeStructureDialog.onTrue();
                     setSelectedFeeHead(index);
                   }}
+                  sx={{
+                    opacity: 0.6,
+                    '&:hover': {
+                      opacity: 1,
+                      bgcolor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.08),
+                    },
+                  }}
                 >
-                  <Iconify icon={GlobalIcons.delete} />
+                  <Iconify icon={GlobalIcons.delete} width={18} />
                 </IconButton>
               </Grid>
             </Grid>
           ))}
         </Scrollbar>
+      ) : (
+        <EmptyContent
+          title="No Fee Heads Added"
+          description="Add fee heads to define the fee structure."
+          filled
+          sx={{ py: 5, mb: 2 }}
+          action={
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="lucide:plus" />}
+              onClick={() => addFeeHeadDialog.onTrue()}
+            >
+              Add Fee Head
+            </Button>
+          }
+        />
       )}
 
       <CustomDialog

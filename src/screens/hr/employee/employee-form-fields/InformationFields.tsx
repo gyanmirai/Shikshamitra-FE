@@ -12,6 +12,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'src/components/phone-input';
 import { UploadAvatar } from 'src/components/upload';
 import { ReligionTypeArray } from 'src/enums/religion';
+import { alpha, useTheme } from '@mui/material/styles';
 import { fileToBase64 } from 'src/utils/file-to-base64';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BloodGroupArray } from 'src/enums/blood-group';
@@ -31,7 +32,6 @@ import {
   Select,
   Divider,
   MenuItem,
-  FormLabel,
   TextField,
   RadioGroup,
   InputLabel,
@@ -64,27 +64,53 @@ export const SectionCard = ({
   isLoading?: boolean;
   paperProps?: PaperProps;
   gridProps?: GridProps;
-}) => (
-  <Paper sx={{ p: 2, mb: 3, position: 'relative', ...paperProps.sx }} elevation={6}>
-    {isLoading && <LinearProgress sx={{ position: 'absolute', left: 0, top: 0, width: '100%' }} />}
-    <Box
-      display="flex"
-      justifyContent={title ? 'space-between' : 'end'}
-      alignItems="center"
-      pb={title || headerContent ? 2 : 0}
+}) => {
+  const theme = useTheme();
+
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        p: { xs: 2, md: 3 },
+        mb: 3,
+        position: 'relative',
+        borderRadius: 2,
+        border: `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
+        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
+        overflow: 'hidden',
+        transition: 'all 0.3s ease-in-out',
+        '&:hover': {
+          boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.08)',
+        },
+        ...paperProps.sx,
+      }}
     >
-      {title && (
-        <Typography variant="h6" color="primary.main">
-          {title}
-        </Typography>
+      {isLoading && (
+        <LinearProgress sx={{ position: 'absolute', left: 0, top: 0, width: '100%', zIndex: 1 }} />
       )}
-      {headerContent}
-    </Box>
-    <Grid container spacing={3} sx={{ display: 'flex', alignItems: 'center', ...gridProps.sx }}>
-      {children}
-    </Grid>
-  </Paper>
-);
+      <Box
+        display="flex"
+        justifyContent={title ? 'space-between' : 'end'}
+        alignItems="center"
+        mb={title || headerContent ? 3 : 0}
+        sx={{
+          borderBottom: title ? `1px dashed ${alpha(theme.palette.grey[500], 0.2)}` : 'none',
+          pb: title ? 2 : 0,
+        }}
+      >
+        {title && (
+          <Typography variant="h6" fontWeight={700} color="text.primary">
+            {title}
+          </Typography>
+        )}
+        {headerContent}
+      </Box>
+      <Grid container spacing={3} sx={{ ...gridProps.sx }}>
+        {children}
+      </Grid>
+    </Paper>
+  );
+};
 // Motion variants for subtle slide
 const editButtonVariant = {
   hidden: { opacity: 0, x: -20 },
@@ -130,8 +156,8 @@ export const CardActions = ({
             transition={{ duration: 0.3 }}
           >
             <CustomTooltip title="Edit" placement="top">
-              <IconButton onClick={isEdit.onTrue} title="Edit">
-                <Iconify icon="solar:pen-bold" sx={{ cursor: 'pointer' }} />
+              <IconButton onClick={isEdit.onTrue} color="default">
+                <Iconify icon="solar:pen-bold" />
               </IconButton>
             </CustomTooltip>
           </motion.div>
@@ -155,16 +181,15 @@ export const CardActions = ({
                   setIsClickOnSave('yes');
                 }}
                 disabled={isNewLoading && isClickOnSave === 'yes'}
-                title="Save Changes"
+                color="primary"
               >
                 <Iconify
                   icon={
                     isNewLoading && isClickOnSave === 'yes'
                       ? 'eos-icons:loading'
-                      : 'lets-icons:save'
+                      : 'solar:diskette-bold'
                   }
-                  width={20}
-                  sx={{ cursor: 'pointer' }}
+                  width={24}
                 />
               </IconButton>
             </CustomTooltip>
@@ -175,9 +200,9 @@ export const CardActions = ({
                   onCancel();
                   isEdit.onFalse();
                 }}
-                title="Cancel"
+                color="error"
               >
-                <Iconify icon="game-icons:cancel" width={20} sx={{ cursor: 'pointer' }} />
+                <Iconify icon="solar:close-circle-bold" width={24} />
               </IconButton>
             </CustomTooltip>
           </motion.div>
@@ -361,18 +386,18 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                   fullWidth
                   sx={{ display: 'flex', gap: 1, flexDirection: 'row', alignItems: 'center' }}
                 >
-                  <FormLabel
-                    id="gender-radio-group"
+                  <Typography
+                    variant="subtitle2"
                     sx={{
                       color: (theme) =>
                         formik.touched.gender && formik.errors.gender
-                          ? '#ff563d !important'
-                          : `${theme.vars.palette.common.black} !important`,
-                      mr: 1,
+                          ? theme.palette.error.main
+                          : theme.palette.text.primary,
+                      mr: 2,
                     }}
                   >
                     Gender *
-                  </FormLabel>
+                  </Typography>
                   <RadioGroup
                     row
                     aria-labelledby="gender-radio-group"
@@ -380,7 +405,12 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
                     value={formik.values.gender}
                     onChange={formik.handleChange}
                   >
-                    <FormControlLabel value={0} control={<Radio size="small" />} label="Male" />
+                    <FormControlLabel
+                      value={0}
+                      control={<Radio size="small" />}
+                      label="Male"
+                      sx={{ mr: 2 }}
+                    />
                     <FormControlLabel value={1} control={<Radio size="small" />} label="Female" />
                   </RadioGroup>
                 </FormControl>
@@ -566,9 +596,9 @@ const InformationAllFields = ({ formik, isMainForm, editData = null }: any) => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Iconify icon="mdi-light:email" />
-                      <Divider orientation="vertical" flexItem sx={{ height: 24 }} />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 0.5 }}>
+                      <Iconify icon="mdi-light:email" width={22} color="text.disabled" />
+                      <Divider orientation="vertical" flexItem sx={{ height: 20, my: 'auto' }} />
                     </Box>
                   </InputAdornment>
                 ),

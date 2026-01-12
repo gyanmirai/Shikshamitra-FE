@@ -95,7 +95,7 @@ const MainDashboardPrincipal = () => {
     <SvgColor src={`${CONFIG.site.basePath}/assets/icons/navbar/${name}.svg`} />
   );
   return (
-    <Grid container spacing={3} px={2} py={3}>
+    <Grid container spacing={3} sx={{ p: 3, maxWidth: '100%' }}>
       <Grid container spacing={3} size={12}>
         <Grid size={{ xs: 12, md: 4 }}>
           <PrincipalDashboardCard
@@ -232,7 +232,7 @@ const MainDashboardPrincipal = () => {
         </Card>
       </Grid>
 
-      <Grid size={{ lg: 8 }}>
+      <Grid size={{ lg: 8 }} sx={{ height: '100%' }}>
         <Typography sx={{ pt: '13px' }} variant="h6" fontWeight={600} mb="24px">
           Exam Overview
         </Typography>
@@ -251,20 +251,51 @@ const MainDashboardPrincipal = () => {
       <Grid size={12}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <ButtonGroup>
+            <ButtonGroup
+              variant="outlined"
+              sx={{
+                bgcolor: 'background.paper',
+                boxShadow: 1,
+                borderRadius: 1,
+                '& .MuiButton-root': {
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  px: 3,
+                  py: 1,
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                    borderColor: 'divider',
+                  },
+                  '&.Mui-contained': {
+                    bgcolor: 'primary.main',
+                    color: 'common.white',
+                    borderColor: 'primary.main',
+                    '&:hover': { bgcolor: 'primary.dark' },
+                  },
+                },
+              }}
+            >
               <Button
                 variant={timeTable === 'student' ? 'outlined' : 'contained'}
-                color="inherit"
                 onClick={() => setTimeTable('employee')}
                 startIcon={icon('ic-hr')}
+                sx={
+                  timeTable === 'employee'
+                    ? { bgcolor: 'primary.main !important', color: 'white !important' }
+                    : {}
+                }
               >
                 Employee
               </Button>
               <Button
-                color="inherit"
                 variant={timeTable === 'student' ? 'contained' : 'outlined'}
                 onClick={() => setTimeTable('student')}
                 startIcon={icon('ic-student')}
+                sx={
+                  timeTable === 'student'
+                    ? { bgcolor: 'primary.main !important', color: 'white !important' }
+                    : {}
+                }
               >
                 Student
               </Button>

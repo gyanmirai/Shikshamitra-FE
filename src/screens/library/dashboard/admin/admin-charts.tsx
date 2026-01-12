@@ -144,12 +144,18 @@ export const CategoryDistributionChart = () => {
     colors: chartColors,
     xaxis: {
       categories: mockCategoryDistribution.categories,
+      labels: {
+        style: {
+          colors: theme.palette.text.secondary,
+          fontSize: '11px',
+        },
+      },
     },
     plotOptions: {
       bar: {
         horizontal: true,
-        barHeight: '80%',
-        borderRadius: 2,
+        barHeight: '65%', // Sligher slimmer bars
+        borderRadius: 3, // Rounded corners
       },
     },
     dataLabels: {
@@ -163,7 +169,9 @@ export const CategoryDistributionChart = () => {
     yaxis: {
       labels: {
         style: {
-          fontSize: '11px', // Reduce font size to fit many categories
+          colors: theme.palette.text.secondary,
+          fontSize: '12px',
+          fontWeight: 500,
         },
       },
     },
@@ -183,7 +191,13 @@ export const CategoryDistributionChart = () => {
   });
 
   return (
-    <Card>
+    <Card
+      sx={{
+        boxShadow: theme.customShadows?.z1 || theme.shadows[1],
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 2,
+      }}
+    >
       <CardHeader title="Book Category Distribution" subheader="Total books per category" />
       <Chart
         type="bar"
@@ -193,27 +207,32 @@ export const CategoryDistributionChart = () => {
           plotOptions: {
             bar: {
               horizontal: false, // Changed to vertical
-              columnWidth: '70%', // Use columnWidth for vertical bars
-              borderRadius: 2,
+              columnWidth: '55%',
+              borderRadius: 4,
             },
           },
           xaxis: {
             categories: mockCategoryDistribution.categories,
             labels: {
               style: {
-                fontSize: '11px', // Adjust font size for x-axis categories
+                fontSize: '11px',
+                colors: theme.palette.text.secondary,
               },
             },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
           },
           yaxis: {
             labels: {
               style: {
-                fontSize: '12px', // Default font size for y-axis values
+                fontSize: '12px',
+                colors: theme.palette.text.secondary,
               },
             },
           },
           grid: {
             ...(chartOptions?.grid || {}),
+            borderColor: theme.palette.divider,
             xaxis: {
               lines: {
                 show: false, // Hide vertical grid lines for vertical bars
@@ -226,7 +245,7 @@ export const CategoryDistributionChart = () => {
             },
           },
         }}
-        height={400} // Adjust height for vertical chart
+        height={400}
         loadingProps={{ sx: { p: 2.5 } }}
         sx={{ py: 2.5, pl: 1, pr: 2.5 }}
       />
@@ -245,9 +264,14 @@ export const MemberActivityChart = () => {
 
   const chartOptions = useChart({
     colors: chartColors,
-    xaxis: { categories: mockMemberActivity.categories },
+    xaxis: {
+      categories: mockMemberActivity.categories,
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      labels: { style: { colors: theme.palette.text.secondary } },
+    },
     stroke: { width: 3, curve: 'smooth' },
-    markers: { size: 5 },
+    markers: { size: 5, strokeColors: theme.palette.background.paper, strokeWidth: 2 },
     tooltip: {
       shared: true,
       intersect: false,
@@ -256,7 +280,12 @@ export const MemberActivityChart = () => {
       },
     },
     yaxis: {
-      title: { text: 'Number of Books' },
+      title: { text: 'Number of Books', style: { color: theme.palette.text.disabled } },
+      labels: { style: { colors: theme.palette.text.secondary } },
+    },
+    grid: {
+      borderColor: theme.palette.divider,
+      strokeDashArray: 3,
     },
   });
 
@@ -265,7 +294,13 @@ export const MemberActivityChart = () => {
   }, []);
 
   return (
-    <Card>
+    <Card
+      sx={{
+        boxShadow: theme.customShadows?.z1 || theme.shadows[1],
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 2,
+      }}
+    >
       <CardHeader
         title="Member Activity Trend"
         subheader="Monthly borrowing activity"
@@ -300,14 +335,27 @@ export const WeeklyCirculationChart = () => {
 
   const chartOptions = useChart({
     colors: chartColors,
-    xaxis: { categories: mockWeeklyCirculation.categories },
+    xaxis: {
+      categories: mockWeeklyCirculation.categories,
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      labels: { style: { colors: theme.palette.text.secondary } },
+    },
     stroke: { width: 2, curve: 'smooth' },
+    fill: { type: 'gradient', gradient: { opacityFrom: 0.6, opacityTo: 0.1 } },
     tooltip: {
       shared: true,
       intersect: false,
       y: {
         formatter: (value: number) => fNumber(value),
       },
+    },
+    grid: {
+      borderColor: theme.palette.divider,
+      strokeDashArray: 3,
+    },
+    yaxis: {
+      labels: { style: { colors: theme.palette.text.secondary } },
     },
   });
 
@@ -316,7 +364,13 @@ export const WeeklyCirculationChart = () => {
   }, []);
 
   return (
-    <Card>
+    <Card
+      sx={{
+        boxShadow: theme.customShadows?.z1 || theme.shadows[1],
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 2,
+      }}
+    >
       <CardHeader
         title="Weekly Issue/Return Circulation"
         subheader="Last 7 days book circulation activity"
@@ -349,22 +403,35 @@ export const SectionBooksChart = () => {
 
   const chartOptions = useChart({
     colors: chartColors,
-    xaxis: { categories },
+    xaxis: {
+      categories,
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      labels: { style: { colors: theme.palette.text.secondary, fontWeight: 500 } },
+    },
     plotOptions: {
       bar: {
         horizontal: false,
         borderRadius: 4,
-        columnWidth: '60%',
+        columnWidth: '50%',
       },
     },
     dataLabels: {
       enabled: true,
       style: { fontSize: '12px', fontWeight: 'bold' },
+      offsetY: -10,
     },
     tooltip: {
       y: {
         formatter: (value: number) => fNumber(value),
       },
+    },
+    grid: {
+      borderColor: theme.palette.divider,
+      strokeDashArray: 3,
+    },
+    yaxis: {
+      labels: { style: { colors: theme.palette.text.secondary } },
     },
   });
 
@@ -373,7 +440,13 @@ export const SectionBooksChart = () => {
   }, []);
 
   return (
-    <Card>
+    <Card
+      sx={{
+        boxShadow: theme.customShadows?.z1 || theme.shadows[1],
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: 2,
+      }}
+    >
       <CardHeader
         title="Section-wise Book Count"
         subheader="Books distribution across shelves"
