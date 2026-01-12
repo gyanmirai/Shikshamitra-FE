@@ -18,6 +18,10 @@ import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetReservationBooksQuery } from 'src/redux/book-reservation-api/book-reservation-api';
 import {
+  useReturnBookMutation,
+  useGetReturnDetailsQuery,
+} from 'src/redux/library/issueAndReturnApi/issueAndReturnApi';
+import {
   ReservedBookStatus,
   ReservedBookStatusColors,
   ReservedBookStatusOptions,
@@ -46,6 +50,18 @@ const ReturnBookForm: React.FC<ReturnBookFormProps> = ({ open, onClose, editData
   const { data: reservedBooks } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReservationBooksQuery,
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: returnDetails } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetReturnDetailsQuery,
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [returnBook, { isLoading: isReturnLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useReturnBookMutation,
   });
 
   const formik = useFormik({

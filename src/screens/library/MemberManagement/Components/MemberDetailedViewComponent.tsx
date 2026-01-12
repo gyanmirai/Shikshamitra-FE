@@ -1,12 +1,17 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { Iconify } from 'src/components/iconify/iconify';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Tab, Box, Card, Grid, Avatar, Typography } from '@mui/material';
+import { useGetMemberDetailsQuery } from 'src/redux/library/libraryMembers/memberManagementApi';
 
 import IssuedBooks from './ViewDetailsComponent/IssuedBooks';
 import FinesCharges from './ViewDetailsComponent/FinesCharges';
@@ -54,9 +59,15 @@ const MemberDetailedViewComponent: React.FC<MemberDetailedViewComponentProps> = 
   // Initialize tab state, defaulting to 'issued-books'
   const tabs = useTabs('borrow-books');
   const theme = useTheme();
+  const { currentYear } = useSelector((state: RootState) => state.academicYear);
   // Find the currently selected tab's component to render
   const CurrentComponent = TABS.find((tab) => tab.value === tabs.value)?.component;
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: memberData } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetMemberDetailsQuery,
+    params: { memberId: member?.id, academicYearId: currentYear?.id },
+  });
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Scrollbar

@@ -20,6 +20,7 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetRoleOptionsQuery } from 'src/redux/library/roleApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useIssueBookMutation } from 'src/redux/library/issueAndReturnApi/issueAndReturnApi';
 import { useGetReservationBooksQuery } from 'src/redux/book-reservation-api/book-reservation-api';
 import { useGetBookCategoryOptionsQuery } from 'src/redux/bookCategoryOptionsApi/bookCategoryOptionApi';
 import { useGetReservationRequestDataQuery } from 'src/redux/reservationRequestApi/reservationRequestApi';
@@ -50,9 +51,14 @@ const IssueBookForm: React.FC<IssueBookFormProps> = ({ open, onClose, editData }
     currentQueryAndMutation: useGetReservationRequestDataQuery,
   });
 
-  useQueryAndMutation({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: reservationBooksData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetReservationBooksQuery,
+  });
+  const [issueBook, { isLoading: isIssueLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useIssueBookMutation,
   });
 
   const [, setBookSelected] = useState(false);

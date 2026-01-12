@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -12,8 +13,11 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { booksApi, useDeleteBookMutation } from 'src/redux/library/bookList/bookList-api';
 
 import LibraryMainScreen from './Components/LIbraryMainScreen';
 import IssueBookModal from './Components/BookView/BookIssueForm';
@@ -30,7 +34,11 @@ import type { IBook, IBookPayload, IBookCopyWithBook } from '../BookManagement/C
 const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
   // State to control book form visibility
   const [open, setOpen] = useState(false);
-
+  const [deleteBook, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteBookMutation,
+  });
+  const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
   // State to store currently selected book for editing
   const [selectedBook, setSelectedBook] = useState<IBook | null>(null);
   const [, setSelectedReservation] = useState<any>(null);
@@ -49,14 +57,6 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
 
   // Boolean hook to control detail view dialog
   const viewDialog = useBoolean();
-
-  /**
-   * Handles the deletion of a book entry
-   */
-  const handleDelete = (id: string | undefined) => {
-    deleteDialog.onFalse();
-    setSelectedBook(null);
-  };
 
   const issueDialog = useBoolean();
   const returnDialog = useBoolean();
@@ -98,6 +98,8 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
       setSelectedCopy(null);
     }
   };
+
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -397,32 +399,54 @@ const BookList = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => {
         />
       </CustomDialog>
       {/* Delete Confirmation */}
+
       <ConfirmDialog
         open={deleteDialog.value}
         onClose={() => {
-          deleteDialog.onFalse();
           setSelectedBook(null);
+          deleteDialog.onFalse();
         }}
         title="Delete"
         content={
           <>
-            Are you sure you want to delete book <strong>{selectedBook?.title}</strong>?
+            Are you sure you want to delete book <strong>&quot;{selectedBook?.title}&quot;</strong>?
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
-              handleDelete(selectedBook?.id);
-              shikshaMitraToast.success({
-                message: `Book ${selectedBook?.title} deleted successfully`,
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedBook,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    booksApi.util.updateQueryData('getAllBooks', undefined, (draft: any) => {
+                      const index = draft.items?.findIndex((b: any) => b.id === selectedBook?.id);
+                      setDeleteIndex(index);
+                      if (index !== -1) {
+                        draft.items.splice(index, 1);
+                      }
+                    })
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    booksApi.util.updateQueryData('getAllBooks', undefined, (draft: any) => {
+                      if (!draft.items) return;
+                      draft.items.splice(index, 0, selectedBook);
+                    })
+                  ),
+                onCommit: () => deleteBook(selectedBook?.id || ''),
               });
+              deleteDialog.onFalse();
+              setSelectedBook(null);
             }}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
 

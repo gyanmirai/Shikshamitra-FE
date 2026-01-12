@@ -22,6 +22,18 @@ const BookViewDetail: React.FC<BookViewDetailProps> = ({
   handleReturnBook,
   handleBookHistory,
 }) => (
+  // const {
+  //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   data: bookDetails,
+  //   isLoading,
+  //   isFetching,
+  // } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useViewBookDetailsQuery,
+  //   params: {
+  //     bookId: book?.id,
+  //   },
+  // });
   <Box display="flex" flexDirection="column" sx={{ height: '100%' }}>
     <Scrollbar sx={{ p: 2, height: '100%' }}>
       <Grid container spacing={2} alignItems="flex-start">
@@ -50,5 +62,4 @@ const BookViewDetail: React.FC<BookViewDetailProps> = ({
     </Scrollbar>
   </Box>
 );
-
 export default BookViewDetail;

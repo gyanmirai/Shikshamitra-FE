@@ -61,7 +61,8 @@ export interface IBook {
 }
 
 export interface IBookPayload {
-  applicableAge: never[];
+  id?: string;
+  applicableAge: string[];
   title: string;
   isbn: string;
   author: string;
