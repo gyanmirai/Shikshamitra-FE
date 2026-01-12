@@ -1,4 +1,5 @@
 import type { LabelColor } from 'src/components/label';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
@@ -19,6 +20,8 @@ import {
   AnnouncementStatusOptions,
 } from 'src/enums/communication_announcement_status_type';
 
+import communicationData from '../../../../../communicationData.json';
+
 import type { IAnnouncementType } from '../../settings/AnnouncementType/Components/type';
 import type {
   IAudience,
@@ -28,7 +31,6 @@ import type {
 
 const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
   setOpen,
-  data,
   onEdit,
   handleSwitchChange,
   onDelete,
@@ -36,16 +38,29 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
   onView,
   onPublish,
 }) => {
+  // const { data: announcementData } = useQueryAndMutation({
+  //   type: 'query',
+  //   currentQueryAndMutation: useGetAnnouncementsQuery,
+  // });
   const theme = useTheme();
   // counts for tabs
   const announcementCounts = useMemo(
     () => ({
-      all: data?.length || 0,
-      draft: data?.filter((i) => i.status === AnnouncementStatus.Upcoming)?.length || 0,
-      published: data?.filter((i) => i.status === AnnouncementStatus.Published)?.length || 0,
-      completed: data?.filter((i) => i.status === AnnouncementStatus.Completed)?.length || 0,
+      all: communicationData?.schoolWiseAnnouncementData?.length || 0,
+      draft:
+        communicationData?.schoolWiseAnnouncementData?.filter(
+          (i: any) => i.status === AnnouncementStatus.Upcoming
+        )?.length || 0,
+      published:
+        communicationData?.schoolWiseAnnouncementData?.filter(
+          (i: any) => i.status === AnnouncementStatus.Published
+        )?.length || 0,
+      completed:
+        communicationData?.schoolWiseAnnouncementData?.filter(
+          (i: any) => i.status === AnnouncementStatus.Completed
+        )?.length || 0,
     }),
-    [data]
+    []
   );
 
   const tabs = useTabs('All');
@@ -81,8 +96,13 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
   );
 
   const tableData = useMemo(
-    () => (tabs.value === 'All' ? data || [] : data?.filter((i) => i.status === tabs.value)),
-    [data, tabs.value]
+    () =>
+      tabs.value === 'All'
+        ? communicationData?.schoolWiseAnnouncementData || []
+        : communicationData?.schoolWiseAnnouncementData?.filter(
+            (i: any) => i.status === tabs.value
+          ),
+    [tabs.value]
   );
 
   const actions = useCallback(
@@ -99,6 +119,526 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
       </MenuList>
     ),
     [onRemove]
+  );
+
+  const allTableColumns: IColumn[] = useMemo(
+    () => [
+      { id: 'title', label: 'Announcement', align: 'left', sticky: true },
+      {
+        id: 'type',
+        label: 'Type',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {row.type?.map((aud: IAnnouncementType, index: string) => (
+              <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={aud.color} />
+                <Typography variant="caption" fontSize="13px">
+                  {aud.announcementType}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ),
+      },
+      {
+        id: 'audience',
+        label: 'Audience',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {row.audience?.map((aud: IAudience) => (
+              <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={aud.color} />
+                <Typography variant="caption" fontSize="13px">
+                  {aud.name}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ),
+      },
+      {
+        id: 'startDate',
+        label: 'Start Date/Time',
+        filterType: 'date',
+        align: 'left',
+        minWidth: 150,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {dayjs(value).format('DD-MM-YYYY hh:mm')}
+          </Typography>
+        ),
+      },
+      {
+        id: 'endDate',
+        label: 'End Date/Time',
+        filterType: 'date',
+        align: 'left',
+        minWidth: 140,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {dayjs(value).format('DD-MM-YYYY hh:mm')}
+          </Typography>
+        ),
+      },
+      {
+        id: 'duration',
+        label: 'Duration',
+        render: (value, row) => (
+          <Typography fontSize="13px">
+            {value} {row.durationUnit}
+          </Typography>
+        ),
+      },
+      {
+        id: 'importance_level',
+        label: 'Importance Level',
+        align: 'left',
+        minWidth: 160,
+        render: (value, row) => (
+          <Box key={value.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <SubjectColorIndicator color={value.color} />
+            <Typography variant="caption" fontSize="13px">
+              {value.levelName}
+            </Typography>
+          </Box>
+        ),
+      },
+      { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
+      {
+        id: 'createdOn',
+        label: 'Created On',
+        filterType: 'date',
+        align: 'left',
+        minWidth: 120,
+        render: (value) => (
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+        ),
+      },
+      {
+        id: 'active',
+        label: 'Publish',
+        align: 'left',
+        minWidth: 80,
+        isFilter: false,
+        sticky: true,
+        isSort: false,
+        filterType: 'enum',
+        enumOptions: AnnouncementStatusOptions,
+        render(value, row) {
+          const statusColor =
+            value === AnnouncementStatus.Published
+              ? theme.palette.success.main
+              : theme.palette.text.secondary;
+
+          return (
+            <CustomTooltip title={value === 0 ? 'Upcoming' : 'Published'} arrow placement="left">
+              <span>
+                <IconButton
+                  onClick={() =>
+                    value === AnnouncementStatus.Upcoming &&
+                    onPublish(row as ISchoolWiseAnnouncement)
+                  }
+                  sx={{
+                    p: 0.6,
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(0,0,0,0.06)',
+                    '&:hover': {
+                      transform: 'scale(1.1)',
+                      backgroundColor: 'rgba(0,0,0,0.08)',
+                    },
+                  }}
+                  disabled={value === AnnouncementStatus.Published}
+                >
+                  <Iconify
+                    icon={GlobalIcons.tick}
+                    sx={{ width: 20, height: 20, color: statusColor }}
+                  />
+                </IconButton>
+              </span>
+            </CustomTooltip>
+          );
+        },
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        align: 'left',
+        filterType: 'enum',
+        minWidth: 100,
+        enumOptions: AnnouncementStatusOptions,
+        sticky: true,
+        render: (value, row) => (
+          <Label
+            variant="soft"
+            color={AnnouncementStatusColor[value as AnnouncementStatus] as LabelColor}
+          >
+            {AnnouncementStatus[value as AnnouncementStatus]}
+          </Label>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        isSort: false,
+        isFilter: false,
+        minWidth: '50px',
+        sticky: true,
+        render: (_, row) => (
+          <ThreeDotsActions
+            placement="right-top"
+            actions={(prop) => actions({ ...prop, row })}
+            showEditIcon
+            showDeleteIcon={row.status === 0}
+            showViewIcon
+            showThreeDots={row.status === 1}
+            handleEditClick={() => onEdit(row as ISchoolWiseAnnouncement)}
+            handleDeleteClick={() => onDelete(row as ISchoolWiseAnnouncement)}
+            handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
+          />
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [theme.palette.success.main, theme.palette.text.secondary]
+  );
+
+  const upcomingTableColumns: IColumn[] = useMemo(
+    () => [
+      { id: 'title', label: 'Announcement', align: 'left', sticky: true },
+      {
+        id: 'type',
+        label: 'Type',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {row.type?.map((aud: IAnnouncementType, index: string) => (
+              <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={aud.color} />
+                <Typography variant="caption" fontSize="13px">
+                  {aud.announcementType}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ),
+      },
+      {
+        id: 'audience',
+        label: 'Audience',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {row.audience?.map((aud: IAudience) => (
+              <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={aud.color} />
+                <Typography variant="caption" fontSize="13px">
+                  {aud.name}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ),
+      },
+      {
+        id: 'startDate',
+        label: 'Start Date/Time',
+        filterType: 'date',
+        minWidth: 150,
+
+        align: 'left',
+        render: (value) => (
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+        ),
+      },
+      {
+        id: 'endDate',
+        label: 'End Date/Time',
+        filterType: 'date',
+        minWidth: 150,
+        align: 'left',
+        render: (value) => (
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+        ),
+      },
+      {
+        id: 'duration',
+        label: 'Duration',
+        render: (value, row) => (
+          <Typography fontSize="13px">
+            {value} {row.durationUnit}
+          </Typography>
+        ),
+      },
+      { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
+      {
+        id: 'createdOn',
+        label: 'Created On',
+        filterType: 'date',
+        align: 'left',
+        minWidth: 120,
+        render: (value) => (
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+        ),
+      },
+      {
+        id: 'active',
+        label: 'Publish',
+        align: 'left',
+        minWidth: 50,
+        isFilter: false,
+        sticky: true,
+        isSort: false,
+        filterType: 'enum',
+        enumOptions: AnnouncementStatusOptions,
+        render(value, row) {
+          const statusColor =
+            value === AnnouncementStatus.Published
+              ? theme.palette.success.main
+              : theme.palette.text.secondary;
+
+          return (
+            <CustomTooltip title={value === 0 ? 'Draft' : 'Published'} arrow placement="left">
+              <span>
+                <IconButton
+                  onClick={() =>
+                    value === AnnouncementStatus.Upcoming &&
+                    onPublish(row as ISchoolWiseAnnouncement)
+                  }
+                  sx={{
+                    p: 0.6,
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(0,0,0,0.06)',
+                    '&:hover': {
+                      transform: 'scale(1.1)',
+                      backgroundColor: 'rgba(0,0,0,0.08)',
+                    },
+                  }}
+                  disabled={value === AnnouncementStatus.Published}
+                >
+                  <Iconify
+                    icon={GlobalIcons.tick}
+                    sx={{ width: 20, height: 20, color: statusColor }}
+                  />
+                </IconButton>
+              </span>
+            </CustomTooltip>
+          );
+        },
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        render: (_, row) => (
+          <ThreeDotsActions
+            placement="right-top"
+            showEditIcon
+            showDeleteIcon
+            showViewIcon
+            showThreeDots={false}
+            handleEditClick={() => onEdit(row as ISchoolWiseAnnouncement)}
+            handleDeleteClick={() => onDelete(row as ISchoolWiseAnnouncement)}
+            handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
+          />
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [theme.palette.success.main, theme.palette.text.secondary]
+  );
+
+  const publishedTableColumns: IColumn[] = useMemo(
+    () => [
+      { id: 'title', label: 'Announcement', align: 'left', sticky: true },
+      {
+        id: 'type',
+        label: 'Type',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {row.type?.map((aud: IAnnouncementType, index: string) => (
+              <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={aud.color} />
+                <Typography variant="caption" fontSize="13px">
+                  {aud.announcementType}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ),
+      },
+      {
+        id: 'audience',
+        label: 'Audience',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {row.audience?.map((aud: IAudience) => (
+              <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={aud.color} />
+                <Typography variant="caption" fontSize="13px">
+                  {aud.name}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ),
+      },
+      {
+        id: 'startDate',
+        label: 'Start Date/Time',
+        filterType: 'date',
+        minWidth: 150,
+        align: 'left',
+        render: (value) => (
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+        ),
+      },
+      {
+        id: 'endDate',
+        label: 'End Date/Time',
+        minWidth: 150,
+        filterType: 'date',
+        align: 'left',
+        render: (value) => (
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+        ),
+      },
+      {
+        id: 'duration',
+        label: 'Duration',
+        render: (value, row) => (
+          <Typography fontSize="13px">
+            {value} {row.durationUnit}
+          </Typography>
+        ),
+      },
+      { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
+      {
+        id: 'createdOn',
+        label: 'Created On',
+        filterType: 'date',
+        align: 'left',
+        minWidth: 120,
+        render: (value) => (
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        render: (_, row) => (
+          <ThreeDotsActions
+            placement="right-top"
+            showViewIcon
+            actions={(prop) => actions({ ...prop, row })}
+            showThreeDots
+            handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
+          />
+        ),
+      },
+    ],
+    [actions, onView]
+  );
+
+  const completedTableColumns: IColumn[] = useMemo(
+    () => [
+      { id: 'title', label: 'Announcement', align: 'left', sticky: true },
+      {
+        id: 'type',
+        label: 'Type',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {row.type?.map((aud: IAnnouncementType, index: string) => (
+              <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={aud.color} />
+                <Typography variant="caption" fontSize="13px">
+                  {aud.announcementType}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ),
+      },
+      {
+        id: 'audience',
+        label: 'Audience',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {row.audience?.map((aud: IAudience) => (
+              <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={aud.color} />
+                <Typography variant="caption" fontSize="13px">
+                  {aud.name}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ),
+      },
+      {
+        id: 'startDate',
+        label: 'Start Date/Time',
+        filterType: 'date',
+        align: 'left',
+        render: (value) => (
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+        ),
+      },
+      {
+        id: 'endDate',
+        label: 'End Date/Time',
+        filterType: 'date',
+        align: 'left',
+        render: (value) => (
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+        ),
+      },
+      {
+        id: 'duration',
+        label: 'Duration',
+        render: (value, row) => (
+          <Typography fontSize="13px">
+            {value} {row.durationUnit}
+          </Typography>
+        ),
+      },
+      { id: 'createdBy', label: 'Created By', align: 'left' },
+      {
+        id: 'createdOn',
+        label: 'Created On',
+        filterType: 'date',
+        align: 'left',
+        render: (value) => (
+          <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        render: (_, row) => (
+          <ThreeDotsActions
+            placement="right-top"
+            showViewIcon
+            showThreeDots={false}
+            handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
+          />
+        ),
+      },
+    ],
+    [onView]
   );
 
   return (
@@ -165,188 +705,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
               </Box>
             </>
           }
-          columns={[
-            { id: 'title', label: 'Announcement', align: 'left', sticky: true },
-            {
-              id: 'type',
-              label: 'Type',
-              align: 'left',
-              render: (value, row) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {row.type?.map((aud: IAnnouncementType, index: string) => (
-                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SubjectColorIndicator color={aud.color} />
-                      <Typography variant="caption" fontSize="13px">
-                        {aud.announcementType}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              ),
-            },
-            {
-              id: 'audience',
-              label: 'Audience',
-              align: 'left',
-              render: (value, row) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {row.audience?.map((aud: IAudience) => (
-                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SubjectColorIndicator color={aud.color} />
-                      <Typography variant="caption" fontSize="13px">
-                        {aud.name}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              ),
-            },
-            {
-              id: 'startDate',
-              label: 'Start Date/Time',
-              filterType: 'date',
-              align: 'left',
-              minWidth: 150,
-              render: (value) => (
-                <Typography variant="caption" fontSize="13px">
-                  {dayjs(value).format('DD-MM-YYYY hh:mm')}
-                </Typography>
-              ),
-            },
-            {
-              id: 'endDate',
-              label: 'End Date/Time',
-              filterType: 'date',
-              align: 'left',
-              minWidth: 140,
-              render: (value) => (
-                <Typography variant="caption" fontSize="13px">
-                  {dayjs(value).format('DD-MM-YYYY hh:mm')}
-                </Typography>
-              ),
-            },
-            {
-              id: 'duration',
-              label: 'Duration',
-              render: (value, row) => (
-                <Typography fontSize="13px">
-                  {value} {row.durationUnit}
-                </Typography>
-              ),
-            },
-            {
-              id: 'importance_level',
-              label: 'Importance Level',
-              align: 'left',
-              minWidth: 160,
-              render: (value, row) => (
-                <Box key={value.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <SubjectColorIndicator color={value.color} />
-                  <Typography variant="caption" fontSize="13px">
-                    {value.levelName}
-                  </Typography>
-                </Box>
-              ),
-            },
-            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
-            {
-              id: 'createdOn',
-              label: 'Created On',
-              filterType: 'date',
-              align: 'left',
-              minWidth: 120,
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
-              ),
-            },
-            {
-              id: 'active',
-              label: 'Publish',
-              align: 'left',
-              minWidth: 80,
-              isFilter: false,
-              sticky: true,
-              isSort: false,
-              filterType: 'enum',
-              enumOptions: AnnouncementStatusOptions,
-              render(value, row) {
-                const statusColor =
-                  value === AnnouncementStatus.Published
-                    ? theme.palette.success.main
-                    : theme.palette.text.secondary;
-
-                return (
-                  <CustomTooltip
-                    title={value === 0 ? 'Upcoming' : 'Published'}
-                    arrow
-                    placement="left"
-                  >
-                    <span>
-                      <IconButton
-                        onClick={() =>
-                          value === AnnouncementStatus.Upcoming &&
-                          onPublish(row as ISchoolWiseAnnouncement)
-                        }
-                        sx={{
-                          p: 0.6,
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(0,0,0,0.06)',
-                          '&:hover': {
-                            transform: 'scale(1.1)',
-                            backgroundColor: 'rgba(0,0,0,0.08)',
-                          },
-                        }}
-                        disabled={value === AnnouncementStatus.Published}
-                      >
-                        <Iconify
-                          icon={GlobalIcons.tick}
-                          sx={{ width: 20, height: 20, color: statusColor }}
-                        />
-                      </IconButton>
-                    </span>
-                  </CustomTooltip>
-                );
-              },
-            },
-            {
-              id: 'status',
-              label: 'Status',
-              align: 'left',
-              filterType: 'enum',
-              minWidth: 100,
-              enumOptions: AnnouncementStatusOptions,
-              sticky: true,
-              render: (value, row) => (
-                <Label
-                  variant="soft"
-                  color={AnnouncementStatusColor[value as AnnouncementStatus] as LabelColor}
-                >
-                  {AnnouncementStatus[value as AnnouncementStatus]}
-                </Label>
-              ),
-            },
-            {
-              id: 'action',
-              label: 'Actions',
-              isSort: false,
-              isFilter: false,
-              minWidth: '50px',
-              sticky: true,
-              render: (_, row) => (
-                <ThreeDotsActions
-                  placement="right-top"
-                  actions={(prop) => actions({ ...prop, row })}
-                  showEditIcon
-                  showDeleteIcon={row.status === 0}
-                  showViewIcon
-                  showThreeDots={row.status === 1}
-                  handleEditClick={() => onEdit(row as ISchoolWiseAnnouncement)}
-                  handleDeleteClick={() => onDelete(row as ISchoolWiseAnnouncement)}
-                  handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
-                />
-              ),
-            },
-          ]}
+          columns={allTableColumns}
           data={tableData || []}
         />
       ) : tabs.value === 0 ? (
@@ -373,148 +732,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
               </Box>
             </>
           }
-          columns={[
-            { id: 'title', label: 'Announcement', align: 'left', sticky: true },
-            {
-              id: 'type',
-              label: 'Type',
-              align: 'left',
-              render: (value, row) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {row.type?.map((aud: IAnnouncementType, index: string) => (
-                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SubjectColorIndicator color={aud.color} />
-                      <Typography variant="caption" fontSize="13px">
-                        {aud.announcementType}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              ),
-            },
-            {
-              id: 'audience',
-              label: 'Audience',
-              align: 'left',
-              render: (value, row) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {row.audience?.map((aud: IAudience) => (
-                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SubjectColorIndicator color={aud.color} />
-                      <Typography variant="caption" fontSize="13px">
-                        {aud.name}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              ),
-            },
-            {
-              id: 'startDate',
-              label: 'Start Date/Time',
-              filterType: 'date',
-              minWidth: 150,
-
-              align: 'left',
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
-              ),
-            },
-            {
-              id: 'endDate',
-              label: 'End Date/Time',
-              filterType: 'date',
-              minWidth: 150,
-              align: 'left',
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
-              ),
-            },
-            {
-              id: 'duration',
-              label: 'Duration',
-              render: (value, row) => (
-                <Typography fontSize="13px">
-                  {value} {row.durationUnit}
-                </Typography>
-              ),
-            },
-            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
-            {
-              id: 'createdOn',
-              label: 'Created On',
-              filterType: 'date',
-              align: 'left',
-              minWidth: 120,
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
-              ),
-            },
-            {
-              id: 'active',
-              label: 'Publish',
-              align: 'left',
-              minWidth: 50,
-              isFilter: false,
-              sticky: true,
-              isSort: false,
-              filterType: 'enum',
-              enumOptions: AnnouncementStatusOptions,
-              render(value, row) {
-                const statusColor =
-                  value === AnnouncementStatus.Published
-                    ? theme.palette.success.main
-                    : theme.palette.text.secondary;
-
-                return (
-                  <CustomTooltip title={value === 0 ? 'Draft' : 'Published'} arrow placement="left">
-                    <span>
-                      <IconButton
-                        onClick={() =>
-                          value === AnnouncementStatus.Upcoming &&
-                          onPublish(row as ISchoolWiseAnnouncement)
-                        }
-                        sx={{
-                          p: 0.6,
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(0,0,0,0.06)',
-                          '&:hover': {
-                            transform: 'scale(1.1)',
-                            backgroundColor: 'rgba(0,0,0,0.08)',
-                          },
-                        }}
-                        disabled={value === AnnouncementStatus.Published}
-                      >
-                        <Iconify
-                          icon={GlobalIcons.tick}
-                          sx={{ width: 20, height: 20, color: statusColor }}
-                        />
-                      </IconButton>
-                    </span>
-                  </CustomTooltip>
-                );
-              },
-            },
-            {
-              id: 'action',
-              label: 'Actions',
-              isSort: false,
-              isFilter: false,
-              sticky: true,
-              render: (_, row) => (
-                <ThreeDotsActions
-                  placement="right-top"
-                  showEditIcon
-                  showDeleteIcon
-                  showViewIcon
-                  showThreeDots={false}
-                  handleEditClick={() => onEdit(row as ISchoolWiseAnnouncement)}
-                  handleDeleteClick={() => onDelete(row as ISchoolWiseAnnouncement)}
-                  handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
-                />
-              ),
-            },
-          ]}
+          columns={upcomingTableColumns}
           data={tableData || []}
         />
       ) : tabs.value === 1 ? (
@@ -541,99 +759,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
               </Box>
             </>
           }
-          columns={[
-            { id: 'title', label: 'Announcement', align: 'left', sticky: true },
-            {
-              id: 'type',
-              label: 'Type',
-              align: 'left',
-              render: (value, row) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {row.type?.map((aud: IAnnouncementType, index: string) => (
-                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SubjectColorIndicator color={aud.color} />
-                      <Typography variant="caption" fontSize="13px">
-                        {aud.announcementType}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              ),
-            },
-            {
-              id: 'audience',
-              label: 'Audience',
-              align: 'left',
-              render: (value, row) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {row.audience?.map((aud: IAudience) => (
-                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SubjectColorIndicator color={aud.color} />
-                      <Typography variant="caption" fontSize="13px">
-                        {aud.name}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              ),
-            },
-            {
-              id: 'startDate',
-              label: 'Start Date/Time',
-              filterType: 'date',
-              minWidth: 150,
-              align: 'left',
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
-              ),
-            },
-            {
-              id: 'endDate',
-              label: 'End Date/Time',
-              minWidth: 150,
-              filterType: 'date',
-              align: 'left',
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
-              ),
-            },
-            {
-              id: 'duration',
-              label: 'Duration',
-              render: (value, row) => (
-                <Typography fontSize="13px">
-                  {value} {row.durationUnit}
-                </Typography>
-              ),
-            },
-            { id: 'createdBy', label: 'Created By', align: 'left', minWidth: 120 },
-            {
-              id: 'createdOn',
-              label: 'Created On',
-              filterType: 'date',
-              align: 'left',
-              minWidth: 120,
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
-              ),
-            },
-            {
-              id: 'action',
-              label: 'Actions',
-              isSort: false,
-              isFilter: false,
-              sticky: true,
-              render: (_, row) => (
-                <ThreeDotsActions
-                  placement="right-top"
-                  showViewIcon
-                  actions={(prop) => actions({ ...prop, row })}
-                  showThreeDots
-                  handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
-                />
-              ),
-            },
-          ]}
+          columns={publishedTableColumns}
           data={tableData || []}
         />
       ) : tabs.value === 2 ? (
@@ -660,95 +786,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
               </Box>
             </>
           }
-          columns={[
-            { id: 'title', label: 'Announcement', align: 'left', sticky: true },
-            {
-              id: 'type',
-              label: 'Type',
-              align: 'left',
-              render: (value, row) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {row.type?.map((aud: IAnnouncementType, index: string) => (
-                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SubjectColorIndicator color={aud.color} />
-                      <Typography variant="caption" fontSize="13px">
-                        {aud.announcementType}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              ),
-            },
-            {
-              id: 'audience',
-              label: 'Audience',
-              align: 'left',
-              render: (value, row) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {row.audience?.map((aud: IAudience) => (
-                    <Box key={aud.value} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <SubjectColorIndicator color={aud.color} />
-                      <Typography variant="caption" fontSize="13px">
-                        {aud.name}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              ),
-            },
-            {
-              id: 'startDate',
-              label: 'Start Date/Time',
-              filterType: 'date',
-              align: 'left',
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
-              ),
-            },
-            {
-              id: 'endDate',
-              label: 'End Date/Time',
-              filterType: 'date',
-              align: 'left',
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
-              ),
-            },
-            {
-              id: 'duration',
-              label: 'Duration',
-              render: (value, row) => (
-                <Typography fontSize="13px">
-                  {value} {row.durationUnit}
-                </Typography>
-              ),
-            },
-            { id: 'createdBy', label: 'Created By', align: 'left' },
-            {
-              id: 'createdOn',
-              label: 'Created On',
-              filterType: 'date',
-              align: 'left',
-              render: (value) => (
-                <Typography fontSize="13px">{dayjs(value).format('DD-MM-YYYY hh:mm')}</Typography>
-              ),
-            },
-            {
-              id: 'action',
-              label: 'Actions',
-              isSort: false,
-              isFilter: false,
-              sticky: true,
-              render: (_, row) => (
-                <ThreeDotsActions
-                  placement="right-top"
-                  showViewIcon
-                  showThreeDots={false}
-                  handleViewClick={() => onView(row as ISchoolWiseAnnouncement)}
-                />
-              ),
-            },
-          ]}
+          columns={completedTableColumns}
           data={tableData || []}
         />
       ) : null}

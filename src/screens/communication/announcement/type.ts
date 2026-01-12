@@ -150,7 +150,6 @@ export interface IClassWiseAnnouncementFormikValues {
 
 export interface ISchoolWiseAnnouncementTableProps {
   setOpen: (value: boolean) => void;
-  data: ISchoolWiseAnnouncement[];
   onEdit: (row: ISchoolWiseAnnouncement) => void;
   handleSwitchChange: (row: ISchoolWiseAnnouncement) => void;
   onRemove: (row: ISchoolWiseAnnouncement) => void;

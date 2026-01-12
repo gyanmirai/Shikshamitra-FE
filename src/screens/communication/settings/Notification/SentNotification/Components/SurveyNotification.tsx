@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo, useState } from 'react';
 import { Box, Card, Switch } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -101,6 +103,75 @@ const SurveyNotification = ({ dialog, setIsViewMode }: any) => {
     );
   };
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'event',
+        label: 'Event',
+      },
+      {
+        id: 'triggerCondition',
+        label: 'Trigger Condition',
+      },
+      {
+        id: 'recipient',
+        label: 'Recipient',
+        render(value, row) {
+          return row.recipient.map((recipient: any) => (
+            <Box key={recipient.name}>{recipient.name.toUpperCase()}</Box>
+          ));
+        },
+      },
+      {
+        id: 'isActive',
+        label: 'Active',
+        filterType: 'enum',
+        isSort: false,
+        enumOptions: NotificationStatusOptions,
+        render(value, row) {
+          return (
+            <Switch
+              checked={NotificationStatusType.Active === row.isActive}
+              onChange={(event) => {
+                handleToggleActive(row.id, event.target.checked);
+              }}
+            />
+          );
+        },
+      },
+      {
+        id: 'action',
+        label: 'Action',
+        isFilter: false,
+        isSort: false,
+        sticky: true,
+        minWidth: 60,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showThreeDots={false}
+              showEditIcon
+              handleEditClick={() => {
+                setSelectedData(row);
+                dialog.onTrue();
+                setView(false);
+                setIsViewMode(false);
+              }}
+              showViewIcon
+              handleViewClick={() => {
+                setSelectedData(row);
+                setView(true);
+                dialog.onTrue();
+                setIsViewMode(true);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    [dialog, setIsViewMode]
+  );
+
   return (
     <Box sx={{ height: '100%' }}>
       {dialog.value ? (
@@ -118,71 +189,7 @@ const SurveyNotification = ({ dialog, setIsViewMode }: any) => {
         <CustomizableTable
           tableId="survey-auto-notification-configuration"
           data={notifications}
-          columns={[
-            {
-              id: 'event',
-              label: 'Event',
-            },
-            {
-              id: 'triggerCondition',
-              label: 'Trigger Condition',
-            },
-            {
-              id: 'recipient',
-              label: 'Recipient',
-              render(value, row) {
-                return row.recipient.map((recipient: any) => (
-                  <Box key={recipient.name}>{recipient.name.toUpperCase()}</Box>
-                ));
-              },
-            },
-            {
-              id: 'isActive',
-              label: 'Active',
-              filterType: 'enum',
-              isSort: false,
-              enumOptions: NotificationStatusOptions,
-              render(value, row) {
-                return (
-                  <Switch
-                    checked={NotificationStatusType.Active === row.isActive}
-                    onChange={(event) => {
-                      handleToggleActive(row.id, event.target.checked);
-                    }}
-                  />
-                );
-              },
-            },
-            {
-              id: 'action',
-              label: 'Action',
-              isFilter: false,
-              isSort: false,
-              sticky: true,
-              minWidth: 60,
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    showThreeDots={false}
-                    showEditIcon
-                    handleEditClick={() => {
-                      setSelectedData(row);
-                      dialog.onTrue();
-                      setView(false);
-                      setIsViewMode(false);
-                    }}
-                    showViewIcon
-                    handleViewClick={() => {
-                      setSelectedData(row);
-                      setView(true);
-                      dialog.onTrue();
-                      setIsViewMode(true);
-                    }}
-                  />
-                );
-              },
-            },
-          ]}
+          columns={columns}
         />
       )}
     </Box>

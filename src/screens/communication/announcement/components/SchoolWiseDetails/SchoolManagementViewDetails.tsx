@@ -1,4 +1,5 @@
 import React from 'react';
+import { Stack } from '@mui/material';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import SchoolWiseAnnouncementDetailCard from './SchoolWiseAnnouncementDetails2';
@@ -10,11 +11,16 @@ const SchoolManagementViewDetails = ({
   announcement,
 }: {
   announcement: ISchoolWiseAnnouncement | null;
-}) => (
-  <Scrollbar sx={{ height: '400px', p: 2 }}>
-    <SchoolWiseAnnouncementDetailsInfoCard announcement={announcement} />
-    <SchoolWiseAnnouncementDetailCard announcement={announcement} />
-  </Scrollbar>
-);
+}) => {
+  console.log('announcement---', announcement);
+  return (
+    <Scrollbar sx={{ maxHeight: 600, p: 3 }}>
+      <Stack spacing={3}>
+        <SchoolWiseAnnouncementDetailsInfoCard announcement={announcement} />
+        <SchoolWiseAnnouncementDetailCard announcement={announcement} />
+      </Stack>
+    </Scrollbar>
+  );
+};
 
 export default SchoolManagementViewDetails;

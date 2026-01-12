@@ -38,7 +38,7 @@ const SendNotification = () => {
               Send Notification
             </Button>
           }
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 2, mb: 1 }}
         />
       )}
 
@@ -55,7 +55,7 @@ const SendNotification = () => {
                 { name: 'Notifications' },
                 { name: 'Sent Notification' },
               ]}
-              sx={{ mb: 2 }}
+              sx={{ px: 2, mb: 2 }}
               isBack
               onBack={handleCloseDialog}
             />

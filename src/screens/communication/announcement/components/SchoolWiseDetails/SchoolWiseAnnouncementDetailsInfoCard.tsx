@@ -18,6 +18,56 @@ import {
 
 import type { ISchoolWiseAnnouncement } from '../../type';
 
+// ----------------------------------------------------------------------
+
+type DetailItemProps = {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  iconColor?: any;
+  iconBgColor?: any;
+};
+
+function DetailItem({ icon, label, value, iconColor, iconBgColor }: DetailItemProps) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Box
+        sx={{
+          width: 40,
+          height: 40,
+          borderRadius: 1.5,
+          bgcolor: iconBgColor || ((theme: any) => alpha(theme.palette.primary.main, 0.08)),
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: iconColor || 'primary.main',
+        }}
+      >
+        {icon}
+      </Box>
+      <Box sx={{ minWidth: 0, flex: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'text.secondary',
+            fontWeight: 600,
+            display: 'block',
+            mb: 0.5,
+            textTransform: 'uppercase',
+          }}
+        >
+          {label}
+        </Typography>
+        <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+          {value}
+        </Typography>
+      </Box>
+    </Box>
+  );
+}
+
+// ----------------------------------------------------------------------
+
 export default function SchoolWiseAnnouncementDetailsInfoCard({
   announcement,
 }: {
@@ -26,316 +76,143 @@ export default function SchoolWiseAnnouncementDetailsInfoCard({
   if (!announcement) return null;
 
   return (
-    <Card sx={{ p: 2, borderRadius: 2, boxShadow: 4, mb: 2 }}>
-      <Grid container spacing={2}>
-        {/* Title & Description */}
-
-        {/* Announcement Type */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.info.main, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Category sx={{ color: 'info.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Type
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {announcement.type?.map((t) => t.announcementType).join(', ') || '—'}
-              </Typography>
-            </Box>
-          </Box>
+    <Card
+      sx={{
+        p: 3,
+        borderRadius: 2,
+        border: (theme) => `1px dashed ${theme.palette.divider}`,
+        boxShadow: 'none',
+      }}
+    >
+      <Grid container spacing={3}>
+        {/* Type */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <DetailItem
+            label="Type"
+            value={announcement.type?.map((t) => t.announcementType).join(', ') || '—'}
+            icon={<Category fontSize="small" />}
+            iconColor="info.main"
+            iconBgColor={(theme: any) => alpha(theme.palette.info.main, 0.08)}
+          />
         </Grid>
 
         {/* Importance Level */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.error.main, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Warning
-                sx={{ color: announcement.importance_level?.color || 'error.main', fontSize: 17 }}
-              />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Importance
-              </Typography>
-              <Typography
-                variant="body1"
-                fontWeight="600"
-                sx={{ color: announcement.importance_level?.color }}
-              >
+        <Grid size={{ xs: 12, md: 4 }}>
+          <DetailItem
+            label="Importance"
+            value={
+              <Box component="span" sx={{ color: announcement.importance_level?.color }}>
                 {announcement.importance_level?.levelName || '—'}
-              </Typography>
-            </Box>
-          </Box>
+              </Box>
+            }
+            icon={<Warning fontSize="small" />}
+            iconColor={announcement.importance_level?.color || 'error.main'}
+            iconBgColor={(theme: any) => alpha(theme.palette.error.main, 0.08)}
+          />
         </Grid>
 
         {/* Start Date */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.success.main, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 1,
-              }}
-            >
-              <AccessTime sx={{ color: 'success.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Announcement Declared On
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {announcement.startDate
-                  ? dayjs(announcement.startDate).format('DD/MM/YYYY - hh:mmA')
-                  : '—'}
-              </Typography>
-            </Box>
-          </Box>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <DetailItem
+            label="Announcement Declared On"
+            value={
+              announcement.startDate
+                ? dayjs(announcement.startDate).format('DD/MM/YYYY - hh:mm A')
+                : '—'
+            }
+            icon={<AccessTime fontSize="small" />}
+            iconColor="success.main"
+            iconBgColor={(theme: any) => alpha(theme.palette.success.main, 0.08)}
+          />
         </Grid>
 
         {/* End Date */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <AccessTime sx={{ color: 'primary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Announcement Closed On
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {announcement.endDate
-                  ? dayjs(announcement.endDate).format('DD/MM/YYYY - hh:mmA')
-                  : '—'}
-              </Typography>
-            </Box>
-          </Box>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <DetailItem
+            label="Announcement Closed On"
+            value={
+              announcement.endDate
+                ? dayjs(announcement.endDate).format('DD/MM/YYYY - hh:mm A')
+                : '—'
+            }
+            icon={<AccessTime fontSize="small" />}
+            iconColor="error.main" // Changed to error to signify closing
+            iconBgColor={(theme: any) => alpha(theme.palette.error.main, 0.08)}
+          />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <AccessTime sx={{ color: 'primary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Status
-              </Typography>
+        {/* Status */}
+        <Grid size={{ xs: 12, md: 4 }}>
+          <DetailItem
+            label="Status"
+            value={
               <Label
                 variant="soft"
-                color={AnnouncementStatusColor[announcement?.status as AnnouncementStatus] as any}
+                color={
+                  (AnnouncementStatusColor[announcement?.status as AnnouncementStatus] as any) ||
+                  'default'
+                }
               >
                 {AnnouncementStatus[announcement?.status as AnnouncementStatus]}
               </Label>
-            </Box>
-          </Box>
+            }
+            icon={<Notifications fontSize="small" />}
+            iconColor="primary.main"
+          />
         </Grid>
 
         {/* Duration */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.info.main, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <AccessTime sx={{ color: 'info.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Duration
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {announcement.duration || '—'}
-              </Typography>
-            </Box>
-          </Box>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <DetailItem
+            label="Duration"
+            value={announcement.duration || '—'}
+            icon={<AccessTime fontSize="small" />}
+            iconColor="info.main"
+            iconBgColor={(theme: any) => alpha(theme.palette.info.main, 0.08)}
+          />
         </Grid>
 
         {/* Audience */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Groups sx={{ color: 'secondary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Audience
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {announcement.audience?.map((a) => a).join(', ') || '—'}
-              </Typography>
-            </Box>
-          </Box>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <DetailItem
+            label="Audience"
+            value={announcement.audience?.map((a) => a.value).join(', ') || '—'}
+            icon={<Groups fontSize="small" />}
+            iconColor="secondary.main"
+            iconBgColor={(theme: any) => alpha(theme.palette.secondary.main, 0.08)}
+          />
         </Grid>
 
         {/* Announced By */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Person sx={{ color: 'primary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Announced By
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {announcement.createdBy || '—'}
-              </Typography>
-            </Box>
-          </Box>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <DetailItem
+            label="Announced By"
+            value={announcement.createdBy || '—'}
+            icon={<Person fontSize="small" />}
+            iconColor="primary.main"
+          />
         </Grid>
 
         {/* Notification Preferences */}
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.warning.main, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Notifications sx={{ color: 'warning.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Notification Preferences
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {announcement.notification_preferences?.join(', ') || '—'}
-              </Typography>
-            </Box>
-          </Box>
-        </Grid>
-        <Grid size={{ xs: 12 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Description sx={{ color: 'primary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Description
-              </Typography>
-              <Typography variant="body1" fontWeight="600">
-                {announcement.description || '—'}
-              </Typography>
-            </Box>
-          </Box>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <DetailItem
+            label="Notification Preferences"
+            value={announcement.notification_preferences?.join(', ') || '—'}
+            icon={<Notifications fontSize="small" />}
+            iconColor="warning.main"
+            iconBgColor={(theme: any) => alpha(theme.palette.warning.main, 0.08)}
+          />
         </Grid>
 
-        {/* Link */}
-        {/* <Grid size={{ xs: 12 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <LinkIcon sx={{ color: 'primary.main' }} />
-            <MuiLink
-              href={announcement.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              underline="hover"
-              color="primary.main"
-              fontWeight="600"
-            >
-              {announcement.link}
-            </MuiLink>
-          </Box>
-        </Grid> */}
+        {/* Description */}
+        <Grid size={{ xs: 12 }}>
+          <DetailItem
+            label="Description"
+            value={announcement.description || '—'}
+            icon={<Description fontSize="small" />}
+            iconColor="primary.main"
+          />
+        </Grid>
       </Grid>
     </Card>
   );

@@ -1,10 +1,12 @@
 'use client';
 
+import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
@@ -17,11 +19,17 @@ import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Close, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  useAddAnnouncementMutation,
+  useGetAnnouncementByIdQuery,
+  useUpdateAnnouncementMutation,
+} from 'src/redux/communication/announcement/schoolWiseAnnouncement';
 import {
   Box,
   Grid,
@@ -45,7 +53,7 @@ import { schoolWiseValidationSchema } from './validationSchema';
 import { getSchoolWiseAnnouncementInitialValues } from './components/getSchoolInitialValues';
 import SchoolWiseAnnouncementCard from './components/SchoolWiseDetails/SchoolWiseAnnouncementPreview';
 
-import type { ISchoolWiseAnnouncementFormProps } from './type';
+import type { ISchoolWiseAnnouncement, ISchoolWiseAnnouncementFormProps } from './type';
 
 const options = [
   { value: 'cricketGroup', label: 'Cricket Group' },
@@ -65,21 +73,93 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const previewDialog = useBoolean();
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [addAnnouncement, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddAnnouncementMutation,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id,
+    },
+  });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: announcementById,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isLoading,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAnnouncementByIdQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id, id: initialValues?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id || !initialValues?.id,
+    },
+  });
+
+  const [updateAnnouncement, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateAnnouncementMutation,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id,
+    },
+  });
 
   const formik = useFormik({
     initialValues: getSchoolWiseAnnouncementInitialValues(initialValues),
     validationSchema: schoolWiseValidationSchema(currentYear),
-    onSubmit: (values) => {
-      if (initialValues) {
-        shikshaMitraToast.success({
-          message: `Announcement : ${values.title} updated successfully!`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Announcement : ${values.title} added successfully!`,
-        });
+    onSubmit: async (values, formikHelpers) => {
+      try {
+        const payloadData = {
+          title: values.title,
+          description: values.description,
+          audience: values.audience.map((a) => a.value),
+          type: values.type?.[0]?.announcementType || '',
+          importanceLevel:
+            values.importance_level?.levelName === 'urgent'
+              ? 2
+              : values.importance_level?.levelName === 'critical'
+                ? 3
+                : 1,
+          startDate: values.startDate ? dayjs(values.startDate).toISOString() : null,
+          endDate: values.endDate ? dayjs(values.endDate).toISOString() : null,
+          duration: Number(values.duration),
+          durationUnit: values.durationUnit === 'days' ? 'DAY' : 'HOUR',
+          documents: values.attachment ? ['string'] : [],
+          notificationPreferences: values.notification_preferences.map((pref) => {
+            if (pref === 'In-App') return 'IN_APP';
+            return pref.toUpperCase();
+          }),
+        };
+
+        if (initialValues) {
+          const payload = {
+            academicMediumId: (currentMedium as Medium).id,
+            id: (initialValues as ISchoolWiseAnnouncement).id,
+            data: payloadData,
+          };
+          await updateAnnouncement(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.title}" Announcement updated successfully`,
+          });
+        } else {
+          const payload = {
+            academicMediumId: (currentMedium as Medium).id,
+            data: payloadData,
+          };
+          await addAnnouncement(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.title}" Announcement added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        // Error handling is managed by the API hook or global error handler if configured
+        console.error('Failed to save subject', error);
       }
-      onClose(null, true);
     },
   });
 
@@ -568,10 +648,11 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
               >
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 variant="contained"
                 size="small"
                 type="submit"
+                loading={isAddLoading || isUpdateLoading}
                 startIcon={
                   <Iconify
                     icon={initialValues ? GlobalIcons.edit : GlobalIcons.submit}
@@ -581,7 +662,7 @@ const AnnouncementForm: React.FC<ISchoolWiseAnnouncementFormProps> = ({
                 }
               >
                 {initialValues ? 'Update' : 'Submit'}
-              </Button>
+              </LoadingButton>
             </DialogActions>
           </Box>
         </form>

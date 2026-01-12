@@ -5,19 +5,18 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetSchoolWiseAnnouncementsQuery } from 'src/redux/communication/announcement/schoolWiseAnnouncement';
 import {
   Box,
   Card,
@@ -25,8 +24,13 @@ import {
   Typography,
   // eslint-disable-next-line import/no-duplicates
 } from '@mui/material';
+import {
+  schoolWiseAnnouncementApi,
+  useDeleteAnnouncementMutation,
+  usePublishAnnouncementMutation,
+} from 'src/redux/communication/announcement/schoolWiseAnnouncement';
 
-import AnnouncementForm from './schoolannouncementForm';
+import AnnouncementForm from './AnnouncementForm';
 import AnnouncementRemoveReasonForm from './removePublishForm';
 import AnnouncementTable from './components/announcementTable';
 import SchoolManagementViewDetails from './components/SchoolWiseDetails/SchoolManagementViewDetails';
@@ -36,10 +40,6 @@ import type { ISchoolWiseAnnouncement } from './type';
 const Announcement = (props: TabComponentType) => {
   // Controls form visibility through URL search parameters
   const [open, setOpen] = useState(false);
-  const { data: announcementData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSchoolWiseAnnouncementsQuery,
-  });
 
   // Stores the announcement being edited
   const [editingAnnouncement, setEditingAnnouncement] = useState<ISchoolWiseAnnouncement | null>(
@@ -49,10 +49,7 @@ const Announcement = (props: TabComponentType) => {
   const [viewAnnouncement, setViewAnnouncement] = useState<ISchoolWiseAnnouncement | null>(null);
   // Controls the visibility of view announcement dialog
   const view_dialog = useBoolean();
-  // Stores the ID of announcement to be deleted
-  const [deleteAnnouncement, setDeleteAnnouncement] = useState<ISchoolWiseAnnouncement | null>(
-    null
-  );
+
   const [, setRemoveAnnouncement] = useState<ISchoolWiseAnnouncement | null>(null);
   // Controls the visibility of delete confirmation dialog
   const confirm_dialog = useBoolean();
@@ -89,6 +86,18 @@ const Announcement = (props: TabComponentType) => {
       resetState();
     }
   };
+  // Delete document mutation
+  const [deleteAnnouncement, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteAnnouncementMutation,
+  });
+
+  const [publishAnnouncement, { isLoading: isPublishLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePublishAnnouncementMutation,
+  });
+
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
@@ -112,7 +121,7 @@ const Announcement = (props: TabComponentType) => {
 
             { name: editingAnnouncement ? 'Update Announcement' : 'Add Announcement' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 2, mb: 1 }}
           isBack
           onBack={() => {
             handleCloseDialog(null, false);
@@ -126,7 +135,7 @@ const Announcement = (props: TabComponentType) => {
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Announcements' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 2, mb: 1 }}
           action={
             <Button
               size="small"
@@ -151,7 +160,6 @@ const Announcement = (props: TabComponentType) => {
       ) : (
         <AnnouncementTable
           setOpen={setOpen}
-          data={announcementData}
           onEdit={(row) => {
             setOpen(true);
             setEditingAnnouncement(row);
@@ -161,7 +169,7 @@ const Announcement = (props: TabComponentType) => {
           }}
           onDelete={(row) => {
             confirm_dialog.onTrue();
-            setDeleteAnnouncement(row);
+            setEditingAnnouncement(row);
           }}
           onRemove={(row) => {
             confirm_dialog.onTrue();
@@ -181,31 +189,60 @@ const Announcement = (props: TabComponentType) => {
       <ConfirmDialog
         open={confirm_dialog.value}
         onClose={() => {
-          setDeleteAnnouncement(null);
+          setEditingAnnouncement(null);
           confirm_dialog.onFalse();
         }}
         title="Delete"
         content={
           <>
             Are you sure you want to delete the{' '}
-            <strong>&apos;{deleteAnnouncement?.title}&apos;</strong> announcement?
+            <strong>&apos;{editingAnnouncement?.title}&apos;</strong> announcement?
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
-            onClick={() => {
-              confirm_dialog.onFalse();
-              setDeleteAnnouncement(null);
-              shikshaMitraToast.success({
-                message: `Announcement : ${deleteAnnouncement?.title} deleted successfully.`,
-              });
-            }}
             size="small"
+            onClick={async () => {
+              confirmWithUndo({
+                item: editingAnnouncement,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    schoolWiseAnnouncementApi.util.updateQueryData(
+                      'getAnnouncements',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft.items?.findIndex(
+                          (b: any) => b.id === editingAnnouncement?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    schoolWiseAnnouncementApi.util.updateQueryData(
+                      'getAnnouncements',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft.items) return;
+                        draft.items.splice(index, 0, editingAnnouncement);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteAnnouncement(editingAnnouncement?.id || ''),
+              });
+              confirm_dialog.onFalse();
+              setEditingAnnouncement(null);
+            }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
 
@@ -241,20 +278,49 @@ const Announcement = (props: TabComponentType) => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isPublishLoading}
             variant="contained"
-            startIcon={<Iconify icon={GlobalIcons.publish} />}
-            onClick={() => {
+            color="error"
+            size="small"
+            onClick={async () => {
+              confirmWithUndo({
+                item: publishingAnnouncement,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    schoolWiseAnnouncementApi.util.updateQueryData(
+                      'getAnnouncements',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft.items?.findIndex(
+                          (b: any) => b.id === publishingAnnouncement?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    schoolWiseAnnouncementApi.util.updateQueryData(
+                      'getAnnouncements',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft.items) return;
+                        draft.items.splice(index, 0, publishingAnnouncement);
+                      }
+                    )
+                  ),
+                onCommit: () => publishAnnouncement(publishingAnnouncement?.id || ''),
+              });
               publish_modal.onFalse();
               setPublishingAnnouncement(null);
-              shikshaMitraToast.success({
-                message: `Announcement : ${publishingAnnouncement?.title} published successfully.`,
-              });
             }}
-            size="small"
           >
-            Publish
-          </Button>
+            Yes
+          </LoadingButton>
         }
       />
 

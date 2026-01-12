@@ -8,7 +8,7 @@ const isDev = process.env.NODE_ENV === 'development';
 export const communicationApi = createApi({
   reducerPath: 'communicationApi',
   baseQuery: isDev
-    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001' })
+    ? axiosBaseQuery({ baseUrl: 'http://localhost:3001/api/communication' })
     : async ({ url }) => {
         switch (url) {
           case '/classWiseAnnouncementData':
@@ -60,6 +60,7 @@ export const communicationApi = createApi({
     'NotificationTemplates',
     'NotificationHistory',
     'SentNotificationHistory',
+    'Notifications',
   ],
   endpoints: () => ({}),
 });
