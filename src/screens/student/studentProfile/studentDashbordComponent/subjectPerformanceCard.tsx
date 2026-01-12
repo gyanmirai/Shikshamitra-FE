@@ -15,40 +15,48 @@ const SubjectPerformanceItem: React.FC<SubjectPerformanceItemProps> = ({
   grade,
   color,
 }) => (
-  <Stack spacing={1} mb={2}>
-    <Stack direction="row" alignItems="center" spacing={1}>
+  <Stack spacing={1.5} mb={2.5}>
+    <Stack direction="row" alignItems="center" spacing={1.5}>
       <SubjectColorIndicator color={color} />
-      <Typography variant="subtitle1" fontWeight={600}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
         {subject}
       </Typography>
       <Box flexGrow={1} />
-      <Typography variant="subtitle2">{percentage}%</Typography>
-      <Chip
-        label={grade}
-        size="small"
-        sx={{
-          fontWeight: 'bold',
-          color: 'white',
-          bgcolor:
-            grade === 'A+'
-              ? '#34c38f'
-              : grade === 'A'
-                ? '#45b5f5'
-                : grade === 'B+'
-                  ? '#fcb92c'
-                  : '#f65f5f',
-        }}
-      />
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
+          {percentage}%
+        </Typography>
+        <Chip
+          label={grade}
+          size="small"
+          sx={{
+            fontWeight: 700,
+            borderRadius: 1,
+            height: 24,
+            width: 36,
+            color: 'white',
+            bgcolor:
+              grade === 'A+'
+                ? '#34c38f'
+                : grade === 'A'
+                  ? '#45b5f5'
+                  : grade === 'B+'
+                    ? '#fcb92c'
+                    : '#f65f5f',
+          }}
+        />
+      </Stack>
     </Stack>
     <LinearProgress
       variant="determinate"
       value={percentage}
       sx={{
-        height: 6,
-        borderRadius: 3,
+        height: 8,
+        borderRadius: 4,
         bgcolor: `${color}22`,
         '& .MuiLinearProgress-bar': {
           backgroundColor: color,
+          borderRadius: 4,
         },
       }}
     />

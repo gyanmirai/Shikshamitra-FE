@@ -12,11 +12,20 @@ const subjectPerformances = [
 ];
 
 const SubjectPerformanceCards = () => (
-  <Card sx={{ p: 3, borderRadius: 3, height: '100%' }}>
-    <Typography variant="h6" mb={3}>
+  <Card
+    sx={{
+      p: 3,
+      borderRadius: 2,
+      height: '100%',
+      boxShadow: 'none',
+      border: '1px solid',
+      borderColor: 'divider',
+    }}
+  >
+    <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
       Subject Wise Performance
     </Typography>
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {subjectPerformances.map((item, index) => (
         <SubjectPerformanceItem key={index} {...item} />
       ))}

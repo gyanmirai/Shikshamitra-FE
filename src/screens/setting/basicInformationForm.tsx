@@ -3,13 +3,14 @@
 // @ts-nocheck
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
+import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
+import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import PhoneInput from 'src/components/phone-input';
 import { Scrollbar } from 'src/components/scrollbar';
-import SubmitButton from 'src/components/submit-button';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Add, ArrowBack, ArrowForward } from '@mui/icons-material';
@@ -35,8 +36,8 @@ import {
   Divider,
   TextField,
   IconButton,
+  Typography,
   DialogContent,
-  DialogActions,
 } from '@mui/material';
 
 import { basicInformationvalidationSchema } from './validationSchema';
@@ -52,21 +53,19 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
   editData,
   handleClose,
 }) => {
+  const theme = useTheme();
   const [addTenant, { isLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddTenantMutation,
     popupConfig: { success: true, successMessage: 'Tenant Added Successfully' },
   });
 
-  /**
-   * Mutation hook for updating existing tenant
-   * Includes success popup configuration
-   */
   const [updateTenant, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateTenantMutation,
     popupConfig: { success: true, successMessage: 'Tenant Updated Successfully' },
   });
+
   const formik = useFormik<IFormValues>({
     initialValues: {
       instituteName: editData?.extraProperties?.InstituteName || '',
@@ -90,7 +89,7 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
             name: editData?.extraProperties?.Country?.name,
             isoCode: editData?.extraProperties?.Country?.isoCode,
           }
-        : { name: 'India', isoCode: 'IN' }, // Default value for country
+        : { name: 'India', isoCode: 'IN' },
       contactNumber: editData?.extraProperties?.ContactNumber || '',
       emailAddress: editData?.adminEmailAddress || '',
       password: '',
@@ -100,142 +99,177 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
     validationSchema: basicInformationvalidationSchema,
     onSubmit: async (formValues: IFormValues) => {
       try {
+        const payload = {
+          name: formValues.instituteName,
+          email: formValues.emailAddress,
+          adminPassword: formValues.password,
+          extraProperties: {
+            Country: { name: formValues.country?.name, isoCode: formValues.country?.isoCode },
+            State: {
+              name: formValues.stateProvince?.name,
+              isoCode: formValues.stateProvince?.isoCode,
+            },
+            City: formValues.city?.name,
+            Address1: formValues.addressLine1,
+            Address2: formValues.addressLine2,
+            Address3: formValues.addressLine3,
+            ContactNumber: formValues.contactNumber,
+            PostalCode: formValues.zipPostalCode,
+            InstituteName: formValues.instituteName,
+            Logo: formValues.instituteLogo,
+            Banner: formValues.instituteBanner,
+            PrincipleSign: formValues.principleSign,
+          },
+        };
+
         if (editData) {
           await updateTenant({
             id: editData.id,
-            body: {
-              name: formValues.instituteName,
-              email: formValues.emailAddress,
-              adminPassword: formValues.password,
-              extraProperties: {
-                Country: { name: formValues.country?.name, isoCode: formValues.country?.isoCode },
-                State: {
-                  name: formValues.stateProvince?.name,
-                  isoCode: formValues.stateProvince?.isoCode,
-                },
-                City: formValues.city?.name,
-                Address1: formValues.addressLine1,
-                Address2: formValues.addressLine2,
-                Address3: formValues.addressLine3,
-                ContactNumber: formValues.contactNumber,
-                PostalCode: formValues.zipPostalCode,
-                InstituteName: formValues.instituteName,
-                Logo: formValues.instituteLogo,
-                Banner: formValues.instituteBanner,
-                PrincipleSign: formValues.principleSign,
-              },
-            },
+            body: payload,
           }).unwrap();
         } else {
           await addTenant({
-            name: formValues.instituteName,
+            ...payload,
             adminEmailAddress: formValues.emailAddress,
-            adminPassword: formValues.password,
-            extraProperties: {
-              Country: { name: formValues.country?.name, isoCode: formValues.country?.isoCode },
-              State: {
-                name: formValues.stateProvince?.name,
-                isoCode: formValues.stateProvince?.isoCode,
-              },
-              City: formValues.city?.name,
-              Address1: formValues.addressLine1,
-              Address2: formValues.addressLine2,
-              Address3: formValues.addressLine3,
-              ContactNumber: formValues.contactNumber,
-              PostalCode: formValues.zipPostalCode,
-              InstituteName: formValues.instituteName,
-              Logo: formValues.instituteLogo,
-              Banner: formValues.instituteBanner,
-              PrincipleSign: formValues.principleSign,
-            },
           }).unwrap();
         }
-
-        handleClose?.();
       } catch (error) {
         console.error(error);
       }
+      handleClose?.();
     },
   });
 
-  /**
-   * Destructured formik properties for easier access
-   */
   const { values, errors, touched, handleChange, handleSubmit, setFieldValue } = formik;
+
+  const renderSectionHeader = (title: string, icon: string, subtitle?: string) => (
+    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+      <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'primary.lighter', color: 'primary.main' }}>
+        <Iconify icon={icon} width={24} />
+      </Box>
+      <Box>
+        <Typography variant="h6">{title}</Typography>
+        {subtitle && (
+          <Typography variant="caption" color="text.secondary">
+            {subtitle}
+          </Typography>
+        )}
+      </Box>
+    </Stack>
+  );
 
   return (
     <Box
-      component="form"
-      sx={{ minHeight: 0, flexGrow: 1, display: 'flex', flexDirection: 'column' }}
+      component={motion.form}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
       onSubmit={handleSubmit}
+      sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
     >
-      <Scrollbar sx={{ p: 2, height: '100%' }}>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12 }}>
-            <Box>
+      <Scrollbar sx={{ flexGrow: 1, p: 3 }}>
+        <Grid container spacing={4}>
+          {/* Left Column: Essential Info */}
+          <Grid size={{ xs: 12, md: 8 }}>
+            <Card sx={{ p: 3, height: '100%', boxShadow: theme.customShadows.z4 }}>
+              {renderSectionHeader(
+                'Institute Profile',
+                'solar:buildings-bold',
+                'Basic details and location'
+              )}
+
               <Grid container spacing={3}>
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
-                    size="small"
-                    name="instituteName *"
                     label="Institute Name"
+                    name="instituteName"
                     value={values.instituteName}
                     onChange={(e) => setFieldValue('instituteName', capitalize(e.target.value))}
                     error={touched.instituteName && Boolean(errors.instituteName)}
                     helperText={touched.instituteName && errors.instituteName}
+                    InputProps={{
+                      startAdornment: (
+                        <Iconify
+                          icon="solar:city-bold"
+                          width={20}
+                          color="text.disabled"
+                          sx={{ mr: 1 }}
+                        />
+                      ),
+                    }}
                   />
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     fullWidth
-                    size="small"
-                    name="addressLine1"
-                    label="Building No./Flat/House No. *"
-                    value={values.addressLine1}
-                    onChange={(e) => setFieldValue('addressLine1', capitalize(e.target.value))}
-                    error={touched.addressLine1 && Boolean(errors.addressLine1)}
-                    helperText={touched.addressLine1 && errors.addressLine1}
+                    label="Email Address"
+                    name="emailAddress"
+                    value={values.emailAddress}
+                    onChange={handleChange}
+                    error={touched.emailAddress && Boolean(errors.emailAddress)}
+                    helperText={touched.emailAddress && errors.emailAddress}
+                    InputProps={{
+                      startAdornment: (
+                        <Iconify
+                          icon="solar:letter-bold"
+                          width={20}
+                          color="text.disabled"
+                          sx={{ mr: 1 }}
+                        />
+                      ),
+                    }}
                   />
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    name="addressLine2"
-                    label="Area/Locality/Road Name *"
-                    value={values.addressLine2}
-                    onChange={(e) => setFieldValue('addressLine2', capitalize(e.target.value))}
-                    error={touched.addressLine2 && Boolean(errors.addressLine2)}
-                    helperText={touched.addressLine2 && errors.addressLine2}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <PhoneInput
+                    name="contactNumber"
+                    value={values.contactNumber}
+                    onChange={(value) => setFieldValue('contactNumber', value)}
+                    error={touched.contactNumber && Boolean(errors.contactNumber)}
+                    helperText={touched.contactNumber && errors.contactNumber}
+                    variant="outlined"
+                    label="Contact No."
+                    size="medium"
                   />
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    name="addressLine3"
-                    label="Landmark"
-                    value={values.addressLine3}
-                    onChange={(e) => setFieldValue('addressLine3', capitalize(e.target.value))}
-                    error={touched.addressLine3 && Boolean(errors.addressLine3)}
-                    helperText={touched.addressLine3 && errors.addressLine3}
-                  />
+                {!editData && (
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                      fullWidth
+                      name="password"
+                      label="Admin Password"
+                      type="password"
+                      value={values.password}
+                      onChange={handleChange}
+                      error={touched.password && Boolean(errors.password)}
+                      helperText={touched.password && errors.password}
+                    />
+                  </Grid>
+                )}
+
+                <Grid size={12}>
+                  <Divider sx={{ borderStyle: 'dashed', my: 1 }} />
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <Grid size={12}>
+                  <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
+                    Location Details
+                  </Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
                   <CountryComponent
+                    size="medium"
+                    value={values.country}
                     onChange={(_e, value) => {
                       setFieldValue('stateProvince', null);
                       setFieldValue('city', null);
                       setFieldValue('country', value);
                     }}
-                    size="small"
-                    value={values.country}
-                    fullWidth
                     error={
                       touched.country &&
                       typeof errors.country === 'object' &&
@@ -243,41 +277,26 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                       'name' in errors.country &&
                       Boolean((errors.country as any).name)
                     }
-                    helperText={
-                      touched.country &&
-                      typeof errors.country === 'object' &&
-                      errors.country !== null &&
-                      'name' in errors.country
-                        ? (errors.country as any).name
-                        : ''
-                    }
-                    textFieldProps={{ label: 'Country *', size: 'small' }}
+                    textFieldProps={{ label: 'Country', size: 'medium' }}
                   />
                 </Grid>
-
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <StateComponent
+                    value={values.stateProvince}
+                    countryValue={values.country}
                     onChange={(_e, value) => {
                       setFieldValue('city', null);
                       setFieldValue('stateProvince', value);
                     }}
-                    value={values.stateProvince}
-                    countryValue={values.country}
-                    fullWidth
                     error={touched.stateProvince && Boolean((errors?.stateProvince as any)?.name)}
-                    helperText={
-                      (touched.stateProvince && (errors?.stateProvince as any)?.name) || ''
-                    }
-                    textFieldProps={{ label: 'State *', size: 'small' }}
+                    textFieldProps={{ label: 'State', size: 'medium' }}
                   />
                 </Grid>
-
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <CityComponent
                     value={values.city}
-                    onChange={(_e, value) => setFieldValue('city', value)}
                     stateValue={values.stateProvince}
-                    fullWidth
+                    onChange={(_e, value) => setFieldValue('city', value)}
                     error={
                       touched.city &&
                       Boolean(
@@ -287,24 +306,14 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                           (errors.city as any).name
                       )
                     }
-                    helperText={
-                      touched.city &&
-                      typeof errors.city === 'object' &&
-                      errors.city !== null &&
-                      'name' in errors.city
-                        ? (errors.city as any).name
-                        : ''
-                    }
-                    textFieldProps={{ label: 'City *', size: 'small' }}
+                    textFieldProps={{ label: 'City', size: 'medium' }}
                   />
                 </Grid>
-
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     fullWidth
-                    size="small"
                     name="zipPostalCode"
-                    label="ZIP/Postal Code *"
+                    label="ZIP/Postal Code"
                     value={values.zipPostalCode}
                     onChange={(e) => {
                       if (e.target.value.length <= 6)
@@ -315,89 +324,93 @@ export const BasicInformationForm: React.FC<IBasicinformatioFormProps> = ({
                     helperText={touched.zipPostalCode && errors.zipPostalCode}
                   />
                 </Grid>
-
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-                  <PhoneInput
-                    name="contactNumber"
-                    value={values.contactNumber}
-                    onChange={(value) => setFieldValue('contactNumber', value)}
-                    error={touched.contactNumber && Boolean(errors.contactNumber)}
-                    helperText={touched.contactNumber && errors.contactNumber}
-                    variant="outlined"
-                    label="Contact No. *"
-                    size="small"
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                <Grid size={{ xs: 12 }}>
                   <TextField
                     fullWidth
-                    size="small"
-                    name="emailAddress"
-                    label="Email Address *"
-                    value={values.emailAddress}
+                    name="addressLine1"
+                    label="Address Line 1"
+                    placeholder="Building No./Flat/House No."
+                    value={values.addressLine1}
                     onChange={handleChange}
-                    error={touched.emailAddress && Boolean(errors.emailAddress)}
-                    helperText={touched.emailAddress && errors.emailAddress}
-                    autoComplete="off"
-                    InputProps={{
-                      startAdornment: (
-                        <>
-                          <Iconify icon="mdi-light:email" />
-                          <Divider orientation="vertical" sx={{ pl: '4px', height: '60%' }} />
-                        </>
-                      ),
-                    }}
+                    error={touched.addressLine1 && Boolean(errors.addressLine1)}
+                    helperText={touched.addressLine1 && errors.addressLine1}
+                    multiline
+                    rows={2}
                   />
                 </Grid>
-
-                {!editData && (
-                  <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      name="password"
-                      label="Password"
-                      type="password"
-                      value={values.password}
-                      onChange={handleChange}
-                      error={touched.password && Boolean(errors.password)}
-                      helperText={touched.password && errors.password}
-                      autoComplete="off"
-                    />
-                  </Grid>
-                )}
               </Grid>
-            </Box>
+            </Card>
           </Grid>
 
-          {[
-            { name: 'instituteLogo', title: 'Upload Institute Logo' },
-            { name: 'instituteBanner', title: 'Upload Institute Banner' },
-            { name: 'principleSign', title: 'Upload Principle Sign' },
-          ].map((item) => (
-            <Grid key={item.name} size={{ xs: 4 }}>
-              <BasicInformationAssets formik={formik} name={item.name} title={item.title} />
-            </Grid>
-          ))}
+          {/* Right Column: Branding Assets */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Stack spacing={3}>
+              <Card sx={{ p: 3, boxShadow: theme.customShadows.z4 }}>
+                {renderSectionHeader('Brand Identity', 'solar:gallery-wide-bold', 'Upload visuals')}
+                <Stack spacing={3}>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      Institute Logo
+                    </Typography>
+                    <BasicInformationAssets
+                      formik={formik}
+                      name="instituteLogo"
+                      title="Drop logo here"
+                    />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      Institute Banner
+                    </Typography>
+                    <BasicInformationAssets
+                      formik={formik}
+                      name="instituteBanner"
+                      title="Drop banner here"
+                    />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      Principal&apos;s Signature
+                    </Typography>
+                    <BasicInformationAssets
+                      formik={formik}
+                      name="principleSign"
+                      title="Drop signature here"
+                    />
+                  </Box>
+                </Stack>
+              </Card>
+            </Stack>
+          </Grid>
         </Grid>
       </Scrollbar>
 
-      <DialogActions sx={{ borderRadius: 1, boxShadow: 'none', bgcolor: 'background.paper' }}>
-        <Stack
-          alignItems="flex-end"
-          sx={{
-            position: 'sticky',
-            bottom: 0,
-            bgcolor: 'background.paper',
-            zIndex: 10,
-            // py: 2,
-            textAlign: 'right',
-          }}
+      <Box
+        sx={{
+          p: 2,
+          borderTop: `1px dashed ${theme.palette.divider}`,
+          bgcolor: 'background.paper',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 2,
+        }}
+      >
+        {/* Add Cancel Button if needed */}
+        <Button
+          variant="contained"
+          onClick={() => formik.handleSubmit()}
+          disabled={isLoading || isUpdateLoading}
+          startIcon={
+            isLoading || isUpdateLoading ? (
+              <Iconify icon="line-md:loading-loop" />
+            ) : (
+              <Iconify icon="solar:disk-bold" />
+            )
+          }
         >
-          <SubmitButton loading={isLoading || isUpdateLoading} />
-        </Stack>
-      </DialogActions>
+          {editData ? 'Update & Next' : 'Save & Next'}
+        </Button>
+      </Box>
     </Box>
   );
 };

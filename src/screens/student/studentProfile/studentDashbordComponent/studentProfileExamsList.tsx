@@ -11,17 +11,30 @@ const exams = [
 ];
 
 const StudentExamsList = () => (
-  <Card sx={{ p: 3, borderRadius: 3, height: '100%' }}>
-    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-      <Typography variant="h6" mb={2}>
+  <Card
+    sx={{
+      p: 3,
+      borderRadius: 2,
+      height: '100%',
+      boxShadow: 'none',
+      border: '1px solid',
+      borderColor: 'divider',
+    }}
+  >
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Typography variant="h6" sx={{ fontWeight: 700 }}>
         Exams
       </Typography>
-      <Button size="small" endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}>
-        View All Exams
+      <Button
+        size="small"
+        endIcon={<Iconify icon="eva:arrow-ios-forward-fill" />}
+        sx={{ color: 'text.secondary', fontWeight: 600 }}
+      >
+        View All
       </Button>
     </Box>
 
-    <Stack spacing={1.5}>
+    <Stack spacing={2}>
       {exams?.map((exam, index) => (
         <ExamCard key={index} {...exam} />
       ))}

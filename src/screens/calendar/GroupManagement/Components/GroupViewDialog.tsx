@@ -143,11 +143,20 @@ interface GroupViewDialogProps {
 }
 
 const InfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-  <Box sx={{ display: 'flex', mb: 0.75 }}>
-    <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 140 }}>
-      {label}:
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'baseline',
+      p: 1.5,
+      borderBottom: '1px dashed',
+      borderColor: 'divider',
+      '&:last-child': { borderBottom: 'none' },
+    }}
+  >
+    <Typography variant="subtitle2" color="text.secondary" sx={{ width: 140, flexShrink: 0 }}>
+      {label}
     </Typography>
-    <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
+    <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500, flexGrow: 1 }}>
       {value || '—'}
     </Typography>
   </Box>
@@ -168,10 +177,11 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
     },
     []
   );
+
   // Simplified read-only rendering of filters: show field label, operator label, and value inline
   const renderFilterRows = useCallback(
     (filters: FilterRow[], isStudent: boolean) => (
-      <Stack spacing={0.75} mt={1}>
+      <Stack spacing={1} mt={1.5}>
         {filters.map((f) => {
           const meta = getFieldMeta(f.field, isStudent);
           const operatorLabel =
@@ -182,29 +192,34 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1,
-                border: 1,
+                gap: 1.5,
+                p: 1.5,
+                borderRadius: 1.5,
+                bgcolor: 'background.neutral',
+                border: '1px solid',
                 borderColor: 'divider',
-                borderRadius: 1,
-                p: 0.75,
-                bgcolor: 'background.paper',
-                flexWrap: 'wrap',
               }}
             >
-              {/* <Chip
-                size="small"
-                label={isStudent ? 'Student' : 'Employee'}
-                color="primary"
-                variant="outlined"
-              /> */}
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              <Box
+                sx={{
+                  bgcolor: isStudent ? 'primary.lighter' : 'secondary.lighter',
+                  color: isStudent ? 'primary.dark' : 'secondary.dark',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                }}
+              >
                 {meta?.label || f.field}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
+              </Box>
+
+              <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
                 {operatorLabel}
               </Typography>
-              <Divider flexItem orientation="vertical" sx={{ mx: 0.5 }} />
-              <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 {String(f.value)}
               </Typography>
             </Box>
@@ -227,420 +242,518 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
       maxWidth="xl"
       scroll="paper"
     >
-      <DialogScrollContent dividers sx={{ bgcolor: 'background.default', p: 2 }}>
-        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={2}>
-          {/* Left Card: Basic Details */}
-          <Card
-            sx={{
-              flexBasis: { md: '35%' },
-              flexGrow: 0,
-              p: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1,
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Details
-            </Typography>
-            <Divider sx={{ mb: 1 }} />
-            <InfoRow label="Group Name" value={group.groupName} />
-            <InfoRow label="Description" value={group.description || '—'} />
-            {/* <InfoRow label="Total Audience" value={200} /> */}
+      <DialogScrollContent dividers sx={{ bgcolor: 'background.default', p: { xs: 2, md: 3 } }}>
+        <Grid container spacing={3}>
+          {/* Left Side: Details & Stats */}
+          <Grid size={{ xs: 12, md: 4, lg: 3.5 }}>
+            <Stack spacing={3}>
+              {/* Basic Details Card */}
+              <Card sx={{ p: 0, overflow: 'hidden', boxShadow: '0px 4px 12px rgba(0,0,0,0.05)' }}>
+                <Box sx={{ bgcolor: 'primary.lighter', px: 2, py: 1.5 }}>
+                  <Typography variant="subtitle1" color="primary.darker" sx={{ fontWeight: 700 }}>
+                    Group Details
+                  </Typography>
+                </Box>
+                <Box sx={{ p: 1 }}>
+                  <InfoRow label="Group Name" value={group.groupName} />
+                  <InfoRow label="Description" value={group.description || '—'} />
+                </Box>
+              </Card>
 
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid size={4}>
-                <Box component={Card} elevation={2} sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Total Users
+              {/* Stats Cards */}
+              <Box>
+                <Card sx={{ p: 2, mb: 1.5 }}>
+                  <Typography variant="subtitle2" sx={{ opacity: 0.7, mb: 0.5 }}>
+                    Total Audience
                   </Typography>
-                  <Typography variant="h5" color="primary" sx={{ mt: 0.5 }}>
-                    200
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid size={4}>
-                <Box component={Card} elevation={2} sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Students
-                  </Typography>
-                  <Typography variant="h5" color="primary" sx={{ mt: 0.5 }}>
-                    120
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid size={4}>
-                <Box component={Card} elevation={2} sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Employees
-                  </Typography>
-                  <Typography variant="h5" color="primary" sx={{ mt: 0.5 }}>
-                    80
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Card>
-          {/* Right Card: Tabbed Static Data */}
-          <Card
-            sx={{ flexGrow: 1, p: 2, minHeight: 360, display: 'flex', flexDirection: 'column' }}
-          >
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-              <Tabs
-                value={tab}
-                onChange={(_, v) => setTab(v)}
-                variant="scrollable"
-                scrollButtons
-                allowScrollButtonsMobile
-              >
-                <Tab label="Rule Based" />
-                <Tab label="Name Based" />
-              </Tabs>
-            </Box>
-            <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-              {tab === 0 && (
-                <Box>
-                  <Grid container spacing={2}>
-                    <Grid
-                      size={{ xs: 12, sm: 8 }}
-                      sx={{ borderRight: '2px solid', borderColor: 'primary.main', pr: 2 }}
+                  <Typography variant="h3">200</Typography>
+                </Card>
+
+                <Grid container spacing={1.5}>
+                  <Grid size={6}>
+                    <Card
+                      sx={{
+                        p: 2,
+                        textAlign: 'center',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                      }}
                     >
-                      <Typography
-                        variant="subtitle1"
-                        color="primary.main"
-                        sx={{ mb: 1, display: 'flex', alignItems: 'center', color: 'primary.main' }}
-                      >
-                        Academic Selections
+                      <Typography variant="h5" color="primary.main">
+                        120
                       </Typography>
-                      {/* Applied selections list */}
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                        Students
+                      </Typography>
+                    </Card>
+                  </Grid>
+                  <Grid size={6}>
+                    <Card
+                      sx={{
+                        p: 2,
+                        textAlign: 'center',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Typography variant="h5" color="info.main">
+                        80
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                        Employees
+                      </Typography>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </Box>
+            </Stack>
+          </Grid>
 
-                      <Scrollbar sx={{ maxHeight: 200 }}>
-                        <HierarchyTextView
-                          data={[
-                            {
-                              id: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
-                              name: 'CBSE',
-                              type: 'boards',
-                              parentId: null,
-                              children: [
-                                {
-                                  id: '3a18e88d-099b-7b84-e3bb-6393ba4f3a51',
-                                  name: 'English',
-                                  type: 'mediums',
-                                  parentId: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
-                                  children: [
-                                    {
-                                      id: '3a190322-7664-4197-552d-a7c1f823c69f',
-                                      name: 'Higher secondary',
-                                      type: 'organizations',
-                                      parentId: '3a18e88d-099b-7b84-e3bb-6393ba4f3a51',
-                                      children: [],
-                                    },
-                                    {
-                                      id: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
-                                      name: 'Primary',
-                                      type: 'organizations',
-                                      parentId: '3a18e88d-099b-7b84-e3bb-6393ba4f3a51',
-                                      children: [
-                                        {
-                                          id: '3a18ee92-3395-c001-c029-86323e1facd5',
-                                          name: '1',
-                                          type: 'standards',
-                                          parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
-                                          children: [
-                                            {
-                                              id: '3a18f304-0b52-a7a2-cd33-c9a23e3d5bbc',
-                                              name: 'A',
-                                              type: 'divisions',
-                                              parentId: '3a18ee92-3395-c001-c029-86323e1facd5',
-                                            },
-                                            {
-                                              id: '3a1945a6-3803-eb88-bb9e-c86b67de63e9',
-                                              name: 'B',
-                                              type: 'divisions',
-                                              parentId: '3a18ee92-3395-c001-c029-86323e1facd5',
-                                            },
-                                            {
-                                              id: '3a195a7c-dea7-857b-9b77-f14761f6da1e',
-                                              name: 'C',
-                                              type: 'divisions',
-                                              parentId: '3a18ee92-3395-c001-c029-86323e1facd5',
-                                            },
-                                          ],
-                                        },
-                                        {
-                                          id: '3a18ee9b-6e99-3c0b-2ec2-d585216f6ef8',
-                                          name: '2',
-                                          type: 'standards',
-                                          parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
-                                          children: [
-                                            {
-                                              id: '3a1a6aaa-2ef1-413b-4112-34c194a874e4',
-                                              name: 'A',
-                                              type: 'divisions',
-                                              parentId: '3a18ee9b-6e99-3c0b-2ec2-d585216f6ef8',
-                                            },
-                                          ],
-                                        },
-                                        {
-                                          id: '3a18ee9b-9049-87bb-951f-d4959c606312',
-                                          name: '3',
-                                          type: 'standards',
-                                          parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
-                                          children: [
-                                            {
-                                              id: '3a1a6aaa-7a1a-de93-c96b-a051f26eeac1',
-                                              name: 'A',
-                                              type: 'divisions',
-                                              parentId: '3a18ee9b-9049-87bb-951f-d4959c606312',
-                                            },
-                                          ],
-                                        },
-                                        {
-                                          id: '3a18ee9b-acbb-9cec-ef08-4cba7bbc5570',
-                                          name: '4',
-                                          type: 'standards',
-                                          parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
-                                          children: [
-                                            {
-                                              id: '3a18f304-ba4c-50fe-b3a2-a2fcbe9638e8',
-                                              name: 'A',
-                                              type: 'divisions',
-                                              parentId: '3a18ee9b-acbb-9cec-ef08-4cba7bbc5570',
-                                            },
-                                            {
-                                              id: '3a18f306-5def-6513-7156-0ba182e667d0',
-                                              name: 'B',
-                                              type: 'divisions',
-                                              parentId: '3a18ee9b-acbb-9cec-ef08-4cba7bbc5570',
-                                            },
-                                          ],
-                                        },
-                                      ],
-                                    },
-                                  ],
-                                },
-                                {
-                                  id: '3a1945a3-e05d-801a-a582-00528d6eeaf9',
-                                  name: 'Gujarati',
-                                  type: 'mediums',
-                                  parentId: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
-                                  children: [
-                                    {
-                                      id: '3a1a614c-adc7-f7b5-6158-fa82b26a3152',
-                                      name: 'Primary',
-                                      type: 'organizations',
-                                      parentId: '3a1945a3-e05d-801a-a582-00528d6eeaf9',
-                                      children: [
-                                        {
-                                          id: '3a1a614c-d4da-3874-984e-5eff5b8af8d7',
-                                          name: '1',
-                                          type: 'standards',
-                                          parentId: '3a1a614c-adc7-f7b5-6158-fa82b26a3152',
-                                          children: [
-                                            {
-                                              id: '3a1a614d-02a3-46d7-204e-007496ee8d20',
-                                              name: 'A',
-                                              type: 'divisions',
-                                              parentId: '3a1a614c-d4da-3874-984e-5eff5b8af8d7',
-                                            },
-                                          ],
-                                        },
-                                      ],
-                                    },
-                                  ],
-                                },
-                                {
-                                  id: '3a195a7b-b927-4af4-09a0-f3d2941f62eb',
-                                  name: 'Marathi',
-                                  type: 'mediums',
-                                  parentId: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
-                                  children: [
-                                    {
-                                      id: '3a1a6159-13f8-ce56-a350-244b974b46ba',
-                                      name: 'Primary',
-                                      type: 'organizations',
-                                      parentId: '3a195a7b-b927-4af4-09a0-f3d2941f62eb',
-                                      children: [
-                                        {
-                                          id: '3a1a6159-2a72-1c82-4b0b-fd482752c873',
-                                          name: '1',
-                                          type: 'standards',
-                                          parentId: '3a1a6159-13f8-ce56-a350-244b974b46ba',
-                                          children: [
-                                            {
-                                              id: '3a1a6159-4bb6-26ef-5c86-c72c152e0af7',
-                                              name: 'A',
-                                              type: 'divisions',
-                                              parentId: '3a1a6159-2a72-1c82-4b0b-fd482752c873',
-                                            },
-                                          ],
-                                        },
-                                      ],
-                                    },
-                                  ],
-                                },
-                              ],
-                            },
-                          ]}
-                          isShowDelete={false}
+          {/* Right Side: Tabbed Static Data */}
+          <Grid size={{ xs: 12, md: 8, lg: 8.5 }}>
+            <Card
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0px 4px 12px rgba(0,0,0,0.05)',
+              }}
+            >
+              <Box
+                sx={{
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  px: 2,
+                  bgcolor: 'background.neutral',
+                }}
+              >
+                <Tabs
+                  value={tab}
+                  onChange={(_, v) => setTab(v)}
+                  variant="standard"
+                  textColor="primary"
+                  indicatorColor="primary"
+                  sx={{ '& .MuiTab-root': { minHeight: 60, fontSize: 13, fontWeight: 700 } }}
+                >
+                  <Tab label="RULE BASED" />
+                  <Tab label="NAME BASED" />
+                </Tabs>
+              </Box>
+
+              <Box sx={{ flexGrow: 1, p: 3, overflowY: 'auto' }}>
+                {tab === 0 && (
+                  <Grid container spacing={4}>
+                    {/* Academic Selections */}
+                    <Grid
+                      size={{ xs: 12, md: 7 }}
+                      sx={{
+                        borderRight: { md: '1px dashed' },
+                        borderColor: { md: 'divider' },
+                        pr: { md: 4 },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
+                        <Box
+                          sx={{
+                            width: 4,
+                            height: 24,
+                            bgcolor: 'primary.main',
+                            mr: 1,
+                            borderRadius: 1,
+                          }}
                         />
-                      </Scrollbar>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4 }}>
-                      <Box>
-                        <Typography variant="subtitle1" color="primary" sx={{ mb: 1 }}>
-                          Roles
-                        </Typography>
-                        <Grid container>
-                          {['Teacher', 'Principle', 'Cashier', 'Driver', 'Librarian', 'Peon'].map(
-                            (role) => (
-                              <Grid
-                                size={{ xs: 6 }}
-                                key={role}
-                                sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}
-                              >
-                                <FormControlLabel
-                                  control={
-                                    <Checkbox
-                                      size="small"
-                                      disabled
-                                      checked={role === 'Teacher' || role === 'Librarian'}
-                                      // checked={formik.values.roles?.includes(role)}
-                                      // onChange={(e) => {
-                                      //   const current = new Set(formik.values.roles || []);
-                                      //   if (e.target.checked) current.add(role);
-                                      //   else current.delete(role);
-                                      //   formik.setFieldValue('roles', Array.from(current));
-                                      // }}
-                                    />
-                                  }
-                                  label={role}
-                                />
-                              </Grid>
-                            )
-                          )}
+                        <Typography variant="h6">Academic Selections</Typography>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 2,
+                          p: 2,
+                          bgcolor: 'background.paper',
+                        }}
+                      >
+                        <Scrollbar sx={{ maxHeight: 300 }}>
+                          <HierarchyTextView
+                            data={[
+                              {
+                                id: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
+                                name: 'CBSE',
+                                type: 'boards',
+                                parentId: null,
+                                children: [
+                                  {
+                                    id: '3a18e88d-099b-7b84-e3bb-6393ba4f3a51',
+                                    name: 'English',
+                                    type: 'mediums',
+                                    parentId: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
+                                    children: [
+                                      {
+                                        id: '3a190322-7664-4197-552d-a7c1f823c69f',
+                                        name: 'Higher secondary',
+                                        type: 'organizations',
+                                        parentId: '3a18e88d-099b-7b84-e3bb-6393ba4f3a51',
+                                        children: [],
+                                      },
+                                      {
+                                        id: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
+                                        name: 'Primary',
+                                        type: 'organizations',
+                                        parentId: '3a18e88d-099b-7b84-e3bb-6393ba4f3a51',
+                                        children: [
+                                          {
+                                            id: '3a18ee92-3395-c001-c029-86323e1facd5',
+                                            name: '1',
+                                            type: 'standards',
+                                            parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
+                                            children: [
+                                              {
+                                                id: '3a18f304-0b52-a7a2-cd33-c9a23e3d5bbc',
+                                                name: 'A',
+                                                type: 'divisions',
+                                                parentId: '3a18ee92-3395-c001-c029-86323e1facd5',
+                                              },
+                                              {
+                                                id: '3a1945a6-3803-eb88-bb9e-c86b67de63e9',
+                                                name: 'B',
+                                                type: 'divisions',
+                                                parentId: '3a18ee92-3395-c001-c029-86323e1facd5',
+                                              },
+                                              {
+                                                id: '3a195a7c-dea7-857b-9b77-f14761f6da1e',
+                                                name: 'C',
+                                                type: 'divisions',
+                                                parentId: '3a18ee92-3395-c001-c029-86323e1facd5',
+                                              },
+                                            ],
+                                          },
+                                          {
+                                            id: '3a18ee9b-6e99-3c0b-2ec2-d585216f6ef8',
+                                            name: '2',
+                                            type: 'standards',
+                                            parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
+                                            children: [
+                                              {
+                                                id: '3a1a6aaa-2ef1-413b-4112-34c194a874e4',
+                                                name: 'A',
+                                                type: 'divisions',
+                                                parentId: '3a18ee9b-6e99-3c0b-2ec2-d585216f6ef8',
+                                              },
+                                            ],
+                                          },
+                                          {
+                                            id: '3a18ee9b-9049-87bb-951f-d4959c606312',
+                                            name: '3',
+                                            type: 'standards',
+                                            parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
+                                            children: [
+                                              {
+                                                id: '3a1a6aaa-7a1a-de93-c96b-a051f26eeac1',
+                                                name: 'A',
+                                                type: 'divisions',
+                                                parentId: '3a18ee9b-9049-87bb-951f-d4959c606312',
+                                              },
+                                            ],
+                                          },
+                                          {
+                                            id: '3a18ee9b-acbb-9cec-ef08-4cba7bbc5570',
+                                            name: '4',
+                                            type: 'standards',
+                                            parentId: '3a18e909-9d5e-d9a3-0f19-7c047129f9d8',
+                                            children: [
+                                              {
+                                                id: '3a18f304-ba4c-50fe-b3a2-a2fcbe9638e8',
+                                                name: 'A',
+                                                type: 'divisions',
+                                                parentId: '3a18ee9b-acbb-9cec-ef08-4cba7bbc5570',
+                                              },
+                                              {
+                                                id: '3a18f306-5def-6513-7156-0ba182e667d0',
+                                                name: 'B',
+                                                type: 'divisions',
+                                                parentId: '3a18ee9b-acbb-9cec-ef08-4cba7bbc5570',
+                                              },
+                                            ],
+                                          },
+                                        ],
+                                      },
+                                    ],
+                                  },
+                                  {
+                                    id: '3a1945a3-e05d-801a-a582-00528d6eeaf9',
+                                    name: 'Gujarati',
+                                    type: 'mediums',
+                                    parentId: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
+                                    children: [
+                                      {
+                                        id: '3a1a614c-adc7-f7b5-6158-fa82b26a3152',
+                                        name: 'Primary',
+                                        type: 'organizations',
+                                        parentId: '3a1945a3-e05d-801a-a582-00528d6eeaf9',
+                                        children: [
+                                          {
+                                            id: '3a1a614c-d4da-3874-984e-5eff5b8af8d7',
+                                            name: '1',
+                                            type: 'standards',
+                                            parentId: '3a1a614c-adc7-f7b5-6158-fa82b26a3152',
+                                            children: [
+                                              {
+                                                id: '3a1a614d-02a3-46d7-204e-007496ee8d20',
+                                                name: 'A',
+                                                type: 'divisions',
+                                                parentId: '3a1a614c-d4da-3874-984e-5eff5b8af8d7',
+                                              },
+                                            ],
+                                          },
+                                        ],
+                                      },
+                                    ],
+                                  },
+                                  {
+                                    id: '3a195a7b-b927-4af4-09a0-f3d2941f62eb',
+                                    name: 'Marathi',
+                                    type: 'mediums',
+                                    parentId: '3a18e4cb-42bb-e343-36b1-db695aa464d9',
+                                    children: [
+                                      {
+                                        id: '3a1a6159-13f8-ce56-a350-244b974b46ba',
+                                        name: 'Primary',
+                                        type: 'organizations',
+                                        parentId: '3a195a7b-b927-4af4-09a0-f3d2941f62eb',
+                                        children: [
+                                          {
+                                            id: '3a1a6159-2a72-1c82-4b0b-fd482752c873',
+                                            name: '1',
+                                            type: 'standards',
+                                            parentId: '3a1a6159-13f8-ce56-a350-244b974b46ba',
+                                            children: [
+                                              {
+                                                id: '3a1a6159-4bb6-26ef-5c86-c72c152e0af7',
+                                                name: 'A',
+                                                type: 'divisions',
+                                                parentId: '3a1a6159-2a72-1c82-4b0b-fd482752c873',
+                                              },
+                                            ],
+                                          },
+                                        ],
+                                      },
+                                    ],
+                                  },
+                                ],
+                              },
+                            ]}
+                            isShowDelete={false}
+                          />
+                        </Scrollbar>
+                      </Box>
+
+                      <Box sx={{ mt: 3 }}>
+                        <Divider sx={{ mb: 2 }}>
+                          <Typography
+                            component="span"
+                            variant="caption"
+                            sx={{ color: 'text.disabled', px: 1 }}
+                          >
+                            AND
+                          </Typography>
+                        </Divider>
+                        <Grid container spacing={2}>
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
+                              Included Roles
+                            </Typography>
+                            <Card variant="outlined">
+                              <Stack spacing={0} sx={{ p: 1 }}>
+                                {[
+                                  'Teacher',
+                                  'Principle',
+                                  'Cashier',
+                                  'Driver',
+                                  'Librarian',
+                                  'Peon',
+                                ].map((role) => (
+                                  <FormControlLabel
+                                    key={role}
+                                    control={
+                                      <Checkbox
+                                        size="small"
+                                        disabled
+                                        checked={role === 'Teacher' || role === 'Librarian'}
+                                      />
+                                    }
+                                    label={<Typography variant="body2">{role}</Typography>}
+                                    sx={{
+                                      m: 0,
+                                      py: 0.5,
+                                      '&:hover': { bgcolor: 'action.hover' },
+                                      borderRadius: 1,
+                                    }}
+                                  />
+                                ))}
+                              </Stack>
+                            </Card>
+                          </Grid>
+
+                          {/* Add more filter summaries here if needed */}
                         </Grid>
                       </Box>
                     </Grid>
-                  </Grid>
 
-                  <Divider sx={{ my: 2 }} />
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 12 }}>
-                      <Typography variant="subtitle1" color="primary">
-                        Additional Selections
-                      </Typography>
+                    {/* Additional Filters */}
+                    <Grid size={{ xs: 12, md: 5 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
+                        <Box
+                          sx={{
+                            width: 4,
+                            height: 24,
+                            bgcolor: 'secondary.main',
+                            mr: 1,
+                            borderRadius: 1,
+                          }}
+                        />
+                        <Typography variant="h6">Additional Rules</Typography>
+                      </Box>
+
+                      <Stack spacing={3}>
+                        <Box>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Student Specific Rules
+                          </Typography>
+                          {renderFilterRows(studentFilters, true)}
+                        </Box>
+                        <Divider />
+                        <Box>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Employee Specific Rules
+                          </Typography>
+                          {renderFilterRows(employeeFilters, false)}
+                        </Box>
+                      </Stack>
                     </Grid>
+                  </Grid>
+                )}
 
-                    <Grid
-                      size={{ xs: 6 }}
-                      sx={{ borderRight: '2px solid', borderColor: 'primary.main', pr: 2 }}
+                {tab === 1 && (
+                  <Box>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 2,
+                      }}
                     >
-                      <Box display="flex" alignItems="center" justifyContent="space-between">
-                        <Typography variant="subtitle2">Students Selections</Typography>
+                      <Typography variant="h6">Manually Selected Users</Typography>
+                      <Box
+                        sx={{
+                          px: 1.5,
+                          py: 0.5,
+                          bgcolor: 'primary.lighter',
+                          color: 'primary.dark',
+                          borderRadius: 20,
+                          fontSize: 13,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {selection.length} Selected
                       </Box>
-                      {renderFilterRows(studentFilters, true)}
-                    </Grid>
-                    <Grid size={{ xs: 6 }} pl={2}>
-                      <Box display="flex" alignItems="center" justifyContent="space-between">
-                        <Typography variant="subtitle2">Employee Selections</Typography>
+                    </Box>
+
+                    {selection.length === 0 ? (
+                      <Box
+                        sx={{
+                          py: 8,
+                          textAlign: 'center',
+                          bgcolor: 'background.neutral',
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Typography variant="body2" color="text.secondary">
+                          No users selected manually.
+                        </Typography>
                       </Box>
-                      {renderFilterRows(employeeFilters, false)}
-                    </Grid>
-                  </Grid>
-                </Box>
-              )}
-              {tab === 1 && (
-                <Box
-                  sx={{
-                    flexBasis: { md: '30%' },
-                    flexGrow: { md: 0, xs: 1 },
-                    minWidth: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    border: 1,
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    p: 1.5,
-                    bgcolor: 'background.paper',
-                    maxHeight: 400,
-                    overflow: 'auto',
-                    mt: 2,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      mb: 1,
-                    }}
-                  >
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                      Selected Users ({selection.length || 0})
-                    </Typography>
-                  </Box>
-                  {selection.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      No users selected yet.
-                    </Typography>
-                  ) : (
-                    <Box>
-                      <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                    ) : (
+                      <Stack spacing={1.5}>
                         {selection.map((id: string) => {
                           const user = dummyRows.find((r) => r.id === id);
                           if (!user) return null;
-                          const extra =
-                            user.type === 'Student'
-                              ? `Class ${user.class}${user.division ? `-${user.division}` : ''}`
-                              : `${user.designation}${user.department ? ` • ${user.department}` : ''}`;
+                          const isStudent = user.type === 'Student';
+                          const extra = isStudent
+                            ? `Class ${user.class}${user.division ? `-${user.division}` : ''}`
+                            : `${user.designation}${user.department ? ` • ${user.department}` : ''}`;
+
                           return (
-                            <Box
+                            <Card
                               key={id}
-                              component="li"
                               sx={{
+                                p: 1.5,
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
-                                border: 1,
-                                borderColor: 'divider',
-                                borderRadius: 1,
-                                p: 0.75,
-                                mb: 0.75,
-                                bgcolor: 'background.default',
-                                gap: 1,
+                                gap: 2,
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                  boxShadow: 3,
+                                  transform: 'translateY(-2px)',
+                                },
                               }}
                             >
-                              <Box sx={{ minWidth: 0 }}>
+                              <Box
+                                sx={{
+                                  width: 48,
+                                  height: 48,
+                                  borderRadius: '50%',
+                                  bgcolor: isStudent ? 'primary.lighter' : 'secondary.lighter',
+                                  color: isStudent ? 'primary.main' : 'secondary.main',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontWeight: 700,
+                                  fontSize: 18,
+                                }}
+                              >
+                                {user.firstName[0]}
+                              </Box>
+                              <Box sx={{ flexGrow: 1 }}>
+                                <Typography variant="subtitle2">{user.fullName}</Typography>
                                 <Typography
-                                  variant="body2"
-                                  sx={{
-                                    fontWeight: 500,
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                  }}
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
                                 >
-                                  {user.fullName}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {user.type === 'Student'
-                                    ? `${extra}${user.role ? ` • ${user.role}` : ''}`
-                                    : `${extra}${user.role ? ` • ${user.role}` : ''}`}
+                                  {user.type} • {extra}
                                 </Typography>
                               </Box>
-                            </Box>
+
+                              <Box sx={{ textAlign: 'right' }}>
+                                <Box
+                                  sx={{
+                                    px: 1,
+                                    py: 0.25,
+                                    borderRadius: 0.5,
+                                    bgcolor:
+                                      user.status === 'Active'
+                                        ? 'success.lighter'
+                                        : 'error.lighter',
+                                    color: user.status === 'Active' ? 'success.dark' : 'error.dark',
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  {user.status.toUpperCase()}
+                                </Box>
+                              </Box>
+                            </Card>
                           );
                         })}
-                      </Box>
-                    </Box>
-                  )}
-                </Box>
-              )}
-            </Box>
-          </Card>
-        </Box>
+                      </Stack>
+                    )}
+                  </Box>
+                )}
+              </Box>
+            </Card>
+          </Grid>
+        </Grid>
       </DialogScrollContent>
     </CustomDialog>
   );

@@ -264,8 +264,8 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
   ) : (
     <>
       <CustomBreadcrumbs
-        heading="Employee List"
-        links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee List' }]}
+        heading="Employee Profile"
+        links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee Profile' }]}
         description="View and manage employee information including personal details, documents, payroll, transportation, academic records and communications"
         isBack
         onBack={() => {

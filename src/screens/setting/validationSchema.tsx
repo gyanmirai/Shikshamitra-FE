@@ -15,7 +15,7 @@ export const basicInformationvalidationSchema = Yup.object().shape({
     .min(1, 'At least one Institute Banner is required')
     .required('Institute Banner is required'),
   addressLine1: Yup.string().required('Building No./Flat/House No. is required'),
-  addressLine2: Yup.string().required('Area/Locality/Road Name is required'),
+  addressLine2: Yup.string(),
   addressLine3: Yup.string(),
 
   country: Yup.object()

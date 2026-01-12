@@ -10,11 +10,20 @@ const teachers = [
 ];
 
 const SubjectsTeachersStudentDashboard = () => (
-  <Card sx={{ p: 3, borderRadius: 3, height: '100%' }}>
-    <Typography variant="h6" mb={2}>
+  <Card
+    sx={{
+      p: 3,
+      borderRadius: 2,
+      height: '100%',
+      boxShadow: 'none',
+      border: '1px solid',
+      borderColor: 'divider',
+    }}
+  >
+    <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>
       Assigned Teachers
     </Typography>
-    <Stack spacing={1.5}>
+    <Stack spacing={2}>
       {teachers.map((item, index) => (
         <AssignedTeacherItem key={index} {...item} />
       ))}

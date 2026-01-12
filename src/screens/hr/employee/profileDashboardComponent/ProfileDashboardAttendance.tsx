@@ -2,10 +2,9 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import React, { useState } from 'react';
+import { Box, Paper, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Badge, Paper, Typography } from '@mui/material';
 import { PickersDay, DateCalendar } from '@mui/x-date-pickers';
-import { Dot } from 'src/screens/student/studentProfile/attendance';
 
 const ProfileDashboardAttendance = () => {
   const [date] = useState<Dayjs | null>(dayjs());
@@ -18,16 +17,20 @@ const ProfileDashboardAttendance = () => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: 'var(--shadows-2)',
+        boxShadow: 'none',
         borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'divider',
       }}
     >
-      <Typography variant="subtitle1" sx={{ padding: '24px 24px 0px' }}>
-        Attendance Calender
-      </Typography>
+      <Box sx={{ p: 3, pb: 0 }}>
+        <Typography variant="h6">Attendance Calendar</Typography>
+      </Box>
+
       <DateCalendar
         value={date}
         disableFuture
+        showDaysOutsideCurrentMonth
         sx={{
           width: '100%',
           flexGrow: 2,
@@ -37,7 +40,13 @@ const ProfileDashboardAttendance = () => {
           '& .MuiPickersCalendarHeader-root': {
             display: 'none', // Hides the header (Month, Year, and Arrows)
           },
-          '& .MuiDayCalendar-header': { justifyContent: 'space-around' },
+          '& .MuiDayCalendar-header': {
+            justifyContent: 'space-around',
+            '& .MuiDayCalendar-weekDayLabel': {
+              fontWeight: 600,
+              color: 'text.primary',
+            },
+          },
           '& .MuiDayCalendar-weekContainer': { justifyContent: 'space-around' },
         }}
         slots={{
@@ -54,7 +63,7 @@ const ProfileDashboardAttendance = () => {
             let backgroundColor = '';
 
             if (absent) {
-              backgroundColor = 'error.main';
+              backgroundColor = 'error.lighter';
               toolTipTitle = 'Doctors Appointment';
             }
             if (isHalfDay) {
@@ -65,7 +74,7 @@ const ProfileDashboardAttendance = () => {
             }
             return (
               <CustomTooltip title={toolTipTitle} arrow placement="top">
-                <Badge overlap="circular" variant={isHoliday ? 'dot' : undefined} color="warning">
+                <Box>
                   <PickersDay
                     {...prop}
                     day={day}
@@ -73,41 +82,24 @@ const ProfileDashboardAttendance = () => {
                       position: 'relative',
                       zIndex: 1,
                       overflow: 'hidden',
-                      fontWeight: disabled ? 400 : 600,
+                      fontWeight: 500,
+                      borderRadius: 1.5,
                       bgcolor: backgroundColor,
-                      '&:hover': { ...(absent ? { backgroundColor: 'unset' } : {}) },
-                      // background: (theme) =>
-                      //   absent
-                      //     ? `${theme.palette.error.main} !important`
-                      //     : today
-                      //       ? 'transparent !important'
-                      //       : '',
-                      // ...(absent
-                      //   ? { color: 'white !important' }
-                      //   : { color: (theme) => `${theme.vars.palette.text.primary} !important` }),
-                      // border: (theme) =>
-                      //   today ? `2px solid ${theme.palette.primary.main}` : 'none !important',
-                      ...(isHalfDay
-                        ? {
-                            '&::before': {
-                              content: '""',
-                              position: 'absolute',
-                              top: '0',
-                              left: '0',
-
-                              width: '50%',
-                              height: '100%',
-                              // eslint-disable-next-line @typescript-eslint/no-shadow
-                              backgroundColor: (theme) => `${theme.palette.error.main} !important`,
-                              border: '2px solid transparent',
-                              zIndex: -1,
-                            },
-                          }
-                        : {}),
+                      color: absent ? 'error.main' : 'text.primary',
+                      '&:hover': { bgcolor: 'action.hover' },
+                      ...(isHalfDay && {
+                        background: (theme) =>
+                          `linear-gradient(135deg, ${theme.palette.warning.lighter} 50%, transparent 50%)`,
+                        color: 'warning.dark',
+                      }),
+                      ...(isHoliday && {
+                        bgcolor: 'background.neutral',
+                        color: 'text.disabled',
+                      }),
                     }}
                     disabled={disabled}
                   />
-                </Badge>
+                </Box>
               </CustomTooltip>
             );
           },
@@ -118,23 +110,30 @@ const ProfileDashboardAttendance = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          borderTop: '1px dashed #ddd',
-          p: 3,
-          // height: '100%',
-          // mt: 9.3,
-          // pt: 3,
-          color: 'text.primary',
+          gap: 3,
+          p: 2,
+          borderTop: '1px solid',
+          borderColor: 'divider',
         }}
       >
-        <Dot color="success.main" sx={{ marginLeft: 2 }}>
-          Today
-        </Dot>
-        <Dot color="warning.main" sx={{ marginLeft: 2 }}>
-          Holiday
-        </Dot>
-        <Dot color="error.main" sx={{ marginLeft: 2 }}>
-          Absent/ Half-Day
-        </Dot>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Present
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'warning.main' }} />
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Holiday
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'error.main' }} />
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Absent
+          </Typography>
+        </Box>
       </Box>
     </Paper>
   );

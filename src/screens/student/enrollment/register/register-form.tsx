@@ -554,6 +554,7 @@ const RegisterForm = ({
           setActiveStep(index);
         }
       }}
+      viewMode="vertical"
       validateOnChange
       initialValues={{
         ...generalFieldsInitialValues(),

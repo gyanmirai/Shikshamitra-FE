@@ -335,7 +335,7 @@ export default function LoginPage() {
                             helperText={
                               loginFormik.touched.organization && loginFormik.errors.organization
                             }
-                            sx={inputStyle}
+                            // sx={inputStyle}
                             InputProps={{
                               startAdornment: (
                                 <InputAdornment position="start">
@@ -362,7 +362,7 @@ export default function LoginPage() {
                             onBlur={loginFormik.handleBlur}
                             error={loginFormik.touched.email && Boolean(loginFormik.errors.email)}
                             helperText={loginFormik.touched.email && loginFormik.errors.email}
-                            sx={inputStyle}
+                            // sx={inputStyle}
                             InputProps={{
                               startAdornment: (
                                 <InputAdornment position="start">
@@ -562,7 +562,7 @@ export default function LoginPage() {
                                 forgotFormik.touched.email && Boolean(forgotFormik.errors.email)
                               }
                               helperText={forgotFormik.touched.email && forgotFormik.errors.email}
-                              sx={inputStyle}
+                              // sx={inputStyle}
                               InputProps={{
                                 startAdornment: (
                                   <InputAdornment position="start">
@@ -635,7 +635,7 @@ export default function LoginPage() {
         {/* Footer/Copyright if needed, but keeping minimal as requested */}
         <Box sx={{ mt: 4, textAlign: 'center' }}>
           <Typography variant="caption" color="text.disabled">
-            © {new Date().getFullYear()} Shiksha Mitra. All rights reserved.
+            © {new Date().getFullYear()} Gyanmirai. All rights reserved.
           </Typography>
         </Box>
       </Box>
