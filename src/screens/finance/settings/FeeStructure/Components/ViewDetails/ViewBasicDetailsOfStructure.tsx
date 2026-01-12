@@ -1,78 +1,94 @@
 import React from 'react';
 import { Label } from 'src/components/label';
-import { Grid, Paper, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { Box, Card, Grid, Divider, CardHeader, Typography, CardContent } from '@mui/material';
 
 import type { IFeeStructure } from '../../type';
 
-const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStructure | null }) => (
-  <Paper sx={{ p: 2, mb: 2, position: 'relative' }} elevation={6}>
-    {/* Heading */}
-    <Typography variant="h6" mb={2} color="primary.main">
-      Fee Structure Information
-    </Typography>
+const ViewBasicDetailsOfStructure = ({ feeStructure }: { feeStructure: IFeeStructure | null }) => {
+  const theme = useTheme();
 
-    <Grid container spacing={2}>
-      {/* Fee Structure Name */}
-      <Grid size={{ xs: 12, md: 2 }}>
-        <Typography variant="body2" color="text.secondary">
-          Fee Structure Name
-        </Typography>
-        <Typography variant="body1" fontWeight="600">
-          {feeStructure?.feeStructureName || '-'}
-        </Typography>
-      </Grid>
+  const renderDetailItem = (label: string, value: string | number | undefined | null) => (
+    <Box>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ mb: 0.5, display: 'block', fontWeight: 500 }}
+      >
+        {label}
+      </Typography>
+      <Typography variant="subtitle2" color="text.primary" sx={{ fontWeight: 600 }}>
+        {value || '-'}
+      </Typography>
+    </Box>
+  );
 
-      {/* Academic Year */}
-      <Grid size={{ xs: 12, md: 2 }}>
-        <Typography variant="body2" color="text.secondary">
-          Academic Year
-        </Typography>
-        <Typography variant="body1" fontWeight="600">
-          {feeStructure?.academicYear || '-'}
-        </Typography>
-      </Grid>
+  return (
+    <Card
+      sx={{
+        mb: 3,
+        borderRadius: 2,
+        boxShadow: theme.shadows[2], // Soft shadow provided by theme
+        overflow: 'visible', // Ensure content doesn't get clipped if we add popovers later, though not needed now
+      }}
+    >
+      <CardHeader
+        title="Fee Structure Information"
+        subheader="Basic details associated with this structure"
+        titleTypographyProps={{ variant: 'h6', fontWeight: 700 }}
+        subheaderTypographyProps={{ variant: 'body2', color: 'text.secondary' }}
+        sx={{ pb: 2 }}
+      />
+      <Divider sx={{ borderStyle: 'dashed' }} />
 
-      {/* Board */}
-      <Grid size={{ xs: 12, md: 2 }}>
-        <Typography variant="body2" color="text.secondary">
-          Board
-        </Typography>
-        <Typography variant="body1" fontWeight="600">
-          {feeStructure?.board || '-'}
-        </Typography>
-      </Grid>
+      <CardContent sx={{ pt: 3 }}>
+        <Grid container spacing={3}>
+          {/* Fee Structure Name */}
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            {renderDetailItem('Fee Structure Name', feeStructure?.feeStructureName)}
+          </Grid>
 
-      {/* Medium */}
-      <Grid size={{ xs: 12, md: 2 }}>
-        <Typography variant="body2" color="text.secondary">
-          Medium
-        </Typography>
-        <Typography variant="body1" fontWeight="600">
-          {feeStructure?.medium || '-'}
-        </Typography>
-      </Grid>
+          {/* Academic Year */}
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            {renderDetailItem('Academic Year', feeStructure?.academicYear)}
+          </Grid>
 
-      {/* Status */}
-      <Grid size={{ xs: 12, md: 2 }}>
-        <Typography variant="body2" color="text.secondary">
-          Status
-        </Typography>
-        <Label variant="soft" color={feeStructure?.status === 1 ? 'success' : 'error'}>
-          {feeStructure?.status === 1 ? 'Active' : 'Inactive'}
-        </Label>
-      </Grid>
+          {/* Board */}
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            {renderDetailItem('Board', feeStructure?.board)}
+          </Grid>
 
-      {/* Receipt Book */}
-      <Grid size={{ xs: 12, md: 2 }}>
-        <Typography variant="body2" color="text.secondary">
-          Receipt Book
-        </Typography>
-        <Typography variant="body1" fontWeight="600">
-          {feeStructure?.receiptBook || '-'}
-        </Typography>
-      </Grid>
-    </Grid>
-  </Paper>
-);
+          {/* Medium */}
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            {renderDetailItem('Medium', feeStructure?.medium)}
+          </Grid>
+
+          {/* Receipt Book */}
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            {renderDetailItem('Receipt Book', feeStructure?.receiptBook)}
+          </Grid>
+
+          {/* Status - Special handling for Label */}
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mb: 0.5, display: 'block', fontWeight: 500 }}
+            >
+              Status
+            </Typography>
+            <Label
+              variant="soft"
+              color={feeStructure?.status === 1 ? 'success' : 'error'}
+              sx={{ textTransform: 'uppercase', fontWeight: 700 }}
+            >
+              {feeStructure?.status === 1 ? 'Active' : 'Inactive'}
+            </Label>
+          </Grid>
+        </Grid>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default ViewBasicDetailsOfStructure;

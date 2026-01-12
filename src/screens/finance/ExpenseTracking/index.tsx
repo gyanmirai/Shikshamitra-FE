@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 
+import Loading from 'src/app/loading';
 import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
@@ -129,7 +130,7 @@ const FinanceExpenseTracking = () => {
               Expense
             </Button>
           }
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 2, mb: 1 }}
         />
       )}
 
@@ -152,10 +153,7 @@ const FinanceExpenseTracking = () => {
             flexDirection="column"
             gap={2}
           >
-            <CircularProgress />
-            <Typography variant="body2" color="text.secondary">
-              Loading expense data...
-            </Typography>
+            <Loading />
           </Box>
         ) : (
           <ExpenseCategoryTable

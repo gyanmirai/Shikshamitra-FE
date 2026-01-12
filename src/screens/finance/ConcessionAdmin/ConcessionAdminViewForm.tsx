@@ -30,61 +30,161 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
   onClose,
 }) => (
   <Box display="flex" flexDirection="column" gap={2} height="100%">
-    <Scrollbar sx={{ p: 2, height: '100%' }}>
+    <Scrollbar sx={{ p: 3, height: '100%' }}>
       <StudentInformationAccordion student={student} />
       {student?.concessions && student.concessions.length > 0 && (
-        <>
-          {student?.concessions.map((c, i) => (
-            <Grid key={i} size={{ xs: 12 }}>
-              <Card sx={{ boxShadow: 3, borderRadius: 2, mb: 2 }}>
-                <CardContent sx={{ p: 2 }}>
-                  <Typography variant="h6" color="#00A76F" gutterBottom>
-                    {c.concessionType} Information
-                  </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {student.concessions.slice(0, 1).map((c, i) => (
+            <Card
+              key={i}
+              sx={{
+                borderRadius: 2,
+                boxShadow: (theme) => theme.customShadows?.card ?? 3,
+                border: (theme) => `1px solid ${theme.palette.divider}`,
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: 'primary.main',
+                    mb: 3,
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  <Iconify icon="mdi:file-document-outline" width={24} />
+                  {c.concessionType} Information
+                </Typography>
 
-                  <Grid container spacing={2}>
-                    {/* Fee Heads */}
-                    <Grid size={{ xs: 12, md: 6 }}>
-                      <Typography variant="body2" color="text.secondary">
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                  {/* Fee Heads */}
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: 1.5,
+                        bgcolor: (theme) => theme.vars.palette.background.neutral,
+                        height: '100%',
+                      }}
+                    >
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                         Applicable Fee Heads
                       </Typography>
-                      <Typography variant="body1">
-                        {c.applicableFeeHeads?.length ? c.applicableFeeHeads.join(', ') : '-'}
-                      </Typography>
-                    </Grid>
-
-                    {/* Amount */}
-                    {c.amount && (
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          Amount
-                        </Typography>
-                        <Typography variant="body1">{formatNumber(c.amount, 'INR')}</Typography>
-                      </Grid>
-                    )}
-
-                    {/* Percentage */}
-                    {c.percentage && (
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          Percentage
-                        </Typography>
-                        <Typography variant="body1">{c.percentage}%</Typography>
-                      </Grid>
-                    )}
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {c.applicableFeeHeads?.length ? (
+                          c.applicableFeeHeads.map((head, idx) => (
+                            <Box
+                              key={idx}
+                              component="span"
+                              sx={{
+                                px: 1,
+                                py: 0.5,
+                                borderRadius: 1,
+                                bgcolor: 'background.paper',
+                                border: 1,
+                                borderColor: 'divider',
+                                typography: 'body2',
+                                fontWeight: 'medium',
+                              }}
+                            >
+                              {head}
+                            </Box>
+                          ))
+                        ) : (
+                          <Typography variant="body2">-</Typography>
+                        )}
+                      </Box>
+                    </Box>
                   </Grid>
 
-                  {/* Documents Table */}
-                  {c.documents?.length > 0 && (
+                  {/* Amount / Percentage */}
+                  {(c.amount || c.percentage) && (
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderRadius: 1.5,
+                          bgcolor: (theme) => theme.vars.palette.background.neutral,
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        {c.amount && (
+                          <Box>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                              Amount
+                            </Typography>
+                            <Typography variant="h5" color="success.main">
+                              {formatNumber(c.amount, 'INR')}
+                            </Typography>
+                          </Box>
+                        )}
+
+                        {c.percentage && (
+                          <Box>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                              Percentage
+                            </Typography>
+                            <Typography variant="h5" color="info.main">
+                              {c.percentage}%
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    </Grid>
+                  )}
+                </Grid>
+
+                {/* Documents Table */}
+                {c.documents?.length > 0 && (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
+                      Attached Documents
+                    </Typography>
                     <CustomizableTable
                       tableId={`view-documents-${i}`}
                       columns={[
-                        { id: 'name', label: 'Name' },
+                        {
+                          id: 'name',
+                          label: 'Document Name',
+                          render: (value, row) => (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <Iconify
+                                icon="mdi:file-document"
+                                width={24}
+                                sx={{ color: 'text.disabled' }}
+                              />
+                              <Typography variant="body2" fontWeight="medium">
+                                {row.documentName || '-'}
+                              </Typography>
+                            </Box>
+                          ),
+                        },
                         {
                           id: 'acceptedFormat',
-                          label: 'Accepted Format',
+                          label: 'Format',
                           align: 'left',
-                          minWidth: 160,
+                          minWidth: 120,
+                          render: (value, row) => (
+                            <Box
+                              component="span"
+                              sx={{
+                                px: 1,
+                                py: 0.5,
+                                borderRadius: 0.75,
+                                bgcolor: (theme) => theme.vars.palette.action.hover,
+                                typography: 'caption',
+                                fontWeight: 'bold',
+                              }}
+                            >
+                              {row.acceptedFormat || '-'}
+                            </Box>
+                          ),
                         },
                         {
                           id: 'status',
@@ -93,100 +193,140 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
                           isFilter: false,
                           isSort: false,
                           render: (value, row) => (
-                            <Tooltip title={row.status}>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                color: row.status === 'Uploaded' ? 'success.main' : 'text.disabled',
+                              }}
+                            >
                               <Iconify
                                 icon={
-                                  row.status === 'Uploaded' ? 'mdi:approve' : 'mage:file-cross-fill'
+                                  row.status === 'Uploaded'
+                                    ? 'eva:checkmark-circle-2-fill'
+                                    : 'eva:alert-circle-fill'
                                 }
-                                height={20}
-                                width={20}
-                                sx={{
-                                  color: (theme) =>
-                                    row.status === 'Uploaded'
-                                      ? 'success.main'
-                                      : theme.vars.palette.grey[500],
-                                }}
+                                width={18}
                               />
-                            </Tooltip>
+                              <Typography variant="body2">{row.status || 'Pending'}</Typography>
+                            </Box>
                           ),
                         },
                         {
-                          id: 'view',
-                          label: 'View',
+                          id: 'actions',
+                          label: 'Actions',
+                          align: 'right',
                           isFilter: false,
                           isSort: false,
                           render: (value, row) => (
-                            <IconButton
-                              onClick={() =>
-                                row.file
-                                  ? window.open(URL.createObjectURL(row.file), '_blank')
-                                  : row.fileUrl
-                                    ? window.open(row.fileUrl, '_blank')
-                                    : null
-                              }
-                              disabled={!row.file && !row.fileUrl}
-                            >
-                              <Iconify icon="carbon:view-filled" />
-                            </IconButton>
-                          ),
-                        },
-                        {
-                          id: 'download',
-                          label: 'Download',
-                          isFilter: false,
-                          isSort: false,
-                          render: (value, row) => (
-                            <IconButton
-                              onClick={() => {
-                                if (row.file) {
-                                  const url = URL.createObjectURL(row.file);
-                                  const link = document.createElement('a');
-                                  link.href = url;
-                                  link.download = row.documentName;
-                                  link.click();
-                                } else if (row.fileUrl) {
-                                  const link = document.createElement('a');
-                                  link.href = row.fileUrl;
-                                  link.download = row.documentName;
-                                  link.click();
-                                }
-                              }}
-                              disabled={!row.file && !row.fileUrl}
-                            >
-                              <Iconify icon="material-symbols:download" width={20} height={20} />
-                            </IconButton>
+                            <Box display="flex" justifyContent="flex-end" gap={1}>
+                              <Tooltip title="View Document">
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() =>
+                                      row.file
+                                        ? window.open(URL.createObjectURL(row.file), '_blank')
+                                        : row.fileUrl
+                                          ? window.open(row.fileUrl, '_blank')
+                                          : null
+                                    }
+                                    disabled={!row.file && !row.fileUrl}
+                                    sx={{
+                                      color: 'info.main',
+                                      bgcolor: (theme) =>
+                                        theme.vars.palette.info.mainChannel &&
+                                        `rgba(${theme.vars.palette.info.mainChannel} / 0.08)`,
+                                      '&:hover': {
+                                        bgcolor: (theme) =>
+                                          theme.vars.palette.info.mainChannel &&
+                                          `rgba(${theme.vars.palette.info.mainChannel} / 0.16)`,
+                                      },
+                                    }}
+                                  >
+                                    <Iconify icon="carbon:view-filled" width={18} />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+
+                              <Tooltip title="Download">
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                      if (row.file) {
+                                        const url = URL.createObjectURL(row.file);
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.download = row.documentName;
+                                        link.click();
+                                      } else if (row.fileUrl) {
+                                        const link = document.createElement('a');
+                                        link.href = row.fileUrl;
+                                        link.download = row.documentName;
+                                        link.click();
+                                      }
+                                    }}
+                                    disabled={!row.file && !row.fileUrl}
+                                    sx={{
+                                      color: 'primary.main',
+                                      bgcolor: (theme) =>
+                                        theme.vars.palette.primary.mainChannel &&
+                                        `rgba(${theme.vars.palette.primary.mainChannel} / 0.08)`,
+                                      '&:hover': {
+                                        bgcolor: (theme) =>
+                                          theme.vars.palette.primary.mainChannel &&
+                                          `rgba(${theme.vars.palette.primary.mainChannel} / 0.16)`,
+                                      },
+                                    }}
+                                  >
+                                    <Iconify icon="eva:download-fill" width={18} />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            </Box>
                           ),
                         },
                       ]}
                       data={c.documents}
                     />
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
           ))}
-        </>
+        </Box>
       )}
     </Scrollbar>
 
-    <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, width: '100%' }}>
+    <DialogActions
+      sx={{
+        p: 2.5,
+        borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
+        bgcolor: 'background.default',
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, width: '100%' }}>
         <Button
           variant="soft"
           color="error"
           onClick={onReject}
-          size="small"
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          sx={{ px: 2 }}
         >
           Reject
         </Button>
 
         <Button
-          variant="soft"
+          variant="contained"
           color="success"
           onClick={onApprove}
-          size="small"
           startIcon={<Iconify icon={GlobalIcons.tick} />}
+          sx={{
+            px: 2,
+            boxShadow: (theme) => theme.customShadows?.success,
+          }}
         >
           Approve
         </Button>

@@ -39,38 +39,70 @@ export default function FeeOverview({
   }) => (
     <Box
       sx={{
-        p: 1,
-        borderRadius: 1,
-        mb: 1,
-        bgcolor,
-        border: `1px solid ${theme.palette.divider}`,
+        p: 2.5,
+        borderRadius: 2,
+        mb: 2,
+        // bgcolor,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+        border: `1px solid transparent`,
+        transition: 'all 0.2s ease-in-out',
+        boxShadow: theme.shadows[2],
+        // borderColor: color,
       }}
     >
-      <Typography variant="body2" color="text.secondary" display="flex" gap={1}>
-        {icon} {label}
-      </Typography>
-      <Typography variant="h6" fontWeight={400} sx={{ color, mt: 0.5, ml: 1 }}>
-        ₹ {value.toLocaleString()}
-      </Typography>
+      <Box
+        sx={{
+          width: 48,
+          height: 48,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '50%',
+          bgcolor,
+          color,
+          boxShadow: theme.customShadows?.z1 || theme.shadows[1],
+        }}
+      >
+        {icon}
+      </Box>
+
+      <Box sx={{ flexGrow: 1 }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600, mb: 0.5 }}>
+          {label}
+        </Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          ₹ {value.toLocaleString()}
+        </Typography>
+      </Box>
     </Box>
   );
 
   return (
     <Card
       sx={{
-        p: 2,
-        borderRadius: 1,
+        p: 3,
+        borderRadius: 2,
         height: '100%',
-        boxShadow: 'var(--shadows-8)',
+        boxShadow: theme.customShadows?.card || theme.shadows[3],
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <Typography variant="h6" color="primary.main" mb={1}>
-        Fee Overview
-      </Typography>
-      <Scrollbar sx={{ height: '380px', p: 1 }}>
+      <Box mb={3}>
+        <Typography variant="h6" sx={{ fontWeight: 800 }}>
+          Fee Overview
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Summary of total fee collection
+        </Typography>
+      </Box>
+
+      <Scrollbar sx={{ flexGrow: 1, height: 'auto', px: 1, mx: -1 }}>
         {/* Total Fee */}
         <RowCard
-          icon={<Iconify icon="streamline:bag-dollar" />}
+          icon={<Iconify icon="streamline:bag-dollar" width={24} />}
           label="Total Fee"
           value={total}
           bgcolor={`${theme.palette.secondary.light}33`}
@@ -78,7 +110,7 @@ export default function FeeOverview({
         />
         {/* Paid Fee */}
         <RowCard
-          icon={<CheckCircleIcon color="success" />}
+          icon={<CheckCircleIcon sx={{ fontSize: 24 }} />}
           label="Paid Fee"
           value={paid}
           bgcolor={`${theme.palette.success.light}33`}
@@ -87,7 +119,7 @@ export default function FeeOverview({
 
         {/* Pending Fee */}
         <RowCard
-          icon={<Iconify icon="game-icons:sands-of-time" sx={{ color: 'warning.main' }} />}
+          icon={<Iconify icon="game-icons:sands-of-time" width={24} />}
           label="Pending Fee"
           value={pending}
           bgcolor={`${theme.palette.warning.light}33`}
@@ -96,7 +128,7 @@ export default function FeeOverview({
 
         {/* Overdue Fee */}
         <RowCard
-          icon={<ErrorIcon color="error" />}
+          icon={<ErrorIcon sx={{ fontSize: 24 }} />}
           label="Overdue Fee"
           value={overdue}
           bgcolor={`${theme.palette.error.light}33`}
@@ -105,7 +137,7 @@ export default function FeeOverview({
 
         {/* Concession */}
         <RowCard
-          icon={<CreditCardIcon color="info" />}
+          icon={<CreditCardIcon sx={{ fontSize: 24 }} />}
           label="Concession"
           value={concession}
           bgcolor={`${theme.palette.info.light}33`}
@@ -113,7 +145,7 @@ export default function FeeOverview({
         />
       </Scrollbar>
 
-      {/* Progress Bar */}
+      {/* Progress Bar (Preserved commented code) */}
       {/* <Box mt={3}>
         <Typography
           variant="body2"

@@ -28,9 +28,9 @@ const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
   if (!feeStructureClasses || Object.keys(feeStructureClasses).length === 0) return null;
 
   return (
-    <Grid size={{ xs: 1.4 }}>
+    <Grid size={{ xs: 12, md: 2.4 }}>
       <SectionCard title="Classes" paperProps={{ sx: { pb: 2 } }}>
-        <Scrollbar sx={{ height: '290px' }}>
+        <Scrollbar sx={{ height: '480px' }}>
           <Box display="flex" flexWrap="wrap" gap={1}>
             {classNames.map((className) => {
               const firstFeeStructure = feeStructureClasses[className]?.[0];
