@@ -1,4 +1,6 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -13,33 +15,9 @@ const HolidayTypeTable: React.FC<IHolidayTypeTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
-}) => (
-  <CustomizableTable
-    tableId="holiday-type-data-table"
-    noDataText={
-      <>
-        No holiday type data found.{' '}
-        <Typography
-          component="span"
-          color="primary.main"
-          fontWeight={600}
-          sx={{
-            '&:hover': {
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            },
-          }}
-          onClick={() => {
-            onAddHolidayType.onTrue();
-            setOpenDialog(true);
-            setEditData(null);
-          }}
-        >
-          Add Holiday
-        </Typography>
-      </>
-    }
-    columns={[
+}) => {
+  const columns: IColumn[] = useMemo(
+    () => [
       {
         id: 'holidayType',
         label: 'Name',
@@ -88,9 +66,41 @@ const HolidayTypeTable: React.FC<IHolidayTypeTableProps> = ({
           );
         },
       },
-    ]}
-    data={data || []}
-  />
-);
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  return (
+    <CustomizableTable
+      tableId="holiday-type-data-table"
+      noDataText={
+        <>
+          No holiday type data found.{' '}
+          <Typography
+            component="span"
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              },
+            }}
+            onClick={() => {
+              onAddHolidayType.onTrue();
+              setOpenDialog(true);
+              setEditData(null);
+            }}
+          >
+            Add Holiday
+          </Typography>
+        </>
+      }
+      columns={columns}
+      data={data || []}
+    />
+  );
+};
 
 export default HolidayTypeTable;

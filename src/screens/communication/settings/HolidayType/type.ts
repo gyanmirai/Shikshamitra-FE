@@ -1,6 +1,7 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface IHolidayType {
+  id?: string;
   holidayType: string;
   description: string;
   color: string;

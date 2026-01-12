@@ -1,13 +1,14 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -98,6 +99,47 @@ const StudentDocumentType = () => {
   };
 
   const { confirmWithUndo } = useConfirmWithUndo();
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      { id: 'name', label: 'Document Name' },
+      { id: 'maxSizeMB', label: 'Document Size' },
+      {
+        id: 'acceptedFormats',
+        label: 'Accepted Format',
+        align: 'left',
+        render(value, row) {
+          return value.map((item: number) => DocumentType[item]).join(', ');
+        },
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        isSort: false,
+        isFilter: false,
+        minWidth: 50,
+        sticky: true,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showDeleteIcon
+              handleDeleteClick={() => {
+                setEditData(row as IStudentDocument);
+                confirm.onTrue();
+              }}
+              showThreeDots={false}
+              showEditIcon
+              handleEditClick={() => {
+                setEditData(row as IStudentDocument);
+                defaultDocumentTypes?.onTrue();
+              }}
+            />
+          );
+        },
+      },
+    ],
+    [confirm, defaultDocumentTypes]
+  );
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -216,43 +258,7 @@ const StudentDocumentType = () => {
             maxResultCount: rowsPerPage,
           }));
         }}
-        columns={[
-          { id: 'name', label: 'Document Name' },
-          { id: 'maxSizeMB', label: 'Document Size' },
-          {
-            id: 'acceptedFormats',
-            label: 'Accepted Format',
-            align: 'left',
-            render(value, row) {
-              return value.map((item: number) => DocumentType[item]).join(', ');
-            },
-          },
-          {
-            id: 'action',
-            label: 'Actions',
-            isSort: false,
-            isFilter: false,
-            minWidth: 50,
-            sticky: true,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  showDeleteIcon
-                  handleDeleteClick={() => {
-                    setEditData(row as IStudentDocument);
-                    confirm.onTrue();
-                  }}
-                  showThreeDots={false}
-                  showEditIcon
-                  handleEditClick={() => {
-                    setEditData(row as IStudentDocument);
-                    defaultDocumentTypes?.onTrue();
-                  }}
-                />
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={documents?.items || []}
       />{' '}
       <CustomDialog

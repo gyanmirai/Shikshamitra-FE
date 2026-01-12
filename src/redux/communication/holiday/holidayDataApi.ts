@@ -9,8 +9,39 @@ export const holidayApi = communicationApi.injectEndpoints({
       }),
       providesTags: ['Holiday'],
     }),
+
+    addHolidayType: builder.mutation({
+      query: (data) => ({
+        url: '/api/calendar/holiday-types',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Holiday'],
+    }),
+
+    updateHolidayType: builder.mutation({
+      query: ({ data, holidayTypeId }) => ({
+        url: `/api/calendar/holiday-types/${holidayTypeId}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: ['Holiday'],
+    }),
+
+    deleteHolidayType: builder.mutation({
+      query: (holidayTypeId) => ({
+        url: `/api/calendar/holiday-types/${holidayTypeId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Holiday'],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetHolidaysQuery } = holidayApi;
+export const {
+  useGetHolidaysQuery,
+  useAddHolidayTypeMutation,
+  useUpdateHolidayTypeMutation,
+  useDeleteHolidayTypeMutation,
+} = holidayApi;

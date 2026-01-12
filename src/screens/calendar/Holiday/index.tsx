@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -12,10 +13,15 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetHolidaysQuery } from 'src/redux/communication/holiday/holidayDataApi';
+import {
+  holidayApi,
+  useGetHolidaysQuery,
+  useDeleteHolidayTypeMutation,
+} from 'src/redux/communication/holiday/holidayDataApi';
 
 import HolidayForm from './Components/HolidayForm';
 import HolidayTable from './Components/HolidayTable';
@@ -31,14 +37,21 @@ const HolidayManagement = (props: TabComponentType) => {
   });
 
   const [editingHoliday, setEditingHoliday] = useState<IHoliday | null>(null);
-  // const [viewHoliday, setViewHoliday] = useState<IHoliday | null>(null);
-  const [, setDeleteHoliday] = useState('');
+  const [selectedHoliday, setSelectedHoliday] = useState<IHoliday | null>(null);
   const confirm_dialog = useBoolean();
   const publish_modal = useBoolean();
   const [publishingHoliday, setPublishingHoliday] = useState<IHoliday | null>(null);
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
+  // Delete mutation and undo hook
+  const [deleteHoliday, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteHolidayTypeMutation,
+  });
+
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   const handleCloseDialog = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -110,8 +123,9 @@ const HolidayManagement = (props: TabComponentType) => {
             setEditingHoliday(row);
           }}
           onDelete={(id) => {
+            const holiday = holidayData?.find((h: IHoliday) => h.id === id);
+            setSelectedHoliday(holiday || null);
             confirm_dialog.onTrue();
-            setDeleteHoliday(id);
           }}
           onPublish={(row) => {
             publish_modal.onTrue();
@@ -123,20 +137,53 @@ const HolidayManagement = (props: TabComponentType) => {
       <ConfirmDialog
         open={confirm_dialog.value}
         onClose={() => {
-          setDeleteHoliday('');
+          setSelectedHoliday(null);
           confirm_dialog.onFalse();
         }}
         title="Delete"
         content={
           <>
             Are you sure you want to delete{' '}
-            <strong>&apos;{editingHoliday?.holidayName}&apos;</strong> Holiday?
+            <strong>&apos;{selectedHoliday?.holidayName}&apos;</strong> Holiday?
           </>
         }
         action={
-          <Button variant="contained" color="error" onClick={() => {}} size="small">
+          <LoadingButton
+            loading={isDeleteLoading}
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedHoliday,
+                message: `Holiday: ${selectedHoliday?.holidayName} deleted successfully`,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    holidayApi.util.updateQueryData('getHolidays', undefined, (draft: any) => {
+                      const index = draft?.findIndex(
+                        (item: any) => item.id === selectedHoliday?.id
+                      );
+                      setDeleteIndex(index);
+                      if (index !== -1 && draft) {
+                        draft.splice(index, 1);
+                      }
+                    })
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    holidayApi.util.updateQueryData('getHolidays', undefined, (draft: any) => {
+                      if (!draft) return;
+                      draft.splice(index, 0, selectedHoliday);
+                    })
+                  ),
+                onCommit: () => deleteHoliday(selectedHoliday?.id || ''),
+              });
+              confirm_dialog.onFalse();
+              setSelectedHoliday(null);
+            }}
+          >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
 

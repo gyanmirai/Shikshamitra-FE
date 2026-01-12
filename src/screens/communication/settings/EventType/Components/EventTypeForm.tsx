@@ -7,9 +7,14 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useAddEventTypeMutation,
+  useUpdateEventTypeMutation,
+} from 'src/redux/communication/setting/eventTypeApi';
 
 import { eventTypeValidationSchema } from './EventTypeValidation';
 import { getEventTypeInitialValues } from './EventTypeInitialValue';
@@ -17,20 +22,51 @@ import { getEventTypeInitialValues } from './EventTypeInitialValue';
 import type { IEventFormProps } from '../type';
 
 const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) => {
+  const { addEventType } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddEventTypeMutation,
+  });
+
+  const { updateEventType } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateEventTypeMutation,
+  });
+
   const formik = useFormik({
     initialValues: getEventTypeInitialValues(editData),
     validationSchema: eventTypeValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Event type : ${values.eventType} has been successfully updated`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Event type : ${values.eventType} has been successfully created`,
+    onSubmit: async (values) => {
+      try {
+        if (editData) {
+          // Update existing event type
+          await updateEventType({
+            eventTypeId: (editData as any).id, // Assuming editData has an id field
+            name: values.eventType,
+            color: values.color,
+            description: values.description,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Event type: ${values.eventType} has been successfully updated`,
+          });
+        } else {
+          // Create new event type
+          await addEventType({
+            name: values.eventType,
+            color: values.color,
+            description: values.description,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Event type: ${values.eventType} has been successfully created`,
+          });
+        }
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message: error?.data?.message || `Failed to ${editData ? 'update' : 'create'} event type`,
         });
       }
-      onClose(null, true);
     },
   });
 
@@ -117,8 +153,9 @@ const EventTypeForm: React.FC<IEventFormProps> = ({ open, onClose, editData }) =
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          disabled={formik.isSubmitting}
         >
-          {editData ? 'Update' : 'Submit'}
+          {formik.isSubmitting ? 'Submitting...' : editData ? 'Update' : 'Submit'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>

@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import dayjs from 'dayjs';
 import React, { useMemo, useState } from 'react';
@@ -96,6 +97,164 @@ const RegistrationFormScreen = () => {
     }
   };
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'studentName',
+        label: 'Student Name',
+        minWidth: '180px',
+        align: 'left',
+        sticky: true,
+        // render: (value, row) => {
+        //   const fullName = `${row.lastName} ${row.firstName} ${row.middleName}`.trim();
+
+        //   return (
+        //     <CustomTooltip title={fullName} arrow sx={{ textAlign: 'justify' }}>
+        //       <Typography
+        //         variant="caption"
+        //         sx={{
+        //           fontSize: '13px',
+        //           display: 'block',
+        //           overflow: 'hidden',
+        //           textOverflow: 'ellipsis',
+        //           whiteSpace: 'nowrap',
+        //           maxWidth: '150px',
+        //         }}
+        //       >
+        //         {fullName}
+        //       </Typography>
+        //     </CustomTooltip>
+        //   );
+        // },
+      },
+      {
+        id: 'formNo',
+        label: 'Form No.',
+        minWidth: '100px',
+        align: 'left',
+        sticky: true,
+      },
+      {
+        id: 'inquiryNo',
+        label: 'Inquiry No.',
+        align: 'left',
+        minWidth: '115px',
+        isFilter: true,
+        filterType: 'string',
+      },
+      { id: 'standard', label: 'Class', align: 'left', filterType: 'number' },
+      {
+        id: 'dobValue',
+        label: 'Date of Birth',
+        minWidth: '128px',
+        align: 'left',
+        isFilter: true,
+        filterType: 'date',
+      },
+      { id: 'age', label: 'Age', align: 'left' },
+      {
+        id: 'doiValue',
+        label: 'Date of Inquiry',
+        minWidth: '145px',
+        align: 'left',
+        isDateRangeFilter: true,
+        filterType: 'date',
+      },
+      {
+        id: 'genderValue',
+        label: 'Gender',
+        align: 'left',
+        filterType: 'enum',
+        enumOptions: GenderOptions,
+        // render: (value, row) => (
+        //   <Typography variant="caption" fontSize="13px">
+        //     {GenderType[value]}
+        //   </Typography>
+        // ),
+      },
+      {
+        id: 'address',
+        label: 'Address',
+        minWidth: '200px',
+        align: 'left',
+        render(value, row) {
+          return value || '-';
+        },
+      },
+      {
+        id: 'primaryContactNo',
+        label: 'Primary Contact No.',
+        minWidth: '180px',
+        align: 'left',
+      },
+      {
+        id: 'secondaryContactNo',
+        label: 'Secondary Contact No.',
+        minWidth: '200px',
+        align: 'left',
+      },
+      {
+        id: 'previousSchool',
+        label: 'Previous School',
+        minWidth: '170px',
+        align: 'left',
+        render(value, row) {
+          return value || '-';
+        },
+      },
+      {
+        id: 'inquiryPreference',
+        label: 'Inquiry Preference',
+        minWidth: '170px',
+        align: 'left',
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        isFilter: false,
+        isSort: false,
+        sticky: true,
+        align: 'left',
+        minWidth: 50,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              actions={({ popover }) => (
+                <MenuList>
+                  <MenuItem
+                    onClick={async (e) => {
+                      // dialog.onTrue();
+                      // setMoveId(row.id);
+                      setEditData(row as IGeneralInformationResponse);
+                      registerFormDialog.onTrue();
+                      popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="mdi:arrow-right-circle" />
+                    Move to Registration
+                  </MenuItem>
+                  <MenuItem
+                    onClick={(e) => {
+                      setEditData(row as IGeneralInformationResponse);
+                      followUpDialog.onTrue();
+                      e.stopPropagation();
+                      popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="clarity:note-edit-line" />
+                    Notes
+                  </MenuItem>
+                </MenuList>
+              )}
+              placement="right-top"
+            />
+          );
+        },
+      },
+    ],
+    [followUpDialog, registerFormDialog]
+  );
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {registerFormDialog.value ? (
@@ -145,160 +304,7 @@ const RegistrationFormScreen = () => {
           isLoading={isLoading}
           noDataText={<>No Registration Form Issued Data Found </>}
           tableId="student-registration-form-table"
-          columns={[
-            {
-              id: 'studentName',
-              label: 'Student Name',
-              minWidth: '180px',
-              align: 'left',
-              sticky: true,
-              // render: (value, row) => {
-              //   const fullName = `${row.lastName} ${row.firstName} ${row.middleName}`.trim();
-
-              //   return (
-              //     <CustomTooltip title={fullName} arrow sx={{ textAlign: 'justify' }}>
-              //       <Typography
-              //         variant="caption"
-              //         sx={{
-              //           fontSize: '13px',
-              //           display: 'block',
-              //           overflow: 'hidden',
-              //           textOverflow: 'ellipsis',
-              //           whiteSpace: 'nowrap',
-              //           maxWidth: '150px',
-              //         }}
-              //       >
-              //         {fullName}
-              //       </Typography>
-              //     </CustomTooltip>
-              //   );
-              // },
-            },
-            {
-              id: 'formNo',
-              label: 'Form No.',
-              minWidth: '100px',
-              align: 'left',
-              sticky: true,
-            },
-            {
-              id: 'inquiryNo',
-              label: 'Inquiry No.',
-              align: 'left',
-              minWidth: '115px',
-              isFilter: true,
-              filterType: 'string',
-            },
-            { id: 'standard', label: 'Class', align: 'left', filterType: 'number' },
-            {
-              id: 'dobValue',
-              label: 'Date of Birth',
-              minWidth: '128px',
-              align: 'left',
-              isFilter: true,
-              filterType: 'date',
-            },
-            { id: 'age', label: 'Age', align: 'left' },
-            {
-              id: 'doiValue',
-              label: 'Date of Inquiry',
-              minWidth: '145px',
-              align: 'left',
-              isDateRangeFilter: true,
-              filterType: 'date',
-            },
-            {
-              id: 'genderValue',
-              label: 'Gender',
-              align: 'left',
-              filterType: 'enum',
-              enumOptions: GenderOptions,
-              // render: (value, row) => (
-              //   <Typography variant="caption" fontSize="13px">
-              //     {GenderType[value]}
-              //   </Typography>
-              // ),
-            },
-            {
-              id: 'address',
-              label: 'Address',
-              minWidth: '200px',
-              align: 'left',
-              render(value, row) {
-                return value || '-';
-              },
-            },
-            {
-              id: 'primaryContactNo',
-              label: 'Primary Contact No.',
-              minWidth: '180px',
-              align: 'left',
-            },
-            {
-              id: 'secondaryContactNo',
-              label: 'Secondary Contact No.',
-              minWidth: '200px',
-              align: 'left',
-            },
-            {
-              id: 'previousSchool',
-              label: 'Previous School',
-              minWidth: '170px',
-              align: 'left',
-              render(value, row) {
-                return value || '-';
-              },
-            },
-            {
-              id: 'inquiryPreference',
-              label: 'Inquiry Preference',
-              minWidth: '170px',
-              align: 'left',
-            },
-            {
-              id: 'actions',
-              label: 'Actions',
-              isFilter: false,
-              isSort: false,
-              sticky: true,
-              align: 'left',
-              minWidth: 50,
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    actions={({ popover }) => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={async (e) => {
-                            // dialog.onTrue();
-                            // setMoveId(row.id);
-                            setEditData(row as IGeneralInformationResponse);
-                            registerFormDialog.onTrue();
-                            popover.onClose();
-                          }}
-                        >
-                          <Iconify icon="mdi:arrow-right-circle" />
-                          Move to Registration
-                        </MenuItem>
-                        <MenuItem
-                          onClick={(e) => {
-                            setEditData(row as IGeneralInformationResponse);
-                            followUpDialog.onTrue();
-                            e.stopPropagation();
-                            popover.onClose();
-                          }}
-                        >
-                          <Iconify icon="clarity:note-edit-line" />
-                          Notes
-                        </MenuItem>
-                      </MenuList>
-                    )}
-                    placement="right-top"
-                  />
-                );
-              },
-            },
-          ]}
+          columns={columns}
           data={tableData || []}
         />
       )}

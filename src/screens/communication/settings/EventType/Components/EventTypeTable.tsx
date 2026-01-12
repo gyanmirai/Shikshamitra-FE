@@ -1,4 +1,6 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -13,33 +15,9 @@ const EventTypeTable: React.FC<IEventTypeTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
-}) => (
-  <CustomizableTable
-    tableId="event-type-data-table"
-    noDataText={
-      <>
-        No event type data found.{' '}
-        <Typography
-          component="span"
-          color="primary.main"
-          fontWeight={600}
-          sx={{
-            '&:hover': {
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            },
-          }}
-          onClick={() => {
-            onAddEventType.onTrue();
-            setOpenDialog(true);
-            setEditData(null);
-          }}
-        >
-          Add Event
-        </Typography>
-      </>
-    }
-    columns={[
+}) => {
+  const columns: IColumn[] = useMemo(
+    () => [
       {
         id: 'eventType',
         label: 'Name',
@@ -88,9 +66,41 @@ const EventTypeTable: React.FC<IEventTypeTableProps> = ({
           );
         },
       },
-    ]}
-    data={data || []}
-  />
-);
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  return (
+    <CustomizableTable
+      tableId="event-type-data-table"
+      noDataText={
+        <>
+          No event type data found.{' '}
+          <Typography
+            component="span"
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              },
+            }}
+            onClick={() => {
+              onAddEventType.onTrue();
+              setOpenDialog(true);
+              setEditData(null);
+            }}
+          >
+            Add Event
+          </Typography>
+        </>
+      }
+      columns={columns}
+      data={data || []}
+    />
+  );
+};
 
 export default EventTypeTable;

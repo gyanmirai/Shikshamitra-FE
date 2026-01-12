@@ -3,19 +3,24 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetHolidayTypeOptionsQuery } from 'src/redux/communication/setting/holidayTypeApi';
+import {
+  holidayTypeOptionsApi,
+  useDeleteHolidayTypeMutation,
+  useGetHolidayTypeOptionsQuery,
+} from 'src/redux/communication/setting/holidayTypeApi';
 
 import HolidayTypeForm from './Components/HoliayTypeForm';
 // Replace with actual API hook when available
@@ -39,6 +44,14 @@ const HolidayTypeCreation = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedHolidayType, setSelectedHolidayType] = useState<IHolidayType | null>(null);
   const dispatch = useDispatch();
+
+  // Delete mutation and undo hook
+  const [deleteHolidayType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteHolidayTypeMutation,
+  });
+
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // Close handler
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -148,21 +161,50 @@ const HolidayTypeCreation = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedHolidayType,
+                message: `Holiday type: ${selectedHolidayType?.holidayType} deleted successfully`,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    holidayTypeOptionsApi.util.updateQueryData(
+                      'getHolidayTypeOptions',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft?.findIndex(
+                          (item: any) => item.id === selectedHolidayType?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1 && draft) {
+                          draft.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    holidayTypeOptionsApi.util.updateQueryData(
+                      'getHolidayTypeOptions',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selectedHolidayType);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteHolidayType(selectedHolidayType?.id || ''),
+              });
               deleteHolidayTypeDialog.onFalse();
               setSelectedHolidayType(null);
-              shikshaMitraToast.success({
-                message: `Holiday Type ${selectedHolidayType?.holidayType} deleted successfully`,
-              });
-              // handle delete API call here
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

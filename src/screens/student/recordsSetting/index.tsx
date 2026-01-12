@@ -21,6 +21,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -31,6 +32,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
+  studentGroupApi,
   useGetAllGroupQuery,
   useDeleteGroupMutation,
   useAddStudentGroupMutation,
@@ -52,6 +54,10 @@ const HouseSetting = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteGroupMutation,
   });
+
+  // Undo functionality hook
+  const { confirmWithUndo } = useConfirmWithUndo();
+
   const dialog = useBoolean();
   // Dialog state for delete confirmation
   const confirm = useBoolean();
@@ -242,15 +248,38 @@ const HouseSetting = () => {
             size="small"
             loading={isDeleteLoading}
             onClick={async () => {
-              try {
-                await deleteGroup(editData?.id).unwrap();
-                confirm.onFalse();
-                shikshaMitraToast.success({
-                  message: `${editData?.name} House Deleted Successfully`,
-                });
-              } catch (error) {
-                console.error(error);
-              }
+              confirmWithUndo({
+                item: editData,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    studentGroupApi.util.updateQueryData(
+                      'getAllGroup',
+                      currentMedium?.id,
+                      (draft: any) => {
+                        const index = draft?.data?.findIndex(
+                          (group: any) => group.id === editData?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1 && draft?.data) {
+                          draft.data.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    studentGroupApi.util.updateQueryData(
+                      'getAllGroup',
+                      currentMedium?.id,
+                      (draft: any) => {
+                        if (!draft?.data) return;
+                        draft.data.splice(index, 0, editData);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteGroup(editData?.id),
+              });
+              confirm.onFalse();
               setEditData(null);
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}

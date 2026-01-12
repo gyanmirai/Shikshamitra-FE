@@ -7,9 +7,14 @@ import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useAddHolidayTypeMutation,
+  useUpdateHolidayTypeMutation,
+} from 'src/redux/communication/setting/holidayTypeApi';
 
 import { holidayTypeValidationSchema } from './HolidayTypeValidation';
 import { getHolidayTypeInitialValues } from './HolidayTypeInitialValues';
@@ -17,20 +22,52 @@ import { getHolidayTypeInitialValues } from './HolidayTypeInitialValues';
 import type { IHolidayFormProps } from '../type';
 
 const HolidayTypeForm: React.FC<IHolidayFormProps> = ({ open, onClose, editData }) => {
+  const { addHolidayType } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddHolidayTypeMutation,
+  });
+
+  const { updateHolidayType } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHolidayTypeMutation,
+  });
+
   const formik = useFormik({
     initialValues: getHolidayTypeInitialValues(editData),
     validationSchema: holidayTypeValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Holiday type ${values.holidayType} has been successfully updated`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `New holiday type ${values.holidayType} has been successfully added`,
+    onSubmit: async (values) => {
+      try {
+        if (editData) {
+          // Update existing holiday type
+          await updateHolidayType({
+            holidayTypeId: editData.id || '',
+            name: values.holidayType,
+            color: values.color,
+            description: values.description,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Holiday type: ${values.holidayType} has been successfully updated`,
+          });
+        } else {
+          // Create new holiday type
+          await addHolidayType({
+            name: values.holidayType,
+            color: values.color,
+            description: values.description,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Holiday type: ${values.holidayType} has been successfully created`,
+          });
+        }
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message:
+            error?.data?.message || `Failed to ${editData ? 'update' : 'create'} holiday type`,
         });
       }
-      onClose(null, true);
     },
   });
 
@@ -116,8 +153,9 @@ const HolidayTypeForm: React.FC<IHolidayFormProps> = ({ open, onClose, editData 
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
+          disabled={formik.isSubmitting}
         >
-          {editData ? 'Update' : 'Submit'}
+          {formik.isSubmitting ? 'Submitting...' : editData ? 'Update' : 'Submit'}
         </Button>
       </DialogActions>
     </BackPopUpChecked>
