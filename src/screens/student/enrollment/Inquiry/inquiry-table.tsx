@@ -2,6 +2,7 @@
 
 import type { LabelColor } from 'src/components/label';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
@@ -71,6 +72,201 @@ const InquiryTable = ({
       })),
     [inquiryData?.data?.items]
   );
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'inquiryNo',
+        label: 'Inquiry No.',
+        sticky: true,
+        minWidth: '110px',
+        filterType: 'string',
+        align: 'left',
+      },
+      {
+        id: 'studentName',
+        label: 'Student Name',
+        minWidth: '150px',
+        align: 'left',
+        sticky: true,
+        // render: (value, row) => {
+        //   const fullName = `${row.lastName} ${row.firstName} ${row.middleName}`.trim();
+
+        //   return (
+        //     <CustomTooltip title={fullName} arrow sx={{ textAlign: 'justify' }}>
+        //       <Typography
+        //         variant="caption"
+        //         sx={{
+        //           fontSize: '13px',
+        //           display: 'block',
+        //           overflow: 'hidden',
+        //           textOverflow: 'ellipsis',
+        //           whiteSpace: 'nowrap',
+        //           maxWidth: '150px',
+        //         }}
+        //       >
+        //         {fullName}
+        //       </Typography>
+        //     </CustomTooltip>
+        //   );
+        // },
+      },
+      { id: 'standard', label: 'Class', align: 'left' },
+      {
+        id: 'dobValue',
+        label: 'Date of Birth',
+        minWidth: '8vw',
+        align: 'left',
+        filterType: 'date',
+      },
+      { id: 'age', label: 'Age', align: 'left', minWidth: '120px' },
+      {
+        id: 'doiValue',
+        label: 'Date of Inquiry',
+        filterType: 'date',
+        minWidth: '10vw',
+        align: 'left',
+        isDateRangeFilter: true,
+      },
+      {
+        id: 'genderValue',
+        label: 'Gender',
+        align: 'left',
+        filterType: 'enum',
+        enumOptions: GenderOptions,
+        // render: (value, row) => (
+        //   <Typography variant="caption" fontSize="13px">
+        //     {GenderType[value]}
+        //   </Typography>
+        // ),
+      },
+      {
+        id: 'address',
+        label: 'Address',
+        minWidth: '200px',
+        align: 'left',
+        // render: (value, row) => {
+        //   // Split address into lines and take first two lines
+        //   const addressLines = value.split(', ');
+        //   const displayAddress = addressLines.slice(0, 3).join(', ');
+        //   const hasMoreLines = addressLines.length > 3;
+
+        //   return (
+        //     <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
+        //       <Typography
+        //         variant="caption"
+        //         sx={{
+        //           fontSize: '13px',
+        //           // width: 200,
+        //           display: '-webkit-box',
+        //           WebkitLineClamp: 2,
+        //           WebkitBoxOrient: 'vertical',
+        //           overflow: 'hidden',
+        //           lineHeight: '1.2em',
+        //           maxHeight: '2.4em',
+        //         }}
+        //       >
+        //         {displayAddress}
+        //         {hasMoreLines && '...'}
+        //       </Typography>
+        //     </CustomTooltip>
+        //   );
+        // },
+      },
+      {
+        id: 'primaryContactNo',
+        label: 'Primary Contact No.',
+        minWidth: '180px',
+        align: 'left',
+      },
+      {
+        id: 'secondaryContactNo',
+        label: 'Secondary Contact No.',
+        minWidth: '200px',
+        align: 'left',
+      },
+      {
+        id: 'previousSchool',
+        label: 'Previous School',
+        minWidth: '150px',
+        align: 'left',
+        render(value, row) {
+          return value || '-';
+        },
+      },
+      {
+        id: 'inquiryPreference',
+        label: 'Inquiry Preference',
+        minWidth: '11vw',
+        align: 'left',
+      },
+      {
+        id: 'nextReminderDate',
+        label: 'Next Reminder Date',
+        minWidth: '180px',
+        align: 'left',
+        filterType: 'date',
+      },
+      {
+        id: 'followUpStatusType',
+        label: 'Status',
+        filterType: 'enum',
+        enumOptions: FollowUpStatusTypeOptions,
+        minWidth: '100px',
+        align: 'left',
+        sticky: true,
+        render: (value, row) => {
+          const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+          return <Label color={color}>{FollowUpStatusType[value]}</Label>;
+        },
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        isFilter: false,
+        isSort: false,
+        sticky: true,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              placement="right-center"
+              showEditIcon
+              handleEditClick={() => {
+                inquiryDialog.onTrue();
+                setEditData(row as IInquiryResponse);
+              }}
+              actions={({ popover }) => (
+                <MenuList>
+                  <MenuItem
+                    onClick={() => {
+                      followUpDialog.onTrue();
+                      setEditData(row as IInquiryResponse);
+                      popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="clarity:note-edit-line" />
+                    Notes
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      issueRegistrationFormDialog.onTrue();
+                      setEditData(row as IInquiryResponse);
+                      popover.onClose();
+                    }}
+                  >
+                    <Iconify icon="clarity:form-line" />
+                    Issue Registration Form
+                  </MenuItem>
+                </MenuList>
+              )}
+            />
+          );
+        },
+      },
+    ],
+    [inquiryDialog, setEditData, followUpDialog, issueRegistrationFormDialog]
+  );
+
   return (
     <Box sx={{ minHeight: 0, flexGrow: 1 }}>
       <CustomizableTable
@@ -99,196 +295,7 @@ const InquiryTable = ({
             </Box>
           </>
         }
-        columns={[
-          {
-            id: 'inquiryNo',
-            label: 'Inquiry No.',
-            sticky: true,
-            minWidth: '110px',
-            filterType: 'string',
-            align: 'left',
-          },
-          {
-            id: 'studentName',
-            label: 'Student Name',
-            minWidth: '150px',
-            align: 'left',
-            sticky: true,
-            // render: (value, row) => {
-            //   const fullName = `${row.lastName} ${row.firstName} ${row.middleName}`.trim();
-
-            //   return (
-            //     <CustomTooltip title={fullName} arrow sx={{ textAlign: 'justify' }}>
-            //       <Typography
-            //         variant="caption"
-            //         sx={{
-            //           fontSize: '13px',
-            //           display: 'block',
-            //           overflow: 'hidden',
-            //           textOverflow: 'ellipsis',
-            //           whiteSpace: 'nowrap',
-            //           maxWidth: '150px',
-            //         }}
-            //       >
-            //         {fullName}
-            //       </Typography>
-            //     </CustomTooltip>
-            //   );
-            // },
-          },
-          { id: 'standard', label: 'Class', align: 'left' },
-          {
-            id: 'dobValue',
-            label: 'Date of Birth',
-            minWidth: '8vw',
-            align: 'left',
-            filterType: 'date',
-          },
-          { id: 'age', label: 'Age', align: 'left', minWidth: '120px' },
-          {
-            id: 'doiValue',
-            label: 'Date of Inquiry',
-            filterType: 'date',
-            minWidth: '10vw',
-            align: 'left',
-            isDateRangeFilter: true,
-          },
-          {
-            id: 'genderValue',
-            label: 'Gender',
-            align: 'left',
-            filterType: 'enum',
-            enumOptions: GenderOptions,
-            // render: (value, row) => (
-            //   <Typography variant="caption" fontSize="13px">
-            //     {GenderType[value]}
-            //   </Typography>
-            // ),
-          },
-          {
-            id: 'address',
-            label: 'Address',
-            minWidth: '200px',
-            align: 'left',
-            // render: (value, row) => {
-            //   // Split address into lines and take first two lines
-            //   const addressLines = value.split(', ');
-            //   const displayAddress = addressLines.slice(0, 3).join(', ');
-            //   const hasMoreLines = addressLines.length > 3;
-
-            //   return (
-            //     <CustomTooltip title={value} arrow sx={{ textAlign: 'justify' }}>
-            //       <Typography
-            //         variant="caption"
-            //         sx={{
-            //           fontSize: '13px',
-            //           // width: 200,
-            //           display: '-webkit-box',
-            //           WebkitLineClamp: 2,
-            //           WebkitBoxOrient: 'vertical',
-            //           overflow: 'hidden',
-            //           lineHeight: '1.2em',
-            //           maxHeight: '2.4em',
-            //         }}
-            //       >
-            //         {displayAddress}
-            //         {hasMoreLines && '...'}
-            //       </Typography>
-            //     </CustomTooltip>
-            //   );
-            // },
-          },
-          {
-            id: 'primaryContactNo',
-            label: 'Primary Contact No.',
-            minWidth: '180px',
-            align: 'left',
-          },
-          {
-            id: 'secondaryContactNo',
-            label: 'Secondary Contact No.',
-            minWidth: '200px',
-            align: 'left',
-          },
-          {
-            id: 'previousSchool',
-            label: 'Previous School',
-            minWidth: '150px',
-            align: 'left',
-            render(value, row) {
-              return value || '-';
-            },
-          },
-          {
-            id: 'inquiryPreference',
-            label: 'Inquiry Preference',
-            minWidth: '11vw',
-            align: 'left',
-          },
-          {
-            id: 'nextReminderDate',
-            label: 'Next Reminder Date',
-            minWidth: '180px',
-            align: 'left',
-            filterType: 'date',
-          },
-          {
-            id: 'followUpStatusType',
-            label: 'Status',
-            filterType: 'enum',
-            enumOptions: FollowUpStatusTypeOptions,
-            minWidth: '100px',
-            align: 'left',
-            sticky: true,
-            render: (value, row) => {
-              const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
-              return <Label color={color}>{FollowUpStatusType[value]}</Label>;
-            },
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            isFilter: false,
-            isSort: false,
-            sticky: true,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  placement="right-center"
-                  showEditIcon
-                  handleEditClick={() => {
-                    inquiryDialog.onTrue();
-                    setEditData(row as IInquiryResponse);
-                  }}
-                  actions={({ popover }) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={() => {
-                          followUpDialog.onTrue();
-                          setEditData(row as IInquiryResponse);
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="clarity:note-edit-line" />
-                        Notes
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          issueRegistrationFormDialog.onTrue();
-                          setEditData(row as IInquiryResponse);
-                          popover.onClose();
-                        }}
-                      >
-                        <Iconify icon="clarity:form-line" />
-                        Issue Registration Form
-                      </MenuItem>
-                    </MenuList>
-                  )}
-                />
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={tableData || []}
       />
     </Box>

@@ -16,6 +16,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -24,6 +25,7 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
+  inquiryPreferenceApi,
   useGetInquiryPreferenceQuery,
   useAddInquiryPreferenceMutation,
   useDeleteInquiryPreferenceMutation,
@@ -60,6 +62,9 @@ const InquiryPreference = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteInquiryPreferenceMutation,
   });
+
+  // Undo functionality hook
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // Reset form and close dialog
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -119,9 +124,36 @@ const InquiryPreference = () => {
             color="error"
             size="small"
             onClick={async () => {
-              await deletePreference(editData?.id);
-              shikshaMitraToast.success({
-                message: `${editData?.preferenceName} inquiry preference deleted successfully`,
+              confirmWithUndo({
+                item: editData,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    inquiryPreferenceApi.util.updateQueryData(
+                      'getInquiryPreference',
+                      { academicYearId: currentYear?.id },
+                      (draft: any) => {
+                        const index = draft?.items?.findIndex(
+                          (pref: any) => pref.id === editData?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1 && draft?.items) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    inquiryPreferenceApi.util.updateQueryData(
+                      'getInquiryPreference',
+                      { academicYearId: currentYear?.id },
+                      (draft: any) => {
+                        if (!draft?.items) return;
+                        draft.items.splice(index, 0, editData);
+                      }
+                    )
+                  ),
+                onCommit: () => deletePreference(editData?.id),
               });
               confirm.onFalse();
               setEditData(null);

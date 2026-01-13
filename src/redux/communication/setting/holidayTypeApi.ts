@@ -4,13 +4,44 @@ export const holidayTypeOptionsApi = communicationApi.injectEndpoints({
   endpoints: (builder) => ({
     getHolidayTypeOptions: builder.query({
       query: () => ({
-        url: '/holidayTypeData',
+        url: '/calendar/holiday-types',
         method: 'GET',
       }),
       providesTags: ['HolidayTypeOptions'],
+    }),
+
+    addHolidayType: builder.mutation({
+      query: (data) => ({
+        url: '/calendar/holiday-types',
+        method: 'POST',
+        data,
+      }),
+      invalidatesTags: ['HolidayTypeOptions'],
+    }),
+
+    updateHolidayType: builder.mutation({
+      query: ({ data, holidayTypeId }) => ({
+        url: `/calendar/holiday-types/${holidayTypeId}`,
+        method: 'PUT',
+        data,
+      }),
+      invalidatesTags: ['HolidayTypeOptions'],
+    }),
+
+    deleteHolidayType: builder.mutation({
+      query: (holidayTypeId) => ({
+        url: `/calendar/holiday-types/${holidayTypeId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['HolidayTypeOptions'],
     }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetHolidayTypeOptionsQuery } = holidayTypeOptionsApi;
+export const {
+  useGetHolidayTypeOptionsQuery,
+  useAddHolidayTypeMutation,
+  useUpdateHolidayTypeMutation,
+  useDeleteHolidayTypeMutation,
+} = holidayTypeOptionsApi;

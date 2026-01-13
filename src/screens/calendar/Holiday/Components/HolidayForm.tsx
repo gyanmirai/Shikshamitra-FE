@@ -15,9 +15,14 @@ import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  useAddHolidayTypeMutation,
+  useUpdateHolidayTypeMutation,
+} from 'src/redux/communication/holiday/holidayDataApi';
 import {
   Box,
   Chip,
@@ -50,6 +55,16 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
   // Redux state for current board, medium and medium setter
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
+  const { addHoliday } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddHolidayTypeMutation,
+  });
+
+  const { updateHoliday } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateHolidayTypeMutation,
+  });
+
   const formik = useFormik<IHoliday>({
     initialValues: {
       id: initialValues?.id || '',
@@ -65,17 +80,41 @@ const HolidayForm: React.FC<IHolidayFormProps> = ({ initialValues, onClose, isEd
       status: initialValues?.status || 1, // Draft by default
     },
     validationSchema: holidayValidationSchema(currentYear),
-    onSubmit: (values) => {
-      if (initialValues) {
-        shikshaMitraToast.success({
-          message: `Holiday : ${values.holidayName} updated successfully!`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Holiday : ${values.holidayName} added successfully!`,
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          name: values.holidayName,
+          holidayTypeId: values.holidayType, // Assuming this is the ID
+          startDate: dayjs(values.startDate).format('YYYY-MM-DD'),
+          endDate: dayjs(values.endDate).format('YYYY-MM-DD'),
+          description: values.description,
+          audience: values.audience,
+          attachment: values.attachment ? 'base64-or-url' : undefined, // Handle file upload
+        };
+
+        if (initialValues) {
+          await updateHoliday({
+            holidayId: values.id,
+            ...payload,
+          }).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Holiday: ${values.holidayName} updated successfully!`,
+          });
+        } else {
+          await addHoliday(payload).unwrap();
+
+          shikshaMitraToast.success({
+            message: `Holiday: ${values.holidayName} added successfully!`,
+          });
+        }
+        onClose(null, true);
+      } catch (error: any) {
+        shikshaMitraToast.error({
+          message:
+            error?.data?.message || `Failed to ${initialValues ? 'update' : 'create'} holiday`,
         });
       }
-      onClose(null, true);
     },
   });
   // Update classes list when organization selection changes

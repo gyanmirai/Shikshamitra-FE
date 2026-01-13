@@ -3,19 +3,24 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetEventTypeOptionsQuery } from 'src/redux/communication/setting/eventTypeApi';
+import {
+  eventTypeOptionsApi,
+  useDeleteEventTypeMutation,
+  useGetEventTypeOptionsQuery,
+} from 'src/redux/communication/setting/eventTypeApi';
 
 // Replace with actual API hook when available
 import EventTypeForm from './Components/EventTypeForm';
@@ -39,6 +44,14 @@ const EventTypeCreation = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const [selectedEventType, setSelectedEventType] = useState<IEventType | null>(null);
   const dispatch = useDispatch();
+
+  // Delete mutation and undo hook
+  const [deleteEventType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteEventTypeMutation,
+  });
+
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // Close handler
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -148,21 +161,50 @@ const EventTypeCreation = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedEventType,
+                message: `Event type: ${selectedEventType?.eventType} deleted successfully`,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    eventTypeOptionsApi.util.updateQueryData(
+                      'getEventTypeOptions',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft?.findIndex(
+                          (item: any) => item.id === selectedEventType?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1 && draft) {
+                          draft.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    eventTypeOptionsApi.util.updateQueryData(
+                      'getEventTypeOptions',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selectedEventType);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteEventType((selectedEventType as any)?.id || ''),
+              });
               deleteEventTypeDialog.onFalse();
               setSelectedEventType(null);
-              shikshaMitraToast.success({
-                message: `Event Type : ${selectedEventType?.eventType} deleted successfully`,
-              });
-              // handle delete API call here
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>
