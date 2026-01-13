@@ -38,9 +38,9 @@ const ViewFeeStructure = ({
 
         {/* Fee Structure Details */}
         {selectedClass && (
-          <Grid size={{ xs: 10.6 }} mb={2}>
+          <Grid size={{ xs: 12, md: 9.6 }} mb={2}>
             <SectionCard title={`Fee Structure For Class : ${selectedClass}`}>
-              <Scrollbar sx={{ maxHeight: '290px' }}>
+              <Scrollbar sx={{ maxHeight: '480px' }}>
                 {feeStructure.feeStructureClasses[selectedClass]?.length ? (
                   feeStructure.feeStructureClasses[selectedClass].map((structure, idx) => (
                     <FeeStructureViewCard

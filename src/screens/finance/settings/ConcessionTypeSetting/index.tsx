@@ -142,7 +142,7 @@ const ConcessionType = () => {
             Concession Type
           </Button>
         }
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 2, mb: 1 }}
       />
       <>
         {/* Form card for creating/editing concession types */}
@@ -251,10 +251,7 @@ const ConcessionType = () => {
             </Box>
           }
         >
-          <ConcessionDocumentTable
-            data={concessionTypeDetails || selectedConcessionType}
-            isLoading={isLoadingDetails}
-          />
+          <ConcessionDocumentTable data={selectedConcessionType} isLoading={isLoadingDetails} />
         </CustomDialog>
       </>
     </Box>

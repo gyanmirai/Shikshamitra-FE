@@ -16,36 +16,47 @@ interface Props {
 
 const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
   <Paper
+    elevation={0}
     sx={{
       borderRadius: 2,
-      p: 2,
-      mb: 2,
+      p: 3,
+      mb: 3,
+      border: (theme) => `1px solid ${theme.palette.divider}`,
+      boxShadow: (theme) =>
+        theme.customShadows?.card ||
+        '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
     }}
-    elevation={6}
   >
     {/* Header */}
-    <Box display="flex" alignItems="center" mb={2} gap={1}>
+    <Box display="flex" alignItems="center" mb={3} gap={1.5}>
       <Box
         sx={{
-          width: 32,
-          height: 32,
-          borderRadius: '6px',
-          bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.15),
+          width: 40,
+          height: 40,
+          borderRadius: 1.5,
+          bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
+          color: 'primary.main',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Iconify icon="solar:user-outline" width={20} color="primary.main" />
+        <Iconify icon="solar:user-id-bold-duotone" width={24} />
       </Box>
 
-      <Typography variant="h6" color="primary.main">
-        Student Information
-      </Typography>
+      <Box>
+        <Typography variant="h6" sx={{ fontSize: '1.125rem', fontWeight: 700 }}>
+          Student Information
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+          Personal and Academic Details
+        </Typography>
+      </Box>
 
       <Box sx={{ ml: 'auto' }}>
         <Label
           color={ConcessionStatusTypeColors[student?.status as ConcessionStatusType] as LabelColor}
+          variant="soft"
         >
           {student?.status ? ConcessionStatusType[student.status] : '-'}
         </Label>
@@ -53,235 +64,242 @@ const StudentInformationAccordion: React.FC<Props> = ({ student }) => (
     </Box>
 
     {/* Body */}
-    <Box sx={{ borderRadius: 2, mb: 1 }}>
-      <Grid container spacing={2}>
-        {/* Student Name */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Person sx={{ color: 'primary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Student Name
-              </Typography>
-              <Typography variant="body1" fontWeight="medium">
-                {student?.studentName || '-'}({student?.grNo})
-              </Typography>
-            </Box>
+    <Grid container spacing={3}>
+      {/* Student Name */}
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+          <Box
+            sx={{
+              mt: 0.5,
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              bgcolor: (theme) => varAlpha(theme.palette.info.mainChannel, 0.08),
+              color: 'info.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Person sx={{ fontSize: 20 }} />
           </Box>
-        </Grid>
-
-        {/* Roll No */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Tag sx={{ color: 'primary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Roll No.
-              </Typography>
-              <Typography variant="body1" fontWeight="medium">
-                {student?.rollNo || '-'}
-              </Typography>
-            </Box>
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+              Student Name
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              {student?.studentName || '-'}
+              {student?.grNo ? ` (${student.grNo})` : ''}
+            </Typography>
           </Box>
-        </Grid>
-
-        {/* Parent Name */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Group sx={{ color: 'primary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Parent Name
-              </Typography>
-              <Typography variant="body1" fontWeight="medium">
-                {student?.parentName || '-'}
-              </Typography>
-            </Box>
-          </Box>
-        </Grid>
-
-        {/* Contact */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Phone sx={{ color: 'primary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Contact No.
-              </Typography>
-              <Typography variant="body1" fontWeight="medium">
-                {student?.contactNo || '-'}
-              </Typography>
-            </Box>
-          </Box>
-        </Grid>
-
-        {/* Email */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Email sx={{ color: 'primary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Email
-              </Typography>
-              <Typography variant="body1" fontWeight="medium">
-                {student?.email || '-'}
-              </Typography>
-            </Box>
-          </Box>
-        </Grid>
-
-        {/* Class / Division */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <School sx={{ color: 'primary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Class/Div
-              </Typography>
-              <Typography variant="body1" fontWeight="medium">
-                {student?.classDivision || '-'}
-              </Typography>
-            </Box>
-          </Box>
-        </Grid>
-
-        {/* Board / Medium */}
-        <Grid size={{ xs: 12, md: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.15),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 2,
-              }}
-            >
-              <Language sx={{ color: 'primary.main', fontSize: 17 }} />
-            </Box>
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Board/Medium
-              </Typography>
-              <Typography variant="body1" fontWeight="medium">
-                {student?.boardMedium || '-'}
-              </Typography>
-            </Box>
-          </Box>
-        </Grid>
-
-        {/* Sibling */}
-        {student?.sibling && (
-          <Grid size={{ xs: 12, md: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box
-                sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
-                  bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.15),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: 2,
-                }}
-              >
-                <People sx={{ color: 'primary.main', fontSize: 17 }} />
-              </Box>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Sibling
-                </Typography>
-                <Typography variant="body1" fontWeight="medium">
-                  {student?.sibling}
-                </Typography>
-              </Box>
-            </Box>
-          </Grid>
-        )}
+        </Box>
       </Grid>
-    </Box>
+
+      {/* Roll No */}
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+          <Box
+            sx={{
+              mt: 0.5,
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              bgcolor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.08),
+              color: 'warning.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Tag sx={{ fontSize: 20 }} />
+          </Box>
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+              Roll No.
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              {student?.rollNo || '-'}
+            </Typography>
+          </Box>
+        </Box>
+      </Grid>
+
+      {/* Parent Name */}
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+          <Box
+            sx={{
+              mt: 0.5,
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              bgcolor: (theme) => varAlpha(theme.palette.success.mainChannel, 0.08),
+              color: 'success.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Group sx={{ fontSize: 20 }} />
+          </Box>
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+              Parent Name
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              {student?.parentName || '-'}
+            </Typography>
+          </Box>
+        </Box>
+      </Grid>
+
+      {/* Contact */}
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+          <Box
+            sx={{
+              mt: 0.5,
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              bgcolor: (theme) => varAlpha(theme.palette.error.mainChannel, 0.08),
+              color: 'error.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Phone sx={{ fontSize: 20 }} />
+          </Box>
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+              Contact No.
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              {student?.contactNo || '-'}
+            </Typography>
+          </Box>
+        </Box>
+      </Grid>
+
+      {/* Email */}
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+          <Box
+            sx={{
+              mt: 0.5,
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              bgcolor: (theme) => varAlpha(theme.palette.secondary.mainChannel, 0.08),
+              color: 'secondary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Email sx={{ fontSize: 20 }} />
+          </Box>
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+              Email
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, wordBreak: 'break-word' }}>
+              {student?.email || '-'}
+            </Typography>
+          </Box>
+        </Box>
+      </Grid>
+
+      {/* Class / Division */}
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+          <Box
+            sx={{
+              mt: 0.5,
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
+              color: 'primary.dark',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <School sx={{ fontSize: 20 }} />
+          </Box>
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+              Class/Div
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              {student?.classDivision || '-'}
+            </Typography>
+          </Box>
+        </Box>
+      </Grid>
+
+      {/* Board / Medium */}
+      <Grid size={{ xs: 12, md: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+          <Box
+            sx={{
+              mt: 0.5,
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              bgcolor: (theme) => varAlpha(theme.palette.info.mainChannel, 0.08),
+              color: 'info.dark',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Language sx={{ fontSize: 20 }} />
+          </Box>
+          <Box>
+            <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+              Board/Medium
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              {student?.boardMedium || '-'}
+            </Typography>
+          </Box>
+        </Box>
+      </Grid>
+
+      {/* Sibling */}
+      {student?.sibling && (
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+            <Box
+              sx={{
+                mt: 0.5,
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                bgcolor: (theme) => varAlpha(theme.palette.warning.mainChannel, 0.08),
+                color: 'warning.dark',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <People sx={{ fontSize: 20 }} />
+            </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                Sibling
+              </Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                {student?.sibling}
+              </Typography>
+            </Box>
+          </Box>
+        </Grid>
+      )}
+    </Grid>
   </Paper>
 );
 

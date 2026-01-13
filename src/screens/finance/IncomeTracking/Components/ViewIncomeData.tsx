@@ -5,7 +5,17 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Card, Grid, Button, Typography, DialogActions } from '@mui/material';
+import {
+  Box,
+  Card,
+  Grid,
+  Stack,
+  Paper,
+  Button,
+  Divider,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 
 import type { IIncomeFormValues } from './type';
 
@@ -20,96 +30,186 @@ const ViewIncomeData = ({
   incomeDetailedData: any;
   onClose: () => void;
 }) => (
-  <Box>
+  <>
     <DialogScrollContent>
-      <Card
-        sx={{
-          p: 2,
-          mb: 2,
-        }}
-      >
-        <Box sx={{}}>
-          <Typography variant="h6" mb={1} color="primary.main">
-            Income Information
-          </Typography>
-          <Grid container spacing={2}>
-            {/* Income Category */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="body2" color="text.secondary">
-                Income Category
+      <Stack spacing={3} sx={{ p: 1 }}>
+        {/* Income Information Section */}
+        <Card
+          variant="outlined"
+          sx={{
+            p: 3,
+            borderRadius: 2,
+            borderStyle: 'dashed',
+            borderColor: 'divider',
+            bgcolor: 'background.neutral',
+          }}
+        >
+          <Stack spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Iconify
+                icon="solar:bill-list-bold-duotone"
+                width={24}
+                sx={{ color: 'primary.main' }}
+              />
+              <Typography variant="h6" color="text.primary">
+                Income Summary
               </Typography>
-              <Typography variant="body1" fontWeight="medium">
-                {incomeData?.incomeCategory || '-'}
-              </Typography>
+            </Stack>
+
+            <Divider sx={{ borderStyle: 'dashed' }} />
+
+            <Grid container spacing={3}>
+              {/* Income Category */}
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Stack spacing={0.5}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight="bold"
+                    sx={{ textTransform: 'uppercase' }}
+                  >
+                    Income Category
+                  </Typography>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    {incomeData?.incomeCategory || '—'}
+                  </Typography>
+                </Stack>
+              </Grid>
+
+              {/* Budget / Tags */}
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Stack spacing={0.5}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight="bold"
+                    sx={{ textTransform: 'uppercase' }}
+                  >
+                    Tags
+                  </Typography>
+                  <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
+                    {incomeData?.incomeCategoryTags || '—'}
+                  </Typography>
+                </Stack>
+              </Grid>
+
+              {/* Total Amount Received */}
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Stack spacing={0.5}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight="bold"
+                    sx={{ textTransform: 'uppercase' }}
+                  >
+                    Total Amount Received
+                  </Typography>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ color: 'success.main', fontWeight: 'bold' }}
+                  >
+                    ₹ {incomeData?.amount?.toLocaleString() || 0}
+                  </Typography>
+                </Stack>
+              </Grid>
             </Grid>
+          </Stack>
+        </Card>
 
-            {/* Budget */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="body2" color="text.secondary">
-                Income Category Tags
-              </Typography>
-              <Typography variant="body1" fontWeight="medium">
-                {incomeData?.incomeCategoryTags || '-'}
-              </Typography>
-            </Grid>
+        {/* Income Lists Section */}
+        <Stack spacing={1.5}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1 }}>
+            <Iconify icon="solar:list-bold-duotone" width={22} sx={{ color: 'info.main' }} />
+            <Typography variant="subtitle1" fontWeight="bold">
+              Detailed Transactions
+            </Typography>
+          </Stack>
 
-            {/* Total Amount Received */}
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="body2" color="text.secondary">
-                Total Amount Received
-              </Typography>
-              <Typography variant="body1" fontWeight="medium">
-                ₹ {incomeData?.amount || 0}
-              </Typography>
-            </Grid>
-          </Grid>
-        </Box>
-      </Card>
-
-      {/* Income Lists */}
-      <Typography variant="h6" mb={1} color="primary.main" ml={1}>
-        Income Lists
-      </Typography>
-
-      <CustomizableTable
-        tableId="income-table"
-        isSearch={false}
-        isFilter={false}
-        noDataText="No Income data found"
-        columns={[
-          {
-            id: 'incomeName',
-            label: 'Income Name',
-            align: 'left',
-            minWidth: '200px',
-            sticky: true,
-          },
-          {
-            id: 'receivedDate',
-            label: 'Received Date',
-            align: 'left',
-            filterType: 'date',
-            minWidth: '150px',
-          },
-          {
-            id: 'paymentMethod',
-            label: 'Payment Method',
-            align: 'left',
-            minWidth: '160px',
-          },
-          {
-            id: 'amount',
-            label: 'Amount',
-            align: 'left',
-
-            filterType: 'number',
-            render: (value) => `₹ ${value?.toLocaleString()}`,
-          },
-        ]}
-        data={incomeDetailedData || []}
-      />
+          <Paper
+            variant="outlined"
+            sx={{
+              borderRadius: 2,
+              overflow: 'hidden',
+              boxShadow: 'var(--shadows-popover)',
+              borderColor: 'divider',
+            }}
+          >
+            <CustomizableTable
+              tableId="income-table"
+              isSearch={false}
+              isFilter={false}
+              noDataText="No transaction data found for this income entry."
+              columns={[
+                {
+                  id: 'incomeName',
+                  label: 'Source / Name',
+                  align: 'left',
+                  minWidth: '220px',
+                  sticky: true,
+                  render: (value: any) => (
+                    <Typography variant="body2" fontWeight="medium">
+                      {value}
+                    </Typography>
+                  ),
+                },
+                {
+                  id: 'receivedDate',
+                  label: 'Date',
+                  align: 'left',
+                  filterType: 'date',
+                  minWidth: '140px',
+                  render: (value: any) => (
+                    <Typography variant="body2" color="text.secondary">
+                      {value}
+                    </Typography>
+                  ),
+                },
+                {
+                  id: 'paymentMethod',
+                  label: 'Method',
+                  align: 'center',
+                  minWidth: '140px',
+                  render: (value: any) => (
+                    <Box
+                      sx={{
+                        display: 'inline-flex',
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        bgcolor: 'background.neutral',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Typography variant="caption" fontWeight="bold">
+                        {value}
+                      </Typography>
+                    </Box>
+                  ),
+                },
+                {
+                  id: 'amount',
+                  label: 'Amount (₹)',
+                  align: 'right',
+                  minWidth: '140px',
+                  filterType: 'number',
+                  render: (value: any) => (
+                    <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
+                      ₹ {value?.toLocaleString()}
+                    </Typography>
+                  ),
+                },
+              ]}
+              data={incomeDetailedData || []}
+            />
+          </Paper>
+        </Stack>
+      </Stack>
     </DialogScrollContent>
-    <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+
+    <Divider />
+
+    <DialogActions sx={{ p: 2.5, bgcolor: 'background.paper' }}>
       <Button
         onClick={() => {
           onClose();
@@ -121,7 +221,7 @@ const ViewIncomeData = ({
         Cancel
       </Button>
     </DialogActions>
-  </Box>
+  </>
 );
 
 export default ViewIncomeData;

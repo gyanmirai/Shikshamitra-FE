@@ -1,9 +1,9 @@
-import type { LabelColor } from 'src/components/label';
-
-import { Label } from 'src/components/label';
-import { useTheme } from '@mui/material/styles';
+// import { useTheme } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
+import { alpha, useTheme } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Label, type LabelColor } from 'src/components/label';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeTermsQuery } from 'src/redux/feeCollection/feeTerms';
 import {
@@ -15,6 +15,7 @@ import {
   Card,
   Paper,
   Table,
+  Stack,
   Divider,
   TableRow,
   Accordion,
@@ -28,6 +29,7 @@ import {
 } from '@mui/material';
 
 export const FeeTermAccordion = () => {
+  // Mocking the API call
   const { data: terms, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeTermsQuery,
@@ -37,7 +39,13 @@ export const FeeTermAccordion = () => {
   if (isLoading) {
     return (
       <Box
-        sx={{ mt: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', height: 120 }}
+        sx={{
+          mt: 2,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: 120,
+        }}
       >
         <Box className="loader" height={24} />
       </Box>
@@ -47,175 +55,370 @@ export const FeeTermAccordion = () => {
   return (
     <Card
       sx={{
-        p: 1.5,
-        borderRadius: 1,
-        boxShadow: 'var(--shadows-8)',
-        bgcolor: theme.vars.palette.background.paper,
+        p: 0,
+        borderRadius: 2,
+        boxShadow: theme.shadows[2],
+        border: 'none',
         height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}
     >
-      <Typography variant="h6" color="primary.main">
-        Fee Term Breakdown
-      </Typography>
+      <Box
+        sx={{
+          p: 3,
+          pb: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: `1px dashed ${theme.palette.divider}`,
+        }}
+      >
+        <Typography variant="h6" fontWeight={700}>
+          Fee Term Breakdown
+        </Typography>
+        <Label color="info" variant="soft">
+          {terms.length} Terms
+        </Label>
+      </Box>
 
-      <Scrollbar sx={{ height: '300px', p: 1 }}>
-        {terms.map((term: any) => {
-          const pending = term.total - term.paid;
+      <Scrollbar
+        sx={{
+          flexGrow: 1,
+          maxHeight: 500,
+          p: 2,
+          bgcolor: alpha(theme.palette.background.neutral, 0.4),
+        }}
+      >
+        <Stack spacing={2}>
+          {terms.map((term: any) => {
+            const pending = term.total - term.paid;
 
-          return (
-            <Accordion
-              key={term.id}
-              sx={{
-                borderRadius: 1,
-                boxShadow: 2,
-                mb: 2,
-                bgcolor: 'background.paper',
-                '&:before': {
-                  display: 'none', // <<< remove the top border line
-                },
-              }}
-            >
-              {/* ---------- TERM HEADER ---------- */}
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Box flex={1}>
-                  <Typography fontWeight={700}>{term.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Due Date: {term.dueDate}
-                  </Typography>
-                </Box>
-
-                {/* Totals */}
-                <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <Box>
-                      <Typography variant="body2">
-                        Total : <strong>₹ {term.total.toLocaleString()}</strong>
-                      </Typography>
-                    </Box>
-                    <Divider orientation="vertical" flexItem />
-                    <Box>
-                      <Typography variant="body2" color="success.main">
-                        Paid : <strong>₹ {term.paid.toLocaleString()}</strong>
-                      </Typography>
-                    </Box>
-                    <Divider orientation="vertical" flexItem />
-                    <Box>
-                      <Typography variant="body2" color="warning.main">
-                        Pending : <strong>₹ {pending.toLocaleString()}</strong>
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  {/* Status chip */}
-                  <Label
-                    color={
-                      FeeCollectionStatusTypeColors[
-                        term.status as FeeCollectionStatusType
-                      ] as LabelColor
-                    }
+            return (
+              <Accordion
+                key={term.id}
+                disableGutters
+                sx={{
+                  borderRadius: 2,
+                  bgcolor: 'background.paper',
+                  boxShadow: theme.shadows[1],
+                  '&:before': { display: 'none' },
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: theme.shadows[4],
+                  },
+                  '&.Mui-expanded': {
+                    margin: 0,
+                    boxShadow: theme.shadows[8],
+                  },
+                }}
+              >
+                {/* ---------- TERM HEADER ---------- */}
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon sx={{ color: 'text.secondary' }} />}
+                  sx={{
+                    px: 2.5,
+                    py: 1,
+                    '& .MuiAccordionSummary-content': {
+                      margin: '12px 0',
+                      flexWrap: 'wrap',
+                      gap: 2,
+                      alignItems: 'center',
+                    },
+                    '&:hover': {
+                      bgcolor: alpha(theme.palette.primary.main, 0.02),
+                    },
+                  }}
+                >
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    spacing={2}
+                    flex={1}
                   >
-                    {FeeCollectionStatusType[term.status as FeeCollectionStatusType]}
-                  </Label>
-                </Box>
-              </AccordionSummary>
+                    {/* Term Info */}
+                    <Box flexGrow={1}>
+                      <Typography variant="subtitle1" fontWeight={700}>
+                        {term.name}
+                      </Typography>
+                      <Stack direction="row" alignItems="center" spacing={0.5} mt={0.5}>
+                        <CalendarTodayIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                        <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                          Due: {term.dueDate}
+                        </Typography>
+                      </Stack>
+                    </Box>
 
-              {/* ---------- CONTENT ---------- */}
-              <AccordionDetails>
-                <Typography variant="h6" color="primary.main" mb={1}>
-                  Fee Head Breakdown
-                </Typography>
-
-                {/* FEE HEADS LIST */}
-                <TableContainer component={Paper} elevation={0}>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 700 }}>Fee Head</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Category</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Pending</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Paid</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-
-                    <TableBody>
-                      {term.feeHeads.map((head: any) => (
-                        <TableRow key={head.name}>
-                          <TableCell>{head.name}</TableCell>
-                          <TableCell>{head.category}</TableCell>
-                          <TableCell>₹ {(head.total - head.paid).toLocaleString()}</TableCell>
-                          <TableCell>₹ {head.paid?.toLocaleString()}</TableCell>
-
-                          <TableCell>
-                            <Label
-                              color={
-                                FeeCollectionStatusTypeColors[
-                                  head.status as FeeCollectionStatusType
-                                ] as LabelColor
-                              }
-                            >
-                              {FeeCollectionStatusType[head.status as FeeCollectionStatusType]}
-                            </Label>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-
-                {/* ---------- CHARGES ---------- */}
-                {term.charges?.length > 0 && (
-                  <>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={600}
-                      color="primary.main"
-                      mt={2}
-                      mb={1}
+                    {/* Stats */}
+                    <Stack
+                      direction="row"
+                      divider={
+                        <Divider
+                          orientation="vertical"
+                          flexItem
+                          sx={{ height: 24, alignSelf: 'center' }}
+                        />
+                      }
+                      spacing={2}
+                      alignItems="center"
+                      sx={{
+                        bgcolor: alpha(theme.palette.background.neutral, 0.7),
+                        p: 1,
+                        borderRadius: 1.5,
+                      }}
                     >
-                      Charges
-                    </Typography>
+                      <Box textAlign="center" minWidth={80}>
+                        <Typography variant="caption" display="block" color="text.secondary">
+                          Total
+                        </Typography>
+                        <Typography variant="subtitle2" fontWeight={700}>
+                          ₹{term.total.toLocaleString()}
+                        </Typography>
+                      </Box>
 
-                    <TableContainer component={Paper} elevation={0} sx={{ mt: 2 }}>
-                      <Table>
-                        <TableHead>
-                          <TableRow>
-                            <TableCell sx={{ fontWeight: 700 }}>Charge</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Due Date</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Pending</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Paid</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        {term.charges.map((cha: any) => (
-                          <TableBody>
-                            <TableRow key={cha.id}>
-                              <TableCell>{cha.name}</TableCell>
-                              <TableCell>{cha.dueDate}</TableCell>
-                              <TableCell>₹ {(cha.total - cha.paid).toLocaleString()}</TableCell>
-                              <TableCell>₹ {cha.paid.toLocaleString()}</TableCell>
-                              <TableCell>
-                                <Label
-                                  color={
-                                    FeeCollectionStatusTypeColors[
-                                      cha.status as FeeCollectionStatusType
-                                    ] as LabelColor
-                                  }
+                      <Box textAlign="center" minWidth={80}>
+                        <Typography variant="caption" display="block" color="text.secondary">
+                          Paid
+                        </Typography>
+                        <Typography variant="subtitle2" color="success.main" fontWeight={700}>
+                          ₹{term.paid.toLocaleString()}
+                        </Typography>
+                      </Box>
+
+                      <Box textAlign="center" minWidth={80}>
+                        <Typography variant="caption" display="block" color="text.secondary">
+                          Pending
+                        </Typography>
+                        <Typography variant="subtitle2" color="warning.main" fontWeight={700}>
+                          ₹{pending.toLocaleString()}
+                        </Typography>
+                      </Box>
+                    </Stack>
+
+                    {/* Status */}
+                    <Box>
+                      <Label
+                        variant="soft"
+                        color={
+                          FeeCollectionStatusTypeColors[
+                            term.status as FeeCollectionStatusType
+                          ] as LabelColor
+                        }
+                      >
+                        {FeeCollectionStatusType[term.status as FeeCollectionStatusType]}
+                      </Label>
+                    </Box>
+                  </Stack>
+                </AccordionSummary>
+
+                {/* ---------- CONTENT ---------- */}
+                <AccordionDetails sx={{ p: 0, borderTop: `1px solid ${theme.palette.divider}` }}>
+                  <Box sx={{ p: 2, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
+                    <Stack spacing={3}>
+                      {/* FEE HEADS */}
+                      <Box>
+                        <Typography
+                          variant="overline"
+                          color="text.secondary"
+                          sx={{ mb: 1.5, display: 'block', letterSpacing: 1.1, fontWeight: 700 }}
+                        >
+                          Fee Head Maintenance
+                        </Typography>
+
+                        <TableContainer
+                          component={Paper}
+                          elevation={0}
+                          sx={{
+                            borderRadius: 1.5,
+                            border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <Table size="small">
+                            <TableHead sx={{ bgcolor: 'background.neutral' }}>
+                              <TableRow>
+                                <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                                  Fee Head
+                                </TableCell>
+                                <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                                  Category
+                                </TableCell>
+                                <TableCell
+                                  align="right"
+                                  sx={{ color: 'text.secondary', fontWeight: 600 }}
                                 >
-                                  {FeeCollectionStatusType[cha.status as FeeCollectionStatusType]}
-                                </Label>
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        ))}
-                      </Table>
-                    </TableContainer>
-                  </>
-                )}
-              </AccordionDetails>
-            </Accordion>
-          );
-        })}
+                                  Pending
+                                </TableCell>
+                                <TableCell
+                                  align="right"
+                                  sx={{ color: 'text.secondary', fontWeight: 600 }}
+                                >
+                                  Paid
+                                </TableCell>
+                                <TableCell
+                                  align="center"
+                                  sx={{ color: 'text.secondary', fontWeight: 600 }}
+                                >
+                                  Status
+                                </TableCell>
+                              </TableRow>
+                            </TableHead>
+
+                            <TableBody>
+                              {term.feeHeads.map((head: any, index: number) => (
+                                <TableRow
+                                  key={index}
+                                  hover
+                                  sx={{
+                                    '&:last-child td, &:last-child th': { border: 0 },
+                                    transition: 'all 0.2s',
+                                  }}
+                                >
+                                  <TableCell sx={{ fontWeight: 500 }}>{head.name}</TableCell>
+                                  <TableCell sx={{ color: 'text.secondary' }}>
+                                    {head.category}
+                                  </TableCell>
+                                  <TableCell
+                                    align="right"
+                                    sx={{ color: 'warning.dark', fontWeight: 600 }}
+                                  >
+                                    ₹{(head.total - head.paid).toLocaleString()}
+                                  </TableCell>
+                                  <TableCell
+                                    align="right"
+                                    sx={{ color: 'success.dark', fontWeight: 600 }}
+                                  >
+                                    ₹{head.paid?.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell align="center">
+                                    <Label
+                                      variant="filled" // Changed to filled for contrast on white
+                                      color={
+                                        FeeCollectionStatusTypeColors[
+                                          head.status as FeeCollectionStatusType
+                                        ] as LabelColor
+                                      }
+                                      sx={{ fontSize: 11, height: 20 }}
+                                    >
+                                      {
+                                        FeeCollectionStatusType[
+                                          head.status as FeeCollectionStatusType
+                                        ]
+                                      }
+                                    </Label>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </Box>
+
+                      {/* CHARGES */}
+                      {term.charges?.length > 0 && (
+                        <Box>
+                          <Typography
+                            variant="overline"
+                            color="text.secondary"
+                            sx={{ mb: 1.5, display: 'block', letterSpacing: 1.1, fontWeight: 700 }}
+                          >
+                            Additional Charges
+                          </Typography>
+
+                          <TableContainer
+                            component={Paper}
+                            elevation={0}
+                            sx={{
+                              borderRadius: 1.5,
+                              border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <Table size="small">
+                              <TableHead sx={{ bgcolor: 'background.neutral' }}>
+                                <TableRow>
+                                  <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                                    Charge
+                                  </TableCell>
+                                  <TableCell sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                                    Due Date
+                                  </TableCell>
+                                  <TableCell
+                                    align="right"
+                                    sx={{ color: 'text.secondary', fontWeight: 600 }}
+                                  >
+                                    Pending
+                                  </TableCell>
+                                  <TableCell
+                                    align="right"
+                                    sx={{ color: 'text.secondary', fontWeight: 600 }}
+                                  >
+                                    Paid
+                                  </TableCell>
+                                  <TableCell
+                                    align="center"
+                                    sx={{ color: 'text.secondary', fontWeight: 600 }}
+                                  >
+                                    Status
+                                  </TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                                {term.charges.map((cha: any) => (
+                                  <TableRow
+                                    key={cha.id}
+                                    hover
+                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                  >
+                                    <TableCell sx={{ fontWeight: 500 }}>{cha.name}</TableCell>
+                                    <TableCell sx={{ color: 'text.secondary' }}>
+                                      {cha.dueDate}
+                                    </TableCell>
+                                    <TableCell
+                                      align="right"
+                                      sx={{ color: 'warning.dark', fontWeight: 600 }}
+                                    >
+                                      ₹{(cha.total - cha.paid).toLocaleString()}
+                                    </TableCell>
+                                    <TableCell
+                                      align="right"
+                                      sx={{ color: 'success.dark', fontWeight: 600 }}
+                                    >
+                                      ₹{cha.paid.toLocaleString()}
+                                    </TableCell>
+                                    <TableCell align="center">
+                                      <Label
+                                        variant="filled"
+                                        color={
+                                          FeeCollectionStatusTypeColors[
+                                            cha.status as FeeCollectionStatusType
+                                          ] as LabelColor
+                                        }
+                                        sx={{ fontSize: 11, height: 20 }}
+                                      >
+                                        {
+                                          FeeCollectionStatusType[
+                                            cha.status as FeeCollectionStatusType
+                                          ]
+                                        }
+                                      </Label>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                        </Box>
+                      )}
+                    </Stack>
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            );
+          })}
+        </Stack>
       </Scrollbar>
     </Card>
   );

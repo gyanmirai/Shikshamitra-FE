@@ -31,13 +31,13 @@ const ViewFeeDetails = ({
     },
   });
   return (
-    <Box display="flex" flexDirection="column" height="100%" pb={2}>
-      <Scrollbar sx={{ height: '100%', p: 1.5 }}>
-        <Grid container spacing={2}>
+    <Box display="flex" flexDirection="column" height="100%">
+      <Scrollbar sx={{ height: '100%', p: 3 }}>
+        <Grid container spacing={3}>
           {/* Row 1 */}
-          {/* Left Side */}
-          <Grid size={{ xs: 12, md: 9 }}>
-            <Grid container direction="column" spacing={2}>
+          {/* Left Side: Student Info & Fee Terms */}
+          <Grid size={{ xs: 12, md: 8 }}>
+            <Grid container direction="column" spacing={3}>
               <Grid size={{ xs: 12 }}>
                 <StudentFeesSummaryView student={student} />
               </Grid>
@@ -48,8 +48,8 @@ const ViewFeeDetails = ({
             </Grid>
           </Grid>
 
-          {/* Right Side */}
-          <Grid size={{ xs: 12, md: 3 }}>
+          {/* Right Side: Overview */}
+          <Grid size={{ xs: 12, md: 4 }}>
             <FeeOverview
               total={50000}
               paid={30000}
@@ -59,18 +59,12 @@ const ViewFeeDetails = ({
             />
           </Grid>
 
-          {/* Row 2 */}
-          <Grid
-            size={{ xs: 12, md: 9 }}
-            // sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
-          >
+          {/* Row 2: Payment History & Concessions */}
+          <Grid size={{ xs: 12, md: 8 }}>
             <PaymentHistory student={student} />
           </Grid>
 
-          <Grid
-            size={{ xs: 12, md: 3 }}
-            // sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
-          >
+          <Grid size={{ xs: 12, md: 4 }}>
             <ConcessionsCard />
           </Grid>
         </Grid>
