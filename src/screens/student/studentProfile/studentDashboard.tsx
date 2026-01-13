@@ -12,7 +12,7 @@ import SubjectsTeachersStudentDashboard from './studentDashbordComponent/subject
 import type { StudentTabsComponentType } from '.';
 
 const StudentDashboard = (props: StudentTabsComponentType) => (
-  <Grid container spacing={2} sx={{ mb: 2 }}>
+  <Grid container spacing={3} sx={{ mb: 3 }}>
     <Grid size={12}>
       <Overview />
     </Grid>

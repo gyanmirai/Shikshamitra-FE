@@ -6,7 +6,15 @@ import { AnalyticsWebsiteVisits } from 'src/sections/overview/analytics/analytic
 const ProfileDashboardAttendanceTrend = () => {
   const theme = useTheme();
   return (
-    <Card sx={{ height: '100%' }}>
+    <Card
+      sx={{
+        height: '100%',
+        boxShadow: 'none',
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 2,
+      }}
+    >
       <AnalyticsWebsiteVisits
         title="Attendance Trend"
         chart={{
@@ -17,8 +25,8 @@ const ProfileDashboardAttendanceTrend = () => {
             { name: 'Absent', data: [35, 20, 45, 22, 20, 30, 35] },
           ],
           colors: [
-            theme.vars.palette.success.main, // Green for Present
-            theme.vars.palette.warning.main, // Yellow/Orange for Half-Day
+            theme.palette.success.main, // Green for Present
+            theme.palette.warning.main, // Yellow/Orange for Half-Day
             theme.palette.error.main, // Red/Pink for Absent
           ],
         }}

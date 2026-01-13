@@ -81,23 +81,28 @@ const activities = [
 ] as const;
 
 const EmployeeProfileDashboard = ({ editData }: { editData: any }) => (
-  <Box>
-    <Grid container spacing={2} sx={{ mb: 2 }}>
+  <Box sx={{ pb: 3 }}>
+    <Grid container spacing={3} sx={{ mb: 3 }}>
       <Grid size={12}>
         <EmployeeProfileOverview />
       </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <ProfileDashboardAttendance />
-      </Grid>{' '}
+
       <Grid size={{ xs: 12, md: 6 }}>
         <ProfileDashboardAttendance />
       </Grid>
+
+      <Grid size={{ xs: 12, md: 6 }}>
+        <ProfileDashboardAttendance />
+      </Grid>
+
       <Grid size={{ xs: 12, md: 6 }}>
         <StudentHomeworkAssignments />
       </Grid>
+
       <Grid size={{ xs: 12, md: 6 }}>
         <RecentActivities activities={activities} />
       </Grid>
+
       <Grid size={12}>
         <ProfileDashboardAttendanceTrend />
       </Grid>

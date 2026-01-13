@@ -6,7 +6,6 @@ import { Add } from '@mui/icons-material';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import CloseIcon from '@mui/icons-material/Close';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -122,7 +121,6 @@ const dummyRows = [
 // Dummy table columns will be created inside component to access formik safely.
 
 const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose }) => {
-  const theme = useTheme();
   const academicDrawer = useBoolean();
   const [activeStep, setActiveStep] = useState(0);
   const [filterTab, setFilterTab] = useState(0); // 0 = Condition Based, 1 = Selection Based
@@ -250,10 +248,22 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
   const renderGeneralInformation = () => (
     <SectionCard
       title="General Information"
-      paperProps={{ sx: { mb: 2 } }}
-      gridProps={{ sx: { alignItems: 'start' } }}
+      paperProps={{
+        sx: {
+          p: 3,
+          borderRadius: 2,
+          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
+          mb: 3,
+        },
+      }}
+      gridProps={{ sx: { alignItems: 'stretch', gap: 3 } }}
     >
-      <Grid size={{ xs: 4 }}>
+      <Grid size={{ xs: 12 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Provide a unique name and a brief description for this group.
+        </Typography>
+      </Grid>
+      <Grid size={{ xs: 12, md: 5 }}>
         <ShakingTextField error={!!(formik.touched.groupName && formik.errors.groupName)}>
           <TextField
             fullWidth
@@ -272,32 +282,28 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
             }}
             error={formik.touched.groupName && Boolean(formik.errors.groupName)}
             helperText={formik.touched.groupName && formik.errors.groupName}
-            size="small"
+            // size="small" // Removed to use default (medium) for better touch target or keep consistent if small is required. Using default often looks more premium.
           />
         </ShakingTextField>
       </Grid>
-      {/* <Grid size={{ xs: 1 }}>
-        <Divider orientation="vertical" flexItem sx={{ mx: 2, height: '100%' }} />
-      </Grid> */}
-      <Grid size={{ xs: 8 }}>
+      <Grid size={{ xs: 12, md: 7 }}>
         <Editor
           value={formik.values.description}
           onChange={(value) => formik.setFieldValue('description', value)}
-          placeholder="Description"
+          placeholder="Write a description..."
           sx={{
-            border: `1px solid ${theme.vars.palette.grey[500]}`,
+            border: (t) => `1px solid ${t.palette.divider}`,
             borderRadius: 1,
-            '&:hover': { borderColor: theme.vars.palette.text.primary },
+            '&:hover': { borderColor: 'text.primary' },
             ...(!!formik.touched.description &&
               !!formik.errors.description && {
-                borderColor: theme.palette.error.main,
+                borderColor: 'error.main',
               }),
             '&:focus-within': {
-              borderColor: theme.vars.palette.text.primary,
-              borderWidth: 2,
+              borderColor: 'primary.main',
             },
-
             minHeight: 120,
+            overflow: 'hidden',
           }}
         />
       </Grid>
@@ -320,227 +326,257 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
   };
 
   const renderFilters = () => (
-    <SectionCard title="Select Audience" paperProps={{ sx: { mb: 2 } }}>
+    <SectionCard
+      title=""
+      paperProps={{
+        sx: {
+          p: 0, // Reset padding for cleaner tab integration
+          borderRadius: 2,
+          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
+          overflow: 'hidden',
+          mb: 3,
+        },
+      }}
+    >
       <Grid size={{ xs: 12 }}>
         {/* Tabs Row */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 0 }}>
+        <Box
+          sx={{
+            borderBottom: 1,
+            borderColor: 'divider',
+            bgcolor: 'background.neutral',
+            px: 2,
+            pt: 1,
+          }}
+        >
           <Tabs
             value={filterTab}
             onChange={handleTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
+            variant="standard"
+            textColor="primary"
+            indicatorColor="primary"
+            sx={{
+              '& .MuiTab-root': {
+                minHeight: 48,
+                fontWeight: 600,
+                textTransform: 'none',
+              },
+            }}
           >
             <Tab label="Rule Based" />
             <Tab label="Name Based" />
           </Tabs>
         </Box>
       </Grid>
+
       <Grid size={{ xs: 12 }}>
-        <Box
-          sx={{
-            p: 1.5,
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 1,
-            bgcolor: 'background.paper',
-          }}
-        >
+        <Box sx={{ p: 3 }}>
           {filterTab === 0 && (
             <Box>
-              <Box>
-                <Grid container spacing={2}>
-                  <Grid
-                    size={{ xs: 12, sm: 8 }}
-                    sx={{ borderRight: '2px solid', borderColor: 'primary.main', pr: 2 }}
-                  >
-                    <Typography
-                      variant="subtitle1"
-                      color="primary.main"
-                      sx={{ mb: 1, display: 'flex', alignItems: 'center', color: 'primary.main' }}
-                    >
-                      Academic Selections
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => {
-                          setCurrentFilterName('Condition-Academic-Selections');
-                          academicDrawer.onTrue();
-                        }}
-                        sx={{ ml: 1 }}
-                        aria-label="add-selection-filter"
-                      >
-                        <Add fontSize="small" />
-                      </IconButton>
-                    </Typography>
-                    {/* Applied selections list */}
-                    {formik.values?.conditionAcademicSelection?.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        No academic selections applied yet.
-                      </Typography>
-                    ) : (
-                      <Scrollbar sx={{ maxHeight: 200 }}>
-                        <HierarchyTextView data={formik.values.conditionAcademicSelection} />
-                      </Scrollbar>
-                    )}
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 4 }}>
-                    <Box>
-                      <Typography variant="subtitle1" color="primary" sx={{ mb: 1 }}>
-                        Roles
-                      </Typography>
-                      <Grid container>
-                        {['Teacher', 'Principle', 'Cashier', 'Driver', 'Librarian', 'Peon'].map(
-                          (role) => (
-                            <Grid
-                              size={{ xs: 6 }}
-                              key={role}
-                              sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}
-                            >
-                              <FormControlLabel
-                                control={
-                                  <Checkbox
-                                    size="small"
-                                    checked={formik.values.roles?.includes(role)}
-                                    onChange={(e) => {
-                                      const current = new Set(formik.values.roles || []);
-                                      if (e.target.checked) current.add(role);
-                                      else current.delete(role);
-                                      formik.setFieldValue('roles', Array.from(current));
-                                    }}
-                                  />
-                                }
-                                label={role}
-                              />
-                            </Grid>
-                          )
-                        )}
-                      </Grid>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Box>
-              <Divider sx={{ my: 2 }} />
-              {/* Reuse existing AdditionalFilters component */}
-              <AdditionalFilters />
-            </Box>
-          )}
-          {filterTab === 1 && (
-            <Box>
-              {/* Existing selection filters */}
-              <Box>
-                <Grid container spacing={2}>
-                  <Grid
-                    size={{ xs: 12, sm: 8 }}
-                    sx={{ borderRight: '2px solid', borderColor: 'primary.main', pr: 2 }}
-                  >
-                    <Typography
-                      variant="subtitle1"
-                      color="primary"
-                      sx={{ mb: 1, display: 'flex', alignItems: 'center' }}
-                    >
-                      Academic Selections
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => {
-                          setCurrentFilterName('Selection-Academic-Selections');
-                          academicDrawer.onTrue();
-                        }}
-                        sx={{ ml: 1 }}
-                        aria-label="add-selection-filter"
-                      >
-                        <Add fontSize="small" />
-                      </IconButton>
-                    </Typography>
-                    {formik.values.selectionAcademicSelection?.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        No academic selections applied yet.
-                      </Typography>
-                    ) : (
-                      <Scrollbar sx={{ maxHeight: 200 }}>
-                        <HierarchyTextView data={formik.values.selectionAcademicSelection} />
-                      </Scrollbar>
-                    )}
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 4 }}>
-                    <Box>
-                      <Typography variant="subtitle1" color="primary.main" sx={{ mb: 1 }}>
-                        Roles
-                      </Typography>
-                      <Grid container>
-                        {['Teacher', 'Principle', 'Cashier', 'Driver', 'Librarian', 'Peon'].map(
-                          (role) => (
-                            <Grid
-                              size={{ xs: 6 }}
-                              key={role}
-                              sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}
-                            >
-                              <FormControlLabel
-                                control={
-                                  <Checkbox
-                                    size="small"
-                                    checked={formik.values.roles?.includes(role)}
-                                    onChange={(e) => {
-                                      const current = new Set(formik.values.roles || []);
-                                      if (e.target.checked) current.add(role);
-                                      else current.delete(role);
-                                      formik.setFieldValue('roles', Array.from(current));
-                                    }}
-                                  />
-                                }
-                                label={role}
-                              />
-                            </Grid>
-                          )
-                        )}
-                      </Grid>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Box>
-              <Divider sx={{ my: 2 }} />
-              <AdditionalFilters />
-              <Divider sx={{ my: 2 }} />
-              {/* Search + Table (70%) and Selected Users (30%) layout */}
-              <Box
-                sx={
-                  {
-                    // display: 'flex',
-                    // flexDirection: { xs: 'column', md: 'row' },
-                    // gap: 2,
-                    // alignItems: 'stretch',
-                  }
-                }
-              >
-                {/* Left side: search + table */}
-                <Box
+              <Grid container spacing={4}>
+                <Grid
+                  size={{ xs: 12, sm: 8 }}
                   sx={{
-                    flexBasis: { md: '100%' },
-                    flexGrow: 1,
-                    minWidth: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
+                    borderRight: (t) => ({ sm: `1px solid ${t.palette.divider}` }),
+                    pr: { sm: 4 },
                   }}
                 >
-                  <Typography variant="subtitle2" sx={{ mb: 1 }} color="primary">
-                    Search & Select Users (Students / Employees)
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, flexGrow: 1 }}>
+                      Academic Selections
+                    </Typography>
+                    <Button
+                      size="small"
+                      startIcon={<Add />}
+                      onClick={() => {
+                        setCurrentFilterName('Condition-Academic-Selections');
+                        academicDrawer.onTrue();
+                      }}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Add Selection
+                    </Button>
+                  </Box>
+
+                  {formik.values?.conditionAcademicSelection?.length === 0 ? (
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 3,
+                        textAlign: 'center',
+                        borderStyle: 'dashed',
+                        bgcolor: 'background.default',
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        No academic rules applied. Click &quot;Add Selection&quot; to start.
+                      </Typography>
+                    </Paper>
+                  ) : (
+                    <Scrollbar sx={{ maxHeight: 250 }}>
+                      <HierarchyTextView data={formik.values.conditionAcademicSelection} />
+                    </Scrollbar>
+                  )}
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
+                    Roles
                   </Typography>
+                  <Grid container spacing={1}>
+                    {['Teacher', 'Principle', 'Cashier', 'Driver', 'Librarian', 'Peon'].map(
+                      (role) => (
+                        <Grid size={{ xs: 12 }} key={role}>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={formik.values.roles?.includes(role)}
+                                onChange={(e) => {
+                                  const current = new Set(formik.values.roles || []);
+                                  if (e.target.checked) current.add(role);
+                                  else current.delete(role);
+                                  formik.setFieldValue('roles', Array.from(current));
+                                }}
+                              />
+                            }
+                            label={
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {role}
+                              </Typography>
+                            }
+                            sx={{ mr: 0, width: '100%' }}
+                          />
+                        </Grid>
+                      )
+                    )}
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ my: 3, borderStyle: 'dashed' }} />
+
+              <Box>
+                {/* <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
+                  Additional Filters
+                </Typography> */}
+                <AdditionalFilters />
+              </Box>
+            </Box>
+          )}
+
+          {filterTab === 1 && (
+            <Box>
+              <Grid container spacing={4} sx={{ mb: 4 }}>
+                <Grid
+                  size={{ xs: 12, sm: 8 }}
+                  sx={{
+                    borderRight: (t) => ({ sm: `1px solid ${t.palette.divider}` }),
+                    pr: { sm: 4 },
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, flexGrow: 1 }}>
+                      Academic Selections
+                    </Typography>
+                    <Button
+                      size="small"
+                      startIcon={<Add />}
+                      onClick={() => {
+                        setCurrentFilterName('Selection-Academic-Selections');
+                        academicDrawer.onTrue();
+                      }}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Add Selection
+                    </Button>
+                  </Box>
+
+                  {formik.values.selectionAcademicSelection?.length === 0 ? (
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 3,
+                        textAlign: 'center',
+                        borderStyle: 'dashed',
+                        bgcolor: 'background.default',
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        No academic filters applied.
+                      </Typography>
+                    </Paper>
+                  ) : (
+                    <Scrollbar sx={{ maxHeight: 250 }}>
+                      <HierarchyTextView data={formik.values.selectionAcademicSelection} />
+                    </Scrollbar>
+                  )}
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
+                    Roles
+                  </Typography>
+                  <Grid container spacing={1}>
+                    {['Teacher', 'Principle', 'Cashier', 'Driver', 'Librarian', 'Peon'].map(
+                      (role) => (
+                        <Grid size={{ xs: 12 }} key={role}>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={formik.values.roles?.includes(role)}
+                                onChange={(e) => {
+                                  const current = new Set(formik.values.roles || []);
+                                  if (e.target.checked) current.add(role);
+                                  else current.delete(role);
+                                  formik.setFieldValue('roles', Array.from(current));
+                                }}
+                              />
+                            }
+                            label={
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {role}
+                              </Typography>
+                            }
+                            sx={{ mr: 0, width: '100%' }}
+                          />
+                        </Grid>
+                      )
+                    )}
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              <AdditionalFilters />
+
+              <Divider sx={{ my: 3 }} />
+
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+                {/* Left side: Search & Table */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700 }}>
+                    Search & Select Users
+                  </Typography>
+
                   <TextField
                     fullWidth
-                    size="small"
-                    label="Search Users"
-                    placeholder="Start typing a name..."
+                    placeholder="Search by name, roll no, or ID..."
                     value={formik.values.searchQuery || ''}
                     onChange={({ target: { value } }) => {
                       formik.setFieldValue('searchQuery', value);
                       formik.setFieldValue('searchTriggered', value.trim().length > 0);
                     }}
                     InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled' }} />
+                        </InputAdornment>
+                      ),
                       endAdornment: formik.values.searchQuery ? (
                         <InputAdornment position="end">
                           <IconButton
                             size="small"
-                            aria-label="clear query"
                             onClick={() => {
                               formik.setFieldValue('searchQuery', '');
                               formik.setFieldValue('searchTriggered', false);
@@ -552,158 +588,164 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
                       ) : null,
                     }}
                     sx={{ mb: 2 }}
+                    variant="outlined"
                   />
-                </Box>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: { xs: 'column', md: 'row' },
-                    gap: 2,
-                    alignItems: 'stretch',
-                  }}
-                >
-                  <Box sx={{ flexGrow: 1, minHeight: 240, flexBasis: { md: '70%' } }}>
+
+                  <Box
+                    sx={{
+                      minHeight: 400,
+                      border: (t) => `1px solid ${t.palette.divider}`,
+                      borderRadius: 1,
+                      overflow: 'hidden',
+                    }}
+                  >
                     {(() => {
                       const query = formik.values.searchQuery.trim().toLowerCase();
                       const showTable = query.length > 0 || formik.values.searchTriggered;
                       if (!showTable) {
                         return (
-                          <Paper
-                            variant="outlined"
-                            sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}
-                          >
-                            Start typing to search users.
-                          </Paper>
+                          <Box sx={{ p: 5, textAlign: 'center' }}>
+                            <Iconify
+                              icon="eva:search-fill"
+                              sx={{ width: 64, height: 64, mb: 2, opacity: 0.5 }}
+                            />
+                            <Typography variant="subtitle1" color="text.secondary">
+                              Start typing to find users
+                            </Typography>
+                          </Box>
                         );
                       }
-                      // const filtered = dummyRows.filter(
-                      //   (r) => !query || r.fullName.toLowerCase().includes(query)
-                      // );
                       return (
-                        <CustomizableTable
-                          tableId="group-selection-table"
-                          noDataText={dummyRows.length ? undefined : 'No matching users'}
-                          data={dummyRows}
-                          columns={selectionColumns}
-                        />
+                        <Box sx={{ '& .MuiTableCell-root': { py: 1.5 } }}>
+                          <CustomizableTable
+                            tableId="group-selection-table"
+                            noDataText="No users found matching your search."
+                            data={dummyRows}
+                            columns={selectionColumns}
+                          />
+                        </Box>
                       );
                     })()}
                   </Box>
-                  {/* Right side: selected users panel */}
+                </Box>
+
+                {/* Right side: Selected Users */}
+                <Box
+                  sx={{
+                    width: { md: 320, xs: '100%' },
+                    display: 'flex',
+                    flexDirection: 'column',
+                    borderLeft: (t) => ({ md: `1px solid ${t.palette.divider}` }),
+                    pl: { md: 3 },
+                  }}
+                >
                   <Box
                     sx={{
-                      flexBasis: { md: '30%' },
-                      flexGrow: { md: 0, xs: 1 },
-                      minWidth: 0,
                       display: 'flex',
-                      flexDirection: 'column',
-                      border: 1,
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      p: 1.5,
-                      bgcolor: 'background.paper',
-                      maxHeight: 400,
-                      overflow: 'auto',
-                      boxShadow: 2,
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      mb: 2,
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        mb: 1,
-                      }}
-                    >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        Selected Users ({formik.values.selections.length || 0})
-                      </Typography>
-                      {formik.values.selections.length > 0 && (
-                        <Button
-                          size="small"
-                          color="error"
-                          onClick={() => formik.setFieldValue('selections', [])}
-                        >
-                          Clear All
-                        </Button>
-                      )}
-                    </Box>
-                    {formik.values.selections.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        No users selected yet.
-                      </Typography>
-                    ) : (
-                      <Box>
-                        <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
-                          {formik.values.selections.map((id: string) => {
-                            const user = dummyRows.find((r) => r.id === id);
-                            if (!user) return null;
-                            const extra =
-                              user.type === 'Student'
-                                ? `Class ${user.class}${user.division ? `-${user.division}` : ''}`
-                                : `${user.designation}${user.department ? ` • ${user.department}` : ''}`;
-                            return (
-                              <Box
-                                key={id}
-                                component="li"
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  border: 1,
-                                  borderColor: 'divider',
-                                  borderRadius: 1,
-                                  p: 0.75,
-                                  mb: 0.75,
-                                  bgcolor: 'background.default',
-                                  gap: 1,
-                                }}
-                              >
-                                <Box sx={{ minWidth: 0 }}>
-                                  <Typography
-                                    variant="body2"
-                                    sx={{
-                                      fontWeight: 500,
-                                      whiteSpace: 'nowrap',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                    }}
-                                  >
-                                    {user.fullName}
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary">
-                                    {user.type === 'Student'
-                                      ? `${extra}${user.role ? ` • ${user.role}` : ''}`
-                                      : `${extra}${user.role ? ` • ${user.role}` : ''}`}
-                                  </Typography>
-                                </Box>
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={() => {
-                                    formik.setFieldValue(
-                                      'selections',
-                                      formik.values.selections.filter((s: string) => s !== id)
-                                    );
-                                  }}
-                                  aria-label="remove-user"
-                                >
-                                  <Iconify icon="mdi:minus" />
-                                </IconButton>
-                              </Box>
-                            );
-                          })}
-                        </Box>
-                      </Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                      Selected ({formik.values.selections.length})
+                    </Typography>
+                    {formik.values.selections.length > 0 && (
+                      <Button
+                        size="small"
+                        color="error"
+                        onClick={() => formik.setFieldValue('selections', [])}
+                        sx={{ fontSize: 12, minWidth: 'auto', px: 1 }}
+                      >
+                        Clear All
+                      </Button>
                     )}
                   </Box>
+
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      flexGrow: 1,
+                      maxHeight: 500,
+                      overflow: 'auto',
+                      bgcolor: 'background.default',
+                      p: 1,
+                      borderRadius: 1,
+                    }}
+                  >
+                    {formik.values.selections.length === 0 ? (
+                      <Box sx={{ py: 4, textAlign: 'center' }}>
+                        <Typography variant="caption" color="text.secondary">
+                          No users selected.
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                        {formik.values.selections.map((id: string) => {
+                          const user = dummyRows.find((r) => r.id === id);
+                          if (!user) return null;
+                          const isStudent = user.type === 'Student';
+                          return (
+                            <Box
+                              key={id}
+                              component="li"
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                opacity: 0.9,
+                                p: 1,
+                                mb: 1,
+                                borderRadius: 1,
+                                bgcolor: 'background.paper',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                                '&:last-child': { mb: 0 },
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                  opacity: 1,
+                                  boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                                  transform: 'translateY(-1px)',
+                                },
+                              }}
+                            >
+                              {/* Avatar placeholder or initials could go here */}
+                              <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ fontWeight: 600, display: 'block' }}
+                                >
+                                  {user.fullName}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" noWrap>
+                                  {isStudent
+                                    ? `Class ${user.class}-${user.division}`
+                                    : user.designation}
+                                </Typography>
+                              </Box>
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  formik.setFieldValue(
+                                    'selections',
+                                    formik.values.selections.filter((s: string) => s !== id)
+                                  );
+                                }}
+                                sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}
+                              >
+                                <CloseIcon sx={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                    )}
+                  </Paper>
                 </Box>
               </Box>
             </Box>
           )}
         </Box>
       </Grid>
-      {/* Content Panel */}
+
       <AcademicFilterDrawer
         open={academicDrawer.value}
         onClose={academicDrawer.onFalse}
@@ -714,73 +756,135 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
   );
 
   const renderPreview = () => (
-    <SectionCard title="Final Preview" paperProps={{ sx: { mb: 2 } }}>
+    <SectionCard
+      title="Final Preview"
+      paperProps={{
+        sx: {
+          p: 3,
+          borderRadius: 2,
+          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
+          mb: 3,
+        },
+      }}
+    >
       <Grid size={{ xs: 12 }}>
-        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            General Information
-          </Typography>
-          <Divider sx={{ my: 1 }} />
-          <Typography variant="subtitle2">Name: {formik.values.groupName || '—'}</Typography>
-          <Typography variant="subtitle2" sx={{ whiteSpace: 'pre-wrap', mt: 1 }}>
-            Description:{' '}
-            {formik.values.description ? (
-              <Typography
-                component="small"
-                variant="subtitle2"
+        <Grid container spacing={3}>
+          {/* Summary Cards */}
+          <Grid size={{ xs: 12 }}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+                gap: 2,
+                mb: 3,
+              }}
+            >
+              <Paper
+                variant="outlined"
                 sx={{
-                  m: 0,
-                  '& *': {
-                    m: 0,
-                  },
+                  p: 2,
+                  textAlign: 'center',
+                  bgcolor: 'primary.lighter',
+                  borderColor: 'primary.lighter',
+                  color: 'primary.darker',
                 }}
-                dangerouslySetInnerHTML={{ __html: formik.values.description }}
-              />
-            ) : (
-              '—'
-            )}
-          </Typography>
-        </Paper>
-        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            Filters & Selection Summary
-          </Typography>
-          <Divider sx={{ my: 1 }} />
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
-                  Total User
+              >
+                <Typography variant="h4" sx={{ mb: 0.5 }}>
+                  {formik.values.total || 0}
                 </Typography>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
-                  50
+                <Typography variant="subtitle2" sx={{ opacity: 0.8 }}>
+                  Total Users selected
                 </Typography>
               </Paper>
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  textAlign: 'center',
+                  bgcolor: 'background.paper',
+                }}
+              >
+                {/* Calculate students count from selection */}
+                <Typography variant="h4" sx={{ mb: 0.5 }}>
+                  {
+                    formik.values.selections.filter(
+                      (id: string) => dummyRows.find((r) => r.id === id)?.type === 'Student'
+                    ).length
+                  }
+                </Typography>
+                <Typography variant="subtitle2" color="text.secondary">
                   Students
                 </Typography>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
-                  30
-                </Typography>
               </Paper>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  textAlign: 'center',
+                  bgcolor: 'background.paper',
+                }}
+              >
+                {/* Calculate employee count from selection */}
+                <Typography variant="h4" sx={{ mb: 0.5 }}>
+                  {
+                    formik.values.selections.filter(
+                      (id: string) => dummyRows.find((r) => r.id === id)?.type === 'Employee'
+                    ).length
+                  }
+                </Typography>
+                <Typography variant="subtitle2" color="text.secondary">
                   Employees
                 </Typography>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, textAlign: 'center' }}>
-                  20
-                </Typography>
               </Paper>
-            </Grid>
+            </Box>
           </Grid>
-        </Paper>
+
+          <Grid size={{ xs: 12 }}>
+            <Divider sx={{ mb: 3 }} />
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Group Details
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', mb: 0.5 }}
+                  >
+                    Group Name
+                  </Typography>
+                  <Typography variant="subtitle1">{formik.values.groupName || '—'}</Typography>
+                </Grid>
+                <Grid size={{ xs: 12, md: 8 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', mb: 0.5 }}
+                  >
+                    Description
+                  </Typography>
+                  {formik.values.description ? (
+                    <Typography
+                      component="div"
+                      variant="body2"
+                      dangerouslySetInnerHTML={{ __html: formik.values.description }}
+                      sx={{
+                        '& p': { m: 0 },
+                        color: 'text.primary',
+                      }}
+                    />
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No description provided.
+                    </Typography>
+                  )}
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
       </Grid>
-      {/* <Chip label={`Total Users : ${selectedUsers.length}`} /> */}
     </SectionCard>
   );
 
@@ -811,49 +915,85 @@ const GroupForm: React.FC<GroupFormProps> = ({ initialValues, isEdit, onClose })
             }
           }}
         >
-          <Box sx={{ flexGrow: 1, overflow: 'auto', p: 2 }}>
-            <Stepper activeStep={activeStep} orientation="vertical">
+          <Box sx={{ flexGrow: 1, overflow: 'auto', p: 3 }}>
+            <Stepper
+              activeStep={activeStep}
+              orientation="vertical"
+              connector={
+                <Box
+                  sx={{
+                    height: 20,
+                    borderLeft: (t) => `2px solid ${t.palette.divider}`,
+                    ml: '11px',
+                    my: 0.5,
+                  }}
+                />
+              }
+            >
               {steps.map((step, index) => (
                 <Step key={step.label} expanded={activeStep === index}>
-                  <StepLabel>{step.label}</StepLabel>
-                  <StepContent TransitionProps={{ unmountOnExit: false }}>
+                  <StepLabel
+                    StepIconProps={{
+                      sx: {
+                        '&.Mui-completed': { color: 'primary.main' },
+                        '&.Mui-active': {
+                          color: 'primary.main',
+                          '& .MuiStepIcon-text': { fill: '#fff' },
+                        },
+                      },
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        fontWeight: activeStep === index ? 700 : 600,
+                        color: activeStep === index ? 'text.primary' : 'text.disabled',
+                      }}
+                    >
+                      {step.label}
+                    </Typography>
+                  </StepLabel>
+                  <StepContent
+                    TransitionProps={{ unmountOnExit: false }}
+                    sx={{
+                      borderLeft: (t) => `2px solid ${t.palette.divider}`,
+                      ml: '11px',
+                      pl: 3,
+                      pb: 3,
+                    }}
+                  >
                     {step.content}
-                    <Box sx={{ mb: 2, mt: 1, display: 'flex', gap: 1 }}>
+                    <Box sx={{ mb: 2, mt: 3, display: 'flex', gap: 1.5 }}>
                       {index > 0 && (
-                        <Button variant="outlined" size="small" onClick={gotoBack}>
+                        <Button variant="outlined" onClick={gotoBack} sx={{ minWidth: 100 }}>
                           Back
                         </Button>
                       )}
                       {index < steps.length - 1 && (
-                        <Button variant="contained" size="small" onClick={gotoNext}>
+                        <Button
+                          variant="contained"
+                          onClick={gotoNext}
+                          sx={{ minWidth: 100, boxShadow: '0 8px 16px 0 rgba(0, 171, 85, 0.24)' }}
+                        >
                           Next
                         </Button>
                       )}
                       {index === steps.length - 1 && (
                         <Button
                           variant="contained"
-                          size="small"
                           type="submit"
                           startIcon={
                             <Iconify
                               icon={initialValues ? GlobalIcons.edit : GlobalIcons.submit}
-                              width={initialValues ? 16 : 20}
-                              height={initialValues ? 16 : 20}
+                              width={20}
+                              height={20}
                             />
                           }
+                          sx={{ minWidth: 120, boxShadow: '0 8px 16px 0 rgba(0, 171, 85, 0.24)' }}
                         >
-                          {initialValues ? 'Update' : 'Submit'}
+                          {initialValues ? 'Update Group' : 'Create Group'}
                         </Button>
                       )}
-                      {/* <Button
-                        variant="text"
-                        size="small"
-                        color="inherit"
-                        onClick={() => onClose?.(null, false)}
-                        startIcon={<Iconify icon={GlobalIcons.cancel} />}
-                      >
-                        Cancel
-                      </Button> */}
                     </Box>
                   </StepContent>
                 </Step>

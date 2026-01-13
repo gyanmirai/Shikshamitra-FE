@@ -21,43 +21,66 @@ export const StudentEnrollmentCard = ({
   labels = [],
   index,
 }: IStudentEnrollmentCardProps) => (
-  <Box component={Link} href={href} sx={{ textDecoration: 'none' }}>
+  <Box
+    component={Link}
+    href={href}
+    sx={{ textDecoration: 'none', height: '100%', display: 'block' }}
+  >
     <Card
       sx={{
-        p: 2,
+        p: 3,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        gap: 5,
-        flexGrow: 1,
-        cursor: 'pointer',
         height: '100%',
-        transition: 'all 0.3s ease',
+        borderRadius: 2,
+        boxShadow: 'none',
+        border: '1px solid',
+        borderColor: 'divider',
+        transition: 'all 0.3s ease-in-out',
         '&:hover': {
-          boxShadow: 'var(--shadows-8)',
-          scale: 1.03,
+          boxShadow: (theme) => theme.customShadows?.z8 || 4,
+          borderColor: 'transparent',
+          transform: 'translateY(-4px)',
         },
       }}
     >
-      <Box>
-        <Typography variant="subtitle1">{title}</Typography>
-        <Typography variant="h3">{count}</Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 0.5, fontWeight: 600 }}>
+          {title}
+        </Typography>
+        <Typography variant="h3" sx={{ fontWeight: 700, letterSpacing: -1 }}>
+          {count}
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
           {labels.map((label, idx) => (
-            <Label key={idx} color={label.color}>
+            <Label key={idx} color={label.color} variant="soft">
               {label.name}
             </Label>
           ))}
         </Box>
       </Box>
-      <Iconify
-        icon={icon}
+      <Box
         sx={{
-          height: '46px',
-          width: '46px',
-          color,
+          width: 64,
+          height: 64,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minWidth: 64, // Prevent shrinking
+          borderRadius: '50%',
+          bgcolor: (theme) => (color ? `${color.split('.')[0]}.lighter` : 'action.selected'), // approximation if palette logic exists
+          color: color || 'text.primary',
         }}
-      />
+      >
+        <Iconify
+          icon={icon}
+          sx={{
+            width: 32,
+            height: 32,
+          }}
+        />
+      </Box>
     </Card>
   </Box>
 );

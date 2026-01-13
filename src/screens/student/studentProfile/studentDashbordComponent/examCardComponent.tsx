@@ -16,23 +16,33 @@ const ExamCard: React.FC<ExamCardProps> = ({ subject, date, status }: ExamCardPr
 
   return (
     <Card
-      variant="outlined"
       sx={{
-        px: 2,
-        py: 1.5,
+        p: 2,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderRadius: 2,
+        borderRadius: 1.5,
+        boxShadow: 'none',
+        border: '1px solid',
+        borderColor: 'divider',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': {
+          bgcolor: 'action.hover',
+          borderColor: 'action.hover',
+        },
       }}
     >
-      <Box>
-        <Typography variant="subtitle1">{subject}</Typography>
-        <Typography variant="body2" color="text.secondary">
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          {subject}
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
           {date}
         </Typography>
       </Box>
-      <Label color={color}>{ScheduleExamStatus[status]}</Label>
+      <Label color={color} variant="soft">
+        {ScheduleExamStatus[status]}
+      </Label>
     </Card>
   );
 };

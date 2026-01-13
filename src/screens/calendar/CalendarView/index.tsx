@@ -6,8 +6,8 @@ import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CommonCalender from 'src/components/calender';
-import { Box, Chip, Button, Divider } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Chip, Stack, Paper, Button, Typography } from '@mui/material';
 
 import CalendarViewDialog from './Components/ViewDialog';
 import FilterControls, {
@@ -383,68 +383,89 @@ const CalendarView = () => {
       />
 
       {/* Inline filter controls */}
-      <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-        <FilterControls filters={filters} onChange={handleApply} />
-      </Box>
-
-      {/* Display active filters - grouped blocks */}
-      {hasActiveFilters && (
-        <Box
-          sx={{
-            display: 'flex',
-            // flexDirection: 'column',
-            gap: 1.5,
-            mb: 2,
-            flexWrap: 'wrap',
-            alignItems: 'center',
-          }}
+      <Paper
+        sx={{
+          mb: 3,
+          p: 2, // Added padding inside card
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+          // alignItems: 'center', // removed to allow full width grid
+          boxShadow: theme.customShadows?.z1 || 'none', // Use a subtle shadow if available
+        }}
+      >
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          alignItems={{ xs: 'stretch', md: 'center' }}
+          justifyContent="space-between"
+          gap={2}
         >
-          {filters.eventType.length > 0 && !isAllSelected(filters.eventType) && (
-            <FilterGroupBlock
-              title="Events"
-              color="primary"
-              items={filters.eventType}
-              onDelete={(v) => handleRemoveFilter('eventType', v)}
-              chipColor="primary"
-            />
-          )}
-          {filters.holidayType.length > 0 && !isAllSelected(filters.holidayType) && (
-            <FilterGroupBlock
-              title="Holidays"
-              color="error"
-              items={filters.holidayType}
-              onDelete={(v) => handleRemoveFilter('holidayType', v)}
-              chipColor="error"
-            />
-          )}
-          {filters.status.length > 0 && !isAllSelected(filters.status) && (
-            <FilterGroupBlock
-              title="Status"
-              color="info"
-              items={filters.status}
-              onDelete={(v) => handleRemoveFilter('status', v)}
-              chipColor="info"
-            />
-          )}
-          <Box>
+          <Box sx={{ flexGrow: 1 }}>
+            <FilterControls filters={filters} onChange={handleApply} />
+          </Box>
+        </Stack>
+
+        {/* Display active filters - grouped blocks */}
+        {hasActiveFilters && (
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1.5,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              mt: 1, // spacing from inputs
+              pt: 2,
+              borderTop: `1px dashed ${theme.palette.divider}`,
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ color: 'text.secondary', mr: 1 }}>
+              Active Filters:
+            </Typography>
+
+            {filters.eventType.length > 0 && !isAllSelected(filters.eventType) && (
+              <FilterGroupBlock
+                title="Events"
+                color="primary"
+                items={filters.eventType}
+                onDelete={(v) => handleRemoveFilter('eventType', v)}
+                chipColor="primary"
+              />
+            )}
+            {filters.holidayType.length > 0 && !isAllSelected(filters.holidayType) && (
+              <FilterGroupBlock
+                title="Holidays"
+                color="error"
+                items={filters.holidayType}
+                onDelete={(v) => handleRemoveFilter('holidayType', v)}
+                chipColor="error"
+              />
+            )}
+            {filters.status.length > 0 && !isAllSelected(filters.status) && (
+              <FilterGroupBlock
+                title="Status"
+                color="info"
+                items={filters.status}
+                onDelete={(v) => handleRemoveFilter('status', v)}
+                chipColor="info"
+              />
+            )}
+
             <Button
               size="small"
               color="error"
               startIcon={
-                <Iconify icon="solar:trash-bin-trash-bold" sx={{ width: '20px', height: '20px' }} />
+                <Iconify icon="solar:trash-bin-trash-bold" sx={{ width: '16px', height: '16px' }} />
               }
               onClick={() =>
                 setFilters({ eventType: ['ALL'], holidayType: ['ALL'], status: ['ALL'] })
               }
+              sx={{ ml: 'auto' }} // Push to right
             >
-              Clear All (
-              {filters.eventType.length + filters.holidayType.length + filters.status.length})
+              Clear All
             </Button>
           </Box>
-        </Box>
-      )}
-
-      <Divider sx={{ mb: 2 }} />
+        )}
+      </Paper>
 
       <CommonCalender
         data={calendarData}
@@ -456,7 +477,12 @@ const CalendarView = () => {
         showCalendarFilter={false}
         containerProps={{
           sx: {
+            flexGrow: 1,
+            '--Paper-shadow': 'var(--shadows-0)',
             height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '0',
           },
         }}
         canReset={hasActiveFilters}
@@ -497,35 +523,35 @@ const FilterGroupBlock = ({
     <Box
       sx={{
         border: `1px solid ${theme.palette.divider}`,
-        borderRadius: 1.2,
-        p: 1,
+        borderRadius: 1,
+        px: 1,
+        py: 0.5,
         display: 'flex',
-        flexWrap: 'wrap',
+        alignItems: 'center',
         gap: 1,
-        backgroundColor: theme.vars.palette.background.paper,
+        // backgroundColor: theme.palette.background.neutral, // Use a neutral background
       }}
     >
       <Box
         sx={{
-          // minWidth: 90,
-          display: 'flex',
-          alignItems: 'center',
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: 600,
-          // color: theme.palette[color].main,
+          color: 'text.secondary',
+          // textTransform: 'uppercase',
         }}
       >
-        {title}
+        {title}:
       </Box>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
         {items.map((item) => (
           <Chip
             key={`${title}-${item}`}
             label={item}
             onDelete={() => onDelete(item)}
             color={chipColor}
-            variant="soft"
+            variant="soft" // 'soft' is usually good for modern look
             size="small"
+            sx={{ height: 24 }} // make them compact
           />
         ))}
       </Box>

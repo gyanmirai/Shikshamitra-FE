@@ -490,9 +490,18 @@ const SidebarItem = ({
         onClick={handleItemClick}
         sx={{
           pl: 2 + depth * 2,
-          py: 0.75,
-          minHeight: 36,
-          borderRadius: 1,
+          py: 1,
+          minHeight: 44,
+          borderRadius: '0 20px 20px 0',
+          mb: 0.5,
+          borderLeft: isSelected ? '4px solid' : '4px solid transparent',
+          borderColor: isSelected ? 'primary.main' : 'transparent',
+          bgcolor: isSelected ? 'primary.lighter' : 'transparent',
+          color: isSelected ? 'primary.dark' : 'text.primary',
+          '&:hover': {
+            bgcolor: 'action.hover',
+            color: isSelected ? 'primary.dark' : 'text.primary',
+          },
           '&.Mui-selected': {
             bgcolor: 'primary.lighter',
             color: 'primary.dark',
@@ -505,7 +514,7 @@ const SidebarItem = ({
             <Iconify
               icon={isExpanded ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
               width={16}
-              sx={{ mr: 1, color: 'text.secondary', flexShrink: 0 }}
+              sx={{ mr: 1, color: isSelected ? 'inherit' : 'text.secondary', flexShrink: 0 }}
             />
           ) : (
             <Box sx={{ width: 16, mr: 1, flexShrink: 0 }} />
@@ -515,7 +524,7 @@ const SidebarItem = ({
             primary={node.name}
             primaryTypographyProps={{
               variant: 'body2',
-              fontWeight: isSelected ? 'fontWeightBold' : 'fontWeightMedium',
+              fontWeight: isSelected ? 700 : 500,
               noWrap: true,
             }}
           />
@@ -525,9 +534,14 @@ const SidebarItem = ({
             <Chip
               label={node.children!.length}
               size="small"
-              variant="soft"
+              variant={isSelected ? 'filled' : 'outlined'}
               color={isSelected ? 'primary' : 'default'}
-              sx={{ height: 20, fontSize: '0.7rem', ml: 1 }}
+              sx={{
+                height: 20,
+                fontSize: '0.7rem',
+                ml: 1,
+                borderColor: isSelected ? 'transparent' : 'divider',
+              }}
             />
           )}
         </Box>
@@ -535,7 +549,7 @@ const SidebarItem = ({
 
       {hasChildren && (
         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-          <Box sx={{ pl: 1 }}>
+          <Box sx={{ pl: 0 }}>
             <List
               component="div"
               disablePadding
@@ -587,27 +601,41 @@ const DetailsPanel = ({ selectedNode, currentAcademicYear }: DetailsPanelProps) 
   if (selectedNode.type !== 'Academic Year') crumbs.push(selectedNode.name); // Current node
 
   return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
+    <Card
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: (theme) => theme.customShadows.z4,
+      }}
+    >
+      <Box sx={{ p: 3, borderBottom: '1px dashed', borderColor: 'divider' }}>
         <Breadcrumbs separator={<Iconify icon="eva:arrow-ios-forward-fill" width={16} />}>
           {crumbs.map((crumb, index) => (
             <Typography
               key={index}
-              variant="body2"
+              variant="caption"
               color={index === crumbs.length - 1 ? 'text.primary' : 'text.secondary'}
+              fontWeight={index === crumbs.length - 1 ? 'bold' : 'normal'}
             >
               {crumb}
             </Typography>
           ))}
         </Breadcrumbs>
 
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 2 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 3 }}>
           <Box>
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack direction="row" alignItems="center" spacing={1.5}>
               <Typography variant="h4">{selectedNode.name}</Typography>
-              <Chip label={selectedNode.type} color="primary" variant="soft" size="small" />
+              <Chip
+                label={selectedNode.type}
+                color="primary"
+                variant="soft"
+                size="small"
+                sx={{ borderRadius: 1 }}
+              />
             </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               {selectedNode.data.description || `Manage settings for this ${selectedNode.type}`}
             </Typography>
           </Box>

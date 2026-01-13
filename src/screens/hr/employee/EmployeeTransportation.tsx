@@ -1,12 +1,25 @@
 import React from 'react';
+import { alpha, useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify/iconify';
-import { Box, Grid, Card, Stack, Button, Typography, CardContent } from '@mui/material';
+import {
+  Box,
+  Grid,
+  Card,
+  Stack,
+  Button,
+  Divider,
+  Typography,
+  CardHeader,
+  CardContent,
+} from '@mui/material';
 
 interface EmployeeTransportationProps {
   employee?: any;
 }
 
 const EmployeeTransportation = ({ employee }: EmployeeTransportationProps) => {
+  const theme = useTheme();
+
   // Mock transport data (replace with real employee transport data from API)
   const transport = {
     routeName: 'Route A-1',
@@ -27,15 +40,20 @@ const EmployeeTransportation = ({ employee }: EmployeeTransportationProps) => {
     { label: 'Start Point', value: transport.startPoint, icon: 'mdi:map-marker-check' },
     { label: 'End Point', value: transport.endPoint, icon: 'mdi:map-marker' },
     { label: 'Stop Name', value: transport.stopName, icon: 'mdi:bus-stop' },
-    { label: 'Pickup Time', value: transport.pickupTime, icon: 'mdi:clock-start' },
-    { label: 'Drop Time', value: transport.dropTime, icon: 'mdi:clock-end' },
+    { label: 'Pickup Time', value: transport.pickupTime, icon: 'mdi:clock-start', color: 'info' },
+    { label: 'Drop Time', value: transport.dropTime, icon: 'mdi:clock-end', color: 'info' },
   ];
 
   const driverDetails = [
     { label: 'Vehicle No.', value: transport.vehicle.number, icon: 'mdi:bus' },
     { label: 'Vehicle Type', value: transport.vehicle.type, icon: 'mdi:bus-school' },
     { label: 'Capacity', value: `${transport.vehicle.capacity} Seats`, icon: 'mdi:account-group' },
-    { label: 'Vehicle Status', value: transport.vehicle.status, icon: 'mdi:shield-check' },
+    {
+      label: 'Status',
+      value: transport.vehicle.status,
+      icon: 'mdi:shield-check',
+      color: 'success',
+    },
     { label: 'Driver', value: transport.driver.name, icon: 'mdi:account-tie' },
     { label: 'Driver Contact', value: transport.driver.phone, icon: 'mdi:phone', isPhone: true },
     { label: 'Conductor', value: transport.conductor.name, icon: 'mdi:account' },
@@ -47,181 +65,141 @@ const EmployeeTransportation = ({ employee }: EmployeeTransportationProps) => {
     },
   ];
 
+  const renderDetailItem = (item: any) => (
+    <Stack direction="row" spacing={2} alignItems="center" sx={{ height: '100%' }}>
+      <Box
+        sx={{
+          width: 36,
+          height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '50%',
+          bgcolor: (t) => alpha(t.palette.primary.main, 0.08),
+          color: 'primary.main',
+          flexShrink: 0,
+        }}
+      >
+        <Iconify icon={item.icon} width={20} />
+      </Box>
+      <Box sx={{ minWidth: 0, flex: 1 }}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          noWrap
+          display="block"
+          sx={{ mb: 0.5 }}
+        >
+          {item.label}
+        </Typography>
+        <Typography variant="subtitle2" color="text.primary" noWrap>
+          {item.value}
+        </Typography>
+      </Box>
+    </Stack>
+  );
+
   return (
-    <Grid container spacing={2}>
-      {/* Action Button */}
-      <Grid size={{ xs: 12 }}>
-        <Box display="flex" justifyContent="flex-end" alignItems="center" flexWrap="wrap" gap={2}>
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon="mdi:bus" />}
+    <Stack spacing={3}>
+      {/* Header / Actions */}
+      <Box display="flex" justifyContent="flex-end">
+        <Button
+          variant="contained"
+          startIcon={<Iconify icon="mdi:bus" />}
+          size="small"
+          sx={{
+            boxShadow: theme.shadows[8],
+            px: 3,
+            py: 1,
+            borderRadius: 1,
+          }}
+        >
+          Request Transport
+        </Button>
+      </Box>
+
+      <Grid container spacing={3}>
+        {/* Route Details Card */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card
             sx={{
-              fontWeight: 600,
-              px: 2,
+              height: '100%',
+              boxShadow: (t) => t.customShadows?.card || t.shadows[4], // Fallback if customShadows doesn't exist
+              borderRadius: 2,
             }}
           >
-            Request Transport
-          </Button>
-        </Box>
-      </Grid>
-
-      {/* Route Details Card */}
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card
-          sx={{
-            boxShadow: 1,
-            borderRadius: '12px',
-            border: '1px solid',
-            borderColor: 'divider',
-            height: '100%',
-          }}
-        >
-          <CardContent>
-            <Typography
-              variant="h6"
-              color="primary.main"
-              mb={2.5}
-              display="flex"
-              alignItems="center"
-              gap={0.75}
-            >
-              <Iconify icon="mdi:routes" width={24} />
-              Route Details
-            </Typography>
-            <hr
-              style={{
-                border: 'none',
-                borderTop: '1px solid #e0e0e0',
-                margin: '1px',
-                marginBottom: '20px',
-              }}
-            />
-
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 2,
-                justifyContent: 'space-between',
-              }}
-            >
-              {routeDetails.map((d) => (
+            <CardHeader
+              title="Route Details"
+              subheader="Daily pickup and drop information"
+              avatar={
                 <Box
-                  key={d.label}
                   sx={{
-                    maxWidth: 140,
-                    width: '100%',
+                    p: 1.5,
+                    borderRadius: 1.5,
+                    bgcolor: (t) => alpha(t.palette.primary.main, 0.12),
+                    color: 'primary.dark',
+                    display: 'flex',
                   }}
                 >
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Iconify icon={d.icon} width={20} color="text.secondary" />
-                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                        sx={{ fontSize: '0.7rem', lineHeight: 1.2 }}
-                      >
-                        {d.label}:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={600}
-                        color="text.primary"
-                        sx={{ fontSize: '0.8rem' }}
-                        noWrap
-                        title={String(d.value)}
-                      >
-                        {d.value}
-                      </Typography>
-                    </Box>
-                  </Stack>
+                  <Iconify icon="mdi:routes" width={24} />
                 </Box>
-              ))}
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      {/* Driver & Vehicle Details Card */}
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card
-          sx={{
-            boxShadow: 1,
-            borderRadius: '12px',
-            border: '1px solid',
-            borderColor: 'divider',
-            height: '100%',
-          }}
-        >
-          <CardContent>
-            <Typography
-              variant="h6"
-              color="primary.main"
-              mb={2.5}
-              display="flex"
-              alignItems="center"
-              gap={0.75}
-            >
-              <Iconify icon="mdi:account-tie" width={24} />
-              Driver & Vehicle Details
-            </Typography>
-            <hr
-              style={{
-                border: 'none',
-                borderTop: '1px solid #e0e0e0',
-                margin: '1px',
-                marginBottom: '20px',
-              }}
+              }
+              titleTypographyProps={{ variant: 'h6' }}
             />
+            <Divider sx={{ borderStyle: 'dashed' }} />
+            <CardContent>
+              <Grid container spacing={3}>
+                {routeDetails.map((item, index) => (
+                  <Grid key={index} size={{ xs: 12, sm: 6 }}>
+                    {renderDetailItem(item)}
+                  </Grid>
+                ))}
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
 
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 2,
-                justifyContent: 'space-between',
-              }}
-            >
-              {driverDetails.map((d) => (
+        {/* Driver & Vehicle Details Card */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card
+            sx={{
+              height: '100%',
+              boxShadow: (t) => t.customShadows?.card || t.shadows[4],
+              borderRadius: 2,
+            }}
+          >
+            <CardHeader
+              title="Driver & Vehicle"
+              subheader="Bus and contact details"
+              avatar={
                 <Box
-                  key={d.label}
                   sx={{
-                    maxWidth: 140,
-                    width: '100%',
+                    p: 1.5,
+                    borderRadius: 1.5,
+                    bgcolor: (t) => alpha(t.palette.info.main, 0.12),
+                    color: 'info.dark',
+                    display: 'flex',
                   }}
                 >
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <Iconify icon={d.icon} width={20} color="text.secondary" />
-                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                        sx={{ fontSize: '0.7rem', lineHeight: 1.2 }}
-                      >
-                        {d.label}:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={600}
-                        color="text.primary"
-                        sx={{ fontSize: '0.8rem' }}
-                        noWrap
-                        title={String(d.value)}
-                      >
-                        {d.value}
-                      </Typography>
-                    </Box>
-                  </Stack>
+                  <Iconify icon="mdi:bus-school" width={24} />
                 </Box>
-              ))}
-            </Box>
-          </CardContent>
-        </Card>
+              }
+              titleTypographyProps={{ variant: 'h6' }}
+            />
+            <Divider sx={{ borderStyle: 'dashed' }} />
+            <CardContent>
+              <Grid container spacing={3}>
+                {driverDetails.map((item, index) => (
+                  <Grid key={index} size={{ xs: 12, sm: 6 }}>
+                    {renderDetailItem(item)}
+                  </Grid>
+                ))}
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
-    </Grid>
+    </Stack>
   );
 };
 

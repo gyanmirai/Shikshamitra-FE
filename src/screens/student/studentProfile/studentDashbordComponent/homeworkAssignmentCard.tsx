@@ -24,30 +24,40 @@ const HomeworkAssignmentCard: React.FC<HomeworkAssignmentCardProps> = ({
 
   return (
     <Card
-      variant="outlined"
       sx={{
-        px: 2,
-        py: 1.5,
-        borderRadius: 2,
+        p: 2,
+        borderRadius: 1.5,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
+        boxShadow: 'none',
+        border: '1px solid',
+        borderColor: 'divider',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': {
+          bgcolor: 'action.hover',
+          borderColor: 'action.hover',
+        },
       }}
     >
-      <Box>
-        <Typography variant="subtitle1">{title}</Typography>
-        <Typography variant="body2" color="text.secondary">
-          {date}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          {title}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Submission Type: {submissionType}
-        </Typography>
+        <Stack spacing={0.5}>
+          <Typography variant="caption" color="text.secondary">
+            {date}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Type: {submissionType}
+          </Typography>
+        </Stack>
       </Box>
-      <Stack alignItems="flex-end">
-        <Label color={color} sx={{ mb: 1 }}>
+      <Stack alignItems="flex-end" spacing={1}>
+        <Label color={color} variant="soft">
           {ScheduleExamStatus[status]}
         </Label>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
           {type}
         </Typography>
       </Stack>

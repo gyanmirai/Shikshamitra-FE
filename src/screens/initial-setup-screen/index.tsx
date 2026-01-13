@@ -1,279 +1,303 @@
 'use client';
 
-// import 'driver.js/dist/driver.css';
-
-import React from 'react';
-import { styled } from '@mui/material/styles';
-import { Box, Paper, Container } from '@mui/material';
+import { useState } from 'react';
+import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
+import { motion, AnimatePresence } from 'framer-motion';
 import YearSetup from 'src/components/academic-setup/year-setup';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useUpdateTenantMutation } from 'src/redux/tenant/tenantApi';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { Box, Stack, Button, Avatar, Typography, useMediaQuery } from '@mui/material';
 
+// Components
 import WelcomeScreen from './welcom-screen';
-import { validationSchema } from './validation-schema';
 import { BasicInformationForm } from '../setting/basicInformationForm';
-import { FormSlider } from '../student/enrollment/register/register-form';
 
-/**
- * Array of step titles for the setup process
- */
-const steps = ['Welcome screen', 'Basic Information', 'Institute Setup'];
-/**
- * Driver.js step configurations for each setup screen
- */
-// const driverSteps = {
-//   welcome: [
-//     {
-//       element: '#step-label-0',
-//       popover: {
-//         title: 'Welcome to Setup',
-//         description: 'This is the beginning of your setup journey',
-//         position: 'bottom',
-//       },
-//     },
-//     {
-//       element: '#initial-0',
-//       popover: {
-//         title: 'Getting Started',
-//         description:
-//           'Welcome to Gyanmirai This screen provides an overview of the setup process. Take a moment to read through the welcome message which explains the key steps needed to configure your institute, including basic information setup and academic configurations. This guided tour will help ensure you complete all necessary setup steps correctly.',
-//         position: 'bottom',
-//       },
-//     },
-//   ],
-//   basicInfo: [
-//     {
-//       element: '#step-label-1',
-//       popover: {
-//         title: 'Basic Information',
-//         description:
-//           "This section allows you to enter your institute's basic details. Start by providing your institute's official registered name as it appears on legal documents. This name will be used across the system and on official documents generated through Shiksha Mitra.",
-//         position: 'bottom',
-//       },
-//     },
-//     {
-//       element: '#initial-1',
-//       popover: {
-//         title: 'Institute Logo',
-//         description:
-//           "Upload your institute's official logo here. The logo should be a high-quality image file (PNG or JPG) with dimensions of at least 300x300 pixels. This logo will appear on all official documents, reports, and the institute's dashboard. Make sure the image clearly represents your institute's identity and branding.",
-//         position: 'right',
-//       },
-//     },
-//   ],
-//   instituteSetup: [
-//     {
-//       element: '#step-label-2',
-//       popover: {
-//         title: 'Academic Settings',
-//         description:
-//           "In this section, you can configure essential academic parameters for your institute. Set up your academic calendar by defining the start and end dates of the academic year. You can also configure class schedules, subjects, and other important educational settings that will form the foundation of your institute's academic operations.",
-//         position: 'bottom',
-//       },
-//     },
-//     {
-//       element: '#initial-2',
-//       popover: {
-//         title: 'Final Review & Confirmation',
-//         description:
-//           "Take a moment to carefully review all the information you've entered throughout the setup process. This includes your institute's basic details, logo, contact information, and academic configurations. Ensure everything is accurate before finalizing the setup, as these settings will be used across the platform for various administrative and academic functions.",
-//         position: 'bottom',
-//       },
-//     },
-//   ],
-// };
+// ----------------------------------------------------------------------
 
-/**
- * Mapping of step index to driver.js configurations
- */
-// const stepToDriverConfig = {
-//   0: driverSteps.welcome,
-//   1: driverSteps.basicInfo,
-//   2: driverSteps.instituteSetup,
-// };
+const STEPS = [
+  { label: 'Welcome', icon: 'solar:home-smile-bold' },
+  { label: 'Institute Profile', icon: 'solar:buildings-bold' },
+  { label: 'Academic Setup', icon: 'solar:calendar-bold' },
+];
 
-/**
- * Component that renders different setup screens based on active step
- * @param props - Component props containing activeStep
- * @returns Appropriate component for the current step
- */
-const CurrentComponent = (props: any): any => {
-  const { activeStep } = props;
-  if (activeStep === 0) {
-    return <WelcomeScreen {...props} />;
-  }
-  if (activeStep === 1) {
-    return <BasicInformationForm />;
-  }
-  if (activeStep === 2) {
-    return <YearSetup />;
-  }
-  return null;
-};
+export default function InitialSetupScreen() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [activeStep, setActiveStep] = useState(0);
 
-/**
- * Main component for initial setup workflow
- */
-const InitialSetupScreen = () => {
-  /**
-   * State to track current step in setup process
-   */
-  const [activeStep, setActiveStep] = React.useState(0);
+  const handleNext = () => setActiveStep((prev) => Math.min(prev + 1, STEPS.length - 1));
+  const handleBack = () => setActiveStep((prev) => Math.max(prev - 1, 0));
 
-  /**
-   * Mutation hook for updating tenant information
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [updateTenant, { isLoading: isUpdateLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateTenantMutation,
-    popupConfig: { success: true, successMessage: 'Tenant Updated Successfully' },
-  });
-
-  /**
-   * Object containing edit data for the form
-   */
-  const editData: any = {};
-
-  /**
-   * Initial values for each step of the setup process
-   */
-  const initialvalues: { [key: number]: any } = {
-    0: {},
-    1: {
-      instituteName: editData?.name || '',
-      instituteLogo: editData?.extraProperties?.Logo || null,
-      instituteBanner: editData?.extraProperties?.Banner || null,
-      addressLine1: editData?.extraProperties?.Address1 || '',
-      addressLine2: editData?.extraProperties?.Address2 || '',
-      addressLine3: editData?.extraProperties?.Address3 || '',
-      city: editData?.extraProperties?.City ? { name: editData?.extraProperties?.City } : undefined,
-      stateProvince: editData?.extraProperties?.State
-        ? {
-            name: editData?.extraProperties?.State?.name,
-            isoCode: editData?.extraProperties?.State?.isoCode,
-          }
-        : undefined,
-      zipPostalCode: editData?.extraProperties?.PostalCode || '',
-      country: editData?.extraProperties?.Country
-        ? {
-            name: editData?.extraProperties?.Country?.name,
-            isoCode: editData?.extraProperties?.Country?.isoCode,
-          }
-        : undefined,
-      contactNumber: editData?.extraProperties?.ContactNumber || '',
-      emailAddress: editData?.adminEmailAddress || '',
-      password: '',
-      principleSign: editData?.extraProperties?.PrincipleSign || null,
-    },
-    2: {},
+  const pageVariants = {
+    initial: { opacity: 0, x: 20, scale: 0.98 },
+    in: { opacity: 1, x: 0, scale: 1 },
+    out: { opacity: 0, x: -20, scale: 0.98 },
   };
 
-  // React.useEffect(() => {
-  //   const driverConfig = driver({
-  //     allowClose: false,
-  //     showProgress: true,
-  //     animate: true,
-  //     showButtons: ['next', 'previous', 'close'],
-  //     popoverClass: 'driver-popover',
-  //     steps: stepToDriverConfig[activeStep as keyof typeof stepToDriverConfig],
-  //     // onNext: (step) => {
-  //     //   if (step.options.onNext) {
-  //     //     step.options.onNext();
-  //     //   }
-  //     // },
-  //     // onPrevious: (step) => {
-  //     //   if (step.options.onPrevious) {
-  //     //     step.options.onPrevious();
-  //     //   }
-  //     // },
-  //   });
-
-  //   driverConfig.drive();
-
-  //   return () => {
-  //     driverConfig.destroy();
-  //   };
-  // }, [activeStep]);
+  const pageTransition = {
+    type: 'tween',
+    ease: 'anticipate',
+    duration: 0.4,
+  } as const;
 
   return (
-    <Box sx={{ bgcolor: 'background.neutral' }}>
-      <Container
-        maxWidth="xl"
+    <Box
+      sx={{
+        minHeight: '100vh',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        px: 3,
+        position: 'relative',
+        overflow: 'hidden',
+        background: `radial-gradient(circle at 10% 20%, ${alpha(theme.palette.primary.lighter, 0.4)} 0%, ${theme.palette.background.default} 60%)`,
+      }}
+    >
+      {/* Background Decor */}
+      <Box
+        component={motion.div}
+        animate={{
+          scale: [1, 1.2, 1],
+          rotate: [0, 5, -5, 0],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
         sx={{
+          position: 'absolute',
+          top: -200,
+          right: -200,
+          width: 600,
+          height: 600,
+          borderRadius: '50%',
+          background: `conic-gradient(from 0deg, ${alpha(theme.palette.primary.main, 0.05)}, transparent)`,
+          filter: 'blur(60px)',
+          zIndex: 0,
+        }}
+      />
+
+      {/* Header / Wizard Progress */}
+      <Box maxWidth="xl" sx={{ pt: 4, pb: 2, zIndex: 2 }}>
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          alignItems="center"
+          justifyContent="space-between"
+          spacing={3}
+        >
+          {/* Logo / Brand Area */}
+          <Stack direction="row" alignItems="center" spacing={2}>
+            {/* <Logo /> You can uncomment if you export Logo */}
+            <Avatar
+              variant="rounded"
+              sx={{
+                bgcolor: 'primary.main',
+                boxShadow: theme.customShadows.z8,
+              }}
+            >
+              <Iconify icon="solar:diploma-bold-duotone" width={24} />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 800, letterSpacing: -0.5 }}>
+                Setup Wizard
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                Start your journey with Shiksha Mitra
+              </Typography>
+            </Box>
+          </Stack>
+
+          {/* Custom Stepper */}
+          {!isMobile && (
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ bgcolor: 'background.neutral', p: 1, borderRadius: 20 }}
+            >
+              {STEPS.map((step, index) => {
+                const isActive = activeStep === index;
+                const isCompleted = activeStep > index;
+
+                return (
+                  <Box
+                    key={index}
+                    onClick={() => {
+                      // Optional: Allow clicking previous steps
+                      if (index < activeStep) setActiveStep(index);
+                    }}
+                    sx={{
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      px: 2.5,
+                      py: 1,
+                      borderRadius: 16,
+                      cursor: index < activeStep ? 'pointer' : 'default',
+                      transition: 'all 0.3s ease',
+                      ...(isActive && {
+                        bgcolor: 'background.paper',
+                        boxShadow: theme.customShadows.z1,
+                      }),
+                      ...(isCompleted && {
+                        opacity: 0.7,
+                      }),
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: isActive
+                          ? 'primary.main'
+                          : isCompleted
+                            ? 'success.main'
+                            : 'action.disabledBackground',
+                        color: isActive || isCompleted ? 'white' : 'text.disabled',
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      {isCompleted ? (
+                        <Iconify icon="solar:check-read-bold" width={16} />
+                      ) : (
+                        <Iconify icon={step.icon} width={16} />
+                      )}
+                    </Box>
+                    <Stack>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          color: isActive ? 'text.primary' : 'text.secondary',
+                          fontWeight: isActive ? 700 : 500,
+                        }}
+                      >
+                        {step.label}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                );
+              })}
+            </Stack>
+          )}
+        </Stack>
+      </Box>
+
+      {/* Main Content Area */}
+      <Box
+        sx={{
+          flexGrow: 1,
           display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100dvh',
           flexDirection: 'column',
+          pb: 4,
+          zIndex: 2,
+          overflow: 'hidden',
         }}
       >
-        <CustomStepperWithFormik
-          onStepClick={(index) => {
-            // if (editData) {
-            //   setActiveStep(index);
-            // }
+        <Box
+          sx={{
+            flexGrow: 1,
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
           }}
-          showSaveButton={false}
-          scrollbarHeight="100%"
-          initialValues={initialvalues[activeStep]}
-          steps={steps}
-          activeStep={activeStep}
-          handleBack={() => {
-            setActiveStep(activeStep - 1);
-          }}
-          validationSchema={validationSchema[activeStep]}
-          handleNext={async (isLastStep, values, formik, setIsLoading) => {
-            setIsLoading(true);
-            try {
-              if (!isLastStep) {
-                setActiveStep(activeStep + 1);
-              }
-            } finally {
-              setIsLoading(false);
-            }
-          }}
-          renderItem={({ activeStep: step, formik, isBackClick }: any) => (
-            <Box height="100%" width="100%">
-              <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
-                <Paper
-                  elevation={6}
-                  id={`initial-${step}`}
-                  sx={{ padding: 2, width: '100%', height: '100%' }}
-                >
-                  {CurrentComponent?.({ formik, activeStep }) || <> </>}
-                </Paper>
-              </FormSlider>
-            </Box>
-          )}
-        />
-      </Container>
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={activeStep}
+              initial="initial"
+              animate="in"
+              exit="out"
+              variants={pageVariants}
+              transition={pageTransition}
+              style={{
+                flexGrow: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                width: '100%',
+                minHeight: 0,
+              }}
+            >
+              <Box
+                sx={{
+                  flexGrow: 1,
+                  minHeight: 0,
+                  overflow: 'hidden',
+                  position: 'relative',
+                  boxShadow: theme.customShadows?.z20 || '0 0 20px rgba(0,0,0,0.1)',
+                  borderRadius: 3,
+                  bgcolor: 'background.paper',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  ...(activeStep === 0 && {
+                    background: 'transparent',
+                    boxShadow: 'none',
+                  }),
+                }}
+              >
+                {activeStep === 0 && <WelcomeScreen onNext={handleNext} />}
+                {activeStep === 1 && (
+                  <Box sx={{ height: '100%', overflow: 'hidden' }}>
+                    {/* BasicInfoForm internal scrollbar handles scrolling. 
+                                    We pass handleNext to handleClose so when they save, it moves next 
+                                */}
+                    <BasicInformationForm
+                      handleClose={handleNext}
+                      // editData is intentionally undefined for new setup
+                    />
+                  </Box>
+                )}
+                {activeStep === 2 && (
+                  <Box
+                    sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}
+                  >
+                    <Box sx={{ flexGrow: 1, overflow: 'hidden', minHeight: 0 }}>
+                      <YearSetup />
+                    </Box>
+                    <Box
+                      sx={{
+                        position: 'sticky',
+                        bottom: 0,
+                        flexShrink: 0,
+                        p: 2,
+                        borderTop: `1px dashed ${theme.palette.divider}`,
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        gap: 2,
+                        bgcolor: 'background.paper',
+                        zIndex: 10,
+                      }}
+                    >
+                      <Button
+                        variant="outlined"
+                        onClick={handleBack}
+                        startIcon={<Iconify icon="eva:arrow-back-fill" />}
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="success"
+                        endIcon={<Iconify icon="solar:confetti-bold" />}
+                        onClick={() => {
+                          // Handle Finish Action - redirect or show completion modal
+                          // For now just console log
+                          console.log('Setup Completed');
+                          // You might want to redirect to dashboard
+                          window.location.href = '/dashboard';
+                        }}
+                      >
+                        Complete Setup
+                      </Button>
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+            </motion.div>
+          </AnimatePresence>
+        </Box>
+      </Box>
     </Box>
   );
-};
-
-export default InitialSetupScreen;
-
-/**
- * Styled component for custom step icon in stepper
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const ColorlibStepIconRoot = styled('div')<{
-  ownerState: { completed?: boolean; active?: boolean };
-}>(({ theme, ownerState }) => ({
-  backgroundColor: theme.vars.palette.grey[400],
-  zIndex: 1,
-  color: '#fff',
-  width: 50,
-  height: 50,
-  display: 'flex',
-  borderRadius: '50%',
-  justifyContent: 'center',
-  alignItems: 'center',
-  ...(ownerState.active && {
-    background: theme.palette.primary.main,
-    boxShadow: '0 4px 10px 0 rgba(0,0,0,.25)',
-  }),
-  ...(ownerState.completed && { background: theme.palette.primary.main }),
-}));
+}

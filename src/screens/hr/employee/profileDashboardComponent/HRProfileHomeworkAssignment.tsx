@@ -92,27 +92,59 @@ const HomeworkAssignmentCard: React.FC<HomeworkAssignmentCardProps> = ({
   status,
 }) => (
   <Card
-    variant="outlined"
     sx={{
-      px: 2,
-      py: 2,
-      borderRadius: 2,
+      p: 2,
+      borderRadius: 1.5,
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
+      border: '1px solid',
+      borderColor: 'divider',
+      boxShadow: 'none',
+      transition: 'all 0.2s ease-in-out',
+      '&:hover': {
+        bgcolor: 'background.neutral',
+        borderColor: 'primary.light',
+        cursor: 'pointer',
+      },
     }}
   >
-    <Box>
-      <Typography variant="subtitle1">{title}</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-        {`${subject} · ${className}-${division}  Due: ${dueDate}`}
-      </Typography>
-    </Box>
-
     <Stack direction="row" alignItems="center" spacing={2}>
-      <Label variant="soft" color="default">
-        {type}
-      </Label>
+      <Box
+        sx={{
+          width: 48,
+          height: 48,
+          borderRadius: 1.5,
+          bgcolor: 'primary.lighter',
+          color: 'primary.main',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Iconify icon="fluent:book-24-filled" width={24} />
+      </Box>
+      <Box>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          {title}
+        </Typography>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+        >
+          <Iconify icon="solar:calendar-date-bold" width={14} />
+          {dueDate} &bull; {subject}
+        </Typography>
+      </Box>
     </Stack>
+
+    <Label
+      variant="soft"
+      color={type === 'homework' ? 'primary' : 'info'}
+      sx={{ textTransform: 'uppercase', fontSize: 11 }}
+    >
+      {type}
+    </Label>
   </Card>
 );

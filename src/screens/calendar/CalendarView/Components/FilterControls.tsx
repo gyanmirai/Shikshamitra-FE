@@ -66,7 +66,8 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
     return selected;
   };
 
-  const DROPDOWN_WIDTH = 300;
+  // No fixed width; let the parent grid/flex handle sizing.
+  // const DROPDOWN_WIDTH = 300;
 
   // Track search input text separately so we can show counts when not searching
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -90,11 +91,11 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexWrap: 'wrap',
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' },
         gap: 2,
-        alignItems: 'flex-start',
-        // Ensure children (dropdowns + button) wrap nicely and chips outside adapt.
+        width: '100%',
+        alignItems: 'center',
       }}
     >
       <Autocomplete
@@ -130,10 +131,13 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
           />
         )}
         renderTags={() => (
-          <Typography ml={1}>{makeDisplayValue(filters.eventType, eventTypesOptions)}</Typography>
+          <Typography ml={1} variant="body2">
+            {makeDisplayValue(filters.eventType, eventTypesOptions)}
+          </Typography>
         )}
-        sx={{ width: DROPDOWN_WIDTH }}
+        sx={{ width: '100%' }}
       />
+
       <Autocomplete
         multiple
         size="small"
@@ -167,10 +171,13 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
           />
         )}
         renderTags={() => (
-          <Typography>{makeDisplayValue(filters.holidayType, holidayTypesOptions)}</Typography>
+          <Typography variant="body2">
+            {makeDisplayValue(filters.holidayType, holidayTypesOptions)}
+          </Typography>
         )}
-        sx={{ width: DROPDOWN_WIDTH }}
+        sx={{ width: '100%' }}
       />
+
       <Autocomplete
         multiple
         size="small"
@@ -198,9 +205,11 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChange }) =>
           <TextField {...params} label="Status" placeholder={search.status ? 'Search…' : ''} />
         )}
         renderTags={() => (
-          <Typography>{makeDisplayValue(filters?.status, statusOptions)}</Typography>
+          <Typography variant="body2">
+            {makeDisplayValue(filters?.status, statusOptions)}
+          </Typography>
         )}
-        sx={{ width: DROPDOWN_WIDTH }}
+        sx={{ width: '100%' }}
       />
     </Box>
   );
