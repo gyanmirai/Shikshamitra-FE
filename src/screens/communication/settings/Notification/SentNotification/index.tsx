@@ -63,7 +63,7 @@ const NotificationSettingScreen = () => {
           onBack={() => {
             dialog.onFalse();
           }}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 2, mb: 2 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -73,7 +73,7 @@ const NotificationSettingScreen = () => {
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Notification', href: '/communication/notification/notificationSetting' },
           ]}
-          sx={{ px: 1, mb: 2 }}
+          sx={{ px: 2, mb: 2 }}
         />
       )}
 

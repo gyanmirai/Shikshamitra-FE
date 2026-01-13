@@ -1,9 +1,13 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo } from 'react';
 import { Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetNotificationTemplatesQuery } from 'src/redux/communication/notification/notificationTemplateApi';
+
+import communicationData from '../../../../../../../communicationData.json';
 
 import type { ITemplateTableProps, INotificationTemplate } from './type';
 
@@ -14,10 +18,74 @@ const NotificationTemplateTable: React.FC<ITemplateTableProps> = ({
   onEdit,
 }) => {
   // fetch templates
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: templateData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetNotificationTemplatesQuery,
   });
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'templateName',
+        label: 'Name',
+        align: 'left',
+        sticky: true,
+      },
+      {
+        id: 'hashtags',
+        label: 'Hashtags',
+        align: 'left',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {Array.isArray(value) && value.length > 0
+              ? value.map((tag) => `${tag}`).join(' ')
+              : '--'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'targetRole',
+        label: 'Target Role',
+        align: 'left',
+      },
+      {
+        id: 'subject',
+        label: 'Subject',
+        align: 'left',
+      },
+      {
+        id: 'message',
+        label: 'Message',
+        align: 'left',
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        minWidth: 60,
+        align: 'left',
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showThreeDots={false}
+              placement="right-top"
+              showDeleteIcon
+              showEditIcon
+              handleDeleteClick={() => {
+                onDelete(row as INotificationTemplate);
+              }}
+              handleEditClick={() => {
+                onEdit(row as INotificationTemplate);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    [onDelete, onEdit]
+  );
   return (
     <CustomizableTable
       tableId="template-data-table"
@@ -43,67 +111,8 @@ const NotificationTemplateTable: React.FC<ITemplateTableProps> = ({
           </Typography>
         </>
       }
-      columns={[
-        {
-          id: 'templateName',
-          label: 'Name',
-          align: 'left',
-          sticky: true,
-        },
-        {
-          id: 'hashtags',
-          label: 'Hashtags',
-          align: 'left',
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {Array.isArray(value) && value.length > 0
-                ? value.map((tag) => `${tag}`).join(' ')
-                : '--'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'targetRole',
-          label: 'Target Role',
-          align: 'left',
-        },
-        {
-          id: 'subject',
-          label: 'Subject',
-          align: 'left',
-        },
-        {
-          id: 'message',
-          label: 'Message',
-          align: 'left',
-        },
-        {
-          id: 'action',
-          label: 'Actions',
-          minWidth: 60,
-          align: 'left',
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                showThreeDots={false}
-                placement="right-top"
-                showDeleteIcon
-                showEditIcon
-                handleDeleteClick={() => {
-                  onDelete(row as INotificationTemplate);
-                }}
-                handleEditClick={() => {
-                  onEdit(row as INotificationTemplate);
-                }}
-              />
-            );
-          },
-        },
-      ]}
-      data={templateData || []}
+      columns={columns}
+      data={communicationData?.notificationTemplateData || []}
     />
   );
 };

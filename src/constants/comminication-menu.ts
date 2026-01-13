@@ -92,14 +92,6 @@ const communicationModule = {
           ],
         },
         {
-          title: 'Notification History',
-          path: communicationPaths.history,
-          _action: 'notification-history',
-          shortcutKey: 'Alt+C+H',
-          shortcutKeyName: 'Alt+C+H',
-          permissionName: communicationPermissions.history,
-        },
-        {
           title: 'Settings',
           path: communicationPaths.settings.root,
           _action: 'settings',

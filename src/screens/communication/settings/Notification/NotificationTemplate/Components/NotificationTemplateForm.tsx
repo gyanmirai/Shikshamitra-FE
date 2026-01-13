@@ -1,7 +1,12 @@
 'use client';
 
+import type { Medium } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+
 import { debounce } from 'lodash';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
@@ -24,6 +29,11 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
+import {
+  useAddNotificationTemplateMutation,
+  useGetNotificationTemplateByIdQuery,
+  useUpdateNotificationTemplateMutation,
+} from 'src/redux/communication/notification/notificationTemplateApi';
 
 import { notificationTemplateValidationSchema } from './notificationTemplateValidation';
 import { getNotificationTemplateInitialValues } from './getNotificationTemplateInitialValues';
@@ -35,6 +45,40 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
   onClose,
   editData,
 }) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [addNotificationTemplate, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddNotificationTemplateMutation,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id,
+    },
+  });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: announcementById,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isLoading,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetNotificationTemplateByIdQuery,
+    params: { academicMediumId: (currentMedium as Medium)?.id, id: editData?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id || !editData?.id,
+    },
+  });
+
+  const [updateNotificationTemplate, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateNotificationTemplateMutation,
+    params: { academicMediumId: (currentMedium as Medium)?.id },
+    options: {
+      skip: !(currentMedium as Medium)?.id,
+    },
+  });
   const [tag, setTag] = useState('');
   const { data: roleOptions, isLoading: roleLoading } = useQueryAndMutation({
     type: 'query',
@@ -43,17 +87,45 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
   const formik = useFormik({
     initialValues: getNotificationTemplateInitialValues(editData),
     validationSchema: notificationTemplateValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Template : ${values.templateName} has been successfully updated`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Template : ${values.templateName} has been successfully created`,
+    onSubmit: async (values) => {
+      try {
+        const roleId = roleOptions?.items?.find((r: any) => r.name === values.targetRole)?.id;
+
+        const payloadData = {
+          templateName: values.templateName,
+          role: roleId,
+          subject: values.subject,
+          message: values.message,
+          tags: values.hashtags,
+        };
+
+        if (editData) {
+          const payload = {
+            academicMediumId: (currentMedium as Medium).id,
+            id: editData.id,
+            data: payloadData,
+          };
+          await updateNotificationTemplate(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.templateName}" Template updated successfully`,
+          });
+        } else {
+          const payload = {
+            academicMediumId: (currentMedium as Medium).id,
+            data: payloadData,
+          };
+          await addNotificationTemplate(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.templateName}" Template added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to save template', error);
+        shikshaMitraToast.error({
+          message: 'Failed to save template',
         });
       }
-      onClose(null, true);
     },
   });
 
@@ -292,7 +364,8 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
+              loading={isAddLoading || isUpdateLoading}
               startIcon={
                 <Iconify
                   icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -306,7 +379,7 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
               onClick={(e: any) => formik.handleSubmit(e)}
             >
               {editData ? 'Update' : 'Submit'}
-            </Button>
+            </LoadingButton>
           </DialogActions>
         </Box>
       </form>

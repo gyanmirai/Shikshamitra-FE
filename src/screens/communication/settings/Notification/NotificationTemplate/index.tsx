@@ -4,15 +4,21 @@ import type { RootState } from 'src/redux/store';
 import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import {
+  notificationTemplateApi,
+  useDeleteNotificationTemplateMutation,
+} from 'src/redux/communication/notification/notificationTemplateApi';
 
 import NotificationTemplateForm from './Components/NotificationTemplateForm';
 import NotificationTemplateTable from './Components/NotificationTemplateTemlate';
@@ -31,6 +37,12 @@ const TemplatesManagement = (props: TabComponentType) => {
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+  // Delete document mutation
+  const [deleteTemplateMutation, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteNotificationTemplateMutation,
+  });
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // close dialog + reset
   const handleCloseDialog = (_e: any, isSubmit?: boolean) => {
@@ -71,7 +83,7 @@ const TemplatesManagement = (props: TabComponentType) => {
             },
             { name: editingTemplate ? 'Update Template' : 'Add Template' },
           ]}
-          sx={{ mb: 2 }}
+          sx={{ px: 2, mb: 2 }}
           isBack
           onBack={() => {
             handleCloseDialog(null, false);
@@ -85,7 +97,7 @@ const TemplatesManagement = (props: TabComponentType) => {
             { name: 'Communication', href: '/communication/dashboard' },
             { name: 'Templates' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 2, mb: 1 }}
           action={
             <Button
               size="small"
@@ -142,20 +154,49 @@ const TemplatesManagement = (props: TabComponentType) => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
-            onClick={() => {
-              confirm_dialog.onFalse();
-              shikshaMitraToast.success({
-                message: `Template : ${deleteTemplate?.templateName} deleted successfully.`,
+            size="small"
+            onClick={async () => {
+              confirmWithUndo({
+                item: deleteTemplate,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    notificationTemplateApi.util.updateQueryData(
+                      'getNotificationTemplates',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft.items?.findIndex(
+                          (b: any) => b.id === deleteTemplate?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    notificationTemplateApi.util.updateQueryData(
+                      'getNotificationTemplates',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft.items) return;
+                        draft.items.splice(index, 0, deleteTemplate);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteTemplateMutation(deleteTemplate?.id || ''),
               });
+              confirm_dialog.onFalse();
               setDeleteTemplate(null);
             }}
-            size="small"
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
 
