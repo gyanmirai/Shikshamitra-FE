@@ -104,12 +104,12 @@ const NotificationFormStepper = ({ onBack }: NotificationFormStepperProps) => {
               memberIds: values.members?.filter((m) => m.isSelect).map((m) => m.id),
             };
 
-            const res = await createNotificationDraft({
-              academicMediumId: mediumId,
-              data: payload,
-            }).unwrap();
+            // const res = await createNotificationDraft({
+            //   academicMediumId: mediumId,
+            //   data: payload,
+            // }).unwrap();
 
-            setNotificationId(res?.id);
+            // setNotificationId(res?.id);
             shikshaMitraToast.success({ message: `Audience saved successfully` });
           } else {
             // If already created, assume success as we don't have update logic for step 1 yet
@@ -117,25 +117,25 @@ const NotificationFormStepper = ({ onBack }: NotificationFormStepperProps) => {
           }
         } else if (activeStep === 1) {
           // STEP 2: Channels -> Update Channels
-          await updateNotificationChannels({
-            academicMediumId: mediumId,
-            id: notificationId,
-            data: {
-              channels: values.channels,
-            },
-          }).unwrap();
+          // await updateNotificationChannels({
+          //   academicMediumId: mediumId,
+          //   id: notificationId,
+          //   data: {
+          //     channels: values.channels,
+          //   },
+          // }).unwrap();
           shikshaMitraToast.success({ message: `Channels chosen successfully` });
         } else if (activeStep === 2) {
           // STEP 3: Message -> Compose & Publish
-          await composeMessageAndPublish({
-            academicMediumId: mediumId,
-            id: notificationId,
-            data: {
-              templateId: values.selectedTemplate?.id,
-              subject: values.selectedTemplate?.subject,
-              message: values.selectedTemplate?.message,
-            },
-          }).unwrap();
+          // await composeMessageAndPublish({
+          //   academicMediumId: mediumId,
+          //   id: notificationId,
+          //   data: {
+          //     templateId: values.selectedTemplate?.id,
+          //     subject: values.selectedTemplate?.subject,
+          //     message: values.selectedTemplate?.message,
+          //   },
+          // }).unwrap();
 
           shikshaMitraToast.success({ message: `Notification sent successfully` });
           onBack?.(null, true);
@@ -155,15 +155,7 @@ const NotificationFormStepper = ({ onBack }: NotificationFormStepperProps) => {
         setIsLoading(false);
       }
     },
-    [
-      activeStep,
-      onBack,
-      currentMedium,
-      createNotificationDraft,
-      notificationId,
-      updateNotificationChannels,
-      composeMessageAndPublish,
-    ]
+    [activeStep, onBack, currentMedium, notificationId]
   );
 
   return (

@@ -1,12 +1,13 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -249,6 +250,66 @@ const LectureSlots = () => {
       ],
     },
   ];
+  const columns: IColumn[] = useMemo(
+    () => [
+      { id: 'className', label: 'Class', filterType: 'number' },
+      {
+        id: 'slotConfiguration',
+        label: 'Slot Configuration',
+        isSort: false,
+        render: (_: any, row: any) => (
+          <Box>
+            {row.slotConfigurations?.map((item: any, index: number) => {
+              const [start, end] = item.weekRange;
+
+              const startLabel = getDayLabel(start);
+              const endLabel = getDayLabel(end);
+
+              return (
+                <Typography key={index} variant="body2">
+                  {start === end ? startLabel : `${startLabel} To ${endLabel}`}
+                  {' : '}
+                  {item.totalSlots}
+                </Typography>
+              );
+            })}
+          </Box>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        sticky: true,
+        align: 'left',
+        isSort: false,
+        isFilter: false,
+        minWidth: '80px',
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              actions={(prop) => actions({ ...prop, row })}
+              showEditIcon
+              showViewIcon
+              handleViewClick={() => {
+                viewSlotsDialog.onTrue();
+                setDisabled(true);
+                setIsEdit(false);
+                setEditData(row as any);
+              }}
+              handleEditClick={() => {
+                setDisabled(false);
+                setIsEdit(true);
+                setEditData(row as any);
+                addLectureSlotDialog.onTrue();
+              }}
+              placement="right-top"
+            />
+          );
+        },
+      },
+    ],
+    [actions, addLectureSlotDialog, viewSlotsDialog]
+  );
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Conditional Breadcrumbs */}
@@ -355,63 +416,7 @@ const LectureSlots = () => {
               </Box>
             </>
           }
-          columns={[
-            { id: 'className', label: 'Class', filterType: 'number' },
-            {
-              id: 'slotConfiguration',
-              label: 'Slot Configuration',
-              isSort: false,
-              render: (_: any, row: any) => (
-                <Box>
-                  {row.slotConfigurations?.map((item: any, index: number) => {
-                    const [start, end] = item.weekRange;
-
-                    const startLabel = getDayLabel(start);
-                    const endLabel = getDayLabel(end);
-
-                    return (
-                      <Typography key={index} variant="body2">
-                        {start === end ? startLabel : `${startLabel} To ${endLabel}`}
-                        {' : '}
-                        {item.totalSlots}
-                      </Typography>
-                    );
-                  })}
-                </Box>
-              ),
-            },
-            {
-              id: 'action',
-              label: 'Actions',
-              sticky: true,
-              align: 'left',
-              isSort: false,
-              isFilter: false,
-              minWidth: '80px',
-              render(value, row) {
-                return (
-                  <ThreeDotsActions
-                    actions={(prop) => actions({ ...prop, row })}
-                    showEditIcon
-                    showViewIcon
-                    handleViewClick={() => {
-                      viewSlotsDialog.onTrue();
-                      setDisabled(true);
-                      setIsEdit(false);
-                      setEditData(row as any);
-                    }}
-                    handleEditClick={() => {
-                      setDisabled(false);
-                      setIsEdit(true);
-                      setEditData(row as any);
-                      addLectureSlotDialog.onTrue();
-                    }}
-                    placement="right-top"
-                  />
-                );
-              },
-            },
-          ]}
+          columns={columns}
           data={mockData}
         />
       )}

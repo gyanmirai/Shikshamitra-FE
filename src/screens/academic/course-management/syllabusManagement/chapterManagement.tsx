@@ -17,19 +17,22 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 // Import Redux related functions
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 // Import external dependencies
 import React, { useState, useEffect, useCallback } from 'react';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import chapterTableData from 'src/json/academic/syllabus/chapterTableData.json';
 import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
-import { useDeleteChapterMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import {
+  chaptersApi,
+  useDeleteChapterMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import { AddNewChapter } from './addChapterForm';
 // Import mock data
@@ -46,7 +49,7 @@ const Subjects = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteChapterMutation,
   });
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
@@ -68,7 +71,7 @@ const Subjects = () => {
   // State for storing subject data with initial temp data
   const [subjectData] = useState<any>(subjectTempData);
   // State for storing subject table data
-  const [chapterData, setChapterData] = useState<IChapter[]>(chapterTableData);
+  const [chapterData] = useState<IChapter[]>(chapterTableData);
   // State for storing dialog data
   const [, setDialogData] = useState<any>([]);
   // State for managing selected chapter
@@ -152,22 +155,6 @@ const Subjects = () => {
     setClasses(allClasses[0]?.name || '');
     setClassId(allClasses[0]?.id || '');
   }, [medium]);
-
-  const handleDelete = (id: string | undefined) => {
-    if (selectedChapter) {
-      setChapterData(chapterData.filter((ch) => ch.id !== id));
-      deleteDialog.onFalse();
-      shikshaMitraToast.success({
-        message: (
-          <>
-            Chapter : <strong>{selectedChapter?.chapterName}</strong> deleted successfully from{' '}
-            {subject} for Class {classes}.
-          </>
-        ),
-      });
-      setSelectedChapter(null);
-    }
-  };
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -324,16 +311,39 @@ const Subjects = () => {
             color="error"
             size="small"
             onClick={async () => {
-              try {
-                await deleteChapter((selectedChapter as any).id).unwrap();
-                deleteDialog.onFalse();
-                setSelectedChapter(null);
-                shikshaMitraToast.success({
-                  message: `Chapter &quot;${selectedChapter?.chapterName}&quot; deleted successfully`,
-                });
-              } catch (error) {
-                console.error('Failed to delete chapter', error);
-              }
+              confirmWithUndo({
+                item: selectedChapter,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    chaptersApi.util.updateQueryData(
+                      'getChapters',
+                      { standardId: classId, subjectId },
+                      (draft: any) => {
+                        const index = draft.findIndex(
+                          (b: any) => b.id === (selectedChapter as any)?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    chaptersApi.util.updateQueryData(
+                      'getChapters',
+                      { standardId: classId, subjectId },
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selectedChapter);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteChapter((selectedChapter as any).id),
+              });
+              deleteDialog.onFalse();
+              setSelectedChapter(null);
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >

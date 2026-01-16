@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -170,6 +171,69 @@ const WeeklyLectures = () => {
     }
   };
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      { id: 'className', label: 'Class', filterType: 'number', align: 'left' },
+      {
+        id: 'totalLectures',
+        label: 'Total Lectures',
+        minWidth: 150,
+        filterType: 'number',
+        align: 'left',
+      },
+      {
+        id: 'newSubject',
+        label: 'Subjects',
+        isSort: false,
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', gap: 0.9, flexWrap: 'wrap' }}>
+            {row.subjects.map((subject: ISubject) => (
+              <Box key={subject.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={subject.subjectColor} />
+                <Typography variant="caption" fontSize="13px">
+                  {`${subject.name} (${subject.noOfLecture})`}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        minWidth: 60,
+        sticky: true,
+        align: 'left',
+        isSort: false,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              // actions={(prop) => actions({ ...prop, row })}
+              showViewIcon
+              handleViewClick={() => {
+                setSelectedWeeklyLecture(row as ISubjectFormValues);
+                viewWeeklyLecturesDialog.onTrue();
+                setDisabled(true);
+              }}
+              showEditIcon
+              showThreeDots={false}
+              handleEditClick={() => {
+                setSelectedWeeklyLecture(row as ISubjectFormValues);
+                setIsEdit(true);
+                addWeeklyLectureDialog.onTrue();
+                setDisabled(false);
+              }}
+              placement="right-top"
+            />
+          );
+        },
+      },
+    ],
+    [addWeeklyLectureDialog, viewWeeklyLecturesDialog]
+  );
+
   const tableData = useMemo(
     () =>
       data.map((item, index) => ({
@@ -231,65 +295,7 @@ const WeeklyLectures = () => {
             </Box>
           </>
         }
-        columns={[
-          { id: 'className', label: 'Class', filterType: 'number', align: 'left' },
-          {
-            id: 'totalLectures',
-            label: 'Total Lectures',
-            minWidth: 150,
-            filterType: 'number',
-            align: 'left',
-          },
-          {
-            id: 'newSubject',
-            label: 'Subjects',
-            isSort: false,
-            align: 'left',
-            render: (value, row) => (
-              <Box sx={{ display: 'flex', gap: 0.9, flexWrap: 'wrap' }}>
-                {row.subjects.map((subject: ISubject) => (
-                  <Box key={subject.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <SubjectColorIndicator color={subject.subjectColor} />
-                    <Typography variant="caption" fontSize="13px">
-                      {`${subject.name} (${subject.noOfLecture})`}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            ),
-          },
-          {
-            id: 'action',
-            label: 'Actions',
-            minWidth: 60,
-            sticky: true,
-            align: 'left',
-            isSort: false,
-            isFilter: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  // actions={(prop) => actions({ ...prop, row })}
-                  showViewIcon
-                  handleViewClick={() => {
-                    setSelectedWeeklyLecture(row as ISubjectFormValues);
-                    viewWeeklyLecturesDialog.onTrue();
-                    setDisabled(true);
-                  }}
-                  showEditIcon
-                  showThreeDots={false}
-                  handleEditClick={() => {
-                    setSelectedWeeklyLecture(row as ISubjectFormValues);
-                    setIsEdit(true);
-                    addWeeklyLectureDialog.onTrue();
-                    setDisabled(false);
-                  }}
-                  placement="right-top"
-                />
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={tableData}
       />
 

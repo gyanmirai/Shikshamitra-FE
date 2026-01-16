@@ -16,9 +16,11 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
+  homeworkApi,
   useGetHomeworksQuery,
   useDeleteHomeworkMutation,
   useUpdateHomeworkMutation,
@@ -58,6 +60,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteHomeworkMutation,
   });
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   const [publishHomework, { isLoading: isPublishLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -280,25 +283,57 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
             loading={isPublishLoading}
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={async () => {
-              try {
-                const payload = {
-                  homeworkId: selectedHomework?.id,
-                  status: 'PUBLISHED',
-                };
-
-                await publishHomework(payload).unwrap();
-
-                shikshaMitraToast.success({
-                  message: `Homework has been successfully published for "${selectedHomework?.title}" subject in Class ${classes} - ${division}.`,
-                });
-
-                publishHomeworkDialog.onFalse();
-                setSelectedHomework(null);
-              } catch (error: any) {
-                shikshaMitraToast.error({
-                  message: error?.data?.message || 'Failed to publish homework.',
-                });
-              }
+              const nextStatus = 'PUBLISHED';
+              confirmWithUndo({
+                item: selectedHomework,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    homeworkApi.util.updateQueryData(
+                      'getHomeworks',
+                      {
+                        classId: selectedClassData?.id,
+                        divisionId: selectedDivisionData?.id,
+                        subjectId: subject,
+                        homeworkDate: date?.toISOString(),
+                      },
+                      (draft: any) => {
+                        const index = draft.findIndex(
+                          (item: any) => item.id === selectedHomework?.id
+                        );
+                        if (index !== -1) {
+                          draft[index].status = nextStatus;
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    homeworkApi.util.updateQueryData(
+                      'getHomeworks',
+                      {
+                        classId: selectedClassData?.id,
+                        divisionId: selectedDivisionData?.id,
+                        subjectId: subject,
+                        homeworkDate: date?.toISOString(),
+                      },
+                      (draft: any) => {
+                        const itemIndex = draft.findIndex(
+                          (item: any) => item.id === selectedHomework?.id
+                        );
+                        if (itemIndex !== -1) {
+                          draft[itemIndex].status = selectedHomework?.status;
+                        }
+                      }
+                    )
+                  ),
+                onCommit: () =>
+                  publishHomework({
+                    homeworkId: selectedHomework?.id,
+                    status: nextStatus,
+                  }),
+              });
+              publishHomeworkDialog.onFalse();
+              setSelectedHomework(null);
             }}
           >
             Publish

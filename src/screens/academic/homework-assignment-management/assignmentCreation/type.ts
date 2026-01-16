@@ -30,6 +30,7 @@ export interface IAssignment {
   // todaysDate: Dayjs | string;
   content?: string;
   submission?: string;
+  status?: number;
 }
 
 export interface IAssignmentFormProps {
