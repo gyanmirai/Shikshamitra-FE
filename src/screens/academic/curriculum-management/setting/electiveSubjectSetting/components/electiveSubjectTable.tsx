@@ -2,8 +2,9 @@
 
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -37,6 +38,67 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
       skip: !(currentMedium as Medium)?.id,
     },
   });
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'name',
+        label: 'Elective Group',
+        align: 'left',
+        render: (value, row) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <SubjectColorIndicator color={row.color} />
+            <Typography variant="caption" fontSize="13px">
+              {value}
+            </Typography>
+          </Box>
+        ),
+      },
+      {
+        id: 'subjects',
+        label: 'Subjects List',
+        align: 'left',
+        render: (value) => (
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {value.map((subject: { name: string; color: string }) => (
+              <Box key={subject.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <SubjectColorIndicator color={subject.color} />
+                <Typography variant="caption" fontSize="13px">
+                  {subject.name}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        minWidth: 60,
+        isSort: false,
+        align: 'left',
+        sticky: true,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showThreeDots={false}
+              placement="right-top"
+              showDeleteIcon
+              showEditIcon
+              handleDeleteClick={() => {
+                onDelete(row as IElectiveSubject);
+              }}
+              handleEditClick={() => {
+                onEdit(row as IElectiveSubject);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    [onDelete, onEdit]
+  );
   return (
     <CustomizableTable
       isLoading={isLoading || isFetching}
@@ -71,63 +133,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
           </Box>
         </>
       }
-      columns={[
-        {
-          id: 'name',
-          label: 'Elective Group',
-          align: 'left',
-          render: (value, row) => (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <SubjectColorIndicator color={row.color} />
-              <Typography variant="caption" fontSize="13px">
-                {value}
-              </Typography>
-            </Box>
-          ),
-        },
-        {
-          id: 'subjects',
-          label: 'Subjects List',
-          align: 'left',
-          render: (value) => (
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {value.map((subject: { name: string; color: string }) => (
-                <Box key={subject.name} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <SubjectColorIndicator color={subject.color} />
-                  <Typography variant="caption" fontSize="13px">
-                    {subject.name}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          ),
-        },
-        {
-          id: 'action',
-          label: 'Actions',
-          minWidth: 60,
-          isSort: false,
-          align: 'left',
-          sticky: true,
-          isFilter: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                showThreeDots={false}
-                placement="right-top"
-                showDeleteIcon
-                showEditIcon
-                handleDeleteClick={() => {
-                  onDelete(row as IElectiveSubject);
-                }}
-                handleEditClick={() => {
-                  onEdit(row as IElectiveSubject);
-                }}
-              />
-            );
-          },
-        },
-      ]}
+      columns={columns}
       data={electiveGroupData || []}
     />
   );

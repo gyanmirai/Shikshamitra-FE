@@ -9,13 +9,16 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteAssignmentTypeMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
+import {
+  assignmentTypesApi,
+  useDeleteAssignmentTypeMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
 
 import AssignmentTypeForm from './assignmentTypeForm';
 import AssignmentTypeTable from './assignmentTypeTable';
@@ -46,6 +49,7 @@ const AssignmentTypeCreation = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteAssignmentTypeMutation,
   });
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   /**
    * Handles dialog close with form submission check
@@ -161,20 +165,39 @@ const AssignmentTypeCreation = () => {
             color="error"
             size="small"
             onClick={async () => {
-              try {
-                const payload = {
-                  academicMediumId: (currentMedium as any).id,
-                  id: selectedData?.id,
-                };
-                await deleteAssignmentType(payload).unwrap();
-                deleteDialog.onFalse();
-                setSelectedData(null);
-                shikshaMitraToast.success({
-                  message: `Assignment Type "${selectedData?.assignmentTypeName}" deleted successfully`,
-                });
-              } catch (error) {
-                console.error('Failed to delete assignment type', error);
-              }
+              confirmWithUndo({
+                item: selectedData,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    assignmentTypesApi.util.updateQueryData(
+                      'getAssignmentTypes',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft.findIndex((item: any) => item.id === selectedData?.id);
+                        setDeleteIndex(index);
+                        if (index !== -1) draft.splice(index, 1);
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    assignmentTypesApi.util.updateQueryData(
+                      'getAssignmentTypes',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selectedData);
+                      }
+                    )
+                  ),
+                onCommit: () =>
+                  deleteAssignmentType({
+                    academicMediumId: (currentMedium as any).id,
+                    assignmentTypeId: selectedData?.id,
+                  }),
+              });
+              deleteDialog.onFalse();
+              setSelectedData(null);
             }}
           >
             Yes

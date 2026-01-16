@@ -1,7 +1,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { useTheme } from '@mui/material/styles';
-import { Box, Card, Chip, Grid, Paper, Divider, Typography, CardContent } from '@mui/material';
+import { Box, Card, Grid, Paper, Divider, Typography, CardContent } from '@mui/material';
 
 import type { INotification } from './type';
 
@@ -28,12 +28,12 @@ const NotificationCard: React.FC<{ data: INotification | null }> = ({ data }) =>
                 </Typography>
               </Grid>
 
-              <Grid size={6}>
+              {/* <Grid size={6}>
                 <Typography color="text.secondary">Category</Typography>
                 <Box sx={{ fontWeight: 300, display: 'inline-block' }}>
                   <Chip label={data?.category || ''} color="primary" size="small" />
                 </Box>
-              </Grid>
+              </Grid> */}
 
               <Grid size={6}>
                 <Typography color="text.secondary">Sent by</Typography>
@@ -58,7 +58,7 @@ const NotificationCard: React.FC<{ data: INotification | null }> = ({ data }) =>
             sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 2, mb: 2 }}
           >
             <Typography variant="h6" mb={2} color="primary.main">
-              Delivery Stats
+              Delivery Status
             </Typography>
 
             <Grid container spacing={2}>

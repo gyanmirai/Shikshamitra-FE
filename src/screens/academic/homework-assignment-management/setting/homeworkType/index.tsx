@@ -9,13 +9,16 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteHomeworkTypeMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
+import {
+  homeworkTypesApi,
+  useDeleteHomeworkTypeMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 
 import HomeworkTypeForm from './homeworkTypeForm';
 import HomeworkTypeTable from './homeworkTypeTable';
@@ -49,6 +52,7 @@ const HomeworkTypeCreation = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteHomeworkTypeMutation,
   });
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   /**
    * Handles closing of the add/edit dialog
@@ -163,20 +167,39 @@ const HomeworkTypeCreation = () => {
             size="small"
             color="error"
             onClick={async () => {
-              try {
-                const payload = {
-                  academicMediumId: (currentMedium as any).id,
-                  id: selectedData?.id,
-                };
-                await deleteHomeworkType(payload).unwrap();
-                deleteDialog.onFalse();
-                setSelectedData(null);
-                shikshaMitraToast.success({
-                  message: `Homework Type "${selectedData?.homeworkTypeName}" deleted successfully`,
-                });
-              } catch (error) {
-                console.error('Failed to delete homework type', error);
-              }
+              confirmWithUndo({
+                item: selectedData,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    homeworkTypesApi.util.updateQueryData(
+                      'getHomeworkTypes',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft.findIndex((item: any) => item.id === selectedData?.id);
+                        setDeleteIndex(index);
+                        if (index !== -1) draft.splice(index, 1);
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    homeworkTypesApi.util.updateQueryData(
+                      'getHomeworkTypes',
+                      undefined,
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selectedData);
+                      }
+                    )
+                  ),
+                onCommit: () =>
+                  deleteHomeworkType({
+                    academicMediumId: (currentMedium as any).id,
+                    homeworkTypeId: selectedData?.id,
+                  }),
+              });
+              deleteDialog.onFalse();
+              setSelectedData(null);
             }}
           >
             Yes

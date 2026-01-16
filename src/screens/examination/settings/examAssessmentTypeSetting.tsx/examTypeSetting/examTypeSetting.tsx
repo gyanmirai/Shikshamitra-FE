@@ -10,16 +10,17 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
 import {
+  examinationTypeApi,
   useGetExaminationTypesQuery,
   useDeleteExaminationTypeMutation,
 } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
@@ -56,24 +57,13 @@ const ExamTypeSettings = () => {
   const confirmDeleteDialog = useBoolean();
   // Redux state indicating if there are unsaved changes.
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const { confirmWithUndo } = useConfirmWithUndo();
   // Redux dispatch function for dispatching actions.
   const dispatch = useDispatch();
   // State for tracking whether the form is in edit mode.
   const [isEdit, setIsEdit] = useState(false);
   // State for storing the currently selected exam type for editing or other actions.
   const [selectedExamType, setSelectedExamType] = useState<IExamType | null>(null);
-
-  // Function to handle the deletion of an exam type.
-  const handleDelete = (comingExamType: IExamType | null) => {
-    // Filter out the deleted exam type from the table data.
-    setExamTypeTable((prevData) =>
-      prevData.filter((examType) => examType.id !== comingExamType?.id)
-    );
-    confirmDeleteDialog.onFalse();
-    shikshaMitraToast.success({
-      message: `${comingExamType?.examType} Exam Type deleted successfully`,
-    });
-  };
 
   // Function to handle form submission for creating or editing an exam type.
   const handleSubmit = (values: any) => {
@@ -196,7 +186,7 @@ const ExamTypeSettings = () => {
             },
           },
         ]}
-        data={examTypeData?.data}
+        data={examTypeData?.data || []}
       />
 
       <CustomDialog
@@ -255,20 +245,41 @@ const ExamTypeSettings = () => {
             color="error"
             size="small"
             onClick={async () => {
-              try {
-                const payload = {
-                  academicMediumId: (currentMedium as any).id,
-                  id: (selectedExamType as any).id,
-                };
-                await deleteExamType(payload).unwrap();
-                confirmDeleteDialog.onFalse();
-                setSelectedExamType(null);
-                shikshaMitraToast.success({
-                  message: `Exam type &quot;${selectedExamType?.examType}&quot; deleted successfully`,
-                });
-              } catch (error) {
-                console.error('Failed to delete exam type', error);
-              }
+              confirmWithUndo({
+                item: selectedExamType,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    examinationTypeApi.util.updateQueryData(
+                      'getExaminationTypes',
+                      { academicMediumId: (currentMedium as any).id },
+                      (draft: any) => {
+                        const index = draft.data.findIndex(
+                          (item: any) => item.id === (selectedExamType as any).id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) draft.data.splice(index, 1);
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    examinationTypeApi.util.updateQueryData(
+                      'getExaminationTypes',
+                      { academicMediumId: (currentMedium as any).id },
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.data.splice(index, 0, selectedExamType);
+                      }
+                    )
+                  ),
+                onCommit: () =>
+                  deleteExamType({
+                    academicMediumId: (currentMedium as any).id,
+                    id: (selectedExamType as any).id,
+                  }).unwrap(),
+              });
+              confirmDeleteDialog.onFalse();
+              setSelectedExamType(null);
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >

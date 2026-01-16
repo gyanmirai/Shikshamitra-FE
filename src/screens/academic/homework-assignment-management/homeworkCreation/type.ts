@@ -39,6 +39,7 @@ export interface IHomework {
   createdBy: TeacherProfile; // includes name, email, avatar, etc.
   divisions: DivisionHomeworkMeta[]; // ✅ Each division with its own dates
   divisionMeta?: DivisionHomeworkMeta;
+  status?: number;
 }
 
 export interface IHomeworkDetail {

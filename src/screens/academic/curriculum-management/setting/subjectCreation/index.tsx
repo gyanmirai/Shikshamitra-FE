@@ -10,13 +10,16 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteSubjectMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
+import {
+  subjectsApi,
+  useDeleteSubjectMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import SettingSubjectForm from './subjectForm';
 import SettingSubjectTable from './settingSubjectTable';
@@ -35,6 +38,7 @@ const SubjectCreation = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteSubjectMutation,
   });
+  const { confirmWithUndo } = useConfirmWithUndo();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
   // Breadcrumb navigation links based on form state
@@ -43,7 +47,6 @@ const SubjectCreation = () => {
   const [selectedSubject, setSelectedSubject] = useState<ISubject | null>(null);
   // Redux dispatch
   const dispatch = useDispatch();
-
   // Handles closing the incident form
   const handleClose = (_e: any, isSubmit?: boolean) => {
     const resetState = () => {
@@ -161,20 +164,41 @@ const SubjectCreation = () => {
             color="error"
             size="small"
             onClick={async () => {
-              try {
-                const payload = {
-                  academicMediumId: (currentMedium as any).id,
-                  id: (selectedSubject as any).id,
-                };
-                await deleteSubject(payload).unwrap();
-                deleteSubjectDialog.onFalse();
-                setSelectedSubject(null);
-                shikshaMitraToast.success({
-                  message: `Subject &quot;${selectedSubject?.name}&quot; deleted successfully`,
-                });
-              } catch (error) {
-                console.error('Failed to delete subject', error);
-              }
+              confirmWithUndo({
+                item: selectedSubject,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    subjectsApi.util.updateQueryData(
+                      'getSubjects',
+                      { academicMediumId: (currentMedium as any).id },
+                      (draft: any) => {
+                        const index = draft.findIndex(
+                          (item: any) => item.id === (selectedSubject as any).id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) draft.splice(index, 1);
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    subjectsApi.util.updateQueryData(
+                      'getSubjects',
+                      { academicMediumId: (currentMedium as any).id },
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selectedSubject);
+                      }
+                    )
+                  ),
+                onCommit: () =>
+                  deleteSubject({
+                    academicMediumId: (currentMedium as any).id,
+                    id: (selectedSubject as any).id,
+                  }),
+              });
+              deleteSubjectDialog.onFalse();
+              setSelectedSubject(null);
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >

@@ -13,13 +13,14 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import assignmentTableData from 'src/json/academic/homeworkAssignment/assignment-table-data.json';
 import {
+  assignmentApi,
   useDeleteAssignmentMutation,
   usePublishAssignmentMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
@@ -75,6 +76,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
     type: 'mutation',
     currentQueryAndMutation: usePublishAssignmentMutation,
   });
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // Update classes when organization changes
   useEffect(() => {
@@ -276,20 +278,51 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             size="small"
             loading={isDeleteLoading}
             onClick={async () => {
-              try {
-                await deleteAssignment(selectedAssignment?.id).unwrap();
-
-                shikshaMitraToast.success({
-                  message: `Assignment for "${selectedAssignment?.subjectName}" has been successfully deleted from Class ${classes} - ${division}.`,
-                });
-
-                deleteAssignmentDialog.onFalse();
-                setSelectedAssignment(null);
-              } catch (error: any) {
-                shikshaMitraToast.error({
-                  message: error?.data?.message || 'Failed to delete assignment.',
-                });
-              }
+              confirmWithUndo({
+                item: selectedAssignment,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    assignmentApi.util.updateQueryData(
+                      'getAssignments',
+                      {
+                        classId: allClass.find((org: any) => org?.id === classes)?.id,
+                        divisionId: allClass
+                          .find((org: any) => org?.id === classes)
+                          ?.divisions?.find((d: any) => d?.name === division)?.id,
+                        subjectId: subject,
+                        assignmentDate: date?.toISOString(),
+                      },
+                      (draft: any) => {
+                        const index = draft.findIndex(
+                          (item: any) => item.id === selectedAssignment?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) draft.splice(index, 1);
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    assignmentApi.util.updateQueryData(
+                      'getAssignments',
+                      {
+                        classId: allClass.find((org: any) => org?.id === classes)?.id,
+                        divisionId: allClass
+                          .find((org: any) => org?.id === classes)
+                          ?.divisions?.find((d: any) => d?.name === division)?.id,
+                        subjectId: subject,
+                        assignmentDate: date?.toISOString(),
+                      },
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selectedAssignment);
+                      }
+                    )
+                  ),
+                onCommit: () => deleteAssignment(selectedAssignment?.id),
+              });
+              deleteAssignmentDialog.onFalse();
+              setSelectedAssignment(null);
             }}
           >
             Yes
@@ -317,25 +350,63 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
             loading={isPublishLoading}
             startIcon={<Iconify icon={GlobalIcons.publish} />}
             onClick={async () => {
-              try {
-                const payload = {
-                  assignmentId: selectedAssignment?.id,
-                  status: 'PUBLISHED',
-                };
+              const nextStatus = 'PUBLISHED';
 
-                await publishAssignment(payload).unwrap();
+              confirmWithUndo({
+                item: selectedAssignment,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    assignmentApi.util.updateQueryData(
+                      'getAssignments',
+                      {
+                        classId: allClass.find((org: any) => org?.id === classes)?.id,
+                        divisionId: allClass
+                          .find((org: any) => org?.id === classes)
+                          ?.divisions?.find((d: any) => d?.name === division)?.id,
+                        subjectId: subject,
+                        assignmentDate: date?.toISOString(),
+                      },
+                      (draft: any) => {
+                        const index = draft.findIndex(
+                          (item: any) => item.id === selectedAssignment?.id
+                        );
+                        if (index !== -1) {
+                          draft[index].status = nextStatus;
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    assignmentApi.util.updateQueryData(
+                      'getAssignments',
+                      {
+                        classId: allClass.find((org: any) => org?.id === classes)?.id,
+                        divisionId: allClass
+                          .find((org: any) => org?.id === classes)
+                          ?.divisions?.find((d: any) => d?.name === division)?.id,
+                        subjectId: subject,
+                        assignmentDate: date?.toISOString(),
+                      },
+                      (draft: any) => {
+                        const itemIndex = draft.findIndex(
+                          (item: any) => item.id === selectedAssignment?.id
+                        );
+                        if (itemIndex !== -1) {
+                          draft[itemIndex].status = selectedAssignment?.status;
+                        }
+                      }
+                    )
+                  ),
+                onCommit: () =>
+                  publishAssignment({
+                    assignmentId: selectedAssignment?.id,
+                    status: nextStatus,
+                  }),
+              });
 
-                shikshaMitraToast.success({
-                  message: `Assignment has been successfully published for "${selectedAssignment?.subjectName}" subject in Class ${classes} - ${division}.`,
-                });
-
-                publishAssignmentDialog.onFalse();
-                setSelectedAssignment(null);
-              } catch (error: any) {
-                shikshaMitraToast.error({
-                  message: error?.data?.message || 'Failed to publish assignment.',
-                });
-              }
+              publishAssignmentDialog.onFalse();
+              setSelectedAssignment(null);
             }}
           >
             Publish

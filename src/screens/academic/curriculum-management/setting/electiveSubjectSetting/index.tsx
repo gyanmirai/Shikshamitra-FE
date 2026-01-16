@@ -3,17 +3,23 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import {
+  electiveGroupsApi,
+  useDeleteElectiveGroupMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 
 import ElectiveSubjectTable from './components/electiveSubjectTable';
 import SettingElectiveSubjectForm from './components/electiveSubjectForm';
@@ -33,6 +39,13 @@ const ElectiveSubjectSetting = () => {
   // Redux state and dispatch
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
+  const [deleteElectiveGroup, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteElectiveGroupMutation,
+  });
+  const { confirmWithUndo } = useConfirmWithUndo();
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
   // Local state management
   const [selected, setSelected] = useState<IElectiveSubject | null>(null);
@@ -157,22 +170,50 @@ const ElectiveSubjectSetting = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
             onClick={() => {
-              // handle delete
+              confirmWithUndo({
+                item: selected,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    electiveGroupsApi.util.updateQueryData(
+                      'getElectiveGroups',
+                      { academicMediumId: (currentMedium as any)?.id },
+                      (draft: any) => {
+                        const index = draft.findIndex((item: any) => item.id === selected?.id);
+                        setDeleteIndex(index);
+                        if (index !== -1) draft.splice(index, 1);
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    electiveGroupsApi.util.updateQueryData(
+                      'getElectiveGroups',
+                      { academicMediumId: (currentMedium as any)?.id },
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selected);
+                      }
+                    )
+                  ),
+                onCommit: () =>
+                  deleteElectiveGroup({
+                    academicMediumId: (currentMedium as any)?.id,
+                    id: (selected as any)?.id,
+                  }),
+              });
               deleteDialog.onFalse();
               setSelected(null);
-              shikshaMitraToast.success({
-                message: `Subject ${selected?.name} deleted successfully`,
-              });
             }}
             // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { Standards, Organization } from 'src/types/school';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 import type { TimeSlot, DayOfWeek } from 'src/components/timetable/types';
 
 import dayjs from 'dayjs';
@@ -452,7 +453,35 @@ const TimeTableGrid = () => {
     ),
     [handleOpenDialog]
   );
-
+  const columns: IColumn[] = useMemo(
+    () => [
+      { id: 'division', label: 'Division' },
+      {
+        id: 'status',
+        label: 'Status',
+        filterType: 'enum',
+        enumOptions: TimetableStatusOptions,
+        align: 'left',
+        render(value, row) {
+          const color = TimetableStatusColors[value as TimetableStatusType] as LabelColor;
+          return <Label color={color}>{TimetableStatusType[value]}</Label>;
+        },
+      },
+      {
+        id: 'action',
+        label: 'Action',
+        minWidth: 40,
+        align: 'left',
+        sticky: true,
+        isSort: false,
+        isFilter: false,
+        render: (value, row) => (
+          <ThreeDotsActions actions={(prop) => actions({ ...prop, row })} placement="right-top" />
+        ),
+      },
+    ],
+    [actions]
+  );
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {open ? (
@@ -532,35 +561,7 @@ const TimeTableGrid = () => {
           <CustomizableTable
             tableId="timetable-table"
             noDataText="No Time Table Data Found"
-            columns={[
-              { id: 'division', label: 'Division' },
-              {
-                id: 'status',
-                label: 'Status',
-                filterType: 'enum',
-                enumOptions: TimetableStatusOptions,
-                align: 'left',
-                render(value, row) {
-                  const color = TimetableStatusColors[value as TimetableStatusType] as LabelColor;
-                  return <Label color={color}>{TimetableStatusType[value]}</Label>;
-                },
-              },
-              {
-                id: 'action',
-                label: 'Action',
-                minWidth: 40,
-                align: 'left',
-                sticky: true,
-                isSort: false,
-                isFilter: false,
-                render: (value, row) => (
-                  <ThreeDotsActions
-                    actions={(prop) => actions({ ...prop, row })}
-                    placement="right-top"
-                  />
-                ),
-              },
-            ]}
+            columns={columns}
             data={[
               {
                 id: 1,

@@ -7,11 +7,12 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
+  quizManagementApi,
   useGetQuizzesQuery,
   useDeleteQuizMutation,
 } from 'src/redux/academicAPI/ExaminationApi/quizManagementApi/quizManagementApi';
@@ -42,6 +43,7 @@ const ActiveQuiz = () => {
 
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // State to control quiz portal visibility
   const [open, setOpen] = useState(false);
@@ -60,18 +62,6 @@ const ActiveQuiz = () => {
   const handleDeleteClick = (row: any) => {
     setSelectedQuizData(row);
     deleteQuizDialog.onTrue();
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      if (selectedQuizData?.id) {
-        await deleteQuiz(selectedQuizData.id).unwrap();
-        shikshaMitraToast.success({ message: 'Quiz deleted successfully' });
-        deleteQuizDialog.onFalse();
-      }
-    } catch (error) {
-      console.error('Error deleting quiz:', error);
-    }
   };
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -120,7 +110,7 @@ const ActiveQuiz = () => {
       ) : (
         <QuizTable
           addQuizDialog={addQuizDialog}
-          handleDelete={handleDeleteClick}
+          onDelete={handleDeleteClick}
           onEdit={handleEdit}
           data={quizzes || []}
           onTogglePublish={handleTogglePublish}
@@ -150,7 +140,43 @@ const ActiveQuiz = () => {
             startIcon={<Iconify icon={GlobalIcons.delete} />}
             variant="contained"
             color="error"
-            onClick={handleDeleteConfirm}
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedQuizData,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    quizManagementApi.util.updateQueryData(
+                      'getQuizzes',
+                      { academicMediumId: currentMedium?.id },
+                      (draft: any) => {
+                        const index = draft.data.findIndex(
+                          (item: any) => item.id === (selectedQuizData as any).id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) draft.data.splice(index, 1);
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    quizManagementApi.util.updateQueryData(
+                      'getQuizzes',
+                      { academicMediumId: currentMedium?.id },
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.data.splice(index, 0, selectedQuizData);
+                      }
+                    )
+                  ),
+                onCommit: async () => {
+                  if (selectedQuizData?.id) {
+                    await deleteQuiz(selectedQuizData.id).unwrap();
+                  }
+                },
+              });
+              deleteQuizDialog.onFalse();
+              setSelectedQuizData(null);
+            }}
           >
             Delete
           </Button>

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 'use client';
 
 import type { Medium } from 'src/types/school';
@@ -34,7 +36,9 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ open, onClose, editDa
     currentQueryAndMutation: useAddSubjectMutation,
   });
   const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     data: subjectById,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isLoading,
     isFetching,
   } = useQueryAndMutation({

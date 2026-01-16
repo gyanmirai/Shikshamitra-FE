@@ -73,7 +73,7 @@ const SentNotificationTableView = () => {
       },
       {
         id: 'category',
-        label: 'Category',
+        label: 'Template',
         align: 'left',
       },
       {

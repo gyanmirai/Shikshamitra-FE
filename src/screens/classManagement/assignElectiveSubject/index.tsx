@@ -286,6 +286,8 @@ const AssignElectiveSubject = () => {
             id: 'electiveSubjects',
             label: '',
             minWidth: '500px',
+            isFilter: false,
+            isSort: false,
             renderColumn: () => {
               if (!students || students.length === 0) return null;
 
