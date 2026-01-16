@@ -74,7 +74,7 @@ const MarksFeedbackHomeworkAssignment = () => {
 
             setSearchParams({ tab: value });
           }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}
           role="tablist"
         >
           {TABS.map((tab) => (

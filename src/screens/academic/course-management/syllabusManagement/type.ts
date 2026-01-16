@@ -47,6 +47,7 @@ export interface IAddNewChapterProps {
 
 export interface IChapterTableProps {
   onDelete: (chapter: IChapter) => void;
+  isLoading: boolean;
   setEditData: React.Dispatch<React.SetStateAction<IChapter | null>>;
   addChapterDialog: UseBooleanReturn;
   data: IChapter[];

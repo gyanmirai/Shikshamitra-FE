@@ -155,53 +155,49 @@ const SeatAllocationSection = ({
 
   return (
     <Grid container spacing={1} height="calc(100vh - 150px)" p={2}>
-      {division && (
-        <Grid size={2.5} height="100%">
-          <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
-            >
-              Total Students : {seatAllocationStudentsData?.length}
+      <Grid size={2.5} height="100%">
+        <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
+          >
+            Total Students : {seatAllocationStudentsData?.length}
+          </Box>
+          <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
+            <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
+              {[...students]
+                .sort((a, b) => Number(a.isRoomAssign) - Number(b.isRoomAssign))
+                .map((student) => (
+                  <StudentCard key={student.id} student={student} theme={theme} />
+                ))}
             </Box>
-            <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
-              <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
-                {[...students]
-                  .sort((a, b) => Number(a.isRoomAssign) - Number(b.isRoomAssign))
-                  .map((student) => (
-                    <StudentCard key={student.id} student={student} theme={theme} />
-                  ))}
-              </Box>
-            </Scrollbar>
-          </Paper>
-        </Grid>
-      )}
-      {division && classRoom && (
-        <Grid size={9} height="100%">
-          <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
-            <SeatManagement
-              selectedRoom={{
-                id: 1,
-                roomName: 'A101',
-                capacity: 24,
-                building: 'Main',
-                floor: '1st',
-                roomType: 'Exam',
-                totalBenches: 12,
-                benchCapacity: 2,
-                rows: 6,
-                columns: 2,
-                features: ['Projector'],
-              }}
-              onStudentRemove={handleStudentRemove}
-              assignedData={assignedData}
-              onStudentDrop={handleStudentDrop}
-              onSeatSwap={handleSeatSwap}
-            />
-          </Paper>
-        </Grid>
-      )}
+          </Scrollbar>
+        </Paper>
+      </Grid>
+      <Grid size={9} height="100%">
+        <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
+          <SeatManagement
+            selectedRoom={{
+              id: 1,
+              roomName: 'A101',
+              capacity: 24,
+              building: 'Main',
+              floor: '1st',
+              roomType: 'Exam',
+              totalBenches: 12,
+              benchCapacity: 2,
+              rows: 6,
+              columns: 2,
+              features: ['Projector'],
+            }}
+            onStudentRemove={handleStudentRemove}
+            assignedData={assignedData}
+            onStudentDrop={handleStudentDrop}
+            onSeatSwap={handleSeatSwap}
+          />
+        </Paper>
+      </Grid>
     </Grid>
   );
 };

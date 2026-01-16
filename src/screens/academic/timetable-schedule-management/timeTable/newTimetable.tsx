@@ -369,6 +369,7 @@ const TimeTableGrid = () => {
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store selected class/standard ID
   const [classes, setClasses] = useState<string>('');
+  const [division, setDivision] = useState<string>('');
 
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -429,6 +430,7 @@ const TimeTableGrid = () => {
             <MenuItem
               onClick={() => {
                 handleOpenDialog();
+                setDivision(row.division);
               }}
             >
               <Iconify icon="mdi:add" sx={{ height: '16px', width: '16px' }} />
@@ -531,7 +533,7 @@ const TimeTableGrid = () => {
         open={open}
         fullScreen
       >
-        <TImeTableForm />
+        <TimeTableForm selectedClass={classes} selectedDivision={division} />
       </CustomDialog>
 
       {!open && (
@@ -541,15 +543,15 @@ const TimeTableGrid = () => {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              mb: 2,
               ml: 1,
+              mb: 1,
             }}
           >
             <CustomSelect
               label="Class"
               name="class"
               options={allClass}
-              valueKey="id"
+              valueKey="name"
               labelKey="name"
               formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
               value={classes}
@@ -648,7 +650,13 @@ const TimeTableGrid = () => {
 
 export default TimeTableGrid;
 
-const TImeTableForm = () => {
+const TimeTableForm = ({
+  selectedClass,
+  selectedDivision,
+}: {
+  selectedClass: string;
+  selectedDivision: string;
+}) => {
   const formik = useFormik<{ slots: Record<DayOfWeek, TimeSlot[]> }>({
     initialValues: {
       slots: generateWeeklySlots(DEFAULT_CONFIG),
@@ -682,8 +690,18 @@ const TImeTableForm = () => {
           }}
         >
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <Typography>Class : Class 10</Typography>
-            <Typography>Division : A</Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
+              Class :
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+              {selectedClass}
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 500, color: 'text.secondary' }}>
+              Division :
+            </Typography>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+              {selectedDivision}
+            </Typography>
           </Box>
 
           <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
@@ -711,6 +729,8 @@ const TImeTableForm = () => {
           onChange={(value) => formik.setFieldValue('slots', value)}
           subjects={MOCK_SUBJECTS}
           readOnly={false}
+          selectedClass={selectedClass}
+          selectedDivision={selectedDivision}
         />
       </Box>
     </DialogScrollContent>

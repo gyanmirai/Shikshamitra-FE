@@ -3,17 +3,19 @@
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
-import { Box, Card, Button } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
+import { Box, Card } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 // import examTableData from 'src/json/examination/examTableData.json';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
+  scheduleExamApi,
   useGetExamsQuery,
   useDeleteExamMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
@@ -50,27 +52,38 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     },
   });
 
-  const [deleteExam] = useQueryAndMutation({
+  const [deleteExam, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteExamMutation,
   });
 
+  const { confirmWithUndo } = useConfirmWithUndo();
+
   const handleDeleteExam = async () => {
-    try {
-      if (selectedExam?.id) {
+    confirmWithUndo({
+      item: selectedExam,
+      onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+        dispatchFn(
+          scheduleExamApi.util.updateQueryData(
+            'getExams',
+            { academicMediumId: medium?.id },
+            (draft: any) => {
+              const index = draft.findIndex((item: any) => item.id === selectedExam?.id);
+              setDeleteIndex(index);
+              if (index !== -1) draft.splice(index, 1);
+            }
+          )
+        ),
+      onUndoRestore: () => getExams.refetch(),
+      onCommit: async () => {
         await deleteExam({
-          examId: selectedExam.id,
+          examId: selectedExam?.id,
           academicMediumId: medium?.id,
-        }).unwrap();
-        shikshaMitraToast.success({
-          message: `Exam ${selectedExam?.examName} deleted successfully`,
         });
-        deleteDialog.onFalse();
-        setSelectedExam(null);
-      }
-    } catch (error) {
-      console.error(error);
-    }
+      },
+    });
+    deleteDialog.onFalse();
+    setSelectedExam(null);
   };
 
   /**
@@ -104,7 +117,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
               { name: 'Examination', href: '/academic/scheduleExam' },
               { name: 'Schedule Exam' },
             ]}
-            sx={{ px: 1 }}
+            sx={{ px: 2 }}
             isBack
             onBack={() => {
               handleClose(null, false);
@@ -119,7 +132,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
               { name: 'Examination', href: '/academic/examinationDashboard' },
               { name: 'Schedule Exam' },
             ]}
-            sx={{ px: 1 }}
+            sx={{ px: 2 }}
           />
         ))}
       {open ? (
@@ -159,9 +172,15 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           </>
         }
         action={
-          <Button variant="contained" color="error" size="small" onClick={handleDeleteExam}>
+          <LoadingButton
+            loading={isDeleteLoading}
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={handleDeleteExam}
+          >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
 
