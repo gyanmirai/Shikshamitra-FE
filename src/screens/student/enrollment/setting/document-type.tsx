@@ -192,6 +192,8 @@ const StudentDocumentType = () => {
                       { ...query },
                       (draft: any) => {
                         const index = draft.items?.findIndex((b: any) => b.id === editData?.id);
+                        console.log('editData----', editData);
+                        console.log('index---', index);
                         setDeleteIndex(index);
                         if (index !== -1) {
                           draft.items.splice(index, 1);
@@ -205,6 +207,9 @@ const StudentDocumentType = () => {
                       'getStudentDocumentType',
                       { ...query },
                       (draft: any) => {
+                        console.log('draft.items----', draft.items);
+                        console.log('index in undo restore----', index);
+
                         if (!draft.items) return;
                         draft.items.splice(index, 0, editData);
                       }

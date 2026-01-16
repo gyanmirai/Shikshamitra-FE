@@ -13,13 +13,14 @@ import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import {
+  subjectAssignmentsApi,
   useDeleteSubjectAssignmentMutation,
   usePublishSubjectAssignmentMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -40,7 +41,50 @@ const Subject = () => {
     type: 'mutation',
     currentQueryAndMutation: usePublishSubjectAssignmentMutation,
   });
-  // State to manage subject table data and filtered data
+  const { confirmWithUndo } = useConfirmWithUndo();
+
+  // Query hook to fetch class data
+  // State to store all classes/standards for the selected organization
+  const [allClass, setAllClass] = useState<Standards[]>([]);
+  // State to store selected class/standard ID
+  const [classes, setClasses] = useState<string>('');
+  const [classId, setClassId] = useState<string>('');
+
+  // Get current board, medium and medium setter from global state
+  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
+
+  // Update classes when organization changes
+  useEffect(() => {
+    // Flatten the list of standards from all stages
+    const allClasses =
+      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+
+    setAllClass(allClasses);
+    setClassId(allClasses[0]?.id || '');
+    setClasses(allClasses[0]?.name || '');
+  }, [medium]);
+
+  // const { data: subjectTableData = [], isLoading: isTableLoading } = useGetSubjectAssignmentsQuery(
+  //   {
+  //     academicMediumId: medium?.id,
+  //     classId,
+  //   },
+  //   { skip: !medium?.id || !classId }
+  // );
+  // URL search parameter state for form visibility
+  const addSubjectDialog = useBoolean();
+  // Dialog control for delete confirmation
+  const deleteConfirmDialog = useBoolean();
+  // Dialog control for publish/unpublish confirmation
+  const confirmPublishDialog = useBoolean();
+  // Dialog control for viewing subject details
+  const showSubjectDialog = useBoolean();
+  // State for managing selected subject and edit mode
+  // State to store the currently selected subject for editing/viewing
+  const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
+  // Boolean flag to track if we're in edit mode
+  const [isEdit, setIsEdit] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [subjectTableData, setSubjectTableData] = useState<any[]>([
     {
       id: 'math-assign-id',
@@ -161,42 +205,6 @@ const Subject = () => {
       ],
     },
   ]);
-
-  // Query hook to fetch class data
-  // State to store all classes/standards for the selected organization
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store selected class/standard ID
-  const [classes, setClasses] = useState<string>('');
-  const [classId, setClassId] = useState<string>('');
-
-  // Get current board, medium and medium setter from global state
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
-  // Update classes when organization changes
-  useEffect(() => {
-    // Flatten the list of standards from all stages
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    setAllClass(allClasses);
-    setClassId(allClasses[0]?.id || '');
-    setClasses(allClasses[0]?.name || '');
-  }, [medium]);
-  // URL search parameter state for form visibility
-  const addSubjectDialog = useBoolean();
-  // Dialog control for delete confirmation
-  const deleteConfirmDialog = useBoolean();
-  // Dialog control for publish/unpublish confirmation
-  const confirmPublishDialog = useBoolean();
-  // Dialog control for viewing subject details
-  const showSubjectDialog = useBoolean();
-  // State for managing selected subject and edit mode
-  // State to store the currently selected subject for editing/viewing
-  const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
-  console.log('selectedSubject-----', selectedSubject);
-  // Boolean flag to track if we're in edit mode
-  const [isEdit, setIsEdit] = useState(false);
-
   // Get the changes status from the confirm popup redux state
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
@@ -240,40 +248,6 @@ const Subject = () => {
     setTimeout(() => {
       setSelectedSubject(null);
     }, 100);
-  };
-
-  // Delete selected subject from table
-  const handleDelete = () => {
-    if (selectedSubject) {
-      setSubjectTableData(subjectTableData.filter((subject) => subject.id !== selectedSubject.id));
-      deleteConfirmDialog.onFalse();
-      setSelectedSubject(null);
-      shikshaMitraToast.success({
-        message:
-          selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
-            <>
-              Subject :{' '}
-              <strong>
-                {selectedSubject.subjectName
-                  .map((name: any, index: any) => {
-                    const code = selectedSubject.subjectCode?.[index] || '';
-                    return `${name} (${code})`;
-                  })
-                  .join(' , ')}
-              </strong>{' '}
-              removed successfully from class {classes}.
-            </>
-          ) : (
-            <>
-              Subject :{' '}
-              <strong>
-                {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
-              </strong>{' '}
-              removed successfully from class {classes}.
-            </>
-          ),
-      });
-    }
   };
 
   return (
@@ -441,42 +415,39 @@ const Subject = () => {
             size="small"
             startIcon={<Iconify icon={GlobalIcons.delete} />}
             onClick={async () => {
-              try {
-                await deleteSubjectAssignment({
-                  subjectAssignmentId: selectedSubject?.id,
-                }).unwrap();
+              confirmWithUndo({
+                item: selectedSubject,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    subjectAssignmentsApi.util.updateQueryData(
+                      'getSubjectAssignments',
+                      { academicMediumId: medium?.id, classId },
+                      (draft: any) => {
+                        const index = draft.findIndex((b: any) => b.id === selectedSubject?.id);
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    subjectAssignmentsApi.util.updateQueryData(
+                      'getSubjectAssignments',
+                      { academicMediumId: medium?.id, classId },
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.splice(index, 0, selectedSubject);
+                      }
+                    )
+                  ),
 
-                shikshaMitraToast.success({
-                  message:
-                    selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
-                      <>
-                        Subject :{' '}
-                        <strong>
-                          {selectedSubject.subjectName
-                            .map((name: any, index: number) => {
-                              const code = selectedSubject.subjectCode?.[index] || '';
-                              return `${name} (${code})`;
-                            })
-                            .join(', ')}
-                        </strong>{' '}
-                        deleted successfully.
-                      </>
-                    ) : (
-                      <>
-                        Subject :{' '}
-                        <strong>
-                          {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
-                        </strong>{' '}
-                        deleted successfully.
-                      </>
-                    ),
-                });
-
-                deleteConfirmDialog.onFalse();
-                setSelectedSubject(null);
-              } catch (error) {
-                console.error('Delete subject failed', error);
-              }
+                onCommit: () =>
+                  deleteSubjectAssignment({ assignmentId: selectedSubject?.id || '' }),
+              });
+              deleteConfirmDialog.onFalse();
+              setSelectedSubject(null);
             }}
           >
             Yes
@@ -529,50 +500,49 @@ const Subject = () => {
               />
             }
             onClick={async () => {
-              try {
-                const nextStatus =
-                  selectedSubject?.status === PublishUnpublishStatusType.Published
-                    ? PublishUnpublishStatusType.Draft
-                    : PublishUnpublishStatusType.Published;
+              const nextStatus =
+                selectedSubject?.status === PublishUnpublishStatusType.Published
+                  ? PublishUnpublishStatusType.Draft
+                  : PublishUnpublishStatusType.Published;
 
-                await publishSubjectAssignment({
-                  assignmentId: selectedSubject?.id,
-                  status: nextStatus,
-                }).unwrap();
-
-                const statusText =
-                  nextStatus === PublishUnpublishStatusType.Published ? 'Published' : 'Draft';
-
-                shikshaMitraToast.success({
-                  message:
-                    selectedSubject && Array.isArray(selectedSubject.subjectName) ? (
-                      <>
-                        Subject :{' '}
-                        <strong>
-                          {selectedSubject.subjectName
-                            .map((name: any, index: number) => {
-                              const code = selectedSubject.subjectCode?.[index] || '';
-                              return `${name} (${code})`;
-                            })
-                            .join(', ')}
-                        </strong>{' '}
-                        moved to {statusText} successfully.
-                      </>
-                    ) : (
-                      <>
-                        Subject :{' '}
-                        <strong>
-                          {selectedSubject?.subjectName} ({selectedSubject?.subjectCode})
-                        </strong>{' '}
-                        moved to {statusText} successfully.
-                      </>
-                    ),
-                });
-
-                confirmPublishDialog.onFalse();
-              } catch (error) {
-                console.error('Publish / Unpublish failed', error);
-              }
+              confirmWithUndo({
+                item: selectedSubject,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    subjectAssignmentsApi.util.updateQueryData(
+                      'getSubjectAssignments',
+                      { academicMediumId: medium?.id, classId },
+                      (draft: any) => {
+                        const index = draft.findIndex((b: any) => b.id === selectedSubject?.id);
+                        if (index !== -1) {
+                          draft[index].status = nextStatus;
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    subjectAssignmentsApi.util.updateQueryData(
+                      'getSubjectAssignments',
+                      { academicMediumId: medium?.id, classId },
+                      (draft: any) => {
+                        const itemIndex = draft.findIndex((b: any) => b.id === selectedSubject?.id);
+                        if (itemIndex !== -1) {
+                          draft[itemIndex].status = selectedSubject?.status;
+                        }
+                      }
+                    )
+                  ),
+                onCommit: () =>
+                  publishSubjectAssignment({
+                    assignmentId: selectedSubject?.id,
+                    status: nextStatus,
+                  }),
+              });
+              confirmPublishDialog.onFalse();
+              setTimeout(() => {
+                setSelectedSubject(null);
+              }, 100);
             }}
           >
             {selectedSubject?.status === PublishUnpublishStatusType.Published ? 'Draft' : 'Publish'}

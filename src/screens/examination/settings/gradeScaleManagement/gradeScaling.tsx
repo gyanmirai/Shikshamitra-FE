@@ -11,15 +11,16 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
+  gradeScalingApi,
   useGetGradeScalingsQuery,
   useDeleteGradeScalingMutation,
 } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
@@ -39,6 +40,7 @@ const GradingScale = () => {
   // Redux state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
@@ -256,20 +258,41 @@ const GradingScale = () => {
             color="error"
             size="small"
             onClick={async () => {
-              try {
-                const payload = {
-                  academicMediumId: (currentMedium as any).id,
-                  id: (selectedGrade as any).id,
-                };
-                await deleteGradeScaling(payload).unwrap();
-                deleteConfirmDialog.onFalse();
-                setSelectedGrade(null);
-                shikshaMitraToast.success({
-                  message: `Grade scale &quot;${selectedGrade?.name}&quot; deleted successfully`,
-                });
-              } catch (error) {
-                console.error('Failed to delete grade scale', error);
-              }
+              confirmWithUndo({
+                item: selectedGrade,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    gradeScalingApi.util.updateQueryData(
+                      'getGradeScalings',
+                      { academicMediumId: (currentMedium as any).id },
+                      (draft: any) => {
+                        const index = draft.data.findIndex(
+                          (item: any) => item.id === (selectedGrade as any).id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) draft.data.splice(index, 1);
+                      }
+                    )
+                  ),
+                onUndoRestore: (dispatchFn, index) =>
+                  dispatchFn(
+                    gradeScalingApi.util.updateQueryData(
+                      'getGradeScalings',
+                      { academicMediumId: (currentMedium as any).id },
+                      (draft: any) => {
+                        if (!draft) return;
+                        draft.data.splice(index, 0, selectedGrade);
+                      }
+                    )
+                  ),
+                onCommit: () =>
+                  deleteGradeScaling({
+                    academicMediumId: (currentMedium as any).id,
+                    id: (selectedGrade as any).id,
+                  }).unwrap(),
+              });
+              deleteConfirmDialog.onFalse();
+              setSelectedGrade(null);
             }}
             startIcon={<Iconify icon={GlobalIcons.delete} />}
           >

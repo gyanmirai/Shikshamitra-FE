@@ -229,7 +229,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           ),
         },
       ]}
-      data={filteredData}
+      data={filteredData || []}
     />
   );
 };

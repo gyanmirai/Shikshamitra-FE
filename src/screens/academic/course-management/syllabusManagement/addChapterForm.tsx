@@ -274,16 +274,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     handleFileUpload(files);
                   }}
                   value={formik.values.documents}
-                  label="Upload Your Subject Documents"
-                  outputFormat="file"
-                />
-                <CustomUpload
-                  multiple
-                  previewCount={6}
-                  onChange={(files: any) => formik.setFieldValue('documents', files)}
-                  value={formik.values.documents}
                   label="Upload Your Chapter Documents"
-                  helperText="Maximum file size is 5MB"
                   outputFormat="file"
                 />
               </Grid>
