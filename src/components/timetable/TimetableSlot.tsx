@@ -6,7 +6,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Button, Tooltip, MenuItem, MenuList, Typography } from '@mui/material';
 
 import { shikshaMitraToast } from '../toast';
 import { SlotType, ItemTypes } from './types';
@@ -205,8 +205,12 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     );
   };
 
-  const hasAnyTeacher = displaySubjects.some((s) => s.teacherName);
-  const hasAnyRoom = displaySubjects.some((s) => s.roomName);
+  const COMPACT_SLOT_HEIGHT = 45; // px
+  const isCompactSlot = height <= COMPACT_SLOT_HEIGHT;
+  const subjectNames = displaySubjects.map((s) => s.name);
+  const fullText = subjectNames.join(' | ');
+  const firstSubject = displaySubjects[0]?.name;
+  const extraCount = displaySubjects.length - 1;
 
   return (
     <Box ref={attachRef} sx={getSx()}>
@@ -245,21 +249,23 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
               textAlign: 'center',
             }}
           >
-            <Typography variant="body2" fontWeight="bold" sx={{ lineHeight: 1.1 }}>
-              {isBreak ? `${slot.breakType} BREAK` : displaySubjects.map((s) => s.name).join(' | ')}
-            </Typography>
+            {!isCompactSlot ? (
+              <Typography variant="body2" fontWeight="bold">
+                {isBreak ? `${slot.breakType} BREAK` : subjectNames.join(' | ')}
+              </Typography>
+            ) : (
+              <Tooltip title={fullText}>
+                <Box>
+                  <Typography variant="body2" fontWeight="bold">
+                    {isBreak ? slot.breakType : firstSubject}
+                  </Typography>
 
-            {/* {hasAnyTeacher && (
-                <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
-                  {displaySubjects.map((s) => s.teacherName || '-').join(' | ')}
-                </Typography>
-              )}
-
-              {hasAnyRoom && (
-                <Typography variant="caption" display="block">
-                  {displaySubjects.map((s) => s.roomName || '-').join(' | ')}
-                </Typography>
-              )} */}
+                  {!isBreak && extraCount > 0 && (
+                    <Typography variant="caption">+{extraCount}</Typography>
+                  )}
+                </Box>
+              </Tooltip>
+            )}
           </Box>
         </Box>
       </CustomTooltip>

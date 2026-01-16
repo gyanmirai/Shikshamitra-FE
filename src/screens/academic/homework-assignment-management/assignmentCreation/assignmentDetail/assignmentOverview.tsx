@@ -6,7 +6,6 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { SubmissionType } from 'src/enums/submission_type';
 import DocumentCard from 'src/components/preview-document/DocumentCard';
 import {
   PublishUnpublishStatusType,
@@ -28,6 +27,8 @@ import {
   ListItemAvatar,
 } from '@mui/material';
 
+import { InfoItem } from './assignmentDetail';
+
 import type { IAssignment } from '../type';
 
 const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
@@ -38,7 +39,13 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 8 }}>
           <Card
-            sx={{ height: '100%', mx: 'auto', boxShadow: 'var(--shadows-10)', borderRadius: 2 }}
+            sx={{
+              height: '100%',
+              mx: 'auto',
+              boxShadow: 'var(--shadows-10)',
+              borderRadius: 2,
+              ml: 1,
+            }}
           >
             <CardContent sx={{ p: 2 }}>
               {/* Main Info Row */}
@@ -124,63 +131,6 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
                     </Box>
                   </Box>
 
-                  {/* Type & Submit Via */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        backgroundColor: 'background.neutral',
-                        borderRadius: 1,
-                        px: 1.5,
-                        py: 0.75,
-                      }}
-                    >
-                      <Iconify
-                        icon="mdi:notebook-edit"
-                        sx={{ color: 'text.secondary', width: 20, height: 20, mr: 0.5 }}
-                      />
-                      <Typography
-                        variant="body2"
-                        component="span"
-                        sx={{ fontWeight: 600, color: 'text.secondary' }}
-                      >
-                        Type :
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {assignment.assignmentTypeId}
-                      </Typography>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        backgroundColor: 'background.neutral',
-                        borderRadius: 1,
-                        px: 1.5,
-                        py: 0.75,
-                      }}
-                    >
-                      <Iconify
-                        icon={GlobalIcons.submit}
-                        sx={{ color: 'text.secondary', width: 20, height: 20, mr: 0.5 }}
-                      />
-                      <Typography
-                        variant="body2"
-                        component="span"
-                        sx={{ fontWeight: 600, color: 'text.secondary' }}
-                      >
-                        Submit Via :
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {SubmissionType[assignment?.submissionType]}
-                      </Typography>
-                    </Box>
-                  </Box>
-
                   {/* Document */}
                   <Box>
                     <Typography
@@ -246,7 +196,7 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-          <Card sx={{ height: '100%', boxShadow: 'var(--shadows-10)', borderRadius: 2 }}>
+          <Card sx={{ height: '100%', boxShadow: 'var(--shadows-10)', borderRadius: 2, mr: 1 }}>
             <Scrollbar sx={{ height: '100%' }}>
               <CardContent sx={{ p: 2 }}>
                 <Box sx={{ mb: 3 }}>
@@ -256,53 +206,39 @@ const AssignmentOverview = ({ assignment }: { assignment: IAssignment }) => {
 
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     {/* Created At */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Iconify icon="mdi:calendar-plus" sx={{ color: 'text.secondary' }} />
-                      <Box>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          Created On
-                        </Typography>
-                        <Typography variant="body2">
-                          {assignment?.divisionMeta?.createdAt
-                            ? dayjs(assignment.divisionMeta.createdAt).format(
-                                'DD MMM YYYY, hh:mm A'
-                              )
-                            : 'N/A'}
-                        </Typography>
-                      </Box>
-                    </Box>
+                    <InfoItem
+                      icon={<Iconify icon="mdi:calendar-plus" />}
+                      label="Created On"
+                      value={
+                        assignment?.divisionMeta?.createdAt
+                          ? dayjs(assignment.divisionMeta.createdAt).format('DD MMM YYYY, hh:mm A')
+                          : 'N/A'
+                      }
+                    />
 
                     {/* Publish Date */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Iconify icon="mdi:calendar-clock" sx={{ color: 'text.secondary' }} />
-                      <Box>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          Published On
-                        </Typography>
-                        <Typography variant="body2">
-                          {assignment?.divisionMeta?.publishDate
-                            ? dayjs(assignment.divisionMeta.publishDate).format(
-                                'DD MMM YYYY, hh:mm A'
-                              )
-                            : 'N/A'}
-                        </Typography>
-                      </Box>
-                    </Box>
+                    <InfoItem
+                      icon={<Iconify icon="mdi:calendar-clock" />}
+                      label="Publish Date"
+                      value={
+                        assignment?.divisionMeta?.publishDate
+                          ? dayjs(assignment.divisionMeta.publishDate).format(
+                              'DD MMM YYYY, hh:mm A'
+                            )
+                          : 'N/A'
+                      }
+                    />
 
                     {/* Due Date */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Iconify icon="mdi:calendar-check" sx={{ color: 'text.secondary' }} />
-                      <Box>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          Due On
-                        </Typography>
-                        <Typography variant="body2">
-                          {assignment?.divisionMeta?.dueDate
-                            ? dayjs(assignment.divisionMeta.dueDate).format('DD MMM YYYY, hh:mm A')
-                            : 'N/A'}
-                        </Typography>
-                      </Box>
-                    </Box>
+                    <InfoItem
+                      icon={<Iconify icon="mdi:calendar-clock" />}
+                      label="Due Date"
+                      value={
+                        assignment?.divisionMeta?.dueDate
+                          ? dayjs(assignment.divisionMeta.dueDate).format('DD MMM YYYY, hh:mm A')
+                          : 'N/A'
+                      }
+                    />
                   </Box>
                 </Box>
                 <Box>

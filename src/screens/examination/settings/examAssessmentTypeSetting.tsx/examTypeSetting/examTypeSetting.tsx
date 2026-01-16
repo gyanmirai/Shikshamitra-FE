@@ -40,6 +40,7 @@ const ExamTypeSettings = () => {
     data: examTypeData,
     isLoading,
     isFetching,
+    refetch: refetchExamTypes,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExaminationTypesQuery,
@@ -261,17 +262,7 @@ const ExamTypeSettings = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    examinationTypeApi.util.updateQueryData(
-                      'getExaminationTypes',
-                      { academicMediumId: (currentMedium as any).id },
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.data.splice(index, 0, selectedExamType);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetchExamTypes(),
                 onCommit: () =>
                   deleteExamType({
                     academicMediumId: (currentMedium as any).id,

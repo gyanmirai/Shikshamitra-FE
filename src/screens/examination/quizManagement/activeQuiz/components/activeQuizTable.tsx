@@ -117,7 +117,7 @@ const QuizTable = ({
   return (
     <>
       {/* Tabs Section */}
-      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
+      <Box display="flex" justifyContent="space-between" sx={{ px: 2 }}>
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}
@@ -147,7 +147,7 @@ const QuizTable = ({
           onClick={() => {
             setOpenDialog(true);
           }}
-          sx={{ px: '32px' }}
+          sx={{ px: '32px', mt: 2 }}
         >
           Quiz
         </Button>

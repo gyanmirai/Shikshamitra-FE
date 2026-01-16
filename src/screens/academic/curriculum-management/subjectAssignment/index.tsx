@@ -21,6 +21,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { PublishUnpublishStatusType } from 'src/enums/publishUnpublish-status';
 import {
   subjectAssignmentsApi,
+  useGetSubjectAssignmentsQuery,
   useDeleteSubjectAssignmentMutation,
   usePublishSubjectAssignmentMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -64,13 +65,20 @@ const Subject = () => {
     setClasses(allClasses[0]?.name || '');
   }, [medium]);
 
-  // const { data: subjectTableData = [], isLoading: isTableLoading } = useGetSubjectAssignmentsQuery(
-  //   {
-  //     academicMediumId: medium?.id,
-  //     classId,
-  //   },
-  //   { skip: !medium?.id || !classId }
-  // );
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: tableData = [],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isLoading: isTableLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSubjectAssignmentsQuery,
+    params: {
+      academicMediumId: medium?.id,
+      classId,
+    },
+  });
   // URL search parameter state for form visibility
   const addSubjectDialog = useBoolean();
   // Dialog control for delete confirmation
@@ -431,18 +439,7 @@ const Subject = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    subjectAssignmentsApi.util.updateQueryData(
-                      'getSubjectAssignments',
-                      { academicMediumId: medium?.id, classId },
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedSubject);
-                      }
-                    )
-                  ),
-
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () =>
                   deleteSubjectAssignment({ assignmentId: selectedSubject?.id || '' }),
               });

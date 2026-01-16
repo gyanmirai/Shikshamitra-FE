@@ -1,9 +1,15 @@
 import React from 'react';
 import { useDrag } from 'react-dnd';
-import { Box, List, Paper, ListItem, Typography } from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, List, Paper, Button, ListItem, Typography } from '@mui/material';
+import CreateNoOfLecture from 'src/screens/academic/timetable-schedule-management/settings/components/weeklyLectures/createWeeklyLectures';
 
 import { ItemTypes } from './types';
+import { Iconify } from '../iconify';
 import { Scrollbar } from '../scrollbar';
+import CustomDialog from '../customDialog';
+import CustomTooltip from '../custom-tooltip';
 
 import type { Subject } from './types';
 
@@ -79,44 +85,105 @@ const SubjectCard: React.FC<SubjectCardProps> = ({ subject, placedCount, totalSu
 interface PaletteProps {
   subjects: Subject[];
   placedCounts: Record<string, number>;
+  selectedClass: string;
+  selectedDivision: string;
 }
 
-const SubjectPalette: React.FC<PaletteProps> = ({ subjects, placedCounts }) => (
-  <Paper
-    elevation={2}
-    sx={{
-      width: '280px',
-      height: '100%',
-      bgcolor: 'background.paper',
-      borderRight: 1,
-      borderColor: 'divider',
-      p: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      zIndex: 10,
-    }}
-  >
-    <Box sx={{ mb: 3 }}>
-      <Typography variant="h6" fontWeight="600">
-        Subjects
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        Drag to schedule
-      </Typography>
-    </Box>
-    <Scrollbar sx={{ height: '100%', pr: 1 }}>
-      <List sx={{ pr: 1, maxHeight: 'unset', height: '100%' }}>
-        {subjects.map((sub) => (
-          <SubjectCard
-            key={sub.id}
-            subject={sub}
-            placedCount={placedCounts[sub.id] || 0}
-            totalSubjects={sub.totalSubjects || 0}
-          />
-        ))}
-      </List>
-    </Scrollbar>
-  </Paper>
-);
+const SubjectPalette: React.FC<PaletteProps> = ({
+  subjects,
+  placedCounts,
+  selectedClass,
+  selectedDivision,
+}) => {
+  const weeklyLecturesDialog = useBoolean();
+
+  return (
+    <Paper
+      elevation={2}
+      sx={{
+        width: '280px',
+        height: '100%',
+        bgcolor: 'background.paper',
+        borderRight: 1,
+        borderColor: 'divider',
+        p: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        zIndex: 10,
+      }}
+    >
+      {subjects.length > 0 ? (
+        <>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" fontWeight="600">
+              Subjects
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Drag to schedule
+            </Typography>
+          </Box>
+          <Scrollbar sx={{ height: '100%', pr: 1 }}>
+            <List sx={{ pr: 1, maxHeight: 'unset', height: '100%' }}>
+              {subjects.map((sub) => (
+                <SubjectCard
+                  key={sub.id}
+                  subject={sub}
+                  placedCount={placedCounts[sub.id] || 0}
+                  totalSubjects={sub.totalSubjects || 0}
+                />
+              ))}
+            </List>
+          </Scrollbar>
+        </>
+      ) : (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'flex-end',
+            mt: 2,
+            mb: 2,
+          }}
+        >
+          <Button
+            startIcon={<Add />}
+            size="small"
+            variant="contained"
+            onClick={() => {
+              weeklyLecturesDialog.onTrue();
+            }}
+          >
+            Weekly Lectures
+          </Button>
+        </Box>
+      )}
+      <CustomDialog
+        title={
+          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
+            <Typography variant="h5">Add Weekly Lectures</Typography>
+            <CustomTooltip
+              arrow
+              placement="right"
+              sx={{ textAlign: 'justify' }}
+              title="Configure the number of lectures per week for each subject"
+            >
+              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+            </CustomTooltip>
+          </Box>
+        }
+        open={weeklyLecturesDialog.value}
+        handleClose={weeklyLecturesDialog.onFalse}
+        maxWidth="sm"
+      >
+        <CreateNoOfLecture
+          isEdit={false}
+          editData={null}
+          onClose={weeklyLecturesDialog.onFalse}
+          selectedClass={selectedClass}
+        />
+      </CustomDialog>
+    </Paper>
+  );
+};
 
 export default SubjectPalette;

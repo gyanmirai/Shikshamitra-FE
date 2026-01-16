@@ -96,21 +96,20 @@ const SeatBox = ({
   const getBgColor = () => {
     // Only show drag over effect on empty seats
     if (isDragOver && !seat.isAssigned)
-      return varAlpha(theme.vars.palette.primary.mainChannel, 0.5); // Blue for drop zone
-    if (seat.isAssigned) return varAlpha(theme.vars.palette.primary.mainChannel, 0.2); // Green for occupied
-    return 'grey.200'; // Gray for empty
+      return varAlpha(theme.vars.palette.primary.mainChannel, 0.08);
+    if (seat.isAssigned) return theme.palette.background.paper;
+    return 'transparent';
   };
 
   const getTextColor = () => {
-    if (isDragOver) return theme.palette.common.black;
-    if (seat.isAssigned) return theme.palette.common.black;
-    return 'black';
+    if (seat.isAssigned) return theme.palette.text.primary;
+    return theme.palette.text.secondary;
   };
 
   const getBorderStyle = () => {
-    if (isDragOver && !seat.isAssigned) return '2px dashed white'; // White dashed for drop zone
-    if (seat.isAssigned) return `2px solid ${theme.palette.primary.main}`;
-    return 'none';
+    if (isDragOver && !seat.isAssigned) return `2px dashed ${theme.palette.primary.main}`;
+    if (seat.isAssigned) return `1px solid ${theme.palette.divider}`;
+    return `1px dashed ${theme.palette.divider}`;
   };
 
   return (
@@ -128,40 +127,83 @@ const SeatBox = ({
       onDrop={handleDrop}
       sx={{
         position: 'relative',
-        width: 130,
-        height: 80,
+        width: 140,
+        height: 90,
         bgcolor: getBgColor(),
         color: getTextColor(),
-        textAlign: 'center',
-        borderRadius: 1,
-        boxShadow: 2,
+        borderRadius: 1.5,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         border: getBorderStyle(),
         cursor: seat.isAssigned ? 'move' : 'default',
-        transition: 'all 0.2s ease-in-out',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: seat.isAssigned
+          ? theme.customShadows?.card ||
+            '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)'
+          : 'none',
         '&:hover': {
-          transform: seat.isAssigned ? 'scale(1.02)' : 'none',
+          transform: seat.isAssigned ? 'translateY(-2px)' : 'none',
+          boxShadow: seat.isAssigned ? theme.shadows[4] : 'none',
+          borderColor: !seat.isAssigned ? theme.palette.text.disabled : undefined,
         },
       }}
     >
-      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 6,
+          left: 8,
+          bgcolor: seat.isAssigned ? 'primary.main' : 'action.disabledBackground',
+          color: seat.isAssigned ? 'primary.contrastText' : 'text.disabled',
+          px: 0.75,
+          py: 0.25,
+          borderRadius: 0.5,
+          fontSize: '0.65rem',
+          fontWeight: 700,
+          lineHeight: 1,
+        }}
+      >
         {seat.seatNumber.toString().padStart(2, '0')}
-      </Typography>
+      </Box>
 
       {seat.isAssigned && (
-        <Box sx={{ width: '100%', position: 'relative' }}>
-          <Box display="flex" flexDirection="column" alignItems="center">
-            <Typography variant="subtitle2" noWrap sx={{ maxWidth: '110px' }}>
+        <Box sx={{ width: '100%', px: 1.5, pt: 1 }}>
+          <Box display="flex" flexDirection="column" alignItems="center" gap={0.5}>
+            <Typography
+              variant="subtitle2"
+              noWrap
+              sx={{ maxWidth: '100%', fontSize: '0.8rem', fontWeight: 600 }}
+            >
               {seat.studentName}
             </Typography>
-            <Typography variant="caption" sx={{ maxWidth: '110px', fontSize: '0.65rem' }}>
-              <strong>Class : </strong>
-              {seat.class} , <strong>Roll No. : </strong>
-              {seat.rollNo}
-            </Typography>
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '0.65rem',
+                  color: 'text.secondary',
+                  bgcolor: 'action.hover',
+                  px: 0.5,
+                  borderRadius: 0.5,
+                }}
+              >
+                {seat.class}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '0.65rem',
+                  color: 'text.secondary',
+                  bgcolor: 'action.hover',
+                  px: 0.5,
+                  borderRadius: 0.5,
+                }}
+              >
+                Rank: {seat.rollNo}
+              </Typography>
+            </Box>
           </Box>
 
           <Box className="action-menu">
@@ -172,12 +214,13 @@ const SeatBox = ({
               }}
               sx={{
                 position: 'absolute',
-                top: -32,
-                right: 0,
+                top: 4,
+                right: 4,
                 zIndex: 1,
-                '& .MuiIconButton-root': {
-                  padding: '4px',
-                },
+                width: 24,
+                height: 24,
+                '& .MuiSvgIcon-root': { fontSize: 16 },
+                '&:hover': { bgcolor: 'action.hover' },
               }}
               actions={({ popover }) => (
                 <MenuList>
@@ -187,9 +230,10 @@ const SeatBox = ({
                       removeStudentDialog.onTrue();
                       popover.onClose();
                     }}
+                    sx={{ color: 'error.main' }}
                   >
-                    <RemoveCircle sx={{ width: '20px', height: '20px', color: 'error.main' }} />
-                    Remove
+                    <RemoveCircle sx={{ width: 18, height: 18, mr: 1 }} />
+                    Remove Student
                   </MenuItem>
                 </MenuList>
               )}
@@ -199,8 +243,14 @@ const SeatBox = ({
       )}
 
       {isDragOver && !seat.isAssigned && (
-        <Typography variant="caption" sx={{ fontSize: '0.6rem', mt: 1 }}>
+        <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
           Drop Here
+        </Typography>
+      )}
+
+      {!seat.isAssigned && !isDragOver && (
+        <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem' }}>
+          Empty
         </Typography>
       )}
 
@@ -220,13 +270,12 @@ const SeatBox = ({
           <Button
             variant="contained"
             color="error"
-            size="small"
             onClick={() => {
               onStudentRemove(seat?.studentId);
               removeStudentDialog.onFalse();
             }}
           >
-            Yes
+            Remove
           </Button>
         }
       />

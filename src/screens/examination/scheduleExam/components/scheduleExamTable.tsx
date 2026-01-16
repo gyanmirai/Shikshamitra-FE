@@ -162,7 +162,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
   return (
     <>
-      <Box display="flex" justifyContent="space-between" sx={{ mt: '4px', mb: 2 }}>
+      <Box display="flex" justifyContent="space-between" sx={{ px: 2 }}>
         <Tabs
           value={tabs.value}
           onChange={handleTabChange}
@@ -199,7 +199,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             onClick={() => {
               setOpenDialog?.(true);
             }}
-            sx={{ px: '32px' }}
+            sx={{ px: '32px', mt: 2 }}
           >
             Schedule Exam
           </Button>

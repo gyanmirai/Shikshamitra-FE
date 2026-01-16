@@ -1,73 +1,52 @@
 'use client';
 
-import type { Medium } from 'src/types/school';
-import type { RootState } from 'src/redux/store';
-
 import React from 'react';
-import { useSelector } from 'react-redux';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 
 import type { IHomeworkType, IHomeworkTypeTableProps } from './type';
 
-const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({ onDelete, onEdit }) => {
-  const { currentMedium } = useSelector((state: RootState) => state.globalState);
-
-  const {
-    data: homeworkTypeData,
-    isLoading,
-    isFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetHomeworkTypesQuery,
-    params: { academicMediumId: (currentMedium as Medium)?.id },
-    options: {
-      skip: !(currentMedium as Medium)?.id,
-    },
-    popupConfig: {
-      error: false, // Suppress error toasts to prevent state updates during render
-    },
-  });
-
-  return (
-    <CustomizableTable
-      tableId="homework-type-data-table"
-      isLoading={isLoading || isFetching}
-      noDataText="No Homework Type Data Found"
-      columns={[
-        {
-          id: 'homeworkTypeName',
-          label: 'Name',
-          align: 'left',
-        },
-        {
-          id: 'action',
-          label: 'Actions',
-          minWidth: 50,
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          render: (_value, row) => (
-            <ThreeDotsActions
-              showThreeDots={false}
-              placement="right-top"
-              showDeleteIcon
-              showEditIcon
-              handleDeleteClick={() => {
-                onDelete(row as IHomeworkType);
-              }}
-              handleEditClick={() => {
-                onEdit(row as IHomeworkType);
-              }}
-            />
-          ),
-        },
-      ]}
-      data={homeworkTypeData || []}
-    />
-  );
-};
+const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
+  isLoading,
+  data,
+  onDelete,
+  onEdit,
+}) => (
+  <CustomizableTable
+    tableId="homework-type-data-table"
+    isLoading={isLoading}
+    noDataText="No Homework Type Data Found"
+    columns={[
+      {
+        id: 'homeworkTypeName',
+        label: 'Name',
+        align: 'left',
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        minWidth: 50,
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        render: (_value, row) => (
+          <ThreeDotsActions
+            showThreeDots={false}
+            placement="right-top"
+            showDeleteIcon
+            showEditIcon
+            handleDeleteClick={() => {
+              onDelete(row as IHomeworkType);
+            }}
+            handleEditClick={() => {
+              onEdit(row as IHomeworkType);
+            }}
+          />
+        ),
+      },
+    ]}
+    data={data || []}
+  />
+);
 
 export default HomeworkTypeTable;

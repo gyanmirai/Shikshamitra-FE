@@ -31,6 +31,7 @@ import chapterTableData from 'src/json/academic/syllabus/chapterTableData.json';
 import { Box, Card, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import {
   chaptersApi,
+  useGetChaptersQuery,
   useDeleteChapterMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
@@ -132,6 +133,20 @@ const Subjects = () => {
     ),
     []
   );
+
+  const {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    data: chapterResponse,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isLoading: isChapterLoading,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isFetching: isChapterFetching,
+    refetch: refetchChapters,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetChaptersQuery,
+    params: { standardId: classId, subjectId },
+  });
 
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
@@ -276,6 +291,7 @@ const Subjects = () => {
               setSelectedChapter(chapter as IChapter);
               deleteDialog.onTrue();
             }}
+            isLoading={isChapterLoading || isChapterFetching}
             setEditData={setSelectedChapter}
             addChapterDialog={addChapterDialog}
             data={chapterData}
@@ -329,17 +345,7 @@ const Subjects = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    chaptersApi.util.updateQueryData(
-                      'getChapters',
-                      { standardId: classId, subjectId },
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedChapter);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetchChapters(),
                 onCommit: () => deleteChapter((selectedChapter as any).id),
               });
               deleteDialog.onFalse();

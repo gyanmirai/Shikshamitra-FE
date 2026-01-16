@@ -68,10 +68,78 @@ const SeatManagement = ({
   };
 
   return (
-    <Box sx={{ height: '100%' }}>
-      <Typography variant="h6">Seat Layout</Typography>
-      <Box sx={{ height: 'calc(100% - 60px)', overflowY: 'auto' }}>
-        <Grid container spacing={2}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          Seat Layout
+        </Typography>
+
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 3,
+            bgcolor: 'background.paper',
+            px: 2,
+            py: 1,
+            borderRadius: 1,
+            border: 1,
+            borderColor: 'divider',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box
+              sx={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                bgcolor: 'success.main',
+                boxShadow: (theme) => `0 0 0 2px ${theme.palette.success.lighter}`,
+              }}
+            />
+            <Typography variant="subtitle2" color="text.secondary">
+              Allocated{' '}
+              <Box component="span" sx={{ color: 'text.primary', fontWeight: 600, ml: 0.5 }}>
+                {allocatedCount.toString().padStart(2, '0')}
+              </Box>
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box
+              sx={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                bgcolor: 'action.hover',
+                border: 1,
+                borderColor: 'divider',
+              }}
+            />
+            <Typography variant="subtitle2" color="text.secondary">
+              Empty{' '}
+              <Box component="span" sx={{ color: 'text.primary', fontWeight: 600, ml: 0.5 }}>
+                {emptyCount}
+              </Box>
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          borderRadius: 2,
+          bgcolor: 'background.default',
+          border: 1,
+          borderColor: 'divider',
+          p: 3,
+          '::-webkit-scrollbar': { width: 8 },
+          '::-webkit-scrollbar-thumb': { borderRadius: 4, bgcolor: 'grey.300' },
+        }}
+      >
+        <Grid container spacing={4} justifyContent="center">
           {Array.from({ length: selectedRoom.columns }).map((_, colIdx) => {
             // Filter seats for this column and group by bench
             const columnSeats = seatList.filter((s) => s.column === colIdx);
@@ -89,73 +157,69 @@ const SeatManagement = ({
               .sort((a, b) => a - b);
 
             return (
-              <Grid size={4} key={`column-${colIdx}`}>
-                <Typography align="center" variant="subtitle2" sx={{ mb: 2 }}>
-                  Column {colIdx + 1}
-                </Typography>
+              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={`column-${colIdx}`}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                    p: 2,
+                    borderRadius: 2,
+                    bgcolor: (theme) =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255, 255, 255, 0.02)'
+                        : 'rgba(0, 0, 0, 0.02)',
+                    border: '1px dashed',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography
+                    align="center"
+                    variant="overline"
+                    sx={{
+                      color: 'text.disabled',
+                      fontWeight: 700,
+                      letterSpacing: 1.2,
+                      mb: 1,
+                    }}
+                  >
+                    Column {colIdx + 1}
+                  </Typography>
 
-                {benchNumbers.map((benchNo) => {
-                  const benchSeats = benchesInColumn[benchNo];
-                  // Sort seats within bench by seat number
-                  benchSeats.sort((a, b) => a.seatNumber - b.seatNumber);
+                  {benchNumbers.map((benchNo) => {
+                    const benchSeats = benchesInColumn[benchNo];
+                    benchSeats.sort((a, b) => a.seatNumber - b.seatNumber);
 
-                  return (
-                    <Box
-                      key={`bench-${benchNo}-${colIdx}`}
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        mb: 2,
-                        gap: 1,
-                      }}
-                    >
-                      {benchSeats.map((seat) => (
-                        <SeatBox
-                          key={`seat-${seat.seatNumber}`} // Use unique seat number as key
-                          seat={seat}
-                          onStudentDrop={onStudentDrop}
-                          onStudentRemove={onStudentRemove}
-                          onSeatSwap={handleSeatSwap}
-                        />
-                      ))}
-                    </Box>
-                  );
-                })}
+                    return (
+                      <Box
+                        key={`bench-${benchNo}-${colIdx}`}
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          gap: 1.5,
+                          p: 1.5,
+                          borderRadius: 1.5,
+                          bgcolor: 'background.paper',
+                          boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.06)',
+                        }}
+                      >
+                        {benchSeats.map((seat) => (
+                          <SeatBox
+                            key={`seat-${seat.seatNumber}`}
+                            seat={seat}
+                            onStudentDrop={onStudentDrop}
+                            onStudentRemove={onStudentRemove}
+                            onSeatSwap={handleSeatSwap}
+                          />
+                        ))}
+                      </Box>
+                    );
+                  })}
+                </Box>
               </Grid>
             );
           })}
         </Grid>
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: 3,
-          // borderTop: '1px solid #e0e0e0',
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{
-              width: 12,
-              height: 12,
-              borderRadius: '50%',
-              bgcolor: 'success.main',
-              boxShadow: 1,
-            }}
-          />
-          <Typography variant="subtitle2">
-            Allocated ({allocatedCount.toString().padStart(2, '0')})
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#f2f2f2', boxShadow: 1 }}
-          />
-          <Typography variant="subtitle2">Empty ({emptyCount})</Typography>
-        </Box>
       </Box>
     </Box>
   );

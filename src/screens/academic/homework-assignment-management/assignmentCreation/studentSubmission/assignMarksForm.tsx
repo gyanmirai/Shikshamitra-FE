@@ -8,24 +8,27 @@ import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 // eslint-disable-next-line import/extensions
+import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { getFileIconByType } from 'src/screens/academic/curriculum-management/subjectAssignment/component/viewDetailComponents/documentList';
+import { useUpdateSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 import {
   Box,
   Grid,
   Card,
+  Stack,
+  Avatar,
   Button,
+  Divider,
   Tooltip,
   TextField,
   Typography,
   IconButton,
   DialogActions,
 } from '@mui/material';
-import { useUpdateSubmissionFeedbackMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 
 import type { IAssignGradeProps } from '../../homeworkCreation/type';
 
@@ -60,8 +63,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
     },
     validationSchema: Yup.object({
       marks: Yup.number()
-        .required('Marks is required')
-        .max(Yup.ref('totalMarks'), 'Marks cannot exceed Total Marks'),
+        .required('Obtained Marks is required')
+        .max(Yup.ref('totalMarks'), 'Obtained Marks cannot exceed Total Marks'),
     }),
     onSubmit(values) {
       const isUpdate = typeof data?.marks === 'number' || Boolean(data?.feedback);
@@ -75,164 +78,236 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ isEdit, data, onClose }: IAs
         },
       });
       shikshaMitraToast.success({
-        message: `Feedback and marks have been ${isUpdate ? 'updated' : 'added'} successfully for ${data?.studentName ?? 'the student'}.`,
+        message: `Feedback and marks have been ${
+          isUpdate ? 'updated' : 'added'
+        } successfully for ${data?.studentName ?? 'the student'}.`,
       });
       onClose(null, true);
     },
   });
 
+  const handleDownload = (doc: IDocument) => {
+    window.open(doc.url, '_blank');
+  };
+
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
-        {/* <form onSubmit={formik.handleSubmit}> */}
-        <DialogScrollContent>
-          <Grid container spacing={2}>
-            {/* Student Info */}
-            <Grid size={{ xs: 12 }}>
-              <Box display="flex" gap={2}>
-                <Typography variant="body2">
-                  <strong>Name : </strong>
-                  {data?.studentName}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Roll No : </strong>
-                  {data?.rollNumber}
-                </Typography>
-              </Box>
-            </Grid>
-
-            {/* Document Card */}
-            <Grid size={{ xs: 12 }}>
-              <Card
-                key={document.id}
-                sx={{
-                  p: 2,
-                  mb: 2,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  '&:hover': { bgcolor: 'action.hover' },
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  {getFileIconByType(document.type ?? 'txt', 32)}
-                  <Box>
-                    <Typography variant="subtitle2">{document.name}</Typography>
-                    {document.size && (
-                      <Typography variant="body2" color="text.secondary">
-                        {document.size}
+        <Box
+          component="form"
+          sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+          onSubmit={formik.handleSubmit}
+        >
+          <Scrollbar sx={{ height: '500px', p: 2 }}>
+            <Grid container spacing={3}>
+              {/* Student Profile Section */}
+              <Grid size={{ xs: 12 }}>
+                <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <Avatar
+                      alt={data?.studentName || 'Student'}
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        bgcolor: 'primary.lighter',
+                        color: 'primary.main',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {data?.studentName?.charAt(0) || 'S'}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        {data?.studentName}
                       </Typography>
-                    )}
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        Roll No: {data?.rollNumber || '--'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Card>
+              </Grid>
+
+              {/* Student Submission Section */}
+              <Grid size={{ xs: 12 }}>
+                <Card sx={{ p: 0, overflow: 'hidden', boxShadow: 'var(--shadows-10)' }}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      bgcolor: (theme) => theme.palette.grey[100],
+                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                    >
+                      <Iconify
+                        icon="solar:document-text-bold"
+                        width={20}
+                        sx={{ color: 'info.main' }}
+                      />
+                      Student Submission
+                    </Typography>
                   </Box>
-                </Box>
+                  <Box sx={{ p: 2 }}>
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        p: 1.5,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        bgcolor: 'background.paper',
+                        '&:hover': {
+                          bgcolor: 'background.neutral',
+                        },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {getFileIconByType(document.type ?? 'txt', 32)}
+                        <Box>
+                          <Typography variant="subtitle2" noWrap sx={{ maxWidth: 200 }}>
+                            {document.name}
+                          </Typography>
+                          {document.size && (
+                            <Typography variant="caption" color="text.secondary">
+                              {document.size}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
 
-                <Tooltip title="Preview">
-                  <IconButton edge="end" aria-label="preview">
-                    <Iconify icon={GlobalIcons.eye} />
-                  </IconButton>
-                </Tooltip>
-              </Card>
+                      <Tooltip title="Preview">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDownload(document)}
+                          sx={{ color: 'text.secondary' }}
+                        >
+                          <Iconify icon={GlobalIcons.eye} width={20} />
+                        </IconButton>
+                      </Tooltip>
+                    </Card>
+                  </Box>
+                </Card>
+              </Grid>
+
+              {/* Assessment & Feedback Section */}
+              <Grid size={{ xs: 12 }}>
+                <Card sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+                  <Typography variant="h6" sx={{ mb: 3 }}>
+                    Assessment & Feedback
+                  </Typography>
+
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <ShakingTextField
+                        error={!!(formik.touched.totalMarks && formik.errors.totalMarks)}
+                      >
+                        <TextField
+                          label="Total Marks"
+                          fullWidth
+                          name="totalMarks"
+                          disabled
+                          size="small"
+                          value={formik.values.totalMarks}
+                          onChange={formik.handleChange}
+                          error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
+                          helperText={formik.touched.totalMarks && formik.errors.totalMarks}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks)}>
+                        <TextField
+                          label="Obtained Marks *"
+                          fullWidth
+                          type="number"
+                          name="marks"
+                          disabled={!isEdit}
+                          inputProps={{ min: 0, max: formik.values.totalMarks }}
+                          onKeyDown={(e) => {
+                            if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
+                          }}
+                          onChange={(e) => {
+                            const { value } = e.target;
+                            if (value === '') {
+                              formik.setFieldValue('marks', '');
+                              return;
+                            }
+                            const numericValue = parseInt(value, 10);
+                            if (
+                              !Number.isNaN(numericValue) &&
+                              numericValue <= Number(formik.values.totalMarks)
+                            ) {
+                              formik.setFieldValue('marks', numericValue);
+                            }
+                          }}
+                          size="small"
+                          value={formik.values.marks}
+                          error={formik.touched.marks && Boolean(formik.errors.marks)}
+                          helperText={formik.touched.marks && formik.errors.marks}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+
+                    <Grid size={{ xs: 12 }}>
+                      <ShakingTextField
+                        error={!!(formik.touched.feedback && formik.errors.feedback)}
+                      >
+                        <TextField
+                          label="Feedback"
+                          multiline
+                          size="small"
+                          disabled={!isEdit}
+                          rows={3}
+                          fullWidth
+                          name="feedback"
+                          value={formik.values.feedback}
+                          onChange={formik.handleChange}
+                          error={formik.touched.feedback && Boolean(formik.errors.feedback)}
+                          helperText={formik.touched.feedback && formik.errors.feedback}
+                        />
+                      </ShakingTextField>
+                    </Grid>
+                  </Grid>
+                </Card>
+              </Grid>
             </Grid>
+          </Scrollbar>
 
-            {/* Total Marks */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!(formik.touched.totalMarks && formik.errors.totalMarks)}>
-                <TextField
-                  label="Total Marks"
-                  fullWidth
-                  name="totalMarks"
-                  disabled
-                  size="small"
-                  value={formik.values.totalMarks}
-                  onChange={formik.handleChange}
-                  error={formik.touched.totalMarks && Boolean(formik.errors.totalMarks)}
-                  helperText={formik.touched.totalMarks && formik.errors.totalMarks}
+          <Divider />
+
+          <DialogActions sx={{ bgcolor: 'background.paper', p: 2.5 }}>
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={() => {
+                onClose(null, false);
+              }}
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              variant="contained"
+              loading={isUpdateLoading}
+              size="small"
+              onClick={(e: any) => formik.handleSubmit(e)}
+              startIcon={
+                <Iconify
+                  icon={data?.marks ? GlobalIcons.edit : GlobalIcons.submit}
+                  width={data?.marks ? 16 : 20}
+                  height={data?.marks ? 16 : 20}
                 />
-              </ShakingTextField>
-            </Grid>
-
-            {/* Obtained Marks */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <ShakingTextField error={!!(formik.touched.marks && formik.errors.marks)}>
-                <TextField
-                  label="Obtained Marks *"
-                  fullWidth
-                  type="number"
-                  name="marks"
-                  disabled={!isEdit}
-                  inputProps={{ min: 0, max: formik.values.totalMarks }}
-                  onKeyDown={(e) => {
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault();
-                  }}
-                  onChange={(e) => {
-                    const { value } = e.target;
-                    if (value === '') {
-                      formik.setFieldValue('marks', '');
-                      return;
-                    }
-                    const numericValue = parseInt(value, 10);
-                    if (!Number.isNaN(numericValue) && numericValue <= formik.values.totalMarks) {
-                      formik.setFieldValue('marks', numericValue);
-                    }
-                  }}
-                  size="small"
-                  value={formik.values.marks}
-                  error={formik.touched.marks && Boolean(formik.errors.marks)}
-                  helperText={formik.touched.marks && formik.errors.marks}
-                />
-              </ShakingTextField>
-            </Grid>
-
-            {/* Feedback */}
-            <Grid size={{ xs: 12 }}>
-              <ShakingTextField error={!!(formik.touched.feedback && formik.errors.feedback)}>
-                <TextField
-                  label="Feedback"
-                  multiline
-                  size="small"
-                  disabled={!isEdit}
-                  rows={3}
-                  fullWidth
-                  name="feedback"
-                  value={formik.values.feedback}
-                  onChange={formik.handleChange}
-                  error={formik.touched.feedback && Boolean(formik.errors.feedback)}
-                  helperText={formik.touched.feedback && formik.errors.feedback}
-                />
-              </ShakingTextField>
-            </Grid>
-          </Grid>
-        </DialogScrollContent>
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button
-            variant="outlined"
-            onClick={() => {
-              onClose(null, false);
-            }}
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            variant="contained"
-            loading={isUpdateLoading}
-            size="small"
-            onClick={(e: any) => formik.handleSubmit(e)}
-            startIcon={
-              <Iconify
-                icon={data?.marks ? GlobalIcons.edit : GlobalIcons.submit}
-                width={data?.marks ? 16 : 20}
-                height={data?.marks ? 16 : 20}
-              />
-            }
-          >
-            {data?.marks ? 'Update' : 'Submit'}
-          </LoadingButton>
-        </DialogActions>
-        {/* </form> */}
+              }
+            >
+              {data?.marks ? 'Update' : 'Submit'}
+            </LoadingButton>
+          </DialogActions>
+        </Box>
       </BackPopUpChecked>
     </Box>
   );

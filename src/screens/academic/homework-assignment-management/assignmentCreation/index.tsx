@@ -1,6 +1,6 @@
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Medium, Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
@@ -21,6 +21,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import assignmentTableData from 'src/json/academic/homeworkAssignment/assignment-table-data.json';
 import {
   assignmentApi,
+  useGetAssignmentsQuery,
   useDeleteAssignmentMutation,
   usePublishAssignmentMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
@@ -34,7 +35,9 @@ import type { IAssignment } from './type';
 
 const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   // State to store list of all assignments
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const [assignmentData] = useState<any[]>(assignmentTableData);
+
   // Dialog state for add/edit assignment form
   // const addAssignmentDialog = useBoolean();
   // Dialog state for delete assignment confirmation
@@ -63,6 +66,25 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
   const [division, setDivision] = useState<string>('');
   // State to store and update the selected date using dayjs
   const [date, setDate] = useState<Dayjs | null>(dayjs());
+  const {
+    data: tableData,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignmentsQuery,
+    params: {
+      academicMediumId: (currentMedium as Medium)?.id,
+      classId: classes,
+      divisionId: division,
+      subjectId: subject,
+      assignmentDate: date?.toISOString(),
+    },
+    options: {
+      skip: !(currentMedium as Medium)?.id,
+    },
+  });
 
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -301,24 +323,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    assignmentApi.util.updateQueryData(
-                      'getAssignments',
-                      {
-                        classId: allClass.find((org: any) => org?.id === classes)?.id,
-                        divisionId: allClass
-                          .find((org: any) => org?.id === classes)
-                          ?.divisions?.find((d: any) => d?.name === division)?.id,
-                        subjectId: subject,
-                        assignmentDate: date?.toISOString(),
-                      },
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedAssignment);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetch(),
                 onCommit: () => deleteAssignment(selectedAssignment?.id),
               });
               deleteAssignmentDialog.onFalse();
