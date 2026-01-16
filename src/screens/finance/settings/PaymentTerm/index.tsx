@@ -7,12 +7,16 @@ import { Add } from '@mui/icons-material';
 import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
-import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetPaymentTermQuery } from 'src/redux/finance/paymentTerm';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import {
+  PaymentTermApi,
+  useGetPaymentTermQuery,
+  useDeletePaymentTermMutation,
+} from 'src/redux/finance/paymentTerm';
 
 import PaymentTermForm from './Components/PaymentTermForm';
 import PaymentTermTable from './Components/PaymentTermTable';
@@ -26,7 +30,15 @@ const PaymentTerm = () => {
   const addPaymentTermDialog = useBoolean();
   const deletePaymentTermDialog = useBoolean();
 
-  const { data: paymentTerms } = useQueryAndMutation({
+  // Delete mutation
+  const { deletePaymentTerm } = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeletePaymentTermMutation,
+  });
+
+  const { confirmWithUndo } = useConfirmWithUndo();
+
+  const { data: paymentTerms, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetPaymentTermQuery,
   });
@@ -154,14 +166,26 @@ const PaymentTerm = () => {
             color="error"
             size="small"
             onClick={() => {
-              // Handle delete action here
-              shikshaMitraToast.success({
-                message: (
-                  <>
-                    Payment Term: <strong>{selectedPaymentTerm?.paymentTermName}</strong> deleted
-                    successfully.
-                  </>
-                ),
+              confirmWithUndo({
+                item: selectedPaymentTerm,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    PaymentTermApi.util.updateQueryData(
+                      'getPaymentTerm',
+                      undefined,
+                      (draft: any) => {
+                        const index = draft.data?.findIndex(
+                          (b: any) => b.id === (selectedPaymentTerm as any)?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.data.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: () => refetch(),
+                onCommit: () => deletePaymentTerm(selectedPaymentTerm?.id),
               });
               deletePaymentTermDialog.onFalse();
               setSelectedPaymentTerm(null);

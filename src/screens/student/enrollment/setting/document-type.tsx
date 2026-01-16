@@ -138,7 +138,8 @@ const StudentDocumentType = () => {
         },
       },
     ],
-    [confirm, defaultDocumentTypes]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   return (

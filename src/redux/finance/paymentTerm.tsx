@@ -30,7 +30,14 @@ export const PaymentTermApi = createApi({
       }),
       providesTags: ['Payment-Term'],
     }),
+    deletePaymentTerm: builder.mutation({
+      query: (id) => ({
+        url: `/paymentTerms/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Payment-Term'],
+    }),
   }),
 });
 
-export const { useGetPaymentTermQuery } = PaymentTermApi;
+export const { useGetPaymentTermQuery, useDeletePaymentTermMutation } = PaymentTermApi;

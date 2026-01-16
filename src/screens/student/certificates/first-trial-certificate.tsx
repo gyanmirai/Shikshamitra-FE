@@ -1,4 +1,5 @@
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
@@ -54,6 +55,28 @@ const FirstTrialCertificate = () => {
       }, 200);
     }
   };
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      { label: 'Medium', id: 'medium', sticky: true, minWidth: '12vw', align: 'left' },
+      { label: 'Organization', id: 'organization' },
+      { label: 'Class', id: 'class' },
+      { label: 'Division', id: 'division' },
+      { label: 'GR.No.', id: 'grNo' },
+      { label: 'Student Name', id: 'studentName', align: 'left', minWidth: '180px' },
+      {
+        label: 'Creation Date',
+        id: 'creationDate',
+        align: 'left',
+        minWidth: '180px',
+        filterType: 'date',
+      },
+      { label: 'Reason', id: 'reason' },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
     <Box sx={{ minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box display="flex" justifyContent="flex-end" mb={2}>
@@ -90,22 +113,7 @@ const FirstTrialCertificate = () => {
             </Box>
           </>
         }
-        columns={[
-          { id: 'medium', label: 'Medium' },
-          { id: 'organization', label: 'Organization' },
-          { id: 'class', label: 'Class' },
-          { id: 'division', label: 'Division' },
-          { id: 'grNo', label: 'GR.No.', align: 'left', minWidth: '180px' },
-          { id: 'studentName', label: 'Student Name', align: 'left', minWidth: '180px' },
-          {
-            id: 'creationDate',
-            label: 'Creation Date',
-            align: 'left',
-            minWidth: '180px',
-            filterType: 'date',
-          },
-          { id: 'reason', label: 'Reason' },
-        ]}
+        columns={columns}
         data={[]}
       />
       <CustomDialog

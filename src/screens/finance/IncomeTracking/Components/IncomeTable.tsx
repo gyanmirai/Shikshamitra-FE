@@ -1,5 +1,7 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
 import { Box } from '@mui/material';
+import React, { useMemo } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -21,32 +23,9 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
   onEdit,
   onDelete,
   onView,
-}) => (
-  <CustomizableTable
-    tableId="income-table"
-    noDataText={
-      <>
-        No Income data found
-        <Box
-          onClick={() => {
-            addIncome.onTrue();
-            setEditData(null);
-          }}
-          color="primary.main"
-          fontWeight={600}
-          sx={{
-            '&:hover': {
-              cursor: 'pointer',
-              color: 'primary.main',
-              textDecoration: 'underline',
-            },
-          }}
-        >
-          Add Income
-        </Box>
-      </>
-    }
-    columns={[
+}) => {
+  const columns: IColumn[] = useMemo(
+    () => [
       {
         id: 'incomeCategory',
         label: 'Income Category',
@@ -121,9 +100,40 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
           />
         ),
       },
-    ]}
-    data={data || []}
-  />
-);
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  return (
+    <CustomizableTable
+      tableId="income-table"
+      noDataText={
+        <>
+          No Income data found
+          <Box
+            onClick={() => {
+              addIncome.onTrue();
+              setEditData(null);
+            }}
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Add Income
+          </Box>
+        </>
+      }
+      columns={columns}
+      data={data || []}
+    />
+  );
+};
 
 export default IncomeTable;

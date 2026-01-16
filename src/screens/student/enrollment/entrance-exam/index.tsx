@@ -3,6 +3,7 @@
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
@@ -206,6 +207,149 @@ const EntranceExamScreen = () => {
     }
   };
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      { id: 'studentName', label: 'Student Name', align: 'left', sticky: true, minWidth: 180 },
+
+      // { id: 'board', label: 'Board', align: 'left' },
+      // { id: 'medium', label: 'Medium', align: 'left' },
+      { id: 'class', label: 'Class', align: 'left' },
+      { id: 'date', label: 'Date', filterType: 'date' },
+      { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
+      {
+        id: 'totalMarks',
+        label: 'Total Marks',
+        filterType: 'number',
+        align: 'left',
+        minWidth: 140,
+        render: (value) => value || '-',
+      },
+      {
+        id: 'passingMark',
+        label: 'Passing Marks',
+        filterType: 'number',
+        align: 'left',
+        minWidth: 140,
+        render: (value) => value || '-',
+      },
+      {
+        id: 'obtainedMarks',
+        label: 'Obtained Marks',
+        filterType: 'number',
+        align: 'left',
+        minWidth: 150,
+      },
+      {
+        id: 'progress',
+        label: 'Progress',
+        align: 'left',
+        sticky: true,
+        filterType: 'number',
+        render(value, row) {
+          return (
+            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+              <CircularProgress
+                variant="determinate"
+                value={value}
+                size={50}
+                thickness={3}
+                sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
+              />
+              <Box
+                sx={{
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  right: 0,
+                  position: 'absolute',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  component="small"
+                  color="text.secondary"
+                  sx={{ fontSize: '12px' }}
+                >
+                  {value}%
+                </Typography>
+              </Box>
+            </Box>
+          );
+        },
+      },
+      {
+        id: 'percentage',
+        label: 'Percentage',
+        filterType: 'number',
+        sticky: true,
+        align: 'left',
+        render(value, row) {
+          return (
+            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+              <CircularProgress
+                variant="determinate"
+                value={value}
+                size={50}
+                thickness={3}
+                sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
+              />
+              <Box
+                sx={{
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  right: 0,
+                  position: 'absolute',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  component="small"
+                  color="text.secondary"
+                  sx={{ fontSize: '12px' }}
+                >
+                  {value}%
+                </Typography>
+              </Box>
+            </Box>
+          );
+        },
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        filterType: 'enum',
+        enumOptions: EntranceExamStatusOptions,
+        align: 'left',
+        sticky: true,
+        render(value, row) {
+          const color = EntranceExamStatusTypeColors[value as EntranceExamStatusType] as LabelColor;
+          return (
+            <Label color={color}>{EntranceExamStatusType[value as EntranceExamStatusType]}</Label>
+          );
+        },
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        align: 'left',
+        isFilter: false,
+        sticky: true,
+        isSort: false,
+        render: (value, row) => (
+          <ThreeDotsActions placement="right-top" actions={(props) => actions(props, row)} />
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
@@ -252,149 +396,7 @@ const EntranceExamScreen = () => {
         tableId="entrance-exam-table"
         noDataText={<>No Entrance Exam Data Found </>}
         isLoading={isLoading}
-        columns={[
-          { id: 'studentName', label: 'Student Name', align: 'left', sticky: true, minWidth: 180 },
-
-          // { id: 'board', label: 'Board', align: 'left' },
-          // { id: 'medium', label: 'Medium', align: 'left' },
-          { id: 'class', label: 'Class', align: 'left' },
-          { id: 'date', label: 'Date', filterType: 'date' },
-          { id: 'examTime', label: 'Exam Time', align: 'left', minWidth: '120px' },
-          {
-            id: 'totalMarks',
-            label: 'Total Marks',
-            filterType: 'number',
-            align: 'left',
-            minWidth: 140,
-            render: (value) => value || '-',
-          },
-          {
-            id: 'passingMark',
-            label: 'Passing Marks',
-            filterType: 'number',
-            align: 'left',
-            minWidth: 140,
-            render: (value) => value || '-',
-          },
-          {
-            id: 'obtainedMarks',
-            label: 'Obtained Marks',
-            filterType: 'number',
-            align: 'left',
-            minWidth: 150,
-          },
-          {
-            id: 'progress',
-            label: 'Progress',
-            align: 'left',
-            sticky: true,
-            filterType: 'number',
-            render(value, row) {
-              return (
-                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                  <CircularProgress
-                    variant="determinate"
-                    value={value}
-                    size={50}
-                    thickness={3}
-                    sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
-                  />
-                  <Box
-                    sx={{
-                      top: 0,
-                      left: 0,
-                      bottom: 0,
-                      right: 0,
-                      position: 'absolute',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      component="small"
-                      color="text.secondary"
-                      sx={{ fontSize: '12px' }}
-                    >
-                      {value}%
-                    </Typography>
-                  </Box>
-                </Box>
-              );
-            },
-          },
-          {
-            id: 'percentage',
-            label: 'Percentage',
-            filterType: 'number',
-            sticky: true,
-            align: 'left',
-            render(value, row) {
-              return (
-                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                  <CircularProgress
-                    variant="determinate"
-                    value={value}
-                    size={50}
-                    thickness={3}
-                    sx={{ color: value < 50 ? 'warning.main' : 'success.main' }}
-                  />
-                  <Box
-                    sx={{
-                      top: 0,
-                      left: 0,
-                      bottom: 0,
-                      right: 0,
-                      position: 'absolute',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      component="small"
-                      color="text.secondary"
-                      sx={{ fontSize: '12px' }}
-                    >
-                      {value}%
-                    </Typography>
-                  </Box>
-                </Box>
-              );
-            },
-          },
-          {
-            id: 'status',
-            label: 'Status',
-            filterType: 'enum',
-            enumOptions: EntranceExamStatusOptions,
-            align: 'left',
-            sticky: true,
-            render(value, row) {
-              const color = EntranceExamStatusTypeColors[
-                value as EntranceExamStatusType
-              ] as LabelColor;
-              return (
-                <Label color={color}>
-                  {EntranceExamStatusType[value as EntranceExamStatusType]}
-                </Label>
-              );
-            },
-          },
-          {
-            id: 'action',
-            label: 'Actions',
-            align: 'left',
-            isFilter: false,
-            sticky: true,
-            isSort: false,
-            render: (value, row) => (
-              <ThreeDotsActions placement="right-top" actions={(props) => actions(props, row)} />
-            ),
-          },
-        ]}
+        columns={columns}
         data={tableData || []}
       />{' '}
       <CustomDialog

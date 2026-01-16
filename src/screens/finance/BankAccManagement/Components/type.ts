@@ -20,6 +20,7 @@ export interface IBankAccountTableProps {
   setEditData: (value: IBankAccount | null) => void;
   onDelete: (data: IBankAccount) => void;
   onEdit: (data: IBankAccount) => void;
+  isLoading?: boolean;
 }
 
 export interface IBankAccountFormProps {

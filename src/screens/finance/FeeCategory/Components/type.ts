@@ -9,8 +9,6 @@ export interface IFeeCategoryTableProps {
   open: boolean;
   setOpenDialog: (value: boolean) => void;
   setEditData: (value: IFeeCategory | null) => void;
-  onDelete: (data: IFeeCategory) => void;
-  onEdit: (data: IFeeCategory) => void;
 }
 
 export interface IFeeCategoryFormProps {

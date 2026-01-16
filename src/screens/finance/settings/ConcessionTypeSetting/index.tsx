@@ -9,13 +9,14 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
+  concessionTypeApi,
   useGetConcessionTypesQuery,
   useGetConcessionTypeByIdQuery,
   useDeleteConcessionTypeMutation,
@@ -41,7 +42,11 @@ const ConcessionType = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   // Fetch concession type data
-  const { data: concessionTypes, isLoading } = useQueryAndMutation({
+  const {
+    data: concessionTypes,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionTypesQuery,
     params: {
@@ -55,10 +60,12 @@ const ConcessionType = () => {
   const dispatch = useDispatch();
 
   // Delete mutation
-  const { deleteConcessionType, isLoading: isDeleting } = useQueryAndMutation({
+  const { deleteConcessionType } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteConcessionTypeMutation,
   });
+
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // Fetch concession type details by ID for view dialog
   const { data: concessionTypeDetails, isLoading: isLoadingDetails } = useQueryAndMutation({
@@ -72,36 +79,6 @@ const ConcessionType = () => {
       skip: !currentYear?.id || !selectedConcessionType?.id || !viewConcessionTypeDialog.value,
     },
   });
-
-  /**
-   * Handles deleting a concession type
-   */
-  const handleDelete = async () => {
-    if (!selectedConcessionType?.id) return;
-
-    try {
-      await deleteConcessionType({
-        academicYearId: currentYear?.id,
-        concessionTypeId: selectedConcessionType.id,
-      }).unwrap();
-
-      shikshaMitraToast.success({
-        message: (
-          <>
-            Concession Type: <strong>{selectedConcessionType?.concessionName}</strong> deleted
-            successfully.
-          </>
-        ),
-      });
-      deleteConcessionTypeDialog.onFalse();
-      setSelectedConcessionType(null);
-    } catch (error) {
-      console.error('Error deleting concession type:', error);
-      shikshaMitraToast.error({
-        message: 'Failed to delete concession type. Please try again.',
-      });
-    }
-  };
 
   /**
    * Handles closing the concession type dialog
@@ -221,9 +198,35 @@ const ConcessionType = () => {
               variant="contained"
               color="error"
               size="small"
-              loading={isDeleting}
-              disabled={isDeleting}
-              onClick={handleDelete}
+              onClick={() => {
+                confirmWithUndo({
+                  item: selectedConcessionType,
+                  onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                    dispatchFn(
+                      concessionTypeApi.util.updateQueryData(
+                        'getConcessionTypes',
+                        currentYear?.id,
+                        (draft: any) => {
+                          const index = draft.data?.findIndex(
+                            (b: any) => b.id === (selectedConcessionType as any)?.id
+                          );
+                          setDeleteIndex(index);
+                          if (index !== -1) {
+                            draft.data.splice(index, 1);
+                          }
+                        }
+                      )
+                    ),
+                  onUndoRestore: () => refetch(),
+                  onCommit: () =>
+                    deleteConcessionType({
+                      academicYearId: currentYear?.id,
+                      concessionTypeId: selectedConcessionType?.id,
+                    }),
+                });
+                deleteConcessionTypeDialog.onFalse();
+                setSelectedConcessionType(null);
+              }}
             >
               Yes
             </Button>

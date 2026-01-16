@@ -3,20 +3,15 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteFeeCategoryMutation } from 'src/redux/feeCategory/feeCategoryApi';
 
 import FeeCategoryForm from './Components/FeeCategoryForm';
 import FeeCategoryTable from './Components/FeeCategoryTable';
@@ -24,16 +19,7 @@ import FeeCategoryTable from './Components/FeeCategoryTable';
 import type { IFeeCategory } from './Components/type';
 
 const FeeCategoryCreation = () => {
-  const { currentAcademicYearId } = useSelector((state: RootState) => state.globalState);
-
-  const [deleteFeeCategory, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteFeeCategoryMutation,
-    params: { academicYearId: currentAcademicYearId },
-  });
-
   // Dialog control states
-  const deleteFeeCategoryDialog = useBoolean(); // Controls delete confirmation dialog
   const addFeeCategoryDialog = useBoolean(); // Controls add/edit fee category dialog
   const [open, setOpen] = useState(false); // Controls table dialog state
 
@@ -98,14 +84,6 @@ const FeeCategoryCreation = () => {
       />
 
       <FeeCategoryTable
-        onDelete={(data) => {
-          setSelectedFeeCategory(data);
-          deleteFeeCategoryDialog.onTrue();
-        }}
-        onEdit={(data) => {
-          setSelectedFeeCategory(data);
-          addFeeCategoryDialog.onTrue();
-        }}
         open={open}
         onAddFeeCategory={addFeeCategoryDialog}
         setOpenDialog={setOpen}
@@ -147,47 +125,6 @@ const FeeCategoryCreation = () => {
           editData={selectedFeeCategory}
         />
       </CustomDialog>
-
-      <ConfirmDialog
-        open={deleteFeeCategoryDialog.value}
-        onClose={() => {
-          setSelectedFeeCategory(null);
-          deleteFeeCategoryDialog.onFalse();
-        }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to delete fee category{' '}
-            <strong>{selectedFeeCategory?.feeCategoryName}</strong>?
-          </>
-        }
-        action={
-          <LoadingButton
-            variant="contained"
-            color="error"
-            size="small"
-            loading={isDeleteLoading}
-            onClick={async () => {
-              try {
-                const payload = {
-                  academicYearId: currentAcademicYearId?.id,
-                  id: (selectedFeeCategory as any).id,
-                };
-                await deleteFeeCategory(payload).unwrap();
-                deleteFeeCategoryDialog.onFalse();
-                setSelectedFeeCategory(null);
-                shikshaMitraToast.success({
-                  message: `Fee category &quot;${selectedFeeCategory?.feeCategoryName}&quot; deleted successfully`,
-                });
-              } catch (error) {
-                console.error('Failed to delete fee category', error);
-              }
-            }}
-          >
-            Yes
-          </LoadingButton>
-        }
-      />
     </Box>
   );
 };

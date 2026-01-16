@@ -8,19 +8,16 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetIncomesQuery } from 'src/redux/incomeApi/incomeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { incomeApi, useGetIncomesQuery } from 'src/redux/incomeApi/incomeApi';
 import { useGetIncomeDetailsQuery } from 'src/redux/incomeApi/incomeDetailedApi';
-import {
-  useGetIncomeCategoryByIdQuery,
-  useDeleteIncomeCategoryMutation,
-} from 'src/redux/finance/incomeTrackingManagement/incomeTracking';
+import { useDeleteIncomeCategoryMutation } from 'src/redux/finance/incomeTrackingManagement/incomeTracking';
 
 import IncomeTable from './Components/IncomeTable';
 import ViewIncomeData from './Components/ViewIncomeData';
@@ -36,28 +33,20 @@ const IncomeTracking = () => {
   const addIncomeDialog = useBoolean();
   const deleteIncomeDialog = useBoolean();
   const viewIncomeDialog = useBoolean();
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   const { data: incomeData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomesQuery,
   });
 
-  const { data: incomeDetailedData } = useQueryAndMutation({
+  const { data: incomeDetailedData, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeDetailsQuery,
   });
 
-  // GET by ID mutation
-  const { data: incomeById, isLoading: isLoadingDetails } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetIncomeCategoryByIdQuery,
-    options: {
-      skip: !selectedIncome?.id,
-    },
-  });
-
   // DELETE mutation
-  const { deleteIncomeCategory, isLoading: isDeleting } = useQueryAndMutation({
+  const { deleteIncomeCategory } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteIncomeCategoryMutation,
   });
@@ -182,24 +171,42 @@ const IncomeTracking = () => {
             variant="contained"
             color="error"
             size="small"
-            loading={isDeleting}
-            disabled={isDeleting}
             onClick={async () => {
-              if (!selectedIncome?.id) return;
-
-              try {
-                await deleteIncomeCategory(selectedIncome.id).unwrap();
-
-                shikshaMitraToast.success({
-                  message: `Income record "${selectedIncome?.incomeName}" deleted successfully`,
-                });
+              if (selectedIncome) {
                 deleteIncomeDialog.onFalse();
-                setSelectedIncome(null);
-              } catch (error) {
-                console.error('Delete operation failed:', error);
-                shikshaMitraToast.error({
-                  message: 'Failed to delete income record',
+                const currentData = incomeData && incomeData.length > 0 ? incomeData : [];
+                confirmWithUndo({
+                  item: selectedIncome,
+                  onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
+                    const index = currentData.findIndex(
+                      (item: any) => item.id === selectedIncome.id
+                    );
+                    if (index !== -1) {
+                      setDeleteIndex(index);
+                      dispatchFn(
+                        incomeApi.util.updateQueryData('getIncomes', undefined, (draft: any) => {
+                          if (draft) {
+                            const paramsIndex = draft.findIndex(
+                              (item: any) => item.id === selectedIncome.id
+                            );
+                            if (paramsIndex !== -1) {
+                              draft.splice(paramsIndex, 1);
+                            }
+                          }
+                        })
+                      );
+                    }
+                  },
+                  onUndoRestore: () => {
+                    refetch();
+                  },
+                  onCommit: async () => {
+                    if (selectedIncome?.id) {
+                      await deleteIncomeCategory(selectedIncome.id);
+                    }
+                  },
                 });
+                setSelectedIncome(null);
               }
             }}
           >
