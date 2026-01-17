@@ -9,13 +9,17 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteServiceTypeMutation } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
+import {
+  vehicleSettingsApi,
+  useGetServiceTypesQuery,
+  useDeleteServiceTypeMutation,
+} from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import ServiceTypeForm from './Components/ServiceTypeForm';
 import ServiceTypeTable from './Components/ServiceTypeTable';
@@ -41,6 +45,18 @@ const ServiceTypeSettingScreen = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteServiceTypeMutation,
   });
+
+  const {
+    data: serviceTypeData,
+    isLoading: serviceTypesLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetServiceTypesQuery,
+  });
+
+  // Undo functionality hook
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   /**
    * Handles closing of add/edit service type dialog
@@ -95,6 +111,8 @@ const ServiceTypeSettingScreen = () => {
       />
 
       <ServiceTypeTable
+        data={serviceTypeData}
+        isLoading={serviceTypesLoading}
         onDelete={(data) => {
           setSelectedServiceType(data);
           deleteServiceTypeDialog.onTrue();
@@ -167,19 +185,37 @@ const ServiceTypeSettingScreen = () => {
             onClick={async () => {
               if (!selectedServiceType?.id) return;
 
-              try {
-                const typeName = selectedServiceType?.name || selectedServiceType?.typeName;
-                await deleteServiceType(selectedServiceType.id);
-                deleteServiceTypeDialog.onFalse();
-                setSelectedServiceType(null);
-                shikshaMitraToast.success({
-                  message: `Service Type: ${typeName} deleted successfully`,
-                });
-              } catch (error: any) {
-                shikshaMitraToast.error({
-                  message: error?.data?.message || 'Failed to delete service type',
-                });
-              }
+              confirmWithUndo({
+                item: selectedServiceType,
+                message: `Service Type: ${selectedServiceType?.name || selectedServiceType?.typeName} deleted successfully`,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
+                  dispatchFn(
+                    vehicleSettingsApi.util.updateQueryData(
+                      'getServiceTypes',
+                      undefined,
+                      (draft: any) => {
+                        const arr = Array.isArray(draft) ? draft : draft?.data;
+                        if (!Array.isArray(arr)) return;
+
+                        const index = arr.findIndex(
+                          (item: any) => item.id === selectedServiceType.id
+                        );
+                        if (index !== -1) {
+                          setDeleteIndex(index);
+                          arr.splice(index, 1);
+                        }
+                      }
+                    )
+                  );
+                },
+                onUndoRestore: () => refetch(),
+                onCommit: async () => {
+                  await deleteServiceType(selectedServiceType.id);
+                },
+              });
+
+              deleteServiceTypeDialog.onFalse();
+              setSelectedServiceType(null);
             }}
           >
             {isDeleting ? 'Deleting...' : 'Yes'}
