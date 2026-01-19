@@ -5,9 +5,9 @@ import type { RootState } from 'src/redux/store';
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -15,9 +15,9 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   librarySettingsApi,
+  useGetSectionManagementQuery,
   useDeleteSectionManagementMutation,
 } from 'src/redux/library/settingApi';
 
@@ -40,12 +40,19 @@ const SectionManagementScreen = () => {
   // State to store currently selected section for edit/delete/view operations
   const [selectedSection, setSelectedSection] = useState<ISection | null>(null);
 
-  const dispatch = useDispatch();
-
   // Delete section mutation hook
   const [deleteSectionManagement, { isLoading: isDeleteLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteSectionManagementMutation,
+  });
+
+  const {
+    data: sectionData,
+    isLoading: sectionsLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetSectionManagementQuery,
   });
 
   // Undo functionality hook
@@ -58,7 +65,6 @@ const SectionManagementScreen = () => {
     const resetState = () => {
       setTimeout(() => {
         setSelectedSection(null);
-        dispatch(setIsChanges(false));
       }, 200);
     };
 
@@ -118,6 +124,8 @@ const SectionManagementScreen = () => {
           setSelectedSection(data);
           viewShelfDialog.onTrue();
         }}
+        isLoading={sectionsLoading}
+        data={sectionData}
         open={open}
         onAddSection={addSectionDialog}
         setOpenDialog={setOpen}
@@ -219,17 +227,7 @@ const SectionManagementScreen = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    librarySettingsApi.util.updateQueryData(
-                      'getSectionManagement',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedSection);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetch(),
                 onCommit: () => deleteSectionManagement(selectedSection?.id || ''),
               });
               deleteSectionDialog.onFalse();

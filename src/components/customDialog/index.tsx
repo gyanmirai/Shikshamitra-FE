@@ -45,8 +45,6 @@ const CustomDialog = ({
     }
   };
 
-  const isLarge = ['lg', 'xl', false].includes(maxWidth) || !!props.fullScreen;
-
   const FormComponent = hasForm ? 'form' : Box;
   return (
     <Dialog
@@ -80,18 +78,7 @@ const CustomDialog = ({
           sx={{
             py: 2.1,
             px: 2,
-            background: (th) =>
-              isLarge
-                ? 'transparent'
-                : th.palette.mode === 'dark'
-                  ? 'var(--palette-common-white)'
-                  : 'var(--palette-grey-800)',
-            color: (th) =>
-              isLarge
-                ? 'text.primary'
-                : th.palette.mode === 'dark'
-                  ? 'var(--palette-grey-800)'
-                  : 'var(--palette-common-white)',
+            boxShadow: 'var(--shadows-3)',
           }} // Increased padding for header
         >
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
@@ -101,12 +88,6 @@ const CustomDialog = ({
             aria-label="close"
             onClick={() => handleCloseDialog({}, 'escapeKeyDown')}
             sx={{
-              color: (th) =>
-                isLarge
-                  ? 'text.secondary'
-                  : th.palette.mode === 'dark'
-                    ? 'var(--palette-grey-800)'
-                    : 'var(--palette-common-white)',
               transition: 'all 0.2s',
               '&:hover': {
                 backgroundColor: theme.palette.action.hover,

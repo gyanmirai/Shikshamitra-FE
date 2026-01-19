@@ -99,7 +99,7 @@ const LibraryChargesManagement = () => {
             Assign Charge
           </Button>
         }
-        sx={{ px: 1 }}
+        sx={{ px: 2 }}
       />
 
       {/* Dialog for Add/Edit */}

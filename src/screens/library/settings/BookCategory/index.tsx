@@ -29,7 +29,7 @@ import type { IBookCategory } from './Components/type';
 
 const BookCategoryCreation = () => {
   // Custom hook to fetch book category data
-  const { data: bookCategoryData } = useQueryAndMutation({
+  const { data: bookCategoryData, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBookCategoriesQuery,
   });
@@ -187,17 +187,7 @@ const BookCategoryCreation = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    bookCategoryApi.util.updateQueryData(
-                      'getBookCategories',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedBookCategory);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetch(),
                 onCommit: () => deleteBookCategory({ categoryId: selectedBookCategory?.id || '' }),
               });
               deleteBookCategoryDialog.onFalse();
