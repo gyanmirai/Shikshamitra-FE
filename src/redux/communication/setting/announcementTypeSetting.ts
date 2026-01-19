@@ -16,7 +16,7 @@ export const announcementTypeOptionsApi = communicationApi.injectEndpoints({
       query: ({ academicMediumId, data }) => ({
         url: '/announcement-types',
         method: 'POST',
-        body: data,
+        data,
         params: {
           academicMediumId,
         },
@@ -24,24 +24,17 @@ export const announcementTypeOptionsApi = communicationApi.injectEndpoints({
       invalidatesTags: ['AnnouncementTypeOptions'],
     }),
     updateAnnouncementType: builder.mutation({
-      query: ({ academicMediumId, data }) => ({
+      query: ({ data }) => ({
         url: `/announcement-types/${data.id}`,
         method: 'PUT',
-        body: data,
-        params: {
-          academicMediumId,
-        },
+        data,
       }),
       invalidatesTags: ['AnnouncementTypeOptions'],
     }),
     deleteAnnouncementType: builder.mutation({
-      query: ({ academicMediumId, data }) => ({
+      query: ({ data }) => ({
         url: `/announcement-types/${data.id}`,
         method: 'DELETE',
-        body: data,
-        params: {
-          academicMediumId,
-        },
       }),
       invalidatesTags: ['AnnouncementTypeOptions'],
     }),
@@ -49,4 +42,9 @@ export const announcementTypeOptionsApi = communicationApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useGetAnnouncementTypeOptionsQuery } = announcementTypeOptionsApi;
+export const {
+  useAddAnnouncementTypeMutation,
+  useUpdateAnnouncementTypeMutation,
+  useGetAnnouncementTypeOptionsQuery,
+  useDeleteAnnouncementTypeMutation,
+} = announcementTypeOptionsApi;

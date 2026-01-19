@@ -254,10 +254,16 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
                       error={!!(formik.touched.message && formik.errors.message) || false}
                     >
                       <Editor
+                        mentionable
+                        mentionItems={[
+                          { id: '1', label: 'student Name' },
+                          { id: '2', label: 'Parent Name' },
+                        ]}
                         value={formik.values.message}
                         onChange={(value) => handleEditorChange(value, formik.setFieldValue)}
                         placeholder="Message"
                         error={!!(formik.touched.message && formik.errors.message)}
+                        editable={!formik.values.templateName}
                         helperText={(formik.touched.message && formik.errors.message) || ''}
                       />
                     </ShakingTextField>
@@ -265,15 +271,10 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
 
                   {/* Tags */}
                   <Grid size={{ xs: 12 }}>
-                    {/* Render Chips */}
-
-                    {/* Input with Add Button */}
-
                     <TextField
                       fullWidth
                       size="small"
                       label="Tags"
-                      placeholder="Type a tag and press Enter"
                       value={tag}
                       onChange={(e) => setTag(e.target.value)}
                       onKeyDown={handleKeyDown}
@@ -294,6 +295,9 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
                                 label={t}
                                 onDelete={() => handleDelete(t)}
                                 size="small"
+                                sx={{
+                                  mt: 1,
+                                }}
                               />
                             ))}
                           </Box>
@@ -304,7 +308,6 @@ const NotificationTemplateForm: React.FC<INotificationTemplateFormProps> = ({
                           flexWrap: 'wrap',
                           alignItems: 'flex-start',
                           minHeight: 'auto',
-                          pt: '10px',
                         },
                         '& .MuiInputBase-input': {
                           flexGrow: 1,

@@ -55,7 +55,6 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
           isFilter: false,
           isSort: false,
           align: 'left',
-          minWidth: 150,
           render(value, row) {
             return (
               <ShakingTextField

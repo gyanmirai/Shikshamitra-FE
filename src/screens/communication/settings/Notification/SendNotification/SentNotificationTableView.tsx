@@ -24,6 +24,7 @@ import communicationData from '../../../../../../communicationData.json';
 
 const SentNotificationTableView = () => {
   const viewNotificationDialog = useBoolean(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: notificationData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSentNotificationHistoryQuery,

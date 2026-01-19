@@ -10,6 +10,8 @@ export interface INotificationTemplate {
 }
 
 export interface ITemplateTableProps {
+  data: INotificationTemplate[];
+  isLoading: boolean;
   setOpenDialog: (open: boolean) => void;
   setEditData: (data: INotificationTemplate | null) => void;
   onDelete: (data: INotificationTemplate) => void;
