@@ -67,7 +67,7 @@ const employeeFieldOptions: FieldOption[] = [
 export interface OperatorOption {
   value: string;
   label: string;
-  icon: string;
+  icon: string | React.ReactNode;
 }
 
 const operatorOptions: OperatorOption[] = [
@@ -215,10 +215,14 @@ const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameB
                         value={op.value}
                         sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
                       >
-                        <Iconify
-                          icon={op.icon}
-                          sx={{ color: 'text.secondary', mr: 1, width: 20, height: 20 }}
-                        />
+                        {typeof op.icon === 'string' ? (
+                          <Iconify
+                            icon={op.icon}
+                            sx={{ color: 'text.secondary', mr: 1, width: 20, height: 20 }}
+                          />
+                        ) : (
+                          <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>{op.icon}</Box>
+                        )}
                         <Typography variant="body2">{op.label}</Typography>
                       </MenuItem>
                     ))}

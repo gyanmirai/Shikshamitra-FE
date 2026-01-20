@@ -3,8 +3,6 @@ import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
-import type { IGroup } from './type';
-
 interface GroupTableProps {
   onEdit: (row: any) => void;
   onDelete: (row: any) => void;
@@ -12,10 +10,10 @@ interface GroupTableProps {
   setOpen: (value: boolean) => void;
 }
 
-export const groupList: IGroup[] = [
+export const groupList = [
   {
     id: 'g1',
-    groupName: 'Science Group - 10th Grade',
+    name: 'Science Group - 10th Grade',
     description: 'Group for all 10th-grade science stream students and teachers.',
     boards: ['GSEB'],
     mediums: ['English'],
@@ -29,7 +27,7 @@ export const groupList: IGroup[] = [
   },
   {
     id: 'g2',
-    groupName: 'Mathematics Group - 9th Grade',
+    name: 'Mathematics Group - 9th Grade',
     description: 'Focus group for advanced mathematics learning and assignments.',
     boards: ['CBSE'],
     mediums: ['English'],
@@ -43,7 +41,7 @@ export const groupList: IGroup[] = [
   },
   {
     id: 'g3',
-    groupName: 'Computer Science - 11th Grade',
+    name: 'Computer Science - 11th Grade',
     description: 'Group for computer science stream students and mentors.',
     boards: ['ICSE'],
     mediums: ['English'],
