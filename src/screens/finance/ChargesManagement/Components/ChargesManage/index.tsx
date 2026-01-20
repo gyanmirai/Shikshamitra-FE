@@ -8,14 +8,18 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Card, Button, Typography } from '@mui/material';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
+import {
+  chargesApi,
+  useGetChargesQuery,
+  useDeleteChargeMutation,
+} from 'src/redux/finance/ChargeManagement/chargeApi';
 
 import ChargeForm from './Component/ChargeForm';
 import ChargesTable from './Component/ChargesTable';
@@ -29,9 +33,15 @@ const ChargesManagement = () => {
   const [selectedChargeData, setSelectedChargeData] = useState<IChargeData | null>(null);
   const addChargeDialog = useBoolean();
   const onConfirmDialg = useBoolean();
+  const { confirmWithUndo } = useConfirmWithUndo();
+
+  const [deleteCharge] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteChargeMutation,
+  });
 
   // Fetch charge data using custom query hook
-  const { data: chargeData } = useQueryAndMutation({
+  const { data: chargeData, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargesQuery,
   });
@@ -191,7 +201,7 @@ const ChargesManagement = () => {
               Charge
             </Button>
           }
-          sx={{ px: 1 }}
+          sx={{ px: 2 }}
         />
       )}
       {!addChargeDialog.value && !viewChargeDetailsDialog.value && !editChargeDialog.value && (
@@ -309,11 +319,27 @@ const ChargesManagement = () => {
             size="small"
             onClick={() => {
               removeChargeDialog.onFalse();
-              setSelectedChargeData(null);
-              shikshaMitraToast.success({
-                message: `Charge ${selectedChargeData?.category} deleted successfully for ${selectedChargeData?.studentName}`,
-              });
-              // Handle delete action here
+              if (selectedChargeData) {
+                confirmWithUndo({
+                  item: selectedChargeData,
+                  onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
+                    dispatchFn(
+                      chargesApi.util.updateQueryData('getCharges', undefined, (draft) => {
+                        const index = draft.findIndex(
+                          (item: any) => item.id === selectedChargeData.id
+                        );
+                        if (index !== -1) {
+                          setDeleteIndex(index);
+                          draft.splice(index, 1);
+                        }
+                      })
+                    );
+                    setSelectedChargeData(null);
+                  },
+                  onUndoRestore: () => refetch(),
+                  onCommit: () => deleteCharge(selectedChargeData.id),
+                });
+              }
             }}
           >
             Yes

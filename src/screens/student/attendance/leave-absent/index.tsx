@@ -2,6 +2,7 @@
 
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 import type { Division, Standards, Organization } from 'src/types/school';
 
 import dayjs from 'dayjs';
@@ -128,6 +129,147 @@ const LeaveAndAbsentScreen = () => {
     [leaveData]
   );
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      // {
+      //   id: 'checkBox',
+      //   label: ' ',
+      //   isSort: false,
+      //   isFilter: false,
+      //   minWidth: '60px',
+      //   sticky: true,
+      //   renderColumn: (value) => (
+      //     <Checkbox
+      //       checked={tableData?.length === selectedStudent?.length}
+      //       onChange={(e) => {
+      //         if (e.target.checked) {
+      //           setSelectedStudent(tableData);
+      //         } else {
+      //           setSelectedStudent([]);
+      //         }
+      //       }}
+      //     />
+      //   ),
+      //   render(value, row) {
+      //     return (
+      //       <Checkbox
+      //         checked={selectedStudent.some((student: any) => student.id === row.id)}
+      //         onChange={(e) => {
+      //           if (!e.target.checked) {
+      //             setSelectedStudent(
+      //               selectedStudent.filter((student: any) => student.id !== row.id)
+      //             );
+      //           } else {
+      //             setSelectedStudent([...selectedStudent, row]);
+      //           }
+      //         }}
+      //       />
+      //     );
+      //   },
+      // },
+      {
+        id: 'name',
+        label: 'Student',
+        sticky: true,
+        render(value, row) {
+          return (
+            <Box display="flex" alignItems="center" gap={1}>
+              <Avatar sx={{ width: 30, height: 30 }} alt={value} title={value} />
+              {value}
+            </Box>
+          );
+        },
+      },
+      { id: 'student.educationMediumStage.name', label: 'Organization' },
+      { id: 'student.standard.name', label: 'Class' },
+      { id: 'student.division.name', label: 'Division' },
+      { id: 'leavePolicy.cleaveType', label: 'Leave Type', minWidth: '120px', align: 'left' },
+      {
+        id: 'startDate',
+        label: 'Start Date',
+        filterType: 'date',
+        minWidth: '120px',
+        align: 'left',
+      },
+      {
+        id: 'endDate',
+        label: 'End Date',
+        filterType: 'date',
+        minWidth: '120px',
+        align: 'left',
+      },
+      {
+        id: 'totalDays',
+        label: 'Total Days',
+        minWidth: '10vw',
+        filterType: 'number',
+        align: 'left',
+      },
+      { id: 'description', label: 'Description' },
+      { id: 'rejectionReason', label: 'Remarks' },
+      {
+        id: 'status',
+        label: 'Status',
+        filterType: 'enum',
+        sticky: true,
+        enumOptions: EmployeeLeaveStatusOptions,
+        render(value, row) {
+          const color = EmployeeLeaveStatusTypeColor[
+            value as EmployeeLeaveStatusType
+          ] as LabelColor;
+
+          return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
+        },
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        sticky: true,
+        minWidth: 80,
+        isSort: false,
+        isFilter: false,
+        align: 'left',
+        render(value, row) {
+          return (
+            <Box display="flex" gap={1}>
+              {row.status === 'Pending' ? (
+                <>
+                  <IconButton
+                    size="small"
+                    color="success"
+                    onClick={() => {
+                      setWhichStatus(EmployeeLeaveStatusType.Approved);
+                      setLeaveId(row.id);
+                      confirmRejectDialog.onTrue();
+                    }}
+                  >
+                    <CheckCircleOutline />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => {
+                      setWhichStatus(EmployeeLeaveStatusType.Rejected);
+                      setLeaveId(row.id);
+                      confirmRejectDialog.onTrue();
+                    }}
+                  >
+                    <Cancel />
+                  </IconButton>
+                </>
+              ) : (
+                '-'
+              )}
+            </Box>
+          );
+        },
+      },
+    ],
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -176,141 +318,7 @@ const LeaveAndAbsentScreen = () => {
             </Box>
           </>
         }
-        columns={[
-          // {
-          //   id: 'checkBox',
-          //   label: ' ',
-          //   isSort: false,
-          //   isFilter: false,
-          //   minWidth: '60px',
-          //   sticky: true,
-          //   renderColumn: (value) => (
-          //     <Checkbox
-          //       checked={tableData?.length === selectedStudent?.length}
-          //       onChange={(e) => {
-          //         if (e.target.checked) {
-          //           setSelectedStudent(tableData);
-          //         } else {
-          //           setSelectedStudent([]);
-          //         }
-          //       }}
-          //     />
-          //   ),
-          //   render(value, row) {
-          //     return (
-          //       <Checkbox
-          //         checked={selectedStudent.some((student: any) => student.id === row.id)}
-          //         onChange={(e) => {
-          //           if (!e.target.checked) {
-          //             setSelectedStudent(
-          //               selectedStudent.filter((student: any) => student.id !== row.id)
-          //             );
-          //           } else {
-          //             setSelectedStudent([...selectedStudent, row]);
-          //           }
-          //         }}
-          //       />
-          //     );
-          //   },
-          // },
-          {
-            id: 'name',
-            label: 'Student',
-            sticky: true,
-            render(value, row) {
-              return (
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Avatar sx={{ width: 30, height: 30 }} alt={value} title={value} />
-                  {value}
-                </Box>
-              );
-            },
-          },
-          { id: 'student.educationMediumStage.name', label: 'Organization' },
-          { id: 'student.standard.name', label: 'Class' },
-          { id: 'student.division.name', label: 'Division' },
-          { id: 'leavePolicy.cleaveType', label: 'Leave Type', minWidth: '120px', align: 'left' },
-          {
-            id: 'startDate',
-            label: 'Start Date',
-            filterType: 'date',
-            minWidth: '120px',
-            align: 'left',
-          },
-          {
-            id: 'endDate',
-            label: 'End Date',
-            filterType: 'date',
-            minWidth: '120px',
-            align: 'left',
-          },
-          {
-            id: 'totalDays',
-            label: 'Total Days',
-            minWidth: '10vw',
-            filterType: 'number',
-            align: 'left',
-          },
-          { id: 'description', label: 'Description' },
-          { id: 'rejectionReason', label: 'Remarks' },
-          {
-            id: 'status',
-            label: 'Status',
-            filterType: 'enum',
-            sticky: true,
-            enumOptions: EmployeeLeaveStatusOptions,
-            render(value, row) {
-              const color = EmployeeLeaveStatusTypeColor[
-                value as EmployeeLeaveStatusType
-              ] as LabelColor;
-
-              return <Label color={color}>{EmployeeLeaveStatusType[value]}</Label>;
-            },
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            sticky: true,
-            minWidth: 80,
-            isSort: false,
-            isFilter: false,
-            align: 'left',
-            render(value, row) {
-              return (
-                <Box display="flex" gap={1}>
-                  {row.status === 'Pending' ? (
-                    <>
-                      <IconButton
-                        size="small"
-                        color="success"
-                        onClick={() => {
-                          setWhichStatus(EmployeeLeaveStatusType.Approved);
-                          setLeaveId(row.id);
-                          confirmRejectDialog.onTrue();
-                        }}
-                      >
-                        <CheckCircleOutline />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => {
-                          setWhichStatus(EmployeeLeaveStatusType.Rejected);
-                          setLeaveId(row.id);
-                          confirmRejectDialog.onTrue();
-                        }}
-                      >
-                        <Cancel />
-                      </IconButton>
-                    </>
-                  ) : (
-                    '-'
-                  )}
-                </Box>
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={tableData || []}
         isLoading={isLoading}
       />{' '}

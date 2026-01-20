@@ -9,13 +9,17 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteBankAccountMutation } from 'src/redux/finance/BankAccountManage/bankAccountApi';
+import {
+  bankAccountApi,
+  useGetBankAccountsQuery,
+  useDeleteBankAccountMutation,
+} from 'src/redux/finance/BankAccountManage/bankAccountApi';
 
 import BankAccountForm from './Components/BankManageForm';
 import BankAccountTable from './Components/BankAccountTable';
@@ -23,6 +27,16 @@ import BankAccountTable from './Components/BankAccountTable';
 import type { IBankAccount } from './Components/type';
 
 const BankAccountManagement: React.FC = () => {
+  // Get bank accounts data
+  const {
+    data: bankAccountData,
+    isLoading: bankAccountsLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetBankAccountsQuery,
+  });
+
   // DELETE mutation
   const { deleteBankAccount, isLoading: isDeleting } = useQueryAndMutation({
     type: 'mutation',
@@ -39,7 +53,7 @@ const BankAccountManagement: React.FC = () => {
 
   // State to store currently selected bank account for edit/delete operations
   const [selectedBankAccount, setSelectedBankAccount] = useState<IBankAccount | null>(null);
-
+  const { confirmWithUndo } = useConfirmWithUndo();
   const dispatch = useDispatch();
 
   /**
@@ -104,7 +118,8 @@ const BankAccountManagement: React.FC = () => {
         setOpenDialog={setOpen}
         editData={selectedBankAccount}
         setEditData={setSelectedBankAccount}
-        data={[]}
+        data={bankAccountData || []}
+        isLoading={bankAccountsLoading}
       />
 
       <CustomDialog
@@ -162,25 +177,33 @@ const BankAccountManagement: React.FC = () => {
             size="small"
             loading={isDeleting}
             disabled={isDeleting}
-            onClick={async () => {
+            onClick={() => {
               if (!selectedBankAccount?.id) return;
 
-              try {
-                await deleteBankAccount({
-                  bankAccountId: selectedBankAccount.id,
-                }).unwrap();
-
-                shikshaMitraToast.success({
-                  message: `Bank account deleted successfully`,
-                });
-                deleteBankAccountDialog.onFalse();
-                setSelectedBankAccount(null);
-              } catch (error) {
-                console.error('Delete operation failed:', error);
-                shikshaMitraToast.error({
-                  message: 'Failed to delete bank account',
-                });
-              }
+              confirmWithUndo({
+                item: selectedBankAccount,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    bankAccountApi.util.updateQueryData(
+                      'getBankAccounts',
+                      undefined,
+                      (draft: any) => {
+                        const list = Array.isArray(draft) ? draft : draft?.data || [];
+                        const index = list.findIndex(
+                          (c: any) => c.id === (selectedBankAccount as any)?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          list.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: () => refetch(),
+                onCommit: () => deleteBankAccount({ bankAccountId: selectedBankAccount.id }),
+              });
+              deleteBankAccountDialog.onFalse();
+              setSelectedBankAccount(null);
             }}
           >
             Yes

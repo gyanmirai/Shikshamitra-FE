@@ -1,3 +1,5 @@
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
@@ -115,6 +117,174 @@ const RegistrationTable = ({
     [registrationData?.data?.items]
   );
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'studentName',
+        label: 'Student Name',
+        minWidth: '160px',
+        align: 'left',
+        sticky: true,
+      },
+      { id: 'formNo', label: 'Form No.', minWidth: '100px', align: 'left' },
+      {
+        id: 'inquiryNo',
+        label: 'Inquiry No.',
+        minWidth: '120px',
+        isFilter: true,
+        filterType: 'string',
+        align: 'left',
+      },
+      { id: 'standard', label: 'Class', align: 'left', minWidth: '80px' },
+      {
+        id: 'dobValue',
+        label: 'Date of Birth',
+        minWidth: '130px',
+        align: 'left',
+        isFilter: true,
+        filterType: 'date',
+      },
+      { id: 'age', label: 'Age', align: 'left' },
+      {
+        id: 'doiValue',
+        label: 'Date of Inquiry',
+        minWidth: '150px',
+        align: 'left',
+        filterType: 'date',
+        isDateRangeFilter: true,
+      },
+      {
+        id: 'genderValue',
+        label: 'Gender',
+        align: 'left',
+        filterType: 'enum',
+        minWidth: '90px',
+        enumOptions: GenderOptions,
+      },
+      { id: 'address', label: 'Address', minWidth: '150px', align: 'left' },
+      {
+        id: 'primaryContactNo',
+        label: 'Primary Contact No.',
+        minWidth: '180px',
+        align: 'left',
+      },
+      {
+        id: 'secondaryContactNo',
+        label: 'Secondary Contact No.',
+        minWidth: '200px',
+        align: 'left',
+      },
+      { id: 'previousSchool', label: 'Previous School', minWidth: '150px', align: 'left' },
+      {
+        id: 'inquiryPreference',
+        label: 'Inquiry Preference',
+        minWidth: '175px',
+        align: 'left',
+      },
+      // {
+      //   id: 'status',
+      //   label: 'Entrance Exam',
+      //   filterType: 'enum',
+      //   enumOptions: EntranceExamStatusOptions,
+      //   align: 'left',
+      //   minWidth: '150px',
+      //   sticky: true,
+      //   render(value, row) {
+      //     const color = EntranceExamStatusTypeColors[
+      //       value as EntranceExamStatusType
+      //     ] as LabelColor;
+      //     return (
+      //       <Label color={color}>
+      //         {EntranceExamStatusType[value as EntranceExamStatusType]}
+      //       </Label>
+      //     );
+      //   },
+      // },
+      // { id: 'educationMedium.name', label: 'Organization', align: 'left' },
+      {
+        id: 'progress',
+        label: 'Progress',
+        align: 'left',
+        sticky: true,
+        filterType: 'number',
+        render(value, row) {
+          return (
+            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+              <CircularProgress
+                variant="determinate"
+                value={value}
+                size={50}
+                thickness={3}
+                sx={{
+                  color: value < 50 ? 'warning.main' : 'success.main',
+                }}
+              />
+              <Box
+                sx={{
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  right: 0,
+                  position: 'absolute',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  component="small"
+                  color="text.secondary"
+                  sx={{ fontSize: '12px' }}
+                >
+                  {value}%
+                </Typography>
+              </Box>
+            </Box>
+          );
+        },
+      },
+      // {
+      //   id: 'followUpStatusType',
+      //   label: 'Follow Up Status',
+      //   filterType: 'enum',
+      //   enumOptions: FollowUpStatusTypeOptions,
+      //   minWidth: '160px',
+      //   align: 'left',
+      //   sticky: true,
+      //   render(value, row) {
+      //     const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
+
+      //     return <Label color={color}>{FollowUpStatusType[value]}</Label>;
+      //   },
+      // },
+      {
+        id: 'actions',
+        label: 'Actions',
+        isSort: false,
+        isFilter: false,
+        minWidth: 50,
+        align: 'left',
+        sticky: true,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showEditIcon
+              handleEditClick={() => {
+                setEditData(row as IInquiryData);
+                formDialog.onTrue();
+              }}
+              actions={(prop) => actions({ ...prop, row })}
+              placement="right-top"
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
     <>
       <CustomizableTable
@@ -142,169 +312,7 @@ const RegistrationTable = ({
           </>
         }
         isLoading={isLoading}
-        columns={[
-          {
-            id: 'studentName',
-            label: 'Student Name',
-            minWidth: '160px',
-            align: 'left',
-            sticky: true,
-          },
-          { id: 'formNo', label: 'Form No.', minWidth: '100px', align: 'left' },
-          {
-            id: 'inquiryNo',
-            label: 'Inquiry No.',
-            minWidth: '120px',
-            isFilter: true,
-            filterType: 'string',
-            align: 'left',
-          },
-          { id: 'standard', label: 'Class', align: 'left', minWidth: '80px' },
-          {
-            id: 'dobValue',
-            label: 'Date of Birth',
-            minWidth: '130px',
-            align: 'left',
-            isFilter: true,
-            filterType: 'date',
-          },
-          { id: 'age', label: 'Age', align: 'left' },
-          {
-            id: 'doiValue',
-            label: 'Date of Inquiry',
-            minWidth: '150px',
-            align: 'left',
-            filterType: 'date',
-            isDateRangeFilter: true,
-          },
-          {
-            id: 'genderValue',
-            label: 'Gender',
-            align: 'left',
-            filterType: 'enum',
-            minWidth: '90px',
-            enumOptions: GenderOptions,
-          },
-          { id: 'address', label: 'Address', minWidth: '150px', align: 'left' },
-          {
-            id: 'primaryContactNo',
-            label: 'Primary Contact No.',
-            minWidth: '180px',
-            align: 'left',
-          },
-          {
-            id: 'secondaryContactNo',
-            label: 'Secondary Contact No.',
-            minWidth: '200px',
-            align: 'left',
-          },
-          { id: 'previousSchool', label: 'Previous School', minWidth: '150px', align: 'left' },
-          {
-            id: 'inquiryPreference',
-            label: 'Inquiry Preference',
-            minWidth: '175px',
-            align: 'left',
-          },
-          // {
-          //   id: 'status',
-          //   label: 'Entrance Exam',
-          //   filterType: 'enum',
-          //   enumOptions: EntranceExamStatusOptions,
-          //   align: 'left',
-          //   minWidth: '150px',
-          //   sticky: true,
-          //   render(value, row) {
-          //     const color = EntranceExamStatusTypeColors[
-          //       value as EntranceExamStatusType
-          //     ] as LabelColor;
-          //     return (
-          //       <Label color={color}>
-          //         {EntranceExamStatusType[value as EntranceExamStatusType]}
-          //       </Label>
-          //     );
-          //   },
-          // },
-          // { id: 'educationMedium.name', label: 'Organization', align: 'left' },
-          {
-            id: 'progress',
-            label: 'Progress',
-            align: 'left',
-            sticky: true,
-            filterType: 'number',
-            render(value, row) {
-              return (
-                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                  <CircularProgress
-                    variant="determinate"
-                    value={value}
-                    size={50}
-                    thickness={3}
-                    sx={{
-                      color: value < 50 ? 'warning.main' : 'success.main',
-                    }}
-                  />
-                  <Box
-                    sx={{
-                      top: 0,
-                      left: 0,
-                      bottom: 0,
-                      right: 0,
-                      position: 'absolute',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      component="small"
-                      color="text.secondary"
-                      sx={{ fontSize: '12px' }}
-                    >
-                      {value}%
-                    </Typography>
-                  </Box>
-                </Box>
-              );
-            },
-          },
-          // {
-          //   id: 'followUpStatusType',
-          //   label: 'Follow Up Status',
-          //   filterType: 'enum',
-          //   enumOptions: FollowUpStatusTypeOptions,
-          //   minWidth: '160px',
-          //   align: 'left',
-          //   sticky: true,
-          //   render(value, row) {
-          //     const color = FollowUpStatusTypeColors[value as FollowUpStatusType] as LabelColor;
-
-          //     return <Label color={color}>{FollowUpStatusType[value]}</Label>;
-          //   },
-          // },
-          {
-            id: 'actions',
-            label: 'Actions',
-            isSort: false,
-            isFilter: false,
-            minWidth: 50,
-            align: 'left',
-            sticky: true,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  showEditIcon
-                  handleEditClick={() => {
-                    setEditData(row as IInquiryData);
-                    formDialog.onTrue();
-                  }}
-                  actions={(prop) => actions({ ...prop, row })}
-                  placement="right-top"
-                />
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={tableData || []}
       />
       <ConfirmDialog

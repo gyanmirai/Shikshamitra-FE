@@ -2,14 +2,15 @@
 
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { capitalize } from 'lodash';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import base64ToFile from 'src/utils/base64ToFile';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -44,7 +45,7 @@ import type { IGroup } from '../management/group-managemnet/type';
 const HouseSetting = () => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
 
-  const { data: groupData } = useQueryAndMutation({
+  const { data: groupData, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAllGroupQuery,
     params: (currentMedium as Medium)?.id,
@@ -78,6 +79,79 @@ const HouseSetting = () => {
       dialog.onFalse();
     }
   };
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        label: 'House Name',
+        id: 'name',
+        render(value, row) {
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <SubjectColorIndicator color={row.color} />
+              <Typography variant="caption" fontSize="13px">
+                {value}
+              </Typography>
+            </Box>
+          );
+        },
+      },
+      {
+        label: 'Actions',
+        id: 'action',
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        minWidth: '40px',
+        align: 'left',
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showEditIcon
+              showDeleteIcon
+              showThreeDots={false}
+              handleEditClick={() => {
+                setEditData(row as any);
+                dialog.onTrue();
+              }}
+              handleDeleteClick={() => {
+                setEditData(row as any);
+                confirm.onTrue();
+              }}
+              placement="right-top"
+              //   actions={({ popover }) => (
+              //     <MenuList>
+              //       <MenuItem
+              //         onClick={() => {
+              //           setEditData(row as IGroup);
+              //           assignStudentDialog.onTrue();
+              //           popover.onClose();
+              //         }}
+              //       >
+              //         <Iconify icon="hugeicons:student" />
+              //         Assign Student
+              //       </MenuItem>
+              //       <MenuItem
+              //         onClick={() => {
+              //           setEditData(row as IGroup);
+              //           assignLeaderDialog.onTrue();
+              //           popover.onClose();
+              //         }}
+              //       >
+              //         <Iconify icon="fluent-mdl2:party-leader" />
+              //         Assign leader
+              //       </MenuItem>
+              //     </MenuList>
+              //   )}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
     <Box sx={{ minHeight: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
@@ -134,73 +208,7 @@ const HouseSetting = () => {
         //   setQueryParams(newParams);
         // }}
         onServerSort={async (column, sort) => {}}
-        columns={[
-          {
-            label: 'House Name',
-            id: 'name',
-            render(value, row) {
-              return (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <SubjectColorIndicator color={row.color} />
-                  <Typography variant="caption" fontSize="13px">
-                    {value}
-                  </Typography>
-                </Box>
-              );
-            },
-          },
-          {
-            label: 'Actions',
-            id: 'action',
-            isSort: false,
-            isFilter: false,
-            sticky: true,
-            minWidth: '40px',
-            align: 'left',
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  showEditIcon
-                  showDeleteIcon
-                  showThreeDots={false}
-                  handleEditClick={() => {
-                    setEditData(row as any);
-                    dialog.onTrue();
-                  }}
-                  handleDeleteClick={() => {
-                    setEditData(row as any);
-                    confirm.onTrue();
-                  }}
-                  placement="right-top"
-                  //   actions={({ popover }) => (
-                  //     <MenuList>
-                  //       <MenuItem
-                  //         onClick={() => {
-                  //           setEditData(row as IGroup);
-                  //           assignStudentDialog.onTrue();
-                  //           popover.onClose();
-                  //         }}
-                  //       >
-                  //         <Iconify icon="hugeicons:student" />
-                  //         Assign Student
-                  //       </MenuItem>
-                  //       <MenuItem
-                  //         onClick={() => {
-                  //           setEditData(row as IGroup);
-                  //           assignLeaderDialog.onTrue();
-                  //           popover.onClose();
-                  //         }}
-                  //       >
-                  //         <Iconify icon="fluent-mdl2:party-leader" />
-                  //         Assign leader
-                  //       </MenuItem>
-                  //     </MenuList>
-                  //   )}
-                />
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={groupData?.data || []}
       />{' '}
       <CustomDialog
@@ -266,17 +274,7 @@ const HouseSetting = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    studentGroupApi.util.updateQueryData(
-                      'getAllGroup',
-                      currentMedium?.id,
-                      (draft: any) => {
-                        if (!draft?.data) return;
-                        draft.data.splice(index, 0, editData);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetch(),
                 onCommit: () => deleteGroup(editData?.id),
               });
               confirm.onFalse();

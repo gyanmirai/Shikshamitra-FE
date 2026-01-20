@@ -1,7 +1,9 @@
 'use client';
 
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
 import { Box } from '@mui/material';
+import React, { useMemo } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
@@ -14,43 +16,11 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   onEdit,
   editData,
   onDelete,
-}) => (
-  <CustomizableTable
-    tableId="payment-term-table"
-    noDataText={
-      <>
-        No Payment Term data found
-        <Box
-          onClick={() => {
-            addPaymentTerm.onTrue();
-            setEditData(null);
-          }}
-          color="primary.main"
-          fontWeight={600}
-          sx={{
-            '&:hover': {
-              cursor: 'pointer',
-              color: 'primary.main',
-              textDecoration: 'underline',
-            },
-          }}
-        >
-          Add Payment Term
-        </Box>
-      </>
-    }
-    columns={[
-      {
-        id: 'paymentTermName',
-        label: 'Name',
-        align: 'left',
-      },
-      {
-        id: 'totalInstallments',
-        label: 'Installments',
-        align: 'left',
-        filterType: 'number',
-      },
+}) => {
+  const columns: IColumn[] = useMemo(
+    () => [
+      { id: 'paymentTermName', label: 'Name', align: 'left' },
+      { id: 'totalInstallments', label: 'Installments', align: 'left', filterType: 'number' },
       {
         id: 'action',
         label: 'Action',
@@ -69,9 +39,40 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
           />
         ),
       },
-    ]}
-    data={data || []}
-  />
-);
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  return (
+    <CustomizableTable
+      tableId="payment-term-table"
+      noDataText={
+        <>
+          No Payment Term data found
+          <Box
+            onClick={() => {
+              addPaymentTerm.onTrue();
+              setEditData(null);
+            }}
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Add Payment Term
+          </Box>
+        </>
+      }
+      columns={columns}
+      data={data || []}
+    />
+  );
+};
 
 export default PaymentTermTable;

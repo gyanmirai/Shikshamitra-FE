@@ -3,7 +3,6 @@
 import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 
-import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -11,14 +10,10 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Button, Typography } from '@mui/material';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteConcessionRequestMutation } from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 
 import ReasonApprovalForm from './Components/ConcessionRequestApprove';
 import StudentConcessionTable from './Components/StudentConcessionTable';
@@ -45,17 +40,12 @@ const Concession = () => {
   const addConcessionRequest = useBoolean();
   const viewConcessionRequest = useBoolean();
   const onViewAllConcession = useBoolean();
-  const removeConcessionDialog = useBoolean();
+
   const [selectedConcession, setSelectedConcession] = useState<IStudentInfo | null>(null);
 
   const onConfirmDialg = useBoolean();
   const [selectedMode, setSelectedMode] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [deleteConcessionRequest, { isLoading: isDeleteLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useDeleteConcessionRequestMutation,
-    params: { concessionRequestId: selectedConcession?.id },
-  });
+
   const handleClose = (_e: any, isSubmit?: boolean) => {
     if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
       addConcessionRequest.onFalse();
@@ -209,10 +199,6 @@ const Concession = () => {
             setSelectedMode('Reject');
             setSelectedConcession(data);
           }}
-          onRemove={(data) => {
-            removeConcessionDialog.onTrue();
-            setSelectedConcession(data);
-          }}
           onAddConcession={() => {
             addConcessionRequest.onTrue();
           }}
@@ -292,50 +278,6 @@ const Concession = () => {
           selectedConcession={selectedConcession}
         />
       </CustomDialog>
-
-      <ConfirmDialog
-        open={removeConcessionDialog.value}
-        onClose={() => {
-          setSelectedConcession(null);
-          removeConcessionDialog.onFalse();
-        }}
-        title="Delete"
-        content={
-          <>
-            Are you sure you want to delete concession for{' '}
-            <strong>
-              &quot;{selectedConcession?.studentName}
-              &quot;?
-            </strong>
-          </>
-        }
-        action={
-          <LoadingButton
-            variant="contained"
-            color="error"
-            size="small"
-            loading={isDeleteLoading}
-            onClick={async () => {
-              try {
-                const payload = {
-                  academicYearId: currentYear?.id,
-                  id: (selectedConcession as any).id,
-                };
-                await deleteConcessionRequest(payload).unwrap();
-                removeConcessionDialog.onFalse();
-                setSelectedConcession(null);
-                shikshaMitraToast.success({
-                  message: `Concession deleted successfully for &quot;${selectedConcession?.studentName}&quot;`,
-                });
-              } catch (error) {
-                console.error('Failed to delete fee category', error);
-              }
-            }}
-          >
-            Yes
-          </LoadingButton>
-        }
-      />
     </Box>
   );
 };

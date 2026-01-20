@@ -1,4 +1,6 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -23,6 +25,122 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
   setSelectedEntry,
 }) => {
   const theme = useTheme();
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'feeHeadName',
+        label: 'Name',
+        align: 'left',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'feeCategoryId',
+        label: 'Fee Category',
+        align: 'left',
+      },
+      {
+        id: 'description',
+        label: 'Description',
+        align: 'left',
+        render: (value) => (
+          <Typography
+            variant="caption"
+            fontSize="13px"
+            sx={{
+              maxWidth: 300,
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden',
+            }}
+          >
+            {value || '-'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'toggle',
+        label: 'Active',
+        isFilter: false,
+        isSort: false,
+        render(value, row) {
+          const statusColor =
+            value === true ? theme.palette.success.main : theme.palette.text.secondary;
+          return (
+            <CustomTooltip
+              title={value === true ? 'Active' : 'InActive'}
+              arrow
+              placement="left"
+              PopperProps={{
+                modifiers: [
+                  {
+                    name: 'offset',
+                    options: {
+                      offset: [0, 0],
+                    },
+                  },
+                ],
+              }}
+            >
+              <IconButton
+                onClick={() => {
+                  activeDialog.onTrue();
+                  setSelectedEntry(row as IFeeHead);
+                }}
+                sx={{
+                  p: 0.6,
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(0,0,0,0.06)',
+                  transition: 'transform 0.2s ease-in-out, background-color 0.2s',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    transform: 'scale(1.1)',
+                    backgroundColor: 'rgba(0,0,0,0.08)',
+                  },
+                }}
+              >
+                <Iconify
+                  icon={GlobalIcons.tick}
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    color: statusColor,
+                  }}
+                />
+              </IconButton>
+            </CustomTooltip>
+          );
+        },
+      },
+      {
+        id: 'action',
+        label: 'Action',
+        minWidth: 60,
+        align: 'left',
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showThreeDots={false}
+              placement="right-top"
+              showEditIcon
+              handleEditClick={() => {
+                onEdit(row as IFeeHead);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   return (
     <CustomizableTable
@@ -49,117 +167,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
           </Box>
         </>
       }
-      columns={[
-        {
-          id: 'feeHeadName',
-          label: 'Name',
-          align: 'left',
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value}
-            </Typography>
-          ),
-        },
-        {
-          id: 'feeCategoryId',
-          label: 'Fee Category',
-          align: 'left',
-        },
-        {
-          id: 'description',
-          label: 'Description',
-          align: 'left',
-          render: (value) => (
-            <Typography
-              variant="caption"
-              fontSize="13px"
-              sx={{
-                maxWidth: 300,
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                overflow: 'hidden',
-              }}
-            >
-              {value || '-'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'toggle',
-          label: 'Active',
-          isFilter: false,
-          isSort: false,
-          render(value, row) {
-            const statusColor =
-              value === true ? theme.palette.success.main : theme.palette.text.secondary;
-            return (
-              <CustomTooltip
-                title={value === true ? 'Active' : 'InActive'}
-                arrow
-                placement="left"
-                PopperProps={{
-                  modifiers: [
-                    {
-                      name: 'offset',
-                      options: {
-                        offset: [0, 0],
-                      },
-                    },
-                  ],
-                }}
-              >
-                <IconButton
-                  onClick={() => {
-                    activeDialog.onTrue();
-                    setSelectedEntry(row as IFeeHead);
-                  }}
-                  sx={{
-                    p: 0.6,
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(0,0,0,0.06)',
-                    transition: 'transform 0.2s ease-in-out, background-color 0.2s',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      transform: 'scale(1.1)',
-                      backgroundColor: 'rgba(0,0,0,0.08)',
-                    },
-                  }}
-                >
-                  <Iconify
-                    icon={GlobalIcons.tick}
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      color: statusColor,
-                    }}
-                  />
-                </IconButton>
-              </CustomTooltip>
-            );
-          },
-        },
-        {
-          id: 'action',
-          label: 'Action',
-          minWidth: 60,
-          align: 'left',
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                showThreeDots={false}
-                placement="right-top"
-                showEditIcon
-                handleEditClick={() => {
-                  onEdit(row as IFeeHead);
-                }}
-              />
-            );
-          },
-        },
-      ]}
+      columns={columns}
       data={data || []}
     />
   );

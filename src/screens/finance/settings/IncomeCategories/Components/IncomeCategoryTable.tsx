@@ -1,4 +1,6 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -14,32 +16,9 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
-}) => (
-  <CustomizableTable
-    tableId="income-category-data-table"
-    noDataText={
-      <>
-        Income Category Data Not Found{' '}
-        <Box
-          onClick={() => {
-            onAddIncomeCategory.onTrue();
-            setOpenDialog(true);
-            setEditData(null);
-          }}
-          color="primary.main"
-          fontWeight={600}
-          sx={{
-            '&:hover': {
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            },
-          }}
-        >
-          Add Income Category
-        </Box>
-      </>
-    }
-    columns={[
+}) => {
+  const columns: IColumn[] = useMemo(
+    () => [
       {
         id: 'incomeCategoryName',
         label: 'Name',
@@ -106,9 +85,40 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
           );
         },
       },
-    ]}
-    data={data || []}
-  />
-);
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  return (
+    <CustomizableTable
+      tableId="income-category-data-table"
+      noDataText={
+        <>
+          Income Category Data Not Found{' '}
+          <Box
+            onClick={() => {
+              onAddIncomeCategory.onTrue();
+              setOpenDialog(true);
+              setEditData(null);
+            }}
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Add Income Category
+          </Box>
+        </>
+      }
+      columns={columns}
+      data={data || []}
+    />
+  );
+};
 
 export default IncomeCategoryTable;

@@ -1,5 +1,7 @@
 'use client';
 
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
 import { Box } from '@mui/material';
 import React, { useMemo } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
@@ -30,6 +32,60 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
     [data]
   );
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'concessionName',
+        label: 'Name',
+        align: 'left',
+      },
+      {
+        id: 'concessionType',
+        label: 'Based On',
+        align: 'left',
+      },
+      {
+        id: 'amountPercentageValue',
+        label: 'Amount/Percentage',
+        align: 'left',
+      },
+      {
+        id: 'applicableFeeHeadsValue',
+        label: 'Applicable Fee Heads',
+        align: 'left',
+      },
+      {
+        id: 'documentRequiredValue',
+        label: 'Documents Required',
+        align: 'left',
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        align: 'left',
+        isSort: false,
+        isFilter: false,
+        sticky: true,
+        minWidth: 50,
+        render: (value, row) => (
+          <ThreeDotsActions
+            showThreeDots={false}
+            showViewIcon
+            handleViewClick={() => {
+              onView?.(row as IConcessionTypeForm);
+            }}
+            showEditIcon
+            showDeleteIcon
+            handleEditClick={() => onEdit?.(row as IConcessionTypeForm)}
+            handleDeleteClick={() => onDelete?.(row as IConcessionTypeForm)}
+          />
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
     <CustomizableTable
       tableId="concession-table"
@@ -56,55 +112,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
           </Box>
         </>
       }
-      columns={[
-        {
-          id: 'concessionName',
-          label: 'Name',
-          align: 'left',
-        },
-        {
-          id: 'concessionType',
-          label: 'Based On',
-          align: 'left',
-        },
-        {
-          id: 'amountPercentageValue',
-          label: 'Amount/Percentage',
-          align: 'left',
-        },
-        {
-          id: 'applicableFeeHeadsValue',
-          label: 'Applicable Fee Heads',
-          align: 'left',
-        },
-        {
-          id: 'documentRequiredValue',
-          label: 'Documents Required',
-          align: 'left',
-        },
-        {
-          id: 'actions',
-          label: 'Actions',
-          align: 'left',
-          isSort: false,
-          isFilter: false,
-          sticky: true,
-          minWidth: 50,
-          render: (value, row) => (
-            <ThreeDotsActions
-              showThreeDots={false}
-              showViewIcon
-              handleViewClick={() => {
-                onView?.(row as IConcessionTypeForm);
-              }}
-              showEditIcon
-              showDeleteIcon
-              handleEditClick={() => onEdit?.(row as IConcessionTypeForm)}
-              handleDeleteClick={() => onDelete?.(row as IConcessionTypeForm)}
-            />
-          ),
-        },
-      ]}
+      columns={columns}
       data={tableData || []}
     />
   );
