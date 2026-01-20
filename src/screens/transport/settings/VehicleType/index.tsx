@@ -9,13 +9,17 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteVehicleTypeMutation } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
+import {
+  vehicleSettingsApi,
+  useGetVehicleTypesQuery,
+  useDeleteVehicleTypeMutation,
+} from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import VehicleTypeForm from './Components/VehicleTypeForm';
 import VehicleTypeTable from './Components/VehicalTypeTable';
@@ -36,10 +40,22 @@ const VehicleTypeSettingScreen = () => {
 
   const dispatch = useDispatch();
 
+  // Undo functionality hook
+  const { confirmWithUndo } = useConfirmWithUndo();
+
   // Delete mutation hook
   const { deleteVehicleType, isLoading: isDeleting } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteVehicleTypeMutation,
+  });
+
+  const {
+    data: vehicleTypeData,
+    isLoading: vehicleTypesLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetVehicleTypesQuery, // Ensure this is imported
   });
 
   /**
@@ -94,6 +110,8 @@ const VehicleTypeSettingScreen = () => {
       />
 
       <VehicleTypeTable
+        data={vehicleTypeData}
+        isLoading={vehicleTypesLoading}
         onDelete={(data) => {
           setSelectedVehicleType(data);
           deleteVehicleTypeDialog.onTrue();
@@ -166,19 +184,38 @@ const VehicleTypeSettingScreen = () => {
             onClick={async () => {
               if (!selectedVehicleType?.id) return;
 
-              try {
-                const vehicleTypeName = selectedVehicleType?.name || selectedVehicleType?.typeName;
-                await deleteVehicleType(selectedVehicleType.id);
-                deleteVehicleTypeDialog.onFalse();
-                setSelectedVehicleType(null);
-                shikshaMitraToast.success({
-                  message: `Vehicle Type: ${vehicleTypeName} deleted successfully`,
-                });
-              } catch (error: any) {
-                shikshaMitraToast.error({
-                  message: error?.data?.message || 'Failed to delete vehicle type',
-                });
-              }
+              confirmWithUndo({
+                item: selectedVehicleType,
+                message: `Vehicle Type: ${selectedVehicleType?.name || selectedVehicleType?.typeName} deleted successfully`,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
+                  dispatchFn(
+                    vehicleSettingsApi.util.updateQueryData(
+                      'getVehicleTypes',
+                      undefined,
+                      (draft: any) => {
+                        // Allow for draft being the array or draft.data being the array
+                        const arr = Array.isArray(draft) ? draft : draft?.data;
+                        if (!Array.isArray(arr)) return;
+
+                        const index = arr.findIndex(
+                          (item: any) => item.id === selectedVehicleType.id
+                        );
+                        if (index !== -1) {
+                          setDeleteIndex(index);
+                          arr.splice(index, 1);
+                        }
+                      }
+                    )
+                  );
+                },
+                onUndoRestore: () => refetch(),
+                onCommit: async () => {
+                  await deleteVehicleType(selectedVehicleType.id);
+                },
+              });
+
+              deleteVehicleTypeDialog.onFalse();
+              setSelectedVehicleType(null);
             }}
           >
             {isDeleting ? 'Deleting...' : 'Yes'}

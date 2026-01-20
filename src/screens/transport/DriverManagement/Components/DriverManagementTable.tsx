@@ -1,11 +1,12 @@
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useMemo, useState, useCallback } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -66,116 +67,122 @@ const DriverConductorTable: React.FC<IDriverManagementTableProps> = () => {
     [assignRouteDialog]
   );
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'name',
+        label: 'Name',
+        align: 'left',
+        sticky: true,
+        minWidth: 150,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'employeeId',
+        label: 'Employee ID',
+        align: 'left',
+        minWidth: 130,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'role',
+        label: 'Role',
+        align: 'left',
+        minWidth: 100,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}
+          </Typography>
+        ),
+      },
+
+      {
+        id: 'licenceExpiry',
+        label: 'Licence Expiry',
+        align: 'left',
+        filterType: 'date',
+        minWidth: 140,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'experience',
+        label: 'Experience',
+        align: 'left',
+        minWidth: 120,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'phoneNo',
+        label: 'Phone No.',
+        align: 'left',
+        minWidth: 140,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'assignedRoute',
+        label: 'Assigned Route',
+        align: 'left',
+        minWidth: 150,
+        render: (value, row) => (
+          <Typography variant="caption" fontSize="13px">
+            {Array.isArray(value) ? value.join(', ') : value || '-'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        minWidth: 50,
+        align: 'left',
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              actions={(prop) => actions({ ...prop, row })}
+              placement="right-top"
+              showViewIcon
+              handleViewClick={() => {
+                setSelectedDriver(row as IDriverConductor);
+                viewProfileDialog.onTrue();
+              }}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
     <>
       <CustomizableTable
         tableId="driver-conductor-data-table"
         isLoading={driverConductorLoading}
         noDataText={<>Driver/Conductor Data Not Found </>}
-        columns={[
-          {
-            id: 'name',
-            label: 'Name',
-            align: 'left',
-            sticky: true,
-            minWidth: 150,
-            render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value}
-              </Typography>
-            ),
-          },
-          {
-            id: 'employeeId',
-            label: 'Employee ID',
-            align: 'left',
-            minWidth: 130,
-            render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value}
-              </Typography>
-            ),
-          },
-          {
-            id: 'role',
-            label: 'Role',
-            align: 'left',
-            minWidth: 100,
-            render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value}
-              </Typography>
-            ),
-          },
-
-          {
-            id: 'licenceExpiry',
-            label: 'Licence Expiry',
-            align: 'left',
-            filterType: 'date',
-            minWidth: 140,
-            render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value}
-              </Typography>
-            ),
-          },
-          {
-            id: 'experience',
-            label: 'Experience',
-            align: 'left',
-            minWidth: 120,
-            render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value}
-              </Typography>
-            ),
-          },
-          {
-            id: 'phoneNo',
-            label: 'Phone No.',
-            align: 'left',
-            minWidth: 140,
-            render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {value}
-              </Typography>
-            ),
-          },
-          {
-            id: 'assignedRoute',
-            label: 'Assigned Route',
-            align: 'left',
-            minWidth: 150,
-            render: (value, row) => (
-              <Typography variant="caption" fontSize="13px">
-                {Array.isArray(value) ? value.join(', ') : value || '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'action',
-            label: 'Actions',
-            minWidth: 50,
-            align: 'left',
-            isSort: false,
-            sticky: true,
-            isFilter: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  actions={(prop) => actions({ ...prop, row })}
-                  placement="right-top"
-                  showViewIcon
-                  handleViewClick={() => {
-                    setSelectedDriver(row as IDriverConductor);
-                    viewProfileDialog.onTrue();
-                  }}
-                />
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={driverConductorData || []}
       />
 

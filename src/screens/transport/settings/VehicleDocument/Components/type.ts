@@ -22,6 +22,8 @@ export interface IVehicleDocumentTableProps {
   setEditData: (value: IVehicleDocument | null) => void;
   onDelete: (data: IVehicleDocument) => void;
   onEdit: (data: IVehicleDocument) => void;
+  data: any;
+  isLoading: boolean;
 }
 
 export interface IVehicleDocumentFormProps {

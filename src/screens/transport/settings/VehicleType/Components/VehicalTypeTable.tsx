@@ -1,9 +1,9 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetVehicleTypesQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import type { IVehicleType, IVehicleTypeTableProps } from './type';
 
@@ -13,16 +13,13 @@ const VehicleTypeTable: React.FC<IVehicleTypeTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
+  data,
+  isLoading,
 }) => {
-  const { data: vehicleTypeData, isLoading: vehicleTypesLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetVehicleTypesQuery,
-  });
-
   // Transform API response to match table format
   const transformedData = React.useMemo(() => {
-    if (!vehicleTypeData) return [];
-    return vehicleTypeData.map((item: any) => {
+    if (!data) return [];
+    return data.map((item: any) => {
       const range = item.approxSittingRange?.split('-').map((v: string) => parseInt(v.trim(), 10));
       return {
         ...item,
@@ -30,12 +27,71 @@ const VehicleTypeTable: React.FC<IVehicleTypeTableProps> = ({
         vehicleRange: range && range.length === 2 ? range : [0, 0],
       };
     });
-  }, [vehicleTypeData]);
+  }, [data]);
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'typeName',
+        label: 'Name',
+        align: 'left',
+        minWidth: 180,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'vehicleRange',
+        label: 'Approx Sitting Range',
+        align: 'left',
+        minWidth: 200,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value ? `${value[0]} - ${value[1]}` : 'N/A'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'description',
+        label: 'Description',
+        align: 'left',
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        minWidth: 50,
+        align: 'left',
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showThreeDots={false}
+              placement="right-top"
+              showDeleteIcon
+              showEditIcon
+              handleDeleteClick={() => {
+                onDelete(row as IVehicleType);
+              }}
+              handleEditClick={() => {
+                onEdit(row as IVehicleType);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   return (
     <CustomizableTable
       tableId="vehicle-type-data-table"
-      isLoading={vehicleTypesLoading}
+      isLoading={isLoading}
       noDataText={
         <>
           Vehicle Type Data Not Found{' '}
@@ -68,60 +124,7 @@ const VehicleTypeTable: React.FC<IVehicleTypeTableProps> = ({
           </Box>
         </>
       }
-      columns={[
-        {
-          id: 'typeName',
-          label: 'Name',
-          align: 'left',
-          minWidth: 180,
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value}
-            </Typography>
-          ),
-        },
-        {
-          id: 'vehicleRange',
-          label: 'Approx Sitting Range',
-          align: 'left',
-          minWidth: 200,
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value ? `${value[0]} - ${value[1]}` : 'N/A'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'description',
-          label: 'Description',
-          align: 'left',
-        },
-        {
-          id: 'action',
-          label: 'Actions',
-          minWidth: 50,
-          align: 'left',
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                showThreeDots={false}
-                placement="right-top"
-                showDeleteIcon
-                showEditIcon
-                handleDeleteClick={() => {
-                  onDelete(row as IVehicleType);
-                }}
-                handleEditClick={() => {
-                  onEdit(row as IVehicleType);
-                }}
-              />
-            );
-          },
-        },
-      ]}
+      columns={columns}
       data={transformedData}
     />
   );

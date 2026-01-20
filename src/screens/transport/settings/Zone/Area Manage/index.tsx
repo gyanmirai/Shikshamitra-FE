@@ -9,13 +9,17 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteZoneAreaOptionsMutation } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
+import {
+  vehicleSettingsApi,
+  useGetZoneAreaOptionsQuery,
+  useDeleteZoneAreaOptionsMutation,
+} from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import ZoneAreaForm from './Components/ZoneForm';
 import ZoneAreaTable from './Components/ZoneAreaTable';
@@ -36,10 +40,22 @@ const ZoneAreaSettingScreen = () => {
 
   const dispatch = useDispatch();
 
+  // Undo functionality hook
+  const { confirmWithUndo } = useConfirmWithUndo();
+
   // Delete mutation hook
   const { deleteZoneAreaOptions, isLoading: isDeleting } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteZoneAreaOptionsMutation,
+  });
+
+  const {
+    data: zoneAreaData,
+    isLoading: zoneAreaLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetZoneAreaOptionsQuery,
   });
 
   /**
@@ -86,6 +102,8 @@ const ZoneAreaSettingScreen = () => {
         sx={{ mb: 2 }}
       />
       <ZoneAreaTable
+        data={zoneAreaData}
+        isLoading={zoneAreaLoading}
         onDelete={(data) => {
           setSelectedZoneArea(data);
           deleteZoneAreaDialog.onTrue();
@@ -151,19 +169,35 @@ const ZoneAreaSettingScreen = () => {
             onClick={async () => {
               if (!selectedZoneArea?.id) return;
 
-              try {
-                const zoneAreaName = selectedZoneArea?.name || selectedZoneArea?.zoneName;
-                await deleteZoneAreaOptions(selectedZoneArea.id);
-                deleteZoneAreaDialog.onFalse();
-                setSelectedZoneArea(null);
-                shikshaMitraToast.success({
-                  message: `Zone/Area: ${zoneAreaName} deleted successfully`,
-                });
-              } catch (error: any) {
-                shikshaMitraToast.error({
-                  message: error?.data?.message || 'Failed to delete zone/area',
-                });
-              }
+              confirmWithUndo({
+                item: selectedZoneArea,
+                message: `Zone/Area deleted successfully`,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
+                  dispatchFn(
+                    vehicleSettingsApi.util.updateQueryData(
+                      'getZoneAreaOptions',
+                      undefined,
+                      (draft: any) => {
+                        const arr = Array.isArray(draft) ? draft : draft?.data;
+                        if (!Array.isArray(arr)) return;
+
+                        const index = arr.findIndex((item: any) => item.id === selectedZoneArea.id);
+                        if (index !== -1) {
+                          setDeleteIndex(index);
+                          arr.splice(index, 1);
+                        }
+                      }
+                    )
+                  );
+                },
+                onUndoRestore: () => refetch(),
+                onCommit: async () => {
+                  await deleteZoneAreaOptions(selectedZoneArea.id);
+                },
+              });
+
+              deleteZoneAreaDialog.onFalse();
+              setSelectedZoneArea(null);
             }}
           >
             {isDeleting ? 'Deleting...' : 'Yes'}

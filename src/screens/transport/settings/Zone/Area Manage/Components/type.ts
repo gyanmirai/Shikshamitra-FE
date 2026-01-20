@@ -14,6 +14,8 @@ export interface IZoneAreaTableProps {
   setEditData: (value: IZoneArea | null) => void;
   onDelete: (data: IZoneArea) => void;
   onEdit: (data: IZoneArea) => void;
+  data: any;
+  isLoading: boolean;
 }
 
 export interface IZoneAreaFormProps {
