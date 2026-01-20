@@ -32,6 +32,7 @@ import {
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
+import { Scrollbar } from 'src/components/scrollbar';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 
@@ -377,38 +378,62 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
   });
   return (
     <Box
-    // sx={{
-    //   '& input': { fontSize: '12px' },
-    //   '& label': { fontSize: '12px' },
-    // }}
+      sx={{
+        height: '100%',
+      }}
+      // sx={{
+      //   '& input': { fontSize: '12px' },
+      //   '& label': { fontSize: '12px' },
+      // }}
     >
       {/* <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}> */}
-      <form onSubmit={formik.handleSubmit}>
+      <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Card
           sx={{
             px: 0,
+            display: 'flex',
+            flexDirection: 'row',
+            height: '100%', // Ensure there's enough height for vertical tabs
             // '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
           }}
         >
-          <CustomTabs
-            value={tabs.value}
-            onChange={handleTabChange}
-            variant="fullWidth"
-            // slotProps={{ tab: { px: 0 } }}
-          >
-            {TABS.map((tab) => (
-              <Tab key={tab.value} value={tab.value} label={tab.label} />
-            ))}
-          </CustomTabs>
+          <Box sx={{ borderRight: 1, borderColor: 'divider', minWidth: 240, maxWidth: 240 }}>
+            <CustomTabs
+              orientation="vertical"
+              variant="scrollable"
+              value={tabs.value}
+              onChange={handleTabChange}
+              sx={{ borderRight: 1, borderColor: 'divider', height: '100%' }}
+              // slotProps={{ tab: { px: 0 } }}
+            >
+              {TABS.map((tab) => (
+                <Tab
+                  key={tab.value}
+                  value={tab.value}
+                  label={tab.label}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    textAlign: 'left',
+                    justifyContent: 'start',
+                  }}
+                />
+              ))}
+            </CustomTabs>
+          </Box>
 
-          <ViewInformationScreen
-            isBackClick={isBackClick}
-            activeTabIndex={activeTabIndex}
-            allFields={fields}
-            formik={formik}
-            editData={editData}
-            isEdit={isEdit}
-          />
+          <Scrollbar
+            sx={{ flexGrow: 1, width: 'calc(100% - 240px)', height: '100%', overflow: 'auto' }}
+          >
+            <ViewInformationScreen
+              isBackClick={isBackClick}
+              activeTabIndex={activeTabIndex}
+              allFields={fields}
+              formik={formik}
+              editData={editData}
+              isEdit={isEdit}
+            />
+          </Scrollbar>
           {/* </CardContent>
           </Card> */}
         </Card>

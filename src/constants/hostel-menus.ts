@@ -1,5 +1,6 @@
 import { hostelPath } from 'src/routes/paths';
 
+import menuIconView from './icon-view';
 import { defaultModulePermissionName } from './student-menu';
 
 const defaultHostelPermissionName = 'Hostel.';
@@ -110,6 +111,7 @@ const hostelModule = {
           shortcutKey: 'Alt+H+1',
           shortcutKeyName: 'Alt+H+1',
           permissionName: hostelPermissions.dashboard,
+          icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
           title: 'New Request',
@@ -118,6 +120,7 @@ const hostelModule = {
           shortcutKey: 'Alt+H+1',
           shortcutKeyName: 'Alt+H+1',
           permissionName: hostelPermissions.newRequest,
+          icon: menuIconView('mdi:plus-circle-outline'),
         },
         {
           title: 'Hostel Management',
@@ -126,6 +129,7 @@ const hostelModule = {
           shortcutKey: 'Alt+H+2',
           shortcutKeyName: 'Alt+H+2',
           permissionName: hostelPermissions.management.root,
+          icon: menuIconView('mdi:bunk-bed-outline'),
           children: [
             {
               title: 'Hostel Configuration',
@@ -133,6 +137,7 @@ const hostelModule = {
               _action: 'hostel-management',
               shortcutKey: 'Alt+A+C+1',
               shortcutKeyName: 'Alt+A+C+1',
+              icon: menuIconView('mdi:home-city-outline'),
             },
             {
               title: 'Room Configuration',
@@ -140,6 +145,7 @@ const hostelModule = {
               _action: 'room-configuration',
               shortcutKey: 'Alt+A+C+1',
               shortcutKeyName: 'Alt+A+C+1',
+              icon: menuIconView('mdi:door-open-outline'),
             },
             {
               title: 'Setting',
@@ -147,6 +153,7 @@ const hostelModule = {
               _action: 'hostel-setting',
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
+              icon: menuIconView('mdi:cog-outline'),
             },
           ],
         },
@@ -157,6 +164,7 @@ const hostelModule = {
           shortcutKey: 'Alt+H+3',
           shortcutKeyName: 'Alt+H+3',
           permissionName: hostelPermissions.roomAllocation,
+          icon: menuIconView('mdi:account-key-outline'),
         },
         {
           title: 'Fee Management',
@@ -165,6 +173,7 @@ const hostelModule = {
           shortcutKey: 'Alt+H+4',
           shortcutKeyName: 'Alt+H+4',
           permissionName: hostelPermissions.feeManagement.root,
+          icon: menuIconView('mdi:cash-multiple'),
           children: [
             {
               title: 'Fee Collection',
@@ -173,6 +182,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+1',
               shortcutKeyName: 'Alt+A+C+1',
               permissionName: hostelPermissions.feeManagement.collection,
+              icon: menuIconView('mdi:hand-coin-outline'),
             },
             {
               title: 'Fee Setting',
@@ -181,6 +191,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
               permissionName: hostelPermissions.feeManagement.setting,
+              icon: menuIconView('mdi:cog-outline'),
             },
           ],
         },
@@ -191,6 +202,7 @@ const hostelModule = {
           shortcutKey: 'Alt+H+4',
           shortcutKeyName: 'Alt+H+4',
           permissionName: hostelPermissions.attendance.root,
+          icon: menuIconView('mdi:calendar-check-outline'),
           children: [
             {
               title: 'Attendance',
@@ -199,6 +211,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+1',
               shortcutKeyName: 'Alt+A+C+1',
               permissionName: hostelPermissions.attendance.attendance,
+              icon: menuIconView('mdi:calendar-check-outline'),
             },
             {
               title: 'Leave And Approve',
@@ -207,6 +220,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
               permissionName: hostelPermissions.attendance.leaveApprove,
+              icon: menuIconView('mdi:calendar-remove-outline'),
             },
             {
               title: 'Gate Verification',
@@ -215,6 +229,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+3',
               shortcutKeyName: 'Alt+A+C+3',
               permissionName: hostelPermissions.attendance.gateVerification,
+              icon: menuIconView('mdi:gate-outlined'),
             },
             {
               title: 'Setting',
@@ -223,6 +238,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
               permissionName: hostelPermissions.attendance.setting,
+              icon: menuIconView('mdi:cog-outline'),
             },
           ],
         },
@@ -233,6 +249,7 @@ const hostelModule = {
           shortcutKey: 'Alt+H+4',
           shortcutKeyName: 'Alt+H+4',
           permissionName: hostelPermissions.visitor.root,
+          icon: menuIconView('mdi:account-box-outline'),
           children: [
             {
               title: 'Log Visitor',
@@ -241,6 +258,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+1',
               shortcutKeyName: 'Alt+A+C+1',
               permissionName: hostelPermissions.visitor.log,
+              icon: menuIconView('mdi:notebook-edit-outline'),
             },
             {
               title: 'Pre Register Visitor',
@@ -249,6 +267,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
               permissionName: hostelPermissions.visitor.preRegister,
+              icon: menuIconView('mdi:account-plus-outline'),
             },
           ],
         },
@@ -259,6 +278,7 @@ const hostelModule = {
           shortcutKey: 'Alt+H+4',
           shortcutKeyName: 'Alt+H+4',
           permissionName: hostelPermissions.disciplinary.root,
+          icon: menuIconView('mdi:gavel'),
           children: [
             {
               title: 'Log Disciplinary Incident',
@@ -267,6 +287,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+1',
               shortcutKeyName: 'Alt+A+C+1',
               permissionName: hostelPermissions.disciplinary.log,
+              icon: menuIconView('mdi:alert-octagon-outline'),
             },
             {
               title: 'Archieved Incident',
@@ -275,6 +296,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
               permissionName: hostelPermissions.disciplinary.archived,
+              icon: menuIconView('mdi:archive-outline'),
             },
             {
               title: 'Setting',
@@ -283,6 +305,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
               permissionName: hostelPermissions.disciplinary.setting,
+              icon: menuIconView('mdi:cog-outline'),
             },
           ],
         },
@@ -293,6 +316,7 @@ const hostelModule = {
           shortcutKey: 'Alt+H+5',
           shortcutKeyName: 'Alt+H+5',
           permissionName: hostelPermissions.maintenance.root,
+          icon: menuIconView('mdi:tools'),
           children: [
             {
               title: 'Safety Management',
@@ -301,6 +325,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+3',
               shortcutKeyName: 'Alt+A+C+3',
               permissionName: hostelPermissions.maintenance.safety,
+              icon: menuIconView('mdi:shield-check-outline'),
             },
             {
               title: 'Setting',
@@ -309,6 +334,7 @@ const hostelModule = {
               shortcutKey: 'Alt+A+C+2',
               shortcutKeyName: 'Alt+A+C+2',
               permissionName: hostelPermissions.maintenance.setting,
+              icon: menuIconView('mdi:cog-outline'),
             },
           ],
         },
@@ -317,12 +343,14 @@ const hostelModule = {
           path: hostelPaths.catering.root,
           _action: 'catering-management',
           permissionName: hostelPermissions.catering.root,
+          icon: menuIconView('mdi:food-fork-drink'),
           children: [
             {
               title: 'Weekly Menu Planning',
               path: hostelPaths.catering.menuPlanning,
               _action: 'weekly-menu-planning',
               permissionName: hostelPermissions.catering.menuPlanning,
+              icon: menuIconView('mdi:calendar-text-outline'),
             },
             // {
             //   title: 'Feedback Analytics',
@@ -334,6 +362,7 @@ const hostelModule = {
               path: hostelPaths.catering.settings,
               _action: 'settings',
               permissionName: hostelPermissions.catering.settings,
+              icon: menuIconView('mdi:cog-outline'),
             },
           ],
         },
@@ -344,6 +373,7 @@ const hostelModule = {
           shortcutKey: 'Alt+H+6',
           shortcutKeyName: 'Alt+H+6',
           permissionName: hostelPermissions.reports,
+          icon: menuIconView('mdi:chart-box-outline'),
         },
         {
           title: 'Settings',
@@ -352,6 +382,7 @@ const hostelModule = {
           shortcutKey: 'Alt+H+7',
           shortcutKeyName: 'Alt+H+7',
           permissionName: hostelPermissions.settings,
+          icon: menuIconView('mdi:cog-outline'),
         },
         {
           title: 'Notification',
@@ -360,6 +391,7 @@ const hostelModule = {
           shortcutKey: 'Alt+S+N',
           shortcutKeyName: 'Alt+S+N',
           permissionName: hostelPermissions.notification,
+          icon: menuIconView('mdi:bell-outline'),
         },
       ],
     },

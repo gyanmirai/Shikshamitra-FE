@@ -743,8 +743,6 @@ const RegisterStepForm = ({ activeStep: step, formik, isBackClick, editData }: a
     studentMedicalDetails?.data,
   ]);
 
-  console.log(formik, 'basicDetails');
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <FormSlider step={step} steps={steps} isBackClick={isBackClick}>
