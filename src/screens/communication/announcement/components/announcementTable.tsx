@@ -30,6 +30,8 @@ import type {
 } from '../type';
 
 const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
+  data,
+  isLoading,
   setOpen,
   onEdit,
   handleSwitchChange,
@@ -38,10 +40,6 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
   onView,
   onPublish,
 }) => {
-  // const { data: announcementData } = useQueryAndMutation({
-  //   type: 'query',
-  //   currentQueryAndMutation: useGetAnnouncementsQuery,
-  // });
   const theme = useTheme();
   // counts for tabs
   const announcementCounts = useMemo(
@@ -684,6 +682,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
       {tabs.value === 'All' ? (
         <CustomizableTable
           tableId="school-wise-announcement-table"
+          isLoading={isLoading}
           noDataText={
             <>
               No school announcement data found
@@ -711,6 +710,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
       ) : tabs.value === 0 ? (
         <CustomizableTable
           tableId="school-wise-announcement-table-draft"
+          isLoading={isLoading}
           noDataText={
             <>
               No school announcement data found
@@ -738,6 +738,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
       ) : tabs.value === 1 ? (
         <CustomizableTable
           tableId="school-wise-announcement-table-readonly"
+          isLoading={isLoading}
           noDataText={
             <>
               No school announcement data found
@@ -765,6 +766,7 @@ const AnnouncementTable: React.FC<ISchoolWiseAnnouncementTableProps> = ({
       ) : tabs.value === 2 ? (
         <CustomizableTable
           tableId="school-wise-announcement-table-readonly"
+          isLoading={isLoading}
           noDataText={
             <>
               No school announcement data found

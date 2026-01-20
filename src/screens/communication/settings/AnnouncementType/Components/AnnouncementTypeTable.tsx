@@ -7,6 +7,7 @@ import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor
 import type { IAnnouncementType, IAnnouncementTypeTableProps } from './type';
 
 const AnnouncementTypeTable: React.FC<IAnnouncementTypeTableProps> = ({
+  isLoading,
   data,
   onAddAnnouncementType,
   setOpenDialog,
@@ -15,6 +16,7 @@ const AnnouncementTypeTable: React.FC<IAnnouncementTypeTableProps> = ({
   onEdit,
 }) => (
   <CustomizableTable
+    isLoading={isLoading}
     tableId="announcement-type-data-table"
     noDataText={
       <>

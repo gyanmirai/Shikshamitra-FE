@@ -1,14 +1,33 @@
-export interface IGroup {
-  id: string;
-  groupName: string;
-  description: string;
+export interface IAcademicRule {
   boards: string[];
   mediums: string[];
-  organizations: string[];
+  stages: string[];
   classes: string[];
   divisions: string[];
-  users: string[];
+}
+
+export interface IFilterRow {
+  field: string;
+  operator: string;
+  value: string;
+}
+
+export interface IGroupRules {
+  academicRules: IAcademicRule[];
   roles: string[];
-  total: number;
-  employees: string[];
+  studentFilters: IFilterRow[];
+  employeeFilters: IFilterRow[];
+  academicTree: any[];
+}
+
+export interface INameBasedRules extends IGroupRules {
+  selectedUserIds: string[];
+}
+
+export interface IGroup {
+  id: string;
+  name: string;
+  description: string;
+  ruleBased: IGroupRules;
+  nameBased: INameBasedRules;
 }

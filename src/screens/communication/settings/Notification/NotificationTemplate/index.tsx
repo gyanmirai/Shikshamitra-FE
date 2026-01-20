@@ -17,6 +17,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   notificationTemplateApi,
+  useGetNotificationTemplatesQuery,
   useDeleteNotificationTemplateMutation,
 } from 'src/redux/communication/notification/notificationTemplateApi';
 
@@ -60,6 +61,14 @@ const TemplatesManagement = (props: TabComponentType) => {
       resetState();
     }
   };
+  const {
+    data: templateData,
+    isLoading: isTemplateLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetNotificationTemplatesQuery,
+  });
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
@@ -122,6 +131,8 @@ const TemplatesManagement = (props: TabComponentType) => {
         </Card>
       ) : (
         <NotificationTemplateTable
+          data={templateData?.items || []}
+          isLoading={isTemplateLoading}
           setOpenDialog={setOpen}
           setEditData={setEditingTemplate}
           onDelete={(row) => {
@@ -178,17 +189,7 @@ const TemplatesManagement = (props: TabComponentType) => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    notificationTemplateApi.util.updateQueryData(
-                      'getNotificationTemplates',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, deleteTemplate);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deleteTemplateMutation(deleteTemplate?.id || ''),
               });
               confirm_dialog.onFalse();

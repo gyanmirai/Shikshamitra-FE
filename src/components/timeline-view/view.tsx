@@ -99,7 +99,14 @@ export function TimelineView({ data }: { data: TimelineType[] }) {
       name: 'Left',
       component: (
         <ComponentBlock>
-          <Timeline position="left">
+          <Timeline
+            position="left"
+            sx={{
+              [`& .MuiTimelineItem-root`]: {
+                '&:before': { display: 'none' },
+              },
+            }}
+          >
             {reduceTimeLine.map((item) => (
               <TimelineItem key={item.key}>
                 <TimelineSeparator>
@@ -117,7 +124,14 @@ export function TimelineView({ data }: { data: TimelineType[] }) {
       name: 'Right',
       component: (
         <ComponentBlock>
-          <Timeline position="right">
+          <Timeline
+            position="right"
+            sx={{
+              [`& .MuiTimelineItem-root`]: {
+                '&:before': { display: 'none' },
+              },
+            }}
+          >
             {reduceTimeLine.map((item) => (
               <TimelineItem key={item.key}>
                 <TimelineSeparator>
@@ -220,18 +234,39 @@ export function TimelineView({ data }: { data: TimelineType[] }) {
                     {item.time}
                   </Typography>
                 </TimelineOppositeContent>
+
                 <TimelineSeparator>
-                  <TimelineDot color={item.color}>{item.icon}</TimelineDot>
+                  <TimelineDot
+                    color={item.color}
+                    sx={{
+                      boxShadow: 'none',
+                    }}
+                  >
+                    {item.icon}
+                  </TimelineDot>
                   <TimelineConnector />
                 </TimelineSeparator>
+
                 <TimelineContent>
                   <Paper
                     sx={{
-                      p: 3,
-                      bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
+                      p: 2.5,
+                      borderRadius: 2,
+                      bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+                      border: (theme) =>
+                        `dashed 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.16)}`,
+                      transition: (theme) =>
+                        theme.transitions.create(['background-color'], {
+                          duration: theme.transitions.duration.shorter,
+                        }),
+                      '&:hover': {
+                        bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
+                      },
                     }}
                   >
-                    <Typography variant="subtitle2">{item.title}</Typography>
+                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                      {item.title}
+                    </Typography>
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                       {item.des}
                     </Typography>
@@ -252,31 +287,110 @@ export function CustomizedTimeline({ data }: { data: TimelineType[] | undefined 
   const lastItem = data && data.length > 0 ? data[data.length - 1].key : undefined;
 
   return (
-    <Timeline position="right">
+    <Timeline
+      position="right"
+      sx={{
+        px: 0,
+        [`& .MuiTimelineItem-root`]: {
+          '&:before': { display: 'none' }, // Remove default left padding/space for right position if needed
+        },
+      }}
+    >
       {data?.map((item) => (
         <TimelineItem key={item.key}>
-          <TimelineOppositeContent>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          <TimelineOppositeContent
+            sx={{
+              flex: 0,
+              minWidth: 80,
+              textAlign: 'left',
+              px: 0,
+              display: { xs: 'none', sm: 'block' },
+            }}
+          >
+            <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 'bold' }}>
               {item.time}
             </Typography>
           </TimelineOppositeContent>
+
           <TimelineSeparator>
-            <TimelineDot color={item.color} />
-            {lastItem === item.key ? null : <TimelineConnector />}
+            <TimelineDot
+              color={item.color}
+              variant="filled"
+              sx={{
+                boxShadow: 'none',
+                m: 1.5,
+              }}
+            />
+            {lastItem === item.key ? null : (
+              <TimelineConnector
+                sx={{
+                  bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
+                }}
+              />
+            )}
           </TimelineSeparator>
-          <TimelineContent>
+
+          <TimelineContent sx={{ pb: 3, px: 2 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'text.disabled',
+                display: { xs: 'block', sm: 'none' },
+                mb: 0.5,
+              }}
+            >
+              {item.time}
+            </Typography>
+
             <Paper
               sx={{
                 p: 2,
-                bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.12),
+                borderRadius: 1.5,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 0.5,
+                bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.04),
+                border: (theme) =>
+                  `solid 1px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
+                transition: (theme) =>
+                  theme.transitions.create(['background-color', 'transform'], {
+                    duration: theme.transitions.duration.shorter,
+                  }),
+                '&:hover': {
+                  bgcolor: (theme) => varAlpha(theme.vars.palette.grey['500Channel'], 0.08),
+                  transform: 'translateY(-2px)',
+                },
               }}
             >
-              <Typography variant="subtitle2">{item.progress}% Completed</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}
+              >
+                {item.progress}% Completed
+              </Typography>
+
+              <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
                 {item.des}
               </Typography>
-              <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
-                By : {item.teacher}
+
+              <Typography
+                variant="caption"
+                sx={{
+                  mt: 0.5,
+                  color: 'text.secondary',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  '&:before': {
+                    content: '""',
+                    width: 4,
+                    height: 4,
+                    borderRadius: '50%',
+                    bgcolor: 'text.disabled',
+                  },
+                }}
+              >
+                Teacher: {item.teacher}
               </Typography>
             </Paper>
           </TimelineContent>

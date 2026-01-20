@@ -537,7 +537,7 @@ const UpdateProgress: React.FC<IUpdateProgressProps> = ({
         <ShakingTextField
           error={!!(formik.touched.completePercentage && formik.errors.completePercentage) || false}
         >
-          <ComponentBlock>
+          <ComponentBlock sx={{ mb: 2 }}>
             <Slider
               defaultValue={20}
               onChange={(event, value) => {

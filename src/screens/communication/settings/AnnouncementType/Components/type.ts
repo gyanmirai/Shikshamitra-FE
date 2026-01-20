@@ -1,12 +1,14 @@
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface IAnnouncementType {
+  id?: string;
   announcementType: string;
   description: string;
-  color: string;
+  color?: string;
 }
 
 export interface IAnnouncementTypeTableProps {
+  isLoading: boolean;
   data: IAnnouncementType[];
   onAddAnnouncementType: { onTrue: () => void };
   setOpenDialog: (value: boolean) => void;

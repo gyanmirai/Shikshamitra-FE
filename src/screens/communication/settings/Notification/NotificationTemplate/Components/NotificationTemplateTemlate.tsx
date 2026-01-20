@@ -4,25 +4,19 @@ import React, { useMemo } from 'react';
 import { Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetNotificationTemplatesQuery } from 'src/redux/communication/notification/notificationTemplateApi';
 
 import communicationData from '../../../../../../../communicationData.json';
 
 import type { ITemplateTableProps, INotificationTemplate } from './type';
 
 const NotificationTemplateTable: React.FC<ITemplateTableProps> = ({
+  data,
+  isLoading,
   setOpenDialog,
   setEditData,
   onDelete,
   onEdit,
 }) => {
-  // fetch templates
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: templateData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetNotificationTemplatesQuery,
-  });
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -89,6 +83,7 @@ const NotificationTemplateTable: React.FC<ITemplateTableProps> = ({
   return (
     <CustomizableTable
       tableId="template-data-table"
+      isLoading={isLoading}
       noDataText={
         <>
           No template data found.

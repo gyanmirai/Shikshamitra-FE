@@ -1,26 +1,11 @@
-/* eslint-disable import/order */
-// eslint-disable-next-line import/order
-import AddIcon from '@mui/icons-material/Add';
-// eslint-disable-next-line import/order
-import DeleteIcon from '@mui/icons-material/Delete';
-import SearchIcon from '@mui/icons-material/Search';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-/* eslint-disable sort-imports */
-import React, { useMemo, useState, useCallback } from 'react';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import KeyboardTabIcon from '@mui/icons-material/KeyboardTab';
-// eslint-disable-next-line import/order
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import SwipeRightAltIcon from '@mui/icons-material/SwipeRightAlt';
-// eslint-disable-next-line import/order
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import DoNotDisturbAltIcon from '@mui/icons-material/DoNotDisturbAlt';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { alpha } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useCallback } from 'react';
 import {
   Box,
   Grid,
   Stack,
+  Button,
   Select,
   MenuItem,
   TextField,
@@ -38,7 +23,7 @@ export interface FieldOption {
 }
 
 export interface FilterRow {
-  id: string;
+  id?: string;
   field?: string;
   operator?: string;
   value?: string;
@@ -82,33 +67,34 @@ const employeeFieldOptions: FieldOption[] = [
 export interface OperatorOption {
   value: string;
   label: string;
-  icon: React.ReactNode;
+  icon: string | React.ReactNode;
 }
 
 const operatorOptions: OperatorOption[] = [
-  { value: 'equals', label: 'Equals', icon: <CheckCircleOutlineIcon fontSize="inherit" /> },
-  { value: 'notEquals', label: 'Not Equals', icon: <DoNotDisturbAltIcon fontSize="inherit" /> },
-  { value: 'contains', label: 'Contains', icon: <SearchIcon fontSize="inherit" /> },
-  { value: 'startsWith', label: 'Starts With', icon: <SwipeRightAltIcon fontSize="inherit" /> },
-  { value: 'endsWith', label: 'Ends With', icon: <KeyboardTabIcon fontSize="inherit" /> },
-  { value: 'greaterThan', label: 'Greater Than', icon: <ArrowUpwardIcon fontSize="inherit" /> },
-  { value: 'lessThan', label: 'Less Than', icon: <ArrowDownwardIcon fontSize="inherit" /> },
+  { value: 'equals', label: 'Equals', icon: 'solar:check-circle-bold-duotone' },
+  { value: 'notEquals', label: 'Not Equals', icon: 'solar:forbidden-circle-bold-duotone' },
+  { value: 'contains', label: 'Contains', icon: 'solar:magnifer-bold-duotone' },
+  { value: 'startsWith', label: 'Starts With', icon: 'solar:forward-2-bold-duotone' },
+  { value: 'endsWith', label: 'Ends With', icon: 'solar:back-2-bold-duotone' },
+  { value: 'greaterThan', label: 'Greater Than', icon: 'solar:arrow-up-bold-duotone' },
+  { value: 'lessThan', label: 'Less Than', icon: 'solar:arrow-down-bold-duotone' },
   {
     value: 'greaterOrEqual',
     label: 'Greater Or Equal',
-    icon: <TrendingUpIcon fontSize="inherit" />,
+    icon: 'solar:double-alt-arrow-up-bold-duotone',
   },
-  { value: 'lessOrEqual', label: 'Less Or Equal', icon: <TrendingDownIcon fontSize="inherit" /> },
-  { value: 'in', label: 'In', icon: <FormatListBulletedIcon fontSize="inherit" /> },
+  {
+    value: 'lessOrEqual',
+    label: 'Less Or Equal',
+    icon: 'solar:double-alt-arrow-down-bold-duotone',
+  },
+  { value: 'in', label: 'In', icon: 'solar:list-bold-duotone' },
 ];
 
-const createEmptyFilter = (): FilterRow => ({ id: crypto.randomUUID() });
-
-const AdditionalFilters: React.FC = () => {
-  const [studentFilters, setStudentFilters] = useState<FilterRow[]>([]);
-
-  const [employeeFilters, setEmployeeFilters] = useState<FilterRow[]>([]);
-
+const AdditionalFilters: React.FC<{ formik: any; basePath?: 'ruleBased' | 'nameBased' }> = ({
+  formik,
+  basePath = 'ruleBased',
+}) => {
   const getFieldMeta = useCallback(
     (fieldValue: string | undefined, isStudent: boolean): FieldOption | undefined => {
       const source = isStudent ? studentFieldOptions : employeeFieldOptions;
@@ -118,48 +104,88 @@ const AdditionalFilters: React.FC = () => {
   );
 
   const handleAddFilter = (isStudent: boolean) => {
-    if (isStudent) setStudentFilters((prev) => [...prev, createEmptyFilter()]);
-    else setEmployeeFilters((prev) => [...prev, createEmptyFilter()]);
+    const newFilter: FilterRow = {
+      field: '',
+      operator: '',
+      value: '',
+    };
+
+    const targetField = isStudent ? 'studentFilters' : 'employeeFilters';
+    const currentPath = `${basePath}.${targetField}`;
+
+    // Safety check for nesting
+    const section = formik.values[basePath] || {};
+    const currentValue = section[targetField] || [];
+
+    formik.setFieldValue(currentPath, [...currentValue, newFilter]);
   };
 
-  const handleRemoveFilter = (id: string, isStudent: boolean) => {
-    if (isStudent) setStudentFilters((prev) => prev.filter((f) => f.id !== id));
-    else setEmployeeFilters((prev) => prev.filter((f) => f.id !== id));
-  };
+  const handleRemoveFilter = useCallback(
+    (index: number, isStudent: boolean) => {
+      const targetSubField = isStudent ? 'studentFilters' : 'employeeFilters';
+      const currentPath = `${basePath}.${targetSubField}`;
 
-  const handleChange = (id: string, key: keyof FilterRow, value: string, isStudent: boolean) => {
-    const updater = (list: FilterRow[]) =>
-      list.map((f) =>
-        f.id === id ? { ...f, [key]: value, ...(key === 'field' ? { value: undefined } : {}) } : f
+      // Navigate nested values correctly
+      const currentObj = formik.values[basePath];
+      const currentFilters = currentObj?.[targetSubField] || [];
+
+      formik.setFieldValue(
+        currentPath,
+        currentFilters.filter((_: any, i: number) => i !== index)
       );
-    if (isStudent) setStudentFilters((prev) => updater(prev));
-    else setEmployeeFilters((prev) => updater(prev));
-  };
+    },
+    [formik, basePath]
+  );
+
+  const handleChange = useCallback(
+    (index: number, key: 'field' | 'operator' | 'value', value: string, isStudent: boolean) => {
+      const targetSubField = isStudent ? 'studentFilters' : 'employeeFilters';
+      const currentPath = `${basePath}.${targetSubField}`;
+
+      const section = formik.values[basePath] || {};
+      const currentFilters = section[targetSubField] || [];
+
+      const updatedFilters = currentFilters.map((f: any, i: number) =>
+        i === index ? { ...f, [key]: value, ...(key === 'field' ? { value: '' } : {}) } : f
+      );
+
+      formik.setFieldValue(currentPath, updatedFilters);
+    },
+    [formik, basePath]
+  );
 
   const renderFilterRows = useCallback(
     (filters: FilterRow[], isStudent: boolean) => (
-      <Stack spacing={1} mt={1}>
-        {filters.map((f) => {
+      <Stack spacing={2} mt={2}>
+        {filters.map((f, index) => {
           const meta = getFieldMeta(f.field, isStudent);
           return (
-            <Grid container spacing={1} key={f.id} alignItems="center">
+            <Grid
+              container
+              spacing={1.5}
+              key={index}
+              alignItems="flex-start"
+              sx={{
+                p: 1.5,
+                borderRadius: 1.25,
+                bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
+                border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.04)}`,
+                position: 'relative',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
+                  borderColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
               <Grid size={{ xs: 4 }}>
-                <FormControl
-                  fullWidth
-                  size="small"
-                  variant="standard"
-                  sx={{
-                    '& .MuiInputBase-input': { fontSize: 14 },
-                    '& .MuiInputLabel-root': { fontSize: 14 },
-                    '& .MuiMenuItem-root': { fontSize: 14 },
-                  }}
-                >
-                  <InputLabel>Field</InputLabel>
+                <FormControl fullWidth size="small">
+                  <InputLabel sx={{ typography: 'caption', fontWeight: 700 }}>Field</InputLabel>
                   <Select
-                    size="small"
                     label="Field"
                     value={f.field || ''}
-                    onChange={(e) => handleChange(f.id, 'field', e.target.value, isStudent)}
+                    onChange={(e) => handleChange(index, 'field', e.target.value, isStudent)}
+                    sx={{ typography: 'body2' }}
                   >
                     {(isStudent ? studentFieldOptions : employeeFieldOptions).map((opt) => (
                       <MenuItem key={opt.value} value={opt.value}>
@@ -169,22 +195,19 @@ const AdditionalFilters: React.FC = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid size={{ xs: 3 }}>
-                <FormControl
-                  fullWidth
-                  size="small"
-                  variant="standard"
-                  sx={{
-                    '& .MuiInputBase-input': { fontSize: 14 },
-                    '& .MuiInputLabel-root': { fontSize: 14 },
-                    '& .MuiMenuItem-root': { fontSize: 14 },
-                  }}
-                >
-                  <InputLabel>Operator</InputLabel>
+
+              <Grid size={{ xs: 3.5 }}>
+                <FormControl fullWidth size="small">
+                  <InputLabel sx={{ typography: 'caption', fontWeight: 700 }}>Operator</InputLabel>
                   <Select
                     label="Operator"
                     value={f.operator || ''}
-                    onChange={(e) => handleChange(f.id, 'operator', e.target.value, isStudent)}
+                    onChange={(e) => handleChange(index, 'operator', e.target.value, isStudent)}
+                    renderValue={(selected) => {
+                      const op = operatorOptions.find((o) => o.value === selected);
+                      return op?.label || '';
+                    }}
+                    sx={{ typography: 'body2' }}
                   >
                     {operatorOptions.map((op) => (
                       <MenuItem
@@ -192,34 +215,31 @@ const AdditionalFilters: React.FC = () => {
                         value={op.value}
                         sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
                       >
-                        {/* <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center' }}>
-                          {op.icon}
-                        </Box> */}
-                        {op.label}
+                        {typeof op.icon === 'string' ? (
+                          <Iconify
+                            icon={op.icon}
+                            sx={{ color: 'text.secondary', mr: 1, width: 20, height: 20 }}
+                          />
+                        ) : (
+                          <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>{op.icon}</Box>
+                        )}
+                        <Typography variant="body2">{op.label}</Typography>
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid size={{ xs: 4 }}>
+
+              <Grid size={{ xs: 3.5 }}>
                 {meta?.type === 'select' ? (
-                  <FormControl
-                    fullWidth
-                    size="small"
-                    variant="standard"
-                    sx={{
-                      '& .MuiInputBase-input': { fontSize: 14 },
-                      '& .MuiInputLabel-root': { fontSize: 14 },
-                      '& .MuiMenuItem-root': { fontSize: 14 },
-                    }}
-                  >
-                    <InputLabel>Value</InputLabel>
+                  <FormControl fullWidth size="small">
+                    <InputLabel sx={{ typography: 'caption', fontWeight: 700 }}>Value</InputLabel>
                     <Select
                       label="Value"
                       value={f.value || ''}
-                      onChange={(e) => handleChange(f.id, 'value', e.target.value, isStudent)}
+                      onChange={(e) => handleChange(index, 'value', e.target.value, isStudent)}
                       disabled={!f.field}
-                      variant="standard"
+                      sx={{ typography: 'body2' }}
                     >
                       {meta.values?.map((v) => (
                         <MenuItem key={v} value={v}>
@@ -232,26 +252,29 @@ const AdditionalFilters: React.FC = () => {
                   <TextField
                     label="Value"
                     size="small"
-                    variant="standard"
-                    sx={{
-                      '& .MuiInputBase-input': { fontSize: 14 },
-                      '& .MuiInputLabel-root': { fontSize: 14 },
-                    }}
                     fullWidth
                     value={f.value || ''}
                     disabled={!f.field}
-                    onChange={(e) => handleChange(f.id, 'value', e.target.value, isStudent)}
+                    onChange={(e) => handleChange(index, 'value', e.target.value, isStudent)}
+                    InputLabelProps={{ sx: { typography: 'caption', fontWeight: 700 } }}
+                    sx={{ '& .MuiInputBase-input': { typography: 'body2' } }}
                   />
                 )}
               </Grid>
-              <Grid size={{ xs: 1 }} display="flex" justifyContent="center">
+
+              <Grid size={{ xs: 1 }} sx={{ mt: 0.5 }}>
                 <IconButton
                   size="small"
-                  color="error"
-                  onClick={() => handleRemoveFilter(f.id, isStudent)}
-                  aria-label="delete-filter"
+                  onClick={() => handleRemoveFilter(index, isStudent)}
+                  sx={{
+                    color: 'text.disabled',
+                    '&:hover': {
+                      color: 'error.main',
+                      bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+                    },
+                  }}
                 >
-                  <DeleteIcon fontSize="small" />
+                  <Iconify icon="solar:trash-bin-trash-bold-duotone" width={20} />
                 </IconButton>
               </Grid>
             </Grid>
@@ -259,66 +282,135 @@ const AdditionalFilters: React.FC = () => {
         })}
       </Stack>
     ),
-    [getFieldMeta]
+    [getFieldMeta, handleChange, handleRemoveFilter]
   );
 
-  const studentFilterContent = useMemo(
-    () =>
-      studentFilters.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" mt={1}>
-          No filters applied
+  const studentFilterContent = useMemo(() => {
+    const filters = formik.values[basePath]?.studentFilters || [];
+    return filters.length === 0 ? (
+      <Box
+        sx={{
+          py: 4,
+          mt: 2,
+          textAlign: 'center',
+          borderRadius: 2,
+          border: (theme) => `1px dashed ${theme.palette.divider}`,
+          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
+        }}
+      >
+        <Iconify
+          icon="solar:user-rounded-bold-duotone"
+          width={32}
+          sx={{ color: 'text.disabled', opacity: 0.3, mb: 1 }}
+        />
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+          No student filters applied.
         </Typography>
-      ) : (
-        renderFilterRows(studentFilters, true)
-      ),
-    [studentFilters, renderFilterRows]
-  );
+      </Box>
+    ) : (
+      renderFilterRows(filters, true)
+    );
+  }, [formik.values, basePath, renderFilterRows]);
+  // Dependency: formik.values[basePath]?.studentFilters
 
-  const employeeFilterContent = useMemo(
-    () =>
-      employeeFilters.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" mt={1}>
-          No filters applied
+  const employeeFilterContent = useMemo(() => {
+    const filters = formik.values[basePath]?.employeeFilters || [];
+    return filters.length === 0 ? (
+      <Box
+        sx={{
+          py: 4,
+          mt: 2,
+          textAlign: 'center',
+          borderRadius: 2,
+          border: (theme) => `1px dashed ${theme.palette.divider}`,
+          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
+        }}
+      >
+        <Iconify
+          icon="solar:users-group-rounded-bold-duotone"
+          width={32}
+          sx={{ color: 'text.disabled', opacity: 0.3, mb: 1 }}
+        />
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+          No employee filters applied.
         </Typography>
-      ) : (
-        renderFilterRows(employeeFilters, false)
-      ),
-    [employeeFilters, renderFilterRows]
-  );
+      </Box>
+    ) : (
+      renderFilterRows(filters, false)
+    );
+  }, [formik.values, basePath, renderFilterRows]);
+  // Dependency: formik.values[basePath]?.employeeFilters
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={4}>
       <Grid size={{ xs: 12 }}>
-        <Typography variant="subtitle1" color="primary">
-          Additional Selections
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+          <Iconify icon="solar:filter-bold-duotone" sx={{ color: 'primary.main' }} width={24} />
+          <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+            Additional Selection Rules
+          </Typography>
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Define refined rules to include specific students or employees based on their attributes.
         </Typography>
       </Grid>
 
-      <Grid size={{ xs: 6 }} sx={{ borderRight: '2px solid', borderColor: 'primary.main', pr: 2 }}>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle2">Students Selections</Typography>
-          <IconButton
+      <Grid
+        size={{ xs: 12, md: 6 }}
+        sx={{
+          borderRight: (theme) => ({ md: `1px dashed ${theme.palette.divider}` }),
+          pr: { md: 4 },
+        }}
+      >
+        <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+              }}
+            />
+            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+              Student Rules
+            </Typography>
+          </Box>
+          <Button
             size="small"
-            color="primary"
+            startIcon={<Iconify icon="mingcute:add-line" />}
             onClick={() => handleAddFilter(true)}
-            aria-label="add-student-filter"
+            sx={{ borderRadius: 1 }}
           >
-            <AddIcon fontSize="small" />
-          </IconButton>
+            Add Rule
+          </Button>
         </Box>
         {studentFilterContent}
       </Grid>
-      <Grid size={{ xs: 6 }} pl={2}>
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle2">Employee Selections</Typography>
-          <IconButton
+
+      <Grid size={{ xs: 12, md: 6 }} sx={{ pl: { md: 4 } }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                bgcolor: 'warning.main',
+              }}
+            />
+            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+              Employee Rules
+            </Typography>
+          </Box>
+          <Button
             size="small"
-            color="primary"
+            startIcon={<Iconify icon="mingcute:add-line" />}
             onClick={() => handleAddFilter(false)}
-            aria-label="add-employee-filter"
+            sx={{ borderRadius: 1 }}
           >
-            <AddIcon fontSize="small" />
-          </IconButton>
+            Add Rule
+          </Button>
         </Box>
         {employeeFilterContent}
       </Grid>

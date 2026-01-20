@@ -78,9 +78,20 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   }, [medium]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 3,
+        p: { xs: 2, md: 3 },
+        borderRadius: 2,
+        bgcolor: 'background.paper',
+        boxShadow: (theme) => theme.customShadows?.card || theme.shadows[1],
+        border: (theme) => `1px solid ${theme.palette.divider}`,
+      }}
+    >
+      <Grid container spacing={4}>
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <ShakingTextField error={formik.touched.examType && Boolean(formik.errors.examType)}>
             <CustomSelect
               options={[
@@ -94,7 +105,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 formik.setFieldTouched(`examType`, false);
               }}
               label="Exam Type *"
-              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              formControlProps={{ fullWidth: true }}
               error={formik.touched.examType && Boolean(formik.errors.examType)}
               helperText={formik.touched.examType ? formik.errors.examType : undefined}
             />
@@ -114,7 +125,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           </CustomDialog>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <ShakingTextField error={!!(formik.touched.className && formik.errors.className)}>
             <CustomSelect
               options={allClass}
@@ -126,7 +137,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               labelKey="name"
               valueKey="id"
               value={formik.values.className}
-              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              formControlProps={{ fullWidth: true }}
               error={!!(formik.touched.className && formik.errors.className)}
               helperText={
                 formik.touched.className && formik.errors.className
@@ -137,7 +148,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
           <ShakingTextField error={!!(formik.touched.divisions && formik.errors.divisions)}>
             <CustomSelect
               label="Division *"
@@ -210,7 +221,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                 });
                 formik.setFieldValue('roomDetails', updatedRoomDetails);
               }}
-              formControlProps={{ fullWidth: true, sx: { minWidth: '200px' } }}
+              formControlProps={{ fullWidth: true }}
               error={!!(formik.touched.divisions && formik.errors.divisions)}
               helperText={
                 formik.touched.divisions
@@ -223,7 +234,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+        <Grid size={{ xs: 12, md: 6, lg: 6 }}>
           <ShakingTextField
             error={!!(formik.touched.selectedSubjects && formik.errors.selectedSubjects)}
           >
@@ -310,12 +321,14 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+        <Grid size={{ xs: 12, md: 6, lg: 6 }}>
           <ShakingTextField error={!!(formik.touched.examName && formik.errors.examName)}>
             <TextField
               fullWidth
               label="Exam Name *"
+              size="small"
               name="examName"
+              placeholder="e.g. First Terminal 2024"
               value={formik.values.examName}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
@@ -324,7 +337,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
               }}
               error={formik.touched.examName && Boolean(formik.errors.examName)}
               helperText={formik.touched.examName && formik.errors.examName}
-              size="small"
             />
           </ShakingTextField>
         </Grid>

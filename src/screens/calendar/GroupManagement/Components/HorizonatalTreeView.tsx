@@ -239,6 +239,8 @@ const HierarchyTextView: React.FC<Props> = ({ data, isShowDelete = true }) => {
     { id: 'dummy-stu-12', name: 'Dummy Student 12', role: 'student' },
   ];
 
+  console.log('paths---', paths);
+
   const employees = [
     { id: 'dummy-emp-1', name: 'Dummy Employee 1', role: 'employee' },
     { id: 'dummy-emp-2', name: 'Dummy Employee 2', role: 'employee', selected: true },

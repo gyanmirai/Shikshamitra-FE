@@ -76,7 +76,7 @@ const ClassManagementNotificationScreen = () => {
           onBack={() => {
             dialog.onFalse();
           }}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 2, mb: 1 }}
         />
       ) : (
         <CustomBreadcrumbs
@@ -86,7 +86,7 @@ const ClassManagementNotificationScreen = () => {
             { name: 'Class Management', href: '/classManagement/dashboard' },
             { name: 'Notification', href: '/classManagement/notification-management' },
           ]}
-          sx={{ px: 1, mb: 1 }}
+          sx={{ px: 2, mb: 1 }}
         />
       )}
 
@@ -107,7 +107,7 @@ const ClassManagementNotificationScreen = () => {
               }
               setSearchParams({ tab: value });
             }}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 } }}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: 2 }}
             role="tablist"
           >
             {TABS.map((tab) => (

@@ -85,7 +85,7 @@ const NotificationSettingScreen = () => {
             setIsBackClick(currentIndex > newIndex);
             setSearchParams({ tab: value });
           }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, mb: 1 }}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, mb: 1, borderRadius: 2 }}
           role="tablist"
         >
           {TABS.map((tab) => (
