@@ -80,18 +80,23 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
 
     setLoadingMember(true);
     setTimeout(() => {
-      const foundMember = memberData.find(
-        (member: any) => member.memberId === trimmedValue // use trimmedValue here!
-      );
+      try {
+        // Safe-guard against missing or invalid memberData
+        const safeMemberData = Array.isArray(memberData) ? memberData : [];
+        const foundMember = safeMemberData.find((member: any) => member.memberId === trimmedValue);
 
-      if (foundMember) {
-        setSelectedMember(foundMember);
-        formik.setFieldValue('memberId', foundMember.memberId);
-      } else {
+        if (foundMember) {
+          setSelectedMember(foundMember);
+          formik.setFieldValue('memberId', foundMember.memberId);
+        } else {
+          setSelectedMember(null);
+        }
+      } catch (error) {
+        console.error('Error searching for member:', error);
         setSelectedMember(null);
+      } finally {
+        setLoadingMember(false);
       }
-
-      setLoadingMember(false);
     }, 400);
   };
 
@@ -323,7 +328,21 @@ const ReservationBookModal: React.FC<ReservationBookModalProps> = ({ onClose, ed
                 />
               </>
             ) : (
-              <Typography>No reservations yet</Typography>
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1,
+                  textAlign: 'center',
+                  bgcolor: (theme) =>
+                    theme.palette.mode === 'light' ? '#e3f2fd' : 'rgba(144, 202, 249, 0.08)',
+                  color: (theme) => (theme.palette.mode === 'light' ? '#0d47a1' : '#90caf9'),
+                  border: 1,
+                  borderColor: (theme) =>
+                    theme.palette.mode === 'light' ? '#2196f3' : 'rgba(144, 202, 249, 0.24)',
+                }}
+              >
+                No reservations yet
+              </Box>
             )}
           </Grid>
         </Grid>

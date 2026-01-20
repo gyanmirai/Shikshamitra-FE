@@ -99,7 +99,21 @@ const ViewReservedMembersTable: React.FC<ViewReservedMembersTableProps> = ({
               data={reservedList || []}
             />
           ) : (
-            <Typography>No reservations yet</Typography>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 1,
+                textAlign: 'center',
+                bgcolor: (theme) =>
+                  theme.palette.mode === 'light' ? '#e3f2fd' : 'rgba(144, 202, 249, 0.08)',
+                color: (theme) => (theme.palette.mode === 'light' ? '#0d47a1' : '#90caf9'),
+                border: 1,
+                borderColor: (theme) =>
+                  theme.palette.mode === 'light' ? '#2196f3' : 'rgba(144, 202, 249, 0.24)',
+              }}
+            >
+              No reservations yet
+            </Box>
           )}
         </Grid>
       </Grid>

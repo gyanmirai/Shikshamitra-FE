@@ -1,4 +1,4 @@
-import type { Theme, Components } from '@mui/material/styles';
+import { alpha, type Theme, type Components } from '@mui/material/styles';
 
 // ----------------------------------------------------------------------
 
@@ -49,7 +49,7 @@ const MuiDialogActions: Components<Theme>['MuiDialogActions'] = {
   styleOverrides: {
     root: ({ theme }) => ({
       padding: theme.spacing(2),
-      boxShadow: 'var(--shadows-10)',
+      boxShadow: `${alpha(theme.palette.divider, 0.35)} 0px 5px 12px`,
       '& > :not(:first-of-type)': { marginLeft: theme.spacing(1.5) },
     }),
   },

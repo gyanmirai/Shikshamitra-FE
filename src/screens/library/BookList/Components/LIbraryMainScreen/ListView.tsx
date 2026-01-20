@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { Box, Divider, MenuList, MenuItem, Typography } from '@mui/material';
 import { useLazyGetCopiesByBookIdQuery } from 'src/redux/library/bookList/copies-api';
@@ -32,11 +33,10 @@ const ListView = ({
     ({ popover: pop, row }: any) => (
       <MenuList>
         <MenuItem
-          onClick={async (e) => {
+          onClick={(e) => {
             e.stopPropagation();
             const book = row as IBook;
-            const copies = await fetchCopies(book.id).unwrap();
-            onReserveBook?.({ ...book, copies });
+            onReserveBook?.(book);
             pop.onClose();
           }}
         >
@@ -45,11 +45,10 @@ const ListView = ({
         </MenuItem>
 
         <MenuItem
-          onClick={async (e) => {
+          onClick={(e) => {
             e.stopPropagation();
             const book = row as IBook;
-            const copies = await fetchCopies(book.id).unwrap();
-            onViewAllReservationBook?.({ ...book, copies });
+            onViewAllReservationBook?.(book);
             pop.onClose();
           }}
         >
@@ -58,7 +57,7 @@ const ListView = ({
         </MenuItem>
       </MenuList>
     ),
-    [fetchCopies, onReserveBook, onViewAllReservationBook]
+    [onReserveBook, onViewAllReservationBook]
   );
 
   return (
@@ -76,8 +75,14 @@ const ListView = ({
               cursor: 'pointer',
             }}
             onClick={async () => {
-              const copies = await fetchCopies(book.id).unwrap();
-              onView?.({ ...book, copies });
+              try {
+                const copies = await fetchCopies(book.id).unwrap();
+                onView?.({ ...book, copies });
+              } catch (error) {
+                console.error('Failed to fetch copies:', error);
+                shikshaMitraToast.error({ message: 'Failed to fetch book copies' });
+                onView?.({ ...book, copies: [] });
+              }
             }}
           >
             {/* Left section - Image + Info */}
@@ -129,18 +134,22 @@ const ListView = ({
                 actions={(prop) => actions({ ...prop, row: book })}
                 handleViewClick={async () => {
                   const selectedBook = book as IBook;
-                  const copies = await fetchCopies(selectedBook.id).unwrap();
-                  onView?.({ ...selectedBook, copies });
+                  try {
+                    const copies = await fetchCopies(selectedBook.id).unwrap();
+                    onView?.({ ...selectedBook, copies });
+                  } catch (error) {
+                    console.error('Failed to fetch copies:', error);
+                    shikshaMitraToast.error({ message: 'Failed to fetch book copies' });
+                    onView?.({ ...selectedBook, copies: [] });
+                  }
                 }}
-                handleDeleteClick={async () => {
+                handleDeleteClick={() => {
                   const selectedBook = book as IBook;
-                  const copies = await fetchCopies(selectedBook.id).unwrap();
-                  onDelete?.({ ...selectedBook, copies });
+                  onDelete?.(selectedBook);
                 }}
-                handleEditClick={async () => {
+                handleEditClick={() => {
                   const selectedBook = book as IBook;
-                  const copies = await fetchCopies(selectedBook.id).unwrap();
-                  onEdit?.({ ...selectedBook, copies });
+                  onEdit?.(selectedBook);
                 }}
               />
             </Box>
