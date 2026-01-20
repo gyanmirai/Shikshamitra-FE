@@ -29,7 +29,7 @@ import type { IChargeType } from './Components/type';
 
 const ChargeTypeCreation = () => {
   // Custom hook to fetch charge type data
-  const { data: chargeTypeData } = useQueryAndMutation({
+  const { data: chargeTypeData, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLibrarySettingsQuery,
   });
@@ -184,17 +184,7 @@ const ChargeTypeCreation = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    librarySettingsApi.util.updateQueryData(
-                      'getLibrarySettings',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft) return;
-                        draft.splice(index, 0, selectedChargeType);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetch(),
                 onCommit: () => deleteChargeCategory({ categoryId: selectedChargeType?.id || '' }),
               });
               deleteChargeTypeDialog.onFalse();

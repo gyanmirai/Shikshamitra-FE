@@ -112,7 +112,7 @@ const BookIssueReturnTable = ({
       tableId="library-book-table"
       noDataText="No Issue Book Data Found "
       columns={columns}
-      data={[]}
+      data={issuedBooks || []}
     />
   );
 };

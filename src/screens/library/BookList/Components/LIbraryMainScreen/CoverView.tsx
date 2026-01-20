@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useCallback } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { shikshaMitraToast } from 'src/components/toast';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { Box, Card, Grid, MenuList, MenuItem, Typography } from '@mui/material';
 import { useLazyGetCopiesByBookIdQuery } from 'src/redux/library/bookList/copies-api';
@@ -33,8 +34,14 @@ const CoverView = ({
         <MenuItem
           onClick={async () => {
             const book = row as IBook;
-            const copies = await fetchCopies(book.id).unwrap();
-            onView?.({ ...book, copies });
+            try {
+              const copies = await fetchCopies(book.id).unwrap();
+              onView?.({ ...book, copies });
+            } catch (error) {
+              console.error('Failed to fetch copies:', error);
+              shikshaMitraToast.error({ message: 'Failed to fetch book copies' });
+              onView?.({ ...book, copies: [] });
+            }
             pop.onClose();
           }}
         >
@@ -42,10 +49,9 @@ const CoverView = ({
           View
         </MenuItem>
         <MenuItem
-          onClick={async () => {
+          onClick={() => {
             const book = row as IBook;
-            const copies = await fetchCopies(book.id).unwrap();
-            onEdit?.({ ...book, copies });
+            onEdit?.(book);
             pop.onClose();
           }}
         >
@@ -53,10 +59,9 @@ const CoverView = ({
           Edit
         </MenuItem>
         <MenuItem
-          onClick={async () => {
+          onClick={() => {
             const book = row as IBook;
-            const copies = await fetchCopies(book.id).unwrap();
-            onDelete?.({ ...book, copies });
+            onDelete?.(book);
             pop.onClose();
           }}
         >
@@ -67,10 +72,9 @@ const CoverView = ({
           Delete
         </MenuItem>
         <MenuItem
-          onClick={async () => {
+          onClick={() => {
             const book = row as IBook;
-            const copies = await fetchCopies(book.id).unwrap();
-            onReserveBook?.({ ...book, copies });
+            onReserveBook?.(book);
             pop.onClose();
           }}
         >
@@ -78,10 +82,9 @@ const CoverView = ({
           Reserve Book
         </MenuItem>
         <MenuItem
-          onClick={async () => {
+          onClick={() => {
             const book = row as IBook;
-            const copies = await fetchCopies(book.id).unwrap();
-            onViewAllReservationBook?.({ ...book, copies });
+            onViewAllReservationBook?.(book);
             pop.onClose();
           }}
         >
@@ -115,8 +118,14 @@ const CoverView = ({
             <Box
               sx={{ position: 'relative', cursor: 'pointer' }}
               onClick={async () => {
-                const copies = await fetchCopies(book.id).unwrap();
-                onView?.({ ...book, copies });
+                try {
+                  const copies = await fetchCopies(book.id).unwrap();
+                  onView?.({ ...book, copies });
+                } catch (error) {
+                  console.error('Failed to fetch copies:', error);
+                  shikshaMitraToast.error({ message: 'Failed to fetch book copies' });
+                  onView?.({ ...book, copies: [] });
+                }
               }}
             >
               <Image

@@ -4,8 +4,6 @@ import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetSectionManagementQuery } from 'src/redux/library/settingApi';
 
 import type { ISection, ISectionTableProps } from './type';
 
@@ -16,12 +14,9 @@ const SectionManagementTable: React.FC<ISectionTableProps> = ({
   onDelete,
   onEdit,
   onView,
+  data,
+  isLoading,
 }) => {
-  const { data: sectionData, isLoading: sectionsLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSectionManagementQuery,
-  });
-
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -81,7 +76,7 @@ const SectionManagementTable: React.FC<ISectionTableProps> = ({
   return (
     <CustomizableTable
       tableId="section-management-data-table"
-      isLoading={sectionsLoading}
+      isLoading={isLoading}
       noDataText={
         <>
           Section Data Not Found{' '}
@@ -115,7 +110,7 @@ const SectionManagementTable: React.FC<ISectionTableProps> = ({
         </>
       }
       columns={columns}
-      data={sectionData || []}
+      data={data || []}
     />
   );
 };

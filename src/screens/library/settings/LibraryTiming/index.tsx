@@ -18,8 +18,8 @@ import {
 } from 'src/redux/library/settingApi';
 import {
   Box,
+  Card,
   Table,
-  Paper,
   Button,
   Switch,
   TableRow,
@@ -43,7 +43,7 @@ const LibraryTimingCreation = () => {
   const sameAsSchoolDialog = useBoolean();
 
   // Fetch library timing data
-  const { data: fetchedTimingData } = useQueryAndMutation({
+  const { data: fetchedTimingData, isLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetLibraryTimingQuery,
   });
@@ -56,11 +56,31 @@ const LibraryTimingCreation = () => {
 
   // Initialize data when fetched
   useEffect(() => {
-    if (fetchedTimingData) {
+    if (fetchedTimingData && fetchedTimingData.length > 0) {
       setTimingData(fetchedTimingData);
       setOriginalTimingData(fetchedTimingData);
+    } else if (!isLoading && (!fetchedTimingData || fetchedTimingData.length === 0)) {
+      // Fallback: Initialize with default days if no data from API
+      const daysOfWeek = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+      ];
+      const defaultData = daysOfWeek.map((day, index) => ({
+        id: `new-${index}`,
+        day,
+        startTime: '',
+        endTime: '',
+        status: 'Off',
+      }));
+      setTimingData(defaultData);
+      setOriginalTimingData(defaultData);
     }
-  }, [fetchedTimingData]);
+  }, [fetchedTimingData, isLoading]);
 
   // Handle time changes
   const handleTimeChange = (id: string, field: string, value: any) => {
@@ -205,13 +225,13 @@ const LibraryTimingCreation = () => {
   const hasChanges = JSON.stringify(timingData) !== JSON.stringify(originalTimingData);
 
   return (
-    <Box height="100%" display="flex" flexDirection="column">
+    <Box sx={{ flexGrow: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Library Hours"
-        description="This screen defines the working schedule of the library by specifying opening and closing times for each day or marking certain days as closed."
+        description="Define the working schedule of the library by specifying opening and closing times for each day."
         links={[
           { name: 'Library', href: '/library/dashboard' },
-          { name: 'Setting', href: '/library/settings/book-category' },
+          { name: 'Settings', href: '/library/settings/book-category' },
           { name: 'Library Hours' },
         ]}
         action={
@@ -219,49 +239,97 @@ const LibraryTimingCreation = () => {
             variant="contained"
             startIcon={<Iconify icon="mdi:clock-outline" />}
             size="small"
-            onClick={() => sameAsSchoolDialog.onTrue()}
+            onClick={sameAsSchoolDialog.onTrue}
             disabled={sameAsSchoolApplied}
             sx={{ px: '32px' }}
           >
             Same as School Hours
           </Button>
         }
-        sx={{ mb: 2 }}
+        sx={{ mb: 3 }}
       />
 
-      <Box sx={{ px: 1, overflow: 'auto', flex: 1 }}>
-        <TableContainer component={Paper}>
-          <Table>
+      <Card
+        sx={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: (theme: any) => theme.customShadows.z16,
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}
+      >
+        <Box
+          sx={{
+            p: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'background.neutral',
+          }}
+        >
+          <Typography variant="h6" sx={{ color: 'text.primary' }}>
+            Weekly Schedule
+          </Typography>
+        </Box>
+
+        <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
+          <Table stickyHeader>
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
-                    fontWeight: 600,
-                    minWidth: 120,
-                    position: 'sticky',
-                    left: 0,
+                    fontWeight: 700,
+                    minWidth: 140,
                     backgroundColor: 'background.paper',
-                    zIndex: 2,
+                    borderBottom: (theme: any) => `2px solid ${theme.palette.divider}`,
+                    zIndex: 3,
                   }}
                 >
-                  <Typography variant="subtitle2">Time</Typography>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Time Slot
+                  </Typography>
                 </TableCell>
                 {timingData.map((row) => (
-                  <TableCell key={row.id} align="center" sx={{ fontWeight: 600, minWidth: 180 }}>
-                    <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-                      <Typography variant="subtitle2">{row.day}</Typography>
+                  <TableCell
+                    key={row.id}
+                    align="center"
+                    sx={{
+                      minWidth: 180,
+                      backgroundColor: 'background.paper',
+                      borderBottom: (theme: any) => `2px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      gap={1}
+                      sx={{
+                        p: 1,
+                        borderRadius: 1,
+                        transition: 'background-color 0.2s',
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }}
+                    >
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        {row.day}
+                      </Typography>
                       <CustomTooltip
                         placement="top"
                         title={
                           row.status !== 'Off'
-                            ? 'Library is open on this day. Toggle to mark as closed.'
-                            : 'Library is closed on this day. Toggle to mark as open.'
+                            ? 'Library is open. Toggle to close.'
+                            : 'Library is closed. Toggle to open.'
                         }
                       >
                         <Switch
                           size="small"
                           checked={row.status !== 'Off'}
                           onChange={(e) => handleStatusChange(row.id, e.target.checked)}
+                          color="success"
                         />
                       </CustomTooltip>
                     </Box>
@@ -271,23 +339,25 @@ const LibraryTimingCreation = () => {
             </TableHead>
             <TableBody>
               {/* Start Time Row */}
-              <TableRow>
+              <TableRow hover>
                 <TableCell
                   sx={{
                     fontWeight: 600,
                     verticalAlign: 'top',
-                    pt: 2,
-                    position: 'sticky',
-                    left: 0,
+                    pt: 3,
                     backgroundColor: 'background.paper',
+                    borderRight: '1px solid',
+                    borderColor: 'divider',
                     zIndex: 1,
                   }}
                 >
                   Start Time
                 </TableCell>
                 {timingData.map((row) => (
-                  <TableCell key={row.id} align="center" sx={{ verticalAlign: 'top', pt: 2 }}>
-                    <Box>
+                  <TableCell key={row.id} align="center" sx={{ verticalAlign: 'top', pt: 3 }}>
+                    <Box
+                      sx={{ opacity: row.status === 'Off' ? 0.5 : 1, transition: 'opacity 0.3s' }}
+                    >
                       <TimePicker
                         value={row.startTime ? dayjs(row.startTime, 'hh:mm A') : null}
                         onChange={(newValue) => handleTimeChange(row.id, 'startTime', newValue)}
@@ -295,9 +365,18 @@ const LibraryTimingCreation = () => {
                         slotProps={{
                           textField: {
                             size: 'small',
-                            placeholder: 'hh:mm aa',
+                            placeholder: '--:-- --',
                             error: Boolean(errors[`${row.id}_startTime`]),
-                            sx: { maxWidth: 140 },
+                            sx: {
+                              maxWidth: 150,
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: 1,
+                                bgcolor:
+                                  row.status === 'Off'
+                                    ? 'action.disabledBackground'
+                                    : 'background.paper',
+                              },
+                            },
                           },
                         }}
                       />
@@ -306,12 +385,20 @@ const LibraryTimingCreation = () => {
                           variant="caption"
                           color="error"
                           sx={{
-                            display: 'block',
-                            mt: 0.5,
-                            fontSize: '0.75rem',
-                            lineHeight: 1.2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mt: 1,
+                            gap: 0.5,
+                            fontWeight: 500,
+                            bgcolor: 'error.lighter',
+                            color: 'error.main',
+                            py: 0.5,
+                            px: 1,
+                            borderRadius: 1,
                           }}
                         >
+                          <Iconify icon="eva:alert-circle-fill" width={14} />
                           {errors[`${row.id}_startTime`]}
                         </Typography>
                       )}
@@ -321,23 +408,25 @@ const LibraryTimingCreation = () => {
               </TableRow>
 
               {/* End Time Row */}
-              <TableRow>
+              <TableRow hover>
                 <TableCell
                   sx={{
                     fontWeight: 600,
                     verticalAlign: 'top',
-                    pt: 2,
-                    position: 'sticky',
-                    left: 0,
+                    pt: 3,
                     backgroundColor: 'background.paper',
+                    borderRight: '1px solid',
+                    borderColor: 'divider',
                     zIndex: 1,
                   }}
                 >
                   End Time
                 </TableCell>
                 {timingData.map((row) => (
-                  <TableCell key={row.id} align="center" sx={{ verticalAlign: 'top', pt: 2 }}>
-                    <Box>
+                  <TableCell key={row.id} align="center" sx={{ verticalAlign: 'top', pt: 3 }}>
+                    <Box
+                      sx={{ opacity: row.status === 'Off' ? 0.5 : 1, transition: 'opacity 0.3s' }}
+                    >
                       <TimePicker
                         value={row.endTime ? dayjs(row.endTime, 'hh:mm A') : null}
                         onChange={(newValue) => handleTimeChange(row.id, 'endTime', newValue)}
@@ -345,9 +434,18 @@ const LibraryTimingCreation = () => {
                         slotProps={{
                           textField: {
                             size: 'small',
-                            placeholder: 'hh:mm aa',
+                            placeholder: '--:-- --',
                             error: Boolean(errors[`${row.id}_endTime`]),
-                            sx: { maxWidth: 140 },
+                            sx: {
+                              maxWidth: 150,
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: 1,
+                                bgcolor:
+                                  row.status === 'Off'
+                                    ? 'action.disabledBackground'
+                                    : 'background.paper',
+                              },
+                            },
                           },
                         }}
                       />
@@ -356,12 +454,20 @@ const LibraryTimingCreation = () => {
                           variant="caption"
                           color="error"
                           sx={{
-                            display: 'block',
-                            mt: 0.5,
-                            fontSize: '0.75rem',
-                            lineHeight: 1.2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            mt: 1,
+                            gap: 0.5,
+                            fontWeight: 500,
+                            bgcolor: 'error.lighter',
+                            color: 'error.main',
+                            py: 0.5,
+                            px: 1,
+                            borderRadius: 1,
                           }}
                         >
+                          <Iconify icon="eva:alert-circle-fill" width={14} />
                           {errors[`${row.id}_endTime`]}
                         </Typography>
                       )}
@@ -372,34 +478,44 @@ const LibraryTimingCreation = () => {
             </TableBody>
           </Table>
         </TableContainer>
-      </Box>
 
-      <Box sx={{ px: 1, py: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-          onClick={() => resetDialog.onTrue()}
-          disabled={!hasChanges}
-          size="small"
+        <Box
+          sx={{
+            p: 2,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 2,
+            bgcolor: 'background.paper',
+          }}
         >
-          Reset
-        </Button>
-        <Button
-          startIcon={<Save />}
-          variant="contained"
-          onClick={() => saveDialog.onTrue()}
-          disabled={!hasChanges}
-          size="small"
-        >
-          Save
-        </Button>
-      </Box>
+          <Button
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+            onClick={resetDialog.onTrue}
+            disabled={!hasChanges}
+            size="small"
+          >
+            Reset
+          </Button>
+          <Button
+            startIcon={<Save />}
+            variant="contained"
+            onClick={saveDialog.onTrue}
+            disabled={!hasChanges}
+            size="small"
+          >
+            Save
+          </Button>
+        </Box>
+      </Card>
 
       <ConfirmDialog
         open={resetDialog.value}
-        onClose={() => resetDialog.onFalse()}
+        onClose={resetDialog.onFalse}
         title="Reset"
-        content="Are you sure you want to reset all timing settings?"
+        content="Are you sure you want to discard all changes and reset to the original schedule?"
         action={
           <Button
             startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
@@ -414,9 +530,9 @@ const LibraryTimingCreation = () => {
 
       <ConfirmDialog
         open={saveDialog.value}
-        onClose={() => saveDialog.onFalse()}
+        onClose={saveDialog.onFalse}
         title="Save"
-        content="Are you sure you want to save these changes?"
+        content="Are you sure you want to save these library hours?"
         action={
           <Button
             startIcon={<Iconify icon={GlobalIcons.submit} />}
@@ -431,9 +547,15 @@ const LibraryTimingCreation = () => {
 
       <ConfirmDialog
         open={sameAsSchoolDialog.value}
-        onClose={() => sameAsSchoolDialog.onFalse()}
-        title="Same as School Hours"
-        content="Are you sure you want to set library hours same as school hours? This will override current timings."
+        onClose={sameAsSchoolDialog.onFalse}
+        title="Apply School Hours"
+        content={
+          <Box>
+            <Typography gutterBottom>
+              Are you sure you want to set library hours same as school hours?
+            </Typography>
+          </Box>
+        }
         action={
           <Button
             startIcon={<Iconify icon="mdi:clock-outline" />}

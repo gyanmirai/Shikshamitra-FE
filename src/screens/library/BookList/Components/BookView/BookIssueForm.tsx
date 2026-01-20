@@ -96,11 +96,13 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
     if (!value) {
       setSelectedBook(null);
       setDebouncedAccessionNumber('');
+      setLoading(false);
       return;
     }
 
     setLoading(true);
     debounce(() => {
+      setDebouncedAccessionNumber(value);
       const foundCopy = copies?.find((c: IBookCopy) => c.accessionNo === value);
       const foundBook = foundCopy
         ? {
@@ -251,15 +253,6 @@ const IssueBookModal: React.FC<IssueBookFormProps> = ({ onClose, editData }) => 
                     (formik.touched.accessionNumber && formik.errors.accessionNumber) as string
                   }
                   placeholder="Enter Accession No. (e.g., ACC-0001, ACC-0002, ACC-0003)"
-                  InputProps={{
-                    endAdornment: (
-                      <>
-                        {formik.values.accessionNumber !== debouncedAccessionNumber && (
-                          <CircularProgress size={20} />
-                        )}
-                      </>
-                    ),
-                  }}
                 />
               </ShakingTextField>
             </Grid>

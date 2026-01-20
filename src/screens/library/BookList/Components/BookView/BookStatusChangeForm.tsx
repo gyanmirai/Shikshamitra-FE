@@ -33,7 +33,6 @@ const ChangeBookStatusForm: React.FC<ChangeStatusFormProps> = ({ editData, onClo
   });
   const { currentAcademicYear } = useSelector((state: RootState) => state.globalState);
   if (!editData) return null; // handle null data
-
   const options = allowedStatuses.map((status) => ({
     label: LibraryBookStatus[status],
     value: status,
