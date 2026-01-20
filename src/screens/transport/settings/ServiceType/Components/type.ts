@@ -16,6 +16,8 @@ export interface IServiceTypeTableProps {
   setEditData: (value: IServiceType | null) => void;
   onDelete: (data: IServiceType) => void;
   onEdit: (data: IServiceType) => void;
+  data: any;
+  isLoading: boolean;
 }
 
 export interface IServiceTypeFormProps {

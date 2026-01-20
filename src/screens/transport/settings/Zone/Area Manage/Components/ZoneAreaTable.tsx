@@ -1,9 +1,9 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetZoneAreaOptionsQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import type { IZoneArea, IZoneAreaTableProps } from './type';
 
@@ -13,20 +13,68 @@ const ZoneAreaTable: React.FC<IZoneAreaTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
+  data: zoneAreaData,
+  isLoading: zoneAreaLoading,
 }) => {
-  const { data: zoneAreaData, isLoading: zoneAreaLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetZoneAreaOptionsQuery,
-  });
-
   // Transform API response to match table format
   const transformedData = React.useMemo(() => {
     if (!zoneAreaData) return [];
-    return zoneAreaData.map((item: any) => ({
+    const data = Array.isArray(zoneAreaData) ? zoneAreaData : zoneAreaData?.data;
+    if (!Array.isArray(data)) return [];
+
+    return data.map((item: any) => ({
       ...item,
       zoneName: item.name || item.zoneName,
     }));
   }, [zoneAreaData]);
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'zoneName',
+        label: 'Name',
+        align: 'left',
+        minWidth: 180,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'description',
+        label: 'Description',
+        align: 'left',
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        minWidth: 50,
+        align: 'left',
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showThreeDots={false}
+              placement="right-top"
+              showDeleteIcon
+              showEditIcon
+              handleDeleteClick={() => {
+                onDelete(row as IZoneArea);
+              }}
+              handleEditClick={() => {
+                onEdit(row as IZoneArea);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   return (
     <CustomizableTable
@@ -64,49 +112,7 @@ const ZoneAreaTable: React.FC<IZoneAreaTableProps> = ({
           </Box>
         </>
       }
-      columns={[
-        {
-          id: 'zoneName',
-          label: 'Name',
-          align: 'left',
-          minWidth: 180,
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value}
-            </Typography>
-          ),
-        },
-        {
-          id: 'description',
-          label: 'Description',
-          align: 'left',
-        },
-        {
-          id: 'action',
-          label: 'Actions',
-          minWidth: 50,
-          align: 'left',
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                showThreeDots={false}
-                placement="right-top"
-                showDeleteIcon
-                showEditIcon
-                handleDeleteClick={() => {
-                  onDelete(row as IZoneArea);
-                }}
-                handleEditClick={() => {
-                  onEdit(row as IZoneArea);
-                }}
-              />
-            );
-          },
-        },
-      ]}
+      columns={columns}
       data={transformedData}
     />
   );

@@ -1,9 +1,9 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetVehicleDocumentsQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import type { IVehicleDocument, IVehicleDocumentTableProps } from './type';
 
@@ -13,28 +13,99 @@ const VehicleDocumentTable: React.FC<IVehicleDocumentTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
+  data,
+  isLoading,
 }) => {
-  const { data: vehicleDocumentData, isLoading: vehicleDocumentsLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetVehicleDocumentsQuery,
-  });
-
   // Transform API response to match table format
   const transformedData = React.useMemo(() => {
-    if (!vehicleDocumentData) return [];
-    return vehicleDocumentData.map((item: any) => ({
+    if (!data) return [];
+    return data.map((item: any) => ({
       ...item,
       documentName: item.name || item.documentName,
       documentSize: item.maxSizeMb || item.documentSize,
       acceptedFormat: item.acceptedFormats || item.acceptedFormat,
       required: item.isRequired ?? item.required,
     }));
-  }, [vehicleDocumentData]);
+  }, [data]);
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'documentName',
+        label: 'Name',
+        align: 'left',
+        minWidth: 180,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'documentSize',
+        label: 'Document Size',
+        align: 'left',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value ? `${value} MB` : '-'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'acceptedFormat',
+        label: 'Accepted Format',
+        align: 'left',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value || '-'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'required',
+        label: 'Required/Optional',
+        align: 'left',
+        minWidth: 180,
+        render: (value, row) => (
+          <Typography variant="caption" fontSize="13px">
+            {value === true ? 'Required' : 'Optional'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        minWidth: 50,
+        align: 'left',
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showThreeDots={false}
+              placement="right-top"
+              showDeleteIcon
+              showEditIcon
+              handleDeleteClick={() => {
+                onDelete(row as IVehicleDocument);
+              }}
+              handleEditClick={() => {
+                onEdit(row as IVehicleDocument);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   return (
     <CustomizableTable
       tableId="vehicle-document-data-table"
-      isLoading={vehicleDocumentsLoading}
+      isLoading={isLoading}
       noDataText={
         <>
           Required Vehicle Document Data Not Found{' '}
@@ -57,75 +128,7 @@ const VehicleDocumentTable: React.FC<IVehicleDocumentTableProps> = ({
           </Box>
         </>
       }
-      columns={[
-        {
-          id: 'documentName',
-          label: 'Name',
-          align: 'left',
-          minWidth: 180,
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value}
-            </Typography>
-          ),
-        },
-        {
-          id: 'documentSize',
-          label: 'Document Size',
-          align: 'left',
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value ? `${value} MB` : '-'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'acceptedFormat',
-          label: 'Accepted Format',
-          align: 'left',
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value || '-'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'required',
-          label: 'Required/Optional',
-          align: 'left',
-          minWidth: 180,
-          render: (value, row) => (
-            <Typography variant="caption" fontSize="13px">
-              {value === true ? 'Required' : 'Optional'}
-            </Typography>
-          ),
-        },
-        {
-          id: 'action',
-          label: 'Actions',
-          minWidth: 50,
-          align: 'left',
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                showThreeDots={false}
-                placement="right-top"
-                showDeleteIcon
-                showEditIcon
-                handleDeleteClick={() => {
-                  onDelete(row as IVehicleDocument);
-                }}
-                handleEditClick={() => {
-                  onEdit(row as IVehicleDocument);
-                }}
-              />
-            );
-          },
-        },
-      ]}
+      columns={columns}
       data={transformedData}
     />
   );

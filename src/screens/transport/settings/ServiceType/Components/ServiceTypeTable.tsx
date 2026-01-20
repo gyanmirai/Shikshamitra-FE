@@ -1,9 +1,9 @@
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
+import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetServiceTypesQuery } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import type { IServiceType, IServiceTypeTableProps } from './type';
 
@@ -13,25 +13,70 @@ const ServiceTypeTable: React.FC<IServiceTypeTableProps> = ({
   setEditData,
   onDelete,
   onEdit,
+  data,
+  isLoading,
 }) => {
-  const { data: serviceTypeData, isLoading: serviceTypesLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetServiceTypesQuery,
-  });
-
   // Transform API response to match table format
   const transformedData = React.useMemo(() => {
-    if (!serviceTypeData) return [];
-    return serviceTypeData.map((item: any) => ({
+    const dataToUse = data && data.length > 0 ? data : [];
+    return dataToUse.map((item: any) => ({
       ...item,
       typeName: item.name || item.typeName,
     }));
-  }, [serviceTypeData]);
+  }, [data]);
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'typeName',
+        label: 'Name',
+        align: 'left',
+        minWidth: 180,
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}
+          </Typography>
+        ),
+      },
+      {
+        id: 'description',
+        label: 'Description',
+        align: 'left',
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        minWidth: 50,
+        align: 'left',
+        isSort: false,
+        sticky: true,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showThreeDots={false}
+              placement="right-top"
+              showDeleteIcon
+              showEditIcon
+              handleDeleteClick={() => {
+                onDelete(row as IServiceType);
+              }}
+              handleEditClick={() => {
+                onEdit(row as IServiceType);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   return (
     <CustomizableTable
       tableId="service-type-data-table"
-      isLoading={serviceTypesLoading}
+      isLoading={isLoading}
       noDataText={
         <>
           Servicing Type Data Not Found{' '}
@@ -54,49 +99,7 @@ const ServiceTypeTable: React.FC<IServiceTypeTableProps> = ({
           </Box>
         </>
       }
-      columns={[
-        {
-          id: 'typeName',
-          label: 'Name',
-          align: 'left',
-          minWidth: 180,
-          render: (value) => (
-            <Typography variant="caption" fontSize="13px">
-              {value}
-            </Typography>
-          ),
-        },
-        {
-          id: 'description',
-          label: 'Description',
-          align: 'left',
-        },
-        {
-          id: 'action',
-          label: 'Actions',
-          minWidth: 50,
-          align: 'left',
-          isSort: false,
-          sticky: true,
-          isFilter: false,
-          render(value, row) {
-            return (
-              <ThreeDotsActions
-                showThreeDots={false}
-                placement="right-top"
-                showDeleteIcon
-                showEditIcon
-                handleDeleteClick={() => {
-                  onDelete(row as IServiceType);
-                }}
-                handleEditClick={() => {
-                  onEdit(row as IServiceType);
-                }}
-              />
-            );
-          },
-        },
-      ]}
+      columns={columns}
       data={transformedData}
     />
   );

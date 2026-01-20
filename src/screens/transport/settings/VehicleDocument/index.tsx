@@ -9,13 +9,17 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteVehicleDocumentMutation } from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
+import {
+  vehicleSettingsApi,
+  useGetVehicleDocumentsQuery,
+  useDeleteVehicleDocumentMutation,
+} from 'src/redux/transport/vehicle-management/vehicleSettingsApi';
 
 import VehicleDocumentForm from './Components/VehicleDocumentForm';
 import VehicleDocumentTable from './Components/VehicleDocumentTable';
@@ -43,6 +47,18 @@ const VehicleDocumentSettingScreen = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteVehicleDocumentMutation,
   });
+
+  const {
+    data: vehicleDocumentData,
+    isLoading: vehicleDocumentsLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetVehicleDocumentsQuery,
+  });
+
+  // Undo functionality hook
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   /**
    * Handles closing of add/edit vehicle document dialog
@@ -97,6 +113,8 @@ const VehicleDocumentSettingScreen = () => {
       />
 
       <VehicleDocumentTable
+        data={vehicleDocumentData}
+        isLoading={vehicleDocumentsLoading}
         onDelete={(data) => {
           setSelectedVehicleDocument(data);
           deleteVehicleDocumentDialog.onTrue();
@@ -169,20 +187,37 @@ const VehicleDocumentSettingScreen = () => {
             onClick={async () => {
               if (!selectedVehicleDocument?.id) return;
 
-              try {
-                const documentName =
-                  selectedVehicleDocument?.name || selectedVehicleDocument?.documentName;
-                await deleteVehicleDocument(selectedVehicleDocument.id);
-                deleteVehicleDocumentDialog.onFalse();
-                setSelectedVehicleDocument(null);
-                shikshaMitraToast.success({
-                  message: `Vehicle Document: ${documentName} deleted successfully`,
-                });
-              } catch (error: any) {
-                shikshaMitraToast.error({
-                  message: error?.data?.message || 'Failed to delete vehicle document',
-                });
-              }
+              confirmWithUndo({
+                item: selectedVehicleDocument,
+                message: `Vehicle Document deleted successfully`,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
+                  dispatchFn(
+                    vehicleSettingsApi.util.updateQueryData(
+                      'getVehicleDocuments',
+                      undefined,
+                      (draft: any) => {
+                        const arr = Array.isArray(draft) ? draft : draft?.data;
+                        if (!Array.isArray(arr)) return;
+
+                        const index = arr.findIndex(
+                          (item: any) => item.id === selectedVehicleDocument.id
+                        );
+                        if (index !== -1) {
+                          setDeleteIndex(index);
+                          arr.splice(index, 1);
+                        }
+                      }
+                    )
+                  );
+                },
+                onUndoRestore: () => refetch(),
+                onCommit: async () => {
+                  await deleteVehicleDocument(selectedVehicleDocument.id);
+                },
+              });
+
+              deleteVehicleDocumentDialog.onFalse();
+              setSelectedVehicleDocument(null);
             }}
           >
             {isDeleting ? 'Deleting...' : 'Yes'}
