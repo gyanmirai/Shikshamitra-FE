@@ -5,14 +5,21 @@ import type { LabelColor } from 'src/components/label';
 import dayjs from 'dayjs';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
+import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useMemo, useCallback } from 'react';
 import { Cancel, CheckCircle } from '@mui/icons-material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
-import { Box, Tab, Tabs, MenuList, MenuItem, Typography } from '@mui/material';
-import { useGetConcessionRequestsListQuery } from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
+import { Box, Tab, Tabs, Button, MenuList, MenuItem, Typography } from '@mui/material';
+import {
+  concessionRequestApi,
+  useGetConcessionRequestsListQuery,
+  useDeleteConcessionRequestMutation,
+} from 'src/redux/finance/ConcessionManagement/concessionRequestApi';
 
 import type { IStudentInfo } from '../type';
 import type { IViewConcessionRequestProps } from '../../ConcessionAdmin/type';
@@ -24,7 +31,8 @@ interface ICombinedProps {
   onApprove: (data: IStudentInfo) => void;
   onReject: (data: IStudentInfo) => void;
   onAddConcession: () => void;
-  onRemove: (data: IStudentInfo) => void;
+  // eslint-disable-next-line react/no-unused-prop-types
+  onRemove?: (data: IStudentInfo) => void;
   onViewConcession?: (student: IViewConcessionRequestProps) => void;
   onViewAllConcession?: (student: IStudentInfo) => void;
 }
@@ -34,15 +42,26 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
   selectedMedium,
   onApprove,
   onReject,
-  onRemove,
   onAddConcession,
   onRequestConcession,
   onViewConcession,
   onViewAllConcession,
 }) => {
   const tabs = useTabs(ConcessionStatusType.Pending);
+  const [selectedConcession, setSelectedConcession] = React.useState<IStudentInfo | null>(null);
+  const removeConcessionDialog = useBoolean();
+  const { confirmWithUndo } = useConfirmWithUndo();
 
-  const { data: concessionData = [], isLoading: isLoadingConcessionData } = useQueryAndMutation({
+  const [deleteConcessionRequest] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteConcessionRequestMutation,
+  });
+
+  const {
+    data: concessionData = [],
+    isLoading: isLoadingConcessionData,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionRequestsListQuery,
     params: {
@@ -233,7 +252,10 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
                   showThreeDots={status !== ConcessionStatusType.Pending}
                   showViewIcon={status === ConcessionStatusType.Pending}
                   showDeleteIcon={status === ConcessionStatusType.Pending}
-                  handleDeleteClick={() => onRemove(row as IStudentInfo)}
+                  handleDeleteClick={() => {
+                    setSelectedConcession(row as IStudentInfo);
+                    removeConcessionDialog.onTrue();
+                  }}
                   handleViewClick={() => onViewConcession?.(row as IViewConcessionRequestProps)}
                 />
               );
@@ -241,6 +263,59 @@ const StudentConcessionTable: React.FC<ICombinedProps> = ({
           },
         ]}
         data={tableData || []}
+      />
+
+      <ConfirmDialog
+        open={removeConcessionDialog.value}
+        onClose={() => {
+          setSelectedConcession(null);
+          removeConcessionDialog.onFalse();
+        }}
+        title="Delete"
+        content={
+          <>
+            Are you sure you want to delete concession for{' '}
+            <strong>&quot;{selectedConcession?.studentName}&quot;?</strong>
+          </>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => {
+              removeConcessionDialog.onFalse();
+              if (selectedConcession) {
+                confirmWithUndo({
+                  item: selectedConcession,
+                  onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
+                    // Optimistic update logic
+                    dispatchFn(
+                      concessionRequestApi.util.updateQueryData(
+                        'getConcessionRequestsList',
+                        { board: selectedBoard, medium: selectedMedium, status: tabs.value },
+                        (draft) => {
+                          const index = draft.findIndex(
+                            (item: any) => item.id === selectedConcession.id
+                          );
+                          if (index !== -1) {
+                            setDeleteIndex(index);
+                            draft.splice(index, 1);
+                          }
+                        }
+                      )
+                    );
+                    setSelectedConcession(null);
+                  },
+                  onUndoRestore: () => refetch(),
+                  onCommit: () => deleteConcessionRequest(selectedConcession.id),
+                });
+              }
+            }}
+          >
+            Yes
+          </Button>
+        }
       />
     </>
   );

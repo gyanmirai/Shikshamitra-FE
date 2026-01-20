@@ -9,15 +9,16 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetExpensesQuery } from 'src/redux/finance/expenseApi/expenseApi';
 import { Box, Card, Button, Typography, CircularProgress } from '@mui/material';
 import {
+  expenseDetailsApi,
   useGetExpenseByIdQuery,
   useGetExpenseDetailsQuery,
   useDeleteExpenseDetailsMutation,
@@ -41,7 +42,11 @@ const FinanceExpenseTracking = () => {
     type: 'query',
     currentQueryAndMutation: useGetExpensesQuery,
   });
-  const { data: expenseDetailedData, isLoading } = useQueryAndMutation({
+  const {
+    data: expenseDetailedData,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseDetailsQuery,
   });
@@ -56,7 +61,7 @@ const FinanceExpenseTracking = () => {
   });
 
   // DELETE mutation
-  const { deleteExpenseDetails, isLoading: isDeleting } = useQueryAndMutation({
+  const { deleteExpenseDetails } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteExpenseDetailsMutation,
   });
@@ -64,6 +69,7 @@ const FinanceExpenseTracking = () => {
   // Redux
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // Handle form/dialog close
   const handleClose = (_e: any, isSubmit?: boolean) => {
@@ -196,25 +202,36 @@ const FinanceExpenseTracking = () => {
             variant="contained"
             color="error"
             size="small"
-            loading={isDeleting}
-            disabled={isDeleting}
-            onClick={async () => {
+            onClick={() => {
               if (!selectedExpense?.id) return;
 
-              try {
-                await deleteExpenseDetails(selectedExpense.id).unwrap();
-
-                shikshaMitraToast.success({
-                  message: `Expense record : ${selectedExpense?.expenseName} deleted successfully`,
-                });
-                deleteExpenseDialog.onFalse();
-                setSelectedExpense(null);
-              } catch (error) {
-                console.error('Delete operation failed:', error);
-                shikshaMitraToast.error({
-                  message: 'Failed to delete expense record',
-                });
-              }
+              confirmWithUndo({
+                item: selectedExpense,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) => {
+                  dispatchFn(
+                    expenseDetailsApi.util.updateQueryData(
+                      'getExpenseDetails',
+                      undefined,
+                      (draft: any) => {
+                        const list = Array.isArray(draft) ? draft : draft?.data || [];
+                        const index = list.findIndex(
+                          (item: any) => item.id === (selectedExpense as any)?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          list.splice(index, 1);
+                        }
+                      }
+                    )
+                  );
+                },
+                onUndoRestore: () => refetch(),
+                onCommit: async () => {
+                  await deleteExpenseDetails(selectedExpense.id).unwrap();
+                },
+              });
+              deleteExpenseDialog.onFalse();
+              setSelectedExpense(null);
             }}
           >
             Yes

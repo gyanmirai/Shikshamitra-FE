@@ -345,7 +345,8 @@ const AdmissionScreen = () => {
         },
       },
     ],
-    [divisionDialog, followUpDialog, selectedStudents, tableData]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   return (

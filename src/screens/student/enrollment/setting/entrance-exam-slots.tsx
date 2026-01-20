@@ -2,14 +2,15 @@
 
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { Iconify } from 'src/components/iconify/iconify';
@@ -54,7 +55,11 @@ const EntranceExamSlots = () => {
   // Redux dispatch
   const dispatch = useDispatch();
   // Fetch entrance exam slots data
-  const { data: slots, isLoading } = useQueryAndMutation({
+  const {
+    data: slots,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetEntranceExamSlotQuery,
     params: {
@@ -103,6 +108,45 @@ const EntranceExamSlots = () => {
       }, 200);
     }
   };
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      { label: 'Slot Name', id: 'slotName', sticky: true, minWidth: '12vw', align: 'left' },
+      { label: 'Duration', id: 'duration' },
+      // { label: 'Date', id: 'creationDate' },
+      { label: 'Start Time', id: 'startTime', filterType: 'date' },
+      { label: 'End Time', id: 'endTime', filterType: 'date' },
+      { label: 'Student Limit', id: 'studentLimit', filterType: 'number' },
+      { label: 'Room No', id: 'roomNo', filterType: 'number' },
+      {
+        label: 'Actions',
+        id: 'action',
+        isSort: false,
+        minWidth: 50,
+        sticky: true,
+        isFilter: false,
+        render(value, row) {
+          return (
+            <ThreeDotsActions
+              showDeleteIcon
+              showEditIcon
+              showThreeDots={false}
+              handleDeleteClick={() => {
+                setEditData(row as ISlot);
+                confirm.onTrue();
+              }}
+              handleEditClick={() => {
+                entranceExamSlotsDialog.onTrue();
+                setEditData(row as ISlot);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -172,21 +216,7 @@ const EntranceExamSlots = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    EntranceExamSlotApi.util.updateQueryData(
-                      'getEntranceExamSlot',
-                      {
-                        academicYearId: currentYear?.id,
-                        startDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
-                        endDate: dateConvertor(selectedDate?.format(dateFormat) || '', true),
-                      },
-                      (draft: any) => {
-                        if (!draft?.items) return;
-                        draft.items.splice(index, 0, editData);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetch(),
                 onCommit: () => deleteSlot(editData?.id),
               });
               confirm.onFalse();
@@ -234,40 +264,7 @@ const EntranceExamSlots = () => {
             </Box>
           </>
         }
-        columns={[
-          { label: 'Slot Name', id: 'slotName', sticky: true, minWidth: '12vw', align: 'left' },
-          { label: 'Duration', id: 'duration' },
-          // { label: 'Date', id: 'creationDate' },
-          { label: 'Start Time', id: 'startTime', filterType: 'date' },
-          { label: 'End Time', id: 'endTime', filterType: 'date' },
-          { label: 'Student Limit', id: 'studentLimit', filterType: 'number' },
-          { label: 'Room No', id: 'roomNo', filterType: 'number' },
-          {
-            label: 'Actions',
-            id: 'action',
-            isSort: false,
-            minWidth: 50,
-            sticky: true,
-            isFilter: false,
-            render(value, row) {
-              return (
-                <ThreeDotsActions
-                  showDeleteIcon
-                  showEditIcon
-                  showThreeDots={false}
-                  handleDeleteClick={() => {
-                    setEditData(row as ISlot);
-                    confirm.onTrue();
-                  }}
-                  handleEditClick={() => {
-                    entranceExamSlotsDialog.onTrue();
-                    setEditData(row as ISlot);
-                  }}
-                />
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={tableData || []}
       />
       <CustomDialog

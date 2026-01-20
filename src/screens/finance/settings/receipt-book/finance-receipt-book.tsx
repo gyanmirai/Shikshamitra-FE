@@ -1,11 +1,12 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
-import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -93,6 +94,104 @@ const FinanceReceiptBookSetting = () => {
       resetState();
     }
   };
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      { id: 'receiptBookName', label: 'Name', align: 'left', sticky: true },
+      { id: 'prefix', label: 'Prefix', align: 'left' },
+      { id: 'suffix', label: 'Suffix', align: 'left' },
+      {
+        id: 'board',
+        label: 'Board/Medium',
+        align: 'left',
+        render: (value, row) => (
+          <Typography variant="caption" fontSize="13px">
+            {value}/{row.medium}
+          </Typography>
+        ),
+      },
+      { id: 'organization', label: 'Organization', align: 'left' },
+      { id: 'startingNumber', label: 'Starting No.', align: 'left', minWidth: 130 },
+      { id: 'endingNumber', label: 'Ending No.', align: 'left', minWidth: 130 },
+      { id: 'description', label: 'Description', align: 'left' },
+      {
+        id: 'toggle',
+        label: 'Active',
+        isFilter: false,
+        isSort: false,
+        sticky: true,
+        render(value, row) {
+          const statusColor =
+            value === true ? theme.vars.palette.success.main : theme.vars.palette.text.secondary;
+          return (
+            <CustomTooltip
+              title={value === true ? 'Active' : 'Inactive'}
+              arrow
+              placement="left"
+              PopperProps={{
+                modifiers: [
+                  {
+                    name: 'offset',
+                    options: {
+                      offset: [0, 0], // Try 0 or adjust closer
+                    },
+                  },
+                ],
+              }}
+            >
+              <IconButton
+                onClick={() => {
+                  activeDialog.onTrue();
+                  setSelectedEntry(row as IReceiptBook);
+                }}
+                sx={{
+                  p: 0.6, // some padding for a more clickable area
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(0,0,0,0.06)', // light background to indicate clickability
+                  transition: 'transform 0.2s ease-in-out, background-color 0.2s',
+                  cursor: 'pointer',
+                  '&:hover': { transform: 'scale(1.1)', backgroundColor: 'rgba(0,0,0,0.08)' },
+                }}
+              >
+                <Iconify
+                  icon={GlobalIcons.tick}
+                  sx={{ width: 20, height: 20, color: statusColor }}
+                />
+              </IconButton>
+            </CustomTooltip>
+          );
+        },
+      },
+      {
+        id: 'action',
+        label: 'Action',
+        isFilter: false,
+        isSort: false,
+        sticky: true,
+        align: 'left',
+        minWidth: 40,
+        render: (value, row: any) => (
+          <ThreeDotsActions
+            showThreeDots={false}
+            showDeleteIcon
+            handleDeleteClick={() => {
+              dialogForDeleteConfirmation.onTrue();
+              setSelectedEntry(row);
+            }}
+            showEditIcon
+            handleEditClick={() => {
+              setIsEdit(true);
+              setSelectedEntry(row);
+              receiptBookDialog.onTrue();
+            }}
+          />
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
@@ -145,100 +244,7 @@ const FinanceReceiptBookSetting = () => {
           </>
         }
         tableId="finance-receipt-book-setting-table"
-        columns={[
-          { id: 'receiptBookName', label: 'Name', align: 'left', sticky: true },
-          { id: 'prefix', label: 'Prefix', align: 'left' },
-          { id: 'suffix', label: 'Suffix', align: 'left' },
-          {
-            id: 'board',
-            label: 'Board/Medium',
-            align: 'left',
-            render: (value, row) => (
-              <Typography variant="caption" fontSize="13px">
-                {value}/{row.medium}
-              </Typography>
-            ),
-          },
-          { id: 'organization', label: 'Organization', align: 'left' },
-          { id: 'startingNumber', label: 'Starting No.', align: 'left', minWidth: 130 },
-          { id: 'endingNumber', label: 'Ending No.', align: 'left', minWidth: 130 },
-          { id: 'description', label: 'Description', align: 'left' },
-          {
-            id: 'toggle',
-            label: 'Active',
-            isFilter: false,
-            isSort: false,
-            sticky: true,
-            render(value, row) {
-              const statusColor =
-                value === true
-                  ? theme.vars.palette.success.main
-                  : theme.vars.palette.text.secondary;
-              return (
-                <CustomTooltip
-                  title={value === true ? 'Active' : 'Inactive'}
-                  arrow
-                  placement="left"
-                  PopperProps={{
-                    modifiers: [
-                      {
-                        name: 'offset',
-                        options: {
-                          offset: [0, 0], // Try 0 or adjust closer
-                        },
-                      },
-                    ],
-                  }}
-                >
-                  <IconButton
-                    onClick={() => {
-                      activeDialog.onTrue();
-                      setSelectedEntry(row as IReceiptBook);
-                    }}
-                    sx={{
-                      p: 0.6, // some padding for a more clickable area
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(0,0,0,0.06)', // light background to indicate clickability
-                      transition: 'transform 0.2s ease-in-out, background-color 0.2s',
-                      cursor: 'pointer',
-                      '&:hover': { transform: 'scale(1.1)', backgroundColor: 'rgba(0,0,0,0.08)' },
-                    }}
-                  >
-                    <Iconify
-                      icon={GlobalIcons.tick}
-                      sx={{ width: 20, height: 20, color: statusColor }}
-                    />
-                  </IconButton>
-                </CustomTooltip>
-              );
-            },
-          },
-          {
-            id: 'action',
-            label: 'Action',
-            isFilter: false,
-            isSort: false,
-            sticky: true,
-            align: 'left',
-            minWidth: 40,
-            render: (value, row: any) => (
-              <ThreeDotsActions
-                showThreeDots={false}
-                showDeleteIcon
-                handleDeleteClick={() => {
-                  dialogForDeleteConfirmation.onTrue();
-                  setSelectedEntry(row);
-                }}
-                showEditIcon
-                handleEditClick={() => {
-                  setIsEdit(true);
-                  setSelectedEntry(row);
-                  receiptBookDialog.onTrue();
-                }}
-              />
-            ),
-          },
-        ]}
+        columns={columns}
         data={tableData}
       />
 

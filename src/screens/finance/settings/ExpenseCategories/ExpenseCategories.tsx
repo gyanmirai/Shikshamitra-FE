@@ -1,12 +1,13 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,6 +17,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -23,6 +25,7 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
+  expenseCategoryApi,
   useGetBudgetOptionsQuery,
   useGetExpenseCategoryQuery,
   usePutExpenseCategoryMutation,
@@ -34,29 +37,33 @@ const FinanceExpenseCategory = () => {
   const addDialog = useBoolean();
   const editDialog = useBoolean();
   const confirm = useBoolean();
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
+  const { academicYearId } = useSelector((state: RootState) => state.academicYear);
+
   // Get expense categories data
-  const { data, isLoading } = useQueryAndMutation({
+  const { data, isLoading, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseCategoryQuery,
+    params: academicYearId?.id,
   });
 
   // POST mutation for creating
-  const { postExpenseCategory, isLoading: isCreating } = useQueryAndMutation({
+  const { postExpenseCategory } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePostExpenseCategoryMutation,
   });
 
   // PUT mutation for updating
-  const { putExpenseCategory, isLoading: isUpdating } = useQueryAndMutation({
+  const { putExpenseCategory } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePutExpenseCategoryMutation,
   });
 
   // DELETE mutation
-  const { deleteExpenseCategory, isLoading: isDeleting } = useQueryAndMutation({
+  const { deleteExpenseCategory } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteExpenseCategoryMutation,
   });
@@ -99,26 +106,31 @@ const FinanceExpenseCategory = () => {
   };
 
   // Handle delete operation
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!selectedItem?.id) return;
 
-    try {
-      await deleteExpenseCategory(selectedItem.id).unwrap();
-
-      shikshaMitraToast.success({
-        message: `${selectedItem.expenseCategoryName} Expense Category Deleted Successfully`,
-      });
-
-      setTimeout(() => {
-        setSelectedItem(null);
-      }, 200);
-      confirm.onFalse();
-    } catch (error) {
-      console.error('Delete operation failed:', error);
-      shikshaMitraToast.error({
-        message: 'Failed to delete expense category',
-      });
-    }
+    confirmWithUndo({
+      item: selectedItem,
+      onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+        dispatchFn(
+          expenseCategoryApi.util.updateQueryData(
+            'getExpenseCategory',
+            academicYearId,
+            (draft: any) => {
+              const list = Array.isArray(draft) ? draft : draft?.data || [];
+              const index = list.findIndex((b: any) => b.id === (selectedItem as any)?.id);
+              setDeleteIndex(index);
+              if (index !== -1) {
+                list.splice(index, 1);
+              }
+            }
+          )
+        ),
+      onUndoRestore: () => refetch(),
+      onCommit: () => deleteExpenseCategory(selectedItem.id),
+    });
+    confirm.onFalse();
+    setSelectedItem(null);
   };
 
   // Handle edit action
@@ -161,6 +173,66 @@ const FinanceExpenseCategory = () => {
       }, 200);
     }
   };
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'expenseCategoryName',
+        label: 'Name',
+        minWidth: '220px',
+        isSort: true,
+        isFilter: true,
+        align: 'left',
+      },
+      {
+        id: 'tags',
+        label: 'Tags',
+        align: 'left',
+        render: (value) => (
+          <Typography variant="caption" fontSize="13px">
+            {Array.isArray(value) && value.length > 0
+              ? value.map((tag) => `${tag}`).join(' ')
+              : '-'}
+          </Typography>
+        ),
+      },
+      {
+        id: 'description',
+        label: 'Description',
+        minWidth: '300px',
+        isSort: false,
+        isFilter: false,
+        align: 'left',
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        minWidth: '70px',
+        isSort: false,
+        isFilter: false,
+        align: 'left',
+        sticky: true,
+        render(value, row: any) {
+          return (
+            <ThreeDotsActions
+              showEditIcon
+              showDeleteIcon
+              showThreeDots={false}
+              placement="right-top"
+              handleDeleteClick={() => {
+                handleDeleteAction(row);
+              }}
+              handleEditClick={() => {
+                handleEdit(row);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -207,61 +279,7 @@ const FinanceExpenseCategory = () => {
           </>
         }
         isLoading={isLoading}
-        columns={[
-          {
-            id: 'expenseCategoryName',
-            label: 'Name',
-            minWidth: '220px',
-            isSort: true,
-            isFilter: true,
-            align: 'left',
-          },
-          {
-            id: 'tags',
-            label: 'Tags',
-            align: 'left',
-            render: (value) => (
-              <Typography variant="caption" fontSize="13px">
-                {Array.isArray(value) && value.length > 0
-                  ? value.map((tag) => `${tag}`).join(' ')
-                  : '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'description',
-            label: 'Description',
-            minWidth: '300px',
-            isSort: false,
-            isFilter: false,
-            align: 'left',
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            minWidth: '70px',
-            isSort: false,
-            isFilter: false,
-            align: 'left',
-            sticky: true,
-            render(value, row: any) {
-              return (
-                <ThreeDotsActions
-                  showEditIcon
-                  showDeleteIcon
-                  showThreeDots={false}
-                  placement="right-top"
-                  handleDeleteClick={() => {
-                    handleDeleteAction(row);
-                  }}
-                  handleEditClick={() => {
-                    handleEdit(row);
-                  }}
-                />
-              );
-            },
-          },
-        ]}
+        columns={columns}
         data={data || []}
       />
 
@@ -314,15 +332,9 @@ const FinanceExpenseCategory = () => {
           </>
         }
         action={
-          <LoadingButton
-            variant="contained"
-            loading={isDeleting}
-            color="error"
-            size="small"
-            onClick={handleDelete}
-          >
+          <Button variant="contained" color="error" size="small" onClick={handleDelete}>
             Yes
-          </LoadingButton>
+          </Button>
         }
       />
     </Box>

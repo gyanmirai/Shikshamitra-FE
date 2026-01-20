@@ -1,13 +1,14 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,6 +19,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -36,6 +38,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import {
+  ChargeCategoryApi,
   useGetChargeCategoryQuery,
   usePutChargeCategoryMutation,
   usePostChargeCategoryMutation,
@@ -50,28 +53,30 @@ const FinanceChargeCategory = () => {
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
   // Get charge categories data
-  const { data, isLoading } = useQueryAndMutation({
+  const { data, isLoading, refetch } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargeCategoryQuery,
   });
 
   // POST mutation for creating
-  const { postChargeCategory, isLoading: isCreating } = useQueryAndMutation({
+  const { postChargeCategory } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePostChargeCategoryMutation,
   });
 
   // PUT mutation for updating
-  const { putChargeCategory, isLoading: isUpdating } = useQueryAndMutation({
+  const { putChargeCategory } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePutChargeCategoryMutation,
   });
 
-  // DELETE mutation
-  const { deleteChargeCategory, isLoading: isDeleting } = useQueryAndMutation({
+  // Delete mutation
+  const { deleteChargeCategory } = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteChargeCategoryMutation,
   });
+
+  const { confirmWithUndo } = useConfirmWithUndo();
 
   // Handle save operation (create/update)
   const handleSave = async (values: any) => {
@@ -114,24 +119,25 @@ const FinanceChargeCategory = () => {
   const handleDelete = async () => {
     if (!selectedItem?.id) return;
 
-    try {
-      await deleteChargeCategory(selectedItem.id).unwrap();
-
-      shikshaMitraToast.success({
-        message: `${selectedItem.chargeName} Charge Category Deleted Successfully`,
-      });
-
-      setTimeout(() => {
-        setSelectedItem(null);
-      }, 200);
-
-      confirm.onFalse();
-    } catch (error) {
-      console.error('Delete operation failed:', error);
-      shikshaMitraToast.error({
-        message: 'Failed to delete charge category',
-      });
-    }
+    confirmWithUndo({
+      item: selectedItem,
+      onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+        dispatchFn(
+          ChargeCategoryApi.util.updateQueryData('getChargeCategory', undefined, (draft: any) => {
+            const index = draft.data?.items?.findIndex(
+              (b: any) => b.id === (selectedItem as any)?.id
+            );
+            setDeleteIndex(index);
+            if (index !== -1) {
+              draft.data.items.splice(index, 1);
+            }
+          })
+        ),
+      onUndoRestore: () => refetch(),
+      onCommit: () => deleteChargeCategory(selectedItem.id),
+    });
+    confirm.onFalse();
+    setSelectedItem(null);
   };
 
   // Handle edit action
@@ -176,6 +182,63 @@ const FinanceChargeCategory = () => {
     }
   };
 
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'chargeName',
+        label: 'Name',
+        minWidth: '200px',
+        isSort: true,
+        isFilter: true,
+        align: 'left',
+      },
+      {
+        id: 'isRefundable',
+        label: 'Approval Required',
+        minWidth: '200px',
+        isSort: true,
+        isFilter: true,
+        align: 'left',
+      },
+      {
+        id: 'roles',
+        label: 'Roles',
+        minWidth: '200px',
+        isSort: true,
+        isFilter: true,
+        align: 'left',
+        render: (value: any) => value?.map((role: any) => role.name).join(', '),
+      },
+      {
+        id: 'actions',
+        label: 'Actions',
+        minWidth: '70px',
+        isSort: false,
+        isFilter: false,
+        align: 'left',
+        sticky: true,
+        render(value, row: any) {
+          return (
+            <ThreeDotsActions
+              showEditIcon
+              showDeleteIcon
+              showThreeDots={false}
+              placement="right-top"
+              handleDeleteClick={() => {
+                handleDeleteAction(row);
+              }}
+              handleEditClick={() => {
+                handleEdit(row);
+              }}
+            />
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
@@ -204,58 +267,8 @@ const FinanceChargeCategory = () => {
         tableId="charge-category-table"
         noDataText={<>No Charge Category Data Found</>}
         isLoading={isLoading}
-        columns={[
-          {
-            id: 'chargeName',
-            label: 'Name',
-            minWidth: '200px',
-            isSort: true,
-            isFilter: true,
-            align: 'left',
-          },
-          {
-            id: 'isRefundable',
-            label: 'Approval Required',
-            minWidth: '200px',
-            isSort: true,
-            isFilter: true,
-            align: 'left',
-          },
-          {
-            id: 'roles',
-            label: 'Roles',
-            minWidth: '200px',
-            isSort: true,
-            isFilter: true,
-            align: 'left',
-          },
-          {
-            id: 'actions',
-            label: 'Actions',
-            minWidth: '70px',
-            isSort: false,
-            isFilter: false,
-            align: 'left',
-            sticky: true,
-            render(value, row: any) {
-              return (
-                <ThreeDotsActions
-                  showEditIcon
-                  showDeleteIcon
-                  showThreeDots={false}
-                  placement="right-top"
-                  handleDeleteClick={() => {
-                    handleDeleteAction(row);
-                  }}
-                  handleEditClick={() => {
-                    handleEdit(row);
-                  }}
-                />
-              );
-            },
-          },
-        ]}
-        data={data || []}
+        columns={columns}
+        data={data?.items || []}
       />
 
       {/* Add/Edit Dialog */}
@@ -308,13 +321,7 @@ const FinanceChargeCategory = () => {
           </>
         }
         action={
-          <LoadingButton
-            variant="contained"
-            loading={isDeleting}
-            color="error"
-            size="small"
-            onClick={handleDelete}
-          >
+          <LoadingButton variant="contained" color="error" size="small" onClick={handleDelete}>
             Yes
           </LoadingButton>
         }

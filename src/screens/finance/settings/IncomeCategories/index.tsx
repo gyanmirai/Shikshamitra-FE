@@ -9,13 +9,14 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
+  incomeCategoryApi,
   useGetIncomeCategoriesQuery,
   useDeleteIncomeCategoryMutation,
 } from 'src/redux/finance/incomeCategory';
@@ -27,7 +28,11 @@ import type { IIncomeCategory } from './Components/type';
 
 const FinanceIncomeCategoriesScreen = () => {
   // Use custom hook to fetch income categories
-  const { data: incomeCategoryData, isLoading: incomeCategoryLoading } = useQueryAndMutation({
+  const {
+    data: incomeCategoryData,
+    isLoading: incomeCategoryLoading,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeCategoriesQuery,
   });
@@ -48,6 +53,7 @@ const FinanceIncomeCategoriesScreen = () => {
   const [selectedIncomeCategory, setSelectedIncomeCategory] = useState<IIncomeCategory | null>(
     null
   );
+  const { confirmWithUndo } = useConfirmWithUndo();
   const dispatch = useDispatch();
 
   /**
@@ -172,23 +178,33 @@ const FinanceIncomeCategoriesScreen = () => {
             size="small"
             loading={isDeleting}
             disabled={isDeleting}
-            onClick={async () => {
+            onClick={() => {
               if (!selectedIncomeCategory?.id) return;
 
-              try {
-                await deleteIncomeCategory(selectedIncomeCategory.id).unwrap();
-
-                shikshaMitraToast.success({
-                  message: `Income Category ${selectedIncomeCategory?.incomeCategoryName} deleted successfully`,
-                });
-                deleteIncomeCategoryDialog.onFalse();
-                setSelectedIncomeCategory(null);
-              } catch (error) {
-                console.error('Delete operation failed:', error);
-                shikshaMitraToast.error({
-                  message: 'Failed to delete income category',
-                });
-              }
+              confirmWithUndo({
+                item: selectedIncomeCategory,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    incomeCategoryApi.util.updateQueryData(
+                      'getIncomeCategories',
+                      undefined,
+                      (draft: any) => {
+                        const list = Array.isArray(draft) ? draft : draft?.data || [];
+                        const index = list.findIndex(
+                          (c: any) => c.id === (selectedIncomeCategory as any)?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          list.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: () => refetch(),
+                onCommit: () => deleteIncomeCategory(selectedIncomeCategory.id),
+              });
+              deleteIncomeCategoryDialog.onFalse();
+              setSelectedIncomeCategory(null);
             }}
           >
             Yes

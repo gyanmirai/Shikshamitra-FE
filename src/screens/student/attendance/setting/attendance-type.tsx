@@ -1,12 +1,13 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/type';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -56,7 +57,11 @@ const AttendanceType = () => {
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
 
   // Fetch all attendance types
-  const { data: attendanceTypes, isLoading } = useQueryAndMutation({
+  const {
+    data: attendanceTypes,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentAttendanceTypeQuery,
   });
@@ -89,6 +94,58 @@ const AttendanceType = () => {
       }, 200);
     }
   };
+
+  const columns: IColumn[] = useMemo(
+    () => [
+      {
+        id: 'leaveTypeName',
+        label: 'Type',
+        render(value, row) {
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <SubjectColorIndicator color={row.color} />
+              <Typography variant="caption" fontSize="13px">
+                {value}
+              </Typography>
+            </Box>
+          );
+        },
+      },
+      {
+        id: 'isActive',
+        label: 'Active',
+        render(values) {
+          return <Typography variant="caption">{values ? 'Yes' : 'No'}</Typography>;
+        },
+      },
+      {
+        id: 'action',
+        label: 'Actions',
+        sticky: true,
+        isFilter: false,
+        isSort: false,
+        minWidth: 60,
+        align: 'left',
+        render: (value, row) => (
+          <ThreeDotsActions
+            showThreeDots={false}
+            showEditIcon
+            showDeleteIcon
+            handleEditClick={() => {
+              dialog.onTrue();
+              setEditData(row as IAttendanceRule);
+            }}
+            handleDeleteClick={() => {
+              confirm.onTrue();
+              setEditData(row as IAttendanceRule);
+            }}
+          />
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -138,53 +195,7 @@ const AttendanceType = () => {
           </>
         }
         isLoading={isLoading}
-        columns={[
-          {
-            id: 'leaveTypeName',
-            label: 'Type',
-            render(value, row) {
-              return (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <SubjectColorIndicator color={row.color} />
-                  <Typography variant="caption" fontSize="13px">
-                    {value}
-                  </Typography>
-                </Box>
-              );
-            },
-          },
-          {
-            id: 'isActive',
-            label: 'Active',
-            render(values) {
-              return <Typography variant="caption">{values ? 'Yes' : 'No'}</Typography>;
-            },
-          },
-          {
-            id: 'action',
-            label: 'Actions',
-            sticky: true,
-            isFilter: false,
-            isSort: false,
-            minWidth: 60,
-            align: 'left',
-            render: (value, row) => (
-              <ThreeDotsActions
-                showThreeDots={false}
-                showEditIcon
-                showDeleteIcon
-                handleEditClick={() => {
-                  dialog.onTrue();
-                  setEditData(row as IAttendanceRule);
-                }}
-                handleDeleteClick={() => {
-                  confirm.onTrue();
-                  setEditData(row as IAttendanceRule);
-                }}
-              />
-            ),
-          },
-        ]}
+        columns={columns}
         data={attendanceTypes?.items || []}
       />{' '}
       <ConfirmDialog
@@ -228,17 +239,7 @@ const AttendanceType = () => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    StudentAttendanceTypeApi.util.updateQueryData(
-                      'getStudentAttendanceType',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft?.items) return;
-                        draft.items.splice(index, 0, editData);
-                      }
-                    )
-                  ),
+                onUndoRestore: () => refetch(),
                 onCommit: () => deleteAttendanceType(editData?.id),
               });
               confirm.onFalse();

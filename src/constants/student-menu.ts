@@ -39,7 +39,7 @@ export const studentPaths = {
       leaveType: '/student/attendance/setting',
     },
   },
-  notification: '/student/studentNotification',
+  notification: '/student/attendance/notification',
 };
 
 export const studentPermissions = {

@@ -1,7 +1,9 @@
 'use client';
 
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/type';
+
 import dayjs from 'dayjs';
+import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -26,33 +28,9 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   onDelete,
   onView,
   isLoading,
-}) => (
-  <CustomizableTable
-    tableId="expense-category-table"
-    isLoading={isLoading}
-    noDataText={
-      <>
-        No Expense data found
-        <Box
-          onClick={() => {
-            addExpenseCategory.onTrue();
-            setEditData(null);
-          }}
-          color="primary.main"
-          fontWeight={600}
-          sx={{
-            '&:hover': {
-              cursor: 'pointer',
-              color: 'primary.main',
-              textDecoration: 'underline',
-            },
-          }}
-        >
-          Add Expense
-        </Box>
-      </>
-    }
-    columns={[
+}) => {
+  const columns: IColumn[] = useMemo(
+    () => [
       {
         id: 'expenseCategory',
         label: 'Expense Category',
@@ -127,8 +105,40 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
           />
         ),
       },
-    ]}
-    data={data || []}
-  />
-);
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  return (
+    <CustomizableTable
+      tableId="expense-category-table"
+      isLoading={isLoading}
+      noDataText={
+        <>
+          No Expense data found
+          <Box
+            onClick={() => {
+              addExpenseCategory.onTrue();
+              setEditData(null);
+            }}
+            color="primary.main"
+            fontWeight={600}
+            sx={{
+              '&:hover': {
+                cursor: 'pointer',
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Add Expense
+          </Box>
+        </>
+      }
+      columns={columns}
+      data={data || []}
+    />
+  );
+};
 export default ExpenseCategoryTable;
