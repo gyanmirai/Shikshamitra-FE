@@ -48,7 +48,7 @@ const GroupManagement = () => {
             },
             { name: editingGroup ? 'Update Group' : 'Add Group' },
           ]}
-          sx={{ mb: 2 }}
+          sx={{ px: 1, mb: 2 }}
           isBack
           onBack={() => {
             handleCloseDialog();
@@ -65,9 +65,9 @@ const GroupManagement = () => {
               href: '/calendar/group-management',
               onClick: handleCloseView,
             },
-            { name: viewingGroup.groupName || 'Group Details' },
+            { name: viewingGroup.name || 'Group Details' },
           ]}
-          sx={{ mb: 2 }}
+          sx={{ px: 1, mb: 2 }}
           isBack
           onBack={handleCloseView}
         />

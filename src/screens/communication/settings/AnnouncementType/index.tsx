@@ -3,21 +3,24 @@
 import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-// Replace with actual API hook when available
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetAnnouncementTypeOptionsQuery } from 'src/redux/communication/setting/announcementTypeSetting';
+import {
+  announcementTypeOptionsApi,
+  useDeleteAnnouncementTypeMutation,
+  useGetAnnouncementTypeOptionsQuery,
+} from 'src/redux/communication/setting/announcementTypeSetting';
 
 import AnnouncementTypeForm from './Components/AnnouncementTypeForm';
 import AnnouncementTypeTable from './Components/AnnouncementTypeTable';
@@ -25,10 +28,25 @@ import AnnouncementTypeTable from './Components/AnnouncementTypeTable';
 import type { IAnnouncementType } from './Components/type';
 
 const AnnouncementTypeCreation = () => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+
   // Custom hook to fetch announcement type data
-  const { data: announcementTypeData } = useQueryAndMutation({
+  const {
+    data: announcementTypeData,
+    refetch,
+    isLoading: isGetLoading,
+    isFetching: isGetFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetAnnouncementTypeOptionsQuery,
+    params: {
+      academicMediumId: currentMedium?.id,
+    },
+  });
+
+  const [deleteAnnouncementType, { isLoading: isDeleteLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useDeleteAnnouncementTypeMutation,
   });
 
   // Dialog control states
@@ -62,6 +80,8 @@ const AnnouncementTypeCreation = () => {
     }
   };
 
+  const { confirmWithUndo } = useConfirmWithUndo();
+
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
@@ -83,10 +103,11 @@ const AnnouncementTypeCreation = () => {
             Announcement Type
           </Button>
         }
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 2, mb: 1 }}
       />
 
       <AnnouncementTypeTable
+        isLoading={isGetLoading || isGetFetching}
         onDelete={(data) => {
           setSelectedAnnouncementType(data);
           deleteAnnouncementTypeDialog.onTrue();
@@ -99,7 +120,7 @@ const AnnouncementTypeCreation = () => {
         onAddAnnouncementType={addAnnouncementTypeDialog}
         setOpenDialog={setOpen}
         setEditData={setSelectedAnnouncementType}
-        data={announcementTypeData}
+        data={announcementTypeData?.items}
       />
 
       <CustomDialog
@@ -151,21 +172,42 @@ const AnnouncementTypeCreation = () => {
           </>
         }
         action={
-          <Button
+          <LoadingButton
+            loading={isDeleteLoading}
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
+            onClick={async () => {
+              confirmWithUndo({
+                item: selectedAnnouncementType,
+                onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
+                  dispatchFn(
+                    announcementTypeOptionsApi.util.updateQueryData(
+                      'getAnnouncementTypeOptions',
+                      { academicMediumId: currentMedium?.id },
+                      (draft: any) => {
+                        const index = draft.items?.findIndex(
+                          (b: any) => b.id === selectedAnnouncementType?.id
+                        );
+                        setDeleteIndex(index);
+                        if (index !== -1) {
+                          draft.items.splice(index, 1);
+                        }
+                      }
+                    )
+                  ),
+                onUndoRestore: () => refetch(),
+                onCommit: () =>
+                  deleteAnnouncementType({
+                    data: { id: selectedAnnouncementType!.id },
+                  }).unwrap(),
+              });
               deleteAnnouncementTypeDialog.onFalse();
               setSelectedAnnouncementType(null);
-              shikshaMitraToast.success({
-                message: `Announcement Type : ${selectedAnnouncementType?.announcementType} deleted successfully`,
-              });
-              // handle delete API call here
             }}
           >
             Yes
-          </Button>
+          </LoadingButton>
         }
       />
     </Box>

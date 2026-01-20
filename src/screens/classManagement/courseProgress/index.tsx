@@ -49,10 +49,10 @@ const CourseProgress = () => {
           { name: 'Class Management', href: '/classManagement/dashboard' },
           { name: 'Chapters Progress' },
         ]}
-        sx={{ px: 1, mb: 1 }}
+        sx={{ px: 2, mb: 2 }}
       />
       {/* Class and Division selection filters */}
-      <Box sx={{ display: 'flex', gap: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, ml: 2 }}>
         <CustomSelect
           options={allClass}
           label="Class"

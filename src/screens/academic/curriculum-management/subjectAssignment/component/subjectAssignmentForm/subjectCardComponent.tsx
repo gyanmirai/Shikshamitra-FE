@@ -1,6 +1,5 @@
 import { getIn } from 'formik';
 import { Editor } from 'src/components/editor';
-import { useTheme } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -44,7 +43,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   index,
   onFileUpload,
 }: ISubjectCardProps) => {
-  const theme = useTheme();
+  // const theme = useTheme();
   const {
     data: employee,
     isLoading,
@@ -113,58 +112,84 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
         expanded={isExpanded}
         onChange={() => setIsExpanded(!isExpanded)}
         sx={{
-          border: '1px solid #ccc',
-          boxShadow: 'none', // optional, remove default shadow
-          borderRadius: 1, // optional, round corners
-          '&:before': {
-            display: 'none', // remove default divider line at top
+          borderRadius: 1.5,
+          border: (theme) => `1px solid ${theme.palette.divider}`,
+          boxShadow: (theme) => theme.customShadows?.z1 || theme.shadows[1],
+          transition: (theme) => theme.transitions.create(['box-shadow', 'background-color']),
+          '&:hover': {
+            boxShadow: (theme) => theme.customShadows?.z8 || theme.shadows[4],
           },
-          mb: '16px',
+          '&:before': { display: 'none' },
+          mb: 2,
+          overflow: 'hidden',
+          '&.Mui-expanded': {
+            m: 0,
+            mb: 3,
+            border: (theme) => `1px solid ${theme.palette.primary.main}`,
+          },
         }}
       >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Box display="flex" gap={0.5}>
-            {/* <Box
-              sx={{
-                width: 16,
-                height: 16,
-                borderRadius: '50%',
-                mt: 0.5,
-                backgroundColor: subject.subjectColor,
-              }}
-            /> */}
-            <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <SubjectColorIndicator color={subject?.subjectColor} />
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{
+            py: 1,
+            px: 2,
+            pb: 0,
+            pt: 0,
+            bgcolor: (theme) => (isExpanded ? theme.palette.action.hover : 'transparent'),
+            '& .MuiAccordionSummary-content': {
+              alignItems: 'center',
+              display: 'flex',
+              gap: 1,
+            },
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1 }}>
+            <SubjectColorIndicator color={subject?.subjectColor} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+              {subject.subjectName || 'Untitled Subject'}
+            </Typography>
 
-              <Typography variant="subtitle1" fontWeight={600} sx={{ mr: 1 }}>
-                {subject.subjectName || 'CHEMISTRY'}
-              </Typography>
-            </Box>
-            {!isExpanded && subject.subjectCode && (
-              <Chip label={`Code : ${subject.subjectCode}`} size="small" variant="outlined" />
-            )}
-            {!isExpanded && subject.primaryTeacher && (
-              <Chip
-                label={`Primary Teacher : ${subject.primaryTeacher}`}
-                size="small"
-                variant="outlined"
-              />
+            {!isExpanded && (
+              <Box sx={{ display: 'flex', gap: 1, ml: 1, flexWrap: 'wrap' }}>
+                {subject.subjectCode && (
+                  <Chip
+                    label={`Code: ${subject.subjectCode}`}
+                    size="small"
+                    variant="soft"
+                    color="primary"
+                    sx={{ height: 22, fontSize: '0.75rem' }}
+                  />
+                )}
+                {subject.primaryTeacher && (
+                  <Chip
+                    label={`Lead: ${subject.primaryTeacher}`}
+                    size="small"
+                    variant="soft"
+                    color="info"
+                    sx={{ height: 22, fontSize: '0.75rem' }}
+                  />
+                )}
+              </Box>
             )}
           </Box>
         </AccordionSummary>
-        <AccordionDetails>
-          <Grid container spacing={3} alignItems="flex-start">
-            {/* Subject Code */}
+
+        <AccordionDetails sx={{ p: 3, bgcolor: 'background.paper' }}>
+          <Grid container spacing={3}>
+            {/* Standard Detail Row */}
             <Grid size={{ xs: 12, md: 4 }}>
               <ShakingTextField error={!!getError('subjectCode')}>
                 <TextField
                   fullWidth
-                  label="Subject Code *"
+                  label="Subject Code"
+                  placeholder="e.g. MATH-101"
                   size="small"
                   value={subject.subjectCode || ''}
                   onChange={(e) => {
-                    const rawValue = e.target.value;
-                    const uppercaseValue = rawValue.toUpperCase().replace(/[^A-Z0-9\-_]/g, ''); // removes special chars except dash and underscore
+                    const uppercaseValue = e.target.value
+                      .toUpperCase()
+                      .replace(/[^A-Z0-9\-_]/g, '');
                     formik.setFieldValue(`subjects.${index}.subjectCode`, uppercaseValue);
                   }}
                   disabled={isPublished}
@@ -174,7 +199,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               </ShakingTextField>
             </Grid>
 
-            {/* Primary Teacher */}
             <Grid size={{ xs: 12, md: 4 }}>
               <FormControl fullWidth error={!!getError('primaryTeacher')}>
                 <Autocomplete
@@ -192,57 +216,21 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id ?? '')
                   }
                   loading={isLoading}
-                  renderOption={(props, option) => <li {...props}>{option?.fullName}</li>}
+                  renderOption={(props, option) => (
+                    <Box component="li" {...props} sx={{ display: 'flex', gap: 1 }}>
+                      <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
+                        {option.fullName?.[0]}
+                      </Avatar>
+                      {option.fullName}
+                    </Box>
+                  )}
                   renderInput={(params) => (
                     <TextField {...params} label="Primary Teacher" size="small" />
                   )}
                 />
-
-                {/* <Autocomplete
-                  options={
-                    teacherOptions?.filter(
-                      (option) =>
-                        !subject.secondaryTeacher?.some(
-                          (secondary: any) => secondary.id === option.id
-                        )
-                    ) || []
-                  }
-                  getOptionLabel={(option) => option?.name || ''}
-                  value={teacherOptions?.find((t) => t.id === subject.primaryTeacher) || null}
-                  onChange={(event, newValue) =>
-                    formik.setFieldValue(`subjects.${index}.primaryTeacher`, newValue?.id)
-                  }
-                  disabled={isPublished}
-                  renderOption={(props, option: any) => <li {...props}>{option.name || ''}</li>}
-                  renderTags={(value) => {
-                    if (!value) return null;
-                    return (
-                      <Chip
-                        avatar={<Avatar>{value.charAt(0)}</Avatar>}
-                        label={value?.name}
-                        onDelete={
-                          isPublished
-                            ? undefined
-                            : () => formik.setFieldValue(`subjects.${index}.primaryTeacher`, '')
-                        }
-                        size="small"
-                      />
-                    );
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Primary Teacher"
-                      size="small"
-                      error={!!getError('primaryTeacher')}
-                      helperText={getError('primaryTeacher')}
-                    />
-                  )}
-                /> */}
               </FormControl>
             </Grid>
 
-            {/* Secondary Teacher */}
             <Grid size={{ xs: 12, md: 4 }}>
               <FormControl fullWidth error={!!getError('secondaryTeacher')}>
                 <Autocomplete
@@ -254,7 +242,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     ) || []
                   }
                   loading={isLoading}
-                  // UI expects objects, not IDs → convert stored ids to objects
                   value={
                     employee?.items?.filter((t: any) =>
                       subject.secondaryTeacher?.includes(t?.id as any)
@@ -274,8 +261,11 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                         icon={<CheckBoxOutlineBlankIcon />}
                         checkedIcon={<CheckBoxIcon />}
                         checked={selected}
-                        sx={{ marginRight: 1 }}
+                        sx={{ mr: 1 }}
                       />
+                      <Avatar sx={{ width: 24, height: 24, fontSize: 12, mr: 1 }}>
+                        {option.fullName?.[0]}
+                      </Avatar>
                       {option?.fullName}
                     </li>
                   )}
@@ -290,6 +280,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                         avatar={<Avatar>{first?.fullName?.[0]}</Avatar>}
                         label={first?.fullName}
                         size="small"
+                        variant="soft"
                         sx={{ ml: 1 }}
                       />,
                       remaining > 0 && (
@@ -304,11 +295,10 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Secondary Teacher"
-                      placeholder={`${subject.secondaryTeacher?.length || 0} Selected`}
+                      label="Secondary Teachers"
+                      placeholder={subject.secondaryTeacher?.length ? '' : 'Select assist teachers'}
                       size="small"
                       error={!!getError('secondaryTeacher')}
-                      helperText={getError('secondaryTeacher')}
                     />
                   )}
                 />
@@ -321,92 +311,52 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               </FormControl>
             </Grid>
 
-            {/* Learning Goal */}
-            <Grid size={{ xs: 12 }} mb={-2}>
-              <Typography variant="subtitle2">Learning Goal</Typography>
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <ShakingTextField error={!!getError('learningGoal')}>
-                <Editor
-                  onChange={(value) => handleChange('learningGoal', value)}
-                  value={subject.learningGoal || ''}
-                  placeholder="Learning Goal"
-                  error={!!getError('learningGoal')}
-                  helperText={getError('learningGoal')}
-                  sx={{
-                    border: `1px solid ${theme.vars.palette.grey[500]}`,
-                    borderRadius: 1,
-                    '&:hover': { borderColor: theme.vars.palette.text.primary },
-                    '&:focus-within': {
-                      borderColor: theme.vars.palette.text.primary,
-                      borderWidth: 2,
-                    },
-                    ...(!!getError('learningGoal') && {
-                      borderColor: theme.vars.palette.text.primary,
-                    }),
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-
-            {/* Prerequisites */}
-            <Grid size={{ xs: 12 }} mb={-2}>
-              <Typography variant="subtitle2">Prerequisites</Typography>
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <ShakingTextField error={!!getError('prerequisites')}>
-                <Editor
-                  onChange={(value) => handleChange('prerequisites', value)}
-                  value={subject.prerequisites || ''}
-                  placeholder="Prerequisites"
-                  error={!!getError('prerequisites')}
-                  helperText={getError('prerequisites')}
-                  sx={{
-                    border: `1px solid ${theme.vars.palette.grey[500]}`,
-                    borderRadius: 1,
-                    '&:hover': { borderColor: theme.vars.palette.text.primary },
-                    '&:focus-within': {
-                      borderColor: theme.vars.palette.text.primary,
-                      borderWidth: 2,
-                    },
-                    ...(!!getError('prerequisites') && {
-                      borderColor: theme.palette.error.main,
-                    }),
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
-
-            {/* Description */}
-            <Grid size={{ xs: 12 }} mb={-2}>
-              <Typography variant="subtitle2">Description</Typography>
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <ShakingTextField error={!!getError('description')}>
-                <Editor
-                  onChange={(value) => handleChange('description', value)}
-                  value={subject.description || ''}
-                  placeholder="Description"
-                  error={!!getError('description')}
-                  helperText={getError('description')}
-                  sx={{
-                    border: `1px solid ${theme.vars.palette.grey[500]}`,
-                    borderRadius: 1,
-                    '&:hover': { borderColor: theme.vars.palette.text.primary },
-                    '&:focus-within': {
-                      borderColor: theme.vars.palette.text.primary,
-                      borderWidth: 2,
-                    },
-                    ...(!!getError('description') && {
-                      borderColor: theme.palette.error.main,
-                    }),
-                  }}
-                />
-              </ShakingTextField>
-            </Grid>
+            {/* Content Sections */}
+            {[
+              { label: 'Learning Goals', field: 'learningGoal' },
+              { label: 'Prerequisites', field: 'prerequisites' },
+              { label: 'Description', field: 'description' },
+            ].map((section) => (
+              <Grid key={section.field} size={{ xs: 12 }}>
+                <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    {section.label}
+                  </Typography>
+                </Box>
+                <ShakingTextField error={!!getError(section.field)}>
+                  <Editor
+                    onChange={(value) => handleChange(section.field, value)}
+                    value={(subject as any)[section.field] || ''}
+                    placeholder={`Enter ${section.label.toLowerCase()}...`}
+                    error={!!getError(section.field)}
+                    sx={{
+                      borderRadius: 1,
+                      border: (theme) =>
+                        `1px solid ${
+                          getError(section.field) ? theme.palette.error.main : theme.palette.divider
+                        }`,
+                      '&:hover': {
+                        borderColor: 'text.secondary',
+                      },
+                      '&:focus-within': {
+                        borderColor: 'primary.main',
+                        borderWidth: 2,
+                      },
+                      maxHeight: 250,
+                      overflow: 'hidden',
+                    }}
+                  />
+                  {getError(section.field) && (
+                    <FormHelperText error sx={{ ml: 1 }}>
+                      {getError(section.field)}
+                    </FormHelperText>
+                  )}
+                </ShakingTextField>
+              </Grid>
+            ))}
 
             {/* Upload Document */}
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12 }} sx={{ mt: 1 }}>
               <CustomUpload
                 multiple
                 previewCount={6}
@@ -414,7 +364,7 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                   onFileUpload(files, index);
                 }}
                 value={subject.documents}
-                label="Upload Your Subject Documents"
+                label="Attach Support Documents"
                 outputFormat="file"
               />
             </Grid>

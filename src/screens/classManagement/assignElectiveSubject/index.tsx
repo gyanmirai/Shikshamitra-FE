@@ -199,7 +199,7 @@ const AssignElectiveSubject = () => {
   // --------------------------------------------
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 3 }}>
       <CustomBreadcrumbs
         heading="Student Elective Assignment"
         description="Assign elective subjects based on student preference."
@@ -207,108 +207,175 @@ const AssignElectiveSubject = () => {
           { name: 'Class Management', href: '/classManagement/dashboard' },
           { name: 'Student Elective Assignment' },
         ]}
-        sx={{ mb: 2 }}
       />
 
-      {/* FILTER BAR */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <CustomSelect
-            label="Class"
-            options={allClass}
-            value={classes}
-            labelKey="name"
-            valueKey="id"
-            onChange={(v) => setClasses(v as string)}
-            formControlProps={{ sx: { minWidth: '200px' } }}
-          />
+      {/* MAIN CARD */}
+      <Box
+        sx={{
+          borderRadius: 2,
+          bgcolor: 'background.paper',
+          boxShadow: (theme) => theme.customShadows.card,
+          p: 3,
+        }}
+      >
+        {/* FILTER & ACTIONS */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            justifyContent: 'space-between',
+            alignItems: { xs: 'stretch', md: 'center' },
+            gap: 2,
+            mb: 3,
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              flexDirection: { xs: 'column', sm: 'row' },
+              flexGrow: 1,
+            }}
+          >
+            <CustomSelect
+              label="Class"
+              options={allClass}
+              value={classes}
+              labelKey="name"
+              valueKey="id"
+              onChange={(v) => setClasses(v as string)}
+              formControlProps={{ sx: { minWidth: '200px' } }}
+            />
 
-          <CustomSelect
-            label="Division"
-            options={allDivision}
-            value={division}
-            labelKey="name"
-            valueKey="id"
-            disabled={!classes}
-            onChange={(v) => setDivision(v as string)}
-            formControlProps={{ sx: { minWidth: '200px' } }}
-          />
+            <CustomSelect
+              label="Division"
+              options={allDivision}
+              value={division}
+              labelKey="name"
+              valueKey="id"
+              disabled={!classes}
+              onChange={(v) => setDivision(v as string)}
+              formControlProps={{ sx: { minWidth: '200px' } }}
+            />
 
-          <CustomSelect
-            label="Elective Group"
-            value={electiveGroupId}
-            onChange={(v) => setElectiveGroupId(v as string)}
-            labelKey="name"
-            valueKey="id"
-            options={electiveGroups}
-            disabled={!division}
-            formControlProps={{ sx: { minWidth: '200px' } }}
-          />
+            <CustomSelect
+              label="Elective Group"
+              value={electiveGroupId}
+              onChange={(v) => setElectiveGroupId(v as string)}
+              labelKey="name"
+              valueKey="id"
+              options={electiveGroups}
+              disabled={!division}
+              formControlProps={{ sx: { minWidth: '200px' } }}
+            />
+          </Box>
+
+          <Box
+            sx={{ display: 'flex', gap: 2, justifyContent: { xs: 'flex-end', sm: 'flex-start' } }}
+          >
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
+              disabled={!hasSelections}
+              onClick={() => resetDialog.onTrue()}
+              size="medium"
+              sx={{ px: 3 }}
+            >
+              Reset
+            </Button>
+
+            <LoadingButton
+              variant="contained"
+              startIcon={<Save />}
+              disabled={!hasSelections}
+              onClick={() => saveDialog.onTrue()}
+              size="medium"
+              loading={isSaving}
+              sx={{ px: 3, boxShadow: (theme) => theme.customShadows.z8 }}
+            >
+              Save
+            </LoadingButton>
+          </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-            disabled={!hasSelections}
-            onClick={() => resetDialog.onTrue()}
-            size="small"
-            sx={{ px: '32px' }}
-          >
-            Reset
-          </Button>
+        {/* TABLE */}
+        <CustomizableTable
+          tableId="elective-table"
+          data={students}
+          isLoading={isElectiveLoading}
+          noDataText={<>No Students Found</>}
+          columns={[
+            { id: 'studentName', label: 'Student Name', minWidth: '200px' },
+            { id: 'rollNo', label: 'Roll No.', minWidth: '120px' },
+            { id: 'studentPreference', label: 'Preference', minWidth: '200px' },
+            {
+              id: 'electiveSubjects',
+              label: '',
+              minWidth: '500px',
+              isFilter: false,
+              isSort: false,
+              renderColumn: () => {
+                if (!students || students.length === 0) return null;
 
-          <LoadingButton
-            variant="contained"
-            startIcon={<Save />}
-            disabled={!hasSelections}
-            onClick={() => saveDialog.onTrue()}
-            size="small"
-            loading={isSaving}
-            sx={{ px: '32px' }}
-          >
-            Save
-          </LoadingButton>
-        </Box>
-      </Box>
+                const subjects = students[0]?.selectableSubjects || [];
 
-      {/* TABLE */}
-      <CustomizableTable
-        tableId="elective-table"
-        data={students}
-        isLoading={isElectiveLoading}
-        noDataText={<>No Students Found</>}
-        columns={[
-          { id: 'studentName', label: 'Student Name', minWidth: '200px' },
-          { id: 'rollNo', label: 'Roll No.', minWidth: '120px' },
-          { id: 'studentPreference', label: 'Preference', minWidth: '200px' },
-          {
-            id: 'electiveSubjects',
-            label: '',
-            minWidth: '500px',
-            isFilter: false,
-            isSort: false,
-            renderColumn: () => {
-              if (!students || students.length === 0) return null;
+                return (
+                  <Box display="flex" gap={1.5}>
+                    {subjects.map((s: any) => {
+                      const isSelected = selectedHeaderSubject === s.subjectId;
+                      return (
+                        <Button
+                          key={s.subjectId}
+                          variant={isSelected ? 'contained' : 'outlined'}
+                          onClick={() => handleHeaderSubjectClick(s.subjectId)}
+                          size="small"
+                          sx={{
+                            borderRadius: 1,
+                            textTransform: 'none',
+                            fontWeight: isSelected ? 'bold' : 'normal',
+                            boxShadow: isSelected ? 2 : 0,
+                            color: isSelected ? '#fff' : s.subjectColor,
+                            borderColor: s.subjectColor,
+                            backgroundColor: isSelected ? s.subjectColor : 'transparent',
+                            '&:hover': {
+                              backgroundColor: isSelected ? s.subjectColor : `${s.subjectColor}15`,
+                              borderColor: s.subjectColor,
+                              boxShadow: isSelected ? 3 : 0,
+                            },
+                          }}
+                        >
+                          {s.subjectName}
+                        </Button>
+                      );
+                    })}
+                  </Box>
+                );
+              },
 
-              const subjects = students[0]?.selectableSubjects || [];
+              render: (_, row) => (
+                <Box display="flex" gap={1.5}>
+                  {row.selectableSubjects?.map((s: any) => {
+                    const isSelected = studentSelections[row.studentId] === s.subjectId;
 
-              return (
-                <Box display="flex" gap={2}>
-                  {subjects.map((s: any) => {
-                    const isSelected = selectedHeaderSubject === s.subjectId;
                     return (
                       <Button
                         key={s.subjectId}
                         variant={isSelected ? 'contained' : 'outlined'}
-                        onClick={() => handleHeaderSubjectClick(s.subjectId)}
+                        onClick={() => handleStudentSubjectClick(row.studentId, s.subjectId)}
                         size="small"
                         sx={{
+                          borderRadius: 1,
+                          textTransform: 'none',
+                          fontWeight: isSelected ? 'bold' : 'normal',
+                          boxShadow: isSelected ? 2 : 0,
                           color: isSelected ? '#fff' : s.subjectColor,
                           borderColor: s.subjectColor,
                           backgroundColor: isSelected ? s.subjectColor : 'transparent',
                           '&:hover': {
-                            backgroundColor: isSelected ? s.subjectColor : `${s.subjectColor}20`,
+                            backgroundColor: isSelected ? s.subjectColor : `${s.subjectColor}15`,
+                            borderColor: s.subjectColor,
+                            boxShadow: isSelected ? 3 : 0,
                           },
                         }}
                       >
@@ -317,47 +384,20 @@ const AssignElectiveSubject = () => {
                     );
                   })}
                 </Box>
-              );
+              ),
             },
-
-            render: (_, row) => (
-              <Box display="flex" gap={2}>
-                {row.selectableSubjects?.map((s: any) => {
-                  const isSelected = studentSelections[row.studentId] === s.subjectId;
-
-                  return (
-                    <Button
-                      key={s.subjectId}
-                      variant={isSelected ? 'contained' : 'outlined'}
-                      onClick={() => handleStudentSubjectClick(row.studentId, s.subjectId)}
-                      size="small"
-                      sx={{
-                        color: isSelected ? '#fff' : s.subjectColor,
-                        borderColor: s.subjectColor,
-                        backgroundColor: isSelected ? s.subjectColor : 'transparent',
-                        '&:hover': {
-                          backgroundColor: isSelected ? s.subjectColor : `${s.subjectColor}20`,
-                        },
-                      }}
-                    >
-                      {s.subjectName}
-                    </Button>
-                  );
-                })}
-              </Box>
-            ),
-          },
-        ]}
-      />
+          ]}
+        />
+      </Box>
 
       {/* RESET DIALOG */}
       <ConfirmDialog
         open={resetDialog.value}
         onClose={() => resetDialog.onFalse()}
-        title="Reset"
-        content="Are you sure you want to clear all selections?"
+        title="Reset Selections"
+        content="Are you sure you want to clear all selected elective subjects?"
         action={
-          <Button variant="contained" onClick={handleReset} size="small">
+          <Button variant="contained" color="error" onClick={handleReset}>
             Reset
           </Button>
         }
@@ -368,9 +408,9 @@ const AssignElectiveSubject = () => {
         open={saveDialog.value}
         onClose={() => saveDialog.onFalse()}
         title="Save Changes"
-        content="Do you want to save elective assignments?"
+        content="Are you sure you want to save these elective assignments?"
         action={
-          <LoadingButton variant="contained" onClick={handleSave} size="small" loading={isSaving}>
+          <LoadingButton variant="contained" onClick={handleSave} loading={isSaving}>
             Save
           </LoadingButton>
         }

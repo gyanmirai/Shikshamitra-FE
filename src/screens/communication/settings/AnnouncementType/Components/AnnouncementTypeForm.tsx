@@ -1,36 +1,77 @@
 'use client';
 
+import type { Medium } from 'src/types/school';
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
 import { useFormik } from 'formik';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Grid, Button, TextField, Typography, DialogActions } from '@mui/material';
+import {
+  useAddAnnouncementTypeMutation,
+  useUpdateAnnouncementTypeMutation,
+} from 'src/redux/communication/setting/announcementTypeSetting';
 
 import { announcementTypeValidationSchema } from './AnnouncementTypeValidation';
 import { getAnnouncementTypeInitialValues } from './AnnoucementTypeinitialValues';
 
-import type { IAnnouncementFormProps } from './type';
+import type { IAnnouncementType, IAnnouncementFormProps } from './type';
 
 const AnnouncementTypeForm: React.FC<IAnnouncementFormProps> = ({ open, onClose, editData }) => {
+  const { currentMedium } = useSelector((state: RootState) => state.globalState);
+  const [addAnnouncementType, { isLoading: isAddLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useAddAnnouncementTypeMutation,
+  });
+  const [updateAnnouncementType, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useUpdateAnnouncementTypeMutation,
+  });
   const formik = useFormik({
     initialValues: getAnnouncementTypeInitialValues(editData),
     validationSchema: announcementTypeValidationSchema,
-    onSubmit: (values) => {
-      if (editData) {
-        shikshaMitraToast.success({
-          message: `Announcement type : ${values.announcementType} has been successfully updated.`,
-        });
-      } else {
-        shikshaMitraToast.success({
-          message: `Announcement type : ${values.announcementType} has been successfully created.`,
-        });
+    onSubmit: async (values, formikHelpers) => {
+      try {
+        if (editData) {
+          const payload = {
+            data: {
+              id: (editData as IAnnouncementType).id,
+              announcementType: values.announcementType,
+              color: values.color,
+              description: values.description,
+            },
+          };
+          await updateAnnouncementType(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.announcementType}" Announcement type updated successfully`,
+          });
+        } else {
+          const payload = {
+            academicMediumId: (currentMedium as Medium).id,
+            data: {
+              announcementType: values.announcementType,
+              color: values.color,
+              description: values.description,
+            },
+          };
+          await addAnnouncementType(payload).unwrap();
+          shikshaMitraToast.success({
+            message: `"${values.announcementType}" Announcement type added successfully`,
+          });
+        }
+        onClose(null, true);
+      } catch (error) {
+        console.error('Failed to save subject', error);
       }
-      onClose(null, true);
     },
   });
 
@@ -106,7 +147,7 @@ const AnnouncementTypeForm: React.FC<IAnnouncementFormProps> = ({ open, onClose,
         >
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -114,13 +155,14 @@ const AnnouncementTypeForm: React.FC<IAnnouncementFormProps> = ({ open, onClose,
               height={editData ? 16 : 20}
             />
           }
+          loading={isAddLoading || isUpdateLoading}
           type="submit"
           variant="contained"
           size="small"
           onClick={(e: any) => formik.handleSubmit(e)}
         >
           {editData ? 'Update' : 'Submit'}
-        </Button>
+        </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>
   );

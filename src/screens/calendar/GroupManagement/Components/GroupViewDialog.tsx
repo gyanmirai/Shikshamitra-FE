@@ -184,8 +184,8 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
       <Stack spacing={1} mt={1.5}>
         {filters.map((f) => {
           const meta = getFieldMeta(f.field, isStudent);
-          const operatorLabel =
-            operatorOptions.find((o) => o.value === f.operator)?.label || f.operator;
+          const metaOp = operatorOptions.find((o) => o.value === f.operator);
+          const operatorLabel = metaOp?.label || f.operator;
           return (
             <Box
               key={f.id}
@@ -215,9 +215,24 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                 {meta?.label || f.field}
               </Box>
 
-              <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                {operatorLabel}
-              </Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  color: 'text.secondary',
+                  fontStyle: 'italic',
+                }}
+              >
+                {metaOp?.icon && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', fontSize: 16 }}>
+                    {metaOp.icon}
+                  </Box>
+                )}
+                <Typography variant="caption" sx={{ fontWeight: 500 }}>
+                  {operatorLabel}
+                </Typography>
+              </Box>
 
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 {String(f.value)}
@@ -235,7 +250,7 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
 
   return (
     <CustomDialog
-      title={group.groupName}
+      title={group.name}
       open={open}
       handleClose={onClose}
       fullWidth
@@ -255,7 +270,7 @@ const GroupViewDialog: React.FC<GroupViewDialogProps> = ({ open, group, onClose 
                   </Typography>
                 </Box>
                 <Box sx={{ p: 1 }}>
-                  <InfoRow label="Group Name" value={group.groupName} />
+                  <InfoRow label="Group Name" value={group.name} />
                   <InfoRow label="Description" value={group.description || '—'} />
                 </Box>
               </Card>

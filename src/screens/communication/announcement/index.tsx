@@ -25,6 +25,7 @@ import {
   // eslint-disable-next-line import/no-duplicates
 } from '@mui/material';
 import {
+  useGetAnnouncementsQuery,
   schoolWiseAnnouncementApi,
   useDeleteAnnouncementMutation,
   usePublishAnnouncementMutation,
@@ -55,6 +56,7 @@ const Announcement = (props: TabComponentType) => {
   const confirm_dialog = useBoolean();
   // Controls the visibility of publish modal
   const publish_modal = useBoolean();
+  const delete_dialog = useBoolean();
   // Stores the announcement being published
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [publishingAnnouncement, setPublishingAnnouncement] =
@@ -95,6 +97,15 @@ const Announcement = (props: TabComponentType) => {
   const [publishAnnouncement, { isLoading: isPublishLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePublishAnnouncementMutation,
+  });
+
+  const {
+    data: announcementData,
+    isLoading,
+    refetch,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAnnouncementsQuery,
   });
 
   const { confirmWithUndo } = useConfirmWithUndo();
@@ -159,6 +170,8 @@ const Announcement = (props: TabComponentType) => {
         </Card>
       ) : (
         <AnnouncementTable
+          data={announcementData?.data}
+          isLoading={isLoading}
           setOpen={setOpen}
           onEdit={(row) => {
             setOpen(true);
@@ -168,7 +181,7 @@ const Announcement = (props: TabComponentType) => {
             setEditingAnnouncement(row);
           }}
           onDelete={(row) => {
-            confirm_dialog.onTrue();
+            delete_dialog.onTrue();
             setEditingAnnouncement(row);
           }}
           onRemove={(row) => {
@@ -187,10 +200,10 @@ const Announcement = (props: TabComponentType) => {
       )}
 
       <ConfirmDialog
-        open={confirm_dialog.value}
+        open={delete_dialog.value}
         onClose={() => {
           setEditingAnnouncement(null);
-          confirm_dialog.onFalse();
+          delete_dialog.onFalse();
         }}
         title="Delete"
         content={
@@ -224,20 +237,10 @@ const Announcement = (props: TabComponentType) => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    schoolWiseAnnouncementApi.util.updateQueryData(
-                      'getAnnouncements',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, editingAnnouncement);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => deleteAnnouncement(editingAnnouncement?.id || ''),
               });
-              confirm_dialog.onFalse();
+              delete_dialog.onFalse();
               setEditingAnnouncement(null);
             }}
           >
@@ -302,17 +305,7 @@ const Announcement = (props: TabComponentType) => {
                       }
                     )
                   ),
-                onUndoRestore: (dispatchFn, index) =>
-                  dispatchFn(
-                    schoolWiseAnnouncementApi.util.updateQueryData(
-                      'getAnnouncements',
-                      undefined,
-                      (draft: any) => {
-                        if (!draft.items) return;
-                        draft.items.splice(index, 0, publishingAnnouncement);
-                      }
-                    )
-                  ),
+                onUndoRestore: (dispatchFn, index) => refetch(),
                 onCommit: () => publishAnnouncement(publishingAnnouncement?.id || ''),
               });
               publish_modal.onFalse();

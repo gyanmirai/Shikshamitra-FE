@@ -1,16 +1,23 @@
 import type { IGroup } from './type';
 
-export const getGroupInitialValues = (initialValues: IGroup | null): IGroup => ({
+export const getGroupInitialValues = (initialValues: any): IGroup & { [key: string]: any } => ({
   id: initialValues?.id || '',
-  groupName: initialValues?.groupName || '',
+  name: initialValues?.name || initialValues?.groupName || '',
   description: initialValues?.description || '',
-  boards: initialValues?.boards || [],
-  mediums: initialValues?.mediums || [],
-  organizations: initialValues?.organizations || [],
-  classes: initialValues?.classes || [],
-  divisions: initialValues?.divisions || [],
-  users: initialValues?.users || [],
-  roles: initialValues?.roles || [],
-  total: initialValues?.total ?? 0,
-  employees: initialValues?.employees || [],
+  ruleBased: {
+    academicRules: initialValues?.ruleBased?.academicRules || [],
+    roles: initialValues?.ruleBased?.roles || [],
+    studentFilters: initialValues?.ruleBased?.studentFilters || [],
+    employeeFilters: initialValues?.ruleBased?.employeeFilters || [],
+    academicTree: initialValues?.ruleBased?.academicTree || [],
+  },
+  nameBased: {
+    academicRules: initialValues?.nameBased?.academicRules || [],
+    roles: initialValues?.nameBased?.roles || [],
+    studentFilters: initialValues?.nameBased?.studentFilters || [],
+    employeeFilters: initialValues?.nameBased?.employeeFilters || [],
+    selectedUserIds: initialValues?.nameBased?.selectedUserIds || initialValues?.selections || [],
+    academicTree: initialValues?.academicTree || [],
+  },
+  // UI-only state (not for submission)
 });
