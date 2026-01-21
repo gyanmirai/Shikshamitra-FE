@@ -18,7 +18,7 @@ import SendInstantNotificationDialog from 'src/components/send-instant-notificat
 import { useChangeStudentClassMutation } from 'src/redux/student/student-change-class/student-change-class-api';
 
 import type { ITableClassDropDownProps } from './type';
-import type { IInquiryData } from '../../enrollment/Inquiry';
+import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 const ChangeClassScreen = ({
   tableData: studentData,

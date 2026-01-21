@@ -34,7 +34,7 @@ import StudentDashboard from './studentDashboard';
 import StudentTransportProfile from './transport';
 import { StudentInformation } from './information';
 
-import type { IInquiryData } from '../enrollment/Inquiry';
+import type { IInquiryData } from '../enrollment/Inquiry/type';
 
 export interface StudentTabsComponentType {
   tabs?: UseTabsReturn;

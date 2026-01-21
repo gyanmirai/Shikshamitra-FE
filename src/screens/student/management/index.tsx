@@ -20,7 +20,7 @@ import ChangeDivisionScreen from './change-division';
 import RollNoGenerationScreen from './roll-generation';
 import { FormSlider } from '../enrollment/register/register-form';
 
-import type { IInquiryData } from '../enrollment/Inquiry';
+import type { IInquiryData } from '../enrollment/Inquiry/type';
 
 const TABS = [
   {

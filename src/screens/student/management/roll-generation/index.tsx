@@ -20,7 +20,7 @@ import {
   useLazyGetRollNumberProjectionsQuery,
 } from 'src/redux/student/roll-number/roll-number-api';
 
-import type { IInquiryData } from '../../enrollment/Inquiry';
+import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 const RollNoGenerationScreen = ({ division }: { division: string }) => {
   // State for controlling how students are arranged (e.g., boys first, girls first)

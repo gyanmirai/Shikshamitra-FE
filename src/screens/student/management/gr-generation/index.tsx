@@ -18,7 +18,7 @@ import {
   useLazyGetStudentForGrNumberQuery,
 } from 'src/redux/student/studentGrNumber/student-gr-number-api';
 
-import type { IInquiryData } from '../../enrollment/Inquiry';
+import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 const GrNoGenerationScreen = ({ division }: { division: string }) => {
   // State to track if manual GR number generation is enabled

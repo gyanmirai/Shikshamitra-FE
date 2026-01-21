@@ -19,7 +19,7 @@ import { useGetAllStudentGroupQuery } from 'src/redux/student/student-group/stud
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 
 import type { TableDivisionDropDownProps } from './type';
-import type { IInquiryData } from '../../enrollment/Inquiry';
+import type { IInquiryData } from '../../enrollment/Inquiry/type';
 
 const ChangeDivisionScreen = ({
   allDivision,
