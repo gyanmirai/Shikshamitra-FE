@@ -1,3 +1,4 @@
+import { Icon } from '@iconify/react';
 import { CONFIG } from 'src/config-global';
 import hrModule from 'src/constants/hr-menus';
 import { SvgColor } from 'src/components/svg-color';
@@ -32,11 +33,18 @@ import {
 
 // ----------------------------------------------------------------------
 
+// Legacy icon loader for backward compatibility
 export const icon = (name: string) => (
   <SvgColor src={`${CONFIG.site.basePath}/assets/icons/navbar/${name}.svg`} />
 );
 
+// Iconify icon helper for modern icons
+const iconify = (name: string, size: number = 28) => (
+  <Icon icon={name} width={size} height={size} />
+);
+
 export const ICONS = {
+  // Legacy icons (keeping for backward compatibility)
   job: icon('ic-job'),
   blog: icon('ic-blog'),
   chat: icon('ic-chat'),
@@ -55,28 +63,30 @@ export const ICONS = {
   booking: icon('ic-booking'),
   invoice: icon('ic-invoice'),
   product: icon('ic-product'),
-  calendar: icon('ic-calendar'),
   disabled: icon('ic-disabled'),
   external: icon('ic-external'),
   menuItem: icon('ic-menu-item'),
   ecommerce: icon('ic-ecommerce'),
   analytics: icon('ic-analytics'),
-  dashboard: icon('ic-dashboard'),
   parameter: icon('ic-parameter'),
-  student: icon('ic-student'),
-  security: icon('ic-security'),
-  securityGuard: icon('ic-security-guard'),
-  hr: icon('ic-hr'),
-  finance: icon('ic-finance'),
-  communication: icon('ic-communication'),
-  library: icon('ic-library'),
-  transport: icon('ic-transport'),
-  hostel: icon('ic-hostel'),
-  academic: icon('ic-academic'),
   examination: icon('ic-examination'),
-  school: icon('ic-school'),
-  resource: icon('ic-hostel'),
-  class: icon('ic-class'),
+
+  // Modern Iconify icons for sidebar navigation (user's curated selection)
+  dashboard: iconify('lucide:layout-dashboard'),
+  student: iconify('ph:student'),
+  academic: iconify('solar:square-academic-cap-2-broken'),
+  class: iconify('streamline:class-lesson'),
+  hr: iconify('clarity:employee-line'),
+  finance: iconify('lucide:landmark'),
+  communication: iconify('fluent-mdl2:office-chat'),
+  calendar: iconify('radix-icons:calendar'),
+  library: iconify('ph:books-light'),
+  transport: iconify('gis:route'),
+  resource: iconify('streamline-freehand:human-resources-businessman'),
+  hostel: iconify('solar:buildings-2-outline'),
+  security: iconify('solar:shield-check-outline'),
+  securityGuard: iconify('solar:user-check-outline'),
+  school: iconify('clarity:building-line'),
 };
 
 // ----------------------------------------------------------------------

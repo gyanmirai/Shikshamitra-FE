@@ -25,12 +25,13 @@ export const InquiryHeader = React.memo(
       heading="Inquiry"
       description="Streamlined management of admission related inquiries from the students and parents."
       links={[
-        { name: 'Student', href: '/student/enrollment/dashboard/' },
-        { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
+        { name: 'Student', href: '/student/dashboard/' },
+        { name: 'Student Enrollment', href: '/student/dashboard/' },
         { name: 'Inquiry' },
       ]}
       isBack={isAdding}
       onBack={onBackClick}
+      sx={{ mb: 2 }}
       action={
         !isAdding && (
           <Button
@@ -40,7 +41,7 @@ export const InquiryHeader = React.memo(
             onClick={onAddClick}
             sx={{ px: '32px' }}
           >
-            Inquiry
+            Add Inquiry
           </Button>
         )
       }

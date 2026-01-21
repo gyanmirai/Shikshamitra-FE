@@ -264,7 +264,7 @@ const RegistrationFormScreen = () => {
           heading="Move to Registration"
           description="Move students from Form Issuance to Registered Status to begin the formal admission process."
           links={[
-            { name: 'Student', href: '/student/enrollment/dashboard/' },
+            { name: 'Student', href: '/student/dashboard/' },
             { name: 'Student Enrollment', href: '/student/enrollment/registration-form/' },
             { name: 'Registration Form Issued' },
             { name: 'Move to Registration' },
@@ -280,8 +280,8 @@ const RegistrationFormScreen = () => {
           heading="Registration Form Issued"
           description="After an inquiry Registration Form in a School ERP is provided to the prospective students for the admission process. "
           links={[
-            { name: 'Student', href: '/student/enrollment/dashboard/' },
-            { name: 'Student Enrollment', href: '/student/enrollment/dashboard/' },
+            { name: 'Student', href: '/student/dashboard/' },
+            { name: 'Student Enrollment', href: '/student/dashboard/' },
             { name: 'Registration Form Issued' },
           ]}
           sx={{ mb: 1 }}

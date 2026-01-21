@@ -35,6 +35,7 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
   const [registrationFormIssue, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useRegistrationFormDetailsMutation,
+    popupConfig: { error: false },
   });
 
   return (
@@ -63,8 +64,19 @@ const IssueRegistrationForm: React.FC<IssueRegistrationFormProps> = ({ handleClo
             shikshaMitraToast.success({
               message: `Registration Form Issued Successfully for ${editData.studentName} on ${dayjs().format('DD-MM-YYYY')}.`,
             });
-          } catch (error) {
+          } catch (error: any) {
             console.error('Error:', error);
+            const errorData = error?.data?.errors || error?.data?.error;
+            if (errorData) {
+              if (typeof errorData === 'object' && !Array.isArray(errorData)) {
+                const errorMessages = Object.values(errorData).flat().join(', ');
+                shikshaMitraToast.error({ message: errorMessages });
+              } else if (typeof errorData === 'string') {
+                shikshaMitraToast.error({ message: errorData });
+              }
+            } else {
+              shikshaMitraToast.error({ message: error?.data?.message || 'Something went wrong' });
+            }
           }
         }}
       >
