@@ -26,11 +26,6 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { StudentInquiryApi } from 'src/redux/student/inquiry/inquiry-api';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
-  FollowUpStatusType,
-  FollowUpStatusTypeColors,
-  FollowUpStatusTypeOptions,
-} from 'src/enums/inquiry-status-type';
-import {
   Box,
   Grid,
   Paper,
@@ -40,6 +35,11 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
+import {
+  FollowUpStatusType,
+  FollowUpStatusTypeColors,
+  FollowUpStatusTypeOptions,
+} from 'src/enums/inquiry-status-type';
 import {
   useGetFollowUpQuery,
   useAddFollowUpMutation,
@@ -56,9 +56,8 @@ import {
   TimelineOppositeContent,
 } from '@mui/lab';
 
-import type { IInquiryData } from '../Inquiry';
-import type { IInquiryResponse } from '../Inquiry/type';
 import type { IGeneralInformationResponse } from '../register/type';
+import type { IInquiryData, IInquiryResponse } from '../Inquiry/type';
 
 const FollowUpScreen: React.FC = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);

@@ -19,7 +19,7 @@ import {
   useGetStudentRegistrationQuery,
 } from 'src/redux/student/registration/registration-api';
 
-import type { IInquiryData } from '../Inquiry';
+import type { IInquiryData } from '../Inquiry/type';
 
 const RegistrationTable = ({
   dialog,

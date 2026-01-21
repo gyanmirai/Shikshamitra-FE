@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import type { NavSectionProps } from 'src/components/nav-section';
 

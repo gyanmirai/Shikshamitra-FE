@@ -200,13 +200,16 @@ export function FileManagerFilters({
 
       <CustomDateRangePicker
         variant="calendar"
-        startDate={filters.state.startDate}
-        endDate={filters.state.endDate}
-        onChangeStartDate={handleFilterStartDate}
-        onChangeEndDate={handleFilterEndDate}
+        value={[filters.state.startDate, filters.state.endDate]}
+        // onChangeStartDate={handleFilterStartDate}
+        // onChangeEndDate={handleFilterEndDate}
+        onChange={(value) => {
+          handleFilterStartDate(value[0]);
+          handleFilterEndDate(value[1]);
+        }}
         open={openDateRange}
         onClose={onCloseDateRange}
-        selected={!!filters.state.startDate && !!filters.state.endDate}
+        // selected={!!filters.state.startDate && !!filters.state.endDate}
         error={dateError}
       />
     </>
